@@ -1,0 +1,253 @@
+[
+  {
+    "organism": "std-prob-normal-distribution",
+    "orbital": "NormalDistributionEngineOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-prob-normal-distribution.ts",
+    "entities": [
+      {
+        "name": "NormalDistributionScene",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "mean",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "stdDev",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "peak",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "yTop",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "curves",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "shapes",
+            "type": "array",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "NormalDistributionSim",
+        "emittedEvents": [
+          "DIST_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "DIST_UPDATED",
+            "direction": "emit",
+            "description": "The recomputed curve and parameters after INIT or a slider change — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "normal distribution, gaussian, bell curve, mean, standard deviation",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "SET_MEAN",
+            "direction": "listen",
+            "description": "Learner dragged the mean slider — value is the new center of the distribution; the curve recomputes immediately.",
+            "tier": "domain"
+          },
+          {
+            "name": "SET_STDDEV",
+            "direction": "listen",
+            "description": "Learner dragged the standard-deviation slider — value is the new spread; the curve recomputes immediately.",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "animate",
+            "type": "boolean",
+            "default": false,
+            "label": "Animate",
+            "tier": "presentation"
+          },
+          {
+            "key": "color",
+            "type": "string",
+            "default": "#3b82f6",
+            "label": "Curve Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "gridStep",
+            "type": "number",
+            "default": 1,
+            "label": "Grid Step",
+            "tier": "presentation"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 400,
+            "label": "Height",
+            "tier": "presentation"
+          },
+          {
+            "key": "interactive",
+            "type": "boolean",
+            "default": false,
+            "label": "Interactive",
+            "tier": "presentation"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "mean",
+            "type": "number",
+            "default": 0,
+            "label": "Mean",
+            "description": "Initial center of the distribution; learners move it with the mean slider.",
+            "synonyms": "mu, average, center",
+            "tier": "domain"
+          },
+          {
+            "key": "showAxes",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Axes",
+            "tier": "presentation"
+          },
+          {
+            "key": "showGrid",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Grid",
+            "tier": "presentation"
+          },
+          {
+            "key": "stdDev",
+            "type": "number",
+            "default": 1,
+            "label": "Standard Deviation",
+            "description": "Initial spread of the distribution; learners move it with the spread slider.",
+            "synonyms": "sigma, spread, standard deviation",
+            "tier": "domain"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Normal Distribution",
+            "label": "Title",
+            "description": "Title shown above the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "tier": "presentation"
+          },
+          {
+            "key": "xMax",
+            "type": "number",
+            "default": 4,
+            "label": "X Max",
+            "tier": "presentation"
+          },
+          {
+            "key": "xMin",
+            "type": "number",
+            "default": -4,
+            "label": "X Min",
+            "tier": "presentation"
+          },
+          {
+            "key": "yMax",
+            "type": "number",
+            "default": 0.5,
+            "label": "Y Max",
+            "description": "Minimum top of the y axis; the canvas grows above it automatically when a small standard deviation pushes the peak higher.",
+            "tier": "presentation"
+          },
+          {
+            "key": "yMin",
+            "type": "number",
+            "default": 0,
+            "label": "Y Min",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "NormalDistributionScene",
+        "transitionEvents": [
+          "INIT",
+          "MODE_SELECTED",
+          "SET_MEAN",
+          "SET_STDDEV"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "curves",
+            "mean",
+            "peak",
+            "shapes",
+            "stdDev",
+            "title",
+            "yTop"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "NormalDistributionEnginePage",
+        "defaultPath": "/prob-normal-dist",
+        "primaryEntity": "NormalDistributionScene"
+      }
+    ],
+    "emittedEvents": [
+      "DIST_UPDATED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

@@ -45,7 +45,7 @@ export interface StdUiGridTacticsDemoBoardConfig {
   units?: unknown;
 }
 
-type _StdUiGridTacticsDemoBoardEntityName = 'GameState';
+type _StdUiGridTacticsDemoBoardEntityName = 'GameState' | 'ScoreState';
 type _StdUiGridTacticsDemoBoardListenTraitName = 'TacticsAuthority' | 'FxDecay' | 'RoundLogic' | 'ScoreKeeper' | 'AnimClock' | 'Player';
 
 /**

@@ -363,7 +363,7 @@ export function stdCircuitBreaker(params: StdCircuitBreakerParams): OrbitalDefin
   });
 }
 
-type _StdCircuitBreakerEntityName = 'ServiceNode';
+type _StdCircuitBreakerEntityName = 'ServiceNode' | 'IconItem' | 'TypographyItem' | 'StatusDotItem' | 'AlertItem' | 'StatDisplayItem' | 'MeterItem' | 'ButtonItem' | 'DividerItem' | 'SimpleGridItem';
 type _StdCircuitBreakerListenTraitName = 'ShieldIcon' | 'AlertTriangleIcon' | 'ActivityIcon' | 'ServiceNodeLabel' | 'ClosedStatusDot' | 'OpenStatusDot' | 'HalfOpenStatusDot' | 'SuccessAlert' | 'ErrorAlert' | 'WarningAlert' | 'FailuresStat' | 'SuccessesStat' | 'FailuresMeter' | 'ResetButton' | 'CircuitDivider' | 'StatsGrid' | 'ServiceNodeCircuitBreaker';
 
 /**

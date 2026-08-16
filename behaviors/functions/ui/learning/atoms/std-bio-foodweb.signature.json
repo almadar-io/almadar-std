@@ -19,18 +19,28 @@
             "required": false
           },
           {
-            "name": "phase",
-            "type": "number",
+            "name": "species",
+            "type": "array",
             "required": false
           },
           {
-            "name": "nodes",
+            "name": "displayEdges",
             "type": "array",
+            "required": false
+          },
+          {
+            "name": "generation",
+            "type": "number",
             "required": false
           },
           {
             "name": "running",
             "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "narration",
+            "type": "string",
             "required": false
           }
         ],
@@ -41,15 +51,15 @@
       {
         "name": "BioFoodwebSim",
         "emittedEvents": [
-          "POPULATION_UPDATED"
+          "POPULATIONS_UPDATED"
         ],
         "listenedEvents": [],
         "events": [
           {
-            "name": "POPULATION_UPDATED",
+            "name": "POPULATIONS_UPDATED",
             "direction": "emit",
-            "description": "The current food-web scene each tick — a composed listener (readout, graph) can subscribe; a harmless no-op when the atom runs standalone.",
-            "synonyms": "tick, frame, step, redraw",
+            "description": "Fires on every generation and on each perturbation with the full species roster (including this generation's population delta), the generation count, and the narration explaining what changed — a composed listener (readout, graph) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "step, tick, generation, population, cascade, ecosystem",
             "tier": "domain"
           },
           {
@@ -61,6 +71,26 @@
             "direction": "listen",
             "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
             "tier": "domain"
+          },
+          {
+            "name": "STEP",
+            "direction": "listen"
+          },
+          {
+            "name": "REMOVE_SPECIES",
+            "direction": "listen"
+          },
+          {
+            "name": "BOOST_SPECIES",
+            "direction": "listen"
+          },
+          {
+            "name": "RUN",
+            "direction": "listen"
+          },
+          {
+            "name": "RESET",
+            "direction": "listen"
           }
         ],
         "overridableConfigKeys": [
@@ -74,63 +104,63 @@
           },
           {
             "key": "edges",
-            "type": "[BioEdge]",
+            "type": "[FeedEdge]",
             "default": [
               {
-                "color": "#94a3b8",
-                "from": "rabbit",
-                "label": "eats",
-                "to": "grass"
+                "efficiency": 0.25,
+                "predator": "rabbit",
+                "prey": "grass",
+                "rate": 0.35
               },
               {
-                "color": "#94a3b8",
-                "from": "insect",
-                "label": "eats",
-                "to": "grass"
+                "efficiency": 0.2,
+                "predator": "insect",
+                "prey": "grass",
+                "rate": 0.3
               },
               {
-                "color": "#94a3b8",
-                "from": "fox",
-                "label": "eats",
-                "to": "rabbit"
+                "efficiency": 0.3,
+                "predator": "fox",
+                "prey": "rabbit",
+                "rate": 0.4
               },
               {
-                "color": "#94a3b8",
-                "from": "fox",
-                "label": "eats",
-                "to": "insect"
+                "efficiency": 0.25,
+                "predator": "fox",
+                "prey": "insect",
+                "rate": 0.3
               },
               {
-                "color": "#94a3b8",
-                "from": "hawk",
-                "label": "eats",
-                "to": "fox"
+                "efficiency": 0.25,
+                "predator": "hawk",
+                "prey": "fox",
+                "rate": 0.4
               }
             ],
-            "label": "Edges",
-            "description": "Directed predation links (from eater to prey) forming the food web.",
-            "tier": "presentation",
+            "label": "Feeding Edges",
+            "description": "Directed predation links — each generation a predator eats a share of its prey's population (rate) and converts a fraction of that (efficiency) into its own growth.",
+            "tier": "domain",
             "items": {
               "properties": {
-                "color": {
-                  "name": "color",
+                "efficiency": {
+                  "name": "efficiency",
                   "required": false,
-                  "type": "string"
+                  "type": "number"
                 },
-                "from": {
-                  "name": "from",
+                "predator": {
+                  "name": "predator",
                   "required": true,
                   "type": "string"
                 },
-                "label": {
-                  "name": "label",
-                  "required": false,
-                  "type": "string"
-                },
-                "to": {
-                  "name": "to",
+                "prey": {
+                  "name": "prey",
                   "required": true,
                   "type": "string"
+                },
+                "rate": {
+                  "name": "rate",
+                  "required": false,
+                  "type": "number"
                 }
               },
               "type": "object"
@@ -153,90 +183,155 @@
             "tier": "presentation"
           },
           {
-            "key": "nodes",
-            "type": "[BioNode]",
+            "key": "perturbBoostFactor",
+            "type": "number",
+            "default": 2,
+            "label": "Boost Factor",
+            "description": "Multiplier applied to the target species' population when Boost is pressed, clamped to its capacity.",
+            "tier": "domain"
+          },
+          {
+            "key": "perturbSpeciesId",
+            "type": "string",
+            "default": "hawk",
+            "label": "Perturbation Target",
+            "description": "Which species id the Remove/Boost buttons act on; must match an id in the species roster.",
+            "synonyms": "target species, cascade trigger",
+            "tier": "domain"
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": false,
+            "label": "Running",
+            "description": "When true the tick auto-advances a generation every 900ms; toggle with the Run button.",
+            "tier": "domain"
+          },
+          {
+            "key": "species",
+            "type": "[Species]",
             "default": [
               {
+                "capacity": 160,
                 "color": "#16a34a",
+                "declineRate": 0,
+                "delta": 0,
+                "growthRate": 0.18,
                 "id": "grass",
-                "kind": "organism",
                 "label": "Grass",
-                "radius": 20,
+                "population": 120,
+                "trophicLevel": "producer",
                 "x": 300,
-                "y": 340
+                "y": 300
               },
               {
+                "capacity": 90,
                 "color": "#a16207",
+                "declineRate": 0.1,
+                "delta": 0,
+                "growthRate": 0,
                 "id": "rabbit",
-                "kind": "organism",
                 "label": "Rabbit",
-                "radius": 18,
+                "population": 40,
+                "trophicLevel": "herbivore",
                 "x": 180,
-                "y": 220
+                "y": 230
               },
               {
+                "capacity": 100,
                 "color": "#0891b2",
+                "declineRate": 0.12,
+                "delta": 0,
+                "growthRate": 0,
                 "id": "insect",
-                "kind": "organism",
                 "label": "Insect",
-                "radius": 14,
+                "population": 55,
+                "trophicLevel": "herbivore",
                 "x": 420,
-                "y": 220
+                "y": 230
               },
               {
+                "capacity": 40,
                 "color": "#dc2626",
+                "declineRate": 0.15,
+                "delta": 0,
+                "growthRate": 0,
                 "id": "fox",
-                "kind": "organism",
                 "label": "Fox",
-                "radius": 20,
+                "population": 18,
+                "trophicLevel": "carnivore",
                 "x": 220,
-                "y": 90
+                "y": 110
               },
               {
+                "capacity": 25,
                 "color": "#7c3aed",
+                "declineRate": 0.18,
+                "delta": 0,
+                "growthRate": 0,
                 "id": "hawk",
-                "kind": "organism",
                 "label": "Hawk",
-                "radius": 22,
+                "population": 10,
+                "trophicLevel": "apex",
                 "x": 400,
-                "y": 60
+                "y": 80
               }
             ],
-            "label": "Nodes",
-            "description": "Five trophic species — producer (grass), herbivores (rabbit, insect), carnivore (fox), apex (hawk); radius encodes population size.",
-            "tier": "presentation",
+            "label": "Species",
+            "description": "Five trophic species — producer (grass), herbivores (rabbit, insect), carnivore (fox), apex predator (hawk) — each with a starting population, carrying capacity, and growth/decline rate.",
+            "tier": "domain",
             "items": {
               "properties": {
+                "capacity": {
+                  "name": "capacity",
+                  "required": false,
+                  "type": "number"
+                },
                 "color": {
                   "name": "color",
                   "required": false,
                   "type": "string"
                 },
+                "declineRate": {
+                  "name": "declineRate",
+                  "required": false,
+                  "type": "number"
+                },
+                "delta": {
+                  "name": "delta",
+                  "required": false,
+                  "type": "number"
+                },
+                "growthRate": {
+                  "name": "growthRate",
+                  "required": false,
+                  "type": "number"
+                },
                 "id": {
                   "name": "id",
-                  "required": false,
+                  "required": true,
                   "type": "string"
-                },
-                "kind": {
-                  "name": "kind",
-                  "required": false,
-                  "type": "string",
-                  "values": [
-                    "cell",
-                    "organelle",
-                    "molecule",
-                    "organism"
-                  ]
                 },
                 "label": {
                   "name": "label",
                   "required": false,
                   "type": "string"
                 },
-                "radius": {
-                  "name": "radius",
+                "population": {
+                  "name": "population",
                   "required": false,
                   "type": "number"
+                },
+                "trophicLevel": {
+                  "name": "trophicLevel",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "producer",
+                    "herbivore",
+                    "carnivore",
+                    "apex"
+                  ]
                 },
                 "x": {
                   "name": "x",
@@ -251,14 +346,6 @@
               },
               "type": "object"
             }
-          },
-          {
-            "key": "running",
-            "type": "boolean",
-            "default": true,
-            "label": "Running",
-            "description": "When true the tick advances the phase and recomputes every species radius; toggle to start/pause.",
-            "tier": "domain"
           },
           {
             "key": "title",
@@ -280,17 +367,24 @@
         "capabilities": [],
         "linkedEntity": "BioFoodwebState",
         "transitionEvents": [
+          "BOOST_SPECIES",
           "INIT",
-          "MODE_SELECTED"
+          "MODE_SELECTED",
+          "REMOVE_SPECIES",
+          "RESET",
+          "RUN",
+          "STEP"
         ],
         "entityRebindable": true,
         "entityContract": {
           "requires": [],
           "provides": [
             "active",
-            "nodes",
-            "phase",
+            "displayEdges",
+            "generation",
+            "narration",
             "running",
+            "species",
             "title"
           ]
         }
@@ -304,7 +398,7 @@
       }
     ],
     "emittedEvents": [
-      "POPULATION_UPDATED"
+      "POPULATIONS_UPDATED"
     ],
     "listenedEvents": [],
     "exposure": "palette",

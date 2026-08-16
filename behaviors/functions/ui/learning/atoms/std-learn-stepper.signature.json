@@ -34,8 +34,23 @@
             "required": false
           },
           {
+            "name": "currentStageLabel",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "currentStageDescription",
+            "type": "string",
+            "required": false
+          },
+          {
             "name": "categoryTally",
             "type": "string",
+            "required": false
+          },
+          {
+            "name": "tallyItems",
+            "type": "array",
             "required": false
           },
           {
@@ -85,19 +100,19 @@
           {
             "name": "NEXT",
             "direction": "listen",
-            "description": "Learner advanced the cursor to the next stage in the ordered roster.",
+            "description": "Learner advanced the cursor to the next stage in the ordered roster; clamps at the last stage with a narrated end note rather than wrapping.",
             "tier": "domain"
           },
           {
             "name": "PREV",
             "direction": "listen",
-            "description": "Learner moved the cursor back to the previous stage in the ordered roster.",
+            "description": "Learner moved the cursor back to the previous stage in the ordered roster; clamps before the first stage, reverting to the start prompt.",
             "tier": "domain"
           },
           {
             "name": "FILTER_CATEGORY",
             "direction": "listen",
-            "description": "Learner picked a category lens (or all) to filter which stage markers are visible on the axis.",
+            "description": "Learner picked a category lens (or all) — non-matching stage markers on the timeline dim rather than disappear, keeping the whole sequence in view.",
             "tier": "domain"
           },
           {
@@ -130,6 +145,14 @@
             "default": false,
             "label": "Animate",
             "description": "Enable continuous redraw loop.",
+            "tier": "presentation"
+          },
+          {
+            "key": "atEndNote",
+            "type": "string",
+            "default": " — Last stage; press Reset to review from the start.",
+            "label": "At-End Note",
+            "description": "Text appended to the current stage's description once the cursor reaches the final stage, narrating that Next is now deliberately clamped rather than doing nothing.",
             "tier": "presentation"
           },
           {
@@ -177,7 +200,7 @@
               }
             ],
             "label": "Categories",
-            "description": "Marker color and button label per stage category, used for both the axis dots and the FILTER_CATEGORY buttons, and for the running per-category tally.",
+            "description": "Marker color and button label per stage category, used for the axis dots, the legend, the FILTER_CATEGORY buttons, and the running per-category tally.",
             "synonyms": "category color, category legend, stage category, filter lens",
             "tier": "domain",
             "items": {
@@ -400,10 +423,13 @@
             "active",
             "activeFilter",
             "categoryTally",
+            "currentStageDescription",
+            "currentStageLabel",
             "cursorIndex",
             "filterButtons",
             "narration",
             "shapes",
+            "tallyItems",
             "title",
             "visibleThreadNote"
           ]

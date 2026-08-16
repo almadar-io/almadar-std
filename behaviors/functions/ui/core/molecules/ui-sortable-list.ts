@@ -56,6 +56,8 @@ export interface StdUiSortableListConfig {
   className?: string;
   /** Default: `"left"` */
   dragHandlePosition?: 'left' | 'right';
+  /** Default: `"id"` */
+  itemLabelField?: string;
   /** Default: `"REORDER"` */
   reorderEvent?: string;
   /** Default: `{}` */

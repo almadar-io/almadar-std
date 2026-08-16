@@ -45,7 +45,7 @@ export interface StdUiBattleBoardConfig {
   units?: unknown;
 }
 
-type _StdUiBattleBoardEntityName = 'GameState';
+type _StdUiBattleBoardEntityName = 'GameState' | 'ScoreState' | 'XpState';
 type _StdUiBattleBoardListenTraitName = 'Authority' | 'FxDecay' | 'RoundLogic' | 'ScoreKeeper' | 'XpKeeper' | 'AnimClock' | 'Player';
 
 /**

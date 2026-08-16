@@ -16,7 +16,7 @@ orbital SortableListOrbital {
         (fetch SortableListItem { emit: { success: SortableListLoaded } })
         (render-ui main {
           items: @entity
-          renderItem: (fn item { content: @item.id, type: typography })
+          renderItem: (fn item { content: (object/get @item @config.itemLabelField ""), type: typography })
           reorderEvent: @config.reorderEvent
           reorderPayload: @config.reorderPayload
           dragHandlePosition: @config.dragHandlePosition
@@ -26,7 +26,7 @@ orbital SortableListOrbital {
       SortableListLoaded -> idle
         (render-ui main {
           items: @payload.data
-          renderItem: (fn item { content: @item.id, type: typography })
+          renderItem: (fn item { content: (object/get @item @config.itemLabelField ""), type: typography })
           reorderEvent: @config.reorderEvent
           reorderPayload: @config.reorderPayload
           dragHandlePosition: @config.dragHandlePosition
@@ -48,6 +48,10 @@ orbital SortableListOrbital {
     }
 
     config {
+      itemLabelField : string = "id"
+        @label "Item label field"
+        @description "Row field rendered as each item's label (defaults to id)."
+        @tier "presentation"
       reorderEvent : string = "REORDER"
         @label "Reorder Event"
         @description "reorderEvent prop"

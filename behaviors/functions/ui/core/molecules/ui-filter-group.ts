@@ -73,7 +73,7 @@ export interface StdUiFilterGroupConfig {
   clearEvent?: string;
   /** Default: `"EVENT"` */
   event?: string;
-  /** Default: `[{"field":"Field","filterType":"text","label":"Label","options":["Item","Item 2"],"type":"text"},{"field":"Field 2","filterType":"select","label":"Label 2","options":["Item","Item 2"],"type":"select"}]` */
+  /** Default: `[{"field":"Field","filterType":"text","label":"Label","max":1,"min":1,"options":["Item","Item 2"],"step":1,"type":"text"},{"field":"Field 2","filterType":"select","label":"Label 2","max":2,"min":2,"options":["Item","Item 2"],"step":2,"type":"select"}]` */
   filters?: EntityRow[];
   isLoading?: boolean;
   /** Default: `"toolbar"` */

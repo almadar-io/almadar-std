@@ -1,5 +1,5 @@
 {
-  "description": "Food-web / ecosystem engine — five trophic species whose radii breathe at staggered phases (trophic lag) on biology-canvas. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches.",
+  "description": "Trophic-dynamics simulator — a config-declared species roster and feeding-edge graph. Step/Run advance a discrete generation: producers regrow toward capacity, consumers gain from what they eat and lose to predation and decay; node radii and count labels track population, and narration explains what changed. Remove/Boost the config-designated species to trigger a cascade. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches.",
   "ledger": {
     "entries": {
       "ent_01KXG051EDJ6H6YPBEF2BHTC1C": {
@@ -19,19 +19,64 @@
         "parent": "trt_01KXG051EDZAP8XEAYJV6B0WP7",
         "renames": []
       },
-      "evt_01KXG051EGVRZV5QK3JXMX9C2C": {
-        "bakedName": "POPULATION_UPDATED",
-        "curName": "POPULATION_UPDATED",
-        "id": "evt_01KXG051EGVRZV5QK3JXMX9C2C",
+      "evt_01KZEKSM1S50TYTW2KFFCCV8KZ": {
+        "bakedName": "MODE_SELECTED",
+        "curName": "MODE_SELECTED",
+        "id": "evt_01KZEKSM1S50TYTW2KFFCCV8KZ",
         "kind": "event",
         "owner": "workspace",
         "parent": "trt_01KXG051EDZAP8XEAYJV6B0WP7",
         "renames": []
       },
-      "evt_01KZEKSM1S50TYTW2KFFCCV8KZ": {
-        "bakedName": "MODE_SELECTED",
-        "curName": "MODE_SELECTED",
-        "id": "evt_01KZEKSM1S50TYTW2KFFCCV8KZ",
+      "evt_01M04BB8Q28N81NYXCFM86RW2X": {
+        "bakedName": "RUN",
+        "curName": "RUN",
+        "id": "evt_01M04BB8Q28N81NYXCFM86RW2X",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG051EDZAP8XEAYJV6B0WP7",
+        "renames": []
+      },
+      "evt_01M04BB8Q29BT08AEYS7KD6HCH": {
+        "bakedName": "POPULATIONS_UPDATED",
+        "curName": "POPULATIONS_UPDATED",
+        "id": "evt_01M04BB8Q29BT08AEYS7KD6HCH",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG051EDZAP8XEAYJV6B0WP7",
+        "renames": []
+      },
+      "evt_01M04BB8Q29ZMJ79VNVX2JNZMH": {
+        "bakedName": "REMOVE_SPECIES",
+        "curName": "REMOVE_SPECIES",
+        "id": "evt_01M04BB8Q29ZMJ79VNVX2JNZMH",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG051EDZAP8XEAYJV6B0WP7",
+        "renames": []
+      },
+      "evt_01M04BB8Q2PMKXCGTZTGQBAJHH": {
+        "bakedName": "BOOST_SPECIES",
+        "curName": "BOOST_SPECIES",
+        "id": "evt_01M04BB8Q2PMKXCGTZTGQBAJHH",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG051EDZAP8XEAYJV6B0WP7",
+        "renames": []
+      },
+      "evt_01M04BB8Q2W575G8ZKPKTXGM85": {
+        "bakedName": "STEP",
+        "curName": "STEP",
+        "id": "evt_01M04BB8Q2W575G8ZKPKTXGM85",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG051EDZAP8XEAYJV6B0WP7",
+        "renames": []
+      },
+      "evt_01M04BB8Q2XP3T1JHFPR55WTRK": {
+        "bakedName": "RESET",
+        "curName": "RESET",
+        "id": "evt_01M04BB8Q2XP3T1JHFPR55WTRK",
         "kind": "event",
         "owner": "workspace",
         "parent": "trt_01KXG051EDZAP8XEAYJV6B0WP7",
@@ -84,43 +129,58 @@
             "type": "string"
           },
           {
-            "default": 0.0,
-            "name": "phase",
-            "type": "number"
-          },
-          {
             "items": {
               "properties": {
+                "capacity": {
+                  "name": "capacity",
+                  "required": false,
+                  "type": "number"
+                },
                 "color": {
                   "name": "color",
                   "required": false,
                   "type": "string"
                 },
+                "declineRate": {
+                  "name": "declineRate",
+                  "required": false,
+                  "type": "number"
+                },
+                "delta": {
+                  "name": "delta",
+                  "required": false,
+                  "type": "number"
+                },
+                "growthRate": {
+                  "name": "growthRate",
+                  "required": false,
+                  "type": "number"
+                },
                 "id": {
                   "name": "id",
-                  "required": false,
+                  "required": true,
                   "type": "string"
-                },
-                "kind": {
-                  "name": "kind",
-                  "required": false,
-                  "type": "string",
-                  "values": [
-                    "cell",
-                    "organelle",
-                    "molecule",
-                    "organism"
-                  ]
                 },
                 "label": {
                   "name": "label",
                   "required": false,
                   "type": "string"
                 },
-                "radius": {
-                  "name": "radius",
+                "population": {
+                  "name": "population",
                   "required": false,
                   "type": "number"
+                },
+                "trophicLevel": {
+                  "name": "trophicLevel",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "producer",
+                    "herbivore",
+                    "carnivore",
+                    "apex"
+                  ]
                 },
                 "x": {
                   "name": "x",
@@ -135,13 +195,51 @@
               },
               "type": "object"
             },
-            "name": "nodes",
+            "name": "species",
             "type": "array"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "from": {
+                  "name": "from",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "to": {
+                  "name": "to",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "name": "displayEdges",
+            "type": "array"
+          },
+          {
+            "default": 0.0,
+            "name": "generation",
+            "type": "number"
           },
           {
             "default": false,
             "name": "running",
             "type": "boolean"
+          },
+          {
+            "name": "narration",
+            "type": "string"
           }
         ],
         "id": "ent_01KXG051EDJ6H6YPBEF2BHTC1C",
@@ -177,65 +275,65 @@
             "edges": {
               "default": [
                 {
-                  "color": "#94a3b8",
-                  "from": "rabbit",
-                  "label": "eats",
-                  "to": "grass"
+                  "efficiency": 0.25,
+                  "predator": "rabbit",
+                  "prey": "grass",
+                  "rate": 0.35
                 },
                 {
-                  "color": "#94a3b8",
-                  "from": "insect",
-                  "label": "eats",
-                  "to": "grass"
+                  "efficiency": 0.2,
+                  "predator": "insect",
+                  "prey": "grass",
+                  "rate": 0.3
                 },
                 {
-                  "color": "#94a3b8",
-                  "from": "fox",
-                  "label": "eats",
-                  "to": "rabbit"
+                  "efficiency": 0.3,
+                  "predator": "fox",
+                  "prey": "rabbit",
+                  "rate": 0.4
                 },
                 {
-                  "color": "#94a3b8",
-                  "from": "fox",
-                  "label": "eats",
-                  "to": "insect"
+                  "efficiency": 0.25,
+                  "predator": "fox",
+                  "prey": "insect",
+                  "rate": 0.3
                 },
                 {
-                  "color": "#94a3b8",
-                  "from": "hawk",
-                  "label": "eats",
-                  "to": "fox"
+                  "efficiency": 0.25,
+                  "predator": "hawk",
+                  "prey": "fox",
+                  "rate": 0.4
                 }
               ],
-              "description": "Directed predation links (from eater to prey) forming the food web.",
+              "description": "Directed predation links — each generation a predator eats a share of its prey's population (rate) and converts a fraction of that (efficiency) into its own growth.",
               "items": {
                 "properties": {
-                  "color": {
-                    "name": "color",
+                  "efficiency": {
+                    "name": "efficiency",
                     "required": false,
-                    "type": "string"
+                    "type": "number"
                   },
-                  "from": {
-                    "name": "from",
+                  "predator": {
+                    "name": "predator",
                     "required": true,
                     "type": "string"
                   },
-                  "label": {
-                    "name": "label",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "to": {
-                    "name": "to",
+                  "prey": {
+                    "name": "prey",
                     "required": true,
                     "type": "string"
+                  },
+                  "rate": {
+                    "name": "rate",
+                    "required": false,
+                    "type": "number"
                   }
                 },
                 "type": "object"
               },
-              "label": "Edges",
-              "tier": "presentation",
-              "type": "[BioEdge]"
+              "label": "Feeding Edges",
+              "tier": "domain",
+              "type": "[FeedEdge]"
             },
             "height": {
               "default": 400.0,
@@ -251,87 +349,149 @@
               "tier": "presentation",
               "type": "string"
             },
-            "nodes": {
+            "perturbBoostFactor": {
+              "default": 2.0,
+              "description": "Multiplier applied to the target species' population when Boost is pressed, clamped to its capacity.",
+              "label": "Boost Factor",
+              "tier": "domain",
+              "type": "number"
+            },
+            "perturbSpeciesId": {
+              "default": "hawk",
+              "description": "Which species id the Remove/Boost buttons act on; must match an id in the species roster.",
+              "label": "Perturbation Target",
+              "synonyms": "target species, cascade trigger",
+              "tier": "domain",
+              "type": "string"
+            },
+            "running": {
+              "default": false,
+              "description": "When true the tick auto-advances a generation every 900ms; toggle with the Run button.",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "species": {
               "default": [
                 {
+                  "capacity": 160.0,
                   "color": "#16a34a",
+                  "declineRate": 0.0,
+                  "delta": 0.0,
+                  "growthRate": 0.18,
                   "id": "grass",
-                  "kind": "organism",
                   "label": "Grass",
-                  "radius": 20.0,
+                  "population": 120.0,
+                  "trophicLevel": "producer",
                   "x": 300.0,
-                  "y": 340.0
+                  "y": 300.0
                 },
                 {
+                  "capacity": 90.0,
                   "color": "#a16207",
+                  "declineRate": 0.1,
+                  "delta": 0.0,
+                  "growthRate": 0.0,
                   "id": "rabbit",
-                  "kind": "organism",
                   "label": "Rabbit",
-                  "radius": 18.0,
+                  "population": 40.0,
+                  "trophicLevel": "herbivore",
                   "x": 180.0,
-                  "y": 220.0
+                  "y": 230.0
                 },
                 {
+                  "capacity": 100.0,
                   "color": "#0891b2",
+                  "declineRate": 0.12,
+                  "delta": 0.0,
+                  "growthRate": 0.0,
                   "id": "insect",
-                  "kind": "organism",
                   "label": "Insect",
-                  "radius": 14.0,
+                  "population": 55.0,
+                  "trophicLevel": "herbivore",
                   "x": 420.0,
-                  "y": 220.0
+                  "y": 230.0
                 },
                 {
+                  "capacity": 40.0,
                   "color": "#dc2626",
+                  "declineRate": 0.15,
+                  "delta": 0.0,
+                  "growthRate": 0.0,
                   "id": "fox",
-                  "kind": "organism",
                   "label": "Fox",
-                  "radius": 20.0,
+                  "population": 18.0,
+                  "trophicLevel": "carnivore",
                   "x": 220.0,
-                  "y": 90.0
+                  "y": 110.0
                 },
                 {
+                  "capacity": 25.0,
                   "color": "#7c3aed",
+                  "declineRate": 0.18,
+                  "delta": 0.0,
+                  "growthRate": 0.0,
                   "id": "hawk",
-                  "kind": "organism",
                   "label": "Hawk",
-                  "radius": 22.0,
+                  "population": 10.0,
+                  "trophicLevel": "apex",
                   "x": 400.0,
-                  "y": 60.0
+                  "y": 80.0
                 }
               ],
-              "description": "Five trophic species — producer (grass), herbivores (rabbit, insect), carnivore (fox), apex (hawk); radius encodes population size.",
+              "description": "Five trophic species — producer (grass), herbivores (rabbit, insect), carnivore (fox), apex predator (hawk) — each with a starting population, carrying capacity, and growth/decline rate.",
               "items": {
                 "properties": {
+                  "capacity": {
+                    "name": "capacity",
+                    "required": false,
+                    "type": "number"
+                  },
                   "color": {
                     "name": "color",
                     "required": false,
                     "type": "string"
                   },
+                  "declineRate": {
+                    "name": "declineRate",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "delta": {
+                    "name": "delta",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "growthRate": {
+                    "name": "growthRate",
+                    "required": false,
+                    "type": "number"
+                  },
                   "id": {
                     "name": "id",
-                    "required": false,
+                    "required": true,
                     "type": "string"
-                  },
-                  "kind": {
-                    "name": "kind",
-                    "required": false,
-                    "type": "string",
-                    "values": [
-                      "cell",
-                      "organelle",
-                      "molecule",
-                      "organism"
-                    ]
                   },
                   "label": {
                     "name": "label",
                     "required": false,
                     "type": "string"
                   },
-                  "radius": {
-                    "name": "radius",
+                  "population": {
+                    "name": "population",
                     "required": false,
                     "type": "number"
+                  },
+                  "trophicLevel": {
+                    "name": "trophicLevel",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "producer",
+                      "herbivore",
+                      "carnivore",
+                      "apex"
+                    ]
                   },
                   "x": {
                     "name": "x",
@@ -346,16 +506,9 @@
                 },
                 "type": "object"
               },
-              "label": "Nodes",
-              "tier": "presentation",
-              "type": "[BioNode]"
-            },
-            "running": {
-              "default": true,
-              "description": "When true the tick advances the phase and recomputes every species radius; toggle to start/pause.",
-              "label": "Running",
+              "label": "Species",
               "tier": "domain",
-              "type": "boolean"
+              "type": "[Species]"
             },
             "title": {
               "default": "Food Web",
@@ -374,26 +527,36 @@
           },
           "emits": [
             {
-              "description": "The current food-web scene each tick — a composed listener (readout, graph) can subscribe; a harmless no-op when the atom runs standalone.",
-              "event": "POPULATION_UPDATED",
-              "eventId": "evt_01KXG051EGVRZV5QK3JXMX9C2C",
+              "description": "Fires on every generation and on each perturbation with the full species roster (including this generation's population delta), the generation count, and the narration explaining what changed — a composed listener (readout, graph) can subscribe; a harmless no-op when the atom runs standalone.",
+              "event": "POPULATIONS_UPDATED",
+              "eventId": "evt_01M04BB8Q29BT08AEYS7KD6HCH",
               "payloadSchema": [
                 {
-                  "name": "nodes",
-                  "type": "[BioNode]"
+                  "name": "species",
+                  "type": "[Species]"
+                },
+                {
+                  "name": "generation",
+                  "type": "number"
+                },
+                {
+                  "name": "narration",
+                  "type": "string"
                 }
               ],
               "scope": "external",
-              "synonyms": "tick, frame, step, redraw",
+              "synonyms": "step, tick, generation, population, cascade, ecosystem",
               "tier": "domain"
             }
           ],
           "entityContract": {
             "provides": [
               "active",
-              "nodes",
-              "phase",
+              "displayEdges",
+              "generation",
+              "narration",
               "running",
+              "species",
               "title"
             ],
             "requires": []
@@ -428,17 +591,50 @@
                 "tier": "domain"
               },
               {
-                "description": "The current food-web scene each tick — a composed listener (readout, graph) can subscribe; a harmless no-op when the atom runs standalone.",
-                "id": "evt_01KXG051EGVRZV5QK3JXMX9C2C",
-                "key": "POPULATION_UPDATED",
-                "name": "Population Updated",
+                "id": "evt_01M04BB8Q2W575G8ZKPKTXGM85",
+                "key": "STEP",
+                "name": "Step"
+              },
+              {
+                "id": "evt_01M04BB8Q29ZMJ79VNVX2JNZMH",
+                "key": "REMOVE_SPECIES",
+                "name": "Remove Species"
+              },
+              {
+                "id": "evt_01M04BB8Q2PMKXCGTZTGQBAJHH",
+                "key": "BOOST_SPECIES",
+                "name": "Boost Species"
+              },
+              {
+                "id": "evt_01M04BB8Q28N81NYXCFM86RW2X",
+                "key": "RUN",
+                "name": "Run"
+              },
+              {
+                "id": "evt_01M04BB8Q2XP3T1JHFPR55WTRK",
+                "key": "RESET",
+                "name": "Reset"
+              },
+              {
+                "description": "Fires on every generation and on each perturbation with the full species roster (including this generation's population delta), the generation count, and the narration explaining what changed — a composed listener (readout, graph) can subscribe; a harmless no-op when the atom runs standalone.",
+                "id": "evt_01M04BB8Q29BT08AEYS7KD6HCH",
+                "key": "POPULATIONS_UPDATED",
+                "name": "Populations Updated",
                 "payloadSchema": [
                   {
-                    "name": "nodes",
-                    "type": "[BioNode]"
+                    "name": "species",
+                    "type": "[Species]"
+                  },
+                  {
+                    "name": "generation",
+                    "type": "number"
+                  },
+                  {
+                    "name": "narration",
+                    "type": "string"
                   }
                 ],
-                "synonyms": "tick, frame, step, redraw",
+                "synonyms": "step, tick, generation, population, cascade, ecosystem",
                 "tier": "domain"
               }
             ],
@@ -463,18 +659,49 @@
                   ],
                   [
                     "set",
-                    "@entity.phase",
-                    0.0
+                    "@entity.species",
+                    "@config.species"
                   ],
                   [
                     "set",
-                    "@entity.nodes",
-                    "@config.nodes"
+                    "@entity.displayEdges",
+                    [
+                      "array/map",
+                      "@config.edges",
+                      [
+                        "fn",
+                        "e",
+                        {
+                          "color": "#94a3b8",
+                          "from": [
+                            "object/get",
+                            "@e",
+                            "predator"
+                          ],
+                          "label": "eats",
+                          "to": [
+                            "object/get",
+                            "@e",
+                            "prey"
+                          ]
+                        }
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.generation",
+                    0.0
                   ],
                   [
                     "set",
                     "@entity.running",
                     "@config.running"
+                  ],
+                  [
+                    "set",
+                    "@entity.narration",
+                    "Ecosystem seeded. Press Step or Run to advance a generation."
                   ],
                   [
                     "render-ui",
@@ -489,12 +716,130 @@
                               "variant": "h4"
                             },
                             {
+                              "children": [
+                                {
+                                  "action": "STEP",
+                                  "label": "Step",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "RUN",
+                                  "label": "Run",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "action": "REMOVE_SPECIES",
+                                  "label": "Remove target",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "BOOST_SPECIES",
+                                  "label": "Boost target",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
                               "backgroundColor": "@config.backgroundColor",
-                              "edges": "@config.edges",
+                              "edges": "@entity.displayEdges",
                               "height": "@config.height",
-                              "nodes": "@entity.nodes",
+                              "nodes": [
+                                "array/map",
+                                "@entity.species",
+                                [
+                                  "fn",
+                                  "s",
+                                  {
+                                    "color": [
+                                      "object/get",
+                                      "@s",
+                                      "color"
+                                    ],
+                                    "id": [
+                                      "object/get",
+                                      "@s",
+                                      "id"
+                                    ],
+                                    "kind": "organism",
+                                    "label": [
+                                      "str/concat",
+                                      [
+                                        "object/get",
+                                        "@s",
+                                        "label"
+                                      ],
+                                      " (",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        [
+                                          "object/get",
+                                          "@s",
+                                          "population"
+                                        ]
+                                      ],
+                                      ")"
+                                    ],
+                                    "radius": [
+                                      "math/clamp",
+                                      [
+                                        "*",
+                                        [
+                                          "object/get",
+                                          "@s",
+                                          "population"
+                                        ],
+                                        0.4
+                                      ],
+                                      6.0,
+                                      55.0
+                                    ],
+                                    "x": [
+                                      "object/get",
+                                      "@s",
+                                      "x"
+                                    ],
+                                    "y": [
+                                      "object/get",
+                                      "@s",
+                                      "y"
+                                    ]
+                                  }
+                                ]
+                              ],
                               "type": "biology-canvas",
                               "width": "@config.width"
+                            },
+                            {
+                              "content": "@entity.narration",
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Generation ",
+                                [
+                                  "str/concat",
+                                  "",
+                                  "@entity.generation"
+                                ]
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
                             }
                           ],
                           "direction": "vertical",
@@ -508,9 +853,11 @@
                   ],
                   [
                     "emit",
-                    "POPULATION_UPDATED",
+                    "POPULATIONS_UPDATED",
                     {
-                      "nodes": "@entity.nodes"
+                      "generation": "@entity.generation",
+                      "narration": "@entity.narration",
+                      "species": "@entity.species"
                     }
                   ]
                 ],
@@ -538,18 +885,49 @@
                   ],
                   [
                     "set",
-                    "@entity.phase",
-                    0.0
+                    "@entity.species",
+                    "@config.species"
                   ],
                   [
                     "set",
-                    "@entity.nodes",
-                    "@config.nodes"
+                    "@entity.displayEdges",
+                    [
+                      "array/map",
+                      "@config.edges",
+                      [
+                        "fn",
+                        "e",
+                        {
+                          "color": "#94a3b8",
+                          "from": [
+                            "object/get",
+                            "@e",
+                            "predator"
+                          ],
+                          "label": "eats",
+                          "to": [
+                            "object/get",
+                            "@e",
+                            "prey"
+                          ]
+                        }
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.generation",
+                    0.0
                   ],
                   [
                     "set",
                     "@entity.running",
                     "@config.running"
+                  ],
+                  [
+                    "set",
+                    "@entity.narration",
+                    "Ecosystem seeded. Press Step or Run to advance a generation."
                   ],
                   [
                     "render-ui",
@@ -564,12 +942,130 @@
                               "variant": "h4"
                             },
                             {
+                              "children": [
+                                {
+                                  "action": "STEP",
+                                  "label": "Step",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "RUN",
+                                  "label": "Run",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "action": "REMOVE_SPECIES",
+                                  "label": "Remove target",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "BOOST_SPECIES",
+                                  "label": "Boost target",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
                               "backgroundColor": "@config.backgroundColor",
-                              "edges": "@config.edges",
+                              "edges": "@entity.displayEdges",
                               "height": "@config.height",
-                              "nodes": "@entity.nodes",
+                              "nodes": [
+                                "array/map",
+                                "@entity.species",
+                                [
+                                  "fn",
+                                  "s",
+                                  {
+                                    "color": [
+                                      "object/get",
+                                      "@s",
+                                      "color"
+                                    ],
+                                    "id": [
+                                      "object/get",
+                                      "@s",
+                                      "id"
+                                    ],
+                                    "kind": "organism",
+                                    "label": [
+                                      "str/concat",
+                                      [
+                                        "object/get",
+                                        "@s",
+                                        "label"
+                                      ],
+                                      " (",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        [
+                                          "object/get",
+                                          "@s",
+                                          "population"
+                                        ]
+                                      ],
+                                      ")"
+                                    ],
+                                    "radius": [
+                                      "math/clamp",
+                                      [
+                                        "*",
+                                        [
+                                          "object/get",
+                                          "@s",
+                                          "population"
+                                        ],
+                                        0.4
+                                      ],
+                                      6.0,
+                                      55.0
+                                    ],
+                                    "x": [
+                                      "object/get",
+                                      "@s",
+                                      "x"
+                                    ],
+                                    "y": [
+                                      "object/get",
+                                      "@s",
+                                      "y"
+                                    ]
+                                  }
+                                ]
+                              ],
                               "type": "biology-canvas",
                               "width": "@config.width"
+                            },
+                            {
+                              "content": "@entity.narration",
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Generation ",
+                                [
+                                  "str/concat",
+                                  "",
+                                  "@entity.generation"
+                                ]
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
                             }
                           ],
                           "direction": "vertical",
@@ -583,9 +1079,11 @@
                   ],
                   [
                     "emit",
-                    "POPULATION_UPDATED",
+                    "POPULATIONS_UPDATED",
                     {
-                      "nodes": "@entity.nodes"
+                      "generation": "@entity.generation",
+                      "narration": "@entity.narration",
+                      "species": "@entity.species"
                     }
                   ]
                 ],
@@ -598,6 +1096,1494 @@
                   "@config.matchMode"
                 ],
                 "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "let",
+                    [
+                      [
+                        "updated",
+                        [
+                          "array/map",
+                          "@entity.species",
+                          [
+                            "fn",
+                            "s",
+                            [
+                              "let",
+                              [
+                                [
+                                  "sid",
+                                  [
+                                    "object/get",
+                                    "@s",
+                                    "id"
+                                  ]
+                                ],
+                                [
+                                  "pop",
+                                  [
+                                    "object/get",
+                                    "@s",
+                                    "population"
+                                  ]
+                                ],
+                                [
+                                  "level",
+                                  [
+                                    "object/get",
+                                    "@s",
+                                    "trophicLevel"
+                                  ]
+                                ],
+                                [
+                                  "cap",
+                                  [
+                                    "object/get",
+                                    "@s",
+                                    "capacity"
+                                  ]
+                                ],
+                                [
+                                  "grow",
+                                  [
+                                    "object/get",
+                                    "@s",
+                                    "growthRate"
+                                  ]
+                                ],
+                                [
+                                  "decl",
+                                  [
+                                    "object/get",
+                                    "@s",
+                                    "declineRate"
+                                  ]
+                                ]
+                              ],
+                              [
+                                "let",
+                                [
+                                  [
+                                    "consumed",
+                                    [
+                                      "array/sum",
+                                      [
+                                        "array/map",
+                                        [
+                                          "array/filter",
+                                          "@config.edges",
+                                          [
+                                            "fn",
+                                            "e",
+                                            [
+                                              "==",
+                                              [
+                                                "object/get",
+                                                "@e",
+                                                "prey"
+                                              ],
+                                              "@sid"
+                                            ]
+                                          ]
+                                        ],
+                                        [
+                                          "fn",
+                                          "e",
+                                          [
+                                            "math/round",
+                                            [
+                                              "*",
+                                              [
+                                                "object/get",
+                                                [
+                                                  "array/find",
+                                                  "@entity.species",
+                                                  [
+                                                    "fn",
+                                                    "p",
+                                                    [
+                                                      "==",
+                                                      [
+                                                        "object/get",
+                                                        "@p",
+                                                        "id"
+                                                      ],
+                                                      [
+                                                        "object/get",
+                                                        "@e",
+                                                        "predator"
+                                                      ]
+                                                    ]
+                                                  ]
+                                                ],
+                                                "population"
+                                              ],
+                                              [
+                                                "object/get",
+                                                "@e",
+                                                "rate"
+                                              ]
+                                            ]
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "gained",
+                                    [
+                                      "array/sum",
+                                      [
+                                        "array/map",
+                                        [
+                                          "array/filter",
+                                          "@config.edges",
+                                          [
+                                            "fn",
+                                            "e",
+                                            [
+                                              "==",
+                                              [
+                                                "object/get",
+                                                "@e",
+                                                "predator"
+                                              ],
+                                              "@sid"
+                                            ]
+                                          ]
+                                        ],
+                                        [
+                                          "fn",
+                                          "e",
+                                          [
+                                            "math/round",
+                                            [
+                                              "*",
+                                              "@pop",
+                                              [
+                                                "object/get",
+                                                "@e",
+                                                "rate"
+                                              ],
+                                              [
+                                                "object/get",
+                                                "@e",
+                                                "efficiency"
+                                              ]
+                                            ]
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "let",
+                                  [
+                                    [
+                                      "newPop",
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@level",
+                                          "producer"
+                                        ],
+                                        [
+                                          "math/clamp",
+                                          [
+                                            "-",
+                                            [
+                                              "+",
+                                              "@pop",
+                                              [
+                                                "math/round",
+                                                [
+                                                  "*",
+                                                  [
+                                                    "-",
+                                                    "@cap",
+                                                    "@pop"
+                                                  ],
+                                                  "@grow"
+                                                ]
+                                              ]
+                                            ],
+                                            "@consumed"
+                                          ],
+                                          0.0,
+                                          "@cap"
+                                        ],
+                                        [
+                                          "math/clamp",
+                                          [
+                                            "-",
+                                            [
+                                              "+",
+                                              "@pop",
+                                              "@gained"
+                                            ],
+                                            [
+                                              "+",
+                                              [
+                                                "math/round",
+                                                [
+                                                  "*",
+                                                  "@pop",
+                                                  "@decl"
+                                                ]
+                                              ],
+                                              "@consumed"
+                                            ]
+                                          ],
+                                          0.0,
+                                          "@cap"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "object/merge",
+                                    "@s",
+                                    {
+                                      "delta": [
+                                        "-",
+                                        "@newPop",
+                                        "@pop"
+                                      ],
+                                      "population": "@newPop"
+                                    }
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "let",
+                      [
+                        [
+                          "dropped",
+                          [
+                            "array/find",
+                            "@updated",
+                            [
+                              "fn",
+                              "s",
+                              [
+                                "<=",
+                                [
+                                  "object/get",
+                                  "@s",
+                                  "delta"
+                                ],
+                                -2.0
+                              ]
+                            ]
+                          ]
+                        ],
+                        [
+                          "risen",
+                          [
+                            "array/find",
+                            "@updated",
+                            [
+                              "fn",
+                              "s",
+                              [
+                                ">=",
+                                [
+                                  "object/get",
+                                  "@s",
+                                  "delta"
+                                ],
+                                2.0
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "let",
+                        [
+                          [
+                            "story",
+                            [
+                              "if",
+                              [
+                                "and",
+                                "@dropped",
+                                "@risen"
+                              ],
+                              [
+                                "str/concat",
+                                [
+                                  "object/get",
+                                  "@dropped",
+                                  "label"
+                                ],
+                                " fell — ",
+                                [
+                                  "object/get",
+                                  "@risen",
+                                  "label"
+                                ],
+                                " felt the effect."
+                              ],
+                              [
+                                "if",
+                                "@dropped",
+                                [
+                                  "str/concat",
+                                  [
+                                    "object/get",
+                                    "@dropped",
+                                    "label"
+                                  ],
+                                  " declined this generation."
+                                ],
+                                [
+                                  "if",
+                                  "@risen",
+                                  [
+                                    "str/concat",
+                                    [
+                                      "object/get",
+                                      "@risen",
+                                      "label"
+                                    ],
+                                    " grew this generation."
+                                  ],
+                                  "Populations held steady this generation."
+                                ]
+                              ]
+                            ]
+                          ]
+                        ],
+                        [
+                          "do",
+                          [
+                            "set",
+                            "@entity.species",
+                            "@updated"
+                          ],
+                          [
+                            "set",
+                            "@entity.generation",
+                            [
+                              "+",
+                              "@entity.generation",
+                              1.0
+                            ]
+                          ],
+                          [
+                            "set",
+                            "@entity.narration",
+                            "@story"
+                          ],
+                          [
+                            "render-ui",
+                            "main",
+                            {
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@entity.title",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    {
+                                      "children": [
+                                        {
+                                          "action": "STEP",
+                                          "label": "Step",
+                                          "type": "button",
+                                          "variant": "primary"
+                                        },
+                                        {
+                                          "action": "RUN",
+                                          "label": "Run",
+                                          "type": "button",
+                                          "variant": "secondary"
+                                        },
+                                        {
+                                          "action": "RESET",
+                                          "label": "Reset",
+                                          "type": "button",
+                                          "variant": "ghost"
+                                        },
+                                        {
+                                          "action": "REMOVE_SPECIES",
+                                          "label": "Remove target",
+                                          "type": "button",
+                                          "variant": "secondary"
+                                        },
+                                        {
+                                          "action": "BOOST_SPECIES",
+                                          "label": "Boost target",
+                                          "type": "button",
+                                          "variant": "secondary"
+                                        }
+                                      ],
+                                      "direction": "horizontal",
+                                      "gap": "sm",
+                                      "type": "stack"
+                                    },
+                                    {
+                                      "backgroundColor": "@config.backgroundColor",
+                                      "edges": "@entity.displayEdges",
+                                      "height": "@config.height",
+                                      "nodes": [
+                                        "array/map",
+                                        "@entity.species",
+                                        [
+                                          "fn",
+                                          "s",
+                                          {
+                                            "color": [
+                                              "object/get",
+                                              "@s",
+                                              "color"
+                                            ],
+                                            "id": [
+                                              "object/get",
+                                              "@s",
+                                              "id"
+                                            ],
+                                            "kind": "organism",
+                                            "label": [
+                                              "str/concat",
+                                              [
+                                                "object/get",
+                                                "@s",
+                                                "label"
+                                              ],
+                                              " (",
+                                              [
+                                                "str/concat",
+                                                "",
+                                                [
+                                                  "object/get",
+                                                  "@s",
+                                                  "population"
+                                                ]
+                                              ],
+                                              ")"
+                                            ],
+                                            "radius": [
+                                              "math/clamp",
+                                              [
+                                                "*",
+                                                [
+                                                  "object/get",
+                                                  "@s",
+                                                  "population"
+                                                ],
+                                                0.4
+                                              ],
+                                              6.0,
+                                              55.0
+                                            ],
+                                            "x": [
+                                              "object/get",
+                                              "@s",
+                                              "x"
+                                            ],
+                                            "y": [
+                                              "object/get",
+                                              "@s",
+                                              "y"
+                                            ]
+                                          }
+                                        ]
+                                      ],
+                                      "type": "biology-canvas",
+                                      "width": "@config.width"
+                                    },
+                                    {
+                                      "content": "@entity.narration",
+                                      "type": "typography",
+                                      "variant": "body"
+                                    },
+                                    {
+                                      "content": [
+                                        "str/concat",
+                                        "Generation ",
+                                        [
+                                          "str/concat",
+                                          "",
+                                          "@entity.generation"
+                                        ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "md",
+                                  "type": "stack"
+                                }
+                              ],
+                              "padding": "md",
+                              "type": "box"
+                            }
+                          ],
+                          [
+                            "emit",
+                            "POPULATIONS_UPDATED",
+                            {
+                              "generation": "@entity.generation",
+                              "narration": "@entity.narration",
+                              "species": "@entity.species"
+                            }
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                "event": "STEP",
+                "eventId": "evt_01M04BB8Q2W575G8ZKPKTXGM85",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "let",
+                    [
+                      [
+                        "target",
+                        [
+                          "array/find",
+                          "@entity.species",
+                          [
+                            "fn",
+                            "s",
+                            [
+                              "==",
+                              [
+                                "object/get",
+                                "@s",
+                                "id"
+                              ],
+                              "@config.perturbSpeciesId"
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.species",
+                        [
+                          "array/map",
+                          "@entity.species",
+                          [
+                            "fn",
+                            "s",
+                            [
+                              "if",
+                              [
+                                "==",
+                                [
+                                  "object/get",
+                                  "@s",
+                                  "id"
+                                ],
+                                "@config.perturbSpeciesId"
+                              ],
+                              [
+                                "object/merge",
+                                "@s",
+                                {
+                                  "delta": [
+                                    "-",
+                                    0.0,
+                                    [
+                                      "object/get",
+                                      "@s",
+                                      "population"
+                                    ]
+                                  ],
+                                  "population": 0.0
+                                }
+                              ],
+                              [
+                                "object/merge",
+                                "@s",
+                                {
+                                  "delta": 0.0
+                                }
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.narration",
+                        [
+                          "str/concat",
+                          [
+                            "object/get",
+                            "@target",
+                            "label"
+                          ],
+                          " removed from the food web — press Step to watch the cascade."
+                        ]
+                      ],
+                      [
+                        "render-ui",
+                        "main",
+                        {
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "content": "@entity.title",
+                                  "type": "typography",
+                                  "variant": "h4"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "action": "STEP",
+                                      "label": "Step",
+                                      "type": "button",
+                                      "variant": "primary"
+                                    },
+                                    {
+                                      "action": "RUN",
+                                      "label": "Run",
+                                      "type": "button",
+                                      "variant": "secondary"
+                                    },
+                                    {
+                                      "action": "RESET",
+                                      "label": "Reset",
+                                      "type": "button",
+                                      "variant": "ghost"
+                                    },
+                                    {
+                                      "action": "REMOVE_SPECIES",
+                                      "label": "Remove target",
+                                      "type": "button",
+                                      "variant": "secondary"
+                                    },
+                                    {
+                                      "action": "BOOST_SPECIES",
+                                      "label": "Boost target",
+                                      "type": "button",
+                                      "variant": "secondary"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "type": "stack"
+                                },
+                                {
+                                  "backgroundColor": "@config.backgroundColor",
+                                  "edges": "@entity.displayEdges",
+                                  "height": "@config.height",
+                                  "nodes": [
+                                    "array/map",
+                                    "@entity.species",
+                                    [
+                                      "fn",
+                                      "s",
+                                      {
+                                        "color": [
+                                          "object/get",
+                                          "@s",
+                                          "color"
+                                        ],
+                                        "id": [
+                                          "object/get",
+                                          "@s",
+                                          "id"
+                                        ],
+                                        "kind": "organism",
+                                        "label": [
+                                          "str/concat",
+                                          [
+                                            "object/get",
+                                            "@s",
+                                            "label"
+                                          ],
+                                          " (",
+                                          [
+                                            "str/concat",
+                                            "",
+                                            [
+                                              "object/get",
+                                              "@s",
+                                              "population"
+                                            ]
+                                          ],
+                                          ")"
+                                        ],
+                                        "radius": [
+                                          "math/clamp",
+                                          [
+                                            "*",
+                                            [
+                                              "object/get",
+                                              "@s",
+                                              "population"
+                                            ],
+                                            0.4
+                                          ],
+                                          6.0,
+                                          55.0
+                                        ],
+                                        "x": [
+                                          "object/get",
+                                          "@s",
+                                          "x"
+                                        ],
+                                        "y": [
+                                          "object/get",
+                                          "@s",
+                                          "y"
+                                        ]
+                                      }
+                                    ]
+                                  ],
+                                  "type": "biology-canvas",
+                                  "width": "@config.width"
+                                },
+                                {
+                                  "content": "@entity.narration",
+                                  "type": "typography",
+                                  "variant": "body"
+                                },
+                                {
+                                  "content": [
+                                    "str/concat",
+                                    "Generation ",
+                                    [
+                                      "str/concat",
+                                      "",
+                                      "@entity.generation"
+                                    ]
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "md",
+                              "type": "stack"
+                            }
+                          ],
+                          "padding": "md",
+                          "type": "box"
+                        }
+                      ],
+                      [
+                        "emit",
+                        "POPULATIONS_UPDATED",
+                        {
+                          "generation": "@entity.generation",
+                          "narration": "@entity.narration",
+                          "species": "@entity.species"
+                        }
+                      ]
+                    ]
+                  ]
+                ],
+                "event": "REMOVE_SPECIES",
+                "eventId": "evt_01M04BB8Q29ZMJ79VNVX2JNZMH",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "let",
+                    [
+                      [
+                        "target",
+                        [
+                          "array/find",
+                          "@entity.species",
+                          [
+                            "fn",
+                            "s",
+                            [
+                              "==",
+                              [
+                                "object/get",
+                                "@s",
+                                "id"
+                              ],
+                              "@config.perturbSpeciesId"
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.species",
+                        [
+                          "array/map",
+                          "@entity.species",
+                          [
+                            "fn",
+                            "s",
+                            [
+                              "if",
+                              [
+                                "==",
+                                [
+                                  "object/get",
+                                  "@s",
+                                  "id"
+                                ],
+                                "@config.perturbSpeciesId"
+                              ],
+                              [
+                                "object/merge",
+                                "@s",
+                                {
+                                  "delta": [
+                                    "-",
+                                    [
+                                      "math/clamp",
+                                      [
+                                        "*",
+                                        [
+                                          "object/get",
+                                          "@s",
+                                          "population"
+                                        ],
+                                        "@config.perturbBoostFactor"
+                                      ],
+                                      0.0,
+                                      [
+                                        "object/get",
+                                        "@s",
+                                        "capacity"
+                                      ]
+                                    ],
+                                    [
+                                      "object/get",
+                                      "@s",
+                                      "population"
+                                    ]
+                                  ],
+                                  "population": [
+                                    "math/clamp",
+                                    [
+                                      "*",
+                                      [
+                                        "object/get",
+                                        "@s",
+                                        "population"
+                                      ],
+                                      "@config.perturbBoostFactor"
+                                    ],
+                                    0.0,
+                                    [
+                                      "object/get",
+                                      "@s",
+                                      "capacity"
+                                    ]
+                                  ]
+                                }
+                              ],
+                              [
+                                "object/merge",
+                                "@s",
+                                {
+                                  "delta": 0.0
+                                }
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.narration",
+                        [
+                          "str/concat",
+                          [
+                            "object/get",
+                            "@target",
+                            "label"
+                          ],
+                          " boosted — press Step to watch the ripple effects."
+                        ]
+                      ],
+                      [
+                        "render-ui",
+                        "main",
+                        {
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "content": "@entity.title",
+                                  "type": "typography",
+                                  "variant": "h4"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "action": "STEP",
+                                      "label": "Step",
+                                      "type": "button",
+                                      "variant": "primary"
+                                    },
+                                    {
+                                      "action": "RUN",
+                                      "label": "Run",
+                                      "type": "button",
+                                      "variant": "secondary"
+                                    },
+                                    {
+                                      "action": "RESET",
+                                      "label": "Reset",
+                                      "type": "button",
+                                      "variant": "ghost"
+                                    },
+                                    {
+                                      "action": "REMOVE_SPECIES",
+                                      "label": "Remove target",
+                                      "type": "button",
+                                      "variant": "secondary"
+                                    },
+                                    {
+                                      "action": "BOOST_SPECIES",
+                                      "label": "Boost target",
+                                      "type": "button",
+                                      "variant": "secondary"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "type": "stack"
+                                },
+                                {
+                                  "backgroundColor": "@config.backgroundColor",
+                                  "edges": "@entity.displayEdges",
+                                  "height": "@config.height",
+                                  "nodes": [
+                                    "array/map",
+                                    "@entity.species",
+                                    [
+                                      "fn",
+                                      "s",
+                                      {
+                                        "color": [
+                                          "object/get",
+                                          "@s",
+                                          "color"
+                                        ],
+                                        "id": [
+                                          "object/get",
+                                          "@s",
+                                          "id"
+                                        ],
+                                        "kind": "organism",
+                                        "label": [
+                                          "str/concat",
+                                          [
+                                            "object/get",
+                                            "@s",
+                                            "label"
+                                          ],
+                                          " (",
+                                          [
+                                            "str/concat",
+                                            "",
+                                            [
+                                              "object/get",
+                                              "@s",
+                                              "population"
+                                            ]
+                                          ],
+                                          ")"
+                                        ],
+                                        "radius": [
+                                          "math/clamp",
+                                          [
+                                            "*",
+                                            [
+                                              "object/get",
+                                              "@s",
+                                              "population"
+                                            ],
+                                            0.4
+                                          ],
+                                          6.0,
+                                          55.0
+                                        ],
+                                        "x": [
+                                          "object/get",
+                                          "@s",
+                                          "x"
+                                        ],
+                                        "y": [
+                                          "object/get",
+                                          "@s",
+                                          "y"
+                                        ]
+                                      }
+                                    ]
+                                  ],
+                                  "type": "biology-canvas",
+                                  "width": "@config.width"
+                                },
+                                {
+                                  "content": "@entity.narration",
+                                  "type": "typography",
+                                  "variant": "body"
+                                },
+                                {
+                                  "content": [
+                                    "str/concat",
+                                    "Generation ",
+                                    [
+                                      "str/concat",
+                                      "",
+                                      "@entity.generation"
+                                    ]
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "md",
+                              "type": "stack"
+                            }
+                          ],
+                          "padding": "md",
+                          "type": "box"
+                        }
+                      ],
+                      [
+                        "emit",
+                        "POPULATIONS_UPDATED",
+                        {
+                          "generation": "@entity.generation",
+                          "narration": "@entity.narration",
+                          "species": "@entity.species"
+                        }
+                      ]
+                    ]
+                  ]
+                ],
+                "event": "BOOST_SPECIES",
+                "eventId": "evt_01M04BB8Q2PMKXCGTZTGQBAJHH",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.running",
+                    [
+                      "not",
+                      "@entity.running"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.narration",
+                    [
+                      "if",
+                      "@entity.running",
+                      "Running — population dynamics advance automatically.",
+                      "Paused — press Step to advance manually."
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "STEP",
+                                  "label": "Step",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "RUN",
+                                  "label": "Run",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "action": "REMOVE_SPECIES",
+                                  "label": "Remove target",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "BOOST_SPECIES",
+                                  "label": "Boost target",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "backgroundColor": "@config.backgroundColor",
+                              "edges": "@entity.displayEdges",
+                              "height": "@config.height",
+                              "nodes": [
+                                "array/map",
+                                "@entity.species",
+                                [
+                                  "fn",
+                                  "s",
+                                  {
+                                    "color": [
+                                      "object/get",
+                                      "@s",
+                                      "color"
+                                    ],
+                                    "id": [
+                                      "object/get",
+                                      "@s",
+                                      "id"
+                                    ],
+                                    "kind": "organism",
+                                    "label": [
+                                      "str/concat",
+                                      [
+                                        "object/get",
+                                        "@s",
+                                        "label"
+                                      ],
+                                      " (",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        [
+                                          "object/get",
+                                          "@s",
+                                          "population"
+                                        ]
+                                      ],
+                                      ")"
+                                    ],
+                                    "radius": [
+                                      "math/clamp",
+                                      [
+                                        "*",
+                                        [
+                                          "object/get",
+                                          "@s",
+                                          "population"
+                                        ],
+                                        0.4
+                                      ],
+                                      6.0,
+                                      55.0
+                                    ],
+                                    "x": [
+                                      "object/get",
+                                      "@s",
+                                      "x"
+                                    ],
+                                    "y": [
+                                      "object/get",
+                                      "@s",
+                                      "y"
+                                    ]
+                                  }
+                                ]
+                              ],
+                              "type": "biology-canvas",
+                              "width": "@config.width"
+                            },
+                            {
+                              "content": "@entity.narration",
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Generation ",
+                                [
+                                  "str/concat",
+                                  "",
+                                  "@entity.generation"
+                                ]
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "POPULATIONS_UPDATED",
+                    {
+                      "generation": "@entity.generation",
+                      "narration": "@entity.narration",
+                      "species": "@entity.species"
+                    }
+                  ]
+                ],
+                "event": "RUN",
+                "eventId": "evt_01M04BB8Q28N81NYXCFM86RW2X",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.species",
+                    "@config.species"
+                  ],
+                  [
+                    "set",
+                    "@entity.generation",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.narration",
+                    "Ecosystem reset. Press Step or Run to advance a generation."
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "STEP",
+                                  "label": "Step",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "RUN",
+                                  "label": "Run",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "action": "REMOVE_SPECIES",
+                                  "label": "Remove target",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "BOOST_SPECIES",
+                                  "label": "Boost target",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "backgroundColor": "@config.backgroundColor",
+                              "edges": "@entity.displayEdges",
+                              "height": "@config.height",
+                              "nodes": [
+                                "array/map",
+                                "@entity.species",
+                                [
+                                  "fn",
+                                  "s",
+                                  {
+                                    "color": [
+                                      "object/get",
+                                      "@s",
+                                      "color"
+                                    ],
+                                    "id": [
+                                      "object/get",
+                                      "@s",
+                                      "id"
+                                    ],
+                                    "kind": "organism",
+                                    "label": [
+                                      "str/concat",
+                                      [
+                                        "object/get",
+                                        "@s",
+                                        "label"
+                                      ],
+                                      " (",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        [
+                                          "object/get",
+                                          "@s",
+                                          "population"
+                                        ]
+                                      ],
+                                      ")"
+                                    ],
+                                    "radius": [
+                                      "math/clamp",
+                                      [
+                                        "*",
+                                        [
+                                          "object/get",
+                                          "@s",
+                                          "population"
+                                        ],
+                                        0.4
+                                      ],
+                                      6.0,
+                                      55.0
+                                    ],
+                                    "x": [
+                                      "object/get",
+                                      "@s",
+                                      "x"
+                                    ],
+                                    "y": [
+                                      "object/get",
+                                      "@s",
+                                      "y"
+                                    ]
+                                  }
+                                ]
+                              ],
+                              "type": "biology-canvas",
+                              "width": "@config.width"
+                            },
+                            {
+                              "content": "@entity.narration",
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Generation ",
+                                [
+                                  "str/concat",
+                                  "",
+                                  "@entity.generation"
+                                ]
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "POPULATIONS_UPDATED",
+                    {
+                      "generation": "@entity.generation",
+                      "narration": "@entity.narration",
+                      "species": "@entity.species"
+                    }
+                  ]
+                ],
+                "event": "RESET",
+                "eventId": "evt_01M04BB8Q2XP3T1JHFPR55WTRK",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
               }
             ]
           },
@@ -605,175 +2591,555 @@
             {
               "effects": [
                 [
-                  "set",
-                  "@entity.phase",
+                  "let",
                   [
-                    "+",
-                    "@entity.phase",
-                    3.0
-                  ]
-                ],
-                [
-                  "set",
-                  "@entity.nodes",
-                  [
-                    "array/map",
-                    "@entity.nodes",
                     [
-                      "fn",
-                      "n",
+                      "updated",
                       [
-                        "let",
+                        "array/map",
+                        "@entity.species",
                         [
-                          [
-                            "off",
-                            [
-                              "if",
-                              [
-                                "=",
-                                [
-                                  "object/get",
-                                  "@n",
-                                  "id"
-                                ],
-                                "grass"
-                              ],
-                              0.0,
-                              [
-                                "if",
-                                [
-                                  "=",
-                                  [
-                                    "object/get",
-                                    "@n",
-                                    "id"
-                                  ],
-                                  "rabbit"
-                                ],
-                                48.0,
-                                [
-                                  "if",
-                                  [
-                                    "=",
-                                    [
-                                      "object/get",
-                                      "@n",
-                                      "id"
-                                    ],
-                                    "insect"
-                                  ],
-                                  96.0,
-                                  [
-                                    "if",
-                                    [
-                                      "=",
-                                      [
-                                        "object/get",
-                                        "@n",
-                                        "id"
-                                      ],
-                                      "fox"
-                                    ],
-                                    144.0,
-                                    192.0
-                                  ]
-                                ]
-                              ]
-                            ]
-                          ]
-                        ],
-                        [
-                          "let",
-                          [
-                            [
-                              "tw",
-                              [
-                                "math/abs",
-                                [
-                                  "-",
-                                  [
-                                    "math/mod",
-                                    [
-                                      "+",
-                                      "@entity.phase",
-                                      "@off"
-                                    ],
-                                    240.0
-                                  ],
-                                  120.0
-                                ]
-                              ]
-                            ]
-                          ],
+                          "fn",
+                          "s",
                           [
                             "let",
                             [
                               [
-                                "nr",
+                                "sid",
                                 [
-                                  "+",
-                                  12.0,
-                                  [
-                                    "*",
-                                    "@tw",
-                                    0.2
-                                  ]
+                                  "object/get",
+                                  "@s",
+                                  "id"
+                                ]
+                              ],
+                              [
+                                "pop",
+                                [
+                                  "object/get",
+                                  "@s",
+                                  "population"
+                                ]
+                              ],
+                              [
+                                "level",
+                                [
+                                  "object/get",
+                                  "@s",
+                                  "trophicLevel"
+                                ]
+                              ],
+                              [
+                                "cap",
+                                [
+                                  "object/get",
+                                  "@s",
+                                  "capacity"
+                                ]
+                              ],
+                              [
+                                "grow",
+                                [
+                                  "object/get",
+                                  "@s",
+                                  "growthRate"
+                                ]
+                              ],
+                              [
+                                "decl",
+                                [
+                                  "object/get",
+                                  "@s",
+                                  "declineRate"
                                 ]
                               ]
                             ],
                             [
-                              "object/merge",
-                              "@n",
-                              {
-                                "radius": "@nr"
-                              }
+                              "let",
+                              [
+                                [
+                                  "consumed",
+                                  [
+                                    "array/sum",
+                                    [
+                                      "array/map",
+                                      [
+                                        "array/filter",
+                                        "@config.edges",
+                                        [
+                                          "fn",
+                                          "e",
+                                          [
+                                            "==",
+                                            [
+                                              "object/get",
+                                              "@e",
+                                              "prey"
+                                            ],
+                                            "@sid"
+                                          ]
+                                        ]
+                                      ],
+                                      [
+                                        "fn",
+                                        "e",
+                                        [
+                                          "math/round",
+                                          [
+                                            "*",
+                                            [
+                                              "object/get",
+                                              [
+                                                "array/find",
+                                                "@entity.species",
+                                                [
+                                                  "fn",
+                                                  "p",
+                                                  [
+                                                    "==",
+                                                    [
+                                                      "object/get",
+                                                      "@p",
+                                                      "id"
+                                                    ],
+                                                    [
+                                                      "object/get",
+                                                      "@e",
+                                                      "predator"
+                                                    ]
+                                                  ]
+                                                ]
+                                              ],
+                                              "population"
+                                            ],
+                                            [
+                                              "object/get",
+                                              "@e",
+                                              "rate"
+                                            ]
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "gained",
+                                  [
+                                    "array/sum",
+                                    [
+                                      "array/map",
+                                      [
+                                        "array/filter",
+                                        "@config.edges",
+                                        [
+                                          "fn",
+                                          "e",
+                                          [
+                                            "==",
+                                            [
+                                              "object/get",
+                                              "@e",
+                                              "predator"
+                                            ],
+                                            "@sid"
+                                          ]
+                                        ]
+                                      ],
+                                      [
+                                        "fn",
+                                        "e",
+                                        [
+                                          "math/round",
+                                          [
+                                            "*",
+                                            "@pop",
+                                            [
+                                              "object/get",
+                                              "@e",
+                                              "rate"
+                                            ],
+                                            [
+                                              "object/get",
+                                              "@e",
+                                              "efficiency"
+                                            ]
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              [
+                                "let",
+                                [
+                                  [
+                                    "newPop",
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@level",
+                                        "producer"
+                                      ],
+                                      [
+                                        "math/clamp",
+                                        [
+                                          "-",
+                                          [
+                                            "+",
+                                            "@pop",
+                                            [
+                                              "math/round",
+                                              [
+                                                "*",
+                                                [
+                                                  "-",
+                                                  "@cap",
+                                                  "@pop"
+                                                ],
+                                                "@grow"
+                                              ]
+                                            ]
+                                          ],
+                                          "@consumed"
+                                        ],
+                                        0.0,
+                                        "@cap"
+                                      ],
+                                      [
+                                        "math/clamp",
+                                        [
+                                          "-",
+                                          [
+                                            "+",
+                                            "@pop",
+                                            "@gained"
+                                          ],
+                                          [
+                                            "+",
+                                            [
+                                              "math/round",
+                                              [
+                                                "*",
+                                                "@pop",
+                                                "@decl"
+                                              ]
+                                            ],
+                                            "@consumed"
+                                          ]
+                                        ],
+                                        0.0,
+                                        "@cap"
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "object/merge",
+                                  "@s",
+                                  {
+                                    "delta": [
+                                      "-",
+                                      "@newPop",
+                                      "@pop"
+                                    ],
+                                    "population": "@newPop"
+                                  }
+                                ]
+                              ]
                             ]
                           ]
                         ]
                       ]
                     ]
-                  ]
-                ],
-                [
-                  "render-ui",
-                  "main",
-                  {
-                    "children": [
-                      {
-                        "children": [
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "dropped",
+                        [
+                          "array/find",
+                          "@updated",
+                          [
+                            "fn",
+                            "s",
+                            [
+                              "<=",
+                              [
+                                "object/get",
+                                "@s",
+                                "delta"
+                              ],
+                              -2.0
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "risen",
+                        [
+                          "array/find",
+                          "@updated",
+                          [
+                            "fn",
+                            "s",
+                            [
+                              ">=",
+                              [
+                                "object/get",
+                                "@s",
+                                "delta"
+                              ],
+                              2.0
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "let",
+                      [
+                        [
+                          "story",
+                          [
+                            "if",
+                            [
+                              "and",
+                              "@dropped",
+                              "@risen"
+                            ],
+                            [
+                              "str/concat",
+                              [
+                                "object/get",
+                                "@dropped",
+                                "label"
+                              ],
+                              " fell — ",
+                              [
+                                "object/get",
+                                "@risen",
+                                "label"
+                              ],
+                              " felt the effect."
+                            ],
+                            [
+                              "if",
+                              "@dropped",
+                              [
+                                "str/concat",
+                                [
+                                  "object/get",
+                                  "@dropped",
+                                  "label"
+                                ],
+                                " declined this generation."
+                              ],
+                              [
+                                "if",
+                                "@risen",
+                                [
+                                  "str/concat",
+                                  [
+                                    "object/get",
+                                    "@risen",
+                                    "label"
+                                  ],
+                                  " grew this generation."
+                                ],
+                                "Populations held steady this generation."
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "do",
+                        [
+                          "set",
+                          "@entity.species",
+                          "@updated"
+                        ],
+                        [
+                          "set",
+                          "@entity.generation",
+                          [
+                            "+",
+                            "@entity.generation",
+                            1.0
+                          ]
+                        ],
+                        [
+                          "set",
+                          "@entity.narration",
+                          "@story"
+                        ],
+                        [
+                          "render-ui",
+                          "main",
                           {
-                            "content": "@entity.title",
-                            "type": "typography",
-                            "variant": "h4"
-                          },
-                          {
-                            "backgroundColor": "@config.backgroundColor",
-                            "edges": "@config.edges",
-                            "height": "@config.height",
-                            "nodes": "@entity.nodes",
-                            "type": "biology-canvas",
-                            "width": "@config.width"
+                            "children": [
+                              {
+                                "children": [
+                                  {
+                                    "content": "@entity.title",
+                                    "type": "typography",
+                                    "variant": "h4"
+                                  },
+                                  {
+                                    "children": [
+                                      {
+                                        "action": "STEP",
+                                        "label": "Step",
+                                        "type": "button",
+                                        "variant": "primary"
+                                      },
+                                      {
+                                        "action": "RUN",
+                                        "label": "Run",
+                                        "type": "button",
+                                        "variant": "secondary"
+                                      },
+                                      {
+                                        "action": "RESET",
+                                        "label": "Reset",
+                                        "type": "button",
+                                        "variant": "ghost"
+                                      },
+                                      {
+                                        "action": "REMOVE_SPECIES",
+                                        "label": "Remove target",
+                                        "type": "button",
+                                        "variant": "secondary"
+                                      },
+                                      {
+                                        "action": "BOOST_SPECIES",
+                                        "label": "Boost target",
+                                        "type": "button",
+                                        "variant": "secondary"
+                                      }
+                                    ],
+                                    "direction": "horizontal",
+                                    "gap": "sm",
+                                    "type": "stack"
+                                  },
+                                  {
+                                    "backgroundColor": "@config.backgroundColor",
+                                    "edges": "@entity.displayEdges",
+                                    "height": "@config.height",
+                                    "nodes": [
+                                      "array/map",
+                                      "@entity.species",
+                                      [
+                                        "fn",
+                                        "s",
+                                        {
+                                          "color": [
+                                            "object/get",
+                                            "@s",
+                                            "color"
+                                          ],
+                                          "id": [
+                                            "object/get",
+                                            "@s",
+                                            "id"
+                                          ],
+                                          "kind": "organism",
+                                          "label": [
+                                            "str/concat",
+                                            [
+                                              "object/get",
+                                              "@s",
+                                              "label"
+                                            ],
+                                            " (",
+                                            [
+                                              "str/concat",
+                                              "",
+                                              [
+                                                "object/get",
+                                                "@s",
+                                                "population"
+                                              ]
+                                            ],
+                                            ")"
+                                          ],
+                                          "radius": [
+                                            "math/clamp",
+                                            [
+                                              "*",
+                                              [
+                                                "object/get",
+                                                "@s",
+                                                "population"
+                                              ],
+                                              0.4
+                                            ],
+                                            6.0,
+                                            55.0
+                                          ],
+                                          "x": [
+                                            "object/get",
+                                            "@s",
+                                            "x"
+                                          ],
+                                          "y": [
+                                            "object/get",
+                                            "@s",
+                                            "y"
+                                          ]
+                                        }
+                                      ]
+                                    ],
+                                    "type": "biology-canvas",
+                                    "width": "@config.width"
+                                  },
+                                  {
+                                    "content": "@entity.narration",
+                                    "type": "typography",
+                                    "variant": "body"
+                                  },
+                                  {
+                                    "content": [
+                                      "str/concat",
+                                      "Generation ",
+                                      [
+                                        "str/concat",
+                                        "",
+                                        "@entity.generation"
+                                      ]
+                                    ],
+                                    "type": "typography",
+                                    "variant": "caption"
+                                  }
+                                ],
+                                "direction": "vertical",
+                                "gap": "md",
+                                "type": "stack"
+                              }
+                            ],
+                            "padding": "md",
+                            "type": "box"
                           }
                         ],
-                        "direction": "vertical",
-                        "gap": "md",
-                        "type": "stack"
-                      }
-                    ],
-                    "padding": "md",
-                    "type": "box"
-                  }
-                ],
-                [
-                  "emit",
-                  "POPULATION_UPDATED",
-                  {
-                    "nodes": "@entity.nodes"
-                  }
+                        [
+                          "emit",
+                          "POPULATIONS_UPDATED",
+                          {
+                            "generation": "@entity.generation",
+                            "narration": "@entity.narration",
+                            "species": "@entity.species"
+                          }
+                        ]
+                      ]
+                    ]
+                  ]
                 ]
               ],
               "guard": "@entity.running",
-              "interval": 32.0,
+              "interval": 900.0,
               "name": "foodwebTick"
             }
           ]

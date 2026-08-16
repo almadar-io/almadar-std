@@ -113,6 +113,13 @@ interface CanonicalOperatorEntry {
      * Omitted for operators with fixed return types.
      */
     returnSemantics?: string;
+    /**
+     * 0-indexed argument position of the operator's lambda/callback, when it
+     * takes one (`acceptsLambda`). The L2 validator uses it to reject a
+     * `(fn …)` form found in any OTHER argument position — the decidable
+     * wrong-arg-order class (e.g. `(array/reduce arr (fn …) init)`).
+     */
+    lambdaArgPosition?: number;
 }
 
 function toCanonicalEntry(meta: StdOperatorMeta): CanonicalOperatorEntry {
@@ -127,6 +134,9 @@ function toCanonicalEntry(meta: StdOperatorMeta): CanonicalOperatorEntry {
     if (meta.hasSideEffects) entry.hasSideEffects = true;
     if (meta.effect) entry.effect = meta.effect;
     if (meta.returnSemantics) entry.returnSemantics = meta.returnSemantics;
+    if (meta.acceptsLambda && meta.lambdaArgPosition != null) {
+        entry.lambdaArgPosition = meta.lambdaArgPosition;
+    }
     return entry;
 }
 

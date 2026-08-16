@@ -45,7 +45,7 @@ export interface StdUiTopdownRtsBoardConfig {
   units?: unknown;
 }
 
-type _StdUiTopdownRtsBoardEntityName = 'GameState';
+type _StdUiTopdownRtsBoardEntityName = 'GameState' | 'ScoreState';
 type _StdUiTopdownRtsBoardListenTraitName = 'Authority' | 'FxDecay' | 'RoundLogic' | 'ScoreKeeper' | 'AnimClock' | 'RtsClock' | 'RtsEconomy' | 'RtsWaves' | 'Player';
 
 /**

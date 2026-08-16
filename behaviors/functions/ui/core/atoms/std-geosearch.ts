@@ -129,7 +129,7 @@ export function stdGeosearch(params: StdGeosearchParams): OrbitalDefinition {
   });
 }
 
-type _StdGeosearchEntityName = 'GeoSearchResult';
+type _StdGeosearchEntityName = 'GeoSearchResult' | 'SearchInputItem' | 'MapViewItem' | 'RangeSliderItem' | 'StackItem';
 type _StdGeosearchListenTraitName = 'GeoSearchResultSearch';
 
 /**

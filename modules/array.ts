@@ -384,13 +384,13 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
     returnType: 'any',
     returnSemantics: 'lambda-result',
     acceptsLambda: true,
-    lambdaArgPosition: 1,
+    lambdaArgPosition: 2,
     params: [
       { name: 'arr', type: 'array', description: 'The array' },
-      { name: 'fn', type: 'lambda', description: 'Reducer function (acc, item) => newAcc' },
       { name: 'init', type: 'any', description: 'Initial accumulator value' },
+      { name: 'fn', type: 'lambda', description: 'Reducer function (acc, item) => newAcc' },
     ],
-    example: '["array/reduce", "@items", ["fn", ["acc", "x"], ["+", "@acc", "@x.price"]], 0]',
+    example: '["array/reduce", "@items", 0, ["fn", ["acc", "x"], ["+", "@acc", "@x.price"]]]',
   },
   'array/every': {
     module: 'array',

@@ -1,0 +1,331 @@
+app std-algo-dp "1.0.0"
+"DP table filler — steps through a recurrence (knapsack, LCS, coin change): each step computes one cell from its highlighted dependency cells, then a backtrack phase traces the optimal answer; renders algorithm-canvas. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital DpEngineOrbital {
+  type AlgoCell = {
+    id : number!
+    row : number!
+    col : number!
+    value : number
+    color : string
+    label : string
+  }
+
+  entity DpState [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    cells : [AlgoCell]
+    row : number = 0
+    col : number = 0
+    filled : number = 0
+    done : boolean = false
+    narration : string
+  }
+
+  trait DpSim -> @rebindable DpState [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.cells @config.cells)
+        (set @entity.row 0)
+        (set @entity.col 0)
+        (set @entity.filled 0)
+        (set @entity.done false)
+        (set @entity.narration (str/concat @config.instance " — press Step Cell to fill the table."))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: STEP_CELL, label: "Step Cell", variant: primary },
+                    { type: button, action: STEP_ROW, label: "Step Row", variant: secondary },
+                    { type: button, action: BACKTRACK, label: "Backtrack", variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: algorithm-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, cells: @entity.cells },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit DP_UPDATED { cells: @entity.cells, filled: @entity.filled, done: @entity.done, narration: @entity.narration })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.cells @config.cells)
+        (set @entity.row 0)
+        (set @entity.col 0)
+        (set @entity.filled 0)
+        (set @entity.done false)
+        (set @entity.narration (str/concat @config.instance " — press Step Cell to fill the table."))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: STEP_CELL, label: "Step Cell", variant: primary },
+                    { type: button, action: STEP_ROW, label: "Step Row", variant: secondary },
+                    { type: button, action: BACKTRACK, label: "Backtrack", variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: algorithm-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, cells: @entity.cells },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit DP_UPDATED { cells: @entity.cells, filled: @entity.filled, done: @entity.done, narration: @entity.narration })
+
+      STEP_CELL -> idle when (and (== @entity.active true) (not @entity.done))
+        (let (
+            (idx (+ (* @entity.row @config.cols) @entity.col))
+            (up (if (> @entity.row 0) (object/get (array/nth @entity.cells (- @idx @config.cols)) value) 0))
+            (left (if (> @entity.col 0) (object/get (array/nth @entity.cells (- @idx 1)) value) 0))
+            (val (+ 1 (math/max @up @left)))
+            (lastCell (and (== @entity.row (- @config.rows 1)) (== @entity.col (- @config.cols 1))))
+          )
+          (do
+            (set @entity.cells (array/map @entity.cells
+              (object/merge @item {
+                value: (if (== (object/get @item id) @idx) @val (object/get @item value))
+                label: (if (== (object/get @item id) @idx) (str/concat "" @val) (object/get @item label))
+                color: (if (== (object/get @item id) @idx) "#3b82f6"
+                         (if (and @config.cellHighlight (or (and (> @entity.row 0) (== (object/get @item id) (- @idx @config.cols))) (and (> @entity.col 0) (== (object/get @item id) (- @idx 1))))) "#f59e0b"
+                           (if (< (object/get @item id) @idx) "#22c55e" "#e2e8f0")))
+              })))
+            (set @entity.narration (str/concat (if @config.showRecurrence "cell(r,c) = 1 + max(up, left) · " "") "cell(" (str/concat "" @entity.row) "," (str/concat "" @entity.col) ") = 1 + max(" (str/concat "" @up) ", " (str/concat "" @left) ") = " (str/concat "" @val)))
+            (set @entity.filled (+ @entity.filled 1))
+            (set @entity.done @lastCell)
+            (set @entity.col (math/mod (+ @entity.col 1) @config.cols))
+            (set @entity.row (if (== @entity.col 0) (+ @entity.row 1) @entity.row))))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: STEP_CELL, label: "Step Cell", variant: primary },
+                    { type: button, action: STEP_ROW, label: "Step Row", variant: secondary },
+                    { type: button, action: BACKTRACK, label: "Backtrack", variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: algorithm-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, cells: @entity.cells },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit DP_UPDATED { cells: @entity.cells, filled: @entity.filled, done: @entity.done, narration: @entity.narration })
+
+      STEP_ROW -> idle when (and (== @entity.active true) (not @entity.done))
+        (let (
+            (remaining (array/drop (array/range @config.cols) @entity.col))
+            (newCells (array/reduce @remaining @entity.cells (fn acc c
+              (let (
+                  (idx (+ (* @entity.row @config.cols) @c))
+                  (up (if (> @entity.row 0) (object/get (array/nth @acc (- @idx @config.cols)) value) 0))
+                  (left (if (> @c 0) (object/get (array/nth @acc (- @idx 1)) value) 0))
+                  (val (+ 1 (math/max @up @left)))
+                )
+                (array/map @acc
+                  (if (== (object/get @item id) @idx)
+                    (object/merge @item { value: @val, label: (str/concat "" @val), color: "#22c55e" })
+                    @item))))))
+            (doneRow (>= (+ @entity.row 1) @config.rows))
+          )
+          (do
+            (set @entity.narration (str/concat "row " (str/concat "" @entity.row) " complete — " (str/concat "" (array/len @remaining)) " cells filled left to right"))
+            (set @entity.cells @newCells)
+            (set @entity.filled (+ @entity.filled (array/len @remaining)))
+            (set @entity.row (+ @entity.row 1))
+            (set @entity.col 0)
+            (set @entity.done @doneRow)))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: STEP_CELL, label: "Step Cell", variant: primary },
+                    { type: button, action: STEP_ROW, label: "Step Row", variant: secondary },
+                    { type: button, action: BACKTRACK, label: "Backtrack", variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: algorithm-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, cells: @entity.cells },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit DP_UPDATED { cells: @entity.cells, filled: @entity.filled, done: @entity.done, narration: @entity.narration })
+
+      BACKTRACK -> idle when (and (== @entity.active true) @entity.done)
+        (let (
+            (result (array/reduce (array/range (+ @config.rows @config.cols)) { path: [(- (* @config.rows @config.cols) 1)], cur: (- (* @config.rows @config.cols) 1) } (fn acc step
+              (let (
+                  (curIdx (object/get @acc cur))
+                  (r (math/floor (/ @curIdx @config.cols)))
+                  (c (math/mod @curIdx @config.cols))
+                  (upVal (if (> @r 0) (object/get (array/nth @entity.cells (- @curIdx @config.cols)) value) -1))
+                  (leftVal (if (> @c 0) (object/get (array/nth @entity.cells (- @curIdx 1)) value) -1))
+                  (stop (and (== @r 0) (== @c 0)))
+                )
+                (if @stop @acc
+                  { path: (array/append (object/get @acc path) (if (>= @upVal @leftVal) (- @curIdx @config.cols) (- @curIdx 1))), cur: (if (>= @upVal @leftVal) (- @curIdx @config.cols) (- @curIdx 1)) })))))
+            (pathIds (object/get @result path))
+          )
+          (do
+            (set @entity.cells (array/map @entity.cells
+              (if (array/includes @pathIds (object/get @item id))
+                (object/merge @item { color: "#8b5cf6" })
+                @item)))
+            (set @entity.narration (str/concat "backtrack — the optimal answer " (str/concat "" (object/get (array/last @entity.cells) value)) " is traced through " (str/concat "" (array/len @pathIds)) " cells"))))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: STEP_CELL, label: "Step Cell", variant: primary },
+                    { type: button, action: STEP_ROW, label: "Step Row", variant: secondary },
+                    { type: button, action: BACKTRACK, label: "Backtrack", variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: algorithm-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, cells: @entity.cells },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit DP_UPDATED { cells: @entity.cells, filled: @entity.filled, done: @entity.done, narration: @entity.narration })
+
+      RESET -> idle when (== @entity.active true)
+        (set @entity.cells @config.cells)
+        (set @entity.row 0)
+        (set @entity.col 0)
+        (set @entity.filled 0)
+        (set @entity.done false)
+        (set @entity.narration (str/concat @config.instance " — press Step Cell to fill the table."))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: STEP_CELL, label: "Step Cell", variant: primary },
+                    { type: button, action: STEP_ROW, label: "Step Row", variant: secondary },
+                    { type: button, action: BACKTRACK, label: "Backtrack", variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: algorithm-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, cells: @entity.cells },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit DP_UPDATED { cells: @entity.cells, filled: @entity.filled, done: @entity.done, narration: @entity.narration })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+    }
+
+    emits {
+      DP_UPDATED -> external {
+        cells : [AlgoCell]
+        filled : number
+        done : boolean
+        narration : string
+      }
+        @description "The DP table after each cell/row step or backtrack — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "dynamic programming, dp table, recurrence, memoization, knapsack, backtrack"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      problemPreset : string = "knapsack"
+        @label "Problem Preset"
+        @description "Which recurrence the trace narrates — knapsack, lcs, or coinchange; presets relabel the table, the fill-from-dependencies mechanism is the same."
+        @synonyms "dp problem, knapsack, longest common subsequence, coin change"
+        @tier "domain"
+      instance : string = "Knapsack: items (w2 v3), (w3 v4), (w4 v5); capacity 5"
+        @label "Instance"
+        @description "The concrete problem instance being solved, shown in the opening narration."
+        @synonyms "input, problem instance, weights and capacity"
+        @tier "domain"
+      rows : number = 4
+        @label "Rows"
+        @description "Number of table rows; rows * cols must equal the number of pre-allocated cells."
+        @tier "domain"
+      cols : number = 5
+        @label "Cols"
+        @description "Number of table columns; rows * cols must equal the number of pre-allocated cells."
+        @tier "domain"
+      showRecurrence : boolean = true
+        @label "Show Recurrence"
+        @description "Prefix each step's narration with the recurrence formula being applied."
+        @tier "presentation"
+      cellHighlight : boolean = true
+        @label "Cell Highlight"
+        @description "Highlight the dependency cells (up and left) in amber while a cell is computed."
+        @tier "presentation"
+      title : string = "DP Table"
+        @label "Title"
+        @description "Title shown above the canvas."
+        @tier "presentation"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      backgroundColor : string = "#f8fafc"
+        @label "Background Color"
+        @description "Canvas background color."
+        @tier "presentation"
+      cells : [AlgoCell] = [
+        { id: 0, row: 0, col: 0, value: 0, color: "#e2e8f0", label: "" },
+        { id: 1, row: 0, col: 1, value: 0, color: "#e2e8f0", label: "" },
+        { id: 2, row: 0, col: 2, value: 0, color: "#e2e8f0", label: "" },
+        { id: 3, row: 0, col: 3, value: 0, color: "#e2e8f0", label: "" },
+        { id: 4, row: 0, col: 4, value: 0, color: "#e2e8f0", label: "" },
+        { id: 5, row: 1, col: 0, value: 0, color: "#e2e8f0", label: "" },
+        { id: 6, row: 1, col: 1, value: 0, color: "#e2e8f0", label: "" },
+        { id: 7, row: 1, col: 2, value: 0, color: "#e2e8f0", label: "" },
+        { id: 8, row: 1, col: 3, value: 0, color: "#e2e8f0", label: "" },
+        { id: 9, row: 1, col: 4, value: 0, color: "#e2e8f0", label: "" },
+        { id: 10, row: 2, col: 0, value: 0, color: "#e2e8f0", label: "" },
+        { id: 11, row: 2, col: 1, value: 0, color: "#e2e8f0", label: "" },
+        { id: 12, row: 2, col: 2, value: 0, color: "#e2e8f0", label: "" },
+        { id: 13, row: 2, col: 3, value: 0, color: "#e2e8f0", label: "" },
+        { id: 14, row: 2, col: 4, value: 0, color: "#e2e8f0", label: "" },
+        { id: 15, row: 3, col: 0, value: 0, color: "#e2e8f0", label: "" },
+        { id: 16, row: 3, col: 1, value: 0, color: "#e2e8f0", label: "" },
+        { id: 17, row: 3, col: 2, value: 0, color: "#e2e8f0", label: "" },
+        { id: 18, row: 3, col: 3, value: 0, color: "#e2e8f0", label: "" },
+        { id: 19, row: 3, col: 4, value: 0, color: "#e2e8f0", label: "" }
+      ]
+        @label "Cells"
+        @description "Pre-allocated table cells in row-major order (id = row * cols + col); the filler recolours grey -> green (filled) -> blue (current) -> purple (backtrack path)."
+        @tier "presentation"
+    }
+  }
+
+  page "/algo-dp" as DpEnginePage -> DpSim
+}

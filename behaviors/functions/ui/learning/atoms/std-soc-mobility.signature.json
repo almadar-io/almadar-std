@@ -1,0 +1,338 @@
+[
+  {
+    "organism": "std-soc-mobility",
+    "orbital": "SocMobOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-soc-mobility.ts",
+    "entities": [
+      {
+        "name": "SocMobScene",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "matrix",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "showBenchmark",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "immobilityRate",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "upwardRate",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "ragsToRiches",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "shapes",
+            "type": "array",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "SocMobSim",
+        "emittedEvents": [
+          "MOBILITY_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "MOBILITY_UPDATED",
+            "direction": "emit",
+            "description": "The mobility-matrix state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "mobility update, transition matrix, immobility, rags to riches, intergenerational mobility",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "SET_CELL",
+            "direction": "listen",
+            "description": "Learner clicked a matrix cell to raise its transition probability by one step (wrapping past the cell max back to the cell min); the row then renormalizes to sum to 1.",
+            "tier": "domain"
+          },
+          {
+            "name": "TOGGLE_BENCHMARK",
+            "direction": "listen",
+            "description": "Learner toggled the perfect-mobility benchmark overlay (every quintile destination equally likely) on the heat grid.",
+            "tier": "domain"
+          },
+          {
+            "name": "RESET",
+            "direction": "listen",
+            "description": "Learner pressed Reset to restore the configured transition matrix.",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "animate",
+            "type": "boolean",
+            "default": false,
+            "label": "Animate",
+            "description": "Enable continuous redraw loop.",
+            "tier": "presentation"
+          },
+          {
+            "key": "backgroundColor",
+            "type": "string",
+            "default": "#f1f5f9",
+            "label": "Background Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "benchmarkMatrix",
+            "type": "[number]",
+            "default": [
+              0.2,
+              0.2,
+              0.2,
+              0.2,
+              0.2,
+              0.2,
+              0.2,
+              0.2,
+              0.2,
+              0.2,
+              0.2,
+              0.2,
+              0.2,
+              0.2,
+              0.2,
+              0.2,
+              0.2,
+              0.2,
+              0.2,
+              0.2,
+              0.2,
+              0.2,
+              0.2,
+              0.2,
+              0.2
+            ],
+            "label": "Benchmark Matrix",
+            "description": "Perfect-mobility benchmark shown by Toggle Benchmark: every child's quintile is equally likely whatever the parent's — a 0.2-uniform matrix, same flat 25-cell layout as Transition Matrix.",
+            "synonyms": "perfect mobility, benchmark, equal opportunity, mobility benchmark",
+            "tier": "domain",
+            "items": {
+              "type": "number"
+            }
+          },
+          {
+            "key": "cellMax",
+            "type": "number",
+            "default": 0.6,
+            "label": "Cell Max",
+            "description": "A click that would push a cell above this value wraps it back to Cell Min instead.",
+            "tier": "domain"
+          },
+          {
+            "key": "cellMin",
+            "type": "number",
+            "default": 0.05,
+            "label": "Cell Min",
+            "description": "Value a cell wraps back to after passing Cell Max.",
+            "tier": "domain"
+          },
+          {
+            "key": "cellSize",
+            "type": "number",
+            "default": 64,
+            "label": "Cell Size",
+            "description": "Pixel size of each matrix cell in the heat grid.",
+            "tier": "presentation"
+          },
+          {
+            "key": "cellStep",
+            "type": "number",
+            "default": 0.05,
+            "label": "Cell Step",
+            "description": "Amount added to a cell's probability on each click, before the row renormalizes.",
+            "tier": "domain"
+          },
+          {
+            "key": "gridX",
+            "type": "number",
+            "default": 160,
+            "label": "Grid X",
+            "description": "X coordinate of the heat grid's top-left corner.",
+            "tier": "presentation"
+          },
+          {
+            "key": "gridY",
+            "type": "number",
+            "default": 40,
+            "label": "Grid Y",
+            "description": "Y coordinate of the heat grid's top-left corner.",
+            "tier": "presentation"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 460,
+            "label": "Height",
+            "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "interactive",
+            "type": "boolean",
+            "default": false,
+            "label": "Interactive",
+            "description": "Enable pointer interaction on the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "quintileLabels",
+            "type": "[string]",
+            "default": [
+              "Top 20%",
+              "Upper-middle 20%",
+              "Middle 20%",
+              "Lower-middle 20%",
+              "Bottom 20%"
+            ],
+            "label": "Quintile Labels",
+            "description": "Display names of the five income quintiles, richest to poorest; index-aligned with both matrix rows and columns.",
+            "synonyms": "quintile, income quintile, social class, socioeconomic status",
+            "tier": "domain",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Intergenerational Mobility Matrix",
+            "label": "Title",
+            "description": "Title shown above the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "transitionMatrix",
+            "type": "[number]",
+            "default": [
+              0.4,
+              0.25,
+              0.17,
+              0.11,
+              0.07,
+              0.25,
+              0.3,
+              0.22,
+              0.14,
+              0.09,
+              0.17,
+              0.22,
+              0.26,
+              0.21,
+              0.14,
+              0.11,
+              0.15,
+              0.21,
+              0.27,
+              0.26,
+              0.07,
+              0.13,
+              0.19,
+              0.27,
+              0.34
+            ],
+            "label": "Transition Matrix",
+            "description": "Flat 25-cell quintile transition matrix (5 rows of 5): row = parent's quintile, column = child's, both ordered richest to poorest as in Quintile Labels; each row sums to 1. Cell 20 (bottom→top) is the rags-to-riches rate.",
+            "synonyms": "social mobility, intergenerational mobility, transition matrix, quintile, immobility, rags to riches, Great Gatsby curve",
+            "tier": "domain",
+            "items": {
+              "type": "number"
+            }
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 640,
+            "label": "Width",
+            "description": "Canvas width in pixels.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "SocMobScene",
+        "transitionEvents": [
+          "INIT",
+          "MODE_SELECTED",
+          "RESET",
+          "SET_CELL",
+          "TOGGLE_BENCHMARK"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "immobilityRate",
+            "matrix",
+            "ragsToRiches",
+            "shapes",
+            "showBenchmark",
+            "title",
+            "upwardRate"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "SocMobPage",
+        "defaultPath": "/soc-mobility",
+        "primaryEntity": "SocMobScene"
+      }
+    ],
+    "emittedEvents": [
+      "MOBILITY_UPDATED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

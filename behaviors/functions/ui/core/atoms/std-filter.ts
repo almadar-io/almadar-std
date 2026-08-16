@@ -244,7 +244,7 @@ export function stdFilterFilterTargetOrbital(params: StdFilterFilterTargetOrbita
                 ],
               },
             ],
-            'description': 'Field, label, control type, and options for each filter input',
+            'description': 'Field, label, control type, and options for each filter input. numberrange renders a min/max slider pair (bounded by min/max/step) and emits one FILTER per side as `<field>_min` / `<field>_max`, mirroring daterange\'s `<field>_from` / `<field>_to` convention.',
             'items': {
               'properties': {
                 'field': {
@@ -264,12 +264,24 @@ export function stdFilterFilterTargetOrbital(params: StdFilterFilterTargetOrbita
                     'date',
                     'daterange',
                     'date-range',
+                    'numberrange',
+                    'number-range',
                   ],
                 },
                 'label': {
                   'name': 'label',
                   'required': true,
                   'type': 'string',
+                },
+                'max': {
+                  'name': 'max',
+                  'required': false,
+                  'type': 'number',
+                },
+                'min': {
+                  'name': 'min',
+                  'required': false,
+                  'type': 'number',
                 },
                 'options': {
                   'items': {
@@ -279,10 +291,16 @@ export function stdFilterFilterTargetOrbital(params: StdFilterFilterTargetOrbita
                   'required': false,
                   'type': 'array',
                 },
+                'step': {
+                  'name': 'step',
+                  'required': false,
+                  'type': 'number',
+                },
               },
               'type': 'object',
             },
             'label': 'Filter controls',
+            'synonyms': 'numeric range, price range, min max, slider filter, range filter, threshold filter',
             'tier': 'presentation',
             'type': '[FilterSpec]',
           },

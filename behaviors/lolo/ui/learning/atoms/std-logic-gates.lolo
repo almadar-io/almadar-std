@@ -1,0 +1,427 @@
+app std-logic-gates "1.0.0"
+"Boolean circuit simulator — the learner toggles input pins, predicts the output bulb, then propagates values gate by gate (AND/OR/NOT/XOR) through the wired network to check the prediction. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital LogicGatesOrbital {
+  type LogicGateInput = {
+    id : string!
+    label : string
+    x : number!
+    y : number!
+    value : boolean
+  }
+  type LogicGateDef = {
+    id : string!
+    kind : "AND" | "OR" | "NOT" | "XOR"!
+    x : number!
+    y : number!
+  }
+  type LogicGateEdge = {
+    from : string!
+    to : string!
+  }
+  type LogicGateCircuit = {
+    id : string!
+    label : string
+    inputs : [LogicGateInput]
+    gates : [LogicGateDef]
+    edges : [LogicGateEdge]
+    output : string!
+  }
+
+  entity LogicGatesState [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    circuitIndex : number
+    inputs : [json]
+    gateValues : [json]
+    nodes : [json]
+    edges : [json]
+    propagated : boolean
+    prediction : string
+    feedback : string
+  }
+
+  trait LogicGatesSim -> @rebindable LogicGatesState [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.circuitIndex 0)
+        (set @entity.gateValues [])
+        (set @entity.propagated false)
+        (set @entity.prediction "")
+        (set @entity.feedback "")
+        (let (
+            (c (array/nth @config.circuits 0))
+          )
+          (do
+            (set @entity.inputs (object/get @c inputs))
+            (set @entity.edges (array/map (object/get @c edges) (fn e { from: (object/get @e from), to: (object/get @e to), color: "#94a3b8" })))
+            (set @entity.nodes (array/concat
+              (array/map (object/get @c inputs) (fn i { id: (object/get @i id), x: (object/get @i x), y: (object/get @i y), radius: 14, color: (if (object/get @i value) "#22c55e" "#94a3b8"), label: (object/get @i label), kind: "molecule" }))
+              (array/map (object/get @c gates) (fn g { id: (object/get @g id), x: (object/get @g x), y: (object/get @g y), radius: 20, color: "#cbd5e1", label: (object/get @g kind), kind: "molecule" }))))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: (object/get (array/nth @config.circuits @entity.circuitIndex) label) },
+                { type: stack, direction: horizontal, gap: sm, children: (array/map (array/take @entity.inputs @config.inputCount) (fn inp { type: button, action: TOGGLE_INPUT, actionPayload: { input: (object/get @inp id) }, label: (str/concat (object/get @inp label) " = " (if (object/get @inp value) "1" "0")), variant: (if (object/get @inp value) "primary" "secondary"), size: sm })) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: PREDICT_OUTPUT, actionPayload: { value: true }, label: "Predict 1", variant: secondary },
+                    { type: button, action: PREDICT_OUTPUT, actionPayload: { value: false }, label: "Predict 0", variant: secondary },
+                    { type: button, action: PROPAGATE, label: "Propagate", variant: primary },
+                    { type: button, action: NEXT_CIRCUIT, label: "Next Circuit", variant: ghost }
+                  ] },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: @entity.nodes, edges: @entity.edges, shapes: [], interactive: @config.interactive, animate: false },
+                { type: typography, variant: caption, content: @entity.feedback }
+              ] }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.circuitIndex 0)
+        (set @entity.gateValues [])
+        (set @entity.propagated false)
+        (set @entity.prediction "")
+        (set @entity.feedback "")
+        (let (
+            (c (array/nth @config.circuits 0))
+          )
+          (do
+            (set @entity.inputs (object/get @c inputs))
+            (set @entity.edges (array/map (object/get @c edges) (fn e { from: (object/get @e from), to: (object/get @e to), color: "#94a3b8" })))
+            (set @entity.nodes (array/concat
+              (array/map (object/get @c inputs) (fn i { id: (object/get @i id), x: (object/get @i x), y: (object/get @i y), radius: 14, color: (if (object/get @i value) "#22c55e" "#94a3b8"), label: (object/get @i label), kind: "molecule" }))
+              (array/map (object/get @c gates) (fn g { id: (object/get @g id), x: (object/get @g x), y: (object/get @g y), radius: 20, color: "#cbd5e1", label: (object/get @g kind), kind: "molecule" }))))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: (object/get (array/nth @config.circuits @entity.circuitIndex) label) },
+                { type: stack, direction: horizontal, gap: sm, children: (array/map (array/take @entity.inputs @config.inputCount) (fn inp { type: button, action: TOGGLE_INPUT, actionPayload: { input: (object/get @inp id) }, label: (str/concat (object/get @inp label) " = " (if (object/get @inp value) "1" "0")), variant: (if (object/get @inp value) "primary" "secondary"), size: sm })) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: PREDICT_OUTPUT, actionPayload: { value: true }, label: "Predict 1", variant: secondary },
+                    { type: button, action: PREDICT_OUTPUT, actionPayload: { value: false }, label: "Predict 0", variant: secondary },
+                    { type: button, action: PROPAGATE, label: "Propagate", variant: primary },
+                    { type: button, action: NEXT_CIRCUIT, label: "Next Circuit", variant: ghost }
+                  ] },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: @entity.nodes, edges: @entity.edges, shapes: [], interactive: @config.interactive, animate: false },
+                { type: typography, variant: caption, content: @entity.feedback }
+              ] }
+          ]
+        })
+
+      TOGGLE_INPUT -> idle when (== @entity.active true)
+        (set @entity.inputs (array/map @entity.inputs (fn i (if (== (object/get @i id) ?input) (object/merge @i { value: (not (object/get @i value)) }) @i))))
+        (set @entity.gateValues [])
+        (set @entity.propagated false)
+        (set @entity.prediction "")
+        (set @entity.feedback "")
+        (let (
+            (c (array/nth @config.circuits @entity.circuitIndex))
+            (outputId (object/get @c output))
+          )
+          (do
+            (set @entity.nodes (array/concat
+              (array/map @entity.inputs (fn i { id: (object/get @i id), x: (object/get @i x), y: (object/get @i y), radius: 14, color: (if (object/get @i value) "#22c55e" "#94a3b8"), label: (object/get @i label), kind: "molecule" }))
+              (array/map (object/get @c gates) (fn g { id: (object/get @g id), x: (object/get @g x), y: (object/get @g y), radius: 20, color: "#cbd5e1", label: (object/get @g kind), kind: "molecule" }))))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: (object/get (array/nth @config.circuits @entity.circuitIndex) label) },
+                { type: stack, direction: horizontal, gap: sm, children: (array/map (array/take @entity.inputs @config.inputCount) (fn inp { type: button, action: TOGGLE_INPUT, actionPayload: { input: (object/get @inp id) }, label: (str/concat (object/get @inp label) " = " (if (object/get @inp value) "1" "0")), variant: (if (object/get @inp value) "primary" "secondary"), size: sm })) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: PREDICT_OUTPUT, actionPayload: { value: true }, label: "Predict 1", variant: secondary },
+                    { type: button, action: PREDICT_OUTPUT, actionPayload: { value: false }, label: "Predict 0", variant: secondary },
+                    { type: button, action: PROPAGATE, label: "Propagate", variant: primary },
+                    { type: button, action: NEXT_CIRCUIT, label: "Next Circuit", variant: ghost }
+                  ] },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: @entity.nodes, edges: @entity.edges, shapes: [], interactive: @config.interactive, animate: false },
+                { type: typography, variant: caption, content: @entity.feedback }
+              ] }
+          ]
+        })
+        (emit GATES_UPDATED { circuitIndex: @entity.circuitIndex, propagated: @entity.propagated, prediction: @entity.prediction, feedback: @entity.feedback })
+
+      PREDICT_OUTPUT -> idle when (== @entity.active true)
+        (set @entity.prediction (if ?value "true" "false"))
+        (set @entity.feedback (str/concat "Prediction locked: output = " (if ?value "1" "0") ". Now propagate."))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: (object/get (array/nth @config.circuits @entity.circuitIndex) label) },
+                { type: stack, direction: horizontal, gap: sm, children: (array/map (array/take @entity.inputs @config.inputCount) (fn inp { type: button, action: TOGGLE_INPUT, actionPayload: { input: (object/get @inp id) }, label: (str/concat (object/get @inp label) " = " (if (object/get @inp value) "1" "0")), variant: (if (object/get @inp value) "primary" "secondary"), size: sm })) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: PREDICT_OUTPUT, actionPayload: { value: true }, label: "Predict 1", variant: secondary },
+                    { type: button, action: PREDICT_OUTPUT, actionPayload: { value: false }, label: "Predict 0", variant: secondary },
+                    { type: button, action: PROPAGATE, label: "Propagate", variant: primary },
+                    { type: button, action: NEXT_CIRCUIT, label: "Next Circuit", variant: ghost }
+                  ] },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: @entity.nodes, edges: @entity.edges, shapes: [], interactive: @config.interactive, animate: false },
+                { type: typography, variant: caption, content: @entity.feedback }
+              ] }
+          ]
+        })
+        (emit GATES_UPDATED { circuitIndex: @entity.circuitIndex, propagated: @entity.propagated, prediction: @entity.prediction, feedback: @entity.feedback })
+
+      PROPAGATE -> idle when (== @entity.active true)
+        (let (
+            (c (array/nth @config.circuits @entity.circuitIndex))
+            (vals (array/reduce (object/get @c gates) [] (fn acc g
+              (let (
+                  (inEdges (array/filter (object/get @c edges) (fn e (== (object/get @e to) (object/get @g id)))))
+                  (srcA (object/get (array/nth @inEdges 0) from))
+                  (inA (array/find @entity.inputs (fn i (== (object/get @i id) @srcA))))
+                  (vA (if (!= @inA null) (object/get @inA value) (object/get (array/find @acc (fn v (== (object/get @v id) @srcA))) value)))
+                  (vB (if (> (array/len @inEdges) 1)
+                    (let (
+                        (srcB (object/get (array/nth @inEdges 1) from))
+                        (inB (array/find @entity.inputs (fn i (== (object/get @i id) @srcB))))
+                      )
+                      (if (!= @inB null) (object/get @inB value) (object/get (array/find @acc (fn v (== (object/get @v id) @srcB))) value)))
+                    false))
+                  (result (if (== (object/get @g kind) "AND") (and @vA @vB)
+                    (if (== (object/get @g kind) "OR") (or @vA @vB)
+                    (if (== (object/get @g kind) "NOT") (not @vA)
+                    (!= @vA @vB)))))
+                )
+                (array/append @acc { id: (object/get @g id), value: @result })))))
+          )
+          (do
+            (set @entity.gateValues @vals)
+            (set @entity.propagated true)
+          )
+        )
+        (let (
+            (c (array/nth @config.circuits @entity.circuitIndex))
+            (outputId (object/get @c output))
+            (outVal (object/get (array/find @entity.gateValues (fn v (== (object/get @v id) @outputId))) value))
+            (hasPrediction (!= @entity.prediction ""))
+            (showValues (or @config.showIntermediate (or (not @config.challengeMode) @hasPrediction)))
+          )
+          (do
+            (set @entity.feedback (if @hasPrediction
+              (if (== (== @entity.prediction "true") @outVal) "Correct prediction — the bulb matches." (str/concat "The bulb is " (if @outVal "1" "0") " — not what you predicted."))
+              (str/concat "Output bulb = " (if @outVal "1" "0") ".")))
+            (set @entity.nodes (array/concat
+              (array/map @entity.inputs (fn i { id: (object/get @i id), x: (object/get @i x), y: (object/get @i y), radius: 14, color: (if (object/get @i value) "#22c55e" "#94a3b8"), label: (object/get @i label), kind: "molecule" }))
+              (array/map (object/get @c gates) (fn g
+                (let (
+                    (gv (array/find @entity.gateValues (fn v (== (object/get @v id) (object/get @g id)))))
+                    (reveal (and @showValues (or @config.showIntermediate (== (object/get @g id) @outputId))))
+                  )
+                  { id: (object/get @g id), x: (object/get @g x), y: (object/get @g y), radius: 20, color: (if (and @reveal (!= @gv null)) (if (object/get @gv value) "#22c55e" "#ef4444") "#cbd5e1"), label: (object/get @g kind), kind: "molecule" })))))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: (object/get (array/nth @config.circuits @entity.circuitIndex) label) },
+                { type: stack, direction: horizontal, gap: sm, children: (array/map (array/take @entity.inputs @config.inputCount) (fn inp { type: button, action: TOGGLE_INPUT, actionPayload: { input: (object/get @inp id) }, label: (str/concat (object/get @inp label) " = " (if (object/get @inp value) "1" "0")), variant: (if (object/get @inp value) "primary" "secondary"), size: sm })) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: PREDICT_OUTPUT, actionPayload: { value: true }, label: "Predict 1", variant: secondary },
+                    { type: button, action: PREDICT_OUTPUT, actionPayload: { value: false }, label: "Predict 0", variant: secondary },
+                    { type: button, action: PROPAGATE, label: "Propagate", variant: primary },
+                    { type: button, action: NEXT_CIRCUIT, label: "Next Circuit", variant: ghost }
+                  ] },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: @entity.nodes, edges: @entity.edges, shapes: [], interactive: @config.interactive, animate: false },
+                { type: typography, variant: caption, content: @entity.feedback }
+              ] }
+          ]
+        })
+        (emit GATES_UPDATED { circuitIndex: @entity.circuitIndex, propagated: @entity.propagated, prediction: @entity.prediction, feedback: @entity.feedback })
+
+      NEXT_CIRCUIT -> idle when (== @entity.active true)
+        (set @entity.circuitIndex (math/mod (+ @entity.circuitIndex 1) (array/len @config.circuits)))
+        (set @entity.gateValues [])
+        (set @entity.propagated false)
+        (set @entity.prediction "")
+        (set @entity.feedback "")
+        (let (
+            (c (array/nth @config.circuits @entity.circuitIndex))
+          )
+          (do
+            (set @entity.inputs (object/get @c inputs))
+            (set @entity.edges (array/map (object/get @c edges) (fn e { from: (object/get @e from), to: (object/get @e to), color: "#94a3b8" })))
+            (set @entity.nodes (array/concat
+              (array/map (object/get @c inputs) (fn i { id: (object/get @i id), x: (object/get @i x), y: (object/get @i y), radius: 14, color: (if (object/get @i value) "#22c55e" "#94a3b8"), label: (object/get @i label), kind: "molecule" }))
+              (array/map (object/get @c gates) (fn g { id: (object/get @g id), x: (object/get @g x), y: (object/get @g y), radius: 20, color: "#cbd5e1", label: (object/get @g kind), kind: "molecule" }))))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: (object/get (array/nth @config.circuits @entity.circuitIndex) label) },
+                { type: stack, direction: horizontal, gap: sm, children: (array/map (array/take @entity.inputs @config.inputCount) (fn inp { type: button, action: TOGGLE_INPUT, actionPayload: { input: (object/get @inp id) }, label: (str/concat (object/get @inp label) " = " (if (object/get @inp value) "1" "0")), variant: (if (object/get @inp value) "primary" "secondary"), size: sm })) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: PREDICT_OUTPUT, actionPayload: { value: true }, label: "Predict 1", variant: secondary },
+                    { type: button, action: PREDICT_OUTPUT, actionPayload: { value: false }, label: "Predict 0", variant: secondary },
+                    { type: button, action: PROPAGATE, label: "Propagate", variant: primary },
+                    { type: button, action: NEXT_CIRCUIT, label: "Next Circuit", variant: ghost }
+                  ] },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: @entity.nodes, edges: @entity.edges, shapes: [], interactive: @config.interactive, animate: false },
+                { type: typography, variant: caption, content: @entity.feedback }
+              ] }
+          ]
+        })
+        (emit GATES_UPDATED { circuitIndex: @entity.circuitIndex, propagated: @entity.propagated, prediction: @entity.prediction, feedback: @entity.feedback })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      TOGGLE_INPUT {
+        input : string
+      }
+        @description "Learner flipped one input pin between 0 and 1; any propagated values are cleared."
+        @tier "domain"
+      PREDICT_OUTPUT {
+        value : boolean
+      }
+        @description "Learner locked in a prediction for the output bulb before propagating."
+        @tier "domain"
+      PROPAGATE {
+      }
+        @description "Learner ran the circuit: values flow gate by gate from the input pins to the output bulb."
+        @tier "domain"
+      NEXT_CIRCUIT {
+      }
+        @description "Learner advanced to the next circuit in the roster."
+        @tier "domain"
+    }
+
+    emits {
+      GATES_UPDATED -> external {
+        circuitIndex : number
+        propagated : boolean
+        prediction : string
+        feedback : string
+      }
+        @description "The circuit state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "circuit update, gate propagation, input toggle, output prediction, boolean circuit"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      circuits : [LogicGateCircuit] = [
+        {
+          id: "circuit-1",
+          label: "Circuit 1 — (A AND B) XOR (A OR B)",
+          inputs: [
+            { id: "A", label: "A", x: 60, y: 90, value: false },
+            { id: "B", label: "B", x: 60, y: 230, value: false }
+          ],
+          gates: [
+            { id: "g1", kind: AND, x: 210, y: 90 },
+            { id: "g2", kind: OR, x: 210, y: 230 },
+            { id: "out", kind: XOR, x: 380, y: 160 }
+          ],
+          edges: [
+            { from: "A", to: "g1" },
+            { from: "B", to: "g1" },
+            { from: "A", to: "g2" },
+            { from: "B", to: "g2" },
+            { from: "g1", to: "out" },
+            { from: "g2", to: "out" }
+          ],
+          output: "out"
+        },
+        {
+          id: "circuit-2",
+          label: "Circuit 2 — NOT (A XOR B)",
+          inputs: [
+            { id: "A", label: "A", x: 60, y: 90, value: true },
+            { id: "B", label: "B", x: 60, y: 230, value: false }
+          ],
+          gates: [
+            { id: "g1", kind: XOR, x: 220, y: 160 },
+            { id: "out", kind: NOT, x: 380, y: 160 }
+          ],
+          edges: [
+            { from: "A", to: "g1" },
+            { from: "B", to: "g1" },
+            { from: "g1", to: "out" }
+          ],
+          output: "out"
+        }
+      ]
+        @label "Circuits"
+        @description "Roster of circuits; each declares its input pins, gates in topological evaluation order, the wires (from/to node ids), and the gate whose value lights the output bulb."
+        @synonyms "boolean circuit, logic gate, wiring diagram, gate network, digital logic"
+        @tier "domain"
+      gateKinds : [string] = ["AND", "OR", "NOT", "XOR"]
+        @label "Gate Kinds"
+        @description "The gate vocabulary used by the circuits: AND and OR combine two inputs, NOT inverts one, XOR is true when its inputs differ."
+        @synonyms "AND gate, OR gate, NOT gate, XOR gate, conjunction, disjunction, negation, exclusive or, logic gate"
+        @tier "domain"
+      inputCount : number = 2
+        @label "Input Count"
+        @description "How many of each circuit's input pins get toggle buttons."
+        @tier "domain"
+      showIntermediate : boolean = true
+        @label "Show Intermediate Values"
+        @description "After propagation, color every gate with its computed value; when false only the output bulb is revealed."
+        @tier "domain"
+      challengeMode : boolean = false
+        @label "Challenge Mode"
+        @description "When true, propagation reveals no values until the learner has locked in an output prediction."
+        @synonyms "predict first, quiz mode, prediction challenge"
+        @tier "domain"
+      title : string = "Boolean Circuit"
+        @label "Title"
+        @description "Title shown above the instrument."
+        @tier "presentation"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 340
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      backgroundColor : string = "#f8fafc"
+        @label "Background Color"
+        @description "Canvas background color."
+        @tier "presentation"
+      interactive : boolean = false
+        @label "Interactive"
+        @description "Enable pointer interaction on the canvas."
+        @tier "presentation"
+    }
+  }
+
+  page "/logic-gates" as LogicGatesPage -> LogicGatesSim
+}

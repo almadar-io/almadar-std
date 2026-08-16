@@ -1,0 +1,211 @@
+[
+  {
+    "organism": "std-prob-binomial",
+    "orbital": "ProbBinomialOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-prob-binomial.ts",
+    "entities": [
+      {
+        "name": "ProbBinomialScene",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "biasP",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "counts",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "runsRun",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "lastHeads",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "shapes",
+            "type": "array",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "ProbBinomialSim",
+        "emittedEvents": [
+          "BINOMIAL_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "BINOMIAL_UPDATED",
+            "direction": "emit",
+            "description": "The binomial accumulation state after each run — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "binomial trial, coin flip run, heads count, pmf convergence",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "RUN_TRIAL",
+            "direction": "listen"
+          },
+          {
+            "name": "RUN_MANY",
+            "direction": "listen"
+          },
+          {
+            "name": "SET_P",
+            "direction": "listen",
+            "description": "Learner dragged the bias slider — value is the new coin bias p; changing p clears the accumulated runs.",
+            "tier": "domain"
+          },
+          {
+            "name": "RESET",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "biasP",
+            "type": "number",
+            "default": 0.5,
+            "label": "Bias p",
+            "description": "Probability of heads on each flip — shifts the histogram and the theoretical PMF.",
+            "synonyms": "coin bias, success probability, binomial p, weighted coin",
+            "tier": "domain"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 400,
+            "label": "Height",
+            "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "maxRuns",
+            "type": "number",
+            "default": 500,
+            "label": "Max Runs",
+            "description": "Cap on accumulated trials; further runs are ignored until Reset.",
+            "tier": "domain"
+          },
+          {
+            "key": "runsPerStep",
+            "type": "number",
+            "default": 25,
+            "label": "Runs Per Step",
+            "description": "How many trials Run Many adds to the histogram per click.",
+            "tier": "domain"
+          },
+          {
+            "key": "showTheoreticalPMF",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Theoretical PMF",
+            "description": "Overlay the binomial probability mass function (Stirling-approximated factorials) as markers the empirical histogram converges to.",
+            "synonyms": "pmf, theoretical distribution, binomial distribution",
+            "tier": "domain"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Binomial Trials",
+            "label": "Title",
+            "description": "Title shown above the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "trialsPerRun",
+            "type": "number",
+            "default": 10,
+            "label": "Trials Per Run",
+            "description": "Number of coin flips n per trial — the histogram x-axis runs from 0 to n heads.",
+            "synonyms": "n, flips per trial, binomial n, number of trials",
+            "tier": "domain"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "description": "Canvas width in pixels.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "ProbBinomialScene",
+        "transitionEvents": [
+          "INIT",
+          "MODE_SELECTED",
+          "RESET",
+          "RUN_MANY",
+          "RUN_TRIAL",
+          "SET_P"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "biasP",
+            "counts",
+            "lastHeads",
+            "runsRun",
+            "shapes",
+            "title"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "ProbBinomialPage",
+        "defaultPath": "/prob-binomial",
+        "primaryEntity": "ProbBinomialScene"
+      }
+    ],
+    "emittedEvents": [
+      "BINOMIAL_UPDATED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

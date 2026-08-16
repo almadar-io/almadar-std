@@ -1,5 +1,5 @@
 {
-  "description": "Probability lab organism — dice, coin-flip, and general distribution/histogram displays (all a declarative math-canvas plotter driven by config data), an animated random-walk display (converged onto the existing std-prob-walk tick-based integrator), and an interactive Bayes' theorem simulator with a population-grid visualization and evidence trials — composed from the std-prob-trials, std-prob-walk, and std-prob-bayes instrument atoms behind a mode router.",
+  "description": "Probability lab organism — dice, coin-flip, and general distribution/histogram displays (all a declarative math-canvas plotter driven by config data), an animated random-walk display (converged onto the existing std-prob-walk tick-based integrator), an interactive Bayes' theorem simulator with a population-grid visualization and evidence trials, a Central Limit Theorem sampling engine with a growing means-histogram, a binomial trial accumulator converging to the theoretical PMF, a least-squares regression explorer with live r/R², and a confidence-interval capture display — composed from the std-prob-trials, std-prob-walk, std-prob-bayes, std-prob-clt, std-prob-binomial, std-prob-regression, and std-prob-confidence instrument atoms behind a mode router.",
   "ledger": {
     "entries": {
       "ent_01KXG053E1C9W3P13206VPF5WN": {
@@ -46,6 +46,38 @@
         "bakedName": "BayesScene",
         "curName": "BayesScene",
         "id": "ent_01KZEJ9DN6YXYB6ZD3YMAP9CY9",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "ent_01KZNF7D5N9JT7KBSMWE3KHQF0": {
+        "bakedName": "BinomialScene",
+        "curName": "BinomialScene",
+        "id": "ent_01KZNF7D5N9JT7KBSMWE3KHQF0",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "ent_01KZNF7D5NPT9C2626TT6P0391": {
+        "bakedName": "RegressionScene",
+        "curName": "RegressionScene",
+        "id": "ent_01KZNF7D5NPT9C2626TT6P0391",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "ent_01KZNF7D5NSM0S5B0Z55FQ667P": {
+        "bakedName": "CltScene",
+        "curName": "CltScene",
+        "id": "ent_01KZNF7D5NSM0S5B0Z55FQ667P",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "ent_01KZNF7D5NX0TVPQSCSR09BYR3": {
+        "bakedName": "ConfidenceScene",
+        "curName": "ConfidenceScene",
+        "id": "ent_01KZNF7D5NX0TVPQSCSR09BYR3",
         "kind": "entity",
         "owner": "workspace",
         "renames": []
@@ -128,6 +160,38 @@
         "bakedName": "BayesSim",
         "curName": "BayesSim",
         "id": "trt_01KZEJ9DN6PDNS1CAB82E45ZNJ",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01KZNF7D5NEVWQGZ9ADYQRA6CH": {
+        "bakedName": "RegressionSim",
+        "curName": "RegressionSim",
+        "id": "trt_01KZNF7D5NEVWQGZ9ADYQRA6CH",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01KZNF7D5NWEVAWWSMKW8JAK9H": {
+        "bakedName": "CltSim",
+        "curName": "CltSim",
+        "id": "trt_01KZNF7D5NWEVAWWSMKW8JAK9H",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01KZNF7D5NZ54DWER77EQ1WG17": {
+        "bakedName": "BinomialSim",
+        "curName": "BinomialSim",
+        "id": "trt_01KZNF7D5NZ54DWER77EQ1WG17",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01KZNF7D5NZ5HK77MQ5AK6DWT3": {
+        "bakedName": "ConfidenceSim",
+        "curName": "ConfidenceSim",
+        "id": "trt_01KZNF7D5NZ5HK77MQ5AK6DWT3",
         "kind": "trait",
         "owner": "workspace",
         "renames": []
@@ -1274,6 +1338,971 @@
           "id": "ent_01KZEJ9DN6YXYB6ZD3YMAP9CY9",
           "name": "BayesScene",
           "persistence": "runtime"
+        },
+        {
+          "fields": [
+            {
+              "name": "id",
+              "required": true,
+              "type": "string"
+            },
+            {
+              "default": false,
+              "name": "active",
+              "type": "boolean"
+            },
+            {
+              "name": "title",
+              "type": "string"
+            },
+            {
+              "name": "sampleSize",
+              "type": "number"
+            },
+            {
+              "items": {
+                "type": "number"
+              },
+              "name": "means",
+              "type": "array"
+            },
+            {
+              "name": "drawsRun",
+              "type": "number"
+            },
+            {
+              "name": "lastSampleMean",
+              "type": "number"
+            },
+            {
+              "items": {
+                "properties": {
+                  "align": {
+                    "name": "align",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "left",
+                      "center",
+                      "right"
+                    ]
+                  },
+                  "axis": {
+                    "name": "axis",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "x",
+                      "y"
+                    ]
+                  },
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "fill": {
+                    "name": "fill",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "fontSize": {
+                    "name": "fontSize",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "height": {
+                    "name": "height",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "lineWidth": {
+                    "name": "lineWidth",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "max": {
+                    "name": "max",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "min": {
+                    "name": "min",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "opacity": {
+                    "name": "opacity",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "path": {
+                    "name": "path",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "points": {
+                    "items": {
+                      "properties": {
+                        "x": {
+                          "name": "x",
+                          "required": true,
+                          "type": "number"
+                        },
+                        "y": {
+                          "name": "y",
+                          "required": true,
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "name": "points",
+                    "required": false,
+                    "type": "array"
+                  },
+                  "radius": {
+                    "name": "radius",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "step": {
+                    "name": "step",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "text": {
+                    "name": "text",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "line",
+                      "arrow",
+                      "circle",
+                      "rect",
+                      "polygon",
+                      "path",
+                      "text",
+                      "axis",
+                      "grid"
+                    ]
+                  },
+                  "width": {
+                    "name": "width",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x1": {
+                    "name": "x1",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x2": {
+                    "name": "x2",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "y1": {
+                    "name": "y1",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "y2": {
+                    "name": "y2",
+                    "required": false,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "name": "shapes",
+              "type": "array"
+            }
+          ],
+          "id": "ent_01KZNF7D5NSM0S5B0Z55FQ667P",
+          "name": "CltScene",
+          "persistence": "runtime"
+        },
+        {
+          "fields": [
+            {
+              "name": "id",
+              "required": true,
+              "type": "string"
+            },
+            {
+              "default": false,
+              "name": "active",
+              "type": "boolean"
+            },
+            {
+              "name": "title",
+              "type": "string"
+            },
+            {
+              "name": "biasP",
+              "type": "number"
+            },
+            {
+              "items": {
+                "type": "number"
+              },
+              "name": "counts",
+              "type": "array"
+            },
+            {
+              "name": "runsRun",
+              "type": "number"
+            },
+            {
+              "name": "lastHeads",
+              "type": "number"
+            },
+            {
+              "items": {
+                "properties": {
+                  "align": {
+                    "name": "align",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "left",
+                      "center",
+                      "right"
+                    ]
+                  },
+                  "axis": {
+                    "name": "axis",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "x",
+                      "y"
+                    ]
+                  },
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "fill": {
+                    "name": "fill",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "fontSize": {
+                    "name": "fontSize",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "height": {
+                    "name": "height",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "lineWidth": {
+                    "name": "lineWidth",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "max": {
+                    "name": "max",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "min": {
+                    "name": "min",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "opacity": {
+                    "name": "opacity",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "path": {
+                    "name": "path",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "points": {
+                    "items": {
+                      "properties": {
+                        "x": {
+                          "name": "x",
+                          "required": true,
+                          "type": "number"
+                        },
+                        "y": {
+                          "name": "y",
+                          "required": true,
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "name": "points",
+                    "required": false,
+                    "type": "array"
+                  },
+                  "radius": {
+                    "name": "radius",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "step": {
+                    "name": "step",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "text": {
+                    "name": "text",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "line",
+                      "arrow",
+                      "circle",
+                      "rect",
+                      "polygon",
+                      "path",
+                      "text",
+                      "axis",
+                      "grid"
+                    ]
+                  },
+                  "width": {
+                    "name": "width",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x1": {
+                    "name": "x1",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x2": {
+                    "name": "x2",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "y1": {
+                    "name": "y1",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "y2": {
+                    "name": "y2",
+                    "required": false,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "name": "shapes",
+              "type": "array"
+            }
+          ],
+          "id": "ent_01KZNF7D5N9JT7KBSMWE3KHQF0",
+          "name": "BinomialScene",
+          "persistence": "runtime"
+        },
+        {
+          "fields": [
+            {
+              "name": "id",
+              "required": true,
+              "type": "string"
+            },
+            {
+              "default": false,
+              "name": "active",
+              "type": "boolean"
+            },
+            {
+              "name": "title",
+              "type": "string"
+            },
+            {
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "radius": {
+                    "name": "radius",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "name": "points",
+              "type": "array"
+            },
+            {
+              "name": "slope",
+              "type": "number"
+            },
+            {
+              "name": "intercept",
+              "type": "number"
+            },
+            {
+              "name": "r",
+              "type": "number"
+            },
+            {
+              "name": "rSquared",
+              "type": "number"
+            },
+            {
+              "name": "guessSlope",
+              "type": "number"
+            },
+            {
+              "name": "guessIntercept",
+              "type": "number"
+            },
+            {
+              "name": "guessScore",
+              "type": "number"
+            },
+            {
+              "default": false,
+              "name": "revealed",
+              "type": "boolean"
+            },
+            {
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "samples": {
+                    "items": {
+                      "properties": {
+                        "color": {
+                          "name": "color",
+                          "required": false,
+                          "type": "string"
+                        },
+                        "label": {
+                          "name": "label",
+                          "required": false,
+                          "type": "string"
+                        },
+                        "radius": {
+                          "name": "radius",
+                          "required": false,
+                          "type": "number"
+                        },
+                        "x": {
+                          "name": "x",
+                          "required": true,
+                          "type": "number"
+                        },
+                        "y": {
+                          "name": "y",
+                          "required": true,
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "name": "samples",
+                    "required": false,
+                    "type": "array"
+                  }
+                },
+                "type": "object"
+              },
+              "name": "curves",
+              "type": "array"
+            },
+            {
+              "items": {
+                "properties": {
+                  "align": {
+                    "name": "align",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "left",
+                      "center",
+                      "right"
+                    ]
+                  },
+                  "axis": {
+                    "name": "axis",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "x",
+                      "y"
+                    ]
+                  },
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "fill": {
+                    "name": "fill",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "fontSize": {
+                    "name": "fontSize",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "height": {
+                    "name": "height",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "lineWidth": {
+                    "name": "lineWidth",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "max": {
+                    "name": "max",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "min": {
+                    "name": "min",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "opacity": {
+                    "name": "opacity",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "path": {
+                    "name": "path",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "points": {
+                    "items": {
+                      "properties": {
+                        "x": {
+                          "name": "x",
+                          "required": true,
+                          "type": "number"
+                        },
+                        "y": {
+                          "name": "y",
+                          "required": true,
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "name": "points",
+                    "required": false,
+                    "type": "array"
+                  },
+                  "radius": {
+                    "name": "radius",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "step": {
+                    "name": "step",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "text": {
+                    "name": "text",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "line",
+                      "arrow",
+                      "circle",
+                      "rect",
+                      "polygon",
+                      "path",
+                      "text",
+                      "axis",
+                      "grid"
+                    ]
+                  },
+                  "width": {
+                    "name": "width",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x1": {
+                    "name": "x1",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x2": {
+                    "name": "x2",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "y1": {
+                    "name": "y1",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "y2": {
+                    "name": "y2",
+                    "required": false,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "name": "shapes",
+              "type": "array"
+            }
+          ],
+          "id": "ent_01KZNF7D5NPT9C2626TT6P0391",
+          "name": "RegressionScene",
+          "persistence": "runtime"
+        },
+        {
+          "fields": [
+            {
+              "name": "id",
+              "required": true,
+              "type": "string"
+            },
+            {
+              "default": false,
+              "name": "active",
+              "type": "boolean"
+            },
+            {
+              "name": "title",
+              "type": "string"
+            },
+            {
+              "name": "level",
+              "type": "number"
+            },
+            {
+              "items": {
+                "properties": {
+                  "captured": {
+                    "name": "captured",
+                    "required": true,
+                    "type": "boolean"
+                  },
+                  "hi": {
+                    "name": "hi",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "lo": {
+                    "name": "lo",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "name": "intervals",
+              "type": "array"
+            },
+            {
+              "name": "intervalsDrawn",
+              "type": "number"
+            },
+            {
+              "name": "captures",
+              "type": "number"
+            },
+            {
+              "default": false,
+              "name": "lastCaptured",
+              "type": "boolean"
+            },
+            {
+              "items": {
+                "properties": {
+                  "align": {
+                    "name": "align",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "left",
+                      "center",
+                      "right"
+                    ]
+                  },
+                  "axis": {
+                    "name": "axis",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "x",
+                      "y"
+                    ]
+                  },
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "fill": {
+                    "name": "fill",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "fontSize": {
+                    "name": "fontSize",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "height": {
+                    "name": "height",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "lineWidth": {
+                    "name": "lineWidth",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "max": {
+                    "name": "max",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "min": {
+                    "name": "min",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "opacity": {
+                    "name": "opacity",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "path": {
+                    "name": "path",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "points": {
+                    "items": {
+                      "properties": {
+                        "x": {
+                          "name": "x",
+                          "required": true,
+                          "type": "number"
+                        },
+                        "y": {
+                          "name": "y",
+                          "required": true,
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "name": "points",
+                    "required": false,
+                    "type": "array"
+                  },
+                  "radius": {
+                    "name": "radius",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "step": {
+                    "name": "step",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "text": {
+                    "name": "text",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "line",
+                      "arrow",
+                      "circle",
+                      "rect",
+                      "polygon",
+                      "path",
+                      "text",
+                      "axis",
+                      "grid"
+                    ]
+                  },
+                  "width": {
+                    "name": "width",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x1": {
+                    "name": "x1",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x2": {
+                    "name": "x2",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "y1": {
+                    "name": "y1",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "y2": {
+                    "name": "y2",
+                    "required": false,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "name": "shapes",
+              "type": "array"
+            }
+          ],
+          "id": "ent_01KZNF7D5NX0TVPQSCSR09BYR3",
+          "name": "ConfidenceScene",
+          "persistence": "runtime"
         }
       ],
       "entity": {
@@ -1319,6 +2348,22 @@
             {
               "ref": "BayesSim",
               "refId": "trt_01KZEJ9DN6PDNS1CAB82E45ZNJ"
+            },
+            {
+              "ref": "CltSim",
+              "refId": "trt_01KZNF7D5NWEVAWWSMKW8JAK9H"
+            },
+            {
+              "ref": "BinomialSim",
+              "refId": "trt_01KZNF7D5NZ54DWER77EQ1WG17"
+            },
+            {
+              "ref": "RegressionSim",
+              "refId": "trt_01KZNF7D5NEVWQGZ9ADYQRA6CH"
+            },
+            {
+              "ref": "ConfidenceSim",
+              "refId": "trt_01KZNF7D5NZ5HK77MQ5AK6DWT3"
             }
           ]
         }
@@ -1331,7 +2376,7 @@
               "default": "distribution",
               "description": "What kind of probability or statistics visualization to render.",
               "label": "Mode",
-              "synonyms": "chance, probability, statistics, dice, coin flip, random walk, sampling, distribution, histogram, law of large numbers, expected value, bayes theorem, bayesian, conditional probability, base rate, base rate fallacy, prior probability, posterior probability, likelihood ratio, positive predictive value, false positive paradox",
+              "synonyms": "chance, probability, statistics, dice, coin flip, random walk, sampling, distribution, histogram, law of large numbers, expected value, bayes theorem, bayesian, conditional probability, base rate, base rate fallacy, prior probability, posterior probability, likelihood ratio, positive predictive value, false positive paradox, central limit theorem, sampling distribution, sample mean, binomial, binomial distribution, pmf, regression, least squares, line of best fit, correlation, scatter plot, confidence interval, capture rate, interval estimate",
               "tier": "domain",
               "type": "string",
               "values": [
@@ -1339,7 +2384,11 @@
                 "coins",
                 "random-walk",
                 "distribution",
-                "bayes"
+                "bayes",
+                "clt",
+                "binomial",
+                "regression",
+                "confidence"
               ]
             }
           },
@@ -1551,6 +2600,114 @@
           ],
           "name": "BayesSim",
           "ref": "ProbBayes.traits.ProbBayesSim"
+        },
+        {
+          "config": {
+            "matchMode": {
+              "default": "clt",
+              "type": "unknown"
+            },
+            "title": {
+              "default": "Probability Lab",
+              "type": "unknown"
+            }
+          },
+          "id": "trt_01KZNF7D5NWEVAWWSMKW8JAK9H",
+          "linkedEntity": "CltScene",
+          "linkedEntityId": "ent_01KZNF7D5NSM0S5B0Z55FQ667P",
+          "listens": [
+            {
+              "event": "MODE_SELECTED",
+              "source": {
+                "kind": "trait",
+                "trait": "ProbabilityLabRouter"
+              },
+              "triggers": "MODE_SELECTED"
+            }
+          ],
+          "name": "CltSim",
+          "ref": "ProbClt.traits.ProbCltSim"
+        },
+        {
+          "config": {
+            "matchMode": {
+              "default": "binomial",
+              "type": "unknown"
+            },
+            "title": {
+              "default": "Probability Lab",
+              "type": "unknown"
+            }
+          },
+          "id": "trt_01KZNF7D5NZ54DWER77EQ1WG17",
+          "linkedEntity": "BinomialScene",
+          "linkedEntityId": "ent_01KZNF7D5N9JT7KBSMWE3KHQF0",
+          "listens": [
+            {
+              "event": "MODE_SELECTED",
+              "source": {
+                "kind": "trait",
+                "trait": "ProbabilityLabRouter"
+              },
+              "triggers": "MODE_SELECTED"
+            }
+          ],
+          "name": "BinomialSim",
+          "ref": "ProbBinomial.traits.ProbBinomialSim"
+        },
+        {
+          "config": {
+            "matchMode": {
+              "default": "regression",
+              "type": "unknown"
+            },
+            "title": {
+              "default": "Probability Lab",
+              "type": "unknown"
+            }
+          },
+          "id": "trt_01KZNF7D5NEVWQGZ9ADYQRA6CH",
+          "linkedEntity": "RegressionScene",
+          "linkedEntityId": "ent_01KZNF7D5NPT9C2626TT6P0391",
+          "listens": [
+            {
+              "event": "MODE_SELECTED",
+              "source": {
+                "kind": "trait",
+                "trait": "ProbabilityLabRouter"
+              },
+              "triggers": "MODE_SELECTED"
+            }
+          ],
+          "name": "RegressionSim",
+          "ref": "ProbRegression.traits.ProbRegressionSim"
+        },
+        {
+          "config": {
+            "matchMode": {
+              "default": "confidence",
+              "type": "unknown"
+            },
+            "title": {
+              "default": "Probability Lab",
+              "type": "unknown"
+            }
+          },
+          "id": "trt_01KZNF7D5NZ5HK77MQ5AK6DWT3",
+          "linkedEntity": "ConfidenceScene",
+          "linkedEntityId": "ent_01KZNF7D5NX0TVPQSCSR09BYR3",
+          "listens": [
+            {
+              "event": "MODE_SELECTED",
+              "source": {
+                "kind": "trait",
+                "trait": "ProbabilityLabRouter"
+              },
+              "triggers": "MODE_SELECTED"
+            }
+          ],
+          "name": "ConfidenceSim",
+          "ref": "ProbConfidence.traits.ProbConfidenceSim"
         }
       ],
       "uses": [
@@ -1565,6 +2722,22 @@
         {
           "as": "ProbBayes",
           "from": "std/behaviors/std-prob-bayes"
+        },
+        {
+          "as": "ProbClt",
+          "from": "std/behaviors/std-prob-clt"
+        },
+        {
+          "as": "ProbBinomial",
+          "from": "std/behaviors/std-prob-binomial"
+        },
+        {
+          "as": "ProbRegression",
+          "from": "std/behaviors/std-prob-regression"
+        },
+        {
+          "as": "ProbConfidence",
+          "from": "std/behaviors/std-prob-confidence"
         }
       ]
     }

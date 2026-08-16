@@ -1,0 +1,463 @@
+[
+  {
+    "organism": "std-logic-venn",
+    "orbital": "LogicVennOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-logic-venn.ts",
+    "entities": [
+      {
+        "name": "LogicVennState",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "shadedRegions",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "markedRegions",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "verdict",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "shapes",
+            "type": "array",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "LogicVennSim",
+        "emittedEvents": [
+          "VENN_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "VENN_UPDATED",
+            "direction": "emit",
+            "description": "The diagram state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "venn update, syllogism test, region shaded, existential mark, validity check",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "SHADE_REGION",
+            "direction": "listen",
+            "description": "Learner toggled shading on one region of the three-circle diagram (universal-premise step of the Venn test).",
+            "tier": "domain"
+          },
+          {
+            "name": "MARK_X",
+            "direction": "listen",
+            "description": "Learner toggled an ✕ mark on one region of the diagram (particular-premise step of the Venn test).",
+            "tier": "domain"
+          },
+          {
+            "name": "TEST_VALIDITY",
+            "direction": "listen",
+            "description": "Learner asked whether the shaded and marked diagram makes the conclusion follow — the Venn validity test.",
+            "tier": "domain"
+          },
+          {
+            "name": "RESET",
+            "direction": "listen",
+            "description": "Learner cleared all shading and ✕ marks to start the diagram over.",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "backgroundColor",
+            "type": "string",
+            "default": "#f8fafc",
+            "label": "Background Color",
+            "description": "Canvas background color.",
+            "tier": "presentation"
+          },
+          {
+            "key": "circles",
+            "type": "[LogicVennCircle]",
+            "default": [
+              {
+                "color": "#2563eb",
+                "id": "S",
+                "radius": 105,
+                "x": 240,
+                "y": 170
+              },
+              {
+                "color": "#15803d",
+                "id": "M",
+                "radius": 105,
+                "x": 360,
+                "y": 170
+              },
+              {
+                "color": "#b45309",
+                "id": "P",
+                "radius": 105,
+                "x": 300,
+                "y": 275
+              }
+            ],
+            "label": "Circles",
+            "description": "The three set circles (center, radius, color); ids match the term keys in propositionLabels.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "figure",
+            "type": "number",
+            "default": 1,
+            "label": "Figure",
+            "description": "The syllogism's figure (1-4) — the placement of the middle term in the premises.",
+            "synonyms": "syllogism figure, middle term, syllogistic form",
+            "tier": "domain"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 420,
+            "label": "Height",
+            "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "interactive",
+            "type": "boolean",
+            "default": false,
+            "label": "Interactive",
+            "description": "Enable pointer interaction on the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "mood",
+            "type": "string",
+            "default": "AII",
+            "label": "Mood",
+            "description": "The syllogism's mood — the three-letter sequence of proposition types (A/E/I/O) for premise 1, premise 2, conclusion.",
+            "synonyms": "syllogism mood, proposition types, categorical syllogism, A E I O",
+            "tier": "domain"
+          },
+          {
+            "key": "premiseTypes",
+            "type": "[string]",
+            "default": [
+              "All M are P",
+              "Some S are M"
+            ],
+            "label": "Premises",
+            "description": "The two premise propositions in categorical form, displayed above the diagram; the learner shades and marks regions for each.",
+            "synonyms": "premise, universal affirmative, particular affirmative, all are, some are, categorical proposition",
+            "tier": "domain",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "propositionLabels",
+            "type": "[LogicVennTerm]",
+            "default": [
+              {
+                "key": "S",
+                "label": "S"
+              },
+              {
+                "key": "M",
+                "label": "M"
+              },
+              {
+                "key": "P",
+                "label": "P"
+              }
+            ],
+            "label": "Term Labels",
+            "description": "Display label for each term (subject S, middle M, predicate P); keys must match the circle ids.",
+            "synonyms": "subject term, middle term, predicate term, minor term, major term",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "regions",
+            "type": "[LogicVennRegion]",
+            "default": [
+              {
+                "id": "s-only",
+                "label": "S only",
+                "x": 175,
+                "y": 150
+              },
+              {
+                "id": "m-only",
+                "label": "M only",
+                "x": 425,
+                "y": 150
+              },
+              {
+                "id": "p-only",
+                "label": "P only",
+                "x": 300,
+                "y": 360
+              },
+              {
+                "id": "sm-only",
+                "label": "S∩M only",
+                "x": 300,
+                "y": 140
+              },
+              {
+                "id": "sp-only",
+                "label": "S∩P only",
+                "x": 245,
+                "y": 255
+              },
+              {
+                "id": "mp-only",
+                "label": "M∩P only",
+                "x": 355,
+                "y": 255
+              },
+              {
+                "id": "smp",
+                "label": "S∩M∩P",
+                "x": 300,
+                "y": 210
+              }
+            ],
+            "label": "Regions",
+            "description": "The seven interior regions of the three-circle diagram (marker position and button label); the learner shades and marks these.",
+            "synonyms": "venn region, intersection, overlap, lens, venn diagram",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "shadedColor",
+            "type": "string",
+            "default": "#64748b",
+            "label": "Shaded Region Color",
+            "description": "Fill color of a region the learner has shaded (claimed empty).",
+            "tier": "presentation"
+          },
+          {
+            "key": "showSolution",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Solution",
+            "description": "Append the solution's explanatory note to the verdict after a correct Test Validity.",
+            "tier": "domain"
+          },
+          {
+            "key": "solution",
+            "type": "LogicVennSolution",
+            "default": {
+              "marked": [
+                "smp"
+              ],
+              "note": "Shading all of M outside P and marking S∩M forces the ✕ into S∩M∩P — so some S are P.",
+              "shaded": [
+                "m-only",
+                "sm-only"
+              ],
+              "valid": true
+            },
+            "label": "Solution",
+            "description": "The shading and ✕ marks the premises demand, whether the syllogism is valid, and an explanatory note revealed by Show Solution.",
+            "synonyms": "answer key, correct diagram, validity verdict, venn test solution",
+            "tier": "domain",
+            "properties": {
+              "marked": {
+                "name": "marked",
+                "required": false,
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "note": {
+                "name": "note",
+                "required": false,
+                "type": "string"
+              },
+              "shaded": {
+                "name": "shaded",
+                "required": false,
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "valid": {
+                "name": "valid",
+                "required": false,
+                "type": "boolean"
+              }
+            }
+          },
+          {
+            "key": "strictBoolean",
+            "type": "boolean",
+            "default": true,
+            "label": "Strict Boolean Standpoint",
+            "description": "Boolean standpoint: universal premises have no existential import, so the ✕ marks must match the solution exactly. When false (Aristotelian), only the shading must match.",
+            "synonyms": "boolean standpoint, aristotelian standpoint, existential import",
+            "tier": "domain"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Syllogism Venn Tester",
+            "label": "Title",
+            "description": "Title shown above the instrument.",
+            "tier": "presentation"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "description": "Canvas width in pixels.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "LogicVennState",
+        "transitionEvents": [
+          "INIT",
+          "MARK_X",
+          "MODE_SELECTED",
+          "RESET",
+          "SHADE_REGION",
+          "TEST_VALIDITY"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "markedRegions",
+            "shadedRegions",
+            "shapes",
+            "title",
+            "verdict"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "LogicVennPage",
+        "defaultPath": "/logic-venn",
+        "primaryEntity": "LogicVennState"
+      }
+    ],
+    "emittedEvents": [
+      "VENN_UPDATED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

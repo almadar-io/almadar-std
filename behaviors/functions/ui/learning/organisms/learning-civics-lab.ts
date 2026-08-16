@@ -50,7 +50,7 @@ export interface StdLearningCivicsLabConfig {
   mode?: 'process' | 'checks-balances';
 }
 
-type _StdLearningCivicsLabEntityName = 'CivicsLabItem' | 'BillProcessScene' | 'ChecksScene';
+type _StdLearningCivicsLabEntityName = 'CivicsLabItem' | 'BillProcessScene' | 'ChecksScene' | 'CivicsBillProcessScene' | 'CivicsChecksScene';
 type _StdLearningCivicsLabListenTraitName = 'CivicsLabRouter' | 'BillProcessSim' | 'ChecksSim';
 
 /**

@@ -227,7 +227,7 @@ export function stdDataErasure(params: StdDataErasureParams): OrbitalDefinition 
   });
 }
 
-type _StdDataErasureEntityName = 'ErasureRequest';
+type _StdDataErasureEntityName = 'ErasureRequest' | 'SpinnerItem' | 'TypographyItem' | 'IconItem' | 'ButtonItem' | 'DividerItem' | 'AlertItem';
 type _StdDataErasureListenTraitName = 'LoadingSpinner' | 'ErrorSpinner' | 'LoadingText' | 'Trash2Icon' | 'ErasureRequestsTitle' | 'CloseButton' | 'ErasureDivider' | 'ErrorAlert' | 'ErasureWorkflow';
 
 /**

@@ -61,7 +61,7 @@ const NOTIFY_CHANNEL: OperatorTypeRef = {
     { kind: 'literal', value: 'email' },
     { kind: 'literal', value: 'push' },
     { kind: 'literal', value: 'sms' },
-    { kind: 'literal', value: 'in_app' },
+    { kind: 'literal', value: 'in-app' },
   ],
 };
 
@@ -499,7 +499,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'channel', type: NOTIFY_CHANNEL, description: 'Delivery channel' },
       { name: 'message', type: STRING, description: 'Message body', optional: true },
     ],
-    example: '["notify", "in_app", "Task created successfully"]',
+    example: '["notify", "in-app", "Task created successfully"]',
     effect: { kind: 'notify' },
   },
   log: {

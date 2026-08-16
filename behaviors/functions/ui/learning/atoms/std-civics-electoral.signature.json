@@ -1,0 +1,738 @@
+[
+  {
+    "organism": "std-civics-electoral",
+    "orbital": "CivicsElectoralOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-civics-electoral.ts",
+    "entities": [
+      {
+        "name": "CivicsElectoralScene",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "winnerMap",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "scenarioName",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "redEV",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "blueEV",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "tossupEV",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "redPop",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "bluePop",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "splitNote",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "renderChildren",
+            "type": "array",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "CivicsElectoralSim",
+        "emittedEvents": [
+          "ELECTORAL_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "ELECTORAL_UPDATED",
+            "direction": "emit",
+            "description": "The electoral map state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "electoral vote tally, EV totals, race to 270, swing state flip, popular vote split, scenario update",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "TOGGLE_STATE",
+            "direction": "listen",
+            "description": "Learner flipped a swing state; its winner cycles red -> blue -> tossup -> red. Non-swing states ignore the event.",
+            "tier": "domain"
+          },
+          {
+            "name": "LOAD_SCENARIO",
+            "direction": "listen",
+            "description": "Learner loaded a named what-if scenario from config.scenarios by its index, replacing the current winner map.",
+            "tier": "domain"
+          },
+          {
+            "name": "RESET",
+            "direction": "listen",
+            "description": "Learner reset the map back to config.baselineMap.",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "animate",
+            "type": "boolean",
+            "default": false,
+            "label": "Animate",
+            "description": "Enable continuous redraw loop.",
+            "tier": "presentation"
+          },
+          {
+            "key": "baselineMap",
+            "type": "[CivicsElectoralWinner]",
+            "default": [
+              {
+                "id": "CA",
+                "winner": "blue"
+              },
+              {
+                "id": "TX",
+                "winner": "red"
+              },
+              {
+                "id": "FL",
+                "winner": "red"
+              },
+              {
+                "id": "NY",
+                "winner": "blue"
+              },
+              {
+                "id": "PA",
+                "winner": "blue"
+              },
+              {
+                "id": "OH",
+                "winner": "red"
+              },
+              {
+                "id": "GA",
+                "winner": "red"
+              },
+              {
+                "id": "NC",
+                "winner": "red"
+              },
+              {
+                "id": "MI",
+                "winner": "blue"
+              },
+              {
+                "id": "AZ",
+                "winner": "red"
+              },
+              {
+                "id": "WI",
+                "winner": "blue"
+              },
+              {
+                "id": "CO",
+                "winner": "blue"
+              },
+              {
+                "id": "OR",
+                "winner": "red"
+              },
+              {
+                "id": "OB",
+                "winner": "blue"
+              }
+            ],
+            "label": "Baseline Map",
+            "description": "The starting winner per state id — a narrow Blue win (272 to 266) that Red can flip by taking swing states.",
+            "synonyms": "starting map, default outcome, baseline election",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "winner": {
+                  "name": "winner",
+                  "required": true,
+                  "type": "string",
+                  "values": [
+                    "red",
+                    "blue",
+                    "tossup"
+                  ]
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "blueColor",
+            "type": "string",
+            "default": "#2563eb",
+            "label": "Blue Color",
+            "description": "Color for Blue-won states and the Blue EV bar.",
+            "tier": "presentation"
+          },
+          {
+            "key": "evCounts",
+            "type": "[CivicsElectoralEVCount]",
+            "default": [
+              {
+                "ev": 54,
+                "id": "CA"
+              },
+              {
+                "ev": 40,
+                "id": "TX"
+              },
+              {
+                "ev": 30,
+                "id": "FL"
+              },
+              {
+                "ev": 28,
+                "id": "NY"
+              },
+              {
+                "ev": 19,
+                "id": "PA"
+              },
+              {
+                "ev": 17,
+                "id": "OH"
+              },
+              {
+                "ev": 16,
+                "id": "GA"
+              },
+              {
+                "ev": 16,
+                "id": "NC"
+              },
+              {
+                "ev": 15,
+                "id": "MI"
+              },
+              {
+                "ev": 11,
+                "id": "AZ"
+              },
+              {
+                "ev": 10,
+                "id": "WI"
+              },
+              {
+                "ev": 10,
+                "id": "CO"
+              },
+              {
+                "ev": 136,
+                "id": "OR"
+              },
+              {
+                "ev": 136,
+                "id": "OB"
+              }
+            ],
+            "label": "Electoral Votes",
+            "description": "Electoral votes per state id; the aggregate tiles carry the remaining electors so the totals sum to 538.",
+            "synonyms": "electoral votes, electors, EV counts",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "ev": {
+                  "name": "ev",
+                  "required": true,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 430,
+            "label": "Height",
+            "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "interactive",
+            "type": "boolean",
+            "default": false,
+            "label": "Interactive",
+            "description": "Enable pointer interaction on the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "redColor",
+            "type": "string",
+            "default": "#dc2626",
+            "label": "Red Color",
+            "description": "Color for Red-won states and the Red EV bar.",
+            "tier": "presentation"
+          },
+          {
+            "key": "scenarios",
+            "type": "[CivicsElectoralScenario]",
+            "default": [
+              {
+                "index": 0,
+                "map": [
+                  {
+                    "id": "CA",
+                    "winner": "blue"
+                  },
+                  {
+                    "id": "TX",
+                    "winner": "red"
+                  },
+                  {
+                    "id": "FL",
+                    "winner": "tossup"
+                  },
+                  {
+                    "id": "NY",
+                    "winner": "blue"
+                  },
+                  {
+                    "id": "PA",
+                    "winner": "tossup"
+                  },
+                  {
+                    "id": "OH",
+                    "winner": "red"
+                  },
+                  {
+                    "id": "GA",
+                    "winner": "tossup"
+                  },
+                  {
+                    "id": "NC",
+                    "winner": "tossup"
+                  },
+                  {
+                    "id": "MI",
+                    "winner": "tossup"
+                  },
+                  {
+                    "id": "AZ",
+                    "winner": "tossup"
+                  },
+                  {
+                    "id": "WI",
+                    "winner": "tossup"
+                  },
+                  {
+                    "id": "CO",
+                    "winner": "blue"
+                  },
+                  {
+                    "id": "OR",
+                    "winner": "red"
+                  },
+                  {
+                    "id": "OB",
+                    "winner": "blue"
+                  }
+                ],
+                "name": "Tossup reset"
+              },
+              {
+                "index": 1,
+                "map": [
+                  {
+                    "id": "CA",
+                    "winner": "blue"
+                  },
+                  {
+                    "id": "TX",
+                    "winner": "red"
+                  },
+                  {
+                    "id": "FL",
+                    "winner": "red"
+                  },
+                  {
+                    "id": "NY",
+                    "winner": "blue"
+                  },
+                  {
+                    "id": "PA",
+                    "winner": "red"
+                  },
+                  {
+                    "id": "OH",
+                    "winner": "red"
+                  },
+                  {
+                    "id": "GA",
+                    "winner": "red"
+                  },
+                  {
+                    "id": "NC",
+                    "winner": "red"
+                  },
+                  {
+                    "id": "MI",
+                    "winner": "red"
+                  },
+                  {
+                    "id": "AZ",
+                    "winner": "red"
+                  },
+                  {
+                    "id": "WI",
+                    "winner": "red"
+                  },
+                  {
+                    "id": "CO",
+                    "winner": "blue"
+                  },
+                  {
+                    "id": "OR",
+                    "winner": "red"
+                  },
+                  {
+                    "id": "OB",
+                    "winner": "blue"
+                  }
+                ],
+                "name": "Red sweep"
+              }
+            ],
+            "label": "Scenarios",
+            "description": "Named what-if maps the learner can load by index; each scenario replaces the whole winner map.",
+            "synonyms": "what-if scenarios, election scenarios, preset maps",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "index": {
+                  "name": "index",
+                  "required": true,
+                  "type": "number"
+                },
+                "map": {
+                  "name": "map",
+                  "required": true,
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "id": {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "winner": {
+                        "name": "winner",
+                        "required": true,
+                        "type": "string",
+                        "values": [
+                          "red",
+                          "blue",
+                          "tossup"
+                        ]
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "states",
+            "type": "[CivicsElectoralState]",
+            "default": [
+              {
+                "col": 0,
+                "id": "CA",
+                "name": "California",
+                "popShare": 11.7,
+                "row": 0,
+                "swing": false
+              },
+              {
+                "col": 1,
+                "id": "TX",
+                "name": "Texas",
+                "popShare": 8.9,
+                "row": 0,
+                "swing": false
+              },
+              {
+                "col": 2,
+                "id": "FL",
+                "name": "Florida",
+                "popShare": 7.6,
+                "row": 0,
+                "swing": true
+              },
+              {
+                "col": 3,
+                "id": "NY",
+                "name": "New York",
+                "popShare": 7.8,
+                "row": 0,
+                "swing": false
+              },
+              {
+                "col": 0,
+                "id": "PA",
+                "name": "Pennsylvania",
+                "popShare": 6.5,
+                "row": 1,
+                "swing": true
+              },
+              {
+                "col": 1,
+                "id": "OH",
+                "name": "Ohio",
+                "popShare": 5.6,
+                "row": 1,
+                "swing": false
+              },
+              {
+                "col": 2,
+                "id": "GA",
+                "name": "Georgia",
+                "popShare": 5.3,
+                "row": 1,
+                "swing": true
+              },
+              {
+                "col": 3,
+                "id": "NC",
+                "name": "North Carolina",
+                "popShare": 5.4,
+                "row": 1,
+                "swing": true
+              },
+              {
+                "col": 0,
+                "id": "MI",
+                "name": "Michigan",
+                "popShare": 5.4,
+                "row": 2,
+                "swing": true
+              },
+              {
+                "col": 1,
+                "id": "AZ",
+                "name": "Arizona",
+                "popShare": 3.4,
+                "row": 2,
+                "swing": true
+              },
+              {
+                "col": 2,
+                "id": "WI",
+                "name": "Wisconsin",
+                "popShare": 3.2,
+                "row": 2,
+                "swing": true
+              },
+              {
+                "col": 3,
+                "id": "CO",
+                "name": "Colorado",
+                "popShare": 2.9,
+                "row": 2,
+                "swing": false
+              },
+              {
+                "col": 0,
+                "id": "OR",
+                "name": "Other safe Red",
+                "popShare": 13,
+                "row": 3,
+                "swing": false
+              },
+              {
+                "col": 1,
+                "id": "OB",
+                "name": "Other safe Blue",
+                "popShare": 13.3,
+                "row": 3,
+                "swing": false
+              }
+            ],
+            "label": "States",
+            "description": "The modeled map: twelve headline states plus two aggregate tiles for the remaining safe-red and safe-blue states. col/row place the tile on the canvas grid; popShare is the share of the national popular vote; swing marks the states the learner may flip.",
+            "synonyms": "electoral map, swing states, battleground states, state tiles",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "col": {
+                  "name": "col",
+                  "required": true,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "popShare": {
+                  "name": "popShare",
+                  "required": true,
+                  "type": "number"
+                },
+                "row": {
+                  "name": "row",
+                  "required": true,
+                  "type": "number"
+                },
+                "swing": {
+                  "name": "swing",
+                  "required": true,
+                  "type": "boolean"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "threshold",
+            "type": "number",
+            "default": 270,
+            "label": "Win Threshold",
+            "description": "Electoral votes needed to win the presidency — a majority of the total electors.",
+            "synonyms": "270 to win, electoral majority, winning threshold",
+            "tier": "domain"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Civics Lab",
+            "label": "Title",
+            "description": "Title shown above the lab.",
+            "tier": "presentation"
+          },
+          {
+            "key": "tossupColor",
+            "type": "string",
+            "default": "#94a3b8",
+            "label": "Tossup Color",
+            "description": "Color for undecided (tossup) states.",
+            "tier": "presentation"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 640,
+            "label": "Width",
+            "description": "Canvas width in pixels.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "CivicsElectoralScene",
+        "transitionEvents": [
+          "INIT",
+          "LOAD_SCENARIO",
+          "MODE_SELECTED",
+          "RESET",
+          "TOGGLE_STATE"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "blueEV",
+            "bluePop",
+            "redEV",
+            "redPop",
+            "renderChildren",
+            "scenarioName",
+            "splitNote",
+            "title",
+            "tossupEV",
+            "winnerMap"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "CivicsElectoralPage",
+        "defaultPath": "/civics-electoral",
+        "primaryEntity": "CivicsElectoralScene"
+      }
+    ],
+    "emittedEvents": [
+      "ELECTORAL_UPDATED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

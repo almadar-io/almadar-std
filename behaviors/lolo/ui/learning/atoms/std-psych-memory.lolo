@@ -1,0 +1,319 @@
+app std-psych-memory "1.0.0"
+"Memory-retention engine — the Ebbinghaus forgetting curve: retention decays exponentially with time since the last repetition, ADD_REPETITION recovers a fraction of the forgotten gap (full boost under the spaced preset, half under massed, so the learner can compare the two schedules), and a no-repetition reference decay is plotted alongside on a math-canvas. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital PsychMemoryOrbital {
+  type PsychMemorySample = {
+    x : number!
+    y : number!
+  }
+  type PsychMemoryCurve = {
+    label : string
+    color : string
+    samples : [PsychMemorySample]!
+  }
+  type PsychMemoryPoint = {
+    x : number!
+    y : number!
+    label : string
+    color : string
+    radius : number
+  }
+
+  entity PsychMemoryScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    retention : number
+    totalTime : number
+    repetitions : number
+    history : [PsychMemorySample]
+    curves : [PsychMemoryCurve]
+    points : [PsychMemoryPoint]
+  }
+
+  trait PsychMemorySim -> @rebindable PsychMemoryScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (let (
+            (refSamples (array/map (array/range 41) (fn i (let ( (t (* (/ @i 40) @config.timeHorizon)) ) { x: @t, y: (exp (* -1 (* @config.decayRate @t))) }))))
+            (seedHistory [ { x: 0, y: 1 } ])
+            (seedCurves [
+                { label: "Retention (with repetitions)", color: @config.curveColor, samples: @seedHistory },
+                { label: "No-Repetition Decay", color: @config.referenceColor, samples: @refSamples }
+              ])
+            (seedPoints [ { x: 0, y: 1, label: "Current", color: @config.curveColor, radius: 5 } ])
+          )
+          (do
+            (set @entity.retention 1)
+            (set @entity.totalTime 0)
+            (set @entity.repetitions 0)
+            (set @entity.history @seedHistory)
+            (set @entity.curves @seedCurves)
+            (set @entity.points @seedPoints)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: ADD_REPETITION, label: "Add Repetition", variant: primary },
+                    { type: button, action: STEP_TIME, label: "Step Time", variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.timeHorizon, yMin: 0, yMax: 1, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: (str/concat "Retention: " (math/round @entity.retention 3) " — repetitions: " @entity.repetitions " — time: " (math/round @entity.totalTime 1) " of " @config.timeHorizon " — schedule: " @config.schedulePresets) }
+              ] }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (let (
+            (refSamples (array/map (array/range 41) (fn i (let ( (t (* (/ @i 40) @config.timeHorizon)) ) { x: @t, y: (exp (* -1 (* @config.decayRate @t))) }))))
+            (seedHistory [ { x: 0, y: 1 } ])
+            (seedCurves [
+                { label: "Retention (with repetitions)", color: @config.curveColor, samples: @seedHistory },
+                { label: "No-Repetition Decay", color: @config.referenceColor, samples: @refSamples }
+              ])
+            (seedPoints [ { x: 0, y: 1, label: "Current", color: @config.curveColor, radius: 5 } ])
+          )
+          (do
+            (set @entity.retention 1)
+            (set @entity.totalTime 0)
+            (set @entity.repetitions 0)
+            (set @entity.history @seedHistory)
+            (set @entity.curves @seedCurves)
+            (set @entity.points @seedPoints)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: ADD_REPETITION, label: "Add Repetition", variant: primary },
+                    { type: button, action: STEP_TIME, label: "Step Time", variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.timeHorizon, yMin: 0, yMax: 1, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: (str/concat "Retention: " (math/round @entity.retention 3) " — repetitions: " @entity.repetitions " — time: " (math/round @entity.totalTime 1) " of " @config.timeHorizon " — schedule: " @config.schedulePresets) }
+              ] }
+          ]
+        })
+
+      ADD_REPETITION -> idle when (== @entity.active true)
+        (let (
+            (boost (* @config.repetitionBoost (if (== @config.schedulePresets "massed") 0.5 1)))
+            (newRetention (math/min 1 (+ @entity.retention (* @boost (- 1 @entity.retention)))))
+            (newHistory (array/append @entity.history { x: @entity.totalTime, y: @newRetention }))
+            (refSamples (array/map (array/range 41) (fn i (let ( (t (* (/ @i 40) @config.timeHorizon)) ) { x: @t, y: (exp (* -1 (* @config.decayRate @t))) }))))
+            (newCurves [
+                { label: "Retention (with repetitions)", color: @config.curveColor, samples: @newHistory },
+                { label: "No-Repetition Decay", color: @config.referenceColor, samples: @refSamples }
+              ])
+            (newPoints [ { x: @entity.totalTime, y: @newRetention, label: "Current", color: @config.curveColor, radius: 5 } ])
+          )
+          (do
+            (set @entity.retention @newRetention)
+            (set @entity.repetitions (+ @entity.repetitions 1))
+            (set @entity.history @newHistory)
+            (set @entity.curves @newCurves)
+            (set @entity.points @newPoints)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: ADD_REPETITION, label: "Add Repetition", variant: primary },
+                    { type: button, action: STEP_TIME, label: "Step Time", variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.timeHorizon, yMin: 0, yMax: 1, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: (str/concat "Retention: " (math/round @entity.retention 3) " — repetitions: " @entity.repetitions " — time: " (math/round @entity.totalTime 1) " of " @config.timeHorizon " — schedule: " @config.schedulePresets) }
+              ] }
+          ]
+        })
+        (emit MEMORY_UPDATED { retention: @entity.retention, repetitions: @entity.repetitions, totalTime: @entity.totalTime })
+
+      STEP_TIME -> idle when (== @entity.active true)
+        (let (
+            (step (/ @config.timeHorizon 20))
+            (newTime (math/min @config.timeHorizon (+ @entity.totalTime @step)))
+            (newRetention (* @entity.retention (exp (* -1 (* @config.decayRate @step)))))
+            (newHistory (array/append @entity.history { x: @newTime, y: @newRetention }))
+            (refSamples (array/map (array/range 41) (fn i (let ( (t (* (/ @i 40) @config.timeHorizon)) ) { x: @t, y: (exp (* -1 (* @config.decayRate @t))) }))))
+            (newCurves [
+                { label: "Retention (with repetitions)", color: @config.curveColor, samples: @newHistory },
+                { label: "No-Repetition Decay", color: @config.referenceColor, samples: @refSamples }
+              ])
+            (newPoints [ { x: @newTime, y: @newRetention, label: "Current", color: @config.curveColor, radius: 5 } ])
+          )
+          (do
+            (set @entity.retention @newRetention)
+            (set @entity.totalTime @newTime)
+            (set @entity.history @newHistory)
+            (set @entity.curves @newCurves)
+            (set @entity.points @newPoints)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: ADD_REPETITION, label: "Add Repetition", variant: primary },
+                    { type: button, action: STEP_TIME, label: "Step Time", variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.timeHorizon, yMin: 0, yMax: 1, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: (str/concat "Retention: " (math/round @entity.retention 3) " — repetitions: " @entity.repetitions " — time: " (math/round @entity.totalTime 1) " of " @config.timeHorizon " — schedule: " @config.schedulePresets) }
+              ] }
+          ]
+        })
+        (emit MEMORY_UPDATED { retention: @entity.retention, repetitions: @entity.repetitions, totalTime: @entity.totalTime })
+
+      RESET -> idle when (== @entity.active true)
+        (let (
+            (refSamples (array/map (array/range 41) (fn i (let ( (t (* (/ @i 40) @config.timeHorizon)) ) { x: @t, y: (exp (* -1 (* @config.decayRate @t))) }))))
+            (seedHistory [ { x: 0, y: 1 } ])
+            (seedCurves [
+                { label: "Retention (with repetitions)", color: @config.curveColor, samples: @seedHistory },
+                { label: "No-Repetition Decay", color: @config.referenceColor, samples: @refSamples }
+              ])
+            (seedPoints [ { x: 0, y: 1, label: "Current", color: @config.curveColor, radius: 5 } ])
+          )
+          (do
+            (set @entity.retention 1)
+            (set @entity.totalTime 0)
+            (set @entity.repetitions 0)
+            (set @entity.history @seedHistory)
+            (set @entity.curves @seedCurves)
+            (set @entity.points @seedPoints)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: ADD_REPETITION, label: "Add Repetition", variant: primary },
+                    { type: button, action: STEP_TIME, label: "Step Time", variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.timeHorizon, yMin: 0, yMax: 1, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: (str/concat "Retention: " (math/round @entity.retention 3) " — repetitions: " @entity.repetitions " — time: " (math/round @entity.totalTime 1) " of " @config.timeHorizon " — schedule: " @config.schedulePresets) }
+              ] }
+          ]
+        })
+        (emit MEMORY_UPDATED { retention: @entity.retention, repetitions: @entity.repetitions, totalTime: @entity.totalTime })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      ADD_REPETITION {
+      }
+        @description "Learner reviewed the material again — retention recovers a fraction of the forgotten gap (full boost spaced, half boost massed) and the decay clock restarts."
+        @tier "domain"
+      STEP_TIME {
+      }
+        @description "Advanced time by one twentieth of the horizon, decaying retention exponentially."
+        @tier "domain"
+      RESET {
+      }
+        @description "Learner reset the forgetting curve — retention, time, and repetition count return to their starting values."
+        @tier "domain"
+    }
+
+    emits {
+      MEMORY_UPDATED -> external {
+        retention : number
+        repetitions : number
+        totalTime : number
+      }
+        @description "The memory state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "forgetting curve, retention, memory decay, Ebbinghaus, spaced repetition"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Ebbinghaus Forgetting Curve"
+        @label "Title"
+        @description "Title shown above the canvas."
+        @tier "presentation"
+      width : number = 640
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 440
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      gridStep : number = 5
+        @label "Grid Step"
+        @description "Spacing between gridlines on the canvas, in time units."
+        @tier "presentation"
+      interactive : boolean = false
+        @label "Interactive"
+        @description "Enable pointer interaction on the canvas."
+        @tier "presentation"
+      animate : boolean = false
+        @label "Animate"
+        @description "Enable continuous redraw loop."
+        @tier "presentation"
+      decayRate : number = 0.08
+        @label "Decay Rate"
+        @description "Exponential forgetting rate — each STEP_TIME multiplies retention by exp(−decayRate · Δt)."
+        @synonyms "forgetting rate, Ebbinghaus decay, retention decay, memory decay"
+        @tier "domain"
+      repetitionBoost : number = 0.35
+        @label "Repetition Boost"
+        @description "Fraction of the forgotten gap (1 − retention) recovered by one repetition; the massed preset halves it to model cramming's weaker encoding."
+        @synonyms "repetition effect, rehearsal boost, spacing effect, relearning savings"
+        @tier "domain"
+      timeHorizon : number = 30
+        @label "Time Horizon"
+        @description "Total time units shown on the x-axis; each STEP_TIME advances one twentieth of it."
+        @tier "domain"
+      schedulePresets : "massed" | "spaced" = spaced
+        @label "Schedule Preset"
+        @description "Practice schedule being demonstrated: massed practice (cramming) recovers only half the boost per repetition, spaced practice recovers the full boost — the spacing effect."
+        @synonyms "spaced repetition, distributed practice, massed practice, cramming, spacing effect"
+        @tier "domain"
+      curveColor : string = "#2563eb"
+        @label "Curve Color"
+        @description "Color of the retention curve and its current-value marker."
+        @tier "presentation"
+      referenceColor : string = "#94a3b8"
+        @label "Reference Curve Color"
+        @description "Color of the no-repetition reference decay curve."
+        @tier "presentation"
+    }
+  }
+
+  page "/psych-memory" as PsychMemoryPage -> PsychMemorySim
+}

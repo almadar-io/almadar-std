@@ -45,7 +45,7 @@ export interface StdUiArenaBoardConfig {
   units?: unknown;
 }
 
-type _StdUiArenaBoardEntityName = 'GameState';
+type _StdUiArenaBoardEntityName = 'GameState' | 'TacticsState' | 'FxState' | 'RoundState' | 'ScoreState' | 'AnimTickItem';
 type _StdUiArenaBoardListenTraitName = 'TacticsAuthority' | 'FxDecay' | 'RoundLogic' | 'ScoreKeeper' | 'AnimClock' | 'ArenaClock' | 'ArenaCommand';
 
 /**

@@ -160,7 +160,7 @@ export function stdEsignRequest(params: StdEsignRequestParams): OrbitalDefinitio
   });
 }
 
-type _StdEsignRequestEntityName = 'ESignRequest';
+type _StdEsignRequestEntityName = 'ESignRequest' | 'TypographyItem' | 'DataGridItem' | 'AlertItem';
 type _StdEsignRequestListenTraitName = 'TitleHeading' | 'RequestDataGrid' | 'ErrorAlert' | 'ESignRequestSigning';
 
 /**

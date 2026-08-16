@@ -1,0 +1,318 @@
+app std-algo-hashing "1.0.0"
+"Hash-table builder — inserts keys one at a time; the hash function maps each key to a bucket, collisions resolve by chaining or linear probing, and a load-factor readout triggers rehash; renders algorithm-canvas. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital HashingEngineOrbital {
+  type AlgoBar = {
+    value : number!
+    color : string
+    label : string
+  }
+
+  entity HashingState [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    buckets : [AlgoBar]
+    cursor : number = 0
+    inserted : number = 0
+    collisions : number = 0
+    size : number = 0
+    narration : string
+  }
+
+  trait HashingSim -> @rebindable HashingState [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.buckets @config.buckets)
+        (set @entity.cursor 0)
+        (set @entity.inserted 0)
+        (set @entity.collisions 0)
+        (set @entity.size @config.tableSize)
+        (set @entity.narration "Press Insert to hash the next key into the table.")
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: INSERT_KEY, label: "Insert", variant: primary },
+                    { type: button, action: DELETE_KEY, label: "Delete", variant: secondary },
+                    { type: button, action: REHASH, label: "Rehash", variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: algorithm-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bars: @entity.buckets },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit HASH_UPDATED { buckets: @entity.buckets, inserted: @entity.inserted, collisions: @entity.collisions, size: @entity.size, narration: @entity.narration })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.buckets @config.buckets)
+        (set @entity.cursor 0)
+        (set @entity.inserted 0)
+        (set @entity.collisions 0)
+        (set @entity.size @config.tableSize)
+        (set @entity.narration "Press Insert to hash the next key into the table.")
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: INSERT_KEY, label: "Insert", variant: primary },
+                    { type: button, action: DELETE_KEY, label: "Delete", variant: secondary },
+                    { type: button, action: REHASH, label: "Rehash", variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: algorithm-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bars: @entity.buckets },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit HASH_UPDATED { buckets: @entity.buckets, inserted: @entity.inserted, collisions: @entity.collisions, size: @entity.size, narration: @entity.narration })
+
+      INSERT_KEY -> idle when (and (== @entity.active true) (< @entity.cursor (array/len @config.keys)))
+        (let (
+            (key (array/nth @config.keys @entity.cursor))
+            (home (if (== @config.hashFunction "midsquare")
+                    (math/mod (math/floor (/ (* @key @key) 10)) @entity.size)
+                    (math/mod @key @entity.size)))
+            (occupied (!= (object/get (array/nth @entity.buckets @home) label) ""))
+            (target (if (and @occupied (== @config.collisionStrategy "probe")) (math/mod (+ @home 1) @entity.size) @home))
+          )
+          (do
+            (set @entity.cursor (+ @entity.cursor 1))
+            (set @entity.inserted (+ @entity.inserted 1))
+            (set @entity.collisions (+ @entity.collisions (if @occupied 1 0)))
+            (set @entity.buckets (array/map @entity.buckets
+              (if (== @index @target)
+                (object/merge @item {
+                  value: (+ (object/get @item value) 1)
+                  color: (if @occupied "#f59e0b" "#3b82f6")
+                  label: (str/concat "" @key)
+                })
+                @item)))
+            (set @entity.narration (str/concat "insert " (str/concat "" @key) " -> bucket " (str/concat "" @target) (if @occupied (if (== @config.collisionStrategy "probe") " (collision, probed forward)" " (collision, chained)") "") " · load " (str/concat "" @entity.inserted) "/" (str/concat "" @entity.size) (if (>= (/ @entity.inserted @entity.size) @config.rehashThreshold) " — over threshold, rehash" "")))))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: INSERT_KEY, label: "Insert", variant: primary },
+                    { type: button, action: DELETE_KEY, label: "Delete", variant: secondary },
+                    { type: button, action: REHASH, label: "Rehash", variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: algorithm-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bars: @entity.buckets },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit HASH_UPDATED { buckets: @entity.buckets, inserted: @entity.inserted, collisions: @entity.collisions, size: @entity.size, narration: @entity.narration })
+
+      DELETE_KEY -> idle when (and (== @entity.active true) (> @entity.cursor 0))
+        (let (
+            (idx (- @entity.cursor 1))
+            (key (array/nth @config.keys @idx))
+            (home (if (== @config.hashFunction "midsquare")
+                    (math/mod (math/floor (/ (* @key @key) 10)) @entity.size)
+                    (math/mod @key @entity.size)))
+          )
+          (do
+            (set @entity.cursor @idx)
+            (set @entity.inserted (- @entity.inserted 1))
+            (set @entity.buckets (array/map @entity.buckets
+              (if (== @index @home)
+                (object/merge @item {
+                  value: (math/max (- (object/get @item value) 1) 0)
+                  color: (if (<= (object/get @item value) 1) "#e2e8f0" (object/get @item color))
+                  label: (if (<= (object/get @item value) 1) "" (object/get @item label))
+                })
+                @item)))
+            (set @entity.narration (str/concat "delete " (str/concat "" @key) " from bucket " (str/concat "" @home) " · load " (str/concat "" @entity.inserted) "/" (str/concat "" @entity.size)))))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: INSERT_KEY, label: "Insert", variant: primary },
+                    { type: button, action: DELETE_KEY, label: "Delete", variant: secondary },
+                    { type: button, action: REHASH, label: "Rehash", variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: algorithm-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bars: @entity.buckets },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit HASH_UPDATED { buckets: @entity.buckets, inserted: @entity.inserted, collisions: @entity.collisions, size: @entity.size, narration: @entity.narration })
+
+      REHASH -> idle when (and (== @entity.active true) (< @entity.size (array/len @entity.buckets)))
+        (let (
+            (oldSize @entity.size)
+            (newSize (math/min (* @entity.size 2) (array/len @entity.buckets)))
+            (live (array/map (array/range @entity.cursor) (fn i (array/nth @config.keys @i))))
+          )
+          (do
+            (set @entity.size @newSize)
+            (set @entity.buckets (array/map @entity.buckets
+              (let (
+                  (here (array/filter @live (fn k (== (if (== @config.hashFunction "midsquare") (math/mod (math/floor (/ (* @k @k) 10)) @newSize) (math/mod @k @newSize)) @index))))
+                )
+                (object/merge @item {
+                  value: (array/len @here)
+                  color: (if (> (array/len @here) 1) "#f59e0b" (if (== (array/len @here) 1) "#3b82f6" "#e2e8f0"))
+                  label: (if (> (array/len @here) 0) (str/concat "" (array/first @here)) "")
+                }))))
+            (set @entity.narration (str/concat "rehash — table " (str/concat "" @oldSize) " -> " (str/concat "" @newSize) ", every key re-mapped · load " (str/concat "" @entity.inserted) "/" (str/concat "" @newSize)))))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: INSERT_KEY, label: "Insert", variant: primary },
+                    { type: button, action: DELETE_KEY, label: "Delete", variant: secondary },
+                    { type: button, action: REHASH, label: "Rehash", variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: algorithm-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bars: @entity.buckets },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit HASH_UPDATED { buckets: @entity.buckets, inserted: @entity.inserted, collisions: @entity.collisions, size: @entity.size, narration: @entity.narration })
+
+      RESET -> idle when (== @entity.active true)
+        (set @entity.buckets @config.buckets)
+        (set @entity.cursor 0)
+        (set @entity.inserted 0)
+        (set @entity.collisions 0)
+        (set @entity.size @config.tableSize)
+        (set @entity.narration "Press Insert to hash the next key into the table.")
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: INSERT_KEY, label: "Insert", variant: primary },
+                    { type: button, action: DELETE_KEY, label: "Delete", variant: secondary },
+                    { type: button, action: REHASH, label: "Rehash", variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: algorithm-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bars: @entity.buckets },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit HASH_UPDATED { buckets: @entity.buckets, inserted: @entity.inserted, collisions: @entity.collisions, size: @entity.size, narration: @entity.narration })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+    }
+
+    emits {
+      HASH_UPDATED -> external {
+        buckets : [AlgoBar]
+        inserted : number
+        collisions : number
+        size : number
+        narration : string
+      }
+        @description "The hash-table state after each insert/delete/rehash — a composed listener (load-factor gauge, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "hash table, bucket, collision, chaining, probing, rehash, load factor"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      tableSize : number = 8
+        @label "Table Size"
+        @description "Starting number of buckets; REHASH doubles it up to the number of pre-allocated bucket slots."
+        @synonyms "bucket count, table capacity, m"
+        @tier "domain"
+      collisionStrategy : string = "chain"
+        @label "Collision Strategy"
+        @description "How a collision resolves — chain stacks the key in the same bucket (amber, depth counted); probe moves the key one bucket forward (linear probing)."
+        @synonyms "chaining, linear probing, open addressing, collision resolution"
+        @tier "domain"
+      keys : [number] = [12, 25, 37, 41, 53, 68, 79, 90]
+        @label "Keys"
+        @description "The keys INSERT_KEY feeds into the table, one per press, in order."
+        @synonyms "records, entries, values to hash"
+        @tier "domain"
+      rehashThreshold : number = 0.75
+        @label "Rehash Threshold"
+        @description "Load factor (inserted / table size) at which the narration flags the table as over threshold and due for rehash."
+        @synonyms "load factor limit, alpha, resize point"
+        @tier "domain"
+      hashFunction : string = "mod"
+        @label "Hash Function"
+        @description "Hash rule applied to each key — mod is key mod table size; midsquare squares the key, shifts right one digit, then takes the mod."
+        @synonyms "hash, division method, mid-square method"
+        @tier "domain"
+      title : string = "Hash Table"
+        @label "Title"
+        @description "Title shown above the canvas."
+        @tier "presentation"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      backgroundColor : string = "#f8fafc"
+        @label "Background Color"
+        @description "Canvas background color."
+        @tier "presentation"
+      buckets : [AlgoBar] = [
+        { value: 0, color: "#e2e8f0", label: "" },
+        { value: 0, color: "#e2e8f0", label: "" },
+        { value: 0, color: "#e2e8f0", label: "" },
+        { value: 0, color: "#e2e8f0", label: "" },
+        { value: 0, color: "#e2e8f0", label: "" },
+        { value: 0, color: "#e2e8f0", label: "" },
+        { value: 0, color: "#e2e8f0", label: "" },
+        { value: 0, color: "#e2e8f0", label: "" },
+        { value: 0, color: "#e2e8f0", label: "" },
+        { value: 0, color: "#e2e8f0", label: "" },
+        { value: 0, color: "#e2e8f0", label: "" },
+        { value: 0, color: "#e2e8f0", label: "" },
+        { value: 0, color: "#e2e8f0", label: "" },
+        { value: 0, color: "#e2e8f0", label: "" },
+        { value: 0, color: "#e2e8f0", label: "" },
+        { value: 0, color: "#e2e8f0", label: "" }
+      ]
+        @label "Bucket Slots"
+        @description "Pre-allocated bucket slots; tableSize uses the first N, REHASH grows into the rest. Keep the slot count at least twice tableSize."
+        @tier "presentation"
+    }
+  }
+
+  page "/algo-hashing" as HashingEnginePage -> HashingSim
+}

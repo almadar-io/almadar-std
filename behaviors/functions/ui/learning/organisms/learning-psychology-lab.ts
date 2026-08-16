@@ -50,7 +50,7 @@ export interface StdLearningPsychologyLabConfig {
   mode?: 'conditioning' | 'hierarchy';
 }
 
-type _StdLearningPsychologyLabEntityName = 'PsychologyLabItem' | 'ConditioningScene' | 'ClassifyScene';
+type _StdLearningPsychologyLabEntityName = 'PsychologyLabItem' | 'ConditioningScene' | 'ClassifyScene' | 'PsychConditioningScene' | 'LearnClassifyScene';
 type _StdLearningPsychologyLabListenTraitName = 'PsychologyLabRouter' | 'ConditioningSim' | 'ClassifySim';
 
 /**
@@ -360,6 +360,14 @@ export function stdLearningPsychologyLabPsychologyLabOrbital(params: StdLearning
             'type': 'string',
           },
           {
+            'name': 'itemHint',
+            'type': 'string',
+          },
+          {
+            'name': 'itemExplanation',
+            'type': 'string',
+          },
+          {
             'name': 'correctCategory',
             'type': 'string',
           },
@@ -372,12 +380,32 @@ export function stdLearningPsychologyLabPsychologyLabOrbital(params: StdLearning
             'type': 'string',
           },
           {
+            'name': 'verdict',
+            'type': 'string',
+          },
+          {
             'name': 'correctCount',
             'type': 'number',
           },
           {
             'name': 'attemptedCount',
             'type': 'number',
+          },
+          {
+            'name': 'totalItems',
+            'type': 'number',
+          },
+          {
+            'default': false,
+            'name': 'roundComplete',
+            'type': 'boolean',
+          },
+          {
+            'items': {
+              'type': 'object',
+            },
+            'name': 'categoryStats',
+            'type': 'array',
           },
           {
             'items': {
@@ -546,6 +574,13 @@ export function stdLearningPsychologyLabPsychologyLabOrbital(params: StdLearning
               'type': 'object',
             },
             'name': 'backdropShapes',
+            'type': 'array',
+          },
+          {
+            'items': {
+              'type': 'object',
+            },
+            'name': 'roundView',
             'type': 'array',
           },
         ],

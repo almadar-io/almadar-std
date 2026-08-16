@@ -19,13 +19,23 @@
             "required": false
           },
           {
-            "name": "curves",
+            "name": "counts",
             "type": "array",
             "required": false
           },
           {
-            "name": "points",
-            "type": "array",
+            "name": "total",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "running",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "narration",
+            "type": "string",
             "required": false
           },
           {
@@ -40,9 +50,18 @@
     "traits": [
       {
         "name": "ProbTrialsSim",
-        "emittedEvents": [],
+        "emittedEvents": [
+          "TRIALS_UPDATED"
+        ],
         "listenedEvents": [],
         "events": [
+          {
+            "name": "TRIALS_UPDATED",
+            "direction": "emit",
+            "description": "The accumulated per-outcome counts, total draws, and narration after each Roll, Run tick, or Reset — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "dice roll, coin flip, sampling, observed frequency, law of large numbers, trial run",
+            "tier": "domain"
+          },
           {
             "name": "INIT",
             "direction": "listen"
@@ -52,6 +71,18 @@
             "direction": "listen",
             "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
             "tier": "domain"
+          },
+          {
+            "name": "TRIAL",
+            "direction": "listen"
+          },
+          {
+            "name": "RUN",
+            "direction": "listen"
+          },
+          {
+            "name": "RESET",
+            "direction": "listen"
           }
         ],
         "overridableConfigKeys": [
@@ -62,116 +93,6 @@
             "label": "Animate",
             "description": "Enable continuous redraw loop.",
             "tier": "presentation"
-          },
-          {
-            "key": "curves",
-            "type": "[ProbTrialsCurve]",
-            "default": [
-              {
-                "color": "#2563eb",
-                "label": "uniform",
-                "samples": [
-                  {
-                    "x": 0,
-                    "y": 0.1
-                  },
-                  {
-                    "x": 1,
-                    "y": 0.1
-                  },
-                  {
-                    "x": 2,
-                    "y": 0.1
-                  },
-                  {
-                    "x": 3,
-                    "y": 0.1
-                  },
-                  {
-                    "x": 4,
-                    "y": 0.1
-                  },
-                  {
-                    "x": 5,
-                    "y": 0.1
-                  },
-                  {
-                    "x": 6,
-                    "y": 0.1
-                  },
-                  {
-                    "x": 7,
-                    "y": 0.1
-                  },
-                  {
-                    "x": 8,
-                    "y": 0.1
-                  },
-                  {
-                    "x": 9,
-                    "y": 0.1
-                  },
-                  {
-                    "x": 10,
-                    "y": 0.1
-                  }
-                ]
-              }
-            ],
-            "label": "Curves",
-            "description": "Distribution curve or cumulative frequency — e.g. a dice-face histogram, a coin-flip bar, or a general distribution shape.",
-            "synonyms": "dice, coin flip, sampling, distribution, histogram, law of large numbers, expected value",
-            "tier": "domain",
-            "items": {
-              "properties": {
-                "color": {
-                  "name": "color",
-                  "required": false,
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
-                  "required": false,
-                  "type": "string"
-                },
-                "samples": {
-                  "name": "samples",
-                  "required": false,
-                  "type": "array",
-                  "items": {
-                    "properties": {
-                      "color": {
-                        "name": "color",
-                        "required": false,
-                        "type": "string"
-                      },
-                      "label": {
-                        "name": "label",
-                        "required": false,
-                        "type": "string"
-                      },
-                      "radius": {
-                        "name": "radius",
-                        "required": false,
-                        "type": "number"
-                      },
-                      "x": {
-                        "name": "x",
-                        "required": true,
-                        "type": "number"
-                      },
-                      "y": {
-                        "name": "y",
-                        "required": true,
-                        "type": "number"
-                      }
-                    },
-                    "type": "object"
-                  }
-                }
-              },
-              "type": "object"
-            }
           },
           {
             "key": "gridStep",
@@ -205,12 +126,44 @@
             "tier": "presentation"
           },
           {
-            "key": "points",
-            "type": "[ProbTrialsPoint]",
-            "default": [],
-            "label": "Points",
-            "description": "Sampled outcomes or scatter points.",
-            "tier": "presentation",
+            "key": "outcomes",
+            "type": "[ProbTrialsOutcome]",
+            "default": [
+              {
+                "color": "#2563eb",
+                "label": "1",
+                "probability": 0.1667
+              },
+              {
+                "color": "#7c3aed",
+                "label": "2",
+                "probability": 0.1667
+              },
+              {
+                "color": "#db2777",
+                "label": "3",
+                "probability": 0.1667
+              },
+              {
+                "color": "#dc2626",
+                "label": "4",
+                "probability": 0.1667
+              },
+              {
+                "color": "#f59e0b",
+                "label": "5",
+                "probability": 0.1667
+              },
+              {
+                "color": "#16a34a",
+                "label": "6",
+                "probability": 0.1667
+              }
+            ],
+            "label": "Outcomes",
+            "description": "The sample space each trial draws from — label, relative probability (weights are normalized, needn't sum to 1), and bar color. Default is a fair six-sided die; a coin flip, a weighted spinner, or any categorical distribution is just a different outcomes list.",
+            "synonyms": "dice, coin flip, sampling, distribution, histogram, law of large numbers, expected value, sample space, categorical distribution",
+            "tier": "domain",
             "items": {
               "properties": {
                 "color": {
@@ -220,21 +173,11 @@
                 },
                 "label": {
                   "name": "label",
-                  "required": false,
+                  "required": true,
                   "type": "string"
                 },
-                "radius": {
-                  "name": "radius",
-                  "required": false,
-                  "type": "number"
-                },
-                "x": {
-                  "name": "x",
-                  "required": true,
-                  "type": "number"
-                },
-                "y": {
-                  "name": "y",
+                "probability": {
+                  "name": "probability",
                   "required": true,
                   "type": "number"
                 }
@@ -243,196 +186,33 @@
             }
           },
           {
-            "key": "shapes",
-            "type": "[ProbTrialsShape]",
-            "default": [],
-            "label": "Shapes",
-            "description": "Extra declarative shapes such as bars or outcome labels.",
-            "tier": "presentation",
-            "items": {
-              "properties": {
-                "align": {
-                  "name": "align",
-                  "required": false,
-                  "type": "string",
-                  "values": [
-                    "left",
-                    "center",
-                    "right"
-                  ]
-                },
-                "axis": {
-                  "name": "axis",
-                  "required": false,
-                  "type": "string",
-                  "values": [
-                    "x",
-                    "y"
-                  ]
-                },
-                "color": {
-                  "name": "color",
-                  "required": false,
-                  "type": "string"
-                },
-                "fill": {
-                  "name": "fill",
-                  "required": false,
-                  "type": "string"
-                },
-                "fontSize": {
-                  "name": "fontSize",
-                  "required": false,
-                  "type": "number"
-                },
-                "height": {
-                  "name": "height",
-                  "required": false,
-                  "type": "number"
-                },
-                "id": {
-                  "name": "id",
-                  "required": false,
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
-                  "required": false,
-                  "type": "string"
-                },
-                "lineWidth": {
-                  "name": "lineWidth",
-                  "required": false,
-                  "type": "number"
-                },
-                "max": {
-                  "name": "max",
-                  "required": false,
-                  "type": "number"
-                },
-                "min": {
-                  "name": "min",
-                  "required": false,
-                  "type": "number"
-                },
-                "opacity": {
-                  "name": "opacity",
-                  "required": false,
-                  "type": "number"
-                },
-                "path": {
-                  "name": "path",
-                  "required": false,
-                  "type": "string"
-                },
-                "points": {
-                  "name": "points",
-                  "required": false,
-                  "type": "array",
-                  "items": {
-                    "properties": {
-                      "x": {
-                        "name": "x",
-                        "required": true,
-                        "type": "number"
-                      },
-                      "y": {
-                        "name": "y",
-                        "required": true,
-                        "type": "number"
-                      }
-                    },
-                    "type": "object"
-                  }
-                },
-                "radius": {
-                  "name": "radius",
-                  "required": false,
-                  "type": "number"
-                },
-                "step": {
-                  "name": "step",
-                  "required": false,
-                  "type": "number"
-                },
-                "text": {
-                  "name": "text",
-                  "required": false,
-                  "type": "string"
-                },
-                "type": {
-                  "name": "type",
-                  "required": true,
-                  "type": "string",
-                  "values": [
-                    "line",
-                    "arrow",
-                    "circle",
-                    "rect",
-                    "polygon",
-                    "path",
-                    "text",
-                    "axis",
-                    "grid"
-                  ]
-                },
-                "width": {
-                  "name": "width",
-                  "required": false,
-                  "type": "number"
-                },
-                "x": {
-                  "name": "x",
-                  "required": false,
-                  "type": "number"
-                },
-                "x1": {
-                  "name": "x1",
-                  "required": false,
-                  "type": "number"
-                },
-                "x2": {
-                  "name": "x2",
-                  "required": false,
-                  "type": "number"
-                },
-                "y": {
-                  "name": "y",
-                  "required": false,
-                  "type": "number"
-                },
-                "y1": {
-                  "name": "y1",
-                  "required": false,
-                  "type": "number"
-                },
-                "y2": {
-                  "name": "y2",
-                  "required": false,
-                  "type": "number"
-                }
-              },
-              "type": "object"
-            }
+            "key": "running",
+            "type": "boolean",
+            "default": false,
+            "label": "Running",
+            "description": "When true the tick auto-samples a new outcome every ~500ms from load; toggle with the Run button.",
+            "tier": "domain"
           },
           {
             "key": "showAxes",
             "type": "boolean",
-            "default": true,
+            "default": false,
             "label": "Show Axes",
+            "description": "Draw background axes behind the observed-frequency bars.",
             "tier": "presentation"
           },
           {
             "key": "showGrid",
             "type": "boolean",
-            "default": true,
+            "default": false,
             "label": "Show Grid",
+            "description": "Draw a background grid behind the observed-frequency bars.",
             "tier": "presentation"
           },
           {
             "key": "title",
             "type": "string",
-            "default": "Probability Lab",
+            "default": "Probability Trials",
             "label": "Title",
             "description": "Title shown above the canvas.",
             "tier": "presentation"
@@ -444,55 +224,28 @@
             "label": "Width",
             "description": "Canvas width in pixels.",
             "tier": "presentation"
-          },
-          {
-            "key": "xMax",
-            "type": "number",
-            "default": 10,
-            "label": "X Max",
-            "description": "Maximum x value on the canvas.",
-            "tier": "presentation"
-          },
-          {
-            "key": "xMin",
-            "type": "number",
-            "default": 0,
-            "label": "X Min",
-            "description": "Minimum x value on the canvas.",
-            "tier": "presentation"
-          },
-          {
-            "key": "yMax",
-            "type": "number",
-            "default": 1,
-            "label": "Y Max",
-            "description": "Maximum y value on the canvas.",
-            "tier": "presentation"
-          },
-          {
-            "key": "yMin",
-            "type": "number",
-            "default": 0,
-            "label": "Y Min",
-            "description": "Minimum y value on the canvas.",
-            "tier": "presentation"
           }
         ],
         "capabilities": [],
         "linkedEntity": "ProbTrialsScene",
         "transitionEvents": [
           "INIT",
-          "MODE_SELECTED"
+          "MODE_SELECTED",
+          "RESET",
+          "RUN",
+          "TRIAL"
         ],
         "entityRebindable": true,
         "entityContract": {
           "requires": [],
           "provides": [
             "active",
-            "curves",
-            "points",
+            "counts",
+            "narration",
+            "running",
             "shapes",
-            "title"
+            "title",
+            "total"
           ]
         }
       }
@@ -504,7 +257,9 @@
         "primaryEntity": "ProbTrialsScene"
       }
     ],
-    "emittedEvents": [],
+    "emittedEvents": [
+      "TRIALS_UPDATED"
+    ],
     "listenedEvents": [],
     "exposure": "palette",
     "provenance": "generated",

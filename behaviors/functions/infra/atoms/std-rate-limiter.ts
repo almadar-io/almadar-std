@@ -331,7 +331,7 @@ export function stdRateLimiter(params: StdRateLimiterParams): OrbitalDefinition 
   });
 }
 
-type _StdRateLimiterEntityName = 'RateBucket';
+type _StdRateLimiterEntityName = 'RateBucket' | 'IconItem' | 'TypographyItem' | 'StatusDotItem' | 'AlertItem' | 'StatDisplayItem' | 'MeterItem' | 'ProgressBarItem' | 'ButtonItem' | 'DividerItem' | 'SimpleGridItem';
 type _StdRateLimiterListenTraitName = 'ShieldIcon' | 'RateBucketTitle' | 'OpenStatusDot' | 'ThrottledStatusDot' | 'RateLimitAlert' | 'RequestsStat' | 'WindowStat' | 'CountMeter' | 'CountProgressBar' | 'RequestButton' | 'ResetButton' | 'ResetPrimaryButton' | 'RateBucketDivider' | 'StatsGrid' | 'RateBucketRateLimiter';
 
 /**

@@ -50,7 +50,7 @@ export interface StdLearningPhysicsLabConfig {
   mode?: 'wave' | 'field' | 'ray-diagram' | 'pendulum' | 'circuit';
 }
 
-type _StdLearningPhysicsLabEntityName = 'PhysicsLabItem' | 'PendulumScene' | 'WaveScene' | 'FieldScene' | 'RayDiagramScene' | 'CircuitScene';
+type _StdLearningPhysicsLabEntityName = 'PhysicsLabItem' | 'PendulumScene' | 'WaveScene' | 'FieldScene' | 'RayDiagramScene' | 'CircuitScene' | 'PendulumState' | 'WaveState' | 'PhysicsDiagramScene';
 type _StdLearningPhysicsLabListenTraitName = 'PhysicsLabRouter' | 'PendulumSim' | 'WaveSim' | 'FieldSim' | 'RayDiagramSim' | 'CircuitSim';
 
 /**

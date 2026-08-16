@@ -173,7 +173,7 @@ export function stdBrowse(params: StdBrowseParams): OrbitalDefinition {
   });
 }
 
-type _StdBrowseEntityName = 'BrowseItem';
+type _StdBrowseEntityName = 'BrowseItem' | 'TypographyItem' | 'DataGridItem' | 'TableViewItem' | 'DataListItem';
 type _StdBrowseListenTraitName = 'DataGrid1' | 'DenseTableView' | 'MasterListView' | 'BrowseItemBrowse';
 
 /**

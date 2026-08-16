@@ -1,5 +1,5 @@
-app std-notify-on-event "1.3.0"
-"std-notify-on-event — cross-orbital wiring atom. Subscribes to events from another orbital (e.g. CheckoutOrbital emits OrderPlaced, OrderRecordOrbital reacts via this atom) and dispatches a notification. Use when one orbital needs to react to or be notified about events that happen in another orbital — the wiring goes through this atom's `EventOccurred` listener which the molecule renames via traitOverrides.events to the upstream event name. Resolves recipient from `recipients` (first entry; multi-recipient fan-out is a future extension) or falls back to `@user.id`. Skips dispatch when the recipient is in `suppressionList`. Emits in-app `notify` when `notifyChannel` is `\"in-app\"`, or persists a `NotificationRecord` row for out-of-band delivery when channel is `\"email\"` or `\"sms\"`."
+app std-notify-on-event "1.5.0"
+"std-notify-on-event — cross-orbital wiring atom. Subscribes to events from another orbital (e.g. CheckoutOrbital emits OrderPlaced, OrderRecordOrbital reacts via this atom) and dispatches a notification. Use when one orbital needs to react to or be notified about events that happen in another orbital — the wiring goes through this atom's `EventOccurred` listener which the molecule renames via traitOverrides.events to the upstream event name. Dispatch gates on `guardOp`: `eq` (default) does string-equality on `triggerStatus` against the upstream event's `status` field, exactly as before; `gt`/`lt`/`gte`/`lte` instead numerically compare `guardField` (read from the event's `data` payload) against `guardValue`, for threshold-crossing asks such as low-stock alerts. Resolves recipient from `recipients` (first entry; multi-recipient fan-out is a future extension), falling back to `fallbackRecipient` when set, or `@user.id` otherwise — set `fallbackRecipient` for system/ops alerts (e.g. low-stock, shipping) so the acting user isn't notified in place of the intended audience. Skips dispatch when the recipient is in `suppressionList`. Emits in-app `notify` when `notifyChannel` is `\"in-app\"` (default, unchanged). `\"email\"`/`\"sms\"`/`\"webhook\"` dispatch through call-service at event time (email.send / twilio.sendSMS / webhook.send respectively) and persist a `NotificationRecord` audit row with an honest `dispatched` flag — true only once the service call succeeds, false with the failure detail in `error` otherwise. `email` uses `emailSubject` (falls back to `template` when blank); `webhook` requires `webhookUrl` to actually dispatch (`webhookSecret` signs the payload) — a blank `webhookUrl` still records the audit row undispatched rather than failing."
 type QuietHoursSpec = { start : string, end : string }
 orbital NotifyOnEventOrbital {
     type EventOccurred = Event { data : object, status : string } "Rename via traitOverrides.events to the upstream event (e.g. ContactSaved). The atom listens on this sentinel and dispatches a notification. The optional `status` field lets `triggerStatus` gate dispatch to a single status-change value."
@@ -13,6 +13,7 @@ orbital NotifyOnEventOrbital {
     message : string @description "The content of the notification message." @synonyms "text, content, body" = ""
     severity : string @description "Indicates the importance or urgency level of the notification." @synonyms "priority, level, importance" = info
     dispatched : boolean @description "Indicates whether the notification has been successfully sent." @synonyms "sent, delivered, status" = false
+    error : string @description "Failure detail from the delivery service when dispatched is false (email/sms/webhook channels only)." @synonyms "error message, failure reason, dispatch error" = ""
     recordedAt : number @description "Timestamp indicating when the notification record was created." @synonyms "creation time, timestamp, date, when" = 0
   }
 
@@ -20,26 +21,105 @@ orbital NotifyOnEventOrbital {
     initial: idle
 
     state idle {
-      EventOccurred -> idle when (or ["=", @config.triggerStatus, ""] ["=", ?status, @config.triggerStatus])
-        (set @entity.recipient (if ["=", (array/len @config.recipients), 0] @user.id (array/first @config.recipients)))
+      EventOccurred -> idle when (if ["=", @config.guardOp, "eq"] (or ["=", @config.triggerStatus, ""] ["=", ?status, @config.triggerStatus]) (if ["=", @config.guardOp, "gt"] [">", (object/get ?data @config.guardField), @config.guardValue] (if ["=", @config.guardOp, "lt"] ["<", (object/get ?data @config.guardField), @config.guardValue] (if ["=", @config.guardOp, "gte"] [">=", (object/get ?data @config.guardField), @config.guardValue] ["<=", (object/get ?data @config.guardField), @config.guardValue]))))
+        (set @entity.recipient (if ["=", (array/len @config.recipients), 0] (if (not ["=", @config.fallbackRecipient, ""]) @config.fallbackRecipient @user.id) (array/first @config.recipients)))
         (set @entity.channel @config.notifyChannel)
         (set @entity.message @config.template)
         (set @entity.severity @config.severity)
         (set @entity.dispatched (and ["=", @config.notifyChannel, in-app] (not (array/includes @config.suppressionList @entity.recipient))))
         (set @entity.recordedAt 0)
-        (when (not (array/includes @config.suppressionList @entity.recipient)) (if ["=", @config.notifyChannel, in-app] (notify @config.severity @config.template) (persist create NotificationRecord {
+        (when (not (array/includes @config.suppressionList @entity.recipient)) (if ["=", @config.notifyChannel, in-app] (notify @config.severity @config.template) (if ["=", @config.notifyChannel, email] (call-service "email" "send" {
+          body: @config.template
+          from: ""
+          subject: (if ["=", @config.emailSubject, ""] @config.template @config.emailSubject)
+          to: @entity.recipient
+        } { emit: { failure: NOTIFY_EMAIL_FAILED, success: NOTIFY_EMAIL_SENT } }) (if ["=", @config.notifyChannel, sms] (call-service "twilio" "sendSMS" {
+          body: @config.template
+          to: @entity.recipient
+        } { emit: { failure: NOTIFY_SMS_FAILED, success: NOTIFY_SMS_SENT } }) (if (not ["=", @config.webhookUrl, ""]) (call-service "webhook" "send" {
+          event: @config.template
+          payload: { message: @config.template, recipient: @entity.recipient, severity: @config.severity }
+          secret: @config.webhookSecret
+          url: @config.webhookUrl
+        } { emit: { failure: NOTIFY_WEBHOOK_FAILED, success: NOTIFY_WEBHOOK_SENT } }) (persist create NotificationRecord {
           channel: @config.notifyChannel
           dispatched: false
           message: @config.template
           recipient: @entity.recipient
           recordedAt: 0
           severity: @config.severity
-        })))
+        }))))))
         (emit NotificationDispatched {
           channel: @config.notifyChannel
           message: @config.template
           recipient: @entity.recipient
           severity: @config.severity
+        })
+      NOTIFY_EMAIL_SENT -> idle
+        (set @entity.dispatched true)
+        (persist create NotificationRecord {
+          channel: @entity.channel
+          dispatched: true
+          message: @entity.message
+          recipient: @entity.recipient
+          recordedAt: 0
+          severity: @entity.severity
+        })
+      NOTIFY_EMAIL_FAILED -> idle
+        (set @entity.dispatched false)
+        (set @entity.error ?error)
+        (persist create NotificationRecord {
+          channel: @entity.channel
+          dispatched: false
+          error: @entity.error
+          message: @entity.message
+          recipient: @entity.recipient
+          recordedAt: 0
+          severity: @entity.severity
+        })
+      NOTIFY_SMS_SENT -> idle
+        (set @entity.dispatched true)
+        (persist create NotificationRecord {
+          channel: @entity.channel
+          dispatched: true
+          message: @entity.message
+          recipient: @entity.recipient
+          recordedAt: 0
+          severity: @entity.severity
+        })
+      NOTIFY_SMS_FAILED -> idle
+        (set @entity.dispatched false)
+        (set @entity.error ?error)
+        (persist create NotificationRecord {
+          channel: @entity.channel
+          dispatched: false
+          error: @entity.error
+          message: @entity.message
+          recipient: @entity.recipient
+          recordedAt: 0
+          severity: @entity.severity
+        })
+      NOTIFY_WEBHOOK_SENT -> idle
+        (set @entity.dispatched true)
+        (persist create NotificationRecord {
+          channel: @entity.channel
+          dispatched: true
+          message: @entity.message
+          recipient: @entity.recipient
+          recordedAt: 0
+          severity: @entity.severity
+        })
+      NOTIFY_WEBHOOK_FAILED -> idle
+        (set @entity.dispatched false)
+        (set @entity.error ?error)
+        (persist create NotificationRecord {
+          channel: @entity.channel
+          dispatched: false
+          error: @entity.error
+          message: @entity.message
+          recipient: @entity.recipient
+          recordedAt: 0
+          severity: @entity.severity
         })
     }
 
@@ -50,6 +130,40 @@ orbital NotifyOnEventOrbital {
         message : string
         severity : string
       }
+      NOTIFY_EMAIL_SENT {
+        id : string!
+        status : string!
+      }
+        @description "email.send service result, flattened onto the payload by the call-service effect executor"
+        @tier "secondary"
+      NOTIFY_EMAIL_FAILED {
+        error : string!
+      }
+        @description "email.send service call failed — dispatched lands false and error carries the service detail"
+        @tier "secondary"
+      NOTIFY_SMS_SENT {
+        sid : string!
+        status : string!
+      }
+        @description "twilio.sendSMS service result, flattened onto the payload by the call-service effect executor"
+        @tier "secondary"
+      NOTIFY_SMS_FAILED {
+        error : string!
+      }
+        @description "twilio.sendSMS service call failed — dispatched lands false and error carries the service detail"
+        @tier "secondary"
+      NOTIFY_WEBHOOK_SENT {
+        status : number!
+        ok : boolean!
+        durationMs : number!
+      }
+        @description "webhook.send service result, flattened onto the payload by the call-service effect executor"
+        @tier "secondary"
+      NOTIFY_WEBHOOK_FAILED {
+        error : string!
+      }
+        @description "webhook.send service call failed — dispatched lands false and error carries the service detail"
+        @tier "secondary"
     }
 
     listens {
@@ -62,19 +176,49 @@ orbital NotifyOnEventOrbital {
     config {
       triggerStatus : string = ""
         @label "Trigger status"
-        @description "When set, dispatch only when the upstream event's `status` field equals this value (e.g. fire only when a record becomes 'approved'). Empty = fire on every subscribed event."
+        @description "When `guardOp` is `eq` and this is set, dispatch only when the upstream event's `status` field equals this value (e.g. fire only when a record becomes 'approved'). Empty = fire on every subscribed event. Ignored when `guardOp` is a numeric comparison."
         @synonyms "on status, when status, status filter, only when, fire on, react on status"
+        @tier "policy"
+      guardOp : "eq" | "gt" | "lt" | "gte" | "lte" = eq
+        @label "Guard comparison"
+        @description "How to gate dispatch. `eq` (default) does string-equality via `triggerStatus` against the upstream event's `status` field, exactly as before. `gt`/`lt`/`gte`/`lte` instead numerically compare `guardField` (read from the event's `data` payload) against `guardValue` — e.g. fire only when a stock level drops below a threshold."
+        @synonyms "comparison operator, threshold operator, guard mode, trigger comparison, numeric gate, greater than, less than, threshold crossing"
+        @tier "policy"
+      guardField : string = ""
+        @label "Guard field (numeric)"
+        @description "Field read from the upstream event's `data` payload and compared against `guardValue` when `guardOp` is not `eq` (e.g. 'stockLevel', 'quantity'). Ignored when `guardOp` is `eq`."
+        @synonyms "threshold field, numeric field, compare field, watched field, data field"
+        @tier "policy"
+      guardValue : number = 0
+        @label "Guard value (numeric)"
+        @description "Threshold compared against `guardField` when `guardOp` is not `eq` (e.g. fire when stock drops below 5)."
+        @synonyms "threshold, cutoff, limit, watermark, trigger value"
         @tier "policy"
       listensFor : [string] = []
         @label "Trigger events"
         @description "Event names that should fire a notification. Set this to the upstream event name (e.g. OrderPlaced, CheckoutCompleted) so this atom listens for events from the orbital that emits them. The orbital owning this trait reacts whenever the named event fires anywhere in the schema."
         @synonyms "subscribe to event, listen for event, react to event, watch for, wire upstream event, observe event from another orbital, cross-orbital subscription, on-event trigger"
         @tier "internal"
-      notifyChannel : string = in-app
+      notifyChannel : "in-app" | "email" | "sms" | "webhook" = in-app
         @label "Channel"
-        @description "Delivery channel: in-app, email, or sms"
+        @description "Delivery channel. `in-app` (default) emits the in-app `notify` toast — unchanged from prior versions. `email`/`sms`/`webhook` dispatch through call-service at event time (email.send / twilio.sendSMS / webhook.send) and persist a NotificationRecord audit row with an honest `dispatched` flag: true only once the service call succeeds, false plus the failure detail in `error` otherwise. `webhook` requires `webhookUrl` to actually dispatch; a blank `webhookUrl` still records the audit row undispatched rather than failing."
         @synonyms "delivery method, notification channel, send via, dispatch through"
         @tier "policy"
+      emailSubject : string = ""
+        @label "Email subject"
+        @description "Subject line used for the email channel. Falls back to `template` when blank. Ignored for other channels."
+        @synonyms "subject, subject line, email title, mail subject"
+        @tier "presentation"
+      webhookUrl : string = ""
+        @label "Webhook URL"
+        @description "Destination endpoint for the webhook channel. Dispatch only fires when this is non-blank; a blank URL on channel \"webhook\" records the audit row with dispatched:false instead of crashing (a consumer misconfiguration, not a failure)."
+        @synonyms "webhook endpoint, callback url, target url, http endpoint, notify url"
+        @tier "policy"
+      webhookSecret : string = ""
+        @label "Webhook secret"
+        @description "Signing secret forwarded to the webhook service so the receiving endpoint can verify the payload. Ignored when `webhookUrl` is blank."
+        @synonyms "signing secret, hmac secret, webhook signature, shared secret"
+        @tier "internal"
       template : string = ""
         @label "Message template"
         @description "Text shown to the recipient; supports payload interpolation"
@@ -87,8 +231,13 @@ orbital NotifyOnEventOrbital {
         @tier "policy"
       recipients : [string] = []
         @label "Recipients"
-        @description "Recipient ids/addresses. v1.1 uses the first entry; multi-recipient fan-out lands in v1.2 (gap). When empty, falls back to the authenticated user."
+        @description "Recipient ids/addresses. v1.1 uses the first entry; multi-recipient fan-out lands in v1.2 (gap). When empty, falls back to `fallbackRecipient` if set, otherwise the authenticated user."
         @synonyms "targets, addressees, notify to"
+        @tier "policy"
+      fallbackRecipient : string = ""
+        @label "Fallback recipient"
+        @description "Recipient used when `recipients` is empty, instead of the acting user. The acting-user fallback (used when this is blank) is intended for personal notifications only — set this to an ops/team address (e.g. 'ops@example.com') for system alerts like low-stock or shipping notices, so the acting user isn't notified in place of the intended audience."
+        @synonyms "default recipient, backup recipient, ops address, fallback address, notify default, alert owner"
         @tier "policy"
       suppressionList : [string] = []
         @label "Suppression list"

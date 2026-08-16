@@ -1,5 +1,5 @@
 app std-vote "1.0.0"
-"std-vote — forum-style up/down vote tally with single-vote-per-user constraint. Owns a Vote entity; VOTE persists the new direction (toggling to none when re-clicking the active arrow) and emits VoteCasted so cross-trait listeners can recompute aggregates."
+"std-vote — forum-style up/down vote tally with single-vote-per-user constraint. Owns a Vote entity, rebindable so a host orbital can target its own entity in place of Vote. VOTE carries the targetId being voted on and persists it plus the new direction onto that row (toggling to none when re-clicking the active arrow), emitting VoteCasted -> external so sibling traits can react. SET_VOTE_TARGET rebinds the trait to a new targetId and refetches scoped to it, mirroring std-browse's REFETCH_FILTER."
 orbital VoteOrbital {
     type VoteLoaded = Event { data : [Vote] } "Fired when the vote collection finishes loading"
 
@@ -17,7 +17,7 @@ orbital VoteOrbital {
     createdAt : string
   }
 
-  trait VoteCast -> Vote [interaction, instance] {
+  trait VoteCast -> @rebindable Vote [interaction, instance] {
     initial: loading
 
     state loading {
@@ -58,7 +58,8 @@ orbital VoteOrbital {
     state idle {
       VOTE -> voting when (not ["=", ?next, @entity.direction])
         (set @entity.direction ?next)
-        (persist update Vote ?data {
+        (set @entity.targetId ?targetId)
+        (persist update Vote (object/set ?data targetId ?targetId) {
           emit: { failure: VoteCastFailed, success: VoteCasted }
         })
         (render-ui main {
@@ -76,7 +77,8 @@ orbital VoteOrbital {
         })
       VOTE -> voting when ["=", ?next, @entity.direction]
         (set @entity.direction none)
-        (persist update Vote ?data {
+        (set @entity.targetId ?targetId)
+        (persist update Vote (object/set ?data targetId ?targetId) {
           emit: { failure: VoteCastFailed, success: VoteCasted }
         })
         (render-ui main {
@@ -91,6 +93,30 @@ orbital VoteOrbital {
           direction: vertical
           gap: md
           type: stack
+        })
+      ;; Rebinds the trait to a new target and refetches scoped to it, no
+      ;; skeleton repaint — same rationale as std-browse's REFETCH_FILTER:
+      ;; a populated body shouldn't flicker to a spinner mid-refetch.
+      SET_VOTE_TARGET -> idle
+        (set @entity.targetId ?targetId)
+        (fetch Vote {
+          emit: { failure: VoteLoadFailed, success: VoteLoaded }
+          filter: ["=", @entity.targetId, ?targetId]
+        })
+      VoteLoaded -> idle
+        (render-ui main {
+          count: 0
+          label: Vote
+          onVote: VOTE
+          type: vote-stack
+          userVote: @entity.direction
+          variant: vertical
+        })
+      VoteLoadFailed -> idle
+        (render-ui main {
+          message: ?error
+          type: alert
+          variant: error
         })
     }
 
@@ -134,6 +160,7 @@ orbital VoteOrbital {
 
     emits {
       VOTE {
+        targetId : string!
         next : "up" | "down" | "none"
         data : object!
       }
@@ -153,7 +180,7 @@ orbital VoteOrbital {
         @description "Indicates that loading a vote failed."
         @synonyms "load error, failed load, fetch failure"
         @tier "internal"
-      VoteCasted {
+      VoteCasted -> external {
         row : Vote
       }
         @description "Indicates a vote has been successfully recorded."
@@ -170,11 +197,18 @@ orbital VoteOrbital {
 
     listens {
       VOTE {
+        targetId : string!
         next : "up" | "down" | "none"
         data : object!
       }
         @description "A user has submitted or changed their vote."
         @synonyms "voted, submitted, updated"
+        @tier "domain"
+      SET_VOTE_TARGET {
+        targetId : string!
+      }
+        @description "Rebinds the trait to a new target and refetches the vote row scoped to it."
+        @synonyms "retarget, rebind target, scope to item, set target, change target"
         @tier "domain"
       VoteLoaded {
         data : [Vote]

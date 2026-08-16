@@ -1,0 +1,572 @@
+app std-ling-vowels "1.0.0"
+"Vowel formant explorer — F1/F2 stepper buttons move a point through the vowel quadrilateral on a math-canvas, the nearest cardinal vowel in the loaded inventory is identified by squared formant distance, and a rounding toggle switches between unrounded and rounded vowel sets. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital LingVowelsOrbital {
+  type LingVowelsShapePoint = {
+    x : number!
+    y : number!
+  }
+  type LingVowelsShape = {
+    type : "line" | "arrow" | "circle" | "rect" | "polygon" | "path" | "text" | "axis" | "grid"!
+    id : string
+    x : number
+    y : number
+    x1 : number
+    y1 : number
+    x2 : number
+    y2 : number
+    radius : number
+    width : number
+    height : number
+    points : [LingVowelsShapePoint]
+    path : string
+    text : string
+    label : string
+    fontSize : number
+    align : "left" | "center" | "right"
+    axis : "x" | "y"
+    min : number
+    max : number
+    step : number
+    color : string
+    fill : string
+    lineWidth : number
+    opacity : number
+  }
+  type LingVowelsVowel = {
+    symbol : string!
+    f1 : number!
+    f2 : number!
+    rounding : string!
+  }
+  type LingVowelsInventory = {
+    name : string!
+    vowels : [LingVowelsVowel]!
+  }
+
+  entity LingVowelsScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    renderChildren : [json]
+    shapes : [LingVowelsShape]
+    f1 : number
+    f2 : number
+    inventoryIndex : number
+    rounding : string
+    nearestSymbol : string
+  }
+
+  trait LingVowelsSim -> @rebindable LingVowelsScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.f1 @config.f1)
+        (set @entity.f2 @config.f2)
+        (set @entity.inventoryIndex 0)
+        (set @entity.rounding "unrounded")
+        (let (
+            (currentInventory (array/nth @config.inventories 0))
+            (inventoryName (object/get @currentInventory name))
+            (visibleVowels (array/filter (object/get @currentInventory vowels) (fn v (== (object/get @v rounding) "unrounded"))))
+            (nearest (array/reduce @visibleVowels (array/nth @visibleVowels 0) (fn best v (if (< (+ (* (- (object/get @v f1) @config.f1) (- (object/get @v f1) @config.f1)) (* (- (object/get @v f2) @config.f2) (- (object/get @v f2) @config.f2))) (+ (* (- (object/get @best f1) @config.f1) (- (object/get @best f1) @config.f1)) (* (- (object/get @best f2) @config.f2) (- (object/get @best f2) @config.f2)))) @v @best))))
+            (nearestSymbol (object/get @nearest symbol))
+            (plotWidth (- (- @config.width @config.plotLeft) @config.plotRight))
+            (plotHeight (- (- @config.height @config.plotTop) @config.plotBottom))
+            (quadShapes [
+              { type: "polygon", id: "quad", points: [
+                  { x: (+ @config.plotLeft (* (/ (- @config.f2Max 2400) (- @config.f2Max @config.f2Min)) @plotWidth)), y: @config.plotTop },
+                  { x: (+ @config.plotLeft (* (/ (- @config.f2Max 1300) (- @config.f2Max @config.f2Min)) @plotWidth)), y: (+ @config.plotTop @plotHeight) },
+                  { x: (+ @config.plotLeft (* (/ (- @config.f2Max 900) (- @config.f2Max @config.f2Min)) @plotWidth)), y: (+ @config.plotTop @plotHeight) },
+                  { x: (+ @config.plotLeft (* (/ (- @config.f2Max 700) (- @config.f2Max @config.f2Min)) @plotWidth)), y: @config.plotTop }
+                ], color: @config.quadColor, fill: @config.quadFill, lineWidth: 2 }
+            ])
+            (cardinalShapes (if @config.showCardinals
+                (array/flatten (array/map @visibleVowels (fn v (let (
+                        (cx (+ @config.plotLeft (* (/ (- @config.f2Max (object/get @v f2)) (- @config.f2Max @config.f2Min)) @plotWidth)))
+                        (cy (+ @config.plotTop (* (/ (- (object/get @v f1) @config.f1Min) (- @config.f1Max @config.f1Min)) @plotHeight)))
+                      )
+                      [
+                        { type: "circle", id: (str/concat "cd" (object/get @v symbol)), x: @cx, y: @cy, radius: 4, color: @config.cardinalColor, fill: @config.cardinalColor },
+                        { type: "text", id: (str/concat "ct" (object/get @v symbol)), x: @cx, y: (- @cy 10), text: (object/get @v symbol), fontSize: @config.symbolFontSize, align: "center", color: @config.cardinalColor }
+                      ]
+                    ))))
+                []))
+            (pointX (+ @config.plotLeft (* (/ (- @config.f2Max @config.f2) (- @config.f2Max @config.f2Min)) @plotWidth)))
+            (pointY (+ @config.plotTop (* (/ (- @config.f1 @config.f1Min) (- @config.f1Max @config.f1Min)) @plotHeight)))
+            (pointShapes [
+              { type: "circle", id: "fp", x: @pointX, y: @pointY, radius: @config.pointRadius, color: @config.pointColor, fill: @config.pointColor },
+              { type: "text", id: "fpt", x: @pointX, y: (+ @pointY 22), text: (str/concat "≈ /" @nearestSymbol "/"), fontSize: @config.symbolFontSize, align: "center", color: @config.pointColor }
+            ])
+            (allShapes (array/concat (array/concat @quadShapes @cardinalShapes) @pointShapes))
+            (readout (str/concat "F1 = " @config.f1 " Hz, F2 = " @config.f2 " Hz — nearest " @entity.rounding " vowel: /" @nearestSymbol "/ (" @inventoryName ")"))
+          )
+          (do
+            (set @entity.nearestSymbol @nearestSymbol)
+            (set @entity.shapes @allShapes)
+            (set @entity.renderChildren [
+              { type: typography, variant: h4, content: @entity.title },
+              { type: typography, variant: body, content: "Step F1 (tongue height) and F2 (tongue backness) to move through the vowel space — the nearest cardinal vowel is named." },
+              { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: false },
+              { type: typography, variant: body, content: @readout },
+              { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: button, action: SET_FORMANTS, actionPayload: { f1: (math/max @config.f1Min (- @config.f1 @config.formantStep)), f2: @config.f2 }, label: "F1 − (higher)", variant: secondary, size: sm },
+                  { type: button, action: SET_FORMANTS, actionPayload: { f1: (math/min @config.f1Max (+ @config.f1 @config.formantStep)), f2: @config.f2 }, label: "F1 + (lower)", variant: secondary, size: sm },
+                  { type: button, action: SET_FORMANTS, actionPayload: { f1: @config.f1, f2: (math/min @config.f2Max (+ @config.f2 @config.formantStep)) }, label: "F2 + (fronter)", variant: secondary, size: sm },
+                  { type: button, action: SET_FORMANTS, actionPayload: { f1: @config.f1, f2: (math/max @config.f2Min (- @config.f2 @config.formantStep)) }, label: "F2 − (backer)", variant: secondary, size: sm }
+                ] },
+              { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: button, action: TOGGLE_ROUNDING, label: "Toggle Rounding", variant: primary },
+                  { type: button, action: LOAD_INVENTORY, actionPayload: { index: (math/mod 1 (array/len @config.inventories)) }, label: "Next Inventory", variant: ghost }
+                ] }
+            ])
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: @entity.renderChildren }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.f1 @config.f1)
+        (set @entity.f2 @config.f2)
+        (set @entity.inventoryIndex 0)
+        (set @entity.rounding "unrounded")
+        (let (
+            (currentInventory (array/nth @config.inventories 0))
+            (inventoryName (object/get @currentInventory name))
+            (visibleVowels (array/filter (object/get @currentInventory vowels) (fn v (== (object/get @v rounding) "unrounded"))))
+            (nearest (array/reduce @visibleVowels (array/nth @visibleVowels 0) (fn best v (if (< (+ (* (- (object/get @v f1) @config.f1) (- (object/get @v f1) @config.f1)) (* (- (object/get @v f2) @config.f2) (- (object/get @v f2) @config.f2))) (+ (* (- (object/get @best f1) @config.f1) (- (object/get @best f1) @config.f1)) (* (- (object/get @best f2) @config.f2) (- (object/get @best f2) @config.f2)))) @v @best))))
+            (nearestSymbol (object/get @nearest symbol))
+            (plotWidth (- (- @config.width @config.plotLeft) @config.plotRight))
+            (plotHeight (- (- @config.height @config.plotTop) @config.plotBottom))
+            (quadShapes [
+              { type: "polygon", id: "quad", points: [
+                  { x: (+ @config.plotLeft (* (/ (- @config.f2Max 2400) (- @config.f2Max @config.f2Min)) @plotWidth)), y: @config.plotTop },
+                  { x: (+ @config.plotLeft (* (/ (- @config.f2Max 1300) (- @config.f2Max @config.f2Min)) @plotWidth)), y: (+ @config.plotTop @plotHeight) },
+                  { x: (+ @config.plotLeft (* (/ (- @config.f2Max 900) (- @config.f2Max @config.f2Min)) @plotWidth)), y: (+ @config.plotTop @plotHeight) },
+                  { x: (+ @config.plotLeft (* (/ (- @config.f2Max 700) (- @config.f2Max @config.f2Min)) @plotWidth)), y: @config.plotTop }
+                ], color: @config.quadColor, fill: @config.quadFill, lineWidth: 2 }
+            ])
+            (cardinalShapes (if @config.showCardinals
+                (array/flatten (array/map @visibleVowels (fn v (let (
+                        (cx (+ @config.plotLeft (* (/ (- @config.f2Max (object/get @v f2)) (- @config.f2Max @config.f2Min)) @plotWidth)))
+                        (cy (+ @config.plotTop (* (/ (- (object/get @v f1) @config.f1Min) (- @config.f1Max @config.f1Min)) @plotHeight)))
+                      )
+                      [
+                        { type: "circle", id: (str/concat "cd" (object/get @v symbol)), x: @cx, y: @cy, radius: 4, color: @config.cardinalColor, fill: @config.cardinalColor },
+                        { type: "text", id: (str/concat "ct" (object/get @v symbol)), x: @cx, y: (- @cy 10), text: (object/get @v symbol), fontSize: @config.symbolFontSize, align: "center", color: @config.cardinalColor }
+                      ]
+                    ))))
+                []))
+            (pointX (+ @config.plotLeft (* (/ (- @config.f2Max @config.f2) (- @config.f2Max @config.f2Min)) @plotWidth)))
+            (pointY (+ @config.plotTop (* (/ (- @config.f1 @config.f1Min) (- @config.f1Max @config.f1Min)) @plotHeight)))
+            (pointShapes [
+              { type: "circle", id: "fp", x: @pointX, y: @pointY, radius: @config.pointRadius, color: @config.pointColor, fill: @config.pointColor },
+              { type: "text", id: "fpt", x: @pointX, y: (+ @pointY 22), text: (str/concat "≈ /" @nearestSymbol "/"), fontSize: @config.symbolFontSize, align: "center", color: @config.pointColor }
+            ])
+            (allShapes (array/concat (array/concat @quadShapes @cardinalShapes) @pointShapes))
+            (readout (str/concat "F1 = " @config.f1 " Hz, F2 = " @config.f2 " Hz — nearest " @entity.rounding " vowel: /" @nearestSymbol "/ (" @inventoryName ")"))
+          )
+          (do
+            (set @entity.nearestSymbol @nearestSymbol)
+            (set @entity.shapes @allShapes)
+            (set @entity.renderChildren [
+              { type: typography, variant: h4, content: @entity.title },
+              { type: typography, variant: body, content: "Step F1 (tongue height) and F2 (tongue backness) to move through the vowel space — the nearest cardinal vowel is named." },
+              { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: false },
+              { type: typography, variant: body, content: @readout },
+              { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: button, action: SET_FORMANTS, actionPayload: { f1: (math/max @config.f1Min (- @config.f1 @config.formantStep)), f2: @config.f2 }, label: "F1 − (higher)", variant: secondary, size: sm },
+                  { type: button, action: SET_FORMANTS, actionPayload: { f1: (math/min @config.f1Max (+ @config.f1 @config.formantStep)), f2: @config.f2 }, label: "F1 + (lower)", variant: secondary, size: sm },
+                  { type: button, action: SET_FORMANTS, actionPayload: { f1: @config.f1, f2: (math/min @config.f2Max (+ @config.f2 @config.formantStep)) }, label: "F2 + (fronter)", variant: secondary, size: sm },
+                  { type: button, action: SET_FORMANTS, actionPayload: { f1: @config.f1, f2: (math/max @config.f2Min (- @config.f2 @config.formantStep)) }, label: "F2 − (backer)", variant: secondary, size: sm }
+                ] },
+              { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: button, action: TOGGLE_ROUNDING, label: "Toggle Rounding", variant: primary },
+                  { type: button, action: LOAD_INVENTORY, actionPayload: { index: (math/mod 1 (array/len @config.inventories)) }, label: "Next Inventory", variant: ghost }
+                ] }
+            ])
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: @entity.renderChildren }
+          ]
+        })
+
+      SET_FORMANTS -> idle when (== @entity.active true)
+        (let (
+            (newF1 (math/max @config.f1Min (math/min @config.f1Max ?f1)))
+            (newF2 (math/max @config.f2Min (math/min @config.f2Max ?f2)))
+            (currentInventory (array/nth @config.inventories @entity.inventoryIndex))
+            (inventoryName (object/get @currentInventory name))
+            (visibleVowels (array/filter (object/get @currentInventory vowels) (fn v (== (object/get @v rounding) @entity.rounding))))
+            (nearest (array/reduce @visibleVowels (array/nth @visibleVowels 0) (fn best v (if (< (+ (* (- (object/get @v f1) @newF1) (- (object/get @v f1) @newF1)) (* (- (object/get @v f2) @newF2) (- (object/get @v f2) @newF2))) (+ (* (- (object/get @best f1) @newF1) (- (object/get @best f1) @newF1)) (* (- (object/get @best f2) @newF2) (- (object/get @best f2) @newF2)))) @v @best))))
+            (nearestSymbol (object/get @nearest symbol))
+            (plotWidth (- (- @config.width @config.plotLeft) @config.plotRight))
+            (plotHeight (- (- @config.height @config.plotTop) @config.plotBottom))
+            (quadShapes [
+              { type: "polygon", id: "quad", points: [
+                  { x: (+ @config.plotLeft (* (/ (- @config.f2Max 2400) (- @config.f2Max @config.f2Min)) @plotWidth)), y: @config.plotTop },
+                  { x: (+ @config.plotLeft (* (/ (- @config.f2Max 1300) (- @config.f2Max @config.f2Min)) @plotWidth)), y: (+ @config.plotTop @plotHeight) },
+                  { x: (+ @config.plotLeft (* (/ (- @config.f2Max 900) (- @config.f2Max @config.f2Min)) @plotWidth)), y: (+ @config.plotTop @plotHeight) },
+                  { x: (+ @config.plotLeft (* (/ (- @config.f2Max 700) (- @config.f2Max @config.f2Min)) @plotWidth)), y: @config.plotTop }
+                ], color: @config.quadColor, fill: @config.quadFill, lineWidth: 2 }
+            ])
+            (cardinalShapes (if @config.showCardinals
+                (array/flatten (array/map @visibleVowels (fn v (let (
+                        (cx (+ @config.plotLeft (* (/ (- @config.f2Max (object/get @v f2)) (- @config.f2Max @config.f2Min)) @plotWidth)))
+                        (cy (+ @config.plotTop (* (/ (- (object/get @v f1) @config.f1Min) (- @config.f1Max @config.f1Min)) @plotHeight)))
+                      )
+                      [
+                        { type: "circle", id: (str/concat "cd" (object/get @v symbol)), x: @cx, y: @cy, radius: 4, color: @config.cardinalColor, fill: @config.cardinalColor },
+                        { type: "text", id: (str/concat "ct" (object/get @v symbol)), x: @cx, y: (- @cy 10), text: (object/get @v symbol), fontSize: @config.symbolFontSize, align: "center", color: @config.cardinalColor }
+                      ]
+                    ))))
+                []))
+            (pointX (+ @config.plotLeft (* (/ (- @config.f2Max @newF2) (- @config.f2Max @config.f2Min)) @plotWidth)))
+            (pointY (+ @config.plotTop (* (/ (- @newF1 @config.f1Min) (- @config.f1Max @config.f1Min)) @plotHeight)))
+            (pointShapes [
+              { type: "circle", id: "fp", x: @pointX, y: @pointY, radius: @config.pointRadius, color: @config.pointColor, fill: @config.pointColor },
+              { type: "text", id: "fpt", x: @pointX, y: (+ @pointY 22), text: (str/concat "≈ /" @nearestSymbol "/"), fontSize: @config.symbolFontSize, align: "center", color: @config.pointColor }
+            ])
+            (allShapes (array/concat (array/concat @quadShapes @cardinalShapes) @pointShapes))
+            (readout (str/concat "F1 = " @newF1 " Hz, F2 = " @newF2 " Hz — nearest " @entity.rounding " vowel: /" @nearestSymbol "/ (" @inventoryName ")"))
+          )
+          (do
+            (set @entity.f1 @newF1)
+            (set @entity.f2 @newF2)
+            (set @entity.nearestSymbol @nearestSymbol)
+            (set @entity.shapes @allShapes)
+            (set @entity.renderChildren [
+              { type: typography, variant: h4, content: @entity.title },
+              { type: typography, variant: body, content: "Step F1 (tongue height) and F2 (tongue backness) to move through the vowel space — the nearest cardinal vowel is named." },
+              { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: false },
+              { type: typography, variant: body, content: @readout },
+              { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: button, action: SET_FORMANTS, actionPayload: { f1: (math/max @config.f1Min (- @newF1 @config.formantStep)), f2: @newF2 }, label: "F1 − (higher)", variant: secondary, size: sm },
+                  { type: button, action: SET_FORMANTS, actionPayload: { f1: (math/min @config.f1Max (+ @newF1 @config.formantStep)), f2: @newF2 }, label: "F1 + (lower)", variant: secondary, size: sm },
+                  { type: button, action: SET_FORMANTS, actionPayload: { f1: @newF1, f2: (math/min @config.f2Max (+ @newF2 @config.formantStep)) }, label: "F2 + (fronter)", variant: secondary, size: sm },
+                  { type: button, action: SET_FORMANTS, actionPayload: { f1: @newF1, f2: (math/max @config.f2Min (- @newF2 @config.formantStep)) }, label: "F2 − (backer)", variant: secondary, size: sm }
+                ] },
+              { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: button, action: TOGGLE_ROUNDING, label: "Toggle Rounding", variant: primary },
+                  { type: button, action: LOAD_INVENTORY, actionPayload: { index: (math/mod (+ @entity.inventoryIndex 1) (array/len @config.inventories)) }, label: "Next Inventory", variant: ghost }
+                ] }
+            ])
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: @entity.renderChildren }
+          ]
+        })
+        (emit VOWELS_UPDATED { f1: @entity.f1, f2: @entity.f2, nearestSymbol: @entity.nearestSymbol, rounding: @entity.rounding, inventoryIndex: @entity.inventoryIndex })
+
+      LOAD_INVENTORY -> idle when (== @entity.active true)
+        (let (
+            (nextIndex (math/mod ?index (array/len @config.inventories)))
+            (currentInventory (array/nth @config.inventories @nextIndex))
+            (inventoryName (object/get @currentInventory name))
+            (visibleVowels (array/filter (object/get @currentInventory vowels) (fn v (== (object/get @v rounding) @entity.rounding))))
+            (nearest (array/reduce @visibleVowels (array/nth @visibleVowels 0) (fn best v (if (< (+ (* (- (object/get @v f1) @entity.f1) (- (object/get @v f1) @entity.f1)) (* (- (object/get @v f2) @entity.f2) (- (object/get @v f2) @entity.f2))) (+ (* (- (object/get @best f1) @entity.f1) (- (object/get @best f1) @entity.f1)) (* (- (object/get @best f2) @entity.f2) (- (object/get @best f2) @entity.f2)))) @v @best))))
+            (nearestSymbol (object/get @nearest symbol))
+            (plotWidth (- (- @config.width @config.plotLeft) @config.plotRight))
+            (plotHeight (- (- @config.height @config.plotTop) @config.plotBottom))
+            (quadShapes [
+              { type: "polygon", id: "quad", points: [
+                  { x: (+ @config.plotLeft (* (/ (- @config.f2Max 2400) (- @config.f2Max @config.f2Min)) @plotWidth)), y: @config.plotTop },
+                  { x: (+ @config.plotLeft (* (/ (- @config.f2Max 1300) (- @config.f2Max @config.f2Min)) @plotWidth)), y: (+ @config.plotTop @plotHeight) },
+                  { x: (+ @config.plotLeft (* (/ (- @config.f2Max 900) (- @config.f2Max @config.f2Min)) @plotWidth)), y: (+ @config.plotTop @plotHeight) },
+                  { x: (+ @config.plotLeft (* (/ (- @config.f2Max 700) (- @config.f2Max @config.f2Min)) @plotWidth)), y: @config.plotTop }
+                ], color: @config.quadColor, fill: @config.quadFill, lineWidth: 2 }
+            ])
+            (cardinalShapes (if @config.showCardinals
+                (array/flatten (array/map @visibleVowels (fn v (let (
+                        (cx (+ @config.plotLeft (* (/ (- @config.f2Max (object/get @v f2)) (- @config.f2Max @config.f2Min)) @plotWidth)))
+                        (cy (+ @config.plotTop (* (/ (- (object/get @v f1) @config.f1Min) (- @config.f1Max @config.f1Min)) @plotHeight)))
+                      )
+                      [
+                        { type: "circle", id: (str/concat "cd" (object/get @v symbol)), x: @cx, y: @cy, radius: 4, color: @config.cardinalColor, fill: @config.cardinalColor },
+                        { type: "text", id: (str/concat "ct" (object/get @v symbol)), x: @cx, y: (- @cy 10), text: (object/get @v symbol), fontSize: @config.symbolFontSize, align: "center", color: @config.cardinalColor }
+                      ]
+                    ))))
+                []))
+            (pointX (+ @config.plotLeft (* (/ (- @config.f2Max @entity.f2) (- @config.f2Max @config.f2Min)) @plotWidth)))
+            (pointY (+ @config.plotTop (* (/ (- @entity.f1 @config.f1Min) (- @config.f1Max @config.f1Min)) @plotHeight)))
+            (pointShapes [
+              { type: "circle", id: "fp", x: @pointX, y: @pointY, radius: @config.pointRadius, color: @config.pointColor, fill: @config.pointColor },
+              { type: "text", id: "fpt", x: @pointX, y: (+ @pointY 22), text: (str/concat "≈ /" @nearestSymbol "/"), fontSize: @config.symbolFontSize, align: "center", color: @config.pointColor }
+            ])
+            (allShapes (array/concat (array/concat @quadShapes @cardinalShapes) @pointShapes))
+            (readout (str/concat "F1 = " @entity.f1 " Hz, F2 = " @entity.f2 " Hz — nearest " @entity.rounding " vowel: /" @nearestSymbol "/ (" @inventoryName ")"))
+          )
+          (do
+            (set @entity.inventoryIndex @nextIndex)
+            (set @entity.nearestSymbol @nearestSymbol)
+            (set @entity.shapes @allShapes)
+            (set @entity.renderChildren [
+              { type: typography, variant: h4, content: @entity.title },
+              { type: typography, variant: body, content: "Step F1 (tongue height) and F2 (tongue backness) to move through the vowel space — the nearest cardinal vowel is named." },
+              { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: false },
+              { type: typography, variant: body, content: @readout },
+              { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: button, action: SET_FORMANTS, actionPayload: { f1: (math/max @config.f1Min (- @entity.f1 @config.formantStep)), f2: @entity.f2 }, label: "F1 − (higher)", variant: secondary, size: sm },
+                  { type: button, action: SET_FORMANTS, actionPayload: { f1: (math/min @config.f1Max (+ @entity.f1 @config.formantStep)), f2: @entity.f2 }, label: "F1 + (lower)", variant: secondary, size: sm },
+                  { type: button, action: SET_FORMANTS, actionPayload: { f1: @entity.f1, f2: (math/min @config.f2Max (+ @entity.f2 @config.formantStep)) }, label: "F2 + (fronter)", variant: secondary, size: sm },
+                  { type: button, action: SET_FORMANTS, actionPayload: { f1: @entity.f1, f2: (math/max @config.f2Min (- @entity.f2 @config.formantStep)) }, label: "F2 − (backer)", variant: secondary, size: sm }
+                ] },
+              { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: button, action: TOGGLE_ROUNDING, label: "Toggle Rounding", variant: primary },
+                  { type: button, action: LOAD_INVENTORY, actionPayload: { index: (math/mod (+ @nextIndex 1) (array/len @config.inventories)) }, label: "Next Inventory", variant: ghost }
+                ] }
+            ])
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: @entity.renderChildren }
+          ]
+        })
+        (emit VOWELS_UPDATED { f1: @entity.f1, f2: @entity.f2, nearestSymbol: @entity.nearestSymbol, rounding: @entity.rounding, inventoryIndex: @entity.inventoryIndex })
+
+      TOGGLE_ROUNDING -> idle when (== @entity.active true)
+        (let (
+            (newRounding (if (== @entity.rounding "unrounded") "rounded" "unrounded"))
+            (currentInventory (array/nth @config.inventories @entity.inventoryIndex))
+            (inventoryName (object/get @currentInventory name))
+            (visibleVowels (array/filter (object/get @currentInventory vowels) (fn v (== (object/get @v rounding) @newRounding))))
+            (nearest (array/reduce @visibleVowels (array/nth @visibleVowels 0) (fn best v (if (< (+ (* (- (object/get @v f1) @entity.f1) (- (object/get @v f1) @entity.f1)) (* (- (object/get @v f2) @entity.f2) (- (object/get @v f2) @entity.f2))) (+ (* (- (object/get @best f1) @entity.f1) (- (object/get @best f1) @entity.f1)) (* (- (object/get @best f2) @entity.f2) (- (object/get @best f2) @entity.f2)))) @v @best))))
+            (nearestSymbol (object/get @nearest symbol))
+            (plotWidth (- (- @config.width @config.plotLeft) @config.plotRight))
+            (plotHeight (- (- @config.height @config.plotTop) @config.plotBottom))
+            (quadShapes [
+              { type: "polygon", id: "quad", points: [
+                  { x: (+ @config.plotLeft (* (/ (- @config.f2Max 2400) (- @config.f2Max @config.f2Min)) @plotWidth)), y: @config.plotTop },
+                  { x: (+ @config.plotLeft (* (/ (- @config.f2Max 1300) (- @config.f2Max @config.f2Min)) @plotWidth)), y: (+ @config.plotTop @plotHeight) },
+                  { x: (+ @config.plotLeft (* (/ (- @config.f2Max 900) (- @config.f2Max @config.f2Min)) @plotWidth)), y: (+ @config.plotTop @plotHeight) },
+                  { x: (+ @config.plotLeft (* (/ (- @config.f2Max 700) (- @config.f2Max @config.f2Min)) @plotWidth)), y: @config.plotTop }
+                ], color: @config.quadColor, fill: @config.quadFill, lineWidth: 2 }
+            ])
+            (cardinalShapes (if @config.showCardinals
+                (array/flatten (array/map @visibleVowels (fn v (let (
+                        (cx (+ @config.plotLeft (* (/ (- @config.f2Max (object/get @v f2)) (- @config.f2Max @config.f2Min)) @plotWidth)))
+                        (cy (+ @config.plotTop (* (/ (- (object/get @v f1) @config.f1Min) (- @config.f1Max @config.f1Min)) @plotHeight)))
+                      )
+                      [
+                        { type: "circle", id: (str/concat "cd" (object/get @v symbol)), x: @cx, y: @cy, radius: 4, color: @config.cardinalColor, fill: @config.cardinalColor },
+                        { type: "text", id: (str/concat "ct" (object/get @v symbol)), x: @cx, y: (- @cy 10), text: (object/get @v symbol), fontSize: @config.symbolFontSize, align: "center", color: @config.cardinalColor }
+                      ]
+                    ))))
+                []))
+            (pointX (+ @config.plotLeft (* (/ (- @config.f2Max @entity.f2) (- @config.f2Max @config.f2Min)) @plotWidth)))
+            (pointY (+ @config.plotTop (* (/ (- @entity.f1 @config.f1Min) (- @config.f1Max @config.f1Min)) @plotHeight)))
+            (pointShapes [
+              { type: "circle", id: "fp", x: @pointX, y: @pointY, radius: @config.pointRadius, color: @config.pointColor, fill: @config.pointColor },
+              { type: "text", id: "fpt", x: @pointX, y: (+ @pointY 22), text: (str/concat "≈ /" @nearestSymbol "/"), fontSize: @config.symbolFontSize, align: "center", color: @config.pointColor }
+            ])
+            (allShapes (array/concat (array/concat @quadShapes @cardinalShapes) @pointShapes))
+            (readout (str/concat "F1 = " @entity.f1 " Hz, F2 = " @entity.f2 " Hz — nearest " @newRounding " vowel: /" @nearestSymbol "/ (" @inventoryName ")"))
+          )
+          (do
+            (set @entity.rounding @newRounding)
+            (set @entity.nearestSymbol @nearestSymbol)
+            (set @entity.shapes @allShapes)
+            (set @entity.renderChildren [
+              { type: typography, variant: h4, content: @entity.title },
+              { type: typography, variant: body, content: "Step F1 (tongue height) and F2 (tongue backness) to move through the vowel space — the nearest cardinal vowel is named." },
+              { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: false },
+              { type: typography, variant: body, content: @readout },
+              { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: button, action: SET_FORMANTS, actionPayload: { f1: (math/max @config.f1Min (- @entity.f1 @config.formantStep)), f2: @entity.f2 }, label: "F1 − (higher)", variant: secondary, size: sm },
+                  { type: button, action: SET_FORMANTS, actionPayload: { f1: (math/min @config.f1Max (+ @entity.f1 @config.formantStep)), f2: @entity.f2 }, label: "F1 + (lower)", variant: secondary, size: sm },
+                  { type: button, action: SET_FORMANTS, actionPayload: { f1: @entity.f1, f2: (math/min @config.f2Max (+ @entity.f2 @config.formantStep)) }, label: "F2 + (fronter)", variant: secondary, size: sm },
+                  { type: button, action: SET_FORMANTS, actionPayload: { f1: @entity.f1, f2: (math/max @config.f2Min (- @entity.f2 @config.formantStep)) }, label: "F2 − (backer)", variant: secondary, size: sm }
+                ] },
+              { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: button, action: TOGGLE_ROUNDING, label: "Toggle Rounding", variant: primary },
+                  { type: button, action: LOAD_INVENTORY, actionPayload: { index: (math/mod (+ @entity.inventoryIndex 1) (array/len @config.inventories)) }, label: "Next Inventory", variant: ghost }
+                ] }
+            ])
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: @entity.renderChildren }
+          ]
+        })
+        (emit VOWELS_UPDATED { f1: @entity.f1, f2: @entity.f2, nearestSymbol: @entity.nearestSymbol, rounding: @entity.rounding, inventoryIndex: @entity.inventoryIndex })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      SET_FORMANTS {
+        f1 : number
+        f2 : number
+      }
+        @description "Learner stepped F1 (tongue height) or F2 (tongue backness); the vowel point moves and the nearest cardinal vowel is recomputed."
+        @tier "domain"
+      LOAD_INVENTORY {
+        index : number
+      }
+        @description "Learner switched to another vowel inventory (e.g. from cardinal vowels to the English vowel system)."
+        @tier "domain"
+      TOGGLE_ROUNDING {
+      }
+        @description "Learner flipped lip rounding; the visible vowel set and nearest-vowel computation switch between unrounded and rounded vowels."
+        @tier "domain"
+    }
+
+    emits {
+      VOWELS_UPDATED -> external {
+        f1 : number
+        f2 : number
+        nearestSymbol : string
+        rounding : string
+        inventoryIndex : number
+      }
+        @description "The vowel-space state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "vowel update, formant change, F1 F2, nearest cardinal vowel, vowel quadrilateral"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Vowel Formant Explorer"
+        @label "Title"
+        @description "Title shown above the canvas."
+        @tier "presentation"
+      f1 : number = 400
+        @label "Initial F1 (Hz)"
+        @description "Starting first-formant frequency in Hz — lower F1 means a higher (closer) tongue position."
+        @synonyms "first formant, tongue height, vowel height"
+        @tier "domain"
+      f2 : number = 1500
+        @label "Initial F2 (Hz)"
+        @description "Starting second-formant frequency in Hz — higher F2 means a fronter tongue position."
+        @synonyms "second formant, tongue backness, vowel backness"
+        @tier "domain"
+      inventories : [LingVowelsInventory] = [
+        { name: "Cardinal vowels", vowels: [
+            { symbol: "i", f1: 250, f2: 2400, rounding: "unrounded" },
+            { symbol: "e", f1: 400, f2: 2200, rounding: "unrounded" },
+            { symbol: "ɛ", f1: 550, f2: 1900, rounding: "unrounded" },
+            { symbol: "a", f1: 750, f2: 1400, rounding: "unrounded" },
+            { symbol: "ɑ", f1: 700, f2: 1100, rounding: "unrounded" },
+            { symbol: "ɯ", f1: 300, f2: 900, rounding: "unrounded" },
+            { symbol: "ʌ", f1: 600, f2: 1000, rounding: "unrounded" },
+            { symbol: "y", f1: 250, f2: 2100, rounding: "rounded" },
+            { symbol: "ø", f1: 400, f2: 1800, rounding: "rounded" },
+            { symbol: "œ", f1: 550, f2: 1600, rounding: "rounded" },
+            { symbol: "ɔ", f1: 550, f2: 900, rounding: "rounded" },
+            { symbol: "o", f1: 400, f2: 800, rounding: "rounded" },
+            { symbol: "u", f1: 300, f2: 700, rounding: "rounded" }
+          ] },
+        { name: "English vowels", vowels: [
+            { symbol: "iː", f1: 280, f2: 2300, rounding: "unrounded" },
+            { symbol: "ɪ", f1: 380, f2: 2000, rounding: "unrounded" },
+            { symbol: "ɛ", f1: 550, f2: 1850, rounding: "unrounded" },
+            { symbol: "æ", f1: 700, f2: 1700, rounding: "unrounded" },
+            { symbol: "ɑː", f1: 720, f2: 1100, rounding: "unrounded" },
+            { symbol: "ʌ", f1: 620, f2: 1200, rounding: "unrounded" },
+            { symbol: "ə", f1: 500, f2: 1500, rounding: "unrounded" },
+            { symbol: "ɔː", f1: 560, f2: 900, rounding: "rounded" },
+            { symbol: "ʊ", f1: 400, f2: 1000, rounding: "rounded" },
+            { symbol: "uː", f1: 320, f2: 800, rounding: "rounded" }
+          ] }
+      ]
+        @label "Vowel Inventories"
+        @description "Named vowel inventories the learner can load. Every vowel carries its symbol, F1/F2 formant frequencies in Hz, and a rounding tag; the nearest-vowel verdict only considers vowels whose rounding matches the current toggle."
+        @synonyms "vowel inventory, cardinal vowels, vowel system, formant chart, vowel space"
+        @tier "domain"
+      showCardinals : boolean = true
+        @label "Show Cardinal Vowels"
+        @description "When true, the inventory's vowels are drawn as labelled reference points on the quadrilateral."
+        @synonyms "cardinal vowels, reference vowels"
+        @tier "domain"
+      formantStep : number = 50
+        @label "Formant Step (Hz)"
+        @description "Hz added or subtracted per stepper-button press."
+        @tier "domain"
+      f1Min : number = 200
+        @label "F1 Minimum (Hz)"
+        @tier "domain"
+      f1Max : number = 900
+        @label "F1 Maximum (Hz)"
+        @tier "domain"
+      f2Min : number = 600
+        @label "F2 Minimum (Hz)"
+        @tier "domain"
+      f2Max : number = 2500
+        @label "F2 Maximum (Hz)"
+        @tier "domain"
+      width : number = 640
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 420
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      interactive : boolean = false
+        @label "Interactive"
+        @description "Enable pointer interaction on the canvas."
+        @tier "presentation"
+      plotLeft : number = 50
+        @label "Plot Left (px)"
+        @tier "presentation"
+      plotRight : number = 40
+        @label "Plot Right (px)"
+        @tier "presentation"
+      plotTop : number = 30
+        @label "Plot Top (px)"
+        @tier "presentation"
+      plotBottom : number = 40
+        @label "Plot Bottom (px)"
+        @tier "presentation"
+      pointRadius : number = 8
+        @label "Formant Point Radius (px)"
+        @tier "presentation"
+      symbolFontSize : number = 16
+        @label "Vowel Symbol Font Size"
+        @tier "presentation"
+      quadColor : string = "#64748b"
+        @label "Quadrilateral Border Color"
+        @tier "presentation"
+      quadFill : string = "#f8fafc"
+        @label "Quadrilateral Fill Color"
+        @tier "presentation"
+      cardinalColor : string = "#475569"
+        @label "Cardinal Vowel Color"
+        @tier "presentation"
+      pointColor : string = "#dc2626"
+        @label "Formant Point Color"
+        @tier "presentation"
+    }
+  }
+
+  page "/ling-vowels" as LingVowelsPage -> LingVowelsSim
+}

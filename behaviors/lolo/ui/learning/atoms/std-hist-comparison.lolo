@@ -1,0 +1,381 @@
+app std-hist-comparison "1.0.0"
+"Comparison instrument — the learner attaches traits to two case columns and snaps traits true of both into the shared center, then checks the Venn-style verdict against the canonical shared traits on a math-canvas. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital HistComparisonOrbital {
+  type HistComparisonShapePoint = {
+    x : number!
+    y : number!
+  }
+  type HistComparisonShape = {
+    type : "line" | "arrow" | "circle" | "rect" | "polygon" | "path" | "text" | "axis" | "grid"!
+    id : string
+    x : number
+    y : number
+    x1 : number
+    y1 : number
+    x2 : number
+    y2 : number
+    radius : number
+    width : number
+    height : number
+    points : [HistComparisonShapePoint]
+    path : string
+    text : string
+    label : string
+    fontSize : number
+    align : "left" | "center" | "right"
+    axis : "x" | "y"
+    min : number
+    max : number
+    step : number
+    color : string
+    fill : string
+    lineWidth : number
+    opacity : number
+  }
+  type HistComparisonCase = {
+    id : string!
+    label : string!
+  }
+  type HistComparisonTrait = {
+    id : string!
+    label : string!
+  }
+
+  entity HistComparisonScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    attachedA : [string]
+    attachedB : [string]
+    shared : [string]
+    checked : boolean = false
+    score : number
+    verdict : string
+    shapes : [HistComparisonShape]
+  }
+
+  trait HistComparisonSim -> @rebindable HistComparisonScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.attachedA [])
+        (set @entity.attachedB [])
+        (set @entity.shared [])
+        (set @entity.checked false)
+        (set @entity.score 0)
+        (set @entity.verdict "")
+        (let (
+            (vennShapes [
+              { type: circle, id: "case-a", x: 230, y: 210, radius: 140, color: "#1d4ed8", fill: "#1d4ed8", opacity: 0.22, lineWidth: 2 },
+              { type: circle, id: "case-b", x: 410, y: 210, radius: 140, color: "#b91c1c", fill: "#b91c1c", opacity: 0.22, lineWidth: 2 },
+              { type: text, id: "case-a-label", x: 160, y: 60, text: @config.caseA.label, fontSize: 14, align: "center", color: "#1d4ed8" },
+              { type: text, id: "case-b-label", x: 480, y: 60, text: @config.caseB.label, fontSize: 14, align: "center", color: "#b91c1c" },
+              { type: text, id: "shared-label", x: 320, y: 60, text: "Shared", fontSize: 14, align: "center", color: "#44403c" },
+              { type: text, id: "count-a", x: 190, y: 215, text: (str/concat "" (array/len @entity.attachedA)), fontSize: 22, align: "center", color: "#1d4ed8" },
+              { type: text, id: "count-shared", x: 320, y: 215, text: (str/concat "" (array/len @entity.shared)), fontSize: 22, align: "center", color: "#44403c" },
+              { type: text, id: "count-b", x: 450, y: 215, text: (str/concat "" (array/len @entity.attachedB)), fontSize: 22, align: "center", color: "#b91c1c" }
+            ])
+          )
+          (do
+            (set @entity.shapes @vennShapes)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: "Attach each trait to a case column; traits true of both cases snap to the shared center." },
+                { type: stack, direction: vertical, gap: sm, children: (array/map @config.traitBank (fn t { type: stack, direction: horizontal, gap: xs, children: [
+                    { type: typography, variant: body, content: @t.label },
+                    { type: button, action: ATTACH_TRAIT, actionPayload: { traitId: @t.id, column: "a" }, label: @config.caseA.label, variant: (if (array/includes @entity.attachedA @t.id) "primary" "ghost"), size: sm },
+                    { type: button, action: ATTACH_TRAIT, actionPayload: { traitId: @t.id, column: "b" }, label: @config.caseB.label, variant: (if (array/includes @entity.attachedB @t.id) "primary" "ghost"), size: sm },
+                    { type: button, action: MOVE_TO_SHARED, actionPayload: { traitId: @t.id }, label: "Shared", variant: (if (array/includes @entity.shared @t.id) "primary" "ghost"), size: sm }
+                  ] })) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: CHECK, label: "Check", variant: primary }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: (if @entity.checked @entity.verdict "Attach traits, then press Check.") }
+              ] }
+          ]
+        })
+        (emit COMPARISON_UPDATED { attachedA: @entity.attachedA, attachedB: @entity.attachedB, shared: @entity.shared, checked: @entity.checked, score: @entity.score })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.attachedA [])
+        (set @entity.attachedB [])
+        (set @entity.shared [])
+        (set @entity.checked false)
+        (set @entity.score 0)
+        (set @entity.verdict "")
+        (let (
+            (vennShapes [
+              { type: circle, id: "case-a", x: 230, y: 210, radius: 140, color: "#1d4ed8", fill: "#1d4ed8", opacity: 0.22, lineWidth: 2 },
+              { type: circle, id: "case-b", x: 410, y: 210, radius: 140, color: "#b91c1c", fill: "#b91c1c", opacity: 0.22, lineWidth: 2 },
+              { type: text, id: "case-a-label", x: 160, y: 60, text: @config.caseA.label, fontSize: 14, align: "center", color: "#1d4ed8" },
+              { type: text, id: "case-b-label", x: 480, y: 60, text: @config.caseB.label, fontSize: 14, align: "center", color: "#b91c1c" },
+              { type: text, id: "shared-label", x: 320, y: 60, text: "Shared", fontSize: 14, align: "center", color: "#44403c" },
+              { type: text, id: "count-a", x: 190, y: 215, text: (str/concat "" (array/len @entity.attachedA)), fontSize: 22, align: "center", color: "#1d4ed8" },
+              { type: text, id: "count-shared", x: 320, y: 215, text: (str/concat "" (array/len @entity.shared)), fontSize: 22, align: "center", color: "#44403c" },
+              { type: text, id: "count-b", x: 450, y: 215, text: (str/concat "" (array/len @entity.attachedB)), fontSize: 22, align: "center", color: "#b91c1c" }
+            ])
+          )
+          (do
+            (set @entity.shapes @vennShapes)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: "Attach each trait to a case column; traits true of both cases snap to the shared center." },
+                { type: stack, direction: vertical, gap: sm, children: (array/map @config.traitBank (fn t { type: stack, direction: horizontal, gap: xs, children: [
+                    { type: typography, variant: body, content: @t.label },
+                    { type: button, action: ATTACH_TRAIT, actionPayload: { traitId: @t.id, column: "a" }, label: @config.caseA.label, variant: (if (array/includes @entity.attachedA @t.id) "primary" "ghost"), size: sm },
+                    { type: button, action: ATTACH_TRAIT, actionPayload: { traitId: @t.id, column: "b" }, label: @config.caseB.label, variant: (if (array/includes @entity.attachedB @t.id) "primary" "ghost"), size: sm },
+                    { type: button, action: MOVE_TO_SHARED, actionPayload: { traitId: @t.id }, label: "Shared", variant: (if (array/includes @entity.shared @t.id) "primary" "ghost"), size: sm }
+                  ] })) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: CHECK, label: "Check", variant: primary }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: (if @entity.checked @entity.verdict "Attach traits, then press Check.") }
+              ] }
+          ]
+        })
+        (emit COMPARISON_UPDATED { attachedA: @entity.attachedA, attachedB: @entity.attachedB, shared: @entity.shared, checked: @entity.checked, score: @entity.score })
+
+      ATTACH_TRAIT -> idle when (== @entity.active true)
+        (set @entity.attachedA (if (== ?column "a") (if (array/includes @entity.attachedA ?traitId) @entity.attachedA (array/concat @entity.attachedA [?traitId])) (array/filter @entity.attachedA (fn t (!= @t ?traitId)))))
+        (set @entity.attachedB (if (== ?column "b") (if (array/includes @entity.attachedB ?traitId) @entity.attachedB (array/concat @entity.attachedB [?traitId])) (array/filter @entity.attachedB (fn t (!= @t ?traitId)))))
+        (set @entity.shared (array/filter @entity.shared (fn t (!= @t ?traitId))))
+        (set @entity.checked false)
+        (let (
+            (vennShapes [
+              { type: circle, id: "case-a", x: 230, y: 210, radius: 140, color: "#1d4ed8", fill: "#1d4ed8", opacity: 0.22, lineWidth: 2 },
+              { type: circle, id: "case-b", x: 410, y: 210, radius: 140, color: "#b91c1c", fill: "#b91c1c", opacity: 0.22, lineWidth: 2 },
+              { type: text, id: "case-a-label", x: 160, y: 60, text: @config.caseA.label, fontSize: 14, align: "center", color: "#1d4ed8" },
+              { type: text, id: "case-b-label", x: 480, y: 60, text: @config.caseB.label, fontSize: 14, align: "center", color: "#b91c1c" },
+              { type: text, id: "shared-label", x: 320, y: 60, text: "Shared", fontSize: 14, align: "center", color: "#44403c" },
+              { type: text, id: "count-a", x: 190, y: 215, text: (str/concat "" (array/len @entity.attachedA)), fontSize: 22, align: "center", color: "#1d4ed8" },
+              { type: text, id: "count-shared", x: 320, y: 215, text: (str/concat "" (array/len @entity.shared)), fontSize: 22, align: "center", color: "#44403c" },
+              { type: text, id: "count-b", x: 450, y: 215, text: (str/concat "" (array/len @entity.attachedB)), fontSize: 22, align: "center", color: "#b91c1c" }
+            ])
+          )
+          (do
+            (set @entity.shapes @vennShapes)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: "Attach each trait to a case column; traits true of both cases snap to the shared center." },
+                { type: stack, direction: vertical, gap: sm, children: (array/map @config.traitBank (fn t { type: stack, direction: horizontal, gap: xs, children: [
+                    { type: typography, variant: body, content: @t.label },
+                    { type: button, action: ATTACH_TRAIT, actionPayload: { traitId: @t.id, column: "a" }, label: @config.caseA.label, variant: (if (array/includes @entity.attachedA @t.id) "primary" "ghost"), size: sm },
+                    { type: button, action: ATTACH_TRAIT, actionPayload: { traitId: @t.id, column: "b" }, label: @config.caseB.label, variant: (if (array/includes @entity.attachedB @t.id) "primary" "ghost"), size: sm },
+                    { type: button, action: MOVE_TO_SHARED, actionPayload: { traitId: @t.id }, label: "Shared", variant: (if (array/includes @entity.shared @t.id) "primary" "ghost"), size: sm }
+                  ] })) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: CHECK, label: "Check", variant: primary }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: (if @entity.checked @entity.verdict "Attach traits, then press Check.") }
+              ] }
+          ]
+        })
+        (emit COMPARISON_UPDATED { attachedA: @entity.attachedA, attachedB: @entity.attachedB, shared: @entity.shared, checked: @entity.checked, score: @entity.score })
+
+      MOVE_TO_SHARED -> idle when (== @entity.active true)
+        (set @entity.shared (if (array/includes @entity.shared ?traitId) (array/filter @entity.shared (fn t (!= @t ?traitId))) (array/concat @entity.shared [?traitId])))
+        (set @entity.attachedA (array/filter @entity.attachedA (fn t (!= @t ?traitId))))
+        (set @entity.attachedB (array/filter @entity.attachedB (fn t (!= @t ?traitId))))
+        (set @entity.checked false)
+        (let (
+            (vennShapes [
+              { type: circle, id: "case-a", x: 230, y: 210, radius: 140, color: "#1d4ed8", fill: "#1d4ed8", opacity: 0.22, lineWidth: 2 },
+              { type: circle, id: "case-b", x: 410, y: 210, radius: 140, color: "#b91c1c", fill: "#b91c1c", opacity: 0.22, lineWidth: 2 },
+              { type: text, id: "case-a-label", x: 160, y: 60, text: @config.caseA.label, fontSize: 14, align: "center", color: "#1d4ed8" },
+              { type: text, id: "case-b-label", x: 480, y: 60, text: @config.caseB.label, fontSize: 14, align: "center", color: "#b91c1c" },
+              { type: text, id: "shared-label", x: 320, y: 60, text: "Shared", fontSize: 14, align: "center", color: "#44403c" },
+              { type: text, id: "count-a", x: 190, y: 215, text: (str/concat "" (array/len @entity.attachedA)), fontSize: 22, align: "center", color: "#1d4ed8" },
+              { type: text, id: "count-shared", x: 320, y: 215, text: (str/concat "" (array/len @entity.shared)), fontSize: 22, align: "center", color: "#44403c" },
+              { type: text, id: "count-b", x: 450, y: 215, text: (str/concat "" (array/len @entity.attachedB)), fontSize: 22, align: "center", color: "#b91c1c" }
+            ])
+          )
+          (do
+            (set @entity.shapes @vennShapes)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: "Attach each trait to a case column; traits true of both cases snap to the shared center." },
+                { type: stack, direction: vertical, gap: sm, children: (array/map @config.traitBank (fn t { type: stack, direction: horizontal, gap: xs, children: [
+                    { type: typography, variant: body, content: @t.label },
+                    { type: button, action: ATTACH_TRAIT, actionPayload: { traitId: @t.id, column: "a" }, label: @config.caseA.label, variant: (if (array/includes @entity.attachedA @t.id) "primary" "ghost"), size: sm },
+                    { type: button, action: ATTACH_TRAIT, actionPayload: { traitId: @t.id, column: "b" }, label: @config.caseB.label, variant: (if (array/includes @entity.attachedB @t.id) "primary" "ghost"), size: sm },
+                    { type: button, action: MOVE_TO_SHARED, actionPayload: { traitId: @t.id }, label: "Shared", variant: (if (array/includes @entity.shared @t.id) "primary" "ghost"), size: sm }
+                  ] })) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: CHECK, label: "Check", variant: primary }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: (if @entity.checked @entity.verdict "Attach traits, then press Check.") }
+              ] }
+          ]
+        })
+        (emit COMPARISON_UPDATED { attachedA: @entity.attachedA, attachedB: @entity.attachedB, shared: @entity.shared, checked: @entity.checked, score: @entity.score })
+
+      CHECK -> idle when (== @entity.active true)
+        (set @entity.checked true)
+        (set @entity.score (array/len (array/filter @config.traitBank (fn t (if (array/includes @config.sharedTraits @t.id) (array/includes @entity.shared @t.id) (or (array/includes @entity.attachedA @t.id) (array/includes @entity.attachedB @t.id)))))))
+        (set @entity.verdict (str/concat "Venn verdict: " @entity.score " of " (array/len @config.traitBank) " traits placed correctly."))
+        (let (
+            (vennShapes [
+              { type: circle, id: "case-a", x: 230, y: 210, radius: 140, color: "#1d4ed8", fill: "#1d4ed8", opacity: 0.22, lineWidth: 2 },
+              { type: circle, id: "case-b", x: 410, y: 210, radius: 140, color: "#b91c1c", fill: "#b91c1c", opacity: 0.22, lineWidth: 2 },
+              { type: text, id: "case-a-label", x: 160, y: 60, text: @config.caseA.label, fontSize: 14, align: "center", color: "#1d4ed8" },
+              { type: text, id: "case-b-label", x: 480, y: 60, text: @config.caseB.label, fontSize: 14, align: "center", color: "#b91c1c" },
+              { type: text, id: "shared-label", x: 320, y: 60, text: "Shared", fontSize: 14, align: "center", color: "#44403c" },
+              { type: text, id: "count-a", x: 190, y: 215, text: (str/concat "" (array/len @entity.attachedA)), fontSize: 22, align: "center", color: "#1d4ed8" },
+              { type: text, id: "count-shared", x: 320, y: 215, text: (str/concat "" (array/len @entity.shared)), fontSize: 22, align: "center", color: "#44403c" },
+              { type: text, id: "count-b", x: 450, y: 215, text: (str/concat "" (array/len @entity.attachedB)), fontSize: 22, align: "center", color: "#b91c1c" }
+            ])
+          )
+          (do
+            (set @entity.shapes @vennShapes)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: "Attach each trait to a case column; traits true of both cases snap to the shared center." },
+                { type: stack, direction: vertical, gap: sm, children: (array/map @config.traitBank (fn t { type: stack, direction: horizontal, gap: xs, children: [
+                    { type: typography, variant: body, content: @t.label },
+                    { type: button, action: ATTACH_TRAIT, actionPayload: { traitId: @t.id, column: "a" }, label: @config.caseA.label, variant: (if (array/includes @entity.attachedA @t.id) "primary" "ghost"), size: sm },
+                    { type: button, action: ATTACH_TRAIT, actionPayload: { traitId: @t.id, column: "b" }, label: @config.caseB.label, variant: (if (array/includes @entity.attachedB @t.id) "primary" "ghost"), size: sm },
+                    { type: button, action: MOVE_TO_SHARED, actionPayload: { traitId: @t.id }, label: "Shared", variant: (if (array/includes @entity.shared @t.id) "primary" "ghost"), size: sm }
+                  ] })) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: CHECK, label: "Check", variant: primary }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: (if @entity.checked @entity.verdict "Attach traits, then press Check.") }
+              ] }
+          ]
+        })
+        (emit COMPARISON_UPDATED { attachedA: @entity.attachedA, attachedB: @entity.attachedB, shared: @entity.shared, checked: @entity.checked, score: @entity.score })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      ATTACH_TRAIT {
+        traitId : string
+        column : string
+      }
+        @description "Learner attached a trait to one case column; the trait leaves the other column and the shared center."
+        @tier "domain"
+      MOVE_TO_SHARED {
+        traitId : string
+      }
+        @description "Learner snapped a trait into the shared center (true of both cases) or pulled it back out."
+        @tier "domain"
+      CHECK {
+      }
+        @description "Learner asked for the Venn-style verdict comparing their placement against the canonical shared traits."
+        @tier "domain"
+    }
+
+    emits {
+      COMPARISON_UPDATED -> external {
+        attachedA : [string]
+        attachedB : [string]
+        shared : [string]
+        checked : boolean
+        score : number
+      }
+        @description "The comparison instrument state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "comparison update, compare and contrast, venn verdict, shared traits, case comparison"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Comparison"
+        @label "Title"
+        @description "Title shown above the lab."
+        @tier "presentation"
+      width : number = 640
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      interactive : boolean = false
+        @label "Interactive"
+        @description "Enable pointer interaction on the canvas."
+        @tier "presentation"
+      animate : boolean = false
+        @label "Animate"
+        @description "Enable continuous redraw loop."
+        @tier "presentation"
+      caseA : HistComparisonCase = { id: "a", label: "French Revolution" }
+        @label "Case A"
+        @description "First case of the comparison — the left column of the Venn."
+        @synonyms "case a, first case, comparison case"
+        @tier "domain"
+      caseB : HistComparisonCase = { id: "b", label: "Haitian Revolution" }
+        @label "Case B"
+        @description "Second case of the comparison — the right column of the Venn."
+        @synonyms "case b, second case, comparison case"
+        @tier "domain"
+      traitBank : [HistComparisonTrait] = [
+        { id: "social-hierarchy", label: "Challenged the social hierarchy" },
+        { id: "enlightenment-ideas", label: "Drew on Enlightenment ideas" },
+        { id: "slave-revolt", label: "Led by enslaved people" },
+        { id: "national-citizenship", label: "Created a new national citizenship" },
+        { id: "abolition", label: "Abolished slavery in its territory" },
+        { id: "european-monarchy", label: "Overthrew a European monarchy" }
+      ]
+        @label "Trait Bank"
+        @description "Roster of traits the learner distributes across the two case columns and the shared center."
+        @synonyms "trait bank, characteristics, attributes, comparison traits"
+        @tier "domain"
+      sharedTraits : [string] = ["social-hierarchy", "enlightenment-ideas"]
+        @label "Shared Traits"
+        @description "Canonical roster of trait ids true of both cases; every other trait is canonical to exactly one column. The CHECK verdict compares learner placement against this list."
+        @synonyms "shared traits, common traits, venn overlap, canonical shared"
+        @tier "domain"
+    }
+  }
+
+  page "/hist-comparison" as HistComparisonPage -> HistComparisonSim
+}

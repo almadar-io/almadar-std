@@ -227,7 +227,7 @@ export function stdModQueue(params: StdModQueueParams): OrbitalDefinition {
   });
 }
 
-type _StdModQueueEntityName = 'ModQueueItem';
+type _StdModQueueEntityName = 'ModQueueItem' | 'SpinnerItem' | 'TypographyItem' | 'IconItem' | 'ButtonItem' | 'DividerItem' | 'AlertItem';
 type _StdModQueueListenTraitName = 'LoadingSpinner' | 'ErrorSpinner' | 'LoadingText' | 'ShieldAlertIcon' | 'ModQueueTitle' | 'CloseButton' | 'ModQueueDivider' | 'ErrorAlert' | 'ModQueueItemReview';
 
 /**

@@ -225,6 +225,55 @@
             },
             "name": "points",
             "type": "array"
+          },
+          {
+            "items": {
+              "properties": {
+                "align": {
+                  "name": "align",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "left",
+                    "center",
+                    "right"
+                  ]
+                },
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "fontSize": {
+                  "name": "fontSize",
+                  "required": false,
+                  "type": "number"
+                },
+                "text": {
+                  "name": "text",
+                  "required": true,
+                  "type": "string"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "labelShapes",
+            "type": "array"
           }
         ],
         "id": "ent_01KZEEZFY8CMGFGK9Y7MFFN46F",
@@ -423,6 +472,7 @@
               "goodAMax",
               "goodBLabel",
               "goodBMax",
+              "labelShapes",
               "marginalOppCost",
               "marginalOppCostLabel",
               "outputA",
@@ -765,17 +815,164 @@
                         [
                           {
                             "color": "@config.frontierPointColor",
-                            "label": "Frontier Point",
                             "radius": 6.0,
                             "x": "@outA",
                             "y": "@outB"
                           },
                           {
                             "color": "@config.actualPointColor",
-                            "label": "Actual Output",
                             "radius": 6.0,
                             "x": "@outA",
                             "y": "@outB"
+                          }
+                        ]
+                      ],
+                      [
+                        "labelClampLo",
+                        70.0
+                      ],
+                      [
+                        "labelClampHi",
+                        [
+                          "-",
+                          "@config.width",
+                          70.0
+                        ]
+                      ],
+                      [
+                        "frontierLabelX",
+                        [
+                          "-",
+                          [
+                            "math/clamp",
+                            [
+                              "+",
+                              24.0,
+                              [
+                                "*",
+                                [
+                                  "/",
+                                  "@outA",
+                                  "@entity.goodAMax"
+                                ],
+                                [
+                                  "-",
+                                  "@config.width",
+                                  48.0
+                                ]
+                              ]
+                            ],
+                            "@labelClampLo",
+                            "@labelClampHi"
+                          ],
+                          8.0
+                        ]
+                      ],
+                      [
+                        "frontierLabelY",
+                        [
+                          "-",
+                          [
+                            "-",
+                            "@config.height",
+                            [
+                              "+",
+                              24.0,
+                              [
+                                "*",
+                                [
+                                  "/",
+                                  "@outB",
+                                  "@entity.goodBMax"
+                                ],
+                                [
+                                  "-",
+                                  "@config.height",
+                                  48.0
+                                ]
+                              ]
+                            ]
+                          ],
+                          14.0
+                        ]
+                      ],
+                      [
+                        "actualLabelX",
+                        [
+                          "+",
+                          [
+                            "math/clamp",
+                            [
+                              "+",
+                              24.0,
+                              [
+                                "*",
+                                [
+                                  "/",
+                                  "@outA",
+                                  "@entity.goodAMax"
+                                ],
+                                [
+                                  "-",
+                                  "@config.width",
+                                  48.0
+                                ]
+                              ]
+                            ],
+                            "@labelClampLo",
+                            "@labelClampHi"
+                          ],
+                          8.0
+                        ]
+                      ],
+                      [
+                        "actualLabelY",
+                        [
+                          "+",
+                          [
+                            "-",
+                            "@config.height",
+                            [
+                              "+",
+                              24.0,
+                              [
+                                "*",
+                                [
+                                  "/",
+                                  "@outB",
+                                  "@entity.goodBMax"
+                                ],
+                                [
+                                  "-",
+                                  "@config.height",
+                                  48.0
+                                ]
+                              ]
+                            ]
+                          ],
+                          16.0
+                        ]
+                      ],
+                      [
+                        "labelShapes",
+                        [
+                          {
+                            "align": "right",
+                            "color": "@config.frontierPointColor",
+                            "fontSize": 12.0,
+                            "text": "Frontier Point",
+                            "type": "text",
+                            "x": "@frontierLabelX",
+                            "y": "@frontierLabelY"
+                          },
+                          {
+                            "align": "left",
+                            "color": "@config.actualPointColor",
+                            "fontSize": 12.0,
+                            "text": "Actual Output",
+                            "type": "text",
+                            "x": "@actualLabelX",
+                            "y": "@actualLabelY"
                           }
                         ]
                       ]
@@ -826,6 +1023,11 @@
                         "set",
                         "@entity.points",
                         "@allocationPoints"
+                      ],
+                      [
+                        "set",
+                        "@entity.labelShapes",
+                        "@labelShapes"
                       ]
                     ]
                   ],
@@ -848,7 +1050,7 @@
                               "height": "@config.height",
                               "interactive": "@config.interactive",
                               "points": "@entity.points",
-                              "shapes": [],
+                              "shapes": "@entity.labelShapes",
                               "showAxes": true,
                               "showGrid": true,
                               "type": "math-canvas",
@@ -1250,17 +1452,164 @@
                         [
                           {
                             "color": "@config.frontierPointColor",
-                            "label": "Frontier Point",
                             "radius": 6.0,
                             "x": "@outA",
                             "y": "@outB"
                           },
                           {
                             "color": "@config.actualPointColor",
-                            "label": "Actual Output",
                             "radius": 6.0,
                             "x": "@outA",
                             "y": "@outB"
+                          }
+                        ]
+                      ],
+                      [
+                        "labelClampLo",
+                        70.0
+                      ],
+                      [
+                        "labelClampHi",
+                        [
+                          "-",
+                          "@config.width",
+                          70.0
+                        ]
+                      ],
+                      [
+                        "frontierLabelX",
+                        [
+                          "-",
+                          [
+                            "math/clamp",
+                            [
+                              "+",
+                              24.0,
+                              [
+                                "*",
+                                [
+                                  "/",
+                                  "@outA",
+                                  "@entity.goodAMax"
+                                ],
+                                [
+                                  "-",
+                                  "@config.width",
+                                  48.0
+                                ]
+                              ]
+                            ],
+                            "@labelClampLo",
+                            "@labelClampHi"
+                          ],
+                          8.0
+                        ]
+                      ],
+                      [
+                        "frontierLabelY",
+                        [
+                          "-",
+                          [
+                            "-",
+                            "@config.height",
+                            [
+                              "+",
+                              24.0,
+                              [
+                                "*",
+                                [
+                                  "/",
+                                  "@outB",
+                                  "@entity.goodBMax"
+                                ],
+                                [
+                                  "-",
+                                  "@config.height",
+                                  48.0
+                                ]
+                              ]
+                            ]
+                          ],
+                          14.0
+                        ]
+                      ],
+                      [
+                        "actualLabelX",
+                        [
+                          "+",
+                          [
+                            "math/clamp",
+                            [
+                              "+",
+                              24.0,
+                              [
+                                "*",
+                                [
+                                  "/",
+                                  "@outA",
+                                  "@entity.goodAMax"
+                                ],
+                                [
+                                  "-",
+                                  "@config.width",
+                                  48.0
+                                ]
+                              ]
+                            ],
+                            "@labelClampLo",
+                            "@labelClampHi"
+                          ],
+                          8.0
+                        ]
+                      ],
+                      [
+                        "actualLabelY",
+                        [
+                          "+",
+                          [
+                            "-",
+                            "@config.height",
+                            [
+                              "+",
+                              24.0,
+                              [
+                                "*",
+                                [
+                                  "/",
+                                  "@outB",
+                                  "@entity.goodBMax"
+                                ],
+                                [
+                                  "-",
+                                  "@config.height",
+                                  48.0
+                                ]
+                              ]
+                            ]
+                          ],
+                          16.0
+                        ]
+                      ],
+                      [
+                        "labelShapes",
+                        [
+                          {
+                            "align": "right",
+                            "color": "@config.frontierPointColor",
+                            "fontSize": 12.0,
+                            "text": "Frontier Point",
+                            "type": "text",
+                            "x": "@frontierLabelX",
+                            "y": "@frontierLabelY"
+                          },
+                          {
+                            "align": "left",
+                            "color": "@config.actualPointColor",
+                            "fontSize": 12.0,
+                            "text": "Actual Output",
+                            "type": "text",
+                            "x": "@actualLabelX",
+                            "y": "@actualLabelY"
                           }
                         ]
                       ]
@@ -1311,6 +1660,11 @@
                         "set",
                         "@entity.points",
                         "@allocationPoints"
+                      ],
+                      [
+                        "set",
+                        "@entity.labelShapes",
+                        "@labelShapes"
                       ]
                     ]
                   ],
@@ -1333,7 +1687,7 @@
                               "height": "@config.height",
                               "interactive": "@config.interactive",
                               "points": "@entity.points",
-                              "shapes": [],
+                              "shapes": "@entity.labelShapes",
                               "showAxes": true,
                               "showGrid": true,
                               "type": "math-canvas",
@@ -1630,17 +1984,164 @@
                         [
                           {
                             "color": "@config.frontierPointColor",
-                            "label": "Frontier Point",
                             "radius": 6.0,
                             "x": "@outA",
                             "y": "@outB"
                           },
                           {
                             "color": "@config.actualPointColor",
-                            "label": "Actual Output",
                             "radius": 6.0,
                             "x": "@actA",
                             "y": "@actB"
+                          }
+                        ]
+                      ],
+                      [
+                        "labelClampLo",
+                        70.0
+                      ],
+                      [
+                        "labelClampHi",
+                        [
+                          "-",
+                          "@config.width",
+                          70.0
+                        ]
+                      ],
+                      [
+                        "frontierLabelX",
+                        [
+                          "-",
+                          [
+                            "math/clamp",
+                            [
+                              "+",
+                              24.0,
+                              [
+                                "*",
+                                [
+                                  "/",
+                                  "@outA",
+                                  "@entity.goodAMax"
+                                ],
+                                [
+                                  "-",
+                                  "@config.width",
+                                  48.0
+                                ]
+                              ]
+                            ],
+                            "@labelClampLo",
+                            "@labelClampHi"
+                          ],
+                          8.0
+                        ]
+                      ],
+                      [
+                        "frontierLabelY",
+                        [
+                          "-",
+                          [
+                            "-",
+                            "@config.height",
+                            [
+                              "+",
+                              24.0,
+                              [
+                                "*",
+                                [
+                                  "/",
+                                  "@outB",
+                                  "@entity.goodBMax"
+                                ],
+                                [
+                                  "-",
+                                  "@config.height",
+                                  48.0
+                                ]
+                              ]
+                            ]
+                          ],
+                          14.0
+                        ]
+                      ],
+                      [
+                        "actualLabelX",
+                        [
+                          "+",
+                          [
+                            "math/clamp",
+                            [
+                              "+",
+                              24.0,
+                              [
+                                "*",
+                                [
+                                  "/",
+                                  "@actA",
+                                  "@entity.goodAMax"
+                                ],
+                                [
+                                  "-",
+                                  "@config.width",
+                                  48.0
+                                ]
+                              ]
+                            ],
+                            "@labelClampLo",
+                            "@labelClampHi"
+                          ],
+                          8.0
+                        ]
+                      ],
+                      [
+                        "actualLabelY",
+                        [
+                          "+",
+                          [
+                            "-",
+                            "@config.height",
+                            [
+                              "+",
+                              24.0,
+                              [
+                                "*",
+                                [
+                                  "/",
+                                  "@actB",
+                                  "@entity.goodBMax"
+                                ],
+                                [
+                                  "-",
+                                  "@config.height",
+                                  48.0
+                                ]
+                              ]
+                            ]
+                          ],
+                          16.0
+                        ]
+                      ],
+                      [
+                        "labelShapes",
+                        [
+                          {
+                            "align": "right",
+                            "color": "@config.frontierPointColor",
+                            "fontSize": 12.0,
+                            "text": "Frontier Point",
+                            "type": "text",
+                            "x": "@frontierLabelX",
+                            "y": "@frontierLabelY"
+                          },
+                          {
+                            "align": "left",
+                            "color": "@config.actualPointColor",
+                            "fontSize": 12.0,
+                            "text": "Actual Output",
+                            "type": "text",
+                            "x": "@actualLabelX",
+                            "y": "@actualLabelY"
                           }
                         ]
                       ]
@@ -1681,6 +2182,11 @@
                         "set",
                         "@entity.points",
                         "@newPoints"
+                      ],
+                      [
+                        "set",
+                        "@entity.labelShapes",
+                        "@labelShapes"
                       ]
                     ]
                   ],
@@ -1703,7 +2209,7 @@
                               "height": "@config.height",
                               "interactive": "@config.interactive",
                               "points": "@entity.points",
-                              "shapes": [],
+                              "shapes": "@entity.labelShapes",
                               "showAxes": true,
                               "showGrid": true,
                               "type": "math-canvas",
@@ -1919,17 +2425,164 @@
                         [
                           {
                             "color": "@config.frontierPointColor",
-                            "label": "Frontier Point",
                             "radius": 6.0,
                             "x": "@entity.outputA",
                             "y": "@entity.outputB"
                           },
                           {
                             "color": "@config.actualPointColor",
-                            "label": "Actual Output",
                             "radius": 6.0,
                             "x": "@actA",
                             "y": "@actB"
+                          }
+                        ]
+                      ],
+                      [
+                        "labelClampLo",
+                        70.0
+                      ],
+                      [
+                        "labelClampHi",
+                        [
+                          "-",
+                          "@config.width",
+                          70.0
+                        ]
+                      ],
+                      [
+                        "frontierLabelX",
+                        [
+                          "-",
+                          [
+                            "math/clamp",
+                            [
+                              "+",
+                              24.0,
+                              [
+                                "*",
+                                [
+                                  "/",
+                                  "@entity.outputA",
+                                  "@entity.goodAMax"
+                                ],
+                                [
+                                  "-",
+                                  "@config.width",
+                                  48.0
+                                ]
+                              ]
+                            ],
+                            "@labelClampLo",
+                            "@labelClampHi"
+                          ],
+                          8.0
+                        ]
+                      ],
+                      [
+                        "frontierLabelY",
+                        [
+                          "-",
+                          [
+                            "-",
+                            "@config.height",
+                            [
+                              "+",
+                              24.0,
+                              [
+                                "*",
+                                [
+                                  "/",
+                                  "@entity.outputB",
+                                  "@entity.goodBMax"
+                                ],
+                                [
+                                  "-",
+                                  "@config.height",
+                                  48.0
+                                ]
+                              ]
+                            ]
+                          ],
+                          14.0
+                        ]
+                      ],
+                      [
+                        "actualLabelX",
+                        [
+                          "+",
+                          [
+                            "math/clamp",
+                            [
+                              "+",
+                              24.0,
+                              [
+                                "*",
+                                [
+                                  "/",
+                                  "@actA",
+                                  "@entity.goodAMax"
+                                ],
+                                [
+                                  "-",
+                                  "@config.width",
+                                  48.0
+                                ]
+                              ]
+                            ],
+                            "@labelClampLo",
+                            "@labelClampHi"
+                          ],
+                          8.0
+                        ]
+                      ],
+                      [
+                        "actualLabelY",
+                        [
+                          "+",
+                          [
+                            "-",
+                            "@config.height",
+                            [
+                              "+",
+                              24.0,
+                              [
+                                "*",
+                                [
+                                  "/",
+                                  "@actB",
+                                  "@entity.goodBMax"
+                                ],
+                                [
+                                  "-",
+                                  "@config.height",
+                                  48.0
+                                ]
+                              ]
+                            ]
+                          ],
+                          16.0
+                        ]
+                      ],
+                      [
+                        "labelShapes",
+                        [
+                          {
+                            "align": "right",
+                            "color": "@config.frontierPointColor",
+                            "fontSize": 12.0,
+                            "text": "Frontier Point",
+                            "type": "text",
+                            "x": "@frontierLabelX",
+                            "y": "@frontierLabelY"
+                          },
+                          {
+                            "align": "left",
+                            "color": "@config.actualPointColor",
+                            "fontSize": 12.0,
+                            "text": "Actual Output",
+                            "type": "text",
+                            "x": "@actualLabelX",
+                            "y": "@actualLabelY"
                           }
                         ]
                       ]
@@ -1955,6 +2608,11 @@
                         "set",
                         "@entity.points",
                         "@newPoints"
+                      ],
+                      [
+                        "set",
+                        "@entity.labelShapes",
+                        "@labelShapes"
                       ]
                     ]
                   ],
@@ -1977,7 +2635,7 @@
                               "height": "@config.height",
                               "interactive": "@config.interactive",
                               "points": "@entity.points",
-                              "shapes": [],
+                              "shapes": "@entity.labelShapes",
                               "showAxes": true,
                               "showGrid": true,
                               "type": "math-canvas",

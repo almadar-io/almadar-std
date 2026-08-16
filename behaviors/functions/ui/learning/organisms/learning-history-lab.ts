@@ -50,7 +50,7 @@ export interface StdLearningHistoryLabConfig {
   mode?: 'causal-chain' | 'timeline';
 }
 
-type _StdLearningHistoryLabEntityName = 'HistoryLabItem' | 'CausalChainScene' | 'StepperScene';
+type _StdLearningHistoryLabEntityName = 'HistoryLabItem' | 'CausalChainScene' | 'StepperScene' | 'HistCausalChainScene' | 'LearnStepperScene';
 type _StdLearningHistoryLabListenTraitName = 'HistoryLabRouter' | 'CausalChainSim' | 'StepperSim';
 
 /**
@@ -375,8 +375,23 @@ export function stdLearningHistoryLabHistoryLabOrbital(params: StdLearningHistor
             'type': 'string',
           },
           {
+            'name': 'currentStageLabel',
+            'type': 'string',
+          },
+          {
+            'name': 'currentStageDescription',
+            'type': 'string',
+          },
+          {
             'name': 'categoryTally',
             'type': 'string',
+          },
+          {
+            'items': {
+              'type': 'object',
+            },
+            'name': 'tallyItems',
+            'type': 'array',
           },
           {
             'name': 'visibleThreadNote',

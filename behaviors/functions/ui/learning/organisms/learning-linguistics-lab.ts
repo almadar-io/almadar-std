@@ -50,7 +50,7 @@ export interface StdLearningLinguisticsLabConfig {
   mode?: 'syntax-tree' | 'sound-change';
 }
 
-type _StdLearningLinguisticsLabEntityName = 'LinguisticsLabItem' | 'SyntaxtreeScene' | 'SoundchangeScene';
+type _StdLearningLinguisticsLabEntityName = 'LinguisticsLabItem' | 'SyntaxtreeScene' | 'SoundchangeScene' | 'LingSyntaxtreeScene' | 'LingSoundchangeScene';
 type _StdLearningLinguisticsLabListenTraitName = 'LinguisticsLabRouter' | 'SyntaxtreeSim' | 'SoundchangeSim';
 
 /**

@@ -29,6 +29,16 @@
             "required": false
           },
           {
+            "name": "itemHint",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "itemExplanation",
+            "type": "string",
+            "required": false
+          },
+          {
             "name": "correctCategory",
             "type": "string",
             "required": false
@@ -44,6 +54,11 @@
             "required": false
           },
           {
+            "name": "verdict",
+            "type": "string",
+            "required": false
+          },
+          {
             "name": "correctCount",
             "type": "number",
             "required": false
@@ -54,7 +69,27 @@
             "required": false
           },
           {
+            "name": "totalItems",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "roundComplete",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "categoryStats",
+            "type": "array",
+            "required": false
+          },
+          {
             "name": "backdropShapes",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "roundView",
             "type": "array",
             "required": false
           }
@@ -96,7 +131,13 @@
           {
             "name": "ADVANCE",
             "direction": "listen",
-            "description": "Learner advanced to the next item, clearing the pick and feedback for the new item.",
+            "description": "Learner advanced to the next item, clearing the pick and feedback for the new item; on the last item this instead ends the round and reveals the summary.",
+            "tier": "domain"
+          },
+          {
+            "name": "RETRY",
+            "direction": "listen",
+            "description": "Learner restarted the round from the summary screen — score, per-category breakdown, and item cursor reset to the beginning.",
             "tier": "domain"
           }
         ],
@@ -202,15 +243,19 @@
             "default": [
               {
                 "category": "a",
+                "explanation": "This example was written to satisfy category A's defining trait.",
+                "hint": "Consider what makes this belong to category A.",
                 "text": "Example item one."
               },
               {
                 "category": "b",
+                "explanation": "This example was written to satisfy category B's defining trait.",
+                "hint": "Consider what makes this belong to category B.",
                 "text": "Example item two."
               }
             ],
             "label": "Items",
-            "description": "Roster of items the learner classifies; each carries its prompt text and the value of its correct category.",
+            "description": "Roster of items the learner classifies; each carries its prompt text, the value of its correct category, and optional hint/explanation text shown before/after the pick.",
             "synonyms": "item, prompt, scenario, situation, case, example, question",
             "tier": "domain",
             "items": {
@@ -218,6 +263,16 @@
                 "category": {
                   "name": "category",
                   "required": true,
+                  "type": "string"
+                },
+                "explanation": {
+                  "name": "explanation",
+                  "required": false,
+                  "type": "string"
+                },
+                "hint": {
+                  "name": "hint",
+                  "required": false,
                   "type": "string"
                 },
                 "text": {
@@ -235,6 +290,14 @@
             "default": "",
             "label": "Match Mode",
             "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "retryLabel",
+            "type": "string",
+            "default": "Retry Round",
+            "label": "Retry Button Label",
+            "description": "Label text for the button that restarts the round from the end-of-round summary.",
             "tier": "presentation"
           },
           {
@@ -260,7 +323,8 @@
           "ADVANCE",
           "INIT",
           "MODE_SELECTED",
-          "PICK"
+          "PICK",
+          "RETRY"
         ],
         "entityRebindable": true,
         "entityContract": {
@@ -269,13 +333,20 @@
             "active",
             "attemptedCount",
             "backdropShapes",
+            "categoryStats",
             "correctCategory",
             "correctCount",
             "feedback",
+            "itemExplanation",
+            "itemHint",
             "itemIndex",
             "itemText",
+            "roundComplete",
+            "roundView",
             "selectedCategory",
-            "title"
+            "title",
+            "totalItems",
+            "verdict"
           ]
         }
       }

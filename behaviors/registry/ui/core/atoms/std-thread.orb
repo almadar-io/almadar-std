@@ -1,5 +1,5 @@
 {
-  "description": "std-thread — forum-style nested replies with collapse + flat-mode toggle. Owns ThreadPost (persistent). flat:true covers 1:1 linear inquiry threads; flat:false renders forum-style nested. INIT fetches; REPLY persists a child post under @payload.parentId. Layer 3 variants override `bodyContent` to deliver chat-bubble, email-threaded, or linear-comments UX while inheriting the same trait, state machine, emits, and listens.",
+  "description": "std-thread — forum-style nested replies with collapse + flat-mode toggle. Owns ThreadPost (persistent). flat:true covers 1:1 linear inquiry threads; flat:false renders forum-style nested. INIT fetches, scoped by @config.threadRootId when set (blank = every root, the default). REPLY persists a child post under @payload.parentId, stamped with the real @user identity. Layer 3 variants override `bodyContent` to deliver chat-bubble, email-threaded, or linear-comments UX while inheriting the same trait, state machine, emits, and listens.",
   "ledger": {
     "entries": {
       "ent_01KXG04HSZB16HRNNZWKASR1J1": {
@@ -404,8 +404,9 @@
             },
             "threadRootId": {
               "default": "",
-              "description": "Top-level post whose descendants are loaded (blank = all roots)",
+              "description": "Top-level post whose descendants are loaded, filters every fetch and defaults new top-level replies' threadRootId (blank = all roots, unfiltered)",
               "label": "Root post id",
+              "synonyms": "rootId, topLevelId, scope, threadScope",
               "tier": "domain",
               "type": "string"
             }
@@ -792,6 +793,23 @@
                         "failure": "ThreadPostLoadFailed",
                         "success": "ThreadPostLoaded"
                       },
+                      "filter": [
+                        "or",
+                        [
+                          "=",
+                          "@config.threadRootId",
+                          ""
+                        ],
+                        [
+                          "=",
+                          [
+                            "object/get",
+                            "@entity",
+                            "threadRootId"
+                          ],
+                          "@config.threadRootId"
+                        ]
+                      ],
                       "include": [
                         "replies"
                       ]
@@ -851,6 +869,23 @@
                         "failure": "ThreadPostLoadFailed",
                         "success": "ThreadPostLoaded"
                       },
+                      "filter": [
+                        "or",
+                        [
+                          "=",
+                          "@config.threadRootId",
+                          ""
+                        ],
+                        [
+                          "=",
+                          [
+                            "object/get",
+                            "@entity",
+                            "threadRootId"
+                          ],
+                          "@config.threadRootId"
+                        ]
+                      ],
                       "include": [
                         "replies"
                       ]
@@ -890,8 +925,8 @@
                     "create",
                     "ThreadPost",
                     {
-                      "authorId": "me",
-                      "authorName": "You",
+                      "authorId": "@user.id",
+                      "authorName": "@user.name",
                       "content": "@payload.content",
                       "parentId": [
                         "str/default",
@@ -901,7 +936,11 @@
                       "threadRootId": [
                         "str/default",
                         "@payload.parentNodeId",
-                        "root"
+                        [
+                          "str/default",
+                          "@config.threadRootId",
+                          "root"
+                        ]
                       ]
                     },
                     {
@@ -1006,6 +1045,23 @@
                         "failure": "ThreadPostLoadFailed",
                         "success": "ThreadPostLoaded"
                       },
+                      "filter": [
+                        "or",
+                        [
+                          "=",
+                          "@config.threadRootId",
+                          ""
+                        ],
+                        [
+                          "=",
+                          [
+                            "object/get",
+                            "@entity",
+                            "threadRootId"
+                          ],
+                          "@config.threadRootId"
+                        ]
+                      ],
                       "include": [
                         "replies"
                       ]
@@ -1032,6 +1088,23 @@
                         "failure": "ThreadPostLoadFailed",
                         "success": "ThreadPostLoaded"
                       },
+                      "filter": [
+                        "or",
+                        [
+                          "=",
+                          "@config.threadRootId",
+                          ""
+                        ],
+                        [
+                          "=",
+                          [
+                            "object/get",
+                            "@entity",
+                            "threadRootId"
+                          ],
+                          "@config.threadRootId"
+                        ]
+                      ],
                       "include": [
                         "replies"
                       ]
@@ -1096,7 +1169,14 @@
                     "persist",
                     "create",
                     "ThreadPost",
-                    "@payload.data",
+                    [
+                      "object/merge",
+                      "@payload.data",
+                      {
+                        "authorId": "@user.id",
+                        "authorName": "@user.name"
+                      }
+                    ],
                     {
                       "emit": {
                         "failure": "ThreadPostCreateFailed",
@@ -1148,6 +1228,23 @@
                         "failure": "ThreadPostLoadFailed",
                         "success": "ThreadPostLoaded"
                       },
+                      "filter": [
+                        "or",
+                        [
+                          "=",
+                          "@config.threadRootId",
+                          ""
+                        ],
+                        [
+                          "=",
+                          [
+                            "object/get",
+                            "@entity",
+                            "threadRootId"
+                          ],
+                          "@config.threadRootId"
+                        ]
+                      ],
                       "include": [
                         "replies"
                       ]
@@ -1186,6 +1283,23 @@
                         "failure": "ThreadPostLoadFailed",
                         "success": "ThreadPostLoaded"
                       },
+                      "filter": [
+                        "or",
+                        [
+                          "=",
+                          "@config.threadRootId",
+                          ""
+                        ],
+                        [
+                          "=",
+                          [
+                            "object/get",
+                            "@entity",
+                            "threadRootId"
+                          ],
+                          "@config.threadRootId"
+                        ]
+                      ],
                       "include": [
                         "replies"
                       ]

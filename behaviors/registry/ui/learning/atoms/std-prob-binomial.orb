@@ -1,0 +1,3556 @@
+{
+  "description": "Binomial trial accumulator — each run flips n coins with bias p and drops the head-count into a histogram that converges to the overlaid theoretical binomial PMF, on a math-canvas. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches.",
+  "ledger": {
+    "entries": {
+      "ent_01KZNF6QWDC46YANP91V5JGSKN": {
+        "bakedName": "ProbBinomialScene",
+        "curName": "ProbBinomialScene",
+        "id": "ent_01KZNF6QWDC46YANP91V5JGSKN",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "evt_01KZNF6QWD6JEZ7RG442SPXR8B": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01KZNF6QWD6JEZ7RG442SPXR8B",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZNF6QWDY7114G62DGS5A049",
+        "renames": []
+      },
+      "evt_01KZNF6QWE05AQRNJHXCPTVWRW": {
+        "bakedName": "RESET",
+        "curName": "RESET",
+        "id": "evt_01KZNF6QWE05AQRNJHXCPTVWRW",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZNF6QWDY7114G62DGS5A049",
+        "renames": []
+      },
+      "evt_01KZNF6QWE3DBCWRKEZV1RQYJ7": {
+        "bakedName": "RUN_TRIAL",
+        "curName": "RUN_TRIAL",
+        "id": "evt_01KZNF6QWE3DBCWRKEZV1RQYJ7",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZNF6QWDY7114G62DGS5A049",
+        "renames": []
+      },
+      "evt_01KZNF6QWE3PFQNWCCW4T6TFDH": {
+        "bakedName": "RUN_MANY",
+        "curName": "RUN_MANY",
+        "id": "evt_01KZNF6QWE3PFQNWCCW4T6TFDH",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZNF6QWDY7114G62DGS5A049",
+        "renames": []
+      },
+      "evt_01KZNF6QWE47K3PM00KK7T6RGH": {
+        "bakedName": "BINOMIAL_UPDATED",
+        "curName": "BINOMIAL_UPDATED",
+        "id": "evt_01KZNF6QWE47K3PM00KK7T6RGH",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZNF6QWDY7114G62DGS5A049",
+        "renames": []
+      },
+      "evt_01KZNF6QWETTZHGYQ41GEJ5NWD": {
+        "bakedName": "MODE_SELECTED",
+        "curName": "MODE_SELECTED",
+        "id": "evt_01KZNF6QWETTZHGYQ41GEJ5NWD",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZNF6QWDY7114G62DGS5A049",
+        "renames": []
+      },
+      "evt_01KZNF6QWEW006WH7F50H4XNSX": {
+        "bakedName": "SET_P",
+        "curName": "SET_P",
+        "id": "evt_01KZNF6QWEW006WH7F50H4XNSX",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZNF6QWDY7114G62DGS5A049",
+        "renames": []
+      },
+      "orb_01KZNF6QWDR2ABNWR8WYPJR9TE": {
+        "bakedName": "ProbBinomialOrbital",
+        "curName": "ProbBinomialOrbital",
+        "id": "orb_01KZNF6QWDR2ABNWR8WYPJR9TE",
+        "kind": "orbital",
+        "owner": "workspace",
+        "renames": []
+      },
+      "pag_01KZNF6QWEVGH1AJYY7MMVDD7N": {
+        "bakedName": "ProbBinomialPage",
+        "curName": "ProbBinomialPage",
+        "id": "pag_01KZNF6QWEVGH1AJYY7MMVDD7N",
+        "kind": "page",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01KZNF6QWDY7114G62DGS5A049": {
+        "bakedName": "ProbBinomialSim",
+        "curName": "ProbBinomialSim",
+        "id": "trt_01KZNF6QWDY7114G62DGS5A049",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      }
+    },
+    "schemaVersion": 1
+  },
+  "name": "std-prob-binomial",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": false,
+            "name": "active",
+            "type": "boolean"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "biasP",
+            "type": "number"
+          },
+          {
+            "items": {
+              "type": "number"
+            },
+            "name": "counts",
+            "type": "array"
+          },
+          {
+            "name": "runsRun",
+            "type": "number"
+          },
+          {
+            "name": "lastHeads",
+            "type": "number"
+          },
+          {
+            "items": {
+              "properties": {
+                "align": {
+                  "name": "align",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "left",
+                    "center",
+                    "right"
+                  ]
+                },
+                "axis": {
+                  "name": "axis",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "x",
+                    "y"
+                  ]
+                },
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "fill": {
+                  "name": "fill",
+                  "required": false,
+                  "type": "string"
+                },
+                "fontSize": {
+                  "name": "fontSize",
+                  "required": false,
+                  "type": "number"
+                },
+                "height": {
+                  "name": "height",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "lineWidth": {
+                  "name": "lineWidth",
+                  "required": false,
+                  "type": "number"
+                },
+                "max": {
+                  "name": "max",
+                  "required": false,
+                  "type": "number"
+                },
+                "min": {
+                  "name": "min",
+                  "required": false,
+                  "type": "number"
+                },
+                "opacity": {
+                  "name": "opacity",
+                  "required": false,
+                  "type": "number"
+                },
+                "path": {
+                  "name": "path",
+                  "required": false,
+                  "type": "string"
+                },
+                "points": {
+                  "items": {
+                    "properties": {
+                      "x": {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "y": {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "name": "points",
+                  "required": false,
+                  "type": "array"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "step": {
+                  "name": "step",
+                  "required": false,
+                  "type": "number"
+                },
+                "text": {
+                  "name": "text",
+                  "required": false,
+                  "type": "string"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string",
+                  "values": [
+                    "line",
+                    "arrow",
+                    "circle",
+                    "rect",
+                    "polygon",
+                    "path",
+                    "text",
+                    "axis",
+                    "grid"
+                  ]
+                },
+                "width": {
+                  "name": "width",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": false,
+                  "type": "number"
+                },
+                "x1": {
+                  "name": "x1",
+                  "required": false,
+                  "type": "number"
+                },
+                "x2": {
+                  "name": "x2",
+                  "required": false,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "y1": {
+                  "name": "y1",
+                  "required": false,
+                  "type": "number"
+                },
+                "y2": {
+                  "name": "y2",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "shapes",
+            "type": "array"
+          }
+        ],
+        "id": "ent_01KZNF6QWDC46YANP91V5JGSKN",
+        "name": "ProbBinomialScene",
+        "persistence": "runtime"
+      },
+      "id": "orb_01KZNF6QWDR2ABNWR8WYPJR9TE",
+      "name": "ProbBinomialOrbital",
+      "pages": [
+        {
+          "id": "pag_01KZNF6QWEVGH1AJYY7MMVDD7N",
+          "name": "ProbBinomialPage",
+          "path": "/prob-binomial",
+          "traits": [
+            {
+              "ref": "ProbBinomialSim",
+              "refId": "trt_01KZNF6QWDY7114G62DGS5A049"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "biasP": {
+              "default": 0.5,
+              "description": "Probability of heads on each flip — shifts the histogram and the theoretical PMF.",
+              "label": "Bias p",
+              "synonyms": "coin bias, success probability, binomial p, weighted coin",
+              "tier": "domain",
+              "type": "number"
+            },
+            "height": {
+              "default": 400.0,
+              "description": "Canvas height in pixels.",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "matchMode": {
+              "default": "",
+              "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+              "label": "Match Mode",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "maxRuns": {
+              "default": 500.0,
+              "description": "Cap on accumulated trials; further runs are ignored until Reset.",
+              "label": "Max Runs",
+              "tier": "domain",
+              "type": "number"
+            },
+            "runsPerStep": {
+              "default": 25.0,
+              "description": "How many trials Run Many adds to the histogram per click.",
+              "label": "Runs Per Step",
+              "tier": "domain",
+              "type": "number"
+            },
+            "showTheoreticalPMF": {
+              "default": true,
+              "description": "Overlay the binomial probability mass function (Stirling-approximated factorials) as markers the empirical histogram converges to.",
+              "label": "Show Theoretical PMF",
+              "synonyms": "pmf, theoretical distribution, binomial distribution",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "title": {
+              "default": "Binomial Trials",
+              "description": "Title shown above the canvas.",
+              "label": "Title",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "trialsPerRun": {
+              "default": 10.0,
+              "description": "Number of coin flips n per trial — the histogram x-axis runs from 0 to n heads.",
+              "label": "Trials Per Run",
+              "synonyms": "n, flips per trial, binomial n, number of trials",
+              "tier": "domain",
+              "type": "number"
+            },
+            "width": {
+              "default": 600.0,
+              "description": "Canvas width in pixels.",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "The binomial accumulation state after each run — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+              "event": "BINOMIAL_UPDATED",
+              "eventId": "evt_01KZNF6QWE47K3PM00KK7T6RGH",
+              "payloadSchema": [
+                {
+                  "name": "runsRun",
+                  "type": "number"
+                },
+                {
+                  "name": "lastHeads",
+                  "type": "number"
+                },
+                {
+                  "name": "counts",
+                  "type": "[number]"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "binomial trial, coin flip run, heads count, pmf convergence",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "active",
+              "biasP",
+              "counts",
+              "lastHeads",
+              "runsRun",
+              "shapes",
+              "title"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "entityRefIds": {
+            "ProbBinomialScene": "ent_01KZNF6QWDC46YANP91V5JGSKN"
+          },
+          "id": "trt_01KZNF6QWDY7114G62DGS5A049",
+          "linkedEntity": "ProbBinomialScene",
+          "linkedEntityId": "ent_01KZNF6QWDC46YANP91V5JGSKN",
+          "name": "ProbBinomialSim",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "id": "evt_01KZNF6QWD6JEZ7RG442SPXR8B",
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+                "id": "evt_01KZNF6QWETTZHGYQ41GEJ5NWD",
+                "key": "MODE_SELECTED",
+                "name": "Mode Selected",
+                "payloadSchema": [
+                  {
+                    "name": "mode",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "id": "evt_01KZNF6QWE3DBCWRKEZV1RQYJ7",
+                "key": "RUN_TRIAL",
+                "name": "Run Trial"
+              },
+              {
+                "id": "evt_01KZNF6QWE3PFQNWCCW4T6TFDH",
+                "key": "RUN_MANY",
+                "name": "Run Many"
+              },
+              {
+                "description": "Learner dragged the bias slider — value is the new coin bias p; changing p clears the accumulated runs.",
+                "id": "evt_01KZNF6QWEW006WH7F50H4XNSX",
+                "key": "SET_P",
+                "name": "Set P",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "number"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "id": "evt_01KZNF6QWE05AQRNJHXCPTVWRW",
+                "key": "RESET",
+                "name": "Reset"
+              },
+              {
+                "description": "The binomial accumulation state after each run — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+                "id": "evt_01KZNF6QWE47K3PM00KK7T6RGH",
+                "key": "BINOMIAL_UPDATED",
+                "name": "Binomial Updated",
+                "payloadSchema": [
+                  {
+                    "name": "runsRun",
+                    "type": "number"
+                  },
+                  {
+                    "name": "lastHeads",
+                    "type": "number"
+                  },
+                  {
+                    "name": "counts",
+                    "type": "[number]"
+                  }
+                ],
+                "synonyms": "binomial trial, coin flip run, heads count, pmf convergence",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.biasP",
+                    "@config.biasP"
+                  ],
+                  [
+                    "set",
+                    "@entity.counts",
+                    [
+                      "array/map",
+                      [
+                        "array/range",
+                        [
+                          "+",
+                          "@config.trialsPerRun",
+                          1.0
+                        ]
+                      ],
+                      [
+                        "fn",
+                        "k",
+                        0.0
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.runsRun",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.lastHeads",
+                    0.0
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "plotW",
+                        [
+                          "-",
+                          "@config.width",
+                          48.0
+                        ]
+                      ],
+                      [
+                        "plotH",
+                        [
+                          "-",
+                          "@config.height",
+                          48.0
+                        ]
+                      ],
+                      [
+                        "factN",
+                        [
+                          "array/reduce",
+                          [
+                            "array/range",
+                            1.0,
+                            [
+                              "+",
+                              "@config.trialsPerRun",
+                              1.0
+                            ]
+                          ],
+                          1.0,
+                          [
+                            "fn",
+                            [
+                              "acc",
+                              "i"
+                            ],
+                            [
+                              "*",
+                              "@acc",
+                              "@i"
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "pmfVals",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            [
+                              "+",
+                              "@config.trialsPerRun",
+                              1.0
+                            ]
+                          ],
+                          [
+                            "fn",
+                            "k",
+                            [
+                              "let",
+                              [
+                                [
+                                  "factK",
+                                  [
+                                    "array/reduce",
+                                    [
+                                      "array/range",
+                                      1.0,
+                                      [
+                                        "+",
+                                        "@k",
+                                        1.0
+                                      ]
+                                    ],
+                                    1.0,
+                                    [
+                                      "fn",
+                                      [
+                                        "acc",
+                                        "i"
+                                      ],
+                                      [
+                                        "*",
+                                        "@acc",
+                                        "@i"
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "factNmK",
+                                  [
+                                    "array/reduce",
+                                    [
+                                      "array/range",
+                                      1.0,
+                                      [
+                                        "+",
+                                        [
+                                          "-",
+                                          "@config.trialsPerRun",
+                                          "@k"
+                                        ],
+                                        1.0
+                                      ]
+                                    ],
+                                    1.0,
+                                    [
+                                      "fn",
+                                      [
+                                        "acc",
+                                        "i"
+                                      ],
+                                      [
+                                        "*",
+                                        "@acc",
+                                        "@i"
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "comb",
+                                  [
+                                    "/",
+                                    "@factN",
+                                    [
+                                      "*",
+                                      "@factK",
+                                      "@factNmK"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "powP",
+                                  [
+                                    "math/pow",
+                                    "@entity.biasP",
+                                    "@k"
+                                  ]
+                                ],
+                                [
+                                  "powQ",
+                                  [
+                                    "math/pow",
+                                    [
+                                      "-",
+                                      1.0,
+                                      "@entity.biasP"
+                                    ],
+                                    [
+                                      "-",
+                                      "@config.trialsPerRun",
+                                      "@k"
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              [
+                                "*",
+                                "@comb",
+                                [
+                                  "*",
+                                  "@powP",
+                                  "@powQ"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "maxPmf",
+                        [
+                          "math/max",
+                          0.0001,
+                          [
+                            "array/max",
+                            "@pmfVals"
+                          ]
+                        ]
+                      ],
+                      [
+                        "maxVal",
+                        [
+                          "*",
+                          "@maxPmf",
+                          1.25
+                        ]
+                      ],
+                      [
+                        "pmfShapes",
+                        [
+                          "if",
+                          "@config.showTheoreticalPMF",
+                          [
+                            "array/map",
+                            [
+                              "array/range",
+                              [
+                                "+",
+                                "@config.trialsPerRun",
+                                1.0
+                              ]
+                            ],
+                            [
+                              "fn",
+                              "k",
+                              {
+                                "fill": "#dc2626",
+                                "lineWidth": 0.0,
+                                "radius": 4.0,
+                                "type": "circle",
+                                "x": [
+                                  "+",
+                                  24.0,
+                                  [
+                                    "*",
+                                    [
+                                      "+",
+                                      "@k",
+                                      0.5
+                                    ],
+                                    [
+                                      "/",
+                                      "@plotW",
+                                      [
+                                        "+",
+                                        "@config.trialsPerRun",
+                                        1.0
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                "y": [
+                                  "-",
+                                  [
+                                    "+",
+                                    24.0,
+                                    "@plotH"
+                                  ],
+                                  [
+                                    "*",
+                                    [
+                                      "/",
+                                      [
+                                        "array/nth",
+                                        "@pmfVals",
+                                        "@k"
+                                      ],
+                                      "@maxVal"
+                                    ],
+                                    "@plotH"
+                                  ]
+                                ]
+                              }
+                            ]
+                          ],
+                          []
+                        ]
+                      ]
+                    ],
+                    [
+                      "set",
+                      "@entity.shapes",
+                      "@pmfShapes"
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "RUN_TRIAL",
+                                  "label": "Run Trial",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "RUN_MANY",
+                                  "label": "Run Many",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Bias p: ",
+                                [
+                                  "math/round",
+                                  "@entity.biasP",
+                                  2.0
+                                ],
+                                " — flips per trial: ",
+                                "@config.trialsPerRun"
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "action": "SET_P",
+                              "max": 1.0,
+                              "min": 0.0,
+                              "showTooltip": true,
+                              "step": 0.01,
+                              "type": "range-slider",
+                              "value": "@entity.biasP"
+                            },
+                            {
+                              "animate": false,
+                              "curves": [],
+                              "gridStep": 1.0,
+                              "height": "@config.height",
+                              "interactive": false,
+                              "points": [],
+                              "shapes": "@entity.shapes",
+                              "showAxes": false,
+                              "showGrid": false,
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": "@config.trialsPerRun",
+                              "xMin": 0.0,
+                              "yMax": 1.0,
+                              "yMin": 0.0
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "@entity.runsRun",
+                                " run(s) — last trial heads: ",
+                                "@entity.lastHeads",
+                                " / ",
+                                "@config.trialsPerRun"
+                              ],
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01KZNF6QWD6JEZ7RG442SPXR8B",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@config.matchMode",
+                  ""
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.biasP",
+                    "@config.biasP"
+                  ],
+                  [
+                    "set",
+                    "@entity.counts",
+                    [
+                      "array/map",
+                      [
+                        "array/range",
+                        [
+                          "+",
+                          "@config.trialsPerRun",
+                          1.0
+                        ]
+                      ],
+                      [
+                        "fn",
+                        "k",
+                        0.0
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.runsRun",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.lastHeads",
+                    0.0
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "plotW",
+                        [
+                          "-",
+                          "@config.width",
+                          48.0
+                        ]
+                      ],
+                      [
+                        "plotH",
+                        [
+                          "-",
+                          "@config.height",
+                          48.0
+                        ]
+                      ],
+                      [
+                        "factN",
+                        [
+                          "array/reduce",
+                          [
+                            "array/range",
+                            1.0,
+                            [
+                              "+",
+                              "@config.trialsPerRun",
+                              1.0
+                            ]
+                          ],
+                          1.0,
+                          [
+                            "fn",
+                            [
+                              "acc",
+                              "i"
+                            ],
+                            [
+                              "*",
+                              "@acc",
+                              "@i"
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "pmfVals",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            [
+                              "+",
+                              "@config.trialsPerRun",
+                              1.0
+                            ]
+                          ],
+                          [
+                            "fn",
+                            "k",
+                            [
+                              "let",
+                              [
+                                [
+                                  "factK",
+                                  [
+                                    "array/reduce",
+                                    [
+                                      "array/range",
+                                      1.0,
+                                      [
+                                        "+",
+                                        "@k",
+                                        1.0
+                                      ]
+                                    ],
+                                    1.0,
+                                    [
+                                      "fn",
+                                      [
+                                        "acc",
+                                        "i"
+                                      ],
+                                      [
+                                        "*",
+                                        "@acc",
+                                        "@i"
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "factNmK",
+                                  [
+                                    "array/reduce",
+                                    [
+                                      "array/range",
+                                      1.0,
+                                      [
+                                        "+",
+                                        [
+                                          "-",
+                                          "@config.trialsPerRun",
+                                          "@k"
+                                        ],
+                                        1.0
+                                      ]
+                                    ],
+                                    1.0,
+                                    [
+                                      "fn",
+                                      [
+                                        "acc",
+                                        "i"
+                                      ],
+                                      [
+                                        "*",
+                                        "@acc",
+                                        "@i"
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "comb",
+                                  [
+                                    "/",
+                                    "@factN",
+                                    [
+                                      "*",
+                                      "@factK",
+                                      "@factNmK"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "powP",
+                                  [
+                                    "math/pow",
+                                    "@entity.biasP",
+                                    "@k"
+                                  ]
+                                ],
+                                [
+                                  "powQ",
+                                  [
+                                    "math/pow",
+                                    [
+                                      "-",
+                                      1.0,
+                                      "@entity.biasP"
+                                    ],
+                                    [
+                                      "-",
+                                      "@config.trialsPerRun",
+                                      "@k"
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              [
+                                "*",
+                                "@comb",
+                                [
+                                  "*",
+                                  "@powP",
+                                  "@powQ"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "maxPmf",
+                        [
+                          "math/max",
+                          0.0001,
+                          [
+                            "array/max",
+                            "@pmfVals"
+                          ]
+                        ]
+                      ],
+                      [
+                        "maxVal",
+                        [
+                          "*",
+                          "@maxPmf",
+                          1.25
+                        ]
+                      ],
+                      [
+                        "pmfShapes",
+                        [
+                          "if",
+                          "@config.showTheoreticalPMF",
+                          [
+                            "array/map",
+                            [
+                              "array/range",
+                              [
+                                "+",
+                                "@config.trialsPerRun",
+                                1.0
+                              ]
+                            ],
+                            [
+                              "fn",
+                              "k",
+                              {
+                                "fill": "#dc2626",
+                                "lineWidth": 0.0,
+                                "radius": 4.0,
+                                "type": "circle",
+                                "x": [
+                                  "+",
+                                  24.0,
+                                  [
+                                    "*",
+                                    [
+                                      "+",
+                                      "@k",
+                                      0.5
+                                    ],
+                                    [
+                                      "/",
+                                      "@plotW",
+                                      [
+                                        "+",
+                                        "@config.trialsPerRun",
+                                        1.0
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                "y": [
+                                  "-",
+                                  [
+                                    "+",
+                                    24.0,
+                                    "@plotH"
+                                  ],
+                                  [
+                                    "*",
+                                    [
+                                      "/",
+                                      [
+                                        "array/nth",
+                                        "@pmfVals",
+                                        "@k"
+                                      ],
+                                      "@maxVal"
+                                    ],
+                                    "@plotH"
+                                  ]
+                                ]
+                              }
+                            ]
+                          ],
+                          []
+                        ]
+                      ]
+                    ],
+                    [
+                      "set",
+                      "@entity.shapes",
+                      "@pmfShapes"
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "RUN_TRIAL",
+                                  "label": "Run Trial",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "RUN_MANY",
+                                  "label": "Run Many",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Bias p: ",
+                                [
+                                  "math/round",
+                                  "@entity.biasP",
+                                  2.0
+                                ],
+                                " — flips per trial: ",
+                                "@config.trialsPerRun"
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "action": "SET_P",
+                              "max": 1.0,
+                              "min": 0.0,
+                              "showTooltip": true,
+                              "step": 0.01,
+                              "type": "range-slider",
+                              "value": "@entity.biasP"
+                            },
+                            {
+                              "animate": false,
+                              "curves": [],
+                              "gridStep": 1.0,
+                              "height": "@config.height",
+                              "interactive": false,
+                              "points": [],
+                              "shapes": "@entity.shapes",
+                              "showAxes": false,
+                              "showGrid": false,
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": "@config.trialsPerRun",
+                              "xMin": 0.0,
+                              "yMax": 1.0,
+                              "yMin": 0.0
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "@entity.runsRun",
+                                " run(s) — last trial heads: ",
+                                "@entity.lastHeads",
+                                " / ",
+                                "@config.trialsPerRun"
+                              ],
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ]
+                ],
+                "event": "MODE_SELECTED",
+                "eventId": "evt_01KZNF6QWETTZHGYQ41GEJ5NWD",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@payload.mode",
+                  "@config.matchMode"
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "let",
+                    [
+                      [
+                        "allowed",
+                        [
+                          "<",
+                          "@entity.runsRun",
+                          "@config.maxRuns"
+                        ]
+                      ],
+                      [
+                        "heads",
+                        [
+                          "array/len",
+                          [
+                            "array/filter",
+                            [
+                              "array/range",
+                              "@config.trialsPerRun"
+                            ],
+                            [
+                              "fn",
+                              "j",
+                              [
+                                "<",
+                                [
+                                  "math/random"
+                                ],
+                                "@entity.biasP"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "newCounts",
+                        [
+                          "if",
+                          "@allowed",
+                          [
+                            "array/map",
+                            [
+                              "array/range",
+                              [
+                                "+",
+                                "@config.trialsPerRun",
+                                1.0
+                              ]
+                            ],
+                            [
+                              "fn",
+                              "k",
+                              [
+                                "if",
+                                [
+                                  "==",
+                                  "@k",
+                                  "@heads"
+                                ],
+                                [
+                                  "+",
+                                  [
+                                    "array/nth",
+                                    "@entity.counts",
+                                    "@k"
+                                  ],
+                                  1.0
+                                ],
+                                [
+                                  "array/nth",
+                                  "@entity.counts",
+                                  "@k"
+                                ]
+                              ]
+                            ]
+                          ],
+                          "@entity.counts"
+                        ]
+                      ],
+                      [
+                        "newRuns",
+                        [
+                          "if",
+                          "@allowed",
+                          [
+                            "+",
+                            "@entity.runsRun",
+                            1.0
+                          ],
+                          "@entity.runsRun"
+                        ]
+                      ],
+                      [
+                        "plotW",
+                        [
+                          "-",
+                          "@config.width",
+                          48.0
+                        ]
+                      ],
+                      [
+                        "plotH",
+                        [
+                          "-",
+                          "@config.height",
+                          48.0
+                        ]
+                      ],
+                      [
+                        "factN",
+                        [
+                          "array/reduce",
+                          [
+                            "array/range",
+                            1.0,
+                            [
+                              "+",
+                              "@config.trialsPerRun",
+                              1.0
+                            ]
+                          ],
+                          1.0,
+                          [
+                            "fn",
+                            [
+                              "acc",
+                              "i"
+                            ],
+                            [
+                              "*",
+                              "@acc",
+                              "@i"
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "pmfVals",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            [
+                              "+",
+                              "@config.trialsPerRun",
+                              1.0
+                            ]
+                          ],
+                          [
+                            "fn",
+                            "k",
+                            [
+                              "let",
+                              [
+                                [
+                                  "factK",
+                                  [
+                                    "array/reduce",
+                                    [
+                                      "array/range",
+                                      1.0,
+                                      [
+                                        "+",
+                                        "@k",
+                                        1.0
+                                      ]
+                                    ],
+                                    1.0,
+                                    [
+                                      "fn",
+                                      [
+                                        "acc",
+                                        "i"
+                                      ],
+                                      [
+                                        "*",
+                                        "@acc",
+                                        "@i"
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "factNmK",
+                                  [
+                                    "array/reduce",
+                                    [
+                                      "array/range",
+                                      1.0,
+                                      [
+                                        "+",
+                                        [
+                                          "-",
+                                          "@config.trialsPerRun",
+                                          "@k"
+                                        ],
+                                        1.0
+                                      ]
+                                    ],
+                                    1.0,
+                                    [
+                                      "fn",
+                                      [
+                                        "acc",
+                                        "i"
+                                      ],
+                                      [
+                                        "*",
+                                        "@acc",
+                                        "@i"
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "comb",
+                                  [
+                                    "/",
+                                    "@factN",
+                                    [
+                                      "*",
+                                      "@factK",
+                                      "@factNmK"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "powP",
+                                  [
+                                    "math/pow",
+                                    "@entity.biasP",
+                                    "@k"
+                                  ]
+                                ],
+                                [
+                                  "powQ",
+                                  [
+                                    "math/pow",
+                                    [
+                                      "-",
+                                      1.0,
+                                      "@entity.biasP"
+                                    ],
+                                    [
+                                      "-",
+                                      "@config.trialsPerRun",
+                                      "@k"
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              [
+                                "*",
+                                "@comb",
+                                [
+                                  "*",
+                                  "@powP",
+                                  "@powQ"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "maxPmf",
+                        [
+                          "math/max",
+                          0.0001,
+                          [
+                            "array/max",
+                            "@pmfVals"
+                          ]
+                        ]
+                      ],
+                      [
+                        "props",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            [
+                              "+",
+                              "@config.trialsPerRun",
+                              1.0
+                            ]
+                          ],
+                          [
+                            "fn",
+                            "k",
+                            [
+                              "if",
+                              [
+                                ">",
+                                "@newRuns",
+                                0.0
+                              ],
+                              [
+                                "/",
+                                [
+                                  "array/nth",
+                                  "@newCounts",
+                                  "@k"
+                                ],
+                                "@newRuns"
+                              ],
+                              0.0
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "maxVal",
+                        [
+                          "*",
+                          [
+                            "math/max",
+                            "@maxPmf",
+                            [
+                              "array/max",
+                              "@props"
+                            ]
+                          ],
+                          1.25
+                        ]
+                      ],
+                      [
+                        "barShapes",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            [
+                              "+",
+                              "@config.trialsPerRun",
+                              1.0
+                            ]
+                          ],
+                          [
+                            "fn",
+                            "k",
+                            [
+                              "let",
+                              [
+                                [
+                                  "barH",
+                                  [
+                                    "*",
+                                    [
+                                      "/",
+                                      [
+                                        "array/nth",
+                                        "@props",
+                                        "@k"
+                                      ],
+                                      "@maxVal"
+                                    ],
+                                    "@plotH"
+                                  ]
+                                ]
+                              ],
+                              {
+                                "fill": "#2563eb",
+                                "height": "@barH",
+                                "lineWidth": 0.0,
+                                "opacity": 0.6,
+                                "type": "rect",
+                                "width": [
+                                  "*",
+                                  [
+                                    "/",
+                                    "@plotW",
+                                    [
+                                      "+",
+                                      "@config.trialsPerRun",
+                                      1.0
+                                    ]
+                                  ],
+                                  0.7
+                                ],
+                                "x": [
+                                  "+",
+                                  24.0,
+                                  [
+                                    "*",
+                                    "@k",
+                                    [
+                                      "/",
+                                      "@plotW",
+                                      [
+                                        "+",
+                                        "@config.trialsPerRun",
+                                        1.0
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                "y": [
+                                  "-",
+                                  [
+                                    "+",
+                                    24.0,
+                                    "@plotH"
+                                  ],
+                                  "@barH"
+                                ]
+                              }
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "pmfShapes",
+                        [
+                          "if",
+                          "@config.showTheoreticalPMF",
+                          [
+                            "array/map",
+                            [
+                              "array/range",
+                              [
+                                "+",
+                                "@config.trialsPerRun",
+                                1.0
+                              ]
+                            ],
+                            [
+                              "fn",
+                              "k",
+                              {
+                                "fill": "#dc2626",
+                                "lineWidth": 0.0,
+                                "radius": 4.0,
+                                "type": "circle",
+                                "x": [
+                                  "+",
+                                  24.0,
+                                  [
+                                    "*",
+                                    [
+                                      "+",
+                                      "@k",
+                                      0.5
+                                    ],
+                                    [
+                                      "/",
+                                      "@plotW",
+                                      [
+                                        "+",
+                                        "@config.trialsPerRun",
+                                        1.0
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                "y": [
+                                  "-",
+                                  [
+                                    "+",
+                                    24.0,
+                                    "@plotH"
+                                  ],
+                                  [
+                                    "*",
+                                    [
+                                      "/",
+                                      [
+                                        "array/nth",
+                                        "@pmfVals",
+                                        "@k"
+                                      ],
+                                      "@maxVal"
+                                    ],
+                                    "@plotH"
+                                  ]
+                                ]
+                              }
+                            ]
+                          ],
+                          []
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.counts",
+                        "@newCounts"
+                      ],
+                      [
+                        "set",
+                        "@entity.runsRun",
+                        "@newRuns"
+                      ],
+                      [
+                        "set",
+                        "@entity.lastHeads",
+                        [
+                          "if",
+                          "@allowed",
+                          "@heads",
+                          "@entity.lastHeads"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.shapes",
+                        [
+                          "array/concat",
+                          "@barShapes",
+                          "@pmfShapes"
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "RUN_TRIAL",
+                                  "label": "Run Trial",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "RUN_MANY",
+                                  "label": "Run Many",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Bias p: ",
+                                [
+                                  "math/round",
+                                  "@entity.biasP",
+                                  2.0
+                                ],
+                                " — flips per trial: ",
+                                "@config.trialsPerRun"
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "action": "SET_P",
+                              "max": 1.0,
+                              "min": 0.0,
+                              "showTooltip": true,
+                              "step": 0.01,
+                              "type": "range-slider",
+                              "value": "@entity.biasP"
+                            },
+                            {
+                              "animate": false,
+                              "curves": [],
+                              "gridStep": 1.0,
+                              "height": "@config.height",
+                              "interactive": false,
+                              "points": [],
+                              "shapes": "@entity.shapes",
+                              "showAxes": false,
+                              "showGrid": false,
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": "@config.trialsPerRun",
+                              "xMin": 0.0,
+                              "yMax": 1.0,
+                              "yMin": 0.0
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "@entity.runsRun",
+                                " run(s) — last trial heads: ",
+                                "@entity.lastHeads",
+                                " / ",
+                                "@config.trialsPerRun"
+                              ],
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "BINOMIAL_UPDATED",
+                    {
+                      "counts": "@entity.counts",
+                      "lastHeads": "@entity.lastHeads",
+                      "runsRun": "@entity.runsRun"
+                    }
+                  ]
+                ],
+                "event": "RUN_TRIAL",
+                "eventId": "evt_01KZNF6QWE3DBCWRKEZV1RQYJ7",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "let",
+                    [
+                      [
+                        "room",
+                        [
+                          "math/max",
+                          0.0,
+                          [
+                            "-",
+                            "@config.maxRuns",
+                            "@entity.runsRun"
+                          ]
+                        ]
+                      ],
+                      [
+                        "batchSize",
+                        [
+                          "math/min",
+                          "@config.runsPerStep",
+                          "@room"
+                        ]
+                      ],
+                      [
+                        "batchHeads",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@batchSize"
+                          ],
+                          [
+                            "fn",
+                            "r",
+                            [
+                              "array/len",
+                              [
+                                "array/filter",
+                                [
+                                  "array/range",
+                                  "@config.trialsPerRun"
+                                ],
+                                [
+                                  "fn",
+                                  "j",
+                                  [
+                                    "<",
+                                    [
+                                      "math/random"
+                                    ],
+                                    "@entity.biasP"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "newCounts",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            [
+                              "+",
+                              "@config.trialsPerRun",
+                              1.0
+                            ]
+                          ],
+                          [
+                            "fn",
+                            "k",
+                            [
+                              "+",
+                              [
+                                "array/nth",
+                                "@entity.counts",
+                                "@k"
+                              ],
+                              [
+                                "array/len",
+                                [
+                                  "array/filter",
+                                  "@batchHeads",
+                                  [
+                                    "fn",
+                                    "h",
+                                    [
+                                      "==",
+                                      "@h",
+                                      "@k"
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "newRuns",
+                        [
+                          "+",
+                          "@entity.runsRun",
+                          "@batchSize"
+                        ]
+                      ],
+                      [
+                        "plotW",
+                        [
+                          "-",
+                          "@config.width",
+                          48.0
+                        ]
+                      ],
+                      [
+                        "plotH",
+                        [
+                          "-",
+                          "@config.height",
+                          48.0
+                        ]
+                      ],
+                      [
+                        "factN",
+                        [
+                          "array/reduce",
+                          [
+                            "array/range",
+                            1.0,
+                            [
+                              "+",
+                              "@config.trialsPerRun",
+                              1.0
+                            ]
+                          ],
+                          1.0,
+                          [
+                            "fn",
+                            [
+                              "acc",
+                              "i"
+                            ],
+                            [
+                              "*",
+                              "@acc",
+                              "@i"
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "pmfVals",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            [
+                              "+",
+                              "@config.trialsPerRun",
+                              1.0
+                            ]
+                          ],
+                          [
+                            "fn",
+                            "k",
+                            [
+                              "let",
+                              [
+                                [
+                                  "factK",
+                                  [
+                                    "array/reduce",
+                                    [
+                                      "array/range",
+                                      1.0,
+                                      [
+                                        "+",
+                                        "@k",
+                                        1.0
+                                      ]
+                                    ],
+                                    1.0,
+                                    [
+                                      "fn",
+                                      [
+                                        "acc",
+                                        "i"
+                                      ],
+                                      [
+                                        "*",
+                                        "@acc",
+                                        "@i"
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "factNmK",
+                                  [
+                                    "array/reduce",
+                                    [
+                                      "array/range",
+                                      1.0,
+                                      [
+                                        "+",
+                                        [
+                                          "-",
+                                          "@config.trialsPerRun",
+                                          "@k"
+                                        ],
+                                        1.0
+                                      ]
+                                    ],
+                                    1.0,
+                                    [
+                                      "fn",
+                                      [
+                                        "acc",
+                                        "i"
+                                      ],
+                                      [
+                                        "*",
+                                        "@acc",
+                                        "@i"
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "comb",
+                                  [
+                                    "/",
+                                    "@factN",
+                                    [
+                                      "*",
+                                      "@factK",
+                                      "@factNmK"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "powP",
+                                  [
+                                    "math/pow",
+                                    "@entity.biasP",
+                                    "@k"
+                                  ]
+                                ],
+                                [
+                                  "powQ",
+                                  [
+                                    "math/pow",
+                                    [
+                                      "-",
+                                      1.0,
+                                      "@entity.biasP"
+                                    ],
+                                    [
+                                      "-",
+                                      "@config.trialsPerRun",
+                                      "@k"
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              [
+                                "*",
+                                "@comb",
+                                [
+                                  "*",
+                                  "@powP",
+                                  "@powQ"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "maxPmf",
+                        [
+                          "math/max",
+                          0.0001,
+                          [
+                            "array/max",
+                            "@pmfVals"
+                          ]
+                        ]
+                      ],
+                      [
+                        "props",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            [
+                              "+",
+                              "@config.trialsPerRun",
+                              1.0
+                            ]
+                          ],
+                          [
+                            "fn",
+                            "k",
+                            [
+                              "if",
+                              [
+                                ">",
+                                "@newRuns",
+                                0.0
+                              ],
+                              [
+                                "/",
+                                [
+                                  "array/nth",
+                                  "@newCounts",
+                                  "@k"
+                                ],
+                                "@newRuns"
+                              ],
+                              0.0
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "maxVal",
+                        [
+                          "*",
+                          [
+                            "math/max",
+                            "@maxPmf",
+                            [
+                              "array/max",
+                              "@props"
+                            ]
+                          ],
+                          1.25
+                        ]
+                      ],
+                      [
+                        "barShapes",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            [
+                              "+",
+                              "@config.trialsPerRun",
+                              1.0
+                            ]
+                          ],
+                          [
+                            "fn",
+                            "k",
+                            [
+                              "let",
+                              [
+                                [
+                                  "barH",
+                                  [
+                                    "*",
+                                    [
+                                      "/",
+                                      [
+                                        "array/nth",
+                                        "@props",
+                                        "@k"
+                                      ],
+                                      "@maxVal"
+                                    ],
+                                    "@plotH"
+                                  ]
+                                ]
+                              ],
+                              {
+                                "fill": "#2563eb",
+                                "height": "@barH",
+                                "lineWidth": 0.0,
+                                "opacity": 0.6,
+                                "type": "rect",
+                                "width": [
+                                  "*",
+                                  [
+                                    "/",
+                                    "@plotW",
+                                    [
+                                      "+",
+                                      "@config.trialsPerRun",
+                                      1.0
+                                    ]
+                                  ],
+                                  0.7
+                                ],
+                                "x": [
+                                  "+",
+                                  24.0,
+                                  [
+                                    "*",
+                                    "@k",
+                                    [
+                                      "/",
+                                      "@plotW",
+                                      [
+                                        "+",
+                                        "@config.trialsPerRun",
+                                        1.0
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                "y": [
+                                  "-",
+                                  [
+                                    "+",
+                                    24.0,
+                                    "@plotH"
+                                  ],
+                                  "@barH"
+                                ]
+                              }
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "pmfShapes",
+                        [
+                          "if",
+                          "@config.showTheoreticalPMF",
+                          [
+                            "array/map",
+                            [
+                              "array/range",
+                              [
+                                "+",
+                                "@config.trialsPerRun",
+                                1.0
+                              ]
+                            ],
+                            [
+                              "fn",
+                              "k",
+                              {
+                                "fill": "#dc2626",
+                                "lineWidth": 0.0,
+                                "radius": 4.0,
+                                "type": "circle",
+                                "x": [
+                                  "+",
+                                  24.0,
+                                  [
+                                    "*",
+                                    [
+                                      "+",
+                                      "@k",
+                                      0.5
+                                    ],
+                                    [
+                                      "/",
+                                      "@plotW",
+                                      [
+                                        "+",
+                                        "@config.trialsPerRun",
+                                        1.0
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                "y": [
+                                  "-",
+                                  [
+                                    "+",
+                                    24.0,
+                                    "@plotH"
+                                  ],
+                                  [
+                                    "*",
+                                    [
+                                      "/",
+                                      [
+                                        "array/nth",
+                                        "@pmfVals",
+                                        "@k"
+                                      ],
+                                      "@maxVal"
+                                    ],
+                                    "@plotH"
+                                  ]
+                                ]
+                              }
+                            ]
+                          ],
+                          []
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.counts",
+                        "@newCounts"
+                      ],
+                      [
+                        "set",
+                        "@entity.runsRun",
+                        "@newRuns"
+                      ],
+                      [
+                        "set",
+                        "@entity.lastHeads",
+                        [
+                          "if",
+                          [
+                            ">",
+                            "@batchSize",
+                            0.0
+                          ],
+                          [
+                            "array/last",
+                            "@batchHeads"
+                          ],
+                          "@entity.lastHeads"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.shapes",
+                        [
+                          "array/concat",
+                          "@barShapes",
+                          "@pmfShapes"
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "RUN_TRIAL",
+                                  "label": "Run Trial",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "RUN_MANY",
+                                  "label": "Run Many",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Bias p: ",
+                                [
+                                  "math/round",
+                                  "@entity.biasP",
+                                  2.0
+                                ],
+                                " — flips per trial: ",
+                                "@config.trialsPerRun"
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "action": "SET_P",
+                              "max": 1.0,
+                              "min": 0.0,
+                              "showTooltip": true,
+                              "step": 0.01,
+                              "type": "range-slider",
+                              "value": "@entity.biasP"
+                            },
+                            {
+                              "animate": false,
+                              "curves": [],
+                              "gridStep": 1.0,
+                              "height": "@config.height",
+                              "interactive": false,
+                              "points": [],
+                              "shapes": "@entity.shapes",
+                              "showAxes": false,
+                              "showGrid": false,
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": "@config.trialsPerRun",
+                              "xMin": 0.0,
+                              "yMax": 1.0,
+                              "yMin": 0.0
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "@entity.runsRun",
+                                " run(s) — last trial heads: ",
+                                "@entity.lastHeads",
+                                " / ",
+                                "@config.trialsPerRun"
+                              ],
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "BINOMIAL_UPDATED",
+                    {
+                      "counts": "@entity.counts",
+                      "lastHeads": "@entity.lastHeads",
+                      "runsRun": "@entity.runsRun"
+                    }
+                  ]
+                ],
+                "event": "RUN_MANY",
+                "eventId": "evt_01KZNF6QWE3PFQNWCCW4T6TFDH",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.biasP",
+                    [
+                      "math/clamp",
+                      "@payload.value",
+                      0.0,
+                      1.0
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.counts",
+                    [
+                      "array/map",
+                      [
+                        "array/range",
+                        [
+                          "+",
+                          "@config.trialsPerRun",
+                          1.0
+                        ]
+                      ],
+                      [
+                        "fn",
+                        "k",
+                        0.0
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.runsRun",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.lastHeads",
+                    0.0
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "plotW",
+                        [
+                          "-",
+                          "@config.width",
+                          48.0
+                        ]
+                      ],
+                      [
+                        "plotH",
+                        [
+                          "-",
+                          "@config.height",
+                          48.0
+                        ]
+                      ],
+                      [
+                        "factN",
+                        [
+                          "array/reduce",
+                          [
+                            "array/range",
+                            1.0,
+                            [
+                              "+",
+                              "@config.trialsPerRun",
+                              1.0
+                            ]
+                          ],
+                          1.0,
+                          [
+                            "fn",
+                            [
+                              "acc",
+                              "i"
+                            ],
+                            [
+                              "*",
+                              "@acc",
+                              "@i"
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "pmfVals",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            [
+                              "+",
+                              "@config.trialsPerRun",
+                              1.0
+                            ]
+                          ],
+                          [
+                            "fn",
+                            "k",
+                            [
+                              "let",
+                              [
+                                [
+                                  "factK",
+                                  [
+                                    "array/reduce",
+                                    [
+                                      "array/range",
+                                      1.0,
+                                      [
+                                        "+",
+                                        "@k",
+                                        1.0
+                                      ]
+                                    ],
+                                    1.0,
+                                    [
+                                      "fn",
+                                      [
+                                        "acc",
+                                        "i"
+                                      ],
+                                      [
+                                        "*",
+                                        "@acc",
+                                        "@i"
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "factNmK",
+                                  [
+                                    "array/reduce",
+                                    [
+                                      "array/range",
+                                      1.0,
+                                      [
+                                        "+",
+                                        [
+                                          "-",
+                                          "@config.trialsPerRun",
+                                          "@k"
+                                        ],
+                                        1.0
+                                      ]
+                                    ],
+                                    1.0,
+                                    [
+                                      "fn",
+                                      [
+                                        "acc",
+                                        "i"
+                                      ],
+                                      [
+                                        "*",
+                                        "@acc",
+                                        "@i"
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "comb",
+                                  [
+                                    "/",
+                                    "@factN",
+                                    [
+                                      "*",
+                                      "@factK",
+                                      "@factNmK"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "powP",
+                                  [
+                                    "math/pow",
+                                    "@entity.biasP",
+                                    "@k"
+                                  ]
+                                ],
+                                [
+                                  "powQ",
+                                  [
+                                    "math/pow",
+                                    [
+                                      "-",
+                                      1.0,
+                                      "@entity.biasP"
+                                    ],
+                                    [
+                                      "-",
+                                      "@config.trialsPerRun",
+                                      "@k"
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              [
+                                "*",
+                                "@comb",
+                                [
+                                  "*",
+                                  "@powP",
+                                  "@powQ"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "maxPmf",
+                        [
+                          "math/max",
+                          0.0001,
+                          [
+                            "array/max",
+                            "@pmfVals"
+                          ]
+                        ]
+                      ],
+                      [
+                        "maxVal",
+                        [
+                          "*",
+                          "@maxPmf",
+                          1.25
+                        ]
+                      ],
+                      [
+                        "pmfShapes",
+                        [
+                          "if",
+                          "@config.showTheoreticalPMF",
+                          [
+                            "array/map",
+                            [
+                              "array/range",
+                              [
+                                "+",
+                                "@config.trialsPerRun",
+                                1.0
+                              ]
+                            ],
+                            [
+                              "fn",
+                              "k",
+                              {
+                                "fill": "#dc2626",
+                                "lineWidth": 0.0,
+                                "radius": 4.0,
+                                "type": "circle",
+                                "x": [
+                                  "+",
+                                  24.0,
+                                  [
+                                    "*",
+                                    [
+                                      "+",
+                                      "@k",
+                                      0.5
+                                    ],
+                                    [
+                                      "/",
+                                      "@plotW",
+                                      [
+                                        "+",
+                                        "@config.trialsPerRun",
+                                        1.0
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                "y": [
+                                  "-",
+                                  [
+                                    "+",
+                                    24.0,
+                                    "@plotH"
+                                  ],
+                                  [
+                                    "*",
+                                    [
+                                      "/",
+                                      [
+                                        "array/nth",
+                                        "@pmfVals",
+                                        "@k"
+                                      ],
+                                      "@maxVal"
+                                    ],
+                                    "@plotH"
+                                  ]
+                                ]
+                              }
+                            ]
+                          ],
+                          []
+                        ]
+                      ]
+                    ],
+                    [
+                      "set",
+                      "@entity.shapes",
+                      "@pmfShapes"
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "RUN_TRIAL",
+                                  "label": "Run Trial",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "RUN_MANY",
+                                  "label": "Run Many",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Bias p: ",
+                                [
+                                  "math/round",
+                                  "@entity.biasP",
+                                  2.0
+                                ],
+                                " — flips per trial: ",
+                                "@config.trialsPerRun"
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "action": "SET_P",
+                              "max": 1.0,
+                              "min": 0.0,
+                              "showTooltip": true,
+                              "step": 0.01,
+                              "type": "range-slider",
+                              "value": "@entity.biasP"
+                            },
+                            {
+                              "animate": false,
+                              "curves": [],
+                              "gridStep": 1.0,
+                              "height": "@config.height",
+                              "interactive": false,
+                              "points": [],
+                              "shapes": "@entity.shapes",
+                              "showAxes": false,
+                              "showGrid": false,
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": "@config.trialsPerRun",
+                              "xMin": 0.0,
+                              "yMax": 1.0,
+                              "yMin": 0.0
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "@entity.runsRun",
+                                " run(s) — last trial heads: ",
+                                "@entity.lastHeads",
+                                " / ",
+                                "@config.trialsPerRun"
+                              ],
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "BINOMIAL_UPDATED",
+                    {
+                      "counts": "@entity.counts",
+                      "lastHeads": "@entity.lastHeads",
+                      "runsRun": "@entity.runsRun"
+                    }
+                  ]
+                ],
+                "event": "SET_P",
+                "eventId": "evt_01KZNF6QWEW006WH7F50H4XNSX",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.counts",
+                    [
+                      "array/map",
+                      [
+                        "array/range",
+                        [
+                          "+",
+                          "@config.trialsPerRun",
+                          1.0
+                        ]
+                      ],
+                      [
+                        "fn",
+                        "k",
+                        0.0
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.runsRun",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.lastHeads",
+                    0.0
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "plotW",
+                        [
+                          "-",
+                          "@config.width",
+                          48.0
+                        ]
+                      ],
+                      [
+                        "plotH",
+                        [
+                          "-",
+                          "@config.height",
+                          48.0
+                        ]
+                      ],
+                      [
+                        "factN",
+                        [
+                          "array/reduce",
+                          [
+                            "array/range",
+                            1.0,
+                            [
+                              "+",
+                              "@config.trialsPerRun",
+                              1.0
+                            ]
+                          ],
+                          1.0,
+                          [
+                            "fn",
+                            [
+                              "acc",
+                              "i"
+                            ],
+                            [
+                              "*",
+                              "@acc",
+                              "@i"
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "pmfVals",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            [
+                              "+",
+                              "@config.trialsPerRun",
+                              1.0
+                            ]
+                          ],
+                          [
+                            "fn",
+                            "k",
+                            [
+                              "let",
+                              [
+                                [
+                                  "factK",
+                                  [
+                                    "array/reduce",
+                                    [
+                                      "array/range",
+                                      1.0,
+                                      [
+                                        "+",
+                                        "@k",
+                                        1.0
+                                      ]
+                                    ],
+                                    1.0,
+                                    [
+                                      "fn",
+                                      [
+                                        "acc",
+                                        "i"
+                                      ],
+                                      [
+                                        "*",
+                                        "@acc",
+                                        "@i"
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "factNmK",
+                                  [
+                                    "array/reduce",
+                                    [
+                                      "array/range",
+                                      1.0,
+                                      [
+                                        "+",
+                                        [
+                                          "-",
+                                          "@config.trialsPerRun",
+                                          "@k"
+                                        ],
+                                        1.0
+                                      ]
+                                    ],
+                                    1.0,
+                                    [
+                                      "fn",
+                                      [
+                                        "acc",
+                                        "i"
+                                      ],
+                                      [
+                                        "*",
+                                        "@acc",
+                                        "@i"
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "comb",
+                                  [
+                                    "/",
+                                    "@factN",
+                                    [
+                                      "*",
+                                      "@factK",
+                                      "@factNmK"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "powP",
+                                  [
+                                    "math/pow",
+                                    "@entity.biasP",
+                                    "@k"
+                                  ]
+                                ],
+                                [
+                                  "powQ",
+                                  [
+                                    "math/pow",
+                                    [
+                                      "-",
+                                      1.0,
+                                      "@entity.biasP"
+                                    ],
+                                    [
+                                      "-",
+                                      "@config.trialsPerRun",
+                                      "@k"
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              [
+                                "*",
+                                "@comb",
+                                [
+                                  "*",
+                                  "@powP",
+                                  "@powQ"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "maxPmf",
+                        [
+                          "math/max",
+                          0.0001,
+                          [
+                            "array/max",
+                            "@pmfVals"
+                          ]
+                        ]
+                      ],
+                      [
+                        "maxVal",
+                        [
+                          "*",
+                          "@maxPmf",
+                          1.25
+                        ]
+                      ],
+                      [
+                        "pmfShapes",
+                        [
+                          "if",
+                          "@config.showTheoreticalPMF",
+                          [
+                            "array/map",
+                            [
+                              "array/range",
+                              [
+                                "+",
+                                "@config.trialsPerRun",
+                                1.0
+                              ]
+                            ],
+                            [
+                              "fn",
+                              "k",
+                              {
+                                "fill": "#dc2626",
+                                "lineWidth": 0.0,
+                                "radius": 4.0,
+                                "type": "circle",
+                                "x": [
+                                  "+",
+                                  24.0,
+                                  [
+                                    "*",
+                                    [
+                                      "+",
+                                      "@k",
+                                      0.5
+                                    ],
+                                    [
+                                      "/",
+                                      "@plotW",
+                                      [
+                                        "+",
+                                        "@config.trialsPerRun",
+                                        1.0
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                "y": [
+                                  "-",
+                                  [
+                                    "+",
+                                    24.0,
+                                    "@plotH"
+                                  ],
+                                  [
+                                    "*",
+                                    [
+                                      "/",
+                                      [
+                                        "array/nth",
+                                        "@pmfVals",
+                                        "@k"
+                                      ],
+                                      "@maxVal"
+                                    ],
+                                    "@plotH"
+                                  ]
+                                ]
+                              }
+                            ]
+                          ],
+                          []
+                        ]
+                      ]
+                    ],
+                    [
+                      "set",
+                      "@entity.shapes",
+                      "@pmfShapes"
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "RUN_TRIAL",
+                                  "label": "Run Trial",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "RUN_MANY",
+                                  "label": "Run Many",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Bias p: ",
+                                [
+                                  "math/round",
+                                  "@entity.biasP",
+                                  2.0
+                                ],
+                                " — flips per trial: ",
+                                "@config.trialsPerRun"
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "action": "SET_P",
+                              "max": 1.0,
+                              "min": 0.0,
+                              "showTooltip": true,
+                              "step": 0.01,
+                              "type": "range-slider",
+                              "value": "@entity.biasP"
+                            },
+                            {
+                              "animate": false,
+                              "curves": [],
+                              "gridStep": 1.0,
+                              "height": "@config.height",
+                              "interactive": false,
+                              "points": [],
+                              "shapes": "@entity.shapes",
+                              "showAxes": false,
+                              "showGrid": false,
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": "@config.trialsPerRun",
+                              "xMin": 0.0,
+                              "yMax": 1.0,
+                              "yMin": 0.0
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "@entity.runsRun",
+                                " run(s) — last trial heads: ",
+                                "@entity.lastHeads",
+                                " / ",
+                                "@config.trialsPerRun"
+                              ],
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "BINOMIAL_UPDATED",
+                    {
+                      "counts": "@entity.counts",
+                      "lastHeads": "@entity.lastHeads",
+                      "runsRun": "@entity.runsRun"
+                    }
+                  ]
+                ],
+                "event": "RESET",
+                "eventId": "evt_01KZNF6QWE05AQRNJHXCPTVWRW",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 1,
+  "version": "1.0.0"
+}

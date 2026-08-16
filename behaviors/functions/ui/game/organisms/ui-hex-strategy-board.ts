@@ -45,7 +45,7 @@ export interface StdUiHexStrategyBoardConfig {
   units?: unknown;
 }
 
-type _StdUiHexStrategyBoardEntityName = 'GameState';
+type _StdUiHexStrategyBoardEntityName = 'GameState' | 'ScoreState';
 type _StdUiHexStrategyBoardListenTraitName = 'Authority' | 'FxDecay' | 'RoundLogic' | 'ScoreKeeper' | 'AnimClock' | 'Player';
 
 /**

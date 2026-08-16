@@ -24,7 +24,7 @@ import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/app
 const BEHAVIOR_PATH = 'std/behaviors/ui-platformer-board';
 const ALIAS = 'UiPlatformerBoard';
 
-type _StdUiPlatformerBoardEntityName = 'PlatformerBoardItem';
+type _StdUiPlatformerBoardEntityName = 'PlatformerBoardItem' | 'StdSvgAssetArt';
 type _StdUiPlatformerBoardListenTraitName = 'VectorArt' | 'PlatformerBoardRender';
 
 /**

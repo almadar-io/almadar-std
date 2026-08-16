@@ -1,0 +1,3606 @@
+{
+  "description": "Intergenerational mobility engine — a 5x5 quintile transition matrix whose rows (parent's quintile) the learner edits cell by cell; each edit renormalizes the row and recomputes the immobility, upward-mobility, and rags-to-riches rates, with a perfect-mobility benchmark overlay, on a biology-canvas heat grid. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches.",
+  "ledger": {
+    "entries": {
+      "ent_01M04DG94V499P4JMMMZ177WHD": {
+        "bakedName": "SocMobScene",
+        "curName": "SocMobScene",
+        "id": "ent_01M04DG94V499P4JMMMZ177WHD",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "evt_01M04DG94VN9T9650ZZF57KW4G": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01M04DG94VN9T9650ZZF57KW4G",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M04DG94VE9GNVNEAX7RZ47GY",
+        "renames": []
+      },
+      "evt_01M04DG94WBZP5HFTXD2GX7NY9": {
+        "bakedName": "SET_CELL",
+        "curName": "SET_CELL",
+        "id": "evt_01M04DG94WBZP5HFTXD2GX7NY9",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M04DG94VE9GNVNEAX7RZ47GY",
+        "renames": []
+      },
+      "evt_01M04DG94WWWM8NZEF9WGZJ1EA": {
+        "bakedName": "MODE_SELECTED",
+        "curName": "MODE_SELECTED",
+        "id": "evt_01M04DG94WWWM8NZEF9WGZJ1EA",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M04DG94VE9GNVNEAX7RZ47GY",
+        "renames": []
+      },
+      "evt_01M04DG94WXE2FXD1JVX442QN2": {
+        "bakedName": "RESET",
+        "curName": "RESET",
+        "id": "evt_01M04DG94WXE2FXD1JVX442QN2",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M04DG94VE9GNVNEAX7RZ47GY",
+        "renames": []
+      },
+      "evt_01M04DG94WYVGRAH2P7453AH55": {
+        "bakedName": "TOGGLE_BENCHMARK",
+        "curName": "TOGGLE_BENCHMARK",
+        "id": "evt_01M04DG94WYVGRAH2P7453AH55",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M04DG94VE9GNVNEAX7RZ47GY",
+        "renames": []
+      },
+      "evt_01M04DG94WZBBGZ3488GAXZWCA": {
+        "bakedName": "MOBILITY_UPDATED",
+        "curName": "MOBILITY_UPDATED",
+        "id": "evt_01M04DG94WZBBGZ3488GAXZWCA",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M04DG94VE9GNVNEAX7RZ47GY",
+        "renames": []
+      },
+      "orb_01M04DG94V0T79PK6YCFD6QV2Q": {
+        "bakedName": "SocMobOrbital",
+        "curName": "SocMobOrbital",
+        "id": "orb_01M04DG94V0T79PK6YCFD6QV2Q",
+        "kind": "orbital",
+        "owner": "workspace",
+        "renames": []
+      },
+      "pag_01M04DG94XBGZCJYXPYC765353": {
+        "bakedName": "SocMobPage",
+        "curName": "SocMobPage",
+        "id": "pag_01M04DG94XBGZCJYXPYC765353",
+        "kind": "page",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M04DG94VE9GNVNEAX7RZ47GY": {
+        "bakedName": "SocMobSim",
+        "curName": "SocMobSim",
+        "id": "trt_01M04DG94VE9GNVNEAX7RZ47GY",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      }
+    },
+    "schemaVersion": 1
+  },
+  "name": "std-soc-mobility",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": false,
+            "name": "active",
+            "type": "boolean"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "items": {
+              "type": "number"
+            },
+            "name": "matrix",
+            "type": "array"
+          },
+          {
+            "name": "showBenchmark",
+            "type": "boolean"
+          },
+          {
+            "name": "immobilityRate",
+            "type": "number"
+          },
+          {
+            "name": "upwardRate",
+            "type": "number"
+          },
+          {
+            "name": "ragsToRiches",
+            "type": "number"
+          },
+          {
+            "items": {
+              "properties": {
+                "align": {
+                  "name": "align",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "left",
+                    "center",
+                    "right"
+                  ]
+                },
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "fill": {
+                  "name": "fill",
+                  "required": false,
+                  "type": "string"
+                },
+                "fontSize": {
+                  "name": "fontSize",
+                  "required": false,
+                  "type": "number"
+                },
+                "height": {
+                  "name": "height",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "text": {
+                  "name": "text",
+                  "required": false,
+                  "type": "string"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string",
+                  "values": [
+                    "line",
+                    "arrow",
+                    "circle",
+                    "rect",
+                    "polygon",
+                    "path",
+                    "text",
+                    "axis",
+                    "grid"
+                  ]
+                },
+                "width": {
+                  "name": "width",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": false,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "shapes",
+            "type": "array"
+          }
+        ],
+        "id": "ent_01M04DG94V499P4JMMMZ177WHD",
+        "name": "SocMobScene",
+        "persistence": "runtime"
+      },
+      "id": "orb_01M04DG94V0T79PK6YCFD6QV2Q",
+      "name": "SocMobOrbital",
+      "pages": [
+        {
+          "id": "pag_01M04DG94XBGZCJYXPYC765353",
+          "name": "SocMobPage",
+          "path": "/soc-mobility",
+          "traits": [
+            {
+              "ref": "SocMobSim",
+              "refId": "trt_01M04DG94VE9GNVNEAX7RZ47GY"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "animate": {
+              "default": false,
+              "description": "Enable continuous redraw loop.",
+              "label": "Animate",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "backgroundColor": {
+              "default": "#f1f5f9",
+              "label": "Background Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "benchmarkMatrix": {
+              "default": [
+                0.2,
+                0.2,
+                0.2,
+                0.2,
+                0.2,
+                0.2,
+                0.2,
+                0.2,
+                0.2,
+                0.2,
+                0.2,
+                0.2,
+                0.2,
+                0.2,
+                0.2,
+                0.2,
+                0.2,
+                0.2,
+                0.2,
+                0.2,
+                0.2,
+                0.2,
+                0.2,
+                0.2,
+                0.2
+              ],
+              "description": "Perfect-mobility benchmark shown by Toggle Benchmark: every child's quintile is equally likely whatever the parent's — a 0.2-uniform matrix, same flat 25-cell layout as Transition Matrix.",
+              "items": {
+                "type": "number"
+              },
+              "label": "Benchmark Matrix",
+              "synonyms": "perfect mobility, benchmark, equal opportunity, mobility benchmark",
+              "tier": "domain",
+              "type": "[number]"
+            },
+            "cellMax": {
+              "default": 0.6,
+              "description": "A click that would push a cell above this value wraps it back to Cell Min instead.",
+              "label": "Cell Max",
+              "tier": "domain",
+              "type": "number"
+            },
+            "cellMin": {
+              "default": 0.05,
+              "description": "Value a cell wraps back to after passing Cell Max.",
+              "label": "Cell Min",
+              "tier": "domain",
+              "type": "number"
+            },
+            "cellSize": {
+              "default": 64.0,
+              "description": "Pixel size of each matrix cell in the heat grid.",
+              "label": "Cell Size",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "cellStep": {
+              "default": 0.05,
+              "description": "Amount added to a cell's probability on each click, before the row renormalizes.",
+              "label": "Cell Step",
+              "tier": "domain",
+              "type": "number"
+            },
+            "gridX": {
+              "default": 160.0,
+              "description": "X coordinate of the heat grid's top-left corner.",
+              "label": "Grid X",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "gridY": {
+              "default": 40.0,
+              "description": "Y coordinate of the heat grid's top-left corner.",
+              "label": "Grid Y",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "height": {
+              "default": 460.0,
+              "description": "Canvas height in pixels.",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "interactive": {
+              "default": false,
+              "description": "Enable pointer interaction on the canvas.",
+              "label": "Interactive",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "matchMode": {
+              "default": "",
+              "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+              "label": "Match Mode",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "quintileLabels": {
+              "default": [
+                "Top 20%",
+                "Upper-middle 20%",
+                "Middle 20%",
+                "Lower-middle 20%",
+                "Bottom 20%"
+              ],
+              "description": "Display names of the five income quintiles, richest to poorest; index-aligned with both matrix rows and columns.",
+              "items": {
+                "type": "string"
+              },
+              "label": "Quintile Labels",
+              "synonyms": "quintile, income quintile, social class, socioeconomic status",
+              "tier": "domain",
+              "type": "[string]"
+            },
+            "title": {
+              "default": "Intergenerational Mobility Matrix",
+              "description": "Title shown above the canvas.",
+              "label": "Title",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "transitionMatrix": {
+              "default": [
+                0.4,
+                0.25,
+                0.17,
+                0.11,
+                0.07,
+                0.25,
+                0.3,
+                0.22,
+                0.14,
+                0.09,
+                0.17,
+                0.22,
+                0.26,
+                0.21,
+                0.14,
+                0.11,
+                0.15,
+                0.21,
+                0.27,
+                0.26,
+                0.07,
+                0.13,
+                0.19,
+                0.27,
+                0.34
+              ],
+              "description": "Flat 25-cell quintile transition matrix (5 rows of 5): row = parent's quintile, column = child's, both ordered richest to poorest as in Quintile Labels; each row sums to 1. Cell 20 (bottom→top) is the rags-to-riches rate.",
+              "items": {
+                "type": "number"
+              },
+              "label": "Transition Matrix",
+              "synonyms": "social mobility, intergenerational mobility, transition matrix, quintile, immobility, rags to riches, Great Gatsby curve",
+              "tier": "domain",
+              "type": "[number]"
+            },
+            "width": {
+              "default": 640.0,
+              "description": "Canvas width in pixels.",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "The mobility-matrix state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+              "event": "MOBILITY_UPDATED",
+              "eventId": "evt_01M04DG94WZBBGZ3488GAXZWCA",
+              "payloadSchema": [
+                {
+                  "name": "matrix",
+                  "type": "[number]"
+                },
+                {
+                  "name": "immobilityRate",
+                  "type": "number"
+                },
+                {
+                  "name": "upwardRate",
+                  "type": "number"
+                },
+                {
+                  "name": "ragsToRiches",
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "mobility update, transition matrix, immobility, rags to riches, intergenerational mobility",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "active",
+              "immobilityRate",
+              "matrix",
+              "ragsToRiches",
+              "shapes",
+              "showBenchmark",
+              "title",
+              "upwardRate"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "entityRefIds": {
+            "SocMobScene": "ent_01M04DG94V499P4JMMMZ177WHD"
+          },
+          "id": "trt_01M04DG94VE9GNVNEAX7RZ47GY",
+          "linkedEntity": "SocMobScene",
+          "linkedEntityId": "ent_01M04DG94V499P4JMMMZ177WHD",
+          "name": "SocMobSim",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "id": "evt_01M04DG94VN9T9650ZZF57KW4G",
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+                "id": "evt_01M04DG94WWWM8NZEF9WGZJ1EA",
+                "key": "MODE_SELECTED",
+                "name": "Mode Selected",
+                "payloadSchema": [
+                  {
+                    "name": "mode",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Learner clicked a matrix cell to raise its transition probability by one step (wrapping past the cell max back to the cell min); the row then renormalizes to sum to 1.",
+                "id": "evt_01M04DG94WBZP5HFTXD2GX7NY9",
+                "key": "SET_CELL",
+                "name": "Set Cell",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "number"
+                  },
+                  {
+                    "name": "col",
+                    "type": "number"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Learner toggled the perfect-mobility benchmark overlay (every quintile destination equally likely) on the heat grid.",
+                "id": "evt_01M04DG94WYVGRAH2P7453AH55",
+                "key": "TOGGLE_BENCHMARK",
+                "name": "Toggle Benchmark",
+                "tier": "domain"
+              },
+              {
+                "description": "Learner pressed Reset to restore the configured transition matrix.",
+                "id": "evt_01M04DG94WXE2FXD1JVX442QN2",
+                "key": "RESET",
+                "name": "Reset",
+                "tier": "domain"
+              },
+              {
+                "description": "The mobility-matrix state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+                "id": "evt_01M04DG94WZBBGZ3488GAXZWCA",
+                "key": "MOBILITY_UPDATED",
+                "name": "Mobility Updated",
+                "payloadSchema": [
+                  {
+                    "name": "matrix",
+                    "type": "[number]"
+                  },
+                  {
+                    "name": "immobilityRate",
+                    "type": "number"
+                  },
+                  {
+                    "name": "upwardRate",
+                    "type": "number"
+                  },
+                  {
+                    "name": "ragsToRiches",
+                    "type": "number"
+                  }
+                ],
+                "synonyms": "mobility update, transition matrix, immobility, rags to riches, intergenerational mobility",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.matrix",
+                    "@config.transitionMatrix"
+                  ],
+                  [
+                    "set",
+                    "@entity.showBenchmark",
+                    false
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "m",
+                        "@config.transitionMatrix"
+                      ],
+                      [
+                        "immob",
+                        [
+                          "/",
+                          [
+                            "+",
+                            [
+                              "+",
+                              [
+                                "+",
+                                [
+                                  "+",
+                                  [
+                                    "array/nth",
+                                    "@m",
+                                    0.0
+                                  ],
+                                  [
+                                    "array/nth",
+                                    "@m",
+                                    6.0
+                                  ]
+                                ],
+                                [
+                                  "array/nth",
+                                  "@m",
+                                  12.0
+                                ]
+                              ],
+                              [
+                                "array/nth",
+                                "@m",
+                                18.0
+                              ]
+                            ],
+                            [
+                              "array/nth",
+                              "@m",
+                              24.0
+                            ]
+                          ],
+                          5.0
+                        ]
+                      ],
+                      [
+                        "upward",
+                        [
+                          "/",
+                          [
+                            "+",
+                            [
+                              "+",
+                              [
+                                "+",
+                                [
+                                  "+",
+                                  [
+                                    "+",
+                                    [
+                                      "+",
+                                      [
+                                        "+",
+                                        [
+                                          "+",
+                                          [
+                                            "+",
+                                            [
+                                              "array/nth",
+                                              "@m",
+                                              5.0
+                                            ],
+                                            [
+                                              "array/nth",
+                                              "@m",
+                                              10.0
+                                            ]
+                                          ],
+                                          [
+                                            "array/nth",
+                                            "@m",
+                                            11.0
+                                          ]
+                                        ],
+                                        [
+                                          "array/nth",
+                                          "@m",
+                                          15.0
+                                        ]
+                                      ],
+                                      [
+                                        "array/nth",
+                                        "@m",
+                                        16.0
+                                      ]
+                                    ],
+                                    [
+                                      "array/nth",
+                                      "@m",
+                                      17.0
+                                    ]
+                                  ],
+                                  [
+                                    "array/nth",
+                                    "@m",
+                                    20.0
+                                  ]
+                                ],
+                                [
+                                  "array/nth",
+                                  "@m",
+                                  21.0
+                                ]
+                              ],
+                              [
+                                "array/nth",
+                                "@m",
+                                22.0
+                              ]
+                            ],
+                            [
+                              "array/nth",
+                              "@m",
+                              23.0
+                            ]
+                          ],
+                          10.0
+                        ]
+                      ],
+                      [
+                        "r2r",
+                        [
+                          "array/nth",
+                          "@m",
+                          20.0
+                        ]
+                      ],
+                      [
+                        "cellShapes",
+                        [
+                          "array/concat",
+                          [
+                            "array/map",
+                            [
+                              "array/range",
+                              25.0
+                            ],
+                            [
+                              "fn",
+                              "i",
+                              [
+                                "let",
+                                [
+                                  [
+                                    "row",
+                                    [
+                                      "math/floor",
+                                      [
+                                        "/",
+                                        "@i",
+                                        5.0
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "col",
+                                    [
+                                      "math/mod",
+                                      "@i",
+                                      5.0
+                                    ]
+                                  ],
+                                  [
+                                    "v",
+                                    [
+                                      "array/nth",
+                                      "@m",
+                                      "@i"
+                                    ]
+                                  ],
+                                  [
+                                    "band",
+                                    [
+                                      "if",
+                                      [
+                                        ">",
+                                        "@v",
+                                        0.35
+                                      ],
+                                      "#1e3a8a",
+                                      [
+                                        "if",
+                                        [
+                                          ">",
+                                          "@v",
+                                          0.25
+                                        ],
+                                        "#2563eb",
+                                        [
+                                          "if",
+                                          [
+                                            ">",
+                                            "@v",
+                                            0.15
+                                          ],
+                                          "#60a5fa",
+                                          "#bfdbfe"
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                {
+                                  "color": "@band",
+                                  "fill": "@band",
+                                  "height": [
+                                    "-",
+                                    "@config.cellSize",
+                                    4.0
+                                  ],
+                                  "id": [
+                                    "str/concat",
+                                    "cell",
+                                    "@i"
+                                  ],
+                                  "type": "rect",
+                                  "width": [
+                                    "-",
+                                    "@config.cellSize",
+                                    4.0
+                                  ],
+                                  "x": [
+                                    "+",
+                                    "@config.gridX",
+                                    [
+                                      "*",
+                                      "@col",
+                                      "@config.cellSize"
+                                    ]
+                                  ],
+                                  "y": [
+                                    "+",
+                                    "@config.gridY",
+                                    [
+                                      "*",
+                                      "@row",
+                                      "@config.cellSize"
+                                    ]
+                                  ]
+                                }
+                              ]
+                            ]
+                          ],
+                          [
+                            "array/map",
+                            [
+                              "array/range",
+                              25.0
+                            ],
+                            [
+                              "fn",
+                              "i",
+                              [
+                                "let",
+                                [
+                                  [
+                                    "row",
+                                    [
+                                      "math/floor",
+                                      [
+                                        "/",
+                                        "@i",
+                                        5.0
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "col",
+                                    [
+                                      "math/mod",
+                                      "@i",
+                                      5.0
+                                    ]
+                                  ],
+                                  [
+                                    "v",
+                                    [
+                                      "array/nth",
+                                      "@m",
+                                      "@i"
+                                    ]
+                                  ]
+                                ],
+                                {
+                                  "align": "center",
+                                  "color": [
+                                    "if",
+                                    [
+                                      ">",
+                                      "@v",
+                                      0.25
+                                    ],
+                                    "#f8fafc",
+                                    "#1e293b"
+                                  ],
+                                  "fontSize": 12.0,
+                                  "id": [
+                                    "str/concat",
+                                    "cellt",
+                                    "@i"
+                                  ],
+                                  "text": [
+                                    "str/concat",
+                                    "",
+                                    [
+                                      "math/round",
+                                      "@v",
+                                      2.0
+                                    ]
+                                  ],
+                                  "type": "text",
+                                  "x": [
+                                    "+",
+                                    "@config.gridX",
+                                    [
+                                      "*",
+                                      "@col",
+                                      "@config.cellSize"
+                                    ],
+                                    [
+                                      "/",
+                                      "@config.cellSize",
+                                      2.0
+                                    ]
+                                  ],
+                                  "y": [
+                                    "+",
+                                    "@config.gridY",
+                                    [
+                                      "*",
+                                      "@row",
+                                      "@config.cellSize"
+                                    ],
+                                    [
+                                      "/",
+                                      "@config.cellSize",
+                                      2.0
+                                    ]
+                                  ]
+                                }
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.immobilityRate",
+                        "@immob"
+                      ],
+                      [
+                        "set",
+                        "@entity.upwardRate",
+                        "@upward"
+                      ],
+                      [
+                        "set",
+                        "@entity.ragsToRiches",
+                        "@r2r"
+                      ],
+                      [
+                        "set",
+                        "@entity.shapes",
+                        "@cellShapes"
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "TOGGLE_BENCHMARK",
+                                  "label": "Toggle Benchmark",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "animate": "@config.animate",
+                              "backgroundColor": "@config.backgroundColor",
+                              "edges": [],
+                              "height": "@config.height",
+                              "interactive": "@config.interactive",
+                              "nodes": [],
+                              "shapes": "@entity.shapes",
+                              "type": "biology-canvas",
+                              "width": "@config.width"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Immobility (stay in quintile): ",
+                                [
+                                  "math/round",
+                                  [
+                                    "*",
+                                    "@entity.immobilityRate",
+                                    100.0
+                                  ],
+                                  1.0
+                                ],
+                                "% — upward mobility: ",
+                                [
+                                  "math/round",
+                                  [
+                                    "*",
+                                    "@entity.upwardRate",
+                                    100.0
+                                  ],
+                                  1.0
+                                ],
+                                "% — rags to riches (bottom→top): ",
+                                [
+                                  "math/round",
+                                  [
+                                    "*",
+                                    "@entity.ragsToRiches",
+                                    100.0
+                                  ],
+                                  1.0
+                                ],
+                                "%"
+                              ],
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Rows = parent's quintile, columns = child's, top→bottom / left→right: ",
+                                [
+                                  "array/nth",
+                                  "@config.quintileLabels",
+                                  0.0
+                                ],
+                                ", ",
+                                [
+                                  "array/nth",
+                                  "@config.quintileLabels",
+                                  1.0
+                                ],
+                                ", ",
+                                [
+                                  "array/nth",
+                                  "@config.quintileLabels",
+                                  2.0
+                                ],
+                                ", ",
+                                [
+                                  "array/nth",
+                                  "@config.quintileLabels",
+                                  3.0
+                                ],
+                                ", ",
+                                [
+                                  "array/nth",
+                                  "@config.quintileLabels",
+                                  4.0
+                                ],
+                                ". Click a cell to raise its probability; the row renormalizes to sum to 1."
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "children": [
+                                "array/map",
+                                [
+                                  "array/range",
+                                  5.0
+                                ],
+                                [
+                                  "fn",
+                                  "r",
+                                  {
+                                    "children": [
+                                      "array/map",
+                                      [
+                                        "array/range",
+                                        5.0
+                                      ],
+                                      [
+                                        "fn",
+                                        "c",
+                                        {
+                                          "action": "SET_CELL",
+                                          "actionPayload": {
+                                            "col": "@c",
+                                            "row": "@r"
+                                          },
+                                          "label": [
+                                            "str/concat",
+                                            "",
+                                            [
+                                              "math/round",
+                                              [
+                                                "array/nth",
+                                                "@entity.matrix",
+                                                [
+                                                  "+",
+                                                  [
+                                                    "*",
+                                                    "@r",
+                                                    5.0
+                                                  ],
+                                                  "@c"
+                                                ]
+                                              ],
+                                              2.0
+                                            ]
+                                          ],
+                                          "type": "button",
+                                          "variant": "ghost"
+                                        }
+                                      ]
+                                    ],
+                                    "direction": "horizontal",
+                                    "gap": "xs",
+                                    "type": "stack"
+                                  }
+                                ]
+                              ],
+                              "direction": "vertical",
+                              "gap": "xs",
+                              "type": "stack"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01M04DG94VN9T9650ZZF57KW4G",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@config.matchMode",
+                  ""
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.matrix",
+                    "@config.transitionMatrix"
+                  ],
+                  [
+                    "set",
+                    "@entity.showBenchmark",
+                    false
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "m",
+                        "@config.transitionMatrix"
+                      ],
+                      [
+                        "immob",
+                        [
+                          "/",
+                          [
+                            "+",
+                            [
+                              "+",
+                              [
+                                "+",
+                                [
+                                  "+",
+                                  [
+                                    "array/nth",
+                                    "@m",
+                                    0.0
+                                  ],
+                                  [
+                                    "array/nth",
+                                    "@m",
+                                    6.0
+                                  ]
+                                ],
+                                [
+                                  "array/nth",
+                                  "@m",
+                                  12.0
+                                ]
+                              ],
+                              [
+                                "array/nth",
+                                "@m",
+                                18.0
+                              ]
+                            ],
+                            [
+                              "array/nth",
+                              "@m",
+                              24.0
+                            ]
+                          ],
+                          5.0
+                        ]
+                      ],
+                      [
+                        "upward",
+                        [
+                          "/",
+                          [
+                            "+",
+                            [
+                              "+",
+                              [
+                                "+",
+                                [
+                                  "+",
+                                  [
+                                    "+",
+                                    [
+                                      "+",
+                                      [
+                                        "+",
+                                        [
+                                          "+",
+                                          [
+                                            "+",
+                                            [
+                                              "array/nth",
+                                              "@m",
+                                              5.0
+                                            ],
+                                            [
+                                              "array/nth",
+                                              "@m",
+                                              10.0
+                                            ]
+                                          ],
+                                          [
+                                            "array/nth",
+                                            "@m",
+                                            11.0
+                                          ]
+                                        ],
+                                        [
+                                          "array/nth",
+                                          "@m",
+                                          15.0
+                                        ]
+                                      ],
+                                      [
+                                        "array/nth",
+                                        "@m",
+                                        16.0
+                                      ]
+                                    ],
+                                    [
+                                      "array/nth",
+                                      "@m",
+                                      17.0
+                                    ]
+                                  ],
+                                  [
+                                    "array/nth",
+                                    "@m",
+                                    20.0
+                                  ]
+                                ],
+                                [
+                                  "array/nth",
+                                  "@m",
+                                  21.0
+                                ]
+                              ],
+                              [
+                                "array/nth",
+                                "@m",
+                                22.0
+                              ]
+                            ],
+                            [
+                              "array/nth",
+                              "@m",
+                              23.0
+                            ]
+                          ],
+                          10.0
+                        ]
+                      ],
+                      [
+                        "r2r",
+                        [
+                          "array/nth",
+                          "@m",
+                          20.0
+                        ]
+                      ],
+                      [
+                        "cellShapes",
+                        [
+                          "array/concat",
+                          [
+                            "array/map",
+                            [
+                              "array/range",
+                              25.0
+                            ],
+                            [
+                              "fn",
+                              "i",
+                              [
+                                "let",
+                                [
+                                  [
+                                    "row",
+                                    [
+                                      "math/floor",
+                                      [
+                                        "/",
+                                        "@i",
+                                        5.0
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "col",
+                                    [
+                                      "math/mod",
+                                      "@i",
+                                      5.0
+                                    ]
+                                  ],
+                                  [
+                                    "v",
+                                    [
+                                      "array/nth",
+                                      "@m",
+                                      "@i"
+                                    ]
+                                  ],
+                                  [
+                                    "band",
+                                    [
+                                      "if",
+                                      [
+                                        ">",
+                                        "@v",
+                                        0.35
+                                      ],
+                                      "#1e3a8a",
+                                      [
+                                        "if",
+                                        [
+                                          ">",
+                                          "@v",
+                                          0.25
+                                        ],
+                                        "#2563eb",
+                                        [
+                                          "if",
+                                          [
+                                            ">",
+                                            "@v",
+                                            0.15
+                                          ],
+                                          "#60a5fa",
+                                          "#bfdbfe"
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                {
+                                  "color": "@band",
+                                  "fill": "@band",
+                                  "height": [
+                                    "-",
+                                    "@config.cellSize",
+                                    4.0
+                                  ],
+                                  "id": [
+                                    "str/concat",
+                                    "cell",
+                                    "@i"
+                                  ],
+                                  "type": "rect",
+                                  "width": [
+                                    "-",
+                                    "@config.cellSize",
+                                    4.0
+                                  ],
+                                  "x": [
+                                    "+",
+                                    "@config.gridX",
+                                    [
+                                      "*",
+                                      "@col",
+                                      "@config.cellSize"
+                                    ]
+                                  ],
+                                  "y": [
+                                    "+",
+                                    "@config.gridY",
+                                    [
+                                      "*",
+                                      "@row",
+                                      "@config.cellSize"
+                                    ]
+                                  ]
+                                }
+                              ]
+                            ]
+                          ],
+                          [
+                            "array/map",
+                            [
+                              "array/range",
+                              25.0
+                            ],
+                            [
+                              "fn",
+                              "i",
+                              [
+                                "let",
+                                [
+                                  [
+                                    "row",
+                                    [
+                                      "math/floor",
+                                      [
+                                        "/",
+                                        "@i",
+                                        5.0
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "col",
+                                    [
+                                      "math/mod",
+                                      "@i",
+                                      5.0
+                                    ]
+                                  ],
+                                  [
+                                    "v",
+                                    [
+                                      "array/nth",
+                                      "@m",
+                                      "@i"
+                                    ]
+                                  ]
+                                ],
+                                {
+                                  "align": "center",
+                                  "color": [
+                                    "if",
+                                    [
+                                      ">",
+                                      "@v",
+                                      0.25
+                                    ],
+                                    "#f8fafc",
+                                    "#1e293b"
+                                  ],
+                                  "fontSize": 12.0,
+                                  "id": [
+                                    "str/concat",
+                                    "cellt",
+                                    "@i"
+                                  ],
+                                  "text": [
+                                    "str/concat",
+                                    "",
+                                    [
+                                      "math/round",
+                                      "@v",
+                                      2.0
+                                    ]
+                                  ],
+                                  "type": "text",
+                                  "x": [
+                                    "+",
+                                    "@config.gridX",
+                                    [
+                                      "*",
+                                      "@col",
+                                      "@config.cellSize"
+                                    ],
+                                    [
+                                      "/",
+                                      "@config.cellSize",
+                                      2.0
+                                    ]
+                                  ],
+                                  "y": [
+                                    "+",
+                                    "@config.gridY",
+                                    [
+                                      "*",
+                                      "@row",
+                                      "@config.cellSize"
+                                    ],
+                                    [
+                                      "/",
+                                      "@config.cellSize",
+                                      2.0
+                                    ]
+                                  ]
+                                }
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.immobilityRate",
+                        "@immob"
+                      ],
+                      [
+                        "set",
+                        "@entity.upwardRate",
+                        "@upward"
+                      ],
+                      [
+                        "set",
+                        "@entity.ragsToRiches",
+                        "@r2r"
+                      ],
+                      [
+                        "set",
+                        "@entity.shapes",
+                        "@cellShapes"
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "TOGGLE_BENCHMARK",
+                                  "label": "Toggle Benchmark",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "animate": "@config.animate",
+                              "backgroundColor": "@config.backgroundColor",
+                              "edges": [],
+                              "height": "@config.height",
+                              "interactive": "@config.interactive",
+                              "nodes": [],
+                              "shapes": "@entity.shapes",
+                              "type": "biology-canvas",
+                              "width": "@config.width"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Immobility (stay in quintile): ",
+                                [
+                                  "math/round",
+                                  [
+                                    "*",
+                                    "@entity.immobilityRate",
+                                    100.0
+                                  ],
+                                  1.0
+                                ],
+                                "% — upward mobility: ",
+                                [
+                                  "math/round",
+                                  [
+                                    "*",
+                                    "@entity.upwardRate",
+                                    100.0
+                                  ],
+                                  1.0
+                                ],
+                                "% — rags to riches (bottom→top): ",
+                                [
+                                  "math/round",
+                                  [
+                                    "*",
+                                    "@entity.ragsToRiches",
+                                    100.0
+                                  ],
+                                  1.0
+                                ],
+                                "%"
+                              ],
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Rows = parent's quintile, columns = child's, top→bottom / left→right: ",
+                                [
+                                  "array/nth",
+                                  "@config.quintileLabels",
+                                  0.0
+                                ],
+                                ", ",
+                                [
+                                  "array/nth",
+                                  "@config.quintileLabels",
+                                  1.0
+                                ],
+                                ", ",
+                                [
+                                  "array/nth",
+                                  "@config.quintileLabels",
+                                  2.0
+                                ],
+                                ", ",
+                                [
+                                  "array/nth",
+                                  "@config.quintileLabels",
+                                  3.0
+                                ],
+                                ", ",
+                                [
+                                  "array/nth",
+                                  "@config.quintileLabels",
+                                  4.0
+                                ],
+                                ". Click a cell to raise its probability; the row renormalizes to sum to 1."
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "children": [
+                                "array/map",
+                                [
+                                  "array/range",
+                                  5.0
+                                ],
+                                [
+                                  "fn",
+                                  "r",
+                                  {
+                                    "children": [
+                                      "array/map",
+                                      [
+                                        "array/range",
+                                        5.0
+                                      ],
+                                      [
+                                        "fn",
+                                        "c",
+                                        {
+                                          "action": "SET_CELL",
+                                          "actionPayload": {
+                                            "col": "@c",
+                                            "row": "@r"
+                                          },
+                                          "label": [
+                                            "str/concat",
+                                            "",
+                                            [
+                                              "math/round",
+                                              [
+                                                "array/nth",
+                                                "@entity.matrix",
+                                                [
+                                                  "+",
+                                                  [
+                                                    "*",
+                                                    "@r",
+                                                    5.0
+                                                  ],
+                                                  "@c"
+                                                ]
+                                              ],
+                                              2.0
+                                            ]
+                                          ],
+                                          "type": "button",
+                                          "variant": "ghost"
+                                        }
+                                      ]
+                                    ],
+                                    "direction": "horizontal",
+                                    "gap": "xs",
+                                    "type": "stack"
+                                  }
+                                ]
+                              ],
+                              "direction": "vertical",
+                              "gap": "xs",
+                              "type": "stack"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ]
+                ],
+                "event": "MODE_SELECTED",
+                "eventId": "evt_01M04DG94WWWM8NZEF9WGZJ1EA",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@payload.mode",
+                  "@config.matchMode"
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "let",
+                    [
+                      [
+                        "idx",
+                        [
+                          "+",
+                          [
+                            "*",
+                            "@payload.row",
+                            5.0
+                          ],
+                          "@payload.col"
+                        ]
+                      ],
+                      [
+                        "cur",
+                        [
+                          "array/nth",
+                          "@entity.matrix",
+                          "@idx"
+                        ]
+                      ],
+                      [
+                        "newVal",
+                        [
+                          "if",
+                          [
+                            ">",
+                            [
+                              "+",
+                              "@cur",
+                              "@config.cellStep"
+                            ],
+                            "@config.cellMax"
+                          ],
+                          "@config.cellMin",
+                          [
+                            "+",
+                            "@cur",
+                            "@config.cellStep"
+                          ]
+                        ]
+                      ],
+                      [
+                        "rowSum",
+                        [
+                          "array/reduce",
+                          [
+                            "array/range",
+                            5.0
+                          ],
+                          0.0,
+                          [
+                            "fn",
+                            [
+                              "acc",
+                              "c"
+                            ],
+                            [
+                              "+",
+                              "@acc",
+                              [
+                                "array/nth",
+                                "@entity.matrix",
+                                [
+                                  "+",
+                                  [
+                                    "*",
+                                    "@payload.row",
+                                    5.0
+                                  ],
+                                  "@c"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "newRowSum",
+                        [
+                          "+",
+                          [
+                            "-",
+                            "@rowSum",
+                            "@cur"
+                          ],
+                          "@newVal"
+                        ]
+                      ],
+                      [
+                        "newMatrix",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            25.0
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "if",
+                              [
+                                "==",
+                                [
+                                  "math/floor",
+                                  [
+                                    "/",
+                                    "@i",
+                                    5.0
+                                  ]
+                                ],
+                                "@payload.row"
+                              ],
+                              [
+                                "/",
+                                [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@i",
+                                    "@idx"
+                                  ],
+                                  "@newVal",
+                                  [
+                                    "array/nth",
+                                    "@entity.matrix",
+                                    "@i"
+                                  ]
+                                ],
+                                "@newRowSum"
+                              ],
+                              [
+                                "array/nth",
+                                "@entity.matrix",
+                                "@i"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "immob",
+                        [
+                          "/",
+                          [
+                            "+",
+                            [
+                              "+",
+                              [
+                                "+",
+                                [
+                                  "+",
+                                  [
+                                    "array/nth",
+                                    "@newMatrix",
+                                    0.0
+                                  ],
+                                  [
+                                    "array/nth",
+                                    "@newMatrix",
+                                    6.0
+                                  ]
+                                ],
+                                [
+                                  "array/nth",
+                                  "@newMatrix",
+                                  12.0
+                                ]
+                              ],
+                              [
+                                "array/nth",
+                                "@newMatrix",
+                                18.0
+                              ]
+                            ],
+                            [
+                              "array/nth",
+                              "@newMatrix",
+                              24.0
+                            ]
+                          ],
+                          5.0
+                        ]
+                      ],
+                      [
+                        "upward",
+                        [
+                          "/",
+                          [
+                            "+",
+                            [
+                              "+",
+                              [
+                                "+",
+                                [
+                                  "+",
+                                  [
+                                    "+",
+                                    [
+                                      "+",
+                                      [
+                                        "+",
+                                        [
+                                          "+",
+                                          [
+                                            "+",
+                                            [
+                                              "array/nth",
+                                              "@newMatrix",
+                                              5.0
+                                            ],
+                                            [
+                                              "array/nth",
+                                              "@newMatrix",
+                                              10.0
+                                            ]
+                                          ],
+                                          [
+                                            "array/nth",
+                                            "@newMatrix",
+                                            11.0
+                                          ]
+                                        ],
+                                        [
+                                          "array/nth",
+                                          "@newMatrix",
+                                          15.0
+                                        ]
+                                      ],
+                                      [
+                                        "array/nth",
+                                        "@newMatrix",
+                                        16.0
+                                      ]
+                                    ],
+                                    [
+                                      "array/nth",
+                                      "@newMatrix",
+                                      17.0
+                                    ]
+                                  ],
+                                  [
+                                    "array/nth",
+                                    "@newMatrix",
+                                    20.0
+                                  ]
+                                ],
+                                [
+                                  "array/nth",
+                                  "@newMatrix",
+                                  21.0
+                                ]
+                              ],
+                              [
+                                "array/nth",
+                                "@newMatrix",
+                                22.0
+                              ]
+                            ],
+                            [
+                              "array/nth",
+                              "@newMatrix",
+                              23.0
+                            ]
+                          ],
+                          10.0
+                        ]
+                      ],
+                      [
+                        "r2r",
+                        [
+                          "array/nth",
+                          "@newMatrix",
+                          20.0
+                        ]
+                      ],
+                      [
+                        "displayM",
+                        [
+                          "if",
+                          "@entity.showBenchmark",
+                          "@config.benchmarkMatrix",
+                          "@newMatrix"
+                        ]
+                      ],
+                      [
+                        "cellShapes",
+                        [
+                          "array/concat",
+                          [
+                            "array/map",
+                            [
+                              "array/range",
+                              25.0
+                            ],
+                            [
+                              "fn",
+                              "i",
+                              [
+                                "let",
+                                [
+                                  [
+                                    "row",
+                                    [
+                                      "math/floor",
+                                      [
+                                        "/",
+                                        "@i",
+                                        5.0
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "col",
+                                    [
+                                      "math/mod",
+                                      "@i",
+                                      5.0
+                                    ]
+                                  ],
+                                  [
+                                    "v",
+                                    [
+                                      "array/nth",
+                                      "@displayM",
+                                      "@i"
+                                    ]
+                                  ],
+                                  [
+                                    "band",
+                                    [
+                                      "if",
+                                      [
+                                        ">",
+                                        "@v",
+                                        0.35
+                                      ],
+                                      "#1e3a8a",
+                                      [
+                                        "if",
+                                        [
+                                          ">",
+                                          "@v",
+                                          0.25
+                                        ],
+                                        "#2563eb",
+                                        [
+                                          "if",
+                                          [
+                                            ">",
+                                            "@v",
+                                            0.15
+                                          ],
+                                          "#60a5fa",
+                                          "#bfdbfe"
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                {
+                                  "color": "@band",
+                                  "fill": "@band",
+                                  "height": [
+                                    "-",
+                                    "@config.cellSize",
+                                    4.0
+                                  ],
+                                  "id": [
+                                    "str/concat",
+                                    "cell",
+                                    "@i"
+                                  ],
+                                  "type": "rect",
+                                  "width": [
+                                    "-",
+                                    "@config.cellSize",
+                                    4.0
+                                  ],
+                                  "x": [
+                                    "+",
+                                    "@config.gridX",
+                                    [
+                                      "*",
+                                      "@col",
+                                      "@config.cellSize"
+                                    ]
+                                  ],
+                                  "y": [
+                                    "+",
+                                    "@config.gridY",
+                                    [
+                                      "*",
+                                      "@row",
+                                      "@config.cellSize"
+                                    ]
+                                  ]
+                                }
+                              ]
+                            ]
+                          ],
+                          [
+                            "array/map",
+                            [
+                              "array/range",
+                              25.0
+                            ],
+                            [
+                              "fn",
+                              "i",
+                              [
+                                "let",
+                                [
+                                  [
+                                    "row",
+                                    [
+                                      "math/floor",
+                                      [
+                                        "/",
+                                        "@i",
+                                        5.0
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "col",
+                                    [
+                                      "math/mod",
+                                      "@i",
+                                      5.0
+                                    ]
+                                  ],
+                                  [
+                                    "v",
+                                    [
+                                      "array/nth",
+                                      "@displayM",
+                                      "@i"
+                                    ]
+                                  ]
+                                ],
+                                {
+                                  "align": "center",
+                                  "color": [
+                                    "if",
+                                    [
+                                      ">",
+                                      "@v",
+                                      0.25
+                                    ],
+                                    "#f8fafc",
+                                    "#1e293b"
+                                  ],
+                                  "fontSize": 12.0,
+                                  "id": [
+                                    "str/concat",
+                                    "cellt",
+                                    "@i"
+                                  ],
+                                  "text": [
+                                    "str/concat",
+                                    "",
+                                    [
+                                      "math/round",
+                                      "@v",
+                                      2.0
+                                    ]
+                                  ],
+                                  "type": "text",
+                                  "x": [
+                                    "+",
+                                    "@config.gridX",
+                                    [
+                                      "*",
+                                      "@col",
+                                      "@config.cellSize"
+                                    ],
+                                    [
+                                      "/",
+                                      "@config.cellSize",
+                                      2.0
+                                    ]
+                                  ],
+                                  "y": [
+                                    "+",
+                                    "@config.gridY",
+                                    [
+                                      "*",
+                                      "@row",
+                                      "@config.cellSize"
+                                    ],
+                                    [
+                                      "/",
+                                      "@config.cellSize",
+                                      2.0
+                                    ]
+                                  ]
+                                }
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.matrix",
+                        "@newMatrix"
+                      ],
+                      [
+                        "set",
+                        "@entity.immobilityRate",
+                        "@immob"
+                      ],
+                      [
+                        "set",
+                        "@entity.upwardRate",
+                        "@upward"
+                      ],
+                      [
+                        "set",
+                        "@entity.ragsToRiches",
+                        "@r2r"
+                      ],
+                      [
+                        "set",
+                        "@entity.shapes",
+                        "@cellShapes"
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "TOGGLE_BENCHMARK",
+                                  "label": "Toggle Benchmark",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "animate": "@config.animate",
+                              "backgroundColor": "@config.backgroundColor",
+                              "edges": [],
+                              "height": "@config.height",
+                              "interactive": "@config.interactive",
+                              "nodes": [],
+                              "shapes": "@entity.shapes",
+                              "type": "biology-canvas",
+                              "width": "@config.width"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Immobility (stay in quintile): ",
+                                [
+                                  "math/round",
+                                  [
+                                    "*",
+                                    "@entity.immobilityRate",
+                                    100.0
+                                  ],
+                                  1.0
+                                ],
+                                "% — upward mobility: ",
+                                [
+                                  "math/round",
+                                  [
+                                    "*",
+                                    "@entity.upwardRate",
+                                    100.0
+                                  ],
+                                  1.0
+                                ],
+                                "% — rags to riches (bottom→top): ",
+                                [
+                                  "math/round",
+                                  [
+                                    "*",
+                                    "@entity.ragsToRiches",
+                                    100.0
+                                  ],
+                                  1.0
+                                ],
+                                "%"
+                              ],
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Rows = parent's quintile, columns = child's, top→bottom / left→right: ",
+                                [
+                                  "array/nth",
+                                  "@config.quintileLabels",
+                                  0.0
+                                ],
+                                ", ",
+                                [
+                                  "array/nth",
+                                  "@config.quintileLabels",
+                                  1.0
+                                ],
+                                ", ",
+                                [
+                                  "array/nth",
+                                  "@config.quintileLabels",
+                                  2.0
+                                ],
+                                ", ",
+                                [
+                                  "array/nth",
+                                  "@config.quintileLabels",
+                                  3.0
+                                ],
+                                ", ",
+                                [
+                                  "array/nth",
+                                  "@config.quintileLabels",
+                                  4.0
+                                ],
+                                ". Click a cell to raise its probability; the row renormalizes to sum to 1."
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "children": [
+                                "array/map",
+                                [
+                                  "array/range",
+                                  5.0
+                                ],
+                                [
+                                  "fn",
+                                  "r",
+                                  {
+                                    "children": [
+                                      "array/map",
+                                      [
+                                        "array/range",
+                                        5.0
+                                      ],
+                                      [
+                                        "fn",
+                                        "c",
+                                        {
+                                          "action": "SET_CELL",
+                                          "actionPayload": {
+                                            "col": "@c",
+                                            "row": "@r"
+                                          },
+                                          "label": [
+                                            "str/concat",
+                                            "",
+                                            [
+                                              "math/round",
+                                              [
+                                                "array/nth",
+                                                "@entity.matrix",
+                                                [
+                                                  "+",
+                                                  [
+                                                    "*",
+                                                    "@r",
+                                                    5.0
+                                                  ],
+                                                  "@c"
+                                                ]
+                                              ],
+                                              2.0
+                                            ]
+                                          ],
+                                          "type": "button",
+                                          "variant": "ghost"
+                                        }
+                                      ]
+                                    ],
+                                    "direction": "horizontal",
+                                    "gap": "xs",
+                                    "type": "stack"
+                                  }
+                                ]
+                              ],
+                              "direction": "vertical",
+                              "gap": "xs",
+                              "type": "stack"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "MOBILITY_UPDATED",
+                    {
+                      "immobilityRate": "@entity.immobilityRate",
+                      "matrix": "@entity.matrix",
+                      "ragsToRiches": "@entity.ragsToRiches",
+                      "upwardRate": "@entity.upwardRate"
+                    }
+                  ]
+                ],
+                "event": "SET_CELL",
+                "eventId": "evt_01M04DG94WBZP5HFTXD2GX7NY9",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "let",
+                    [
+                      [
+                        "newShow",
+                        [
+                          "not",
+                          "@entity.showBenchmark"
+                        ]
+                      ],
+                      [
+                        "displayM",
+                        [
+                          "if",
+                          "@newShow",
+                          "@config.benchmarkMatrix",
+                          "@entity.matrix"
+                        ]
+                      ],
+                      [
+                        "cellShapes",
+                        [
+                          "array/concat",
+                          [
+                            "array/map",
+                            [
+                              "array/range",
+                              25.0
+                            ],
+                            [
+                              "fn",
+                              "i",
+                              [
+                                "let",
+                                [
+                                  [
+                                    "row",
+                                    [
+                                      "math/floor",
+                                      [
+                                        "/",
+                                        "@i",
+                                        5.0
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "col",
+                                    [
+                                      "math/mod",
+                                      "@i",
+                                      5.0
+                                    ]
+                                  ],
+                                  [
+                                    "v",
+                                    [
+                                      "array/nth",
+                                      "@displayM",
+                                      "@i"
+                                    ]
+                                  ],
+                                  [
+                                    "band",
+                                    [
+                                      "if",
+                                      [
+                                        ">",
+                                        "@v",
+                                        0.35
+                                      ],
+                                      "#1e3a8a",
+                                      [
+                                        "if",
+                                        [
+                                          ">",
+                                          "@v",
+                                          0.25
+                                        ],
+                                        "#2563eb",
+                                        [
+                                          "if",
+                                          [
+                                            ">",
+                                            "@v",
+                                            0.15
+                                          ],
+                                          "#60a5fa",
+                                          "#bfdbfe"
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                {
+                                  "color": "@band",
+                                  "fill": "@band",
+                                  "height": [
+                                    "-",
+                                    "@config.cellSize",
+                                    4.0
+                                  ],
+                                  "id": [
+                                    "str/concat",
+                                    "cell",
+                                    "@i"
+                                  ],
+                                  "type": "rect",
+                                  "width": [
+                                    "-",
+                                    "@config.cellSize",
+                                    4.0
+                                  ],
+                                  "x": [
+                                    "+",
+                                    "@config.gridX",
+                                    [
+                                      "*",
+                                      "@col",
+                                      "@config.cellSize"
+                                    ]
+                                  ],
+                                  "y": [
+                                    "+",
+                                    "@config.gridY",
+                                    [
+                                      "*",
+                                      "@row",
+                                      "@config.cellSize"
+                                    ]
+                                  ]
+                                }
+                              ]
+                            ]
+                          ],
+                          [
+                            "array/map",
+                            [
+                              "array/range",
+                              25.0
+                            ],
+                            [
+                              "fn",
+                              "i",
+                              [
+                                "let",
+                                [
+                                  [
+                                    "row",
+                                    [
+                                      "math/floor",
+                                      [
+                                        "/",
+                                        "@i",
+                                        5.0
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "col",
+                                    [
+                                      "math/mod",
+                                      "@i",
+                                      5.0
+                                    ]
+                                  ],
+                                  [
+                                    "v",
+                                    [
+                                      "array/nth",
+                                      "@displayM",
+                                      "@i"
+                                    ]
+                                  ]
+                                ],
+                                {
+                                  "align": "center",
+                                  "color": [
+                                    "if",
+                                    [
+                                      ">",
+                                      "@v",
+                                      0.25
+                                    ],
+                                    "#f8fafc",
+                                    "#1e293b"
+                                  ],
+                                  "fontSize": 12.0,
+                                  "id": [
+                                    "str/concat",
+                                    "cellt",
+                                    "@i"
+                                  ],
+                                  "text": [
+                                    "str/concat",
+                                    "",
+                                    [
+                                      "math/round",
+                                      "@v",
+                                      2.0
+                                    ]
+                                  ],
+                                  "type": "text",
+                                  "x": [
+                                    "+",
+                                    "@config.gridX",
+                                    [
+                                      "*",
+                                      "@col",
+                                      "@config.cellSize"
+                                    ],
+                                    [
+                                      "/",
+                                      "@config.cellSize",
+                                      2.0
+                                    ]
+                                  ],
+                                  "y": [
+                                    "+",
+                                    "@config.gridY",
+                                    [
+                                      "*",
+                                      "@row",
+                                      "@config.cellSize"
+                                    ],
+                                    [
+                                      "/",
+                                      "@config.cellSize",
+                                      2.0
+                                    ]
+                                  ]
+                                }
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.showBenchmark",
+                        "@newShow"
+                      ],
+                      [
+                        "set",
+                        "@entity.shapes",
+                        "@cellShapes"
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "TOGGLE_BENCHMARK",
+                                  "label": "Toggle Benchmark",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "animate": "@config.animate",
+                              "backgroundColor": "@config.backgroundColor",
+                              "edges": [],
+                              "height": "@config.height",
+                              "interactive": "@config.interactive",
+                              "nodes": [],
+                              "shapes": "@entity.shapes",
+                              "type": "biology-canvas",
+                              "width": "@config.width"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Immobility (stay in quintile): ",
+                                [
+                                  "math/round",
+                                  [
+                                    "*",
+                                    "@entity.immobilityRate",
+                                    100.0
+                                  ],
+                                  1.0
+                                ],
+                                "% — upward mobility: ",
+                                [
+                                  "math/round",
+                                  [
+                                    "*",
+                                    "@entity.upwardRate",
+                                    100.0
+                                  ],
+                                  1.0
+                                ],
+                                "% — rags to riches (bottom→top): ",
+                                [
+                                  "math/round",
+                                  [
+                                    "*",
+                                    "@entity.ragsToRiches",
+                                    100.0
+                                  ],
+                                  1.0
+                                ],
+                                "%"
+                              ],
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Rows = parent's quintile, columns = child's, top→bottom / left→right: ",
+                                [
+                                  "array/nth",
+                                  "@config.quintileLabels",
+                                  0.0
+                                ],
+                                ", ",
+                                [
+                                  "array/nth",
+                                  "@config.quintileLabels",
+                                  1.0
+                                ],
+                                ", ",
+                                [
+                                  "array/nth",
+                                  "@config.quintileLabels",
+                                  2.0
+                                ],
+                                ", ",
+                                [
+                                  "array/nth",
+                                  "@config.quintileLabels",
+                                  3.0
+                                ],
+                                ", ",
+                                [
+                                  "array/nth",
+                                  "@config.quintileLabels",
+                                  4.0
+                                ],
+                                ". Click a cell to raise its probability; the row renormalizes to sum to 1."
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "children": [
+                                "array/map",
+                                [
+                                  "array/range",
+                                  5.0
+                                ],
+                                [
+                                  "fn",
+                                  "r",
+                                  {
+                                    "children": [
+                                      "array/map",
+                                      [
+                                        "array/range",
+                                        5.0
+                                      ],
+                                      [
+                                        "fn",
+                                        "c",
+                                        {
+                                          "action": "SET_CELL",
+                                          "actionPayload": {
+                                            "col": "@c",
+                                            "row": "@r"
+                                          },
+                                          "label": [
+                                            "str/concat",
+                                            "",
+                                            [
+                                              "math/round",
+                                              [
+                                                "array/nth",
+                                                "@entity.matrix",
+                                                [
+                                                  "+",
+                                                  [
+                                                    "*",
+                                                    "@r",
+                                                    5.0
+                                                  ],
+                                                  "@c"
+                                                ]
+                                              ],
+                                              2.0
+                                            ]
+                                          ],
+                                          "type": "button",
+                                          "variant": "ghost"
+                                        }
+                                      ]
+                                    ],
+                                    "direction": "horizontal",
+                                    "gap": "xs",
+                                    "type": "stack"
+                                  }
+                                ]
+                              ],
+                              "direction": "vertical",
+                              "gap": "xs",
+                              "type": "stack"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "MOBILITY_UPDATED",
+                    {
+                      "immobilityRate": "@entity.immobilityRate",
+                      "matrix": "@entity.matrix",
+                      "ragsToRiches": "@entity.ragsToRiches",
+                      "upwardRate": "@entity.upwardRate"
+                    }
+                  ]
+                ],
+                "event": "TOGGLE_BENCHMARK",
+                "eventId": "evt_01M04DG94WYVGRAH2P7453AH55",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.matrix",
+                    "@config.transitionMatrix"
+                  ],
+                  [
+                    "set",
+                    "@entity.showBenchmark",
+                    false
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "m",
+                        "@config.transitionMatrix"
+                      ],
+                      [
+                        "immob",
+                        [
+                          "/",
+                          [
+                            "+",
+                            [
+                              "+",
+                              [
+                                "+",
+                                [
+                                  "+",
+                                  [
+                                    "array/nth",
+                                    "@m",
+                                    0.0
+                                  ],
+                                  [
+                                    "array/nth",
+                                    "@m",
+                                    6.0
+                                  ]
+                                ],
+                                [
+                                  "array/nth",
+                                  "@m",
+                                  12.0
+                                ]
+                              ],
+                              [
+                                "array/nth",
+                                "@m",
+                                18.0
+                              ]
+                            ],
+                            [
+                              "array/nth",
+                              "@m",
+                              24.0
+                            ]
+                          ],
+                          5.0
+                        ]
+                      ],
+                      [
+                        "upward",
+                        [
+                          "/",
+                          [
+                            "+",
+                            [
+                              "+",
+                              [
+                                "+",
+                                [
+                                  "+",
+                                  [
+                                    "+",
+                                    [
+                                      "+",
+                                      [
+                                        "+",
+                                        [
+                                          "+",
+                                          [
+                                            "+",
+                                            [
+                                              "array/nth",
+                                              "@m",
+                                              5.0
+                                            ],
+                                            [
+                                              "array/nth",
+                                              "@m",
+                                              10.0
+                                            ]
+                                          ],
+                                          [
+                                            "array/nth",
+                                            "@m",
+                                            11.0
+                                          ]
+                                        ],
+                                        [
+                                          "array/nth",
+                                          "@m",
+                                          15.0
+                                        ]
+                                      ],
+                                      [
+                                        "array/nth",
+                                        "@m",
+                                        16.0
+                                      ]
+                                    ],
+                                    [
+                                      "array/nth",
+                                      "@m",
+                                      17.0
+                                    ]
+                                  ],
+                                  [
+                                    "array/nth",
+                                    "@m",
+                                    20.0
+                                  ]
+                                ],
+                                [
+                                  "array/nth",
+                                  "@m",
+                                  21.0
+                                ]
+                              ],
+                              [
+                                "array/nth",
+                                "@m",
+                                22.0
+                              ]
+                            ],
+                            [
+                              "array/nth",
+                              "@m",
+                              23.0
+                            ]
+                          ],
+                          10.0
+                        ]
+                      ],
+                      [
+                        "r2r",
+                        [
+                          "array/nth",
+                          "@m",
+                          20.0
+                        ]
+                      ],
+                      [
+                        "cellShapes",
+                        [
+                          "array/concat",
+                          [
+                            "array/map",
+                            [
+                              "array/range",
+                              25.0
+                            ],
+                            [
+                              "fn",
+                              "i",
+                              [
+                                "let",
+                                [
+                                  [
+                                    "row",
+                                    [
+                                      "math/floor",
+                                      [
+                                        "/",
+                                        "@i",
+                                        5.0
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "col",
+                                    [
+                                      "math/mod",
+                                      "@i",
+                                      5.0
+                                    ]
+                                  ],
+                                  [
+                                    "v",
+                                    [
+                                      "array/nth",
+                                      "@m",
+                                      "@i"
+                                    ]
+                                  ],
+                                  [
+                                    "band",
+                                    [
+                                      "if",
+                                      [
+                                        ">",
+                                        "@v",
+                                        0.35
+                                      ],
+                                      "#1e3a8a",
+                                      [
+                                        "if",
+                                        [
+                                          ">",
+                                          "@v",
+                                          0.25
+                                        ],
+                                        "#2563eb",
+                                        [
+                                          "if",
+                                          [
+                                            ">",
+                                            "@v",
+                                            0.15
+                                          ],
+                                          "#60a5fa",
+                                          "#bfdbfe"
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                {
+                                  "color": "@band",
+                                  "fill": "@band",
+                                  "height": [
+                                    "-",
+                                    "@config.cellSize",
+                                    4.0
+                                  ],
+                                  "id": [
+                                    "str/concat",
+                                    "cell",
+                                    "@i"
+                                  ],
+                                  "type": "rect",
+                                  "width": [
+                                    "-",
+                                    "@config.cellSize",
+                                    4.0
+                                  ],
+                                  "x": [
+                                    "+",
+                                    "@config.gridX",
+                                    [
+                                      "*",
+                                      "@col",
+                                      "@config.cellSize"
+                                    ]
+                                  ],
+                                  "y": [
+                                    "+",
+                                    "@config.gridY",
+                                    [
+                                      "*",
+                                      "@row",
+                                      "@config.cellSize"
+                                    ]
+                                  ]
+                                }
+                              ]
+                            ]
+                          ],
+                          [
+                            "array/map",
+                            [
+                              "array/range",
+                              25.0
+                            ],
+                            [
+                              "fn",
+                              "i",
+                              [
+                                "let",
+                                [
+                                  [
+                                    "row",
+                                    [
+                                      "math/floor",
+                                      [
+                                        "/",
+                                        "@i",
+                                        5.0
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "col",
+                                    [
+                                      "math/mod",
+                                      "@i",
+                                      5.0
+                                    ]
+                                  ],
+                                  [
+                                    "v",
+                                    [
+                                      "array/nth",
+                                      "@m",
+                                      "@i"
+                                    ]
+                                  ]
+                                ],
+                                {
+                                  "align": "center",
+                                  "color": [
+                                    "if",
+                                    [
+                                      ">",
+                                      "@v",
+                                      0.25
+                                    ],
+                                    "#f8fafc",
+                                    "#1e293b"
+                                  ],
+                                  "fontSize": 12.0,
+                                  "id": [
+                                    "str/concat",
+                                    "cellt",
+                                    "@i"
+                                  ],
+                                  "text": [
+                                    "str/concat",
+                                    "",
+                                    [
+                                      "math/round",
+                                      "@v",
+                                      2.0
+                                    ]
+                                  ],
+                                  "type": "text",
+                                  "x": [
+                                    "+",
+                                    "@config.gridX",
+                                    [
+                                      "*",
+                                      "@col",
+                                      "@config.cellSize"
+                                    ],
+                                    [
+                                      "/",
+                                      "@config.cellSize",
+                                      2.0
+                                    ]
+                                  ],
+                                  "y": [
+                                    "+",
+                                    "@config.gridY",
+                                    [
+                                      "*",
+                                      "@row",
+                                      "@config.cellSize"
+                                    ],
+                                    [
+                                      "/",
+                                      "@config.cellSize",
+                                      2.0
+                                    ]
+                                  ]
+                                }
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.immobilityRate",
+                        "@immob"
+                      ],
+                      [
+                        "set",
+                        "@entity.upwardRate",
+                        "@upward"
+                      ],
+                      [
+                        "set",
+                        "@entity.ragsToRiches",
+                        "@r2r"
+                      ],
+                      [
+                        "set",
+                        "@entity.shapes",
+                        "@cellShapes"
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "TOGGLE_BENCHMARK",
+                                  "label": "Toggle Benchmark",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "animate": "@config.animate",
+                              "backgroundColor": "@config.backgroundColor",
+                              "edges": [],
+                              "height": "@config.height",
+                              "interactive": "@config.interactive",
+                              "nodes": [],
+                              "shapes": "@entity.shapes",
+                              "type": "biology-canvas",
+                              "width": "@config.width"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Immobility (stay in quintile): ",
+                                [
+                                  "math/round",
+                                  [
+                                    "*",
+                                    "@entity.immobilityRate",
+                                    100.0
+                                  ],
+                                  1.0
+                                ],
+                                "% — upward mobility: ",
+                                [
+                                  "math/round",
+                                  [
+                                    "*",
+                                    "@entity.upwardRate",
+                                    100.0
+                                  ],
+                                  1.0
+                                ],
+                                "% — rags to riches (bottom→top): ",
+                                [
+                                  "math/round",
+                                  [
+                                    "*",
+                                    "@entity.ragsToRiches",
+                                    100.0
+                                  ],
+                                  1.0
+                                ],
+                                "%"
+                              ],
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Rows = parent's quintile, columns = child's, top→bottom / left→right: ",
+                                [
+                                  "array/nth",
+                                  "@config.quintileLabels",
+                                  0.0
+                                ],
+                                ", ",
+                                [
+                                  "array/nth",
+                                  "@config.quintileLabels",
+                                  1.0
+                                ],
+                                ", ",
+                                [
+                                  "array/nth",
+                                  "@config.quintileLabels",
+                                  2.0
+                                ],
+                                ", ",
+                                [
+                                  "array/nth",
+                                  "@config.quintileLabels",
+                                  3.0
+                                ],
+                                ", ",
+                                [
+                                  "array/nth",
+                                  "@config.quintileLabels",
+                                  4.0
+                                ],
+                                ". Click a cell to raise its probability; the row renormalizes to sum to 1."
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "children": [
+                                "array/map",
+                                [
+                                  "array/range",
+                                  5.0
+                                ],
+                                [
+                                  "fn",
+                                  "r",
+                                  {
+                                    "children": [
+                                      "array/map",
+                                      [
+                                        "array/range",
+                                        5.0
+                                      ],
+                                      [
+                                        "fn",
+                                        "c",
+                                        {
+                                          "action": "SET_CELL",
+                                          "actionPayload": {
+                                            "col": "@c",
+                                            "row": "@r"
+                                          },
+                                          "label": [
+                                            "str/concat",
+                                            "",
+                                            [
+                                              "math/round",
+                                              [
+                                                "array/nth",
+                                                "@entity.matrix",
+                                                [
+                                                  "+",
+                                                  [
+                                                    "*",
+                                                    "@r",
+                                                    5.0
+                                                  ],
+                                                  "@c"
+                                                ]
+                                              ],
+                                              2.0
+                                            ]
+                                          ],
+                                          "type": "button",
+                                          "variant": "ghost"
+                                        }
+                                      ]
+                                    ],
+                                    "direction": "horizontal",
+                                    "gap": "xs",
+                                    "type": "stack"
+                                  }
+                                ]
+                              ],
+                              "direction": "vertical",
+                              "gap": "xs",
+                              "type": "stack"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "MOBILITY_UPDATED",
+                    {
+                      "immobilityRate": "@entity.immobilityRate",
+                      "matrix": "@entity.matrix",
+                      "ragsToRiches": "@entity.ragsToRiches",
+                      "upwardRate": "@entity.upwardRate"
+                    }
+                  ]
+                ],
+                "event": "RESET",
+                "eventId": "evt_01M04DG94WXE2FXD1JVX442QN2",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 1,
+  "version": "1.0.0"
+}

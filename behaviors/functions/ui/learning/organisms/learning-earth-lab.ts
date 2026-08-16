@@ -50,7 +50,7 @@ export interface StdLearningEarthLabConfig {
   mode?: 'plates' | 'water-cycle';
 }
 
-type _StdLearningEarthLabEntityName = 'EarthLabItem' | 'PlatesScene' | 'WatercycleScene';
+type _StdLearningEarthLabEntityName = 'EarthLabItem' | 'PlatesScene' | 'WatercycleScene' | 'EarthPlatesScene' | 'EarthWatercycleScene';
 type _StdLearningEarthLabListenTraitName = 'EarthLabRouter' | 'PlatesSim' | 'WatercycleSim';
 
 /**

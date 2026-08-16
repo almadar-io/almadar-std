@@ -227,7 +227,7 @@ export function stdApprovalGate(params: StdApprovalGateParams): OrbitalDefinitio
   });
 }
 
-type _StdApprovalGateEntityName = 'ApprovalRequest';
+type _StdApprovalGateEntityName = 'ApprovalRequest' | 'SpinnerItem' | 'TypographyItem' | 'IconItem' | 'ButtonItem' | 'DividerItem' | 'AlertItem';
 type _StdApprovalGateListenTraitName = 'LoadingSpinner' | 'ErrorSpinner' | 'LoadingText' | 'ShieldCheckIcon' | 'ApprovalQueueTitle' | 'CloseButton' | 'ApprovalDivider' | 'ErrorAlert' | 'ApprovalGateReview';
 
 /**

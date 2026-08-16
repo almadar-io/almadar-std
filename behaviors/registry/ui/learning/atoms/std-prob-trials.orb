@@ -1,5 +1,5 @@
 {
-  "description": "Declarative probability plotter — renders a distribution curve, sampled points, and extra shapes from config onto a math-canvas; no interaction beyond the initial render (dice-roll, coin-flip, and general distribution/histogram displays all share this mechanism — only the config data differs per topic). Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches.",
+  "description": "Trials simulator — Roll samples one outcome from a weighted sample space and accumulates it into an observed-frequency histogram overlaid with expected-probability markers on a math-canvas; Run auto-samples on a tick. Default outcomes is a fair six-sided die; a coin flip, a weighted spinner, or any categorical distribution is just a different outcomes config. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches.",
   "ledger": {
     "entries": {
       "ent_01KZEJ8QE0CXDV5ZJH0DA17W5P": {
@@ -23,6 +23,42 @@
         "bakedName": "MODE_SELECTED",
         "curName": "MODE_SELECTED",
         "id": "evt_01KZEJ8QE2J9NADTEKM8VT109E",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZEJ8QE0KYBSE065SR8C4M6Q",
+        "renames": []
+      },
+      "evt_01M04ANCX998T5GH1SAKPBHNFP": {
+        "bakedName": "RUN",
+        "curName": "RUN",
+        "id": "evt_01M04ANCX998T5GH1SAKPBHNFP",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZEJ8QE0KYBSE065SR8C4M6Q",
+        "renames": []
+      },
+      "evt_01M04ANCX9QR0GCN5DNDBH3KKY": {
+        "bakedName": "TRIAL",
+        "curName": "TRIAL",
+        "id": "evt_01M04ANCX9QR0GCN5DNDBH3KKY",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZEJ8QE0KYBSE065SR8C4M6Q",
+        "renames": []
+      },
+      "evt_01M04ANCX9SS2YDXDB5GZB58R1": {
+        "bakedName": "TRIALS_UPDATED",
+        "curName": "TRIALS_UPDATED",
+        "id": "evt_01M04ANCX9SS2YDXDB5GZB58R1",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZEJ8QE0KYBSE065SR8C4M6Q",
+        "renames": []
+      },
+      "evt_01M04ANCX9WQSZ8PX0END3Z3DS": {
+        "bakedName": "RESET",
+        "curName": "RESET",
+        "id": "evt_01M04ANCX9WQSZ8PX0END3Z3DS",
         "kind": "event",
         "owner": "workspace",
         "parent": "trt_01KZEJ8QE0KYBSE065SR8C4M6Q",
@@ -76,91 +112,24 @@
           },
           {
             "items": {
-              "properties": {
-                "color": {
-                  "name": "color",
-                  "required": false,
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
-                  "required": false,
-                  "type": "string"
-                },
-                "samples": {
-                  "items": {
-                    "properties": {
-                      "color": {
-                        "name": "color",
-                        "required": false,
-                        "type": "string"
-                      },
-                      "label": {
-                        "name": "label",
-                        "required": false,
-                        "type": "string"
-                      },
-                      "radius": {
-                        "name": "radius",
-                        "required": false,
-                        "type": "number"
-                      },
-                      "x": {
-                        "name": "x",
-                        "required": true,
-                        "type": "number"
-                      },
-                      "y": {
-                        "name": "y",
-                        "required": true,
-                        "type": "number"
-                      }
-                    },
-                    "type": "object"
-                  },
-                  "name": "samples",
-                  "required": false,
-                  "type": "array"
-                }
-              },
-              "type": "object"
+              "type": "number"
             },
-            "name": "curves",
+            "name": "counts",
             "type": "array"
           },
           {
-            "items": {
-              "properties": {
-                "color": {
-                  "name": "color",
-                  "required": false,
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
-                  "required": false,
-                  "type": "string"
-                },
-                "radius": {
-                  "name": "radius",
-                  "required": false,
-                  "type": "number"
-                },
-                "x": {
-                  "name": "x",
-                  "required": true,
-                  "type": "number"
-                },
-                "y": {
-                  "name": "y",
-                  "required": true,
-                  "type": "number"
-                }
-              },
-              "type": "object"
-            },
-            "name": "points",
-            "type": "array"
+            "default": 0.0,
+            "name": "total",
+            "type": "number"
+          },
+          {
+            "default": false,
+            "name": "running",
+            "type": "boolean"
+          },
+          {
+            "name": "narration",
+            "type": "string"
           },
           {
             "items": {
@@ -362,115 +331,6 @@
               "tier": "presentation",
               "type": "boolean"
             },
-            "curves": {
-              "default": [
-                {
-                  "color": "#2563eb",
-                  "label": "uniform",
-                  "samples": [
-                    {
-                      "x": 0.0,
-                      "y": 0.1
-                    },
-                    {
-                      "x": 1.0,
-                      "y": 0.1
-                    },
-                    {
-                      "x": 2.0,
-                      "y": 0.1
-                    },
-                    {
-                      "x": 3.0,
-                      "y": 0.1
-                    },
-                    {
-                      "x": 4.0,
-                      "y": 0.1
-                    },
-                    {
-                      "x": 5.0,
-                      "y": 0.1
-                    },
-                    {
-                      "x": 6.0,
-                      "y": 0.1
-                    },
-                    {
-                      "x": 7.0,
-                      "y": 0.1
-                    },
-                    {
-                      "x": 8.0,
-                      "y": 0.1
-                    },
-                    {
-                      "x": 9.0,
-                      "y": 0.1
-                    },
-                    {
-                      "x": 10.0,
-                      "y": 0.1
-                    }
-                  ]
-                }
-              ],
-              "description": "Distribution curve or cumulative frequency — e.g. a dice-face histogram, a coin-flip bar, or a general distribution shape.",
-              "items": {
-                "properties": {
-                  "color": {
-                    "name": "color",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "label": {
-                    "name": "label",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "samples": {
-                    "items": {
-                      "properties": {
-                        "color": {
-                          "name": "color",
-                          "required": false,
-                          "type": "string"
-                        },
-                        "label": {
-                          "name": "label",
-                          "required": false,
-                          "type": "string"
-                        },
-                        "radius": {
-                          "name": "radius",
-                          "required": false,
-                          "type": "number"
-                        },
-                        "x": {
-                          "name": "x",
-                          "required": true,
-                          "type": "number"
-                        },
-                        "y": {
-                          "name": "y",
-                          "required": true,
-                          "type": "number"
-                        }
-                      },
-                      "type": "object"
-                    },
-                    "name": "samples",
-                    "required": false,
-                    "type": "array"
-                  }
-                },
-                "type": "object"
-              },
-              "label": "Curves",
-              "synonyms": "dice, coin flip, sampling, distribution, histogram, law of large numbers, expected value",
-              "tier": "domain",
-              "type": "[ProbTrialsCurve]"
-            },
             "gridStep": {
               "default": 1.0,
               "label": "Grid Step",
@@ -498,9 +358,40 @@
               "tier": "presentation",
               "type": "string"
             },
-            "points": {
-              "default": [],
-              "description": "Sampled outcomes or scatter points.",
+            "outcomes": {
+              "default": [
+                {
+                  "color": "#2563eb",
+                  "label": "1",
+                  "probability": 0.1667
+                },
+                {
+                  "color": "#7c3aed",
+                  "label": "2",
+                  "probability": 0.1667
+                },
+                {
+                  "color": "#db2777",
+                  "label": "3",
+                  "probability": 0.1667
+                },
+                {
+                  "color": "#dc2626",
+                  "label": "4",
+                  "probability": 0.1667
+                },
+                {
+                  "color": "#f59e0b",
+                  "label": "5",
+                  "probability": 0.1667
+                },
+                {
+                  "color": "#16a34a",
+                  "label": "6",
+                  "probability": 0.1667
+                }
+              ],
+              "description": "The sample space each trial draws from — label, relative probability (weights are normalized, needn't sum to 1), and bar color. Default is a fair six-sided die; a coin flip, a weighted spinner, or any categorical distribution is just a different outcomes list.",
               "items": {
                 "properties": {
                   "color": {
@@ -510,217 +401,45 @@
                   },
                   "label": {
                     "name": "label",
-                    "required": false,
+                    "required": true,
                     "type": "string"
                   },
-                  "radius": {
-                    "name": "radius",
-                    "required": false,
-                    "type": "number"
-                  },
-                  "x": {
-                    "name": "x",
-                    "required": true,
-                    "type": "number"
-                  },
-                  "y": {
-                    "name": "y",
+                  "probability": {
+                    "name": "probability",
                     "required": true,
                     "type": "number"
                   }
                 },
                 "type": "object"
               },
-              "label": "Points",
-              "tier": "presentation",
-              "type": "[ProbTrialsPoint]"
+              "label": "Outcomes",
+              "synonyms": "dice, coin flip, sampling, distribution, histogram, law of large numbers, expected value, sample space, categorical distribution",
+              "tier": "domain",
+              "type": "[ProbTrialsOutcome]"
             },
-            "shapes": {
-              "default": [],
-              "description": "Extra declarative shapes such as bars or outcome labels.",
-              "items": {
-                "properties": {
-                  "align": {
-                    "name": "align",
-                    "required": false,
-                    "type": "string",
-                    "values": [
-                      "left",
-                      "center",
-                      "right"
-                    ]
-                  },
-                  "axis": {
-                    "name": "axis",
-                    "required": false,
-                    "type": "string",
-                    "values": [
-                      "x",
-                      "y"
-                    ]
-                  },
-                  "color": {
-                    "name": "color",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "fill": {
-                    "name": "fill",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "fontSize": {
-                    "name": "fontSize",
-                    "required": false,
-                    "type": "number"
-                  },
-                  "height": {
-                    "name": "height",
-                    "required": false,
-                    "type": "number"
-                  },
-                  "id": {
-                    "name": "id",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "label": {
-                    "name": "label",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "lineWidth": {
-                    "name": "lineWidth",
-                    "required": false,
-                    "type": "number"
-                  },
-                  "max": {
-                    "name": "max",
-                    "required": false,
-                    "type": "number"
-                  },
-                  "min": {
-                    "name": "min",
-                    "required": false,
-                    "type": "number"
-                  },
-                  "opacity": {
-                    "name": "opacity",
-                    "required": false,
-                    "type": "number"
-                  },
-                  "path": {
-                    "name": "path",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "points": {
-                    "items": {
-                      "properties": {
-                        "x": {
-                          "name": "x",
-                          "required": true,
-                          "type": "number"
-                        },
-                        "y": {
-                          "name": "y",
-                          "required": true,
-                          "type": "number"
-                        }
-                      },
-                      "type": "object"
-                    },
-                    "name": "points",
-                    "required": false,
-                    "type": "array"
-                  },
-                  "radius": {
-                    "name": "radius",
-                    "required": false,
-                    "type": "number"
-                  },
-                  "step": {
-                    "name": "step",
-                    "required": false,
-                    "type": "number"
-                  },
-                  "text": {
-                    "name": "text",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "type": {
-                    "name": "type",
-                    "required": true,
-                    "type": "string",
-                    "values": [
-                      "line",
-                      "arrow",
-                      "circle",
-                      "rect",
-                      "polygon",
-                      "path",
-                      "text",
-                      "axis",
-                      "grid"
-                    ]
-                  },
-                  "width": {
-                    "name": "width",
-                    "required": false,
-                    "type": "number"
-                  },
-                  "x": {
-                    "name": "x",
-                    "required": false,
-                    "type": "number"
-                  },
-                  "x1": {
-                    "name": "x1",
-                    "required": false,
-                    "type": "number"
-                  },
-                  "x2": {
-                    "name": "x2",
-                    "required": false,
-                    "type": "number"
-                  },
-                  "y": {
-                    "name": "y",
-                    "required": false,
-                    "type": "number"
-                  },
-                  "y1": {
-                    "name": "y1",
-                    "required": false,
-                    "type": "number"
-                  },
-                  "y2": {
-                    "name": "y2",
-                    "required": false,
-                    "type": "number"
-                  }
-                },
-                "type": "object"
-              },
-              "label": "Shapes",
-              "tier": "presentation",
-              "type": "[ProbTrialsShape]"
+            "running": {
+              "default": false,
+              "description": "When true the tick auto-samples a new outcome every ~500ms from load; toggle with the Run button.",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
             },
             "showAxes": {
-              "default": true,
+              "default": false,
+              "description": "Draw background axes behind the observed-frequency bars.",
               "label": "Show Axes",
               "tier": "presentation",
               "type": "boolean"
             },
             "showGrid": {
-              "default": true,
+              "default": false,
+              "description": "Draw a background grid behind the observed-frequency bars.",
               "label": "Show Grid",
               "tier": "presentation",
               "type": "boolean"
             },
             "title": {
-              "default": "Probability Lab",
+              "default": "Probability Trials",
               "description": "Title shown above the canvas.",
               "label": "Title",
               "tier": "presentation",
@@ -732,43 +451,41 @@
               "label": "Width",
               "tier": "presentation",
               "type": "number"
-            },
-            "xMax": {
-              "default": 10.0,
-              "description": "Maximum x value on the canvas.",
-              "label": "X Max",
-              "tier": "presentation",
-              "type": "number"
-            },
-            "xMin": {
-              "default": 0.0,
-              "description": "Minimum x value on the canvas.",
-              "label": "X Min",
-              "tier": "presentation",
-              "type": "number"
-            },
-            "yMax": {
-              "default": 1.0,
-              "description": "Maximum y value on the canvas.",
-              "label": "Y Max",
-              "tier": "presentation",
-              "type": "number"
-            },
-            "yMin": {
-              "default": 0.0,
-              "description": "Minimum y value on the canvas.",
-              "label": "Y Min",
-              "tier": "presentation",
-              "type": "number"
             }
           },
+          "emits": [
+            {
+              "description": "The accumulated per-outcome counts, total draws, and narration after each Roll, Run tick, or Reset — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+              "event": "TRIALS_UPDATED",
+              "eventId": "evt_01M04ANCX9SS2YDXDB5GZB58R1",
+              "payloadSchema": [
+                {
+                  "name": "counts",
+                  "type": "[number]"
+                },
+                {
+                  "name": "total",
+                  "type": "number"
+                },
+                {
+                  "name": "narration",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "dice roll, coin flip, sampling, observed frequency, law of large numbers, trial run",
+              "tier": "domain"
+            }
+          ],
           "entityContract": {
             "provides": [
               "active",
-              "curves",
-              "points",
+              "counts",
+              "narration",
+              "running",
               "shapes",
-              "title"
+              "title",
+              "total"
             ],
             "requires": []
           },
@@ -800,6 +517,43 @@
                   }
                 ],
                 "tier": "domain"
+              },
+              {
+                "id": "evt_01M04ANCX9QR0GCN5DNDBH3KKY",
+                "key": "TRIAL",
+                "name": "Trial"
+              },
+              {
+                "id": "evt_01M04ANCX998T5GH1SAKPBHNFP",
+                "key": "RUN",
+                "name": "Run"
+              },
+              {
+                "id": "evt_01M04ANCX9WQSZ8PX0END3Z3DS",
+                "key": "RESET",
+                "name": "Reset"
+              },
+              {
+                "description": "The accumulated per-outcome counts, total draws, and narration after each Roll, Run tick, or Reset — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+                "id": "evt_01M04ANCX9SS2YDXDB5GZB58R1",
+                "key": "TRIALS_UPDATED",
+                "name": "Trials Updated",
+                "payloadSchema": [
+                  {
+                    "name": "counts",
+                    "type": "[number]"
+                  },
+                  {
+                    "name": "total",
+                    "type": "number"
+                  },
+                  {
+                    "name": "narration",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "dice roll, coin flip, sampling, observed frequency, law of large numbers, trial run",
+                "tier": "domain"
               }
             ],
             "states": [
@@ -812,29 +566,419 @@
               {
                 "effects": [
                   [
-                    "set",
-                    "@entity.active",
-                    true
-                  ],
-                  [
-                    "set",
-                    "@entity.title",
-                    "@config.title"
-                  ],
-                  [
-                    "set",
-                    "@entity.curves",
-                    "@config.curves"
-                  ],
-                  [
-                    "set",
-                    "@entity.points",
-                    "@config.points"
-                  ],
-                  [
-                    "set",
-                    "@entity.shapes",
-                    "@config.shapes"
+                    "let",
+                    [
+                      [
+                        "n",
+                        [
+                          "array/len",
+                          "@config.outcomes"
+                        ]
+                      ],
+                      [
+                        "sumP",
+                        [
+                          "array/sum",
+                          "@config.outcomes",
+                          "probability"
+                        ]
+                      ],
+                      [
+                        "expectedProbs",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@n"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "/",
+                              [
+                                "object/get",
+                                [
+                                  "array/nth",
+                                  "@config.outcomes",
+                                  "@i"
+                                ],
+                                "probability"
+                              ],
+                              "@sumP"
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "zeroCounts",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@n"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            0.0
+                          ]
+                        ]
+                      ],
+                      [
+                        "plotW",
+                        [
+                          "-",
+                          "@config.width",
+                          48.0
+                        ]
+                      ],
+                      [
+                        "plotH",
+                        [
+                          "-",
+                          "@config.height",
+                          48.0
+                        ]
+                      ],
+                      [
+                        "observedProps",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@n"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            0.0
+                          ]
+                        ]
+                      ],
+                      [
+                        "maxExpected",
+                        [
+                          "math/max",
+                          [
+                            "array/max",
+                            "@expectedProbs"
+                          ],
+                          0.0001
+                        ]
+                      ],
+                      [
+                        "maxObserved",
+                        [
+                          "math/max",
+                          [
+                            "array/max",
+                            "@observedProps"
+                          ],
+                          0.0001
+                        ]
+                      ],
+                      [
+                        "maxVal",
+                        [
+                          "*",
+                          [
+                            "math/max",
+                            "@maxExpected",
+                            "@maxObserved"
+                          ],
+                          1.25
+                        ]
+                      ],
+                      [
+                        "barW",
+                        [
+                          "/",
+                          "@plotW",
+                          "@n"
+                        ]
+                      ],
+                      [
+                        "barShapes",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@n"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "let",
+                              [
+                                [
+                                  "barH",
+                                  [
+                                    "*",
+                                    [
+                                      "/",
+                                      [
+                                        "array/nth",
+                                        "@observedProps",
+                                        "@i"
+                                      ],
+                                      "@maxVal"
+                                    ],
+                                    "@plotH"
+                                  ]
+                                ],
+                                [
+                                  "outcome",
+                                  [
+                                    "array/nth",
+                                    "@config.outcomes",
+                                    "@i"
+                                  ]
+                                ]
+                              ],
+                              {
+                                "fill": [
+                                  "object/get",
+                                  "@outcome",
+                                  "color"
+                                ],
+                                "height": "@barH",
+                                "lineWidth": 0.0,
+                                "opacity": 0.85,
+                                "type": "rect",
+                                "width": [
+                                  "*",
+                                  "@barW",
+                                  0.6
+                                ],
+                                "x": [
+                                  "+",
+                                  24.0,
+                                  [
+                                    "*",
+                                    "@i",
+                                    "@barW"
+                                  ]
+                                ],
+                                "y": [
+                                  "-",
+                                  [
+                                    "+",
+                                    24.0,
+                                    "@plotH"
+                                  ],
+                                  "@barH"
+                                ]
+                              }
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "expectedShapes",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@n"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            {
+                              "fill": "#111827",
+                              "lineWidth": 0.0,
+                              "radius": 5.0,
+                              "type": "circle",
+                              "x": [
+                                "+",
+                                24.0,
+                                [
+                                  "*",
+                                  [
+                                    "+",
+                                    "@i",
+                                    0.5
+                                  ],
+                                  "@barW"
+                                ]
+                              ],
+                              "y": [
+                                "-",
+                                [
+                                  "+",
+                                  24.0,
+                                  "@plotH"
+                                ],
+                                [
+                                  "*",
+                                  [
+                                    "/",
+                                    [
+                                      "array/nth",
+                                      "@expectedProbs",
+                                      "@i"
+                                    ],
+                                    "@maxVal"
+                                  ],
+                                  "@plotH"
+                                ]
+                              ]
+                            }
+                          ]
+                        ]
+                      ],
+                      [
+                        "labelShapes",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@n"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "let",
+                              [
+                                [
+                                  "outcome",
+                                  [
+                                    "array/nth",
+                                    "@config.outcomes",
+                                    "@i"
+                                  ]
+                                ]
+                              ],
+                              {
+                                "align": "center",
+                                "color": "#111827",
+                                "fontSize": 11.0,
+                                "text": [
+                                  "str/concat",
+                                  [
+                                    "object/get",
+                                    "@outcome",
+                                    "label"
+                                  ],
+                                  ": ",
+                                  [
+                                    "str/concat",
+                                    "",
+                                    [
+                                      "array/nth",
+                                      "@zeroCounts",
+                                      "@i"
+                                    ]
+                                  ]
+                                ],
+                                "type": "text",
+                                "x": [
+                                  "+",
+                                  24.0,
+                                  [
+                                    "*",
+                                    [
+                                      "+",
+                                      "@i",
+                                      0.5
+                                    ],
+                                    "@barW"
+                                  ]
+                                ],
+                                "y": [
+                                  "+",
+                                  [
+                                    "+",
+                                    24.0,
+                                    "@plotH"
+                                  ],
+                                  16.0
+                                ]
+                              }
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "shapes",
+                        [
+                          "array/concat",
+                          [
+                            {
+                              "color": "#cbd5e1",
+                              "lineWidth": 1.0,
+                              "type": "line",
+                              "x1": 24.0,
+                              "x2": [
+                                "+",
+                                24.0,
+                                "@plotW"
+                              ],
+                              "y1": [
+                                "+",
+                                24.0,
+                                "@plotH"
+                              ],
+                              "y2": [
+                                "+",
+                                24.0,
+                                "@plotH"
+                              ]
+                            }
+                          ],
+                          [
+                            "array/concat",
+                            "@barShapes",
+                            [
+                              "array/concat",
+                              "@expectedShapes",
+                              "@labelShapes"
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.active",
+                        true
+                      ],
+                      [
+                        "set",
+                        "@entity.title",
+                        "@config.title"
+                      ],
+                      [
+                        "set",
+                        "@entity.counts",
+                        "@zeroCounts"
+                      ],
+                      [
+                        "set",
+                        "@entity.total",
+                        0.0
+                      ],
+                      [
+                        "set",
+                        "@entity.running",
+                        "@config.running"
+                      ],
+                      [
+                        "set",
+                        "@entity.narration",
+                        "Press Roll to sample an outcome, or Run to auto-sample."
+                      ],
+                      [
+                        "set",
+                        "@entity.shapes",
+                        "@shapes"
+                      ]
+                    ]
                   ],
                   [
                     "render-ui",
@@ -849,22 +993,68 @@
                               "variant": "h4"
                             },
                             {
+                              "children": [
+                                {
+                                  "action": "TRIAL",
+                                  "label": "Roll",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "RUN",
+                                  "label": "Run",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Total trials: ",
+                                [
+                                  "str/concat",
+                                  "",
+                                  "@entity.total"
+                                ]
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
                               "animate": "@config.animate",
-                              "curves": "@entity.curves",
+                              "curves": [],
                               "gridStep": "@config.gridStep",
                               "height": "@config.height",
                               "interactive": "@config.interactive",
-                              "points": "@entity.points",
+                              "points": [],
                               "shapes": "@entity.shapes",
                               "showAxes": "@config.showAxes",
                               "showGrid": "@config.showGrid",
                               "type": "math-canvas",
                               "vectors": [],
                               "width": "@config.width",
-                              "xMax": "@config.xMax",
-                              "xMin": "@config.xMin",
-                              "yMax": "@config.yMax",
-                              "yMin": "@config.yMin"
+                              "xMax": [
+                                "array/len",
+                                "@config.outcomes"
+                              ],
+                              "xMin": 0.0,
+                              "yMax": 1.0,
+                              "yMin": 0.0
+                            },
+                            {
+                              "content": "@entity.narration",
+                              "type": "typography",
+                              "variant": "body"
                             }
                           ],
                           "direction": "vertical",
@@ -874,6 +1064,15 @@
                       ],
                       "padding": "md",
                       "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "TRIALS_UPDATED",
+                    {
+                      "counts": "@entity.counts",
+                      "narration": "@entity.narration",
+                      "total": "@entity.total"
                     }
                   ]
                 ],
@@ -890,29 +1089,419 @@
               {
                 "effects": [
                   [
-                    "set",
-                    "@entity.active",
-                    true
-                  ],
-                  [
-                    "set",
-                    "@entity.title",
-                    "@config.title"
-                  ],
-                  [
-                    "set",
-                    "@entity.curves",
-                    "@config.curves"
-                  ],
-                  [
-                    "set",
-                    "@entity.points",
-                    "@config.points"
-                  ],
-                  [
-                    "set",
-                    "@entity.shapes",
-                    "@config.shapes"
+                    "let",
+                    [
+                      [
+                        "n",
+                        [
+                          "array/len",
+                          "@config.outcomes"
+                        ]
+                      ],
+                      [
+                        "sumP",
+                        [
+                          "array/sum",
+                          "@config.outcomes",
+                          "probability"
+                        ]
+                      ],
+                      [
+                        "expectedProbs",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@n"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "/",
+                              [
+                                "object/get",
+                                [
+                                  "array/nth",
+                                  "@config.outcomes",
+                                  "@i"
+                                ],
+                                "probability"
+                              ],
+                              "@sumP"
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "zeroCounts",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@n"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            0.0
+                          ]
+                        ]
+                      ],
+                      [
+                        "plotW",
+                        [
+                          "-",
+                          "@config.width",
+                          48.0
+                        ]
+                      ],
+                      [
+                        "plotH",
+                        [
+                          "-",
+                          "@config.height",
+                          48.0
+                        ]
+                      ],
+                      [
+                        "observedProps",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@n"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            0.0
+                          ]
+                        ]
+                      ],
+                      [
+                        "maxExpected",
+                        [
+                          "math/max",
+                          [
+                            "array/max",
+                            "@expectedProbs"
+                          ],
+                          0.0001
+                        ]
+                      ],
+                      [
+                        "maxObserved",
+                        [
+                          "math/max",
+                          [
+                            "array/max",
+                            "@observedProps"
+                          ],
+                          0.0001
+                        ]
+                      ],
+                      [
+                        "maxVal",
+                        [
+                          "*",
+                          [
+                            "math/max",
+                            "@maxExpected",
+                            "@maxObserved"
+                          ],
+                          1.25
+                        ]
+                      ],
+                      [
+                        "barW",
+                        [
+                          "/",
+                          "@plotW",
+                          "@n"
+                        ]
+                      ],
+                      [
+                        "barShapes",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@n"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "let",
+                              [
+                                [
+                                  "barH",
+                                  [
+                                    "*",
+                                    [
+                                      "/",
+                                      [
+                                        "array/nth",
+                                        "@observedProps",
+                                        "@i"
+                                      ],
+                                      "@maxVal"
+                                    ],
+                                    "@plotH"
+                                  ]
+                                ],
+                                [
+                                  "outcome",
+                                  [
+                                    "array/nth",
+                                    "@config.outcomes",
+                                    "@i"
+                                  ]
+                                ]
+                              ],
+                              {
+                                "fill": [
+                                  "object/get",
+                                  "@outcome",
+                                  "color"
+                                ],
+                                "height": "@barH",
+                                "lineWidth": 0.0,
+                                "opacity": 0.85,
+                                "type": "rect",
+                                "width": [
+                                  "*",
+                                  "@barW",
+                                  0.6
+                                ],
+                                "x": [
+                                  "+",
+                                  24.0,
+                                  [
+                                    "*",
+                                    "@i",
+                                    "@barW"
+                                  ]
+                                ],
+                                "y": [
+                                  "-",
+                                  [
+                                    "+",
+                                    24.0,
+                                    "@plotH"
+                                  ],
+                                  "@barH"
+                                ]
+                              }
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "expectedShapes",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@n"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            {
+                              "fill": "#111827",
+                              "lineWidth": 0.0,
+                              "radius": 5.0,
+                              "type": "circle",
+                              "x": [
+                                "+",
+                                24.0,
+                                [
+                                  "*",
+                                  [
+                                    "+",
+                                    "@i",
+                                    0.5
+                                  ],
+                                  "@barW"
+                                ]
+                              ],
+                              "y": [
+                                "-",
+                                [
+                                  "+",
+                                  24.0,
+                                  "@plotH"
+                                ],
+                                [
+                                  "*",
+                                  [
+                                    "/",
+                                    [
+                                      "array/nth",
+                                      "@expectedProbs",
+                                      "@i"
+                                    ],
+                                    "@maxVal"
+                                  ],
+                                  "@plotH"
+                                ]
+                              ]
+                            }
+                          ]
+                        ]
+                      ],
+                      [
+                        "labelShapes",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@n"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "let",
+                              [
+                                [
+                                  "outcome",
+                                  [
+                                    "array/nth",
+                                    "@config.outcomes",
+                                    "@i"
+                                  ]
+                                ]
+                              ],
+                              {
+                                "align": "center",
+                                "color": "#111827",
+                                "fontSize": 11.0,
+                                "text": [
+                                  "str/concat",
+                                  [
+                                    "object/get",
+                                    "@outcome",
+                                    "label"
+                                  ],
+                                  ": ",
+                                  [
+                                    "str/concat",
+                                    "",
+                                    [
+                                      "array/nth",
+                                      "@zeroCounts",
+                                      "@i"
+                                    ]
+                                  ]
+                                ],
+                                "type": "text",
+                                "x": [
+                                  "+",
+                                  24.0,
+                                  [
+                                    "*",
+                                    [
+                                      "+",
+                                      "@i",
+                                      0.5
+                                    ],
+                                    "@barW"
+                                  ]
+                                ],
+                                "y": [
+                                  "+",
+                                  [
+                                    "+",
+                                    24.0,
+                                    "@plotH"
+                                  ],
+                                  16.0
+                                ]
+                              }
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "shapes",
+                        [
+                          "array/concat",
+                          [
+                            {
+                              "color": "#cbd5e1",
+                              "lineWidth": 1.0,
+                              "type": "line",
+                              "x1": 24.0,
+                              "x2": [
+                                "+",
+                                24.0,
+                                "@plotW"
+                              ],
+                              "y1": [
+                                "+",
+                                24.0,
+                                "@plotH"
+                              ],
+                              "y2": [
+                                "+",
+                                24.0,
+                                "@plotH"
+                              ]
+                            }
+                          ],
+                          [
+                            "array/concat",
+                            "@barShapes",
+                            [
+                              "array/concat",
+                              "@expectedShapes",
+                              "@labelShapes"
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.active",
+                        true
+                      ],
+                      [
+                        "set",
+                        "@entity.title",
+                        "@config.title"
+                      ],
+                      [
+                        "set",
+                        "@entity.counts",
+                        "@zeroCounts"
+                      ],
+                      [
+                        "set",
+                        "@entity.total",
+                        0.0
+                      ],
+                      [
+                        "set",
+                        "@entity.running",
+                        "@config.running"
+                      ],
+                      [
+                        "set",
+                        "@entity.narration",
+                        "Press Roll to sample an outcome, or Run to auto-sample."
+                      ],
+                      [
+                        "set",
+                        "@entity.shapes",
+                        "@shapes"
+                      ]
+                    ]
                   ],
                   [
                     "render-ui",
@@ -927,22 +1516,68 @@
                               "variant": "h4"
                             },
                             {
+                              "children": [
+                                {
+                                  "action": "TRIAL",
+                                  "label": "Roll",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "RUN",
+                                  "label": "Run",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Total trials: ",
+                                [
+                                  "str/concat",
+                                  "",
+                                  "@entity.total"
+                                ]
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
                               "animate": "@config.animate",
-                              "curves": "@entity.curves",
+                              "curves": [],
                               "gridStep": "@config.gridStep",
                               "height": "@config.height",
                               "interactive": "@config.interactive",
-                              "points": "@entity.points",
+                              "points": [],
                               "shapes": "@entity.shapes",
                               "showAxes": "@config.showAxes",
                               "showGrid": "@config.showGrid",
                               "type": "math-canvas",
                               "vectors": [],
                               "width": "@config.width",
-                              "xMax": "@config.xMax",
-                              "xMin": "@config.xMin",
-                              "yMax": "@config.yMax",
-                              "yMin": "@config.yMin"
+                              "xMax": [
+                                "array/len",
+                                "@config.outcomes"
+                              ],
+                              "xMin": 0.0,
+                              "yMax": 1.0,
+                              "yMin": 0.0
+                            },
+                            {
+                              "content": "@entity.narration",
+                              "type": "typography",
+                              "variant": "body"
                             }
                           ],
                           "direction": "vertical",
@@ -952,6 +1587,15 @@
                       ],
                       "padding": "md",
                       "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "TRIALS_UPDATED",
+                    {
+                      "counts": "@entity.counts",
+                      "narration": "@entity.narration",
+                      "total": "@entity.total"
                     }
                   ]
                 ],
@@ -964,9 +1608,2008 @@
                   "@config.matchMode"
                 ],
                 "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "let",
+                    [
+                      [
+                        "n",
+                        [
+                          "array/len",
+                          "@config.outcomes"
+                        ]
+                      ],
+                      [
+                        "sumP",
+                        [
+                          "array/sum",
+                          "@config.outcomes",
+                          "probability"
+                        ]
+                      ],
+                      [
+                        "expectedProbs",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@n"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "/",
+                              [
+                                "object/get",
+                                [
+                                  "array/nth",
+                                  "@config.outcomes",
+                                  "@i"
+                                ],
+                                "probability"
+                              ],
+                              "@sumP"
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "cumProbs",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@n"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "array/sum",
+                              [
+                                "array/slice",
+                                "@expectedProbs",
+                                0.0,
+                                [
+                                  "+",
+                                  "@i",
+                                  1.0
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "r",
+                        [
+                          "math/random"
+                        ]
+                      ],
+                      [
+                        "rolledIdxRaw",
+                        [
+                          "array/len",
+                          [
+                            "array/filter",
+                            "@cumProbs",
+                            [
+                              "fn",
+                              "c",
+                              [
+                                "<=",
+                                "@c",
+                                "@r"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "rolledIdx",
+                        [
+                          "math/min",
+                          "@rolledIdxRaw",
+                          [
+                            "-",
+                            "@n",
+                            1.0
+                          ]
+                        ]
+                      ],
+                      [
+                        "rolledOutcome",
+                        [
+                          "array/nth",
+                          "@config.outcomes",
+                          "@rolledIdx"
+                        ]
+                      ],
+                      [
+                        "newCounts",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@n"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "if",
+                              [
+                                "==",
+                                "@i",
+                                "@rolledIdx"
+                              ],
+                              [
+                                "+",
+                                [
+                                  "array/nth",
+                                  "@entity.counts",
+                                  "@i"
+                                ],
+                                1.0
+                              ],
+                              [
+                                "array/nth",
+                                "@entity.counts",
+                                "@i"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "newTotal",
+                        [
+                          "+",
+                          "@entity.total",
+                          1.0
+                        ]
+                      ],
+                      [
+                        "plotW",
+                        [
+                          "-",
+                          "@config.width",
+                          48.0
+                        ]
+                      ],
+                      [
+                        "plotH",
+                        [
+                          "-",
+                          "@config.height",
+                          48.0
+                        ]
+                      ],
+                      [
+                        "observedProps",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@n"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "/",
+                              [
+                                "array/nth",
+                                "@newCounts",
+                                "@i"
+                              ],
+                              "@newTotal"
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "maxExpected",
+                        [
+                          "math/max",
+                          [
+                            "array/max",
+                            "@expectedProbs"
+                          ],
+                          0.0001
+                        ]
+                      ],
+                      [
+                        "maxObserved",
+                        [
+                          "math/max",
+                          [
+                            "array/max",
+                            "@observedProps"
+                          ],
+                          0.0001
+                        ]
+                      ],
+                      [
+                        "maxVal",
+                        [
+                          "*",
+                          [
+                            "math/max",
+                            "@maxExpected",
+                            "@maxObserved"
+                          ],
+                          1.25
+                        ]
+                      ],
+                      [
+                        "barW",
+                        [
+                          "/",
+                          "@plotW",
+                          "@n"
+                        ]
+                      ],
+                      [
+                        "barShapes",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@n"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "let",
+                              [
+                                [
+                                  "barH",
+                                  [
+                                    "*",
+                                    [
+                                      "/",
+                                      [
+                                        "array/nth",
+                                        "@observedProps",
+                                        "@i"
+                                      ],
+                                      "@maxVal"
+                                    ],
+                                    "@plotH"
+                                  ]
+                                ],
+                                [
+                                  "outcome",
+                                  [
+                                    "array/nth",
+                                    "@config.outcomes",
+                                    "@i"
+                                  ]
+                                ]
+                              ],
+                              {
+                                "fill": [
+                                  "object/get",
+                                  "@outcome",
+                                  "color"
+                                ],
+                                "height": "@barH",
+                                "lineWidth": 0.0,
+                                "opacity": 0.85,
+                                "type": "rect",
+                                "width": [
+                                  "*",
+                                  "@barW",
+                                  0.6
+                                ],
+                                "x": [
+                                  "+",
+                                  24.0,
+                                  [
+                                    "*",
+                                    "@i",
+                                    "@barW"
+                                  ]
+                                ],
+                                "y": [
+                                  "-",
+                                  [
+                                    "+",
+                                    24.0,
+                                    "@plotH"
+                                  ],
+                                  "@barH"
+                                ]
+                              }
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "expectedShapes",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@n"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            {
+                              "fill": "#111827",
+                              "lineWidth": 0.0,
+                              "radius": 5.0,
+                              "type": "circle",
+                              "x": [
+                                "+",
+                                24.0,
+                                [
+                                  "*",
+                                  [
+                                    "+",
+                                    "@i",
+                                    0.5
+                                  ],
+                                  "@barW"
+                                ]
+                              ],
+                              "y": [
+                                "-",
+                                [
+                                  "+",
+                                  24.0,
+                                  "@plotH"
+                                ],
+                                [
+                                  "*",
+                                  [
+                                    "/",
+                                    [
+                                      "array/nth",
+                                      "@expectedProbs",
+                                      "@i"
+                                    ],
+                                    "@maxVal"
+                                  ],
+                                  "@plotH"
+                                ]
+                              ]
+                            }
+                          ]
+                        ]
+                      ],
+                      [
+                        "labelShapes",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@n"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "let",
+                              [
+                                [
+                                  "outcome",
+                                  [
+                                    "array/nth",
+                                    "@config.outcomes",
+                                    "@i"
+                                  ]
+                                ]
+                              ],
+                              {
+                                "align": "center",
+                                "color": "#111827",
+                                "fontSize": 11.0,
+                                "text": [
+                                  "str/concat",
+                                  [
+                                    "object/get",
+                                    "@outcome",
+                                    "label"
+                                  ],
+                                  ": ",
+                                  [
+                                    "str/concat",
+                                    "",
+                                    [
+                                      "array/nth",
+                                      "@newCounts",
+                                      "@i"
+                                    ]
+                                  ]
+                                ],
+                                "type": "text",
+                                "x": [
+                                  "+",
+                                  24.0,
+                                  [
+                                    "*",
+                                    [
+                                      "+",
+                                      "@i",
+                                      0.5
+                                    ],
+                                    "@barW"
+                                  ]
+                                ],
+                                "y": [
+                                  "+",
+                                  [
+                                    "+",
+                                    24.0,
+                                    "@plotH"
+                                  ],
+                                  16.0
+                                ]
+                              }
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "shapes",
+                        [
+                          "array/concat",
+                          [
+                            {
+                              "color": "#cbd5e1",
+                              "lineWidth": 1.0,
+                              "type": "line",
+                              "x1": 24.0,
+                              "x2": [
+                                "+",
+                                24.0,
+                                "@plotW"
+                              ],
+                              "y1": [
+                                "+",
+                                24.0,
+                                "@plotH"
+                              ],
+                              "y2": [
+                                "+",
+                                24.0,
+                                "@plotH"
+                              ]
+                            }
+                          ],
+                          [
+                            "array/concat",
+                            "@barShapes",
+                            [
+                              "array/concat",
+                              "@expectedShapes",
+                              "@labelShapes"
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "observedPct",
+                        [
+                          "math/round",
+                          [
+                            "*",
+                            [
+                              "array/nth",
+                              "@observedProps",
+                              "@rolledIdx"
+                            ],
+                            100.0
+                          ],
+                          1.0
+                        ]
+                      ],
+                      [
+                        "expectedPct",
+                        [
+                          "math/round",
+                          [
+                            "*",
+                            [
+                              "array/nth",
+                              "@expectedProbs",
+                              "@rolledIdx"
+                            ],
+                            100.0
+                          ],
+                          1.0
+                        ]
+                      ],
+                      [
+                        "narration",
+                        [
+                          "str/concat",
+                          "trial ",
+                          [
+                            "str/concat",
+                            "",
+                            "@newTotal"
+                          ],
+                          " — rolled ",
+                          [
+                            "object/get",
+                            "@rolledOutcome",
+                            "label"
+                          ],
+                          "; observed ",
+                          [
+                            "str/concat",
+                            "",
+                            "@observedPct"
+                          ],
+                          "% vs expected ",
+                          [
+                            "str/concat",
+                            "",
+                            "@expectedPct"
+                          ],
+                          "%"
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.counts",
+                        "@newCounts"
+                      ],
+                      [
+                        "set",
+                        "@entity.total",
+                        "@newTotal"
+                      ],
+                      [
+                        "set",
+                        "@entity.narration",
+                        "@narration"
+                      ],
+                      [
+                        "set",
+                        "@entity.shapes",
+                        "@shapes"
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "TRIAL",
+                                  "label": "Roll",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "RUN",
+                                  "label": "Run",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Total trials: ",
+                                [
+                                  "str/concat",
+                                  "",
+                                  "@entity.total"
+                                ]
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "animate": "@config.animate",
+                              "curves": [],
+                              "gridStep": "@config.gridStep",
+                              "height": "@config.height",
+                              "interactive": "@config.interactive",
+                              "points": [],
+                              "shapes": "@entity.shapes",
+                              "showAxes": "@config.showAxes",
+                              "showGrid": "@config.showGrid",
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": [
+                                "array/len",
+                                "@config.outcomes"
+                              ],
+                              "xMin": 0.0,
+                              "yMax": 1.0,
+                              "yMin": 0.0
+                            },
+                            {
+                              "content": "@entity.narration",
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "TRIALS_UPDATED",
+                    {
+                      "counts": "@entity.counts",
+                      "narration": "@entity.narration",
+                      "total": "@entity.total"
+                    }
+                  ]
+                ],
+                "event": "TRIAL",
+                "eventId": "evt_01M04ANCX9QR0GCN5DNDBH3KKY",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.running",
+                    [
+                      "not",
+                      "@entity.running"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.narration",
+                    [
+                      "if",
+                      "@entity.running",
+                      "Auto-sampling — tick draws a new outcome.",
+                      "Paused — sample manually with Roll."
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "TRIAL",
+                                  "label": "Roll",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "RUN",
+                                  "label": "Run",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Total trials: ",
+                                [
+                                  "str/concat",
+                                  "",
+                                  "@entity.total"
+                                ]
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "animate": "@config.animate",
+                              "curves": [],
+                              "gridStep": "@config.gridStep",
+                              "height": "@config.height",
+                              "interactive": "@config.interactive",
+                              "points": [],
+                              "shapes": "@entity.shapes",
+                              "showAxes": "@config.showAxes",
+                              "showGrid": "@config.showGrid",
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": [
+                                "array/len",
+                                "@config.outcomes"
+                              ],
+                              "xMin": 0.0,
+                              "yMax": 1.0,
+                              "yMin": 0.0
+                            },
+                            {
+                              "content": "@entity.narration",
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "TRIALS_UPDATED",
+                    {
+                      "counts": "@entity.counts",
+                      "narration": "@entity.narration",
+                      "total": "@entity.total"
+                    }
+                  ]
+                ],
+                "event": "RUN",
+                "eventId": "evt_01M04ANCX998T5GH1SAKPBHNFP",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "let",
+                    [
+                      [
+                        "n",
+                        [
+                          "array/len",
+                          "@config.outcomes"
+                        ]
+                      ],
+                      [
+                        "sumP",
+                        [
+                          "array/sum",
+                          "@config.outcomes",
+                          "probability"
+                        ]
+                      ],
+                      [
+                        "expectedProbs",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@n"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "/",
+                              [
+                                "object/get",
+                                [
+                                  "array/nth",
+                                  "@config.outcomes",
+                                  "@i"
+                                ],
+                                "probability"
+                              ],
+                              "@sumP"
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "zeroCounts",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@n"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            0.0
+                          ]
+                        ]
+                      ],
+                      [
+                        "plotW",
+                        [
+                          "-",
+                          "@config.width",
+                          48.0
+                        ]
+                      ],
+                      [
+                        "plotH",
+                        [
+                          "-",
+                          "@config.height",
+                          48.0
+                        ]
+                      ],
+                      [
+                        "observedProps",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@n"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            0.0
+                          ]
+                        ]
+                      ],
+                      [
+                        "maxExpected",
+                        [
+                          "math/max",
+                          [
+                            "array/max",
+                            "@expectedProbs"
+                          ],
+                          0.0001
+                        ]
+                      ],
+                      [
+                        "maxObserved",
+                        [
+                          "math/max",
+                          [
+                            "array/max",
+                            "@observedProps"
+                          ],
+                          0.0001
+                        ]
+                      ],
+                      [
+                        "maxVal",
+                        [
+                          "*",
+                          [
+                            "math/max",
+                            "@maxExpected",
+                            "@maxObserved"
+                          ],
+                          1.25
+                        ]
+                      ],
+                      [
+                        "barW",
+                        [
+                          "/",
+                          "@plotW",
+                          "@n"
+                        ]
+                      ],
+                      [
+                        "barShapes",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@n"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "let",
+                              [
+                                [
+                                  "barH",
+                                  [
+                                    "*",
+                                    [
+                                      "/",
+                                      [
+                                        "array/nth",
+                                        "@observedProps",
+                                        "@i"
+                                      ],
+                                      "@maxVal"
+                                    ],
+                                    "@plotH"
+                                  ]
+                                ],
+                                [
+                                  "outcome",
+                                  [
+                                    "array/nth",
+                                    "@config.outcomes",
+                                    "@i"
+                                  ]
+                                ]
+                              ],
+                              {
+                                "fill": [
+                                  "object/get",
+                                  "@outcome",
+                                  "color"
+                                ],
+                                "height": "@barH",
+                                "lineWidth": 0.0,
+                                "opacity": 0.85,
+                                "type": "rect",
+                                "width": [
+                                  "*",
+                                  "@barW",
+                                  0.6
+                                ],
+                                "x": [
+                                  "+",
+                                  24.0,
+                                  [
+                                    "*",
+                                    "@i",
+                                    "@barW"
+                                  ]
+                                ],
+                                "y": [
+                                  "-",
+                                  [
+                                    "+",
+                                    24.0,
+                                    "@plotH"
+                                  ],
+                                  "@barH"
+                                ]
+                              }
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "expectedShapes",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@n"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            {
+                              "fill": "#111827",
+                              "lineWidth": 0.0,
+                              "radius": 5.0,
+                              "type": "circle",
+                              "x": [
+                                "+",
+                                24.0,
+                                [
+                                  "*",
+                                  [
+                                    "+",
+                                    "@i",
+                                    0.5
+                                  ],
+                                  "@barW"
+                                ]
+                              ],
+                              "y": [
+                                "-",
+                                [
+                                  "+",
+                                  24.0,
+                                  "@plotH"
+                                ],
+                                [
+                                  "*",
+                                  [
+                                    "/",
+                                    [
+                                      "array/nth",
+                                      "@expectedProbs",
+                                      "@i"
+                                    ],
+                                    "@maxVal"
+                                  ],
+                                  "@plotH"
+                                ]
+                              ]
+                            }
+                          ]
+                        ]
+                      ],
+                      [
+                        "labelShapes",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@n"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "let",
+                              [
+                                [
+                                  "outcome",
+                                  [
+                                    "array/nth",
+                                    "@config.outcomes",
+                                    "@i"
+                                  ]
+                                ]
+                              ],
+                              {
+                                "align": "center",
+                                "color": "#111827",
+                                "fontSize": 11.0,
+                                "text": [
+                                  "str/concat",
+                                  [
+                                    "object/get",
+                                    "@outcome",
+                                    "label"
+                                  ],
+                                  ": ",
+                                  [
+                                    "str/concat",
+                                    "",
+                                    [
+                                      "array/nth",
+                                      "@zeroCounts",
+                                      "@i"
+                                    ]
+                                  ]
+                                ],
+                                "type": "text",
+                                "x": [
+                                  "+",
+                                  24.0,
+                                  [
+                                    "*",
+                                    [
+                                      "+",
+                                      "@i",
+                                      0.5
+                                    ],
+                                    "@barW"
+                                  ]
+                                ],
+                                "y": [
+                                  "+",
+                                  [
+                                    "+",
+                                    24.0,
+                                    "@plotH"
+                                  ],
+                                  16.0
+                                ]
+                              }
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "shapes",
+                        [
+                          "array/concat",
+                          [
+                            {
+                              "color": "#cbd5e1",
+                              "lineWidth": 1.0,
+                              "type": "line",
+                              "x1": 24.0,
+                              "x2": [
+                                "+",
+                                24.0,
+                                "@plotW"
+                              ],
+                              "y1": [
+                                "+",
+                                24.0,
+                                "@plotH"
+                              ],
+                              "y2": [
+                                "+",
+                                24.0,
+                                "@plotH"
+                              ]
+                            }
+                          ],
+                          [
+                            "array/concat",
+                            "@barShapes",
+                            [
+                              "array/concat",
+                              "@expectedShapes",
+                              "@labelShapes"
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.counts",
+                        "@zeroCounts"
+                      ],
+                      [
+                        "set",
+                        "@entity.total",
+                        0.0
+                      ],
+                      [
+                        "set",
+                        "@entity.running",
+                        false
+                      ],
+                      [
+                        "set",
+                        "@entity.narration",
+                        "Press Roll to sample an outcome, or Run to auto-sample."
+                      ],
+                      [
+                        "set",
+                        "@entity.shapes",
+                        "@shapes"
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "TRIAL",
+                                  "label": "Roll",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "RUN",
+                                  "label": "Run",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Total trials: ",
+                                [
+                                  "str/concat",
+                                  "",
+                                  "@entity.total"
+                                ]
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "animate": "@config.animate",
+                              "curves": [],
+                              "gridStep": "@config.gridStep",
+                              "height": "@config.height",
+                              "interactive": "@config.interactive",
+                              "points": [],
+                              "shapes": "@entity.shapes",
+                              "showAxes": "@config.showAxes",
+                              "showGrid": "@config.showGrid",
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": [
+                                "array/len",
+                                "@config.outcomes"
+                              ],
+                              "xMin": 0.0,
+                              "yMax": 1.0,
+                              "yMin": 0.0
+                            },
+                            {
+                              "content": "@entity.narration",
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "TRIALS_UPDATED",
+                    {
+                      "counts": "@entity.counts",
+                      "narration": "@entity.narration",
+                      "total": "@entity.total"
+                    }
+                  ]
+                ],
+                "event": "RESET",
+                "eventId": "evt_01M04ANCX9WQSZ8PX0END3Z3DS",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
               }
             ]
-          }
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "let",
+                  [
+                    [
+                      "n",
+                      [
+                        "array/len",
+                        "@config.outcomes"
+                      ]
+                    ],
+                    [
+                      "sumP",
+                      [
+                        "array/sum",
+                        "@config.outcomes",
+                        "probability"
+                      ]
+                    ],
+                    [
+                      "expectedProbs",
+                      [
+                        "array/map",
+                        [
+                          "array/range",
+                          "@n"
+                        ],
+                        [
+                          "fn",
+                          "i",
+                          [
+                            "/",
+                            [
+                              "object/get",
+                              [
+                                "array/nth",
+                                "@config.outcomes",
+                                "@i"
+                              ],
+                              "probability"
+                            ],
+                            "@sumP"
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "cumProbs",
+                      [
+                        "array/map",
+                        [
+                          "array/range",
+                          "@n"
+                        ],
+                        [
+                          "fn",
+                          "i",
+                          [
+                            "array/sum",
+                            [
+                              "array/slice",
+                              "@expectedProbs",
+                              0.0,
+                              [
+                                "+",
+                                "@i",
+                                1.0
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "r",
+                      [
+                        "math/random"
+                      ]
+                    ],
+                    [
+                      "rolledIdxRaw",
+                      [
+                        "array/len",
+                        [
+                          "array/filter",
+                          "@cumProbs",
+                          [
+                            "fn",
+                            "c",
+                            [
+                              "<=",
+                              "@c",
+                              "@r"
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "rolledIdx",
+                      [
+                        "math/min",
+                        "@rolledIdxRaw",
+                        [
+                          "-",
+                          "@n",
+                          1.0
+                        ]
+                      ]
+                    ],
+                    [
+                      "rolledOutcome",
+                      [
+                        "array/nth",
+                        "@config.outcomes",
+                        "@rolledIdx"
+                      ]
+                    ],
+                    [
+                      "newCounts",
+                      [
+                        "array/map",
+                        [
+                          "array/range",
+                          "@n"
+                        ],
+                        [
+                          "fn",
+                          "i",
+                          [
+                            "if",
+                            [
+                              "==",
+                              "@i",
+                              "@rolledIdx"
+                            ],
+                            [
+                              "+",
+                              [
+                                "array/nth",
+                                "@entity.counts",
+                                "@i"
+                              ],
+                              1.0
+                            ],
+                            [
+                              "array/nth",
+                              "@entity.counts",
+                              "@i"
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "newTotal",
+                      [
+                        "+",
+                        "@entity.total",
+                        1.0
+                      ]
+                    ],
+                    [
+                      "plotW",
+                      [
+                        "-",
+                        "@config.width",
+                        48.0
+                      ]
+                    ],
+                    [
+                      "plotH",
+                      [
+                        "-",
+                        "@config.height",
+                        48.0
+                      ]
+                    ],
+                    [
+                      "observedProps",
+                      [
+                        "array/map",
+                        [
+                          "array/range",
+                          "@n"
+                        ],
+                        [
+                          "fn",
+                          "i",
+                          [
+                            "/",
+                            [
+                              "array/nth",
+                              "@newCounts",
+                              "@i"
+                            ],
+                            "@newTotal"
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "maxExpected",
+                      [
+                        "math/max",
+                        [
+                          "array/max",
+                          "@expectedProbs"
+                        ],
+                        0.0001
+                      ]
+                    ],
+                    [
+                      "maxObserved",
+                      [
+                        "math/max",
+                        [
+                          "array/max",
+                          "@observedProps"
+                        ],
+                        0.0001
+                      ]
+                    ],
+                    [
+                      "maxVal",
+                      [
+                        "*",
+                        [
+                          "math/max",
+                          "@maxExpected",
+                          "@maxObserved"
+                        ],
+                        1.25
+                      ]
+                    ],
+                    [
+                      "barW",
+                      [
+                        "/",
+                        "@plotW",
+                        "@n"
+                      ]
+                    ],
+                    [
+                      "barShapes",
+                      [
+                        "array/map",
+                        [
+                          "array/range",
+                          "@n"
+                        ],
+                        [
+                          "fn",
+                          "i",
+                          [
+                            "let",
+                            [
+                              [
+                                "barH",
+                                [
+                                  "*",
+                                  [
+                                    "/",
+                                    [
+                                      "array/nth",
+                                      "@observedProps",
+                                      "@i"
+                                    ],
+                                    "@maxVal"
+                                  ],
+                                  "@plotH"
+                                ]
+                              ],
+                              [
+                                "outcome",
+                                [
+                                  "array/nth",
+                                  "@config.outcomes",
+                                  "@i"
+                                ]
+                              ]
+                            ],
+                            {
+                              "fill": [
+                                "object/get",
+                                "@outcome",
+                                "color"
+                              ],
+                              "height": "@barH",
+                              "lineWidth": 0.0,
+                              "opacity": 0.85,
+                              "type": "rect",
+                              "width": [
+                                "*",
+                                "@barW",
+                                0.6
+                              ],
+                              "x": [
+                                "+",
+                                24.0,
+                                [
+                                  "*",
+                                  "@i",
+                                  "@barW"
+                                ]
+                              ],
+                              "y": [
+                                "-",
+                                [
+                                  "+",
+                                  24.0,
+                                  "@plotH"
+                                ],
+                                "@barH"
+                              ]
+                            }
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "expectedShapes",
+                      [
+                        "array/map",
+                        [
+                          "array/range",
+                          "@n"
+                        ],
+                        [
+                          "fn",
+                          "i",
+                          {
+                            "fill": "#111827",
+                            "lineWidth": 0.0,
+                            "radius": 5.0,
+                            "type": "circle",
+                            "x": [
+                              "+",
+                              24.0,
+                              [
+                                "*",
+                                [
+                                  "+",
+                                  "@i",
+                                  0.5
+                                ],
+                                "@barW"
+                              ]
+                            ],
+                            "y": [
+                              "-",
+                              [
+                                "+",
+                                24.0,
+                                "@plotH"
+                              ],
+                              [
+                                "*",
+                                [
+                                  "/",
+                                  [
+                                    "array/nth",
+                                    "@expectedProbs",
+                                    "@i"
+                                  ],
+                                  "@maxVal"
+                                ],
+                                "@plotH"
+                              ]
+                            ]
+                          }
+                        ]
+                      ]
+                    ],
+                    [
+                      "labelShapes",
+                      [
+                        "array/map",
+                        [
+                          "array/range",
+                          "@n"
+                        ],
+                        [
+                          "fn",
+                          "i",
+                          [
+                            "let",
+                            [
+                              [
+                                "outcome",
+                                [
+                                  "array/nth",
+                                  "@config.outcomes",
+                                  "@i"
+                                ]
+                              ]
+                            ],
+                            {
+                              "align": "center",
+                              "color": "#111827",
+                              "fontSize": 11.0,
+                              "text": [
+                                "str/concat",
+                                [
+                                  "object/get",
+                                  "@outcome",
+                                  "label"
+                                ],
+                                ": ",
+                                [
+                                  "str/concat",
+                                  "",
+                                  [
+                                    "array/nth",
+                                    "@newCounts",
+                                    "@i"
+                                  ]
+                                ]
+                              ],
+                              "type": "text",
+                              "x": [
+                                "+",
+                                24.0,
+                                [
+                                  "*",
+                                  [
+                                    "+",
+                                    "@i",
+                                    0.5
+                                  ],
+                                  "@barW"
+                                ]
+                              ],
+                              "y": [
+                                "+",
+                                [
+                                  "+",
+                                  24.0,
+                                  "@plotH"
+                                ],
+                                16.0
+                              ]
+                            }
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "shapes",
+                      [
+                        "array/concat",
+                        [
+                          {
+                            "color": "#cbd5e1",
+                            "lineWidth": 1.0,
+                            "type": "line",
+                            "x1": 24.0,
+                            "x2": [
+                              "+",
+                              24.0,
+                              "@plotW"
+                            ],
+                            "y1": [
+                              "+",
+                              24.0,
+                              "@plotH"
+                            ],
+                            "y2": [
+                              "+",
+                              24.0,
+                              "@plotH"
+                            ]
+                          }
+                        ],
+                        [
+                          "array/concat",
+                          "@barShapes",
+                          [
+                            "array/concat",
+                            "@expectedShapes",
+                            "@labelShapes"
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "observedPct",
+                      [
+                        "math/round",
+                        [
+                          "*",
+                          [
+                            "array/nth",
+                            "@observedProps",
+                            "@rolledIdx"
+                          ],
+                          100.0
+                        ],
+                        1.0
+                      ]
+                    ],
+                    [
+                      "expectedPct",
+                      [
+                        "math/round",
+                        [
+                          "*",
+                          [
+                            "array/nth",
+                            "@expectedProbs",
+                            "@rolledIdx"
+                          ],
+                          100.0
+                        ],
+                        1.0
+                      ]
+                    ],
+                    [
+                      "narration",
+                      [
+                        "str/concat",
+                        "trial ",
+                        [
+                          "str/concat",
+                          "",
+                          "@newTotal"
+                        ],
+                        " — rolled ",
+                        [
+                          "object/get",
+                          "@rolledOutcome",
+                          "label"
+                        ],
+                        "; observed ",
+                        [
+                          "str/concat",
+                          "",
+                          "@observedPct"
+                        ],
+                        "% vs expected ",
+                        [
+                          "str/concat",
+                          "",
+                          "@expectedPct"
+                        ],
+                        "%"
+                      ]
+                    ]
+                  ],
+                  [
+                    "do",
+                    [
+                      "set",
+                      "@entity.counts",
+                      "@newCounts"
+                    ],
+                    [
+                      "set",
+                      "@entity.total",
+                      "@newTotal"
+                    ],
+                    [
+                      "set",
+                      "@entity.narration",
+                      "@narration"
+                    ],
+                    [
+                      "set",
+                      "@entity.shapes",
+                      "@shapes"
+                    ]
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "children": [
+                      {
+                        "children": [
+                          {
+                            "content": "@entity.title",
+                            "type": "typography",
+                            "variant": "h4"
+                          },
+                          {
+                            "children": [
+                              {
+                                "action": "TRIAL",
+                                "label": "Roll",
+                                "type": "button",
+                                "variant": "primary"
+                              },
+                              {
+                                "action": "RUN",
+                                "label": "Run",
+                                "type": "button",
+                                "variant": "secondary"
+                              },
+                              {
+                                "action": "RESET",
+                                "label": "Reset",
+                                "type": "button",
+                                "variant": "ghost"
+                              }
+                            ],
+                            "direction": "horizontal",
+                            "gap": "sm",
+                            "type": "stack"
+                          },
+                          {
+                            "content": [
+                              "str/concat",
+                              "Total trials: ",
+                              [
+                                "str/concat",
+                                "",
+                                "@entity.total"
+                              ]
+                            ],
+                            "type": "typography",
+                            "variant": "caption"
+                          },
+                          {
+                            "animate": "@config.animate",
+                            "curves": [],
+                            "gridStep": "@config.gridStep",
+                            "height": "@config.height",
+                            "interactive": "@config.interactive",
+                            "points": [],
+                            "shapes": "@entity.shapes",
+                            "showAxes": "@config.showAxes",
+                            "showGrid": "@config.showGrid",
+                            "type": "math-canvas",
+                            "vectors": [],
+                            "width": "@config.width",
+                            "xMax": [
+                              "array/len",
+                              "@config.outcomes"
+                            ],
+                            "xMin": 0.0,
+                            "yMax": 1.0,
+                            "yMin": 0.0
+                          },
+                          {
+                            "content": "@entity.narration",
+                            "type": "typography",
+                            "variant": "body"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "md",
+                        "type": "stack"
+                      }
+                    ],
+                    "padding": "md",
+                    "type": "box"
+                  }
+                ],
+                [
+                  "emit",
+                  "TRIALS_UPDATED",
+                  {
+                    "counts": "@entity.counts",
+                    "narration": "@entity.narration",
+                    "total": "@entity.total"
+                  }
+                ]
+              ],
+              "guard": [
+                "and",
+                "@entity.active",
+                "@entity.running"
+              ],
+              "interval": 500.0,
+              "name": "trialsTick"
+            }
+          ]
         }
       ]
     }

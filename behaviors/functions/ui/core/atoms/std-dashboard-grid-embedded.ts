@@ -141,7 +141,7 @@ export function stdDashboardGridEmbedded(params: StdDashboardGridEmbeddedParams)
   });
 }
 
-type _StdDashboardGridEmbeddedEntityName = 'DashboardGridEmbeddedData';
+type _StdDashboardGridEmbeddedEntityName = 'DashboardGridEmbeddedData' | 'SimpleGridItem';
 type _StdDashboardGridEmbeddedListenTraitName = 'SimpleGrid1' | 'EmptyTile' | 'DashboardGridEmbedded';
 
 /**

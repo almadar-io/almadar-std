@@ -1,6 +1,11 @@
 app learning-math-lab "1.0.0"
-"Math lab organism — plots functions, vectors, geometry, number lines, slope fields, and areas on a math-canvas."
+"Math lab organism — a declarative plotter for the seven config-driven canvas modes, plus the quadratic, derivative, riemann-sum, and matrix instrument atoms, composed behind a mode router."
 orbital MathLabOrbital {
+  uses Quadratic from "std/behaviors/std-math-quadratic"
+  uses Derivative from "std/behaviors/std-math-derivative"
+  uses Integral from "std/behaviors/std-math-integral"
+  uses Matrix from "std/behaviors/std-math-matrix"
+
   type MathLabCurve = {
     label : string
     color : string
@@ -52,9 +57,23 @@ orbital MathLabOrbital {
     x : number!
     y : number!
   }
+  type MathLabPlotSample = {
+    x : number!
+    y : number!
+  }
+  type MathLabPlotCurve = {
+    label : string
+    color : string
+    samples : [MathLabPlotSample]
+  }
+
+  entity MathLabRouterItem [runtime] {
+    id : string!
+  }
 
   entity MathLabItem [runtime] {
     id : string!
+    active : boolean = false
     title : string
     curves : [MathLabCurve]
     points : [MathLabPoint]
@@ -62,11 +81,105 @@ orbital MathLabOrbital {
     shapes : [MathLabShape]
   }
 
+  entity QuadraticScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    a : number
+    b : number
+    c : number
+    vertexX : number
+    vertexY : number
+    discriminant : number
+    equationLabel : string
+    rootsLabel : string
+    curves : [MathLabPlotCurve]
+    points : [MathLabPoint]
+  }
+
+  entity DerivativeScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    functionPreset : string
+    px : number
+    h : number
+    fx : number
+    slope : number
+    secantSlope : number
+    showSecant : boolean = false
+    curves : [MathLabPlotCurve]
+    points : [MathLabPoint]
+  }
+
+  entity IntegralScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    functionPreset : string
+    method : string
+    rectangles : number
+    lowerBound : number
+    upperBound : number
+    approxArea : number
+    exactArea : number
+    curves : [MathLabPlotCurve]
+  }
+
+  entity MatrixScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    m11 : number
+    m12 : number
+    m21 : number
+    m22 : number
+    t11 : number
+    t12 : number
+    t21 : number
+    t22 : number
+    determinant : number
+    animating : boolean = false
+    animT : number = 0
+    showBasis : boolean = false
+    curves : [MathLabPlotCurve]
+    vectors : [MathLabVector]
+  }
+
+  trait MathLabRouter -> @rebindable MathLabRouterItem [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (emit MODE_SELECTED { mode: @config.mode })
+    }
+
+    emits {
+      MODE_SELECTED -> external {
+        mode : string
+      }
+        @description "Broadcast once on mount — tells each composed instrument trait which mode the lab is in; the instrument whose matchMode equals it renders, the others render null."
+        @tier "domain"
+    }
+
+    config {
+      mode : "coordinate-plane" | "function-plot" | "vector" | "geometry" | "number-line" | "slope-field" | "area-integral" | "quadratic" | "derivative" | "riemann-sum" | "matrix" = coordinate-plane
+        @label "Mode"
+        @description "What kind of math visualization to render."
+        @synonyms "graph, plot, axes, coordinate plane, function, vector, geometry, number line, slope field, riemann sum, area under curve, quadratic, parabola, vertex, discriminant, roots, derivative, tangent, secant, slope, rate of change, integral, rectangles, matrix, linear transformation, basis vectors, determinant"
+        @tier "domain"
+    }
+  }
+
   trait MathLabRender -> @rebindable MathLabItem [interaction, instance] {
     initial: idle
 
     state idle {
       INIT -> idle
+        (set @entity.active false)
+
+      MODE_SELECTED -> idle when (or (== ?mode "coordinate-plane") (or (== ?mode "function-plot") (or (== ?mode "vector") (or (== ?mode "geometry") (or (== ?mode "number-line") (or (== ?mode "slope-field") (== ?mode "area-integral")))))))
+        (set @entity.active true)
         (set @entity.title @config.title)
         (set @entity.curves @config.curves)
         (set @entity.points @config.points)
@@ -105,12 +218,16 @@ orbital MathLabOrbital {
         })
     }
 
-    config {
-      mode : "coordinate-plane" | "function-plot" | "vector" | "geometry" | "number-line" | "slope-field" | "area-integral" = coordinate-plane
-        @label "Mode"
-        @description "What kind of math visualization to render."
-        @synonyms "graph, plot, axes, coordinate plane, function, vector, geometry, number line, slope field, riemann sum, area under curve"
+    listens {
+      MathLabRouter.MODE_SELECTED -> MODE_SELECTED
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; the declarative plotter renders when the mode is one of the seven config-driven canvas modes, otherwise renders null."
         @tier "domain"
+    }
+
+    config {
       title : string = "Math Lab"
         @label "Title"
         @description "Title shown above the canvas."
@@ -183,5 +300,45 @@ orbital MathLabOrbital {
     }
   }
 
-  page "/learning/math-lab" as MathLabPage -> MathLabRender
+  trait QuadraticSim = Quadratic.traits.MathQuadraticSim -> QuadraticScene {
+    listens {
+      MathLabRouter.MODE_SELECTED -> MODE_SELECTED
+    }
+    config {
+      matchMode: "quadratic"
+      title: "Math Lab"
+    }
+  }
+
+  trait DerivativeSim = Derivative.traits.MathDerivativeSim -> DerivativeScene {
+    listens {
+      MathLabRouter.MODE_SELECTED -> MODE_SELECTED
+    }
+    config {
+      matchMode: "derivative"
+      title: "Math Lab"
+    }
+  }
+
+  trait IntegralSim = Integral.traits.MathIntegralSim -> IntegralScene {
+    listens {
+      MathLabRouter.MODE_SELECTED -> MODE_SELECTED
+    }
+    config {
+      matchMode: "riemann-sum"
+      title: "Math Lab"
+    }
+  }
+
+  trait MatrixSim = Matrix.traits.MathMatrixSim -> MatrixScene {
+    listens {
+      MathLabRouter.MODE_SELECTED -> MODE_SELECTED
+    }
+    config {
+      matchMode: "matrix"
+      title: "Math Lab"
+    }
+  }
+
+  page "/learning/math-lab" as MathLabPage -> MathLabRouter, MathLabRender, QuadraticSim, DerivativeSim, IntegralSim, MatrixSim
 }

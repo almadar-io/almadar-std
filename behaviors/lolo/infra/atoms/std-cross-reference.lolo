@@ -1,5 +1,5 @@
 app std-cross-reference "1.0.0"
-"std-cross-reference — join-table primitive for N:M relationships. Listens for LinkRequested/UnlinkRequested/FETCH_LINKS_FOR and manages the junction collection (default CrossRefLink [persistent: cross_ref_links]). Rebind via linkedEntity to your consumer junction. Emits LinkCreated, LinkRemoved, LinksLoaded as external broadcasts for downstream consumers."
+"std-cross-reference — join-table primitive for N:M relationships. Listens for LinkRequested/UnlinkRequested/FETCH_LINKS_FOR and manages the junction collection (default CrossRefLink [persistent: cross_ref_links]). Rebind via linkedEntity={YourJunction} to your consumer junction; if your junction's id fields differ from leftId/rightId, override them with fields{} renames at the call site. A rebind target must supply leftId, rightId, createdAt, filteredLinks. Emits LinkCreated, LinkRemoved, LinksLoaded as external broadcasts for downstream consumers."
 type LinkSpec = { label : string!, href : string!, icon : string }
 type ObjectSpec = { id : string, label : string, value : string }
 orbital CrossReferenceOrbital {
@@ -27,7 +27,7 @@ orbital CrossReferenceOrbital {
     filteredLinks : [LinkSpec] @description "A list of filtered link specifications." @synonyms "links, references, connections" = []
   }
 
-  trait CrossReferenceGate -> CrossRefLink [lifecycle, instance] {
+  trait CrossReferenceGate -> @rebindable CrossRefLink [lifecycle, instance] {
     initial: idle
 
     state idle {
@@ -87,33 +87,7 @@ orbital CrossReferenceOrbital {
       }
     }
 
-    config {
-      leftEntity : entity = ""
-        @label "Left entity"
-        @description "Entity type on the left side of the N:M relationship"
-        @synonyms "left side, source entity, from entity, parent entity"
-        @tier "internal"
-      rightEntity : entity = ""
-        @label "Right entity"
-        @description "Entity type on the right side of the N:M relationship"
-        @synonyms "right side, target entity, to entity, child entity, related entity"
-        @tier "internal"
-      junctionEntity : entity = ""
-        @label "Junction entity"
-        @description "Persistent entity used as the join table"
-        @synonyms "join table, link table, bridge table, junction table, mapping table"
-        @tier "internal"
-      leftIdField : string = ""
-        @label "Left FK field"
-        @description "Junction column holding the left entity's id"
-        @synonyms "left foreign key, left FK, source key, parent key"
-        @tier "internal"
-      rightIdField : string = ""
-        @label "Right FK field"
-        @description "Junction column holding the right entity's id"
-        @synonyms "right foreign key, right FK, target key, child key"
-        @tier "internal"
-    }
+    config {}
   }
 
   page "/cross-reference" as CrossReferencePage -> CrossReferenceGate

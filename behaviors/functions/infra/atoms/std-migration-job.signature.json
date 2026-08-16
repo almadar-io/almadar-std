@@ -51,6 +51,27 @@
             "description": "Staged/committed/failed/skipped counts."
           },
           {
+            "name": "units",
+            "type": "array",
+            "required": false,
+            "description": "Staged ImportUnits ready for review (ref/targetEntity/fields/parentRef), when the host stages the full rows rather than aggregate stats only.",
+            "synonyms": "staged units, preview rows, import rows, staged rows"
+          },
+          {
+            "name": "skipped",
+            "type": "array",
+            "required": false,
+            "description": "Source elements skipped during staging with a reason each, when the host stages the full rows rather than aggregate stats only.",
+            "synonyms": "skipped rows, skipped elements, staging skips"
+          },
+          {
+            "name": "validationErrors",
+            "type": "array",
+            "required": false,
+            "description": "Validation errors surfaced during staging, when the host stages the full rows rather than aggregate stats only.",
+            "synonyms": "staging errors, validation issues, import errors"
+          },
+          {
             "name": "error",
             "type": "string",
             "required": false,
@@ -117,7 +138,7 @@
           {
             "name": "MIGRATION_REVIEW_READY",
             "direction": "emit",
-            "description": "Staging is complete; the preview is ready for the approval gate",
+            "description": "Staging is complete; the preview is ready for the approval gate. units/skipped/validationErrors forward the full staged rows when the host staged them, for a review-before-commit UI; stats-only hosts leave them empty.",
             "synonyms": "preview ready, staging complete, review import",
             "tier": "domain"
           },
@@ -155,7 +176,7 @@
           {
             "name": "MIGRATION_STAGED",
             "direction": "listen",
-            "description": "Host staging finished — units are staged and validated; stats summarize staged/skipped counts for the preview",
+            "description": "Host staging finished — units are staged and validated; stats summarize staged/skipped counts for the preview. units/skipped/validationErrors optionally carry the full staged rows (server ImportPreview shape) so reviewing can render an ImportPreviewTree instead of staying headless.",
             "tier": "internal"
           },
           {
@@ -167,7 +188,7 @@
           {
             "name": "MIGRATION_APPROVED",
             "direction": "listen",
-            "description": "The user approved the preview; units are the staged ImportUnits to commit through the host sink",
+            "description": "The user approved the preview; units are the staged ImportUnits to commit through the host sink. Optional — the ImportPreviewTree's onConfirm fires with no payload, so commit falls back to the units already staged on the entity via MIGRATION_STAGED.",
             "synonyms": "approve import, confirm migration",
             "tier": "domain"
           },
@@ -198,6 +219,15 @@
             "label": "Connection reference",
             "description": "Secret-store / environment KEY holding the source credentials. The reference is stored; the secret itself never enters config, traces, or snapshots — the migration service resolves it at run time. (Typed `string` until the `secret` config-field type lands in the lolo language — tracked gap.)",
             "synonyms": "credential key, connection string reference, secret name",
+            "tier": "internal"
+          },
+          {
+            "key": "reviewSlot",
+            "type": "slot",
+            "default": "modal",
+            "label": "Review slot",
+            "description": "UI slot the staged-import review renders into when the host stages the full units/skipped rows (not stats-only). Defaults to the modal overlay so a host that never places this trait on a page — or that only ever sends {stats} — stays effectively headless; the rendered tree's confirm/cancel wire to the atom's own MIGRATION_APPROVED/MIGRATION_DISCARDED events.",
+            "synonyms": "preview slot, review outlet, staging modal, import review slot",
             "tier": "internal"
           },
           {
@@ -240,10 +270,13 @@
             "documents",
             "error",
             "files",
+            "skipped",
             "source",
             "stats",
             "status",
-            "target"
+            "target",
+            "units",
+            "validationErrors"
           ]
         },
         "effectEntityRefs": [

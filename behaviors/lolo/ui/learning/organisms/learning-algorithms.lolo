@@ -196,6 +196,60 @@ orbital BubblesortOrbital {
 
   page "/algorithms/bubblesort" as BubblesortPage -> BubblesortEngine
 }
+orbital BstOrbital {
+  uses Bst from "std/behaviors/std-algo-bst"
+
+    type GraphNode = {
+      id : string!
+      x : number!
+      y : number!
+      radius : number
+      color : string
+      label : string
+      kind : "cell" | "organelle" | "molecule" | "organism"
+    }
+    type GraphEdge = {
+      from : string!
+      to : string!
+      color : string
+      label : string
+    }
+    type TreeEntry = {
+      id : string!
+      value : number!
+      x : number!
+      path : string
+      levelKey : number
+    }
+
+    entity BstScene [runtime] {
+      id : string!
+      active : boolean = false
+      title : string
+      nodes : [GraphNode]
+      edges : [GraphEdge]
+      entries : [TreeEntry]
+      cursor : number = 0
+      pending : number = 0
+      descending : boolean = false
+      curId : string = ""
+      curVal : number = 0
+      curX : number = 0
+      curOffset : number = 0
+      depth : number = 0
+      maxDepth : number = 0
+      count : number = 0
+      narration : string
+    }
+
+  trait BstEngine = Bst.traits.BstSim -> BstScene {
+    config {
+      traversalKind: "inorder"
+    }
+  }
+
+  page "/algorithms/bst" as BstPage -> BstEngine
+}
 orbital DfsOrbital {
   uses Dfs from "std/behaviors/std-algo-dfs"
 
@@ -286,6 +340,38 @@ orbital DijkstraOrbital {
 
   page "/algorithms/dijkstra" as DijkstraPage -> DijkstraEngine
 }
+orbital DpOrbital {
+  uses Dp from "std/behaviors/std-algo-dp"
+
+    type AlgoCell = {
+      id : number!
+      row : number!
+      col : number!
+      value : number
+      color : string
+      label : string
+    }
+
+    entity DpScene [runtime] {
+      id : string!
+      active : boolean = false
+      title : string
+      cells : [AlgoCell]
+      row : number = 0
+      col : number = 0
+      filled : number = 0
+      done : boolean = false
+      narration : string
+    }
+
+  trait DpEngine = Dp.traits.DpSim -> DpScene {
+    config {
+      problemPreset: "knapsack"
+    }
+  }
+
+  page "/algorithms/dp" as DpPage -> DpEngine
+}
 orbital FloodfillOrbital {
   uses Floodfill from "std/behaviors/std-algo-floodfill"
 
@@ -375,6 +461,35 @@ orbital GridbfsOrbital {
   }
 
   page "/algorithms/gridbfs" as GridbfsPage -> GridbfsEngine
+}
+orbital HashingOrbital {
+  uses Hashing from "std/behaviors/std-algo-hashing"
+
+    type AlgoBar = {
+      value : number!
+      color : string
+      label : string
+    }
+
+    entity HashingScene [runtime] {
+      id : string!
+      active : boolean = false
+      title : string
+      buckets : [AlgoBar]
+      cursor : number = 0
+      inserted : number = 0
+      collisions : number = 0
+      size : number = 0
+      narration : string
+    }
+
+  trait HashingEngine = Hashing.traits.HashingSim -> HashingScene {
+    config {
+      collisionStrategy: "chain"
+    }
+  }
+
+  page "/algorithms/hashing" as HashingPage -> HashingEngine
 }
 orbital HeapsortOrbital {
   uses Heapsort from "std/behaviors/std-algo-heapsort"
@@ -606,6 +721,36 @@ orbital QuicksortOrbital {
   }
 
   page "/algorithms/quicksort" as QuicksortPage -> QuicksortEngine
+}
+orbital RecursionOrbital {
+  uses Recursion from "std/behaviors/std-algo-recursion"
+
+    type AlgoBar = {
+      value : number!
+      color : string
+      label : string
+    }
+
+    entity RecursionScene [runtime] {
+      id : string!
+      active : boolean = false
+      title : string
+      frames : [AlgoBar]
+      depth : number = 0
+      calls : number = 0
+      unwinding : boolean = false
+      done : boolean = false
+      running : boolean = false
+      narration : string
+    }
+
+  trait RecursionEngine = Recursion.traits.RecursionSim -> RecursionScene {
+    config {
+      running: true
+    }
+  }
+
+  page "/algorithms/recursion" as RecursionPage -> RecursionEngine
 }
 orbital SelectionsortOrbital {
   uses Selectionsort from "std/behaviors/std-algo-selectionsort"

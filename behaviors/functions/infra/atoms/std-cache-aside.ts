@@ -609,7 +609,7 @@ export function stdCacheAside(params: StdCacheAsideParams): OrbitalDefinition {
   });
 }
 
-type _StdCacheAsideEntityName = 'CacheEntry';
+type _StdCacheAsideEntityName = 'CacheEntry' | 'IconItem' | 'TypographyItem' | 'ButtonItem' | 'DividerItem' | 'EmptyStateItem' | 'SpinnerItem' | 'StatusDotItem' | 'BadgeItem' | 'AlertItem';
 type _StdCacheAsideListenTraitName = 'FetchButton' | 'InvalidateButton' | 'RefreshButton' | 'RetryButton' | 'CacheEntryCacheManager' | 'InlineIconRender1' | 'InlineTypographyRender2' | 'InlineDividerRender3' | 'InlineEmptyStateRender4' | 'InlineSpinnerRender5' | 'InlineTypographyRender6' | 'InlineIconRender7' | 'InlineTypographyRender8' | 'InlineStatusDotRender9' | 'InlineDividerRender10' | 'InlineIconRender11' | 'InlineTypographyRender12' | 'InlineBadgeRender13' | 'InlineTypographyRender14' | 'InlineIconRender15' | 'InlineTypographyRender16' | 'InlineTypographyRender17' | 'InlineIconRender18' | 'InlineTypographyRender19' | 'InlineStatusDotRender20' | 'InlineDividerRender21' | 'InlineAlertRender22' | 'InlineSpinnerRender23' | 'InlineSpinnerRender24' | 'InlineSpinnerRender25' | 'InlineEmptyStateRender26' | 'InlineSpinnerRender27';
 
 /**

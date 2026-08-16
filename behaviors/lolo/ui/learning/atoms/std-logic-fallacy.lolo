@@ -1,0 +1,367 @@
+app std-logic-fallacy "1.0.0"
+"Fallacy classifier — an argument card is presented, the learner classifies it as valid or as a named fallacy (ad hominem, straw man, false dilemma, affirming the consequent), gets a verdict with explanation, and builds a running score across the corpus. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital LogicFallacyOrbital {
+  type LogicFallacyItem = {
+    text : string!
+    answer : string!
+    hint : string
+    explanation : string
+  }
+  type LogicFallacyLabel = {
+    value : string!
+    label : string!
+    color : string!
+  }
+
+  entity LogicFallacyState [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    itemIndex : number
+    selectedLabel : string
+    revealed : boolean
+    feedback : string
+    correctCount : number
+    attemptedCount : number
+    cardShapes : [json]
+  }
+
+  trait LogicFallacySim -> @rebindable LogicFallacyState [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.itemIndex 0)
+        (set @entity.selectedLabel "")
+        (set @entity.revealed false)
+        (set @entity.feedback "")
+        (set @entity.correctCount 0)
+        (set @entity.attemptedCount 0)
+        (let (
+            (n (array/len @config.fallacySet))
+            (gap 12)
+            (boxW (/ (- @config.width (+ (* 20 2) (* @gap (- @n 1)))) @n))
+            (boxH 70)
+            (y (- (/ @config.height 2) (/ @boxH 2)))
+          )
+          (do
+            (set @entity.cardShapes (array/flatten (array/map (array/range @n) (fn i (let (
+                  (entry (array/nth @config.fallacySet @i))
+                  (x (+ 20 (* @i (+ @boxW @gap))))
+                )
+                [
+                  { type: rect, id: (str/concat "box-" @i), x: @x, y: @y, width: @boxW, height: @boxH, color: (object/get @entry color), fill: (object/get @entry color), opacity: 0.9 },
+                  { type: text, id: (str/concat "box-label-" @i), x: (+ @x (/ @boxW 2)), y: (+ @y (/ @boxH 2) 5), text: (object/get @entry label), fontSize: 13, align: "center", color: "#0f172a" }
+                ])))))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: (object/get (array/nth @config.corpus @entity.itemIndex) text) },
+                { type: typography, variant: caption, content: (if @config.showHint (object/get (array/nth @config.corpus @entity.itemIndex) hint) "") },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.fallacySet (fn f { type: button, action: PICK_LABEL, actionPayload: { label: (object/get @f value) }, label: (object/get @f label), variant: (if (== @entity.selectedLabel (object/get @f value)) "primary" "secondary"), size: sm })) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: REVEAL_ANSWER, label: "Reveal Answer", variant: secondary },
+                    { type: button, action: NEXT_ITEM, label: "Next Argument", variant: primary }
+                  ] },
+                { type: learning-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.cardShapes, interactive: @config.interactive, animate: false },
+                { type: typography, variant: caption, content: @entity.feedback },
+                { type: typography, variant: body, content: (str/concat "Score: " @entity.correctCount "/" @entity.attemptedCount " — pass at " @config.passScore) }
+              ] }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.itemIndex 0)
+        (set @entity.selectedLabel "")
+        (set @entity.revealed false)
+        (set @entity.feedback "")
+        (set @entity.correctCount 0)
+        (set @entity.attemptedCount 0)
+        (let (
+            (n (array/len @config.fallacySet))
+            (gap 12)
+            (boxW (/ (- @config.width (+ (* 20 2) (* @gap (- @n 1)))) @n))
+            (boxH 70)
+            (y (- (/ @config.height 2) (/ @boxH 2)))
+          )
+          (do
+            (set @entity.cardShapes (array/flatten (array/map (array/range @n) (fn i (let (
+                  (entry (array/nth @config.fallacySet @i))
+                  (x (+ 20 (* @i (+ @boxW @gap))))
+                )
+                [
+                  { type: rect, id: (str/concat "box-" @i), x: @x, y: @y, width: @boxW, height: @boxH, color: (object/get @entry color), fill: (object/get @entry color), opacity: 0.9 },
+                  { type: text, id: (str/concat "box-label-" @i), x: (+ @x (/ @boxW 2)), y: (+ @y (/ @boxH 2) 5), text: (object/get @entry label), fontSize: 13, align: "center", color: "#0f172a" }
+                ])))))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: (object/get (array/nth @config.corpus @entity.itemIndex) text) },
+                { type: typography, variant: caption, content: (if @config.showHint (object/get (array/nth @config.corpus @entity.itemIndex) hint) "") },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.fallacySet (fn f { type: button, action: PICK_LABEL, actionPayload: { label: (object/get @f value) }, label: (object/get @f label), variant: (if (== @entity.selectedLabel (object/get @f value)) "primary" "secondary"), size: sm })) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: REVEAL_ANSWER, label: "Reveal Answer", variant: secondary },
+                    { type: button, action: NEXT_ITEM, label: "Next Argument", variant: primary }
+                  ] },
+                { type: learning-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.cardShapes, interactive: @config.interactive, animate: false },
+                { type: typography, variant: caption, content: @entity.feedback },
+                { type: typography, variant: body, content: (str/concat "Score: " @entity.correctCount "/" @entity.attemptedCount " — pass at " @config.passScore) }
+              ] }
+          ]
+        })
+
+      PICK_LABEL -> idle when (== @entity.active true)
+        (let (
+            (item (array/nth @config.corpus @entity.itemIndex))
+            (answer (object/get @item answer))
+            (firstPick (== @entity.revealed false))
+            (correct (== ?label @answer))
+          )
+          (do
+            (set @entity.selectedLabel ?label)
+            (set @entity.attemptedCount (if @firstPick (+ @entity.attemptedCount 1) @entity.attemptedCount))
+            (set @entity.correctCount (if (and @firstPick @correct) (+ @entity.correctCount 1) @entity.correctCount))
+            (set @entity.revealed true)
+            (set @entity.feedback (if @firstPick
+              (if @correct (str/concat "Correct — this is " @answer ".") (str/concat "Not quite — you picked " ?label "."))
+              @entity.feedback))
+          )
+        )
+        (let (
+            (item (array/nth @config.corpus @entity.itemIndex))
+            (answer (object/get @item answer))
+            (n (array/len @config.fallacySet))
+            (gap 12)
+            (boxW (/ (- @config.width (+ (* 20 2) (* @gap (- @n 1)))) @n))
+            (boxH 70)
+            (y (- (/ @config.height 2) (/ @boxH 2)))
+          )
+          (do
+            (set @entity.cardShapes (array/flatten (array/map (array/range @n) (fn i (let (
+                  (entry (array/nth @config.fallacySet @i))
+                  (val (object/get @entry value))
+                  (fillColor (if @entity.revealed (if (== @val @answer) @config.correctColor (if (== @val @entity.selectedLabel) @config.incorrectColor (object/get @entry color))) (object/get @entry color)))
+                  (x (+ 20 (* @i (+ @boxW @gap))))
+                )
+                [
+                  { type: rect, id: (str/concat "box-" @i), x: @x, y: @y, width: @boxW, height: @boxH, color: @fillColor, fill: @fillColor, opacity: 0.9 },
+                  { type: text, id: (str/concat "box-label-" @i), x: (+ @x (/ @boxW 2)), y: (+ @y (/ @boxH 2) 5), text: (object/get @entry label), fontSize: 13, align: "center", color: "#0f172a" }
+                ])))))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: (object/get (array/nth @config.corpus @entity.itemIndex) text) },
+                { type: typography, variant: caption, content: (if @config.showHint (object/get (array/nth @config.corpus @entity.itemIndex) hint) "") },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.fallacySet (fn f { type: button, action: PICK_LABEL, actionPayload: { label: (object/get @f value) }, label: (object/get @f label), variant: (if (== @entity.selectedLabel (object/get @f value)) "primary" "secondary"), size: sm })) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: REVEAL_ANSWER, label: "Reveal Answer", variant: secondary },
+                    { type: button, action: NEXT_ITEM, label: "Next Argument", variant: primary }
+                  ] },
+                { type: learning-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.cardShapes, interactive: @config.interactive, animate: false },
+                { type: typography, variant: caption, content: @entity.feedback },
+                { type: typography, variant: body, content: (str/concat "Score: " @entity.correctCount "/" @entity.attemptedCount " — pass at " @config.passScore) }
+              ] }
+          ]
+        })
+        (emit FALLACY_UPDATED { itemIndex: @entity.itemIndex, selectedLabel: @entity.selectedLabel, revealed: @entity.revealed, correctCount: @entity.correctCount, attemptedCount: @entity.attemptedCount })
+
+      REVEAL_ANSWER -> idle when (== @entity.active true)
+        (let (
+            (item (array/nth @config.corpus @entity.itemIndex))
+          )
+          (do
+            (set @entity.feedback (str/concat "Answer: " (object/get @item answer) ". " (object/get @item explanation)))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: (object/get (array/nth @config.corpus @entity.itemIndex) text) },
+                { type: typography, variant: caption, content: (if @config.showHint (object/get (array/nth @config.corpus @entity.itemIndex) hint) "") },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.fallacySet (fn f { type: button, action: PICK_LABEL, actionPayload: { label: (object/get @f value) }, label: (object/get @f label), variant: (if (== @entity.selectedLabel (object/get @f value)) "primary" "secondary"), size: sm })) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: REVEAL_ANSWER, label: "Reveal Answer", variant: secondary },
+                    { type: button, action: NEXT_ITEM, label: "Next Argument", variant: primary }
+                  ] },
+                { type: learning-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.cardShapes, interactive: @config.interactive, animate: false },
+                { type: typography, variant: caption, content: @entity.feedback },
+                { type: typography, variant: body, content: (str/concat "Score: " @entity.correctCount "/" @entity.attemptedCount " — pass at " @config.passScore) }
+              ] }
+          ]
+        })
+        (emit FALLACY_UPDATED { itemIndex: @entity.itemIndex, selectedLabel: @entity.selectedLabel, revealed: @entity.revealed, correctCount: @entity.correctCount, attemptedCount: @entity.attemptedCount })
+
+      NEXT_ITEM -> idle when (== @entity.active true)
+        (set @entity.itemIndex (math/mod (+ @entity.itemIndex (if @config.shuffle 3 1)) (array/len @config.corpus)))
+        (set @entity.selectedLabel "")
+        (set @entity.revealed false)
+        (set @entity.feedback "")
+        (let (
+            (n (array/len @config.fallacySet))
+            (gap 12)
+            (boxW (/ (- @config.width (+ (* 20 2) (* @gap (- @n 1)))) @n))
+            (boxH 70)
+            (y (- (/ @config.height 2) (/ @boxH 2)))
+          )
+          (do
+            (set @entity.cardShapes (array/flatten (array/map (array/range @n) (fn i (let (
+                  (entry (array/nth @config.fallacySet @i))
+                  (x (+ 20 (* @i (+ @boxW @gap))))
+                )
+                [
+                  { type: rect, id: (str/concat "box-" @i), x: @x, y: @y, width: @boxW, height: @boxH, color: (object/get @entry color), fill: (object/get @entry color), opacity: 0.9 },
+                  { type: text, id: (str/concat "box-label-" @i), x: (+ @x (/ @boxW 2)), y: (+ @y (/ @boxH 2) 5), text: (object/get @entry label), fontSize: 13, align: "center", color: "#0f172a" }
+                ])))))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: (object/get (array/nth @config.corpus @entity.itemIndex) text) },
+                { type: typography, variant: caption, content: (if @config.showHint (object/get (array/nth @config.corpus @entity.itemIndex) hint) "") },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.fallacySet (fn f { type: button, action: PICK_LABEL, actionPayload: { label: (object/get @f value) }, label: (object/get @f label), variant: (if (== @entity.selectedLabel (object/get @f value)) "primary" "secondary"), size: sm })) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: REVEAL_ANSWER, label: "Reveal Answer", variant: secondary },
+                    { type: button, action: NEXT_ITEM, label: "Next Argument", variant: primary }
+                  ] },
+                { type: learning-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.cardShapes, interactive: @config.interactive, animate: false },
+                { type: typography, variant: caption, content: @entity.feedback },
+                { type: typography, variant: body, content: (str/concat "Score: " @entity.correctCount "/" @entity.attemptedCount " — pass at " @config.passScore) }
+              ] }
+          ]
+        })
+        (emit FALLACY_UPDATED { itemIndex: @entity.itemIndex, selectedLabel: @entity.selectedLabel, revealed: @entity.revealed, correctCount: @entity.correctCount, attemptedCount: @entity.attemptedCount })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      PICK_LABEL {
+        label : string
+      }
+        @description "Learner classified the current argument as valid or as a named fallacy; the first pick per item is verdicted and scored."
+        @tier "domain"
+      REVEAL_ANSWER {
+      }
+        @description "Learner asked for the answer and its explanation."
+        @tier "domain"
+      NEXT_ITEM {
+      }
+        @description "Learner advanced to the next argument card in the corpus."
+        @tier "domain"
+    }
+
+    emits {
+      FALLACY_UPDATED -> external {
+        itemIndex : number
+        selectedLabel : string
+        revealed : boolean
+        correctCount : number
+        attemptedCount : number
+      }
+        @description "The classification state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "fallacy classification, verdict, running score, argument card, informal fallacy"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      corpus : [LogicFallacyItem] = [
+        { text: "You're only against the plan because you never liked me.", answer: "ad-hominem", hint: "Does this engage the plan, or the person?", explanation: "It attacks the person rather than the argument — ad hominem." },
+        { text: "We either ban all cars or accept choking smog forever.", answer: "false-dilemma", hint: "Are those really the only two options?", explanation: "It presents two extremes as the only possibilities — false dilemma." },
+        { text: "If it rains, the match is cancelled. The match is cancelled, so it rained.", answer: "affirming-the-consequent", hint: "Can the match be cancelled for another reason?", explanation: "From P→Q and Q it concludes P — affirming the consequent." },
+        { text: "He wants the library closed? Next he'll want books banned.", answer: "straw-man", hint: "Is that really what he argued?", explanation: "It exaggerates the position into something easier to attack — straw man." },
+        { text: "All mammals breathe air. Whales are mammals, so whales breathe air.", answer: "valid", hint: "Does the conclusion follow from the premises?", explanation: "The conclusion follows necessarily from the premises — a valid argument." }
+      ]
+        @label "Corpus"
+        @description "Argument cards (text, correct classification, hint, explanation) presented one at a time; the answer must be one of the fallacySet values."
+        @synonyms "argument card, corpus, exercise set, fallacy example, argument"
+        @tier "domain"
+      fallacySet : [LogicFallacyLabel] = [
+        { value: "valid", label: "Valid", color: "#cbd5e1" },
+        { value: "ad-hominem", label: "Ad Hominem", color: "#fca5a5" },
+        { value: "straw-man", label: "Straw Man", color: "#fdba74" },
+        { value: "false-dilemma", label: "False Dilemma", color: "#fde68a" },
+        { value: "affirming-the-consequent", label: "Affirming the Consequent", color: "#c4b5fd" }
+      ]
+        @label "Fallacy Set"
+        @description "The classification labels offered as buttons and drawn as the canvas boxes; value is the machine key, label and color are what the learner sees."
+        @synonyms "fallacy, ad hominem, straw man, false dilemma, affirming the consequent, informal fallacy, valid argument"
+        @tier "domain"
+      showHint : boolean = true
+        @label "Show Hint"
+        @description "Show the current card's hint caption before the answer is revealed."
+        @tier "domain"
+      passScore : number = 4
+        @label "Pass Score"
+        @description "Number of correct classifications the learner is aiming for, shown next to the running score."
+        @synonyms "mastery threshold, target score, passing grade"
+        @tier "domain"
+      shuffle : boolean = false
+        @label "Shuffle"
+        @description "When true, Next Argument advances by a stride of 3 through the corpus, interleaving cards instead of stepping linearly."
+        @tier "domain"
+      correctColor : string = "#86efac"
+        @label "Correct Color"
+        @description "Box color of the correct label once revealed."
+        @tier "presentation"
+      incorrectColor : string = "#ef4444"
+        @label "Incorrect Color"
+        @description "Box color of a wrong selected label once revealed."
+        @tier "presentation"
+      title : string = "Fallacy Classifier"
+        @label "Title"
+        @description "Title shown above the instrument."
+        @tier "presentation"
+      width : number = 640
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 160
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      backgroundColor : string = "#f8fafc"
+        @label "Background Color"
+        @description "Canvas background color."
+        @tier "presentation"
+      interactive : boolean = false
+        @label "Interactive"
+        @description "Enable pointer interaction on the canvas."
+        @tier "presentation"
+    }
+  }
+
+  page "/logic-fallacy" as LogicFallacyPage -> LogicFallacySim
+}

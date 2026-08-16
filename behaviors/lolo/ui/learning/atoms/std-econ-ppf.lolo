@@ -22,6 +22,15 @@ orbital EconPpfOrbital {
     label : string!
     maxOutput : number!
   }
+  type EconPpfLabelShape = {
+    type : "text"!
+    x : number!
+    y : number!
+    text : string!
+    color : string
+    fontSize : number
+    align : "left" | "center" | "right"
+  }
 
   entity EconPpfScene [runtime] {
     id : string!
@@ -42,6 +51,7 @@ orbital EconPpfOrbital {
     allocationStatusLabel : string
     curves : [EconPpfCurve]
     points : [EconPpfMarker]
+    labelShapes : [EconPpfLabelShape]
   }
 
   trait EconPpfSim -> @rebindable EconPpfScene [interaction, instance] {
@@ -66,8 +76,18 @@ orbital EconPpfOrbital {
             (frontierSamples (array/map (array/range 41) (fn i (let ( (s (/ @i 40)) ) { x: (* @entity.goodAMax @s), y: (* @entity.goodBMax (math/sqrt (math/max 0 (- 1 (* @s @s))))) }))))
             (allocationCurves [ { label: "Production Possibilities Frontier", color: @config.frontierColor, samples: @frontierSamples } ])
             (allocationPoints [
-                { x: @outA, y: @outB, label: "Frontier Point", color: @config.frontierPointColor, radius: 6 },
-                { x: @outA, y: @outB, label: "Actual Output", color: @config.actualPointColor, radius: 6 }
+                { x: @outA, y: @outB, color: @config.frontierPointColor, radius: 6 },
+                { x: @outA, y: @outB, color: @config.actualPointColor, radius: 6 }
+              ])
+            (labelClampLo 70)
+            (labelClampHi (- @config.width 70))
+            (frontierLabelX (- (math/clamp (+ 24 (* (/ @outA @entity.goodAMax) (- @config.width 48))) @labelClampLo @labelClampHi) 8))
+            (frontierLabelY (- (- @config.height (+ 24 (* (/ @outB @entity.goodBMax) (- @config.height 48)))) 14))
+            (actualLabelX (+ (math/clamp (+ 24 (* (/ @outA @entity.goodAMax) (- @config.width 48))) @labelClampLo @labelClampHi) 8))
+            (actualLabelY (+ (- @config.height (+ 24 (* (/ @outB @entity.goodBMax) (- @config.height 48)))) 16))
+            (labelShapes [
+                { type: text, x: @frontierLabelX, y: @frontierLabelY, text: "Frontier Point", color: @config.frontierPointColor, fontSize: 12, align: right },
+                { type: text, x: @actualLabelX, y: @actualLabelY, text: "Actual Output", color: @config.actualPointColor, fontSize: 12, align: left }
               ])
           )
           (do
@@ -80,6 +100,7 @@ orbital EconPpfOrbital {
             (set @entity.allocationStatusLabel "Efficient — on the frontier")
             (set @entity.curves @allocationCurves)
             (set @entity.points @allocationPoints)
+            (set @entity.labelShapes @labelShapes)
           )
         )
         (render-ui main {
@@ -88,7 +109,7 @@ orbital EconPpfOrbital {
           children: [
             { type: stack, direction: vertical, gap: md, children: [
                 { type: typography, variant: h4, content: @entity.title },
-                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @entity.goodAMax, yMin: 0, yMax: @entity.goodBMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @entity.goodAMax, yMin: 0, yMax: @entity.goodBMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: @entity.labelShapes, interactive: @config.interactive, animate: @config.animate },
                 { type: stack, direction: vertical, gap: xs, children: [
                     { type: typography, variant: caption, content: (str/concat "Share of resources to " @entity.goodALabel ": " @entity.allocationShare "%") },
                     { type: range-slider, min: 0, max: 100, step: @config.allocationStep, value: @entity.allocationShare, showTooltip: true, onChange: ALLOCATE }
@@ -122,8 +143,18 @@ orbital EconPpfOrbital {
             (frontierSamples (array/map (array/range 41) (fn i (let ( (s (/ @i 40)) ) { x: (* @entity.goodAMax @s), y: (* @entity.goodBMax (math/sqrt (math/max 0 (- 1 (* @s @s))))) }))))
             (allocationCurves [ { label: "Production Possibilities Frontier", color: @config.frontierColor, samples: @frontierSamples } ])
             (allocationPoints [
-                { x: @outA, y: @outB, label: "Frontier Point", color: @config.frontierPointColor, radius: 6 },
-                { x: @outA, y: @outB, label: "Actual Output", color: @config.actualPointColor, radius: 6 }
+                { x: @outA, y: @outB, color: @config.frontierPointColor, radius: 6 },
+                { x: @outA, y: @outB, color: @config.actualPointColor, radius: 6 }
+              ])
+            (labelClampLo 70)
+            (labelClampHi (- @config.width 70))
+            (frontierLabelX (- (math/clamp (+ 24 (* (/ @outA @entity.goodAMax) (- @config.width 48))) @labelClampLo @labelClampHi) 8))
+            (frontierLabelY (- (- @config.height (+ 24 (* (/ @outB @entity.goodBMax) (- @config.height 48)))) 14))
+            (actualLabelX (+ (math/clamp (+ 24 (* (/ @outA @entity.goodAMax) (- @config.width 48))) @labelClampLo @labelClampHi) 8))
+            (actualLabelY (+ (- @config.height (+ 24 (* (/ @outB @entity.goodBMax) (- @config.height 48)))) 16))
+            (labelShapes [
+                { type: text, x: @frontierLabelX, y: @frontierLabelY, text: "Frontier Point", color: @config.frontierPointColor, fontSize: 12, align: right },
+                { type: text, x: @actualLabelX, y: @actualLabelY, text: "Actual Output", color: @config.actualPointColor, fontSize: 12, align: left }
               ])
           )
           (do
@@ -136,6 +167,7 @@ orbital EconPpfOrbital {
             (set @entity.allocationStatusLabel "Efficient — on the frontier")
             (set @entity.curves @allocationCurves)
             (set @entity.points @allocationPoints)
+            (set @entity.labelShapes @labelShapes)
           )
         )
         (render-ui main {
@@ -144,7 +176,7 @@ orbital EconPpfOrbital {
             children: [
               { type: stack, direction: vertical, gap: md, children: [
                   { type: typography, variant: h4, content: @entity.title },
-                  { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @entity.goodAMax, yMin: 0, yMax: @entity.goodBMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: [], interactive: @config.interactive, animate: @config.animate },
+                  { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @entity.goodAMax, yMin: 0, yMax: @entity.goodBMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: @entity.labelShapes, interactive: @config.interactive, animate: @config.animate },
                   { type: stack, direction: vertical, gap: xs, children: [
                       { type: typography, variant: caption, content: (str/concat "Share of resources to " @entity.goodALabel ": " @entity.allocationShare "%") },
                       { type: range-slider, min: 0, max: 100, step: @config.allocationStep, value: @entity.allocationShare, showTooltip: true, onChange: ALLOCATE }
@@ -171,8 +203,18 @@ orbital EconPpfOrbital {
             (actA (if @entity.wasteActive (* @outA @config.wasteFactor) @outA))
             (actB (if @entity.wasteActive (* @outB @config.wasteFactor) @outB))
             (newPoints [
-                { x: @outA, y: @outB, label: "Frontier Point", color: @config.frontierPointColor, radius: 6 },
-                { x: @actA, y: @actB, label: "Actual Output", color: @config.actualPointColor, radius: 6 }
+                { x: @outA, y: @outB, color: @config.frontierPointColor, radius: 6 },
+                { x: @actA, y: @actB, color: @config.actualPointColor, radius: 6 }
+              ])
+            (labelClampLo 70)
+            (labelClampHi (- @config.width 70))
+            (frontierLabelX (- (math/clamp (+ 24 (* (/ @outA @entity.goodAMax) (- @config.width 48))) @labelClampLo @labelClampHi) 8))
+            (frontierLabelY (- (- @config.height (+ 24 (* (/ @outB @entity.goodBMax) (- @config.height 48)))) 14))
+            (actualLabelX (+ (math/clamp (+ 24 (* (/ @actA @entity.goodAMax) (- @config.width 48))) @labelClampLo @labelClampHi) 8))
+            (actualLabelY (+ (- @config.height (+ 24 (* (/ @actB @entity.goodBMax) (- @config.height 48)))) 16))
+            (labelShapes [
+                { type: text, x: @frontierLabelX, y: @frontierLabelY, text: "Frontier Point", color: @config.frontierPointColor, fontSize: 12, align: right },
+                { type: text, x: @actualLabelX, y: @actualLabelY, text: "Actual Output", color: @config.actualPointColor, fontSize: 12, align: left }
               ])
           )
           (do
@@ -183,6 +225,7 @@ orbital EconPpfOrbital {
             (set @entity.actualOutputA @actA)
             (set @entity.actualOutputB @actB)
             (set @entity.points @newPoints)
+            (set @entity.labelShapes @labelShapes)
           )
         )
         (render-ui main {
@@ -191,7 +234,7 @@ orbital EconPpfOrbital {
           children: [
             { type: stack, direction: vertical, gap: md, children: [
                 { type: typography, variant: h4, content: @entity.title },
-                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @entity.goodAMax, yMin: 0, yMax: @entity.goodBMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @entity.goodAMax, yMin: 0, yMax: @entity.goodBMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: @entity.labelShapes, interactive: @config.interactive, animate: @config.animate },
                 { type: stack, direction: vertical, gap: xs, children: [
                     { type: typography, variant: caption, content: (str/concat "Share of resources to " @entity.goodALabel ": " @entity.allocationShare "%") },
                     { type: range-slider, min: 0, max: 100, step: @config.allocationStep, value: @entity.allocationShare, showTooltip: true, onChange: ALLOCATE }
@@ -215,8 +258,18 @@ orbital EconPpfOrbital {
             (actB (if @entity.wasteActive (* @entity.outputB @config.wasteFactor) @entity.outputB))
             (statusLabel (if @entity.wasteActive "Inefficient — idle resources, inside the frontier" "Efficient — on the frontier"))
             (newPoints [
-                { x: @entity.outputA, y: @entity.outputB, label: "Frontier Point", color: @config.frontierPointColor, radius: 6 },
-                { x: @actA, y: @actB, label: "Actual Output", color: @config.actualPointColor, radius: 6 }
+                { x: @entity.outputA, y: @entity.outputB, color: @config.frontierPointColor, radius: 6 },
+                { x: @actA, y: @actB, color: @config.actualPointColor, radius: 6 }
+              ])
+            (labelClampLo 70)
+            (labelClampHi (- @config.width 70))
+            (frontierLabelX (- (math/clamp (+ 24 (* (/ @entity.outputA @entity.goodAMax) (- @config.width 48))) @labelClampLo @labelClampHi) 8))
+            (frontierLabelY (- (- @config.height (+ 24 (* (/ @entity.outputB @entity.goodBMax) (- @config.height 48)))) 14))
+            (actualLabelX (+ (math/clamp (+ 24 (* (/ @actA @entity.goodAMax) (- @config.width 48))) @labelClampLo @labelClampHi) 8))
+            (actualLabelY (+ (- @config.height (+ 24 (* (/ @actB @entity.goodBMax) (- @config.height 48)))) 16))
+            (labelShapes [
+                { type: text, x: @frontierLabelX, y: @frontierLabelY, text: "Frontier Point", color: @config.frontierPointColor, fontSize: 12, align: right },
+                { type: text, x: @actualLabelX, y: @actualLabelY, text: "Actual Output", color: @config.actualPointColor, fontSize: 12, align: left }
               ])
           )
           (do
@@ -224,6 +277,7 @@ orbital EconPpfOrbital {
             (set @entity.actualOutputB @actB)
             (set @entity.allocationStatusLabel @statusLabel)
             (set @entity.points @newPoints)
+            (set @entity.labelShapes @labelShapes)
           )
         )
         (render-ui main {
@@ -232,7 +286,7 @@ orbital EconPpfOrbital {
           children: [
             { type: stack, direction: vertical, gap: md, children: [
                 { type: typography, variant: h4, content: @entity.title },
-                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @entity.goodAMax, yMin: 0, yMax: @entity.goodBMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @entity.goodAMax, yMin: 0, yMax: @entity.goodBMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: @entity.labelShapes, interactive: @config.interactive, animate: @config.animate },
                 { type: stack, direction: vertical, gap: xs, children: [
                     { type: typography, variant: caption, content: (str/concat "Share of resources to " @entity.goodALabel ": " @entity.allocationShare "%") },
                     { type: range-slider, min: 0, max: 100, step: @config.allocationStep, value: @entity.allocationShare, showTooltip: true, onChange: ALLOCATE }

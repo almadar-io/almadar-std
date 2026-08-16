@@ -1,17 +1,10 @@
 app std-prob-trials "1.0.0"
-"Declarative probability plotter — renders a distribution curve, sampled points, and extra shapes from config onto a math-canvas; no interaction beyond the initial render (dice-roll, coin-flip, and general distribution/histogram displays all share this mechanism — only the config data differs per topic). Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+"Trials simulator — Roll samples one outcome from a weighted sample space and accumulates it into an observed-frequency histogram overlaid with expected-probability markers on a math-canvas; Run auto-samples on a tick. Default outcomes is a fair six-sided die; a coin flip, a weighted spinner, or any categorical distribution is just a different outcomes config. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
 orbital ProbTrialsOrbital {
-  type ProbTrialsPoint = {
-    x : number!
-    y : number!
-    label : string
+  type ProbTrialsOutcome = {
+    label : string!
+    probability : number!
     color : string
-    radius : number
-  }
-  type ProbTrialsCurve = {
-    label : string
-    color : string
-    samples : [ProbTrialsPoint]
   }
   type ProbTrialsShape = {
     type : "line" | "arrow" | "circle" | "rect" | "polygon" | "path" | "text" | "axis" | "grid"!
@@ -49,8 +42,10 @@ orbital ProbTrialsOrbital {
     id : string!
     active : boolean = false
     title : string
-    curves : [ProbTrialsCurve]
-    points : [ProbTrialsPoint]
+    counts : [number]
+    total : number = 0
+    running : boolean = false
+    narration : string
     shapes : [ProbTrialsShape]
   }
 
@@ -59,38 +54,274 @@ orbital ProbTrialsOrbital {
 
     state idle {
       INIT -> idle when (== @config.matchMode "")
-        (set @entity.active true)
-        (set @entity.title @config.title)
-        (set @entity.curves @config.curves)
-        (set @entity.points @config.points)
-        (set @entity.shapes @config.shapes)
+        (let (
+            (n (array/len @config.outcomes))
+            (sumP (array/sum @config.outcomes probability))
+            (expectedProbs (array/map (array/range @n) (fn i (/ (object/get (array/nth @config.outcomes @i) probability) @sumP))))
+            (zeroCounts (array/map (array/range @n) (fn i 0)))
+            (plotW (- @config.width 48))
+            (plotH (- @config.height 48))
+            (observedProps (array/map (array/range @n) (fn i 0)))
+            (maxExpected (math/max (array/max @expectedProbs) 0.0001))
+            (maxObserved (math/max (array/max @observedProps) 0.0001))
+            (maxVal (* (math/max @maxExpected @maxObserved) 1.25))
+            (barW (/ @plotW @n))
+            (barShapes (array/map (array/range @n) (fn i (let ((barH (* (/ (array/nth @observedProps @i) @maxVal) @plotH)) (outcome (array/nth @config.outcomes @i))) { type: "rect", x: (+ 24 (* @i @barW)), y: (- (+ 24 @plotH) @barH), width: (* @barW 0.6), height: @barH, fill: (object/get @outcome color), opacity: 0.85, lineWidth: 0 }))))
+            (expectedShapes (array/map (array/range @n) (fn i { type: "circle", x: (+ 24 (* (+ @i 0.5) @barW)), y: (- (+ 24 @plotH) (* (/ (array/nth @expectedProbs @i) @maxVal) @plotH)), radius: 5, fill: "#111827", lineWidth: 0 })))
+            (labelShapes (array/map (array/range @n) (fn i (let ((outcome (array/nth @config.outcomes @i))) { type: "text", x: (+ 24 (* (+ @i 0.5) @barW)), y: (+ (+ 24 @plotH) 16), text: (str/concat (object/get @outcome label) ": " (str/concat "" (array/nth @zeroCounts @i))), fontSize: 11, align: "center", color: "#111827" }))))
+            (shapes (array/concat [ { type: "line", x1: 24, y1: (+ 24 @plotH), x2: (+ 24 @plotW), y2: (+ 24 @plotH), color: "#cbd5e1", lineWidth: 1 } ] (array/concat @barShapes (array/concat @expectedShapes @labelShapes))))
+          )
+          (do
+            (set @entity.active true)
+            (set @entity.title @config.title)
+            (set @entity.counts @zeroCounts)
+            (set @entity.total 0)
+            (set @entity.running @config.running)
+            (set @entity.narration "Press Roll to sample an outcome, or Run to auto-sample.")
+            (set @entity.shapes @shapes)
+          )
+        )
         (render-ui main {
           type: box
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
                 { type: typography, variant: h4, content: @entity.title },
-                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.xMin, xMax: @config.xMax, yMin: @config.yMin, yMax: @config.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate }
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: TRIAL, label: "Roll", variant: primary },
+                    { type: button, action: RUN, label: "Run", variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: typography, variant: caption, content: (str/concat "Total trials: " (str/concat "" @entity.total)) },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: (array/len @config.outcomes), yMin: 0, yMax: 1, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: @entity.narration }
               ] }
           ]
         })
+        (emit TRIALS_UPDATED { counts: @entity.counts, total: @entity.total, narration: @entity.narration })
 
       MODE_SELECTED -> idle when (== ?mode @config.matchMode)
-        (set @entity.active true)
-        (set @entity.title @config.title)
-        (set @entity.curves @config.curves)
-        (set @entity.points @config.points)
-        (set @entity.shapes @config.shapes)
+        (let (
+            (n (array/len @config.outcomes))
+            (sumP (array/sum @config.outcomes probability))
+            (expectedProbs (array/map (array/range @n) (fn i (/ (object/get (array/nth @config.outcomes @i) probability) @sumP))))
+            (zeroCounts (array/map (array/range @n) (fn i 0)))
+            (plotW (- @config.width 48))
+            (plotH (- @config.height 48))
+            (observedProps (array/map (array/range @n) (fn i 0)))
+            (maxExpected (math/max (array/max @expectedProbs) 0.0001))
+            (maxObserved (math/max (array/max @observedProps) 0.0001))
+            (maxVal (* (math/max @maxExpected @maxObserved) 1.25))
+            (barW (/ @plotW @n))
+            (barShapes (array/map (array/range @n) (fn i (let ((barH (* (/ (array/nth @observedProps @i) @maxVal) @plotH)) (outcome (array/nth @config.outcomes @i))) { type: "rect", x: (+ 24 (* @i @barW)), y: (- (+ 24 @plotH) @barH), width: (* @barW 0.6), height: @barH, fill: (object/get @outcome color), opacity: 0.85, lineWidth: 0 }))))
+            (expectedShapes (array/map (array/range @n) (fn i { type: "circle", x: (+ 24 (* (+ @i 0.5) @barW)), y: (- (+ 24 @plotH) (* (/ (array/nth @expectedProbs @i) @maxVal) @plotH)), radius: 5, fill: "#111827", lineWidth: 0 })))
+            (labelShapes (array/map (array/range @n) (fn i (let ((outcome (array/nth @config.outcomes @i))) { type: "text", x: (+ 24 (* (+ @i 0.5) @barW)), y: (+ (+ 24 @plotH) 16), text: (str/concat (object/get @outcome label) ": " (str/concat "" (array/nth @zeroCounts @i))), fontSize: 11, align: "center", color: "#111827" }))))
+            (shapes (array/concat [ { type: "line", x1: 24, y1: (+ 24 @plotH), x2: (+ 24 @plotW), y2: (+ 24 @plotH), color: "#cbd5e1", lineWidth: 1 } ] (array/concat @barShapes (array/concat @expectedShapes @labelShapes))))
+          )
+          (do
+            (set @entity.active true)
+            (set @entity.title @config.title)
+            (set @entity.counts @zeroCounts)
+            (set @entity.total 0)
+            (set @entity.running @config.running)
+            (set @entity.narration "Press Roll to sample an outcome, or Run to auto-sample.")
+            (set @entity.shapes @shapes)
+          )
+        )
         (render-ui main {
           type: box
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
                 { type: typography, variant: h4, content: @entity.title },
-                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.xMin, xMax: @config.xMax, yMin: @config.yMin, yMax: @config.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate }
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: TRIAL, label: "Roll", variant: primary },
+                    { type: button, action: RUN, label: "Run", variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: typography, variant: caption, content: (str/concat "Total trials: " (str/concat "" @entity.total)) },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: (array/len @config.outcomes), yMin: 0, yMax: 1, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: @entity.narration }
               ] }
           ]
         })
+        (emit TRIALS_UPDATED { counts: @entity.counts, total: @entity.total, narration: @entity.narration })
+
+      TRIAL -> idle when (== @entity.active true)
+        (let (
+            (n (array/len @config.outcomes))
+            (sumP (array/sum @config.outcomes probability))
+            (expectedProbs (array/map (array/range @n) (fn i (/ (object/get (array/nth @config.outcomes @i) probability) @sumP))))
+            (cumProbs (array/map (array/range @n) (fn i (array/sum (array/slice @expectedProbs 0 (+ @i 1))))))
+            (r (math/random))
+            (rolledIdxRaw (array/len (array/filter @cumProbs (fn c (<= @c @r)))))
+            (rolledIdx (math/min @rolledIdxRaw (- @n 1)))
+            (rolledOutcome (array/nth @config.outcomes @rolledIdx))
+            (newCounts (array/map (array/range @n) (fn i (if (== @i @rolledIdx) (+ (array/nth @entity.counts @i) 1) (array/nth @entity.counts @i)))))
+            (newTotal (+ @entity.total 1))
+            (plotW (- @config.width 48))
+            (plotH (- @config.height 48))
+            (observedProps (array/map (array/range @n) (fn i (/ (array/nth @newCounts @i) @newTotal))))
+            (maxExpected (math/max (array/max @expectedProbs) 0.0001))
+            (maxObserved (math/max (array/max @observedProps) 0.0001))
+            (maxVal (* (math/max @maxExpected @maxObserved) 1.25))
+            (barW (/ @plotW @n))
+            (barShapes (array/map (array/range @n) (fn i (let ((barH (* (/ (array/nth @observedProps @i) @maxVal) @plotH)) (outcome (array/nth @config.outcomes @i))) { type: "rect", x: (+ 24 (* @i @barW)), y: (- (+ 24 @plotH) @barH), width: (* @barW 0.6), height: @barH, fill: (object/get @outcome color), opacity: 0.85, lineWidth: 0 }))))
+            (expectedShapes (array/map (array/range @n) (fn i { type: "circle", x: (+ 24 (* (+ @i 0.5) @barW)), y: (- (+ 24 @plotH) (* (/ (array/nth @expectedProbs @i) @maxVal) @plotH)), radius: 5, fill: "#111827", lineWidth: 0 })))
+            (labelShapes (array/map (array/range @n) (fn i (let ((outcome (array/nth @config.outcomes @i))) { type: "text", x: (+ 24 (* (+ @i 0.5) @barW)), y: (+ (+ 24 @plotH) 16), text: (str/concat (object/get @outcome label) ": " (str/concat "" (array/nth @newCounts @i))), fontSize: 11, align: "center", color: "#111827" }))))
+            (shapes (array/concat [ { type: "line", x1: 24, y1: (+ 24 @plotH), x2: (+ 24 @plotW), y2: (+ 24 @plotH), color: "#cbd5e1", lineWidth: 1 } ] (array/concat @barShapes (array/concat @expectedShapes @labelShapes))))
+            (observedPct (math/round (* (array/nth @observedProps @rolledIdx) 100) 1))
+            (expectedPct (math/round (* (array/nth @expectedProbs @rolledIdx) 100) 1))
+            (narration (str/concat "trial " (str/concat "" @newTotal) " — rolled " (object/get @rolledOutcome label) "; observed " (str/concat "" @observedPct) "% vs expected " (str/concat "" @expectedPct) "%"))
+          )
+          (do
+            (set @entity.counts @newCounts)
+            (set @entity.total @newTotal)
+            (set @entity.narration @narration)
+            (set @entity.shapes @shapes)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: TRIAL, label: "Roll", variant: primary },
+                    { type: button, action: RUN, label: "Run", variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: typography, variant: caption, content: (str/concat "Total trials: " (str/concat "" @entity.total)) },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: (array/len @config.outcomes), yMin: 0, yMax: 1, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit TRIALS_UPDATED { counts: @entity.counts, total: @entity.total, narration: @entity.narration })
+
+      RUN -> idle when (== @entity.active true)
+        (set @entity.running (not @entity.running))
+        (set @entity.narration (if @entity.running "Auto-sampling — tick draws a new outcome." "Paused — sample manually with Roll."))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: TRIAL, label: "Roll", variant: primary },
+                    { type: button, action: RUN, label: "Run", variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: typography, variant: caption, content: (str/concat "Total trials: " (str/concat "" @entity.total)) },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: (array/len @config.outcomes), yMin: 0, yMax: 1, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit TRIALS_UPDATED { counts: @entity.counts, total: @entity.total, narration: @entity.narration })
+
+      RESET -> idle when (== @entity.active true)
+        (let (
+            (n (array/len @config.outcomes))
+            (sumP (array/sum @config.outcomes probability))
+            (expectedProbs (array/map (array/range @n) (fn i (/ (object/get (array/nth @config.outcomes @i) probability) @sumP))))
+            (zeroCounts (array/map (array/range @n) (fn i 0)))
+            (plotW (- @config.width 48))
+            (plotH (- @config.height 48))
+            (observedProps (array/map (array/range @n) (fn i 0)))
+            (maxExpected (math/max (array/max @expectedProbs) 0.0001))
+            (maxObserved (math/max (array/max @observedProps) 0.0001))
+            (maxVal (* (math/max @maxExpected @maxObserved) 1.25))
+            (barW (/ @plotW @n))
+            (barShapes (array/map (array/range @n) (fn i (let ((barH (* (/ (array/nth @observedProps @i) @maxVal) @plotH)) (outcome (array/nth @config.outcomes @i))) { type: "rect", x: (+ 24 (* @i @barW)), y: (- (+ 24 @plotH) @barH), width: (* @barW 0.6), height: @barH, fill: (object/get @outcome color), opacity: 0.85, lineWidth: 0 }))))
+            (expectedShapes (array/map (array/range @n) (fn i { type: "circle", x: (+ 24 (* (+ @i 0.5) @barW)), y: (- (+ 24 @plotH) (* (/ (array/nth @expectedProbs @i) @maxVal) @plotH)), radius: 5, fill: "#111827", lineWidth: 0 })))
+            (labelShapes (array/map (array/range @n) (fn i (let ((outcome (array/nth @config.outcomes @i))) { type: "text", x: (+ 24 (* (+ @i 0.5) @barW)), y: (+ (+ 24 @plotH) 16), text: (str/concat (object/get @outcome label) ": " (str/concat "" (array/nth @zeroCounts @i))), fontSize: 11, align: "center", color: "#111827" }))))
+            (shapes (array/concat [ { type: "line", x1: 24, y1: (+ 24 @plotH), x2: (+ 24 @plotW), y2: (+ 24 @plotH), color: "#cbd5e1", lineWidth: 1 } ] (array/concat @barShapes (array/concat @expectedShapes @labelShapes))))
+          )
+          (do
+            (set @entity.counts @zeroCounts)
+            (set @entity.total 0)
+            (set @entity.running false)
+            (set @entity.narration "Press Roll to sample an outcome, or Run to auto-sample.")
+            (set @entity.shapes @shapes)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: TRIAL, label: "Roll", variant: primary },
+                    { type: button, action: RUN, label: "Run", variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: typography, variant: caption, content: (str/concat "Total trials: " (str/concat "" @entity.total)) },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: (array/len @config.outcomes), yMin: 0, yMax: 1, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit TRIALS_UPDATED { counts: @entity.counts, total: @entity.total, narration: @entity.narration })
+    }
+
+    ticks {
+      trialsTick every 500ms
+        when (and @entity.active @entity.running)
+        (let (
+            (n (array/len @config.outcomes))
+            (sumP (array/sum @config.outcomes probability))
+            (expectedProbs (array/map (array/range @n) (fn i (/ (object/get (array/nth @config.outcomes @i) probability) @sumP))))
+            (cumProbs (array/map (array/range @n) (fn i (array/sum (array/slice @expectedProbs 0 (+ @i 1))))))
+            (r (math/random))
+            (rolledIdxRaw (array/len (array/filter @cumProbs (fn c (<= @c @r)))))
+            (rolledIdx (math/min @rolledIdxRaw (- @n 1)))
+            (rolledOutcome (array/nth @config.outcomes @rolledIdx))
+            (newCounts (array/map (array/range @n) (fn i (if (== @i @rolledIdx) (+ (array/nth @entity.counts @i) 1) (array/nth @entity.counts @i)))))
+            (newTotal (+ @entity.total 1))
+            (plotW (- @config.width 48))
+            (plotH (- @config.height 48))
+            (observedProps (array/map (array/range @n) (fn i (/ (array/nth @newCounts @i) @newTotal))))
+            (maxExpected (math/max (array/max @expectedProbs) 0.0001))
+            (maxObserved (math/max (array/max @observedProps) 0.0001))
+            (maxVal (* (math/max @maxExpected @maxObserved) 1.25))
+            (barW (/ @plotW @n))
+            (barShapes (array/map (array/range @n) (fn i (let ((barH (* (/ (array/nth @observedProps @i) @maxVal) @plotH)) (outcome (array/nth @config.outcomes @i))) { type: "rect", x: (+ 24 (* @i @barW)), y: (- (+ 24 @plotH) @barH), width: (* @barW 0.6), height: @barH, fill: (object/get @outcome color), opacity: 0.85, lineWidth: 0 }))))
+            (expectedShapes (array/map (array/range @n) (fn i { type: "circle", x: (+ 24 (* (+ @i 0.5) @barW)), y: (- (+ 24 @plotH) (* (/ (array/nth @expectedProbs @i) @maxVal) @plotH)), radius: 5, fill: "#111827", lineWidth: 0 })))
+            (labelShapes (array/map (array/range @n) (fn i (let ((outcome (array/nth @config.outcomes @i))) { type: "text", x: (+ 24 (* (+ @i 0.5) @barW)), y: (+ (+ 24 @plotH) 16), text: (str/concat (object/get @outcome label) ": " (str/concat "" (array/nth @newCounts @i))), fontSize: 11, align: "center", color: "#111827" }))))
+            (shapes (array/concat [ { type: "line", x1: 24, y1: (+ 24 @plotH), x2: (+ 24 @plotW), y2: (+ 24 @plotH), color: "#cbd5e1", lineWidth: 1 } ] (array/concat @barShapes (array/concat @expectedShapes @labelShapes))))
+            (observedPct (math/round (* (array/nth @observedProps @rolledIdx) 100) 1))
+            (expectedPct (math/round (* (array/nth @expectedProbs @rolledIdx) 100) 1))
+            (narration (str/concat "trial " (str/concat "" @newTotal) " — rolled " (object/get @rolledOutcome label) "; observed " (str/concat "" @observedPct) "% vs expected " (str/concat "" @expectedPct) "%"))
+          )
+          (do
+            (set @entity.counts @newCounts)
+            (set @entity.total @newTotal)
+            (set @entity.narration @narration)
+            (set @entity.shapes @shapes)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: TRIAL, label: "Roll", variant: primary },
+                    { type: button, action: RUN, label: "Run", variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: typography, variant: caption, content: (str/concat "Total trials: " (str/concat "" @entity.total)) },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: (array/len @config.outcomes), yMin: 0, yMax: 1, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit TRIALS_UPDATED { counts: @entity.counts, total: @entity.total, narration: @entity.narration })
     }
 
     listens {
@@ -101,15 +332,42 @@ orbital ProbTrialsOrbital {
         @tier "domain"
     }
 
+    emits {
+      TRIALS_UPDATED -> external {
+        counts : [number]
+        total : number
+        narration : string
+      }
+        @description "The accumulated per-outcome counts, total draws, and narration after each Roll, Run tick, or Reset — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "dice roll, coin flip, sampling, observed frequency, law of large numbers, trial run"
+        @tier "domain"
+    }
+
     config {
       matchMode : string = ""
         @label "Match Mode"
         @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
         @tier "presentation"
-      title : string = "Probability Lab"
+      title : string = "Probability Trials"
         @label "Title"
         @description "Title shown above the canvas."
         @tier "presentation"
+      running : boolean = false
+        @label "Running"
+        @description "When true the tick auto-samples a new outcome every ~500ms from load; toggle with the Run button."
+        @tier "domain"
+      outcomes : [ProbTrialsOutcome] = [
+        { label: "1", probability: 0.1667, color: "#2563eb" },
+        { label: "2", probability: 0.1667, color: "#7c3aed" },
+        { label: "3", probability: 0.1667, color: "#db2777" },
+        { label: "4", probability: 0.1667, color: "#dc2626" },
+        { label: "5", probability: 0.1667, color: "#f59e0b" },
+        { label: "6", probability: 0.1667, color: "#16a34a" }
+      ]
+        @label "Outcomes"
+        @description "The sample space each trial draws from — label, relative probability (weights are normalized, needn't sum to 1), and bar color. Default is a fair six-sided die; a coin flip, a weighted spinner, or any categorical distribution is just a different outcomes list."
+        @synonyms "dice, coin flip, sampling, distribution, histogram, law of large numbers, expected value, sample space, categorical distribution"
+        @tier "domain"
       width : number = 600
         @label "Width"
         @description "Canvas width in pixels."
@@ -118,27 +376,13 @@ orbital ProbTrialsOrbital {
         @label "Height"
         @description "Canvas height in pixels."
         @tier "presentation"
-      xMin : number = 0
-        @label "X Min"
-        @description "Minimum x value on the canvas."
-        @tier "presentation"
-      xMax : number = 10
-        @label "X Max"
-        @description "Maximum x value on the canvas."
-        @tier "presentation"
-      yMin : number = 0
-        @label "Y Min"
-        @description "Minimum y value on the canvas."
-        @tier "presentation"
-      yMax : number = 1
-        @label "Y Max"
-        @description "Maximum y value on the canvas."
-        @tier "presentation"
-      showAxes : boolean = true
+      showAxes : boolean = false
         @label "Show Axes"
+        @description "Draw background axes behind the observed-frequency bars."
         @tier "presentation"
-      showGrid : boolean = true
+      showGrid : boolean = false
         @label "Show Grid"
+        @description "Draw a background grid behind the observed-frequency bars."
         @tier "presentation"
       gridStep : number = 1
         @label "Grid Step"
@@ -150,24 +394,6 @@ orbital ProbTrialsOrbital {
       animate : boolean = false
         @label "Animate"
         @description "Enable continuous redraw loop."
-        @tier "presentation"
-      curves : [ProbTrialsCurve] = [
-        { label: "uniform", color: "#2563eb", samples: [
-          { x: 0, y: 0.1 }, { x: 1, y: 0.1 }, { x: 2, y: 0.1 }, { x: 3, y: 0.1 }, { x: 4, y: 0.1 },
-          { x: 5, y: 0.1 }, { x: 6, y: 0.1 }, { x: 7, y: 0.1 }, { x: 8, y: 0.1 }, { x: 9, y: 0.1 }, { x: 10, y: 0.1 }
-        ]}
-      ]
-        @label "Curves"
-        @description "Distribution curve or cumulative frequency — e.g. a dice-face histogram, a coin-flip bar, or a general distribution shape."
-        @synonyms "dice, coin flip, sampling, distribution, histogram, law of large numbers, expected value"
-        @tier "domain"
-      points : [ProbTrialsPoint] = []
-        @label "Points"
-        @description "Sampled outcomes or scatter points."
-        @tier "presentation"
-      shapes : [ProbTrialsShape] = []
-        @label "Shapes"
-        @description "Extra declarative shapes such as bars or outcome labels."
         @tier "presentation"
     }
   }

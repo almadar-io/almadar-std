@@ -1,6 +1,27 @@
 app std-bio-foodweb "1.0.0"
-"Food-web / ecosystem engine — five trophic species whose radii breathe at staggered phases (trophic lag) on biology-canvas. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+"Trophic-dynamics simulator — a config-declared species roster and feeding-edge graph. Step/Run advance a discrete generation: producers regrow toward capacity, consumers gain from what they eat and lose to predation and decay; node radii and count labels track population, and narration explains what changed. Remove/Boost the config-designated species to trigger a cascade. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
 orbital BioFoodwebEngineOrbital {
+  type Species = {
+    id : string!
+    x : number!
+    y : number!
+    color : string
+    label : string
+    trophicLevel : "producer" | "herbivore" | "carnivore" | "apex"
+    population : number
+    capacity : number
+    growthRate : number
+    declineRate : number
+    delta : number
+  }
+
+  type FeedEdge = {
+    predator : string!
+    prey : string!
+    rate : number
+    efficiency : number
+  }
+
   type BioNode = {
     id : string
     x : number!
@@ -22,9 +43,11 @@ orbital BioFoodwebEngineOrbital {
     id : string!
     active : boolean = false
     title : string
-    phase : number = 0
-    nodes : [BioNode]
+    species : [Species]
+    displayEdges : [BioEdge]
+    generation : number = 0
     running : boolean = false
+    narration : string
   }
 
   trait BioFoodwebSim -> @rebindable BioFoodwebState [interaction, instance] {
@@ -34,66 +57,333 @@ orbital BioFoodwebEngineOrbital {
       INIT -> idle when (== @config.matchMode "")
         (set @entity.active true)
         (set @entity.title @config.title)
-        (set @entity.phase 0)
-        (set @entity.nodes @config.nodes)
+        (set @entity.species @config.species)
+        (set @entity.displayEdges (array/map @config.edges (fn e { from: (object/get @e predator), to: (object/get @e prey), color: "#94a3b8", label: "eats" })))
+        (set @entity.generation 0)
         (set @entity.running @config.running)
+        (set @entity.narration "Ecosystem seeded. Press Step or Run to advance a generation.")
         (render-ui main {
           type: box
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
                 { type: typography, variant: h4, content: @entity.title },
-                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: @entity.nodes, edges: @config.edges }
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: STEP, label: "Step", variant: primary },
+                    { type: button, action: RUN, label: "Run", variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost },
+                    { type: button, action: REMOVE_SPECIES, label: "Remove target", variant: secondary },
+                    { type: button, action: BOOST_SPECIES, label: "Boost target", variant: secondary }
+                  ] },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
+                  nodes: (array/map @entity.species (fn s { id: (object/get @s id), x: (object/get @s x), y: (object/get @s y), radius: (math/clamp (* (object/get @s population) 0.4) 6 55), color: (object/get @s color), label: (str/concat (object/get @s label) " (" (str/concat "" (object/get @s population)) ")"), kind: organism })),
+                  edges: @entity.displayEdges
+                },
+                { type: typography, variant: body, content: @entity.narration },
+                { type: typography, variant: caption, content: (str/concat "Generation " (str/concat "" @entity.generation)) }
               ] }
           ]
         })
-        (emit POPULATION_UPDATED { nodes: @entity.nodes })
+        (emit POPULATIONS_UPDATED { species: @entity.species, generation: @entity.generation, narration: @entity.narration })
 
       MODE_SELECTED -> idle when (== ?mode @config.matchMode)
         (set @entity.active true)
         (set @entity.title @config.title)
-        (set @entity.phase 0)
-        (set @entity.nodes @config.nodes)
+        (set @entity.species @config.species)
+        (set @entity.displayEdges (array/map @config.edges (fn e { from: (object/get @e predator), to: (object/get @e prey), color: "#94a3b8", label: "eats" })))
+        (set @entity.generation 0)
         (set @entity.running @config.running)
+        (set @entity.narration "Ecosystem seeded. Press Step or Run to advance a generation.")
         (render-ui main {
           type: box
           padding: md
           children: [
             { type: stack, direction: vertical, gap: md, children: [
                 { type: typography, variant: h4, content: @entity.title },
-                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: @entity.nodes, edges: @config.edges }
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: STEP, label: "Step", variant: primary },
+                    { type: button, action: RUN, label: "Run", variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost },
+                    { type: button, action: REMOVE_SPECIES, label: "Remove target", variant: secondary },
+                    { type: button, action: BOOST_SPECIES, label: "Boost target", variant: secondary }
+                  ] },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
+                  nodes: (array/map @entity.species (fn s { id: (object/get @s id), x: (object/get @s x), y: (object/get @s y), radius: (math/clamp (* (object/get @s population) 0.4) 6 55), color: (object/get @s color), label: (str/concat (object/get @s label) " (" (str/concat "" (object/get @s population)) ")"), kind: organism })),
+                  edges: @entity.displayEdges
+                },
+                { type: typography, variant: body, content: @entity.narration },
+                { type: typography, variant: caption, content: (str/concat "Generation " (str/concat "" @entity.generation)) }
               ] }
           ]
         })
-        (emit POPULATION_UPDATED { nodes: @entity.nodes })
+        (emit POPULATIONS_UPDATED { species: @entity.species, generation: @entity.generation, narration: @entity.narration })
+
+      STEP -> idle when (== @entity.active true)
+        (let (
+            (updated (array/map @entity.species (fn s
+              (let (
+                  (sid (object/get @s id))
+                  (pop (object/get @s population))
+                  (level (object/get @s trophicLevel))
+                  (cap (object/get @s capacity))
+                  (grow (object/get @s growthRate))
+                  (decl (object/get @s declineRate))
+                )
+                (let (
+                    (consumed (array/sum (array/map (array/filter @config.edges (fn e (== (object/get @e prey) @sid))) (fn e (math/round (* (object/get (array/find @entity.species (fn p (== (object/get @p id) (object/get @e predator)))) population) (object/get @e rate)))))))
+                    (gained (array/sum (array/map (array/filter @config.edges (fn e (== (object/get @e predator) @sid))) (fn e (math/round (* @pop (object/get @e rate) (object/get @e efficiency)))))))
+                  )
+                  (let (
+                      (newPop (if (== @level "producer")
+                        (math/clamp (- (+ @pop (math/round (* (- @cap @pop) @grow))) @consumed) 0 @cap)
+                        (math/clamp (- (+ @pop @gained) (+ (math/round (* @pop @decl)) @consumed)) 0 @cap)))
+                    )
+                    (object/merge @s { population: @newPop, delta: (- @newPop @pop) })
+                  )
+                )
+              )
+            )))
+          )
+          (let (
+              (dropped (array/find @updated (fn s (<= (object/get @s delta) -2))))
+              (risen (array/find @updated (fn s (>= (object/get @s delta) 2))))
+            )
+            (let (
+                (story (if (and @dropped @risen)
+                  (str/concat (object/get @dropped label) " fell — " (object/get @risen label) " felt the effect.")
+                  (if @dropped
+                    (str/concat (object/get @dropped label) " declined this generation.")
+                    (if @risen
+                      (str/concat (object/get @risen label) " grew this generation.")
+                      "Populations held steady this generation."))))
+              )
+              (do
+                (set @entity.species @updated)
+                (set @entity.generation (+ @entity.generation 1))
+                (set @entity.narration @story)
+                (render-ui main {
+                  type: box
+                  padding: md
+                  children: [
+                    { type: stack, direction: vertical, gap: md, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        { type: stack, direction: horizontal, gap: sm, children: [
+                            { type: button, action: STEP, label: "Step", variant: primary },
+                            { type: button, action: RUN, label: "Run", variant: secondary },
+                            { type: button, action: RESET, label: "Reset", variant: ghost },
+                            { type: button, action: REMOVE_SPECIES, label: "Remove target", variant: secondary },
+                            { type: button, action: BOOST_SPECIES, label: "Boost target", variant: secondary }
+                          ] },
+                        { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
+                          nodes: (array/map @entity.species (fn s { id: (object/get @s id), x: (object/get @s x), y: (object/get @s y), radius: (math/clamp (* (object/get @s population) 0.4) 6 55), color: (object/get @s color), label: (str/concat (object/get @s label) " (" (str/concat "" (object/get @s population)) ")"), kind: organism })),
+                          edges: @entity.displayEdges
+                        },
+                        { type: typography, variant: body, content: @entity.narration },
+                        { type: typography, variant: caption, content: (str/concat "Generation " (str/concat "" @entity.generation)) }
+                      ] }
+                  ]
+                })
+                (emit POPULATIONS_UPDATED { species: @entity.species, generation: @entity.generation, narration: @entity.narration })
+              )
+            )
+          )
+        )
+
+      REMOVE_SPECIES -> idle when (== @entity.active true)
+        (let (
+            (target (array/find @entity.species (fn s (== (object/get @s id) @config.perturbSpeciesId))))
+          )
+          (do
+            (set @entity.species (array/map @entity.species (fn s (if (== (object/get @s id) @config.perturbSpeciesId) (object/merge @s { population: 0, delta: (- 0 (object/get @s population)) }) (object/merge @s { delta: 0 })))))
+            (set @entity.narration (str/concat (object/get @target label) " removed from the food web — press Step to watch the cascade."))
+            (render-ui main {
+              type: box
+              padding: md
+              children: [
+                { type: stack, direction: vertical, gap: md, children: [
+                    { type: typography, variant: h4, content: @entity.title },
+                    { type: stack, direction: horizontal, gap: sm, children: [
+                        { type: button, action: STEP, label: "Step", variant: primary },
+                        { type: button, action: RUN, label: "Run", variant: secondary },
+                        { type: button, action: RESET, label: "Reset", variant: ghost },
+                        { type: button, action: REMOVE_SPECIES, label: "Remove target", variant: secondary },
+                        { type: button, action: BOOST_SPECIES, label: "Boost target", variant: secondary }
+                      ] },
+                    { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
+                      nodes: (array/map @entity.species (fn s { id: (object/get @s id), x: (object/get @s x), y: (object/get @s y), radius: (math/clamp (* (object/get @s population) 0.4) 6 55), color: (object/get @s color), label: (str/concat (object/get @s label) " (" (str/concat "" (object/get @s population)) ")"), kind: organism })),
+                      edges: @entity.displayEdges
+                    },
+                    { type: typography, variant: body, content: @entity.narration },
+                    { type: typography, variant: caption, content: (str/concat "Generation " (str/concat "" @entity.generation)) }
+                  ] }
+              ]
+            })
+            (emit POPULATIONS_UPDATED { species: @entity.species, generation: @entity.generation, narration: @entity.narration })
+          )
+        )
+
+      BOOST_SPECIES -> idle when (== @entity.active true)
+        (let (
+            (target (array/find @entity.species (fn s (== (object/get @s id) @config.perturbSpeciesId))))
+          )
+          (do
+            (set @entity.species (array/map @entity.species (fn s (if (== (object/get @s id) @config.perturbSpeciesId) (object/merge @s { population: (math/clamp (* (object/get @s population) @config.perturbBoostFactor) 0 (object/get @s capacity)), delta: (- (math/clamp (* (object/get @s population) @config.perturbBoostFactor) 0 (object/get @s capacity)) (object/get @s population)) }) (object/merge @s { delta: 0 })))))
+            (set @entity.narration (str/concat (object/get @target label) " boosted — press Step to watch the ripple effects."))
+            (render-ui main {
+              type: box
+              padding: md
+              children: [
+                { type: stack, direction: vertical, gap: md, children: [
+                    { type: typography, variant: h4, content: @entity.title },
+                    { type: stack, direction: horizontal, gap: sm, children: [
+                        { type: button, action: STEP, label: "Step", variant: primary },
+                        { type: button, action: RUN, label: "Run", variant: secondary },
+                        { type: button, action: RESET, label: "Reset", variant: ghost },
+                        { type: button, action: REMOVE_SPECIES, label: "Remove target", variant: secondary },
+                        { type: button, action: BOOST_SPECIES, label: "Boost target", variant: secondary }
+                      ] },
+                    { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
+                      nodes: (array/map @entity.species (fn s { id: (object/get @s id), x: (object/get @s x), y: (object/get @s y), radius: (math/clamp (* (object/get @s population) 0.4) 6 55), color: (object/get @s color), label: (str/concat (object/get @s label) " (" (str/concat "" (object/get @s population)) ")"), kind: organism })),
+                      edges: @entity.displayEdges
+                    },
+                    { type: typography, variant: body, content: @entity.narration },
+                    { type: typography, variant: caption, content: (str/concat "Generation " (str/concat "" @entity.generation)) }
+                  ] }
+              ]
+            })
+            (emit POPULATIONS_UPDATED { species: @entity.species, generation: @entity.generation, narration: @entity.narration })
+          )
+        )
+
+      RUN -> idle when (== @entity.active true)
+        (set @entity.running (not @entity.running))
+        (set @entity.narration (if @entity.running "Running — population dynamics advance automatically." "Paused — press Step to advance manually."))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: STEP, label: "Step", variant: primary },
+                    { type: button, action: RUN, label: "Run", variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost },
+                    { type: button, action: REMOVE_SPECIES, label: "Remove target", variant: secondary },
+                    { type: button, action: BOOST_SPECIES, label: "Boost target", variant: secondary }
+                  ] },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
+                  nodes: (array/map @entity.species (fn s { id: (object/get @s id), x: (object/get @s x), y: (object/get @s y), radius: (math/clamp (* (object/get @s population) 0.4) 6 55), color: (object/get @s color), label: (str/concat (object/get @s label) " (" (str/concat "" (object/get @s population)) ")"), kind: organism })),
+                  edges: @entity.displayEdges
+                },
+                { type: typography, variant: body, content: @entity.narration },
+                { type: typography, variant: caption, content: (str/concat "Generation " (str/concat "" @entity.generation)) }
+              ] }
+          ]
+        })
+        (emit POPULATIONS_UPDATED { species: @entity.species, generation: @entity.generation, narration: @entity.narration })
+
+      RESET -> idle when (== @entity.active true)
+        (set @entity.species @config.species)
+        (set @entity.generation 0)
+        (set @entity.running false)
+        (set @entity.narration "Ecosystem reset. Press Step or Run to advance a generation.")
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: STEP, label: "Step", variant: primary },
+                    { type: button, action: RUN, label: "Run", variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost },
+                    { type: button, action: REMOVE_SPECIES, label: "Remove target", variant: secondary },
+                    { type: button, action: BOOST_SPECIES, label: "Boost target", variant: secondary }
+                  ] },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
+                  nodes: (array/map @entity.species (fn s { id: (object/get @s id), x: (object/get @s x), y: (object/get @s y), radius: (math/clamp (* (object/get @s population) 0.4) 6 55), color: (object/get @s color), label: (str/concat (object/get @s label) " (" (str/concat "" (object/get @s population)) ")"), kind: organism })),
+                  edges: @entity.displayEdges
+                },
+                { type: typography, variant: body, content: @entity.narration },
+                { type: typography, variant: caption, content: (str/concat "Generation " (str/concat "" @entity.generation)) }
+              ] }
+          ]
+        })
+        (emit POPULATIONS_UPDATED { species: @entity.species, generation: @entity.generation, narration: @entity.narration })
     }
 
     ticks {
-      foodwebTick every 32ms
+      foodwebTick every 900ms
         when @entity.running
-        (set @entity.phase (+ @entity.phase 3))
-        (set @entity.nodes (array/map @entity.nodes (fn n
-          (let (
-            (off (if (= (object/get @n id) "grass") 0 (if (= (object/get @n id) "rabbit") 48 (if (= (object/get @n id) "insect") 96 (if (= (object/get @n id) "fox") 144 192)))))
+        (let (
+            (updated (array/map @entity.species (fn s
+              (let (
+                  (sid (object/get @s id))
+                  (pop (object/get @s population))
+                  (level (object/get @s trophicLevel))
+                  (cap (object/get @s capacity))
+                  (grow (object/get @s growthRate))
+                  (decl (object/get @s declineRate))
+                )
+                (let (
+                    (consumed (array/sum (array/map (array/filter @config.edges (fn e (== (object/get @e prey) @sid))) (fn e (math/round (* (object/get (array/find @entity.species (fn p (== (object/get @p id) (object/get @e predator)))) population) (object/get @e rate)))))))
+                    (gained (array/sum (array/map (array/filter @config.edges (fn e (== (object/get @e predator) @sid))) (fn e (math/round (* @pop (object/get @e rate) (object/get @e efficiency)))))))
+                  )
+                  (let (
+                      (newPop (if (== @level "producer")
+                        (math/clamp (- (+ @pop (math/round (* (- @cap @pop) @grow))) @consumed) 0 @cap)
+                        (math/clamp (- (+ @pop @gained) (+ (math/round (* @pop @decl)) @consumed)) 0 @cap)))
+                    )
+                    (object/merge @s { population: @newPop, delta: (- @newPop @pop) })
+                  )
+                )
+              )
+            )))
           )
           (let (
-            (tw (math/abs (- (math/mod (+ @entity.phase @off) 240) 120)))
+              (dropped (array/find @updated (fn s (<= (object/get @s delta) -2))))
+              (risen (array/find @updated (fn s (>= (object/get @s delta) 2))))
+            )
+            (let (
+                (story (if (and @dropped @risen)
+                  (str/concat (object/get @dropped label) " fell — " (object/get @risen label) " felt the effect.")
+                  (if @dropped
+                    (str/concat (object/get @dropped label) " declined this generation.")
+                    (if @risen
+                      (str/concat (object/get @risen label) " grew this generation.")
+                      "Populations held steady this generation."))))
+              )
+              (do
+                (set @entity.species @updated)
+                (set @entity.generation (+ @entity.generation 1))
+                (set @entity.narration @story)
+                (render-ui main {
+                  type: box
+                  padding: md
+                  children: [
+                    { type: stack, direction: vertical, gap: md, children: [
+                        { type: typography, variant: h4, content: @entity.title },
+                        { type: stack, direction: horizontal, gap: sm, children: [
+                            { type: button, action: STEP, label: "Step", variant: primary },
+                            { type: button, action: RUN, label: "Run", variant: secondary },
+                            { type: button, action: RESET, label: "Reset", variant: ghost },
+                            { type: button, action: REMOVE_SPECIES, label: "Remove target", variant: secondary },
+                            { type: button, action: BOOST_SPECIES, label: "Boost target", variant: secondary }
+                          ] },
+                        { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
+                          nodes: (array/map @entity.species (fn s { id: (object/get @s id), x: (object/get @s x), y: (object/get @s y), radius: (math/clamp (* (object/get @s population) 0.4) 6 55), color: (object/get @s color), label: (str/concat (object/get @s label) " (" (str/concat "" (object/get @s population)) ")"), kind: organism })),
+                          edges: @entity.displayEdges
+                        },
+                        { type: typography, variant: body, content: @entity.narration },
+                        { type: typography, variant: caption, content: (str/concat "Generation " (str/concat "" @entity.generation)) }
+                      ] }
+                  ]
+                })
+                (emit POPULATIONS_UPDATED { species: @entity.species, generation: @entity.generation, narration: @entity.narration })
+              )
+            )
           )
-          (let (
-            (nr (+ 12 (* @tw 0.2)))
-          )
-          (object/merge @n { radius: @nr })))))))
-        (render-ui main {
-          type: box
-          padding: md
-          children: [
-            { type: stack, direction: vertical, gap: md, children: [
-                { type: typography, variant: h4, content: @entity.title },
-                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: @entity.nodes, edges: @config.edges }
-              ] }
-          ]
-        })
-        (emit POPULATION_UPDATED { nodes: @entity.nodes })
+        )
     }
 
     listens {
@@ -105,11 +395,13 @@ orbital BioFoodwebEngineOrbital {
     }
 
     emits {
-      POPULATION_UPDATED -> external {
-        nodes : [BioNode]
+      POPULATIONS_UPDATED -> external {
+        species : [Species]
+        generation : number
+        narration : string
       }
-        @description "The current food-web scene each tick — a composed listener (readout, graph) can subscribe; a harmless no-op when the atom runs standalone."
-        @synonyms "tick, frame, step, redraw"
+        @description "Fires on every generation and on each perturbation with the full species roster (including this generation's population delta), the generation count, and the narration explaining what changed — a composed listener (readout, graph) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "step, tick, generation, population, cascade, ecosystem"
         @tier "domain"
     }
 
@@ -122,30 +414,39 @@ orbital BioFoodwebEngineOrbital {
         @label "Title"
         @description "Title shown above the canvas."
         @tier "presentation"
-      running : boolean = true
+      running : boolean = false
         @label "Running"
-        @description "When true the tick advances the phase and recomputes every species radius; toggle to start/pause."
+        @description "When true the tick auto-advances a generation every 900ms; toggle with the Run button."
         @tier "domain"
-      nodes : [BioNode] = [
-        { id: "grass", x: 300, y: 340, radius: 20, color: "#16a34a", label: "Grass", kind: organism },
-        { id: "rabbit", x: 180, y: 220, radius: 18, color: "#a16207", label: "Rabbit", kind: organism },
-        { id: "insect", x: 420, y: 220, radius: 14, color: "#0891b2", label: "Insect", kind: organism },
-        { id: "fox", x: 220, y: 90, radius: 20, color: "#dc2626", label: "Fox", kind: organism },
-        { id: "hawk", x: 400, y: 60, radius: 22, color: "#7c3aed", label: "Hawk", kind: organism }
+      perturbSpeciesId : string = "hawk"
+        @label "Perturbation Target"
+        @description "Which species id the Remove/Boost buttons act on; must match an id in the species roster."
+        @synonyms "target species, cascade trigger"
+        @tier "domain"
+      perturbBoostFactor : number = 2
+        @label "Boost Factor"
+        @description "Multiplier applied to the target species' population when Boost is pressed, clamped to its capacity."
+        @tier "domain"
+      species : [Species] = [
+        { id: "grass", x: 300, y: 300, color: "#16a34a", label: "Grass", trophicLevel: producer, population: 120, capacity: 160, growthRate: 0.18, declineRate: 0, delta: 0 },
+        { id: "rabbit", x: 180, y: 230, color: "#a16207", label: "Rabbit", trophicLevel: herbivore, population: 40, capacity: 90, growthRate: 0, declineRate: 0.1, delta: 0 },
+        { id: "insect", x: 420, y: 230, color: "#0891b2", label: "Insect", trophicLevel: herbivore, population: 55, capacity: 100, growthRate: 0, declineRate: 0.12, delta: 0 },
+        { id: "fox", x: 220, y: 110, color: "#dc2626", label: "Fox", trophicLevel: carnivore, population: 18, capacity: 40, growthRate: 0, declineRate: 0.15, delta: 0 },
+        { id: "hawk", x: 400, y: 80, color: "#7c3aed", label: "Hawk", trophicLevel: apex, population: 10, capacity: 25, growthRate: 0, declineRate: 0.18, delta: 0 }
       ]
-        @label "Nodes"
-        @description "Five trophic species — producer (grass), herbivores (rabbit, insect), carnivore (fox), apex (hawk); radius encodes population size."
-        @tier "presentation"
-      edges : [BioEdge] = [
-        { from: "rabbit", to: "grass", color: "#94a3b8", label: "eats" },
-        { from: "insect", to: "grass", color: "#94a3b8", label: "eats" },
-        { from: "fox", to: "rabbit", color: "#94a3b8", label: "eats" },
-        { from: "fox", to: "insect", color: "#94a3b8", label: "eats" },
-        { from: "hawk", to: "fox", color: "#94a3b8", label: "eats" }
+        @label "Species"
+        @description "Five trophic species — producer (grass), herbivores (rabbit, insect), carnivore (fox), apex predator (hawk) — each with a starting population, carrying capacity, and growth/decline rate."
+        @tier "domain"
+      edges : [FeedEdge] = [
+        { predator: "rabbit", prey: "grass", rate: 0.35, efficiency: 0.25 },
+        { predator: "insect", prey: "grass", rate: 0.3, efficiency: 0.2 },
+        { predator: "fox", prey: "rabbit", rate: 0.4, efficiency: 0.3 },
+        { predator: "fox", prey: "insect", rate: 0.3, efficiency: 0.25 },
+        { predator: "hawk", prey: "fox", rate: 0.4, efficiency: 0.25 }
       ]
-        @label "Edges"
-        @description "Directed predation links (from eater to prey) forming the food web."
-        @tier "presentation"
+        @label "Feeding Edges"
+        @description "Directed predation links — each generation a predator eats a share of its prey's population (rate) and converts a fraction of that (efficiency) into its own growth."
+        @tier "domain"
       width : number = 600
         @label "Width"
         @description "Canvas width in pixels."

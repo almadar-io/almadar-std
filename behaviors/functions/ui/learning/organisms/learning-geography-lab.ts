@@ -50,7 +50,7 @@ export interface StdLearningGeographyLabConfig {
   mode?: 'population' | 'climate';
 }
 
-type _StdLearningGeographyLabEntityName = 'GeographyLabItem' | 'PopulationScene' | 'ClimateScene';
+type _StdLearningGeographyLabEntityName = 'GeographyLabItem' | 'PopulationScene' | 'ClimateScene' | 'GeoPopulationScene' | 'GeoKoppenScene';
 type _StdLearningGeographyLabListenTraitName = 'GeographyLabRouter' | 'PopulationSim' | 'KoppenSim';
 
 /**

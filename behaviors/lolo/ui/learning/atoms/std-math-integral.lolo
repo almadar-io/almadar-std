@@ -1,0 +1,482 @@
+app std-math-integral "1.0.0"
+"Riemann-sum accumulator — each step doubles the rectangles under a curve; the left/right/midpoint/trapezoid rule is selectable and the accumulated area converges to the exact integral readout. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital MathIntegralOrbital {
+  type MathIntegralSample = {
+    x : number!
+    y : number!
+  }
+  type MathIntegralCurve = {
+    label : string
+    color : string
+    samples : [MathIntegralSample]
+  }
+
+  entity MathIntegralState [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    functionPreset : string
+    method : string
+    rectangles : number
+    lowerBound : number
+    upperBound : number
+    approxArea : number
+    exactArea : number
+    curves : [MathIntegralCurve]
+  }
+
+  trait MathIntegralSim -> @rebindable MathIntegralState [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.functionPreset @config.functionPreset)
+        (set @entity.method @config.method)
+        (set @entity.rectangles @config.startRectangles)
+        (set @entity.lowerBound @config.lowerBound)
+        (set @entity.upperBound @config.upperBound)
+        (let (
+            (dx (/ (- @entity.upperBound @entity.lowerBound) @entity.rectangles))
+            (ks (array/take @config.binIndex @entity.rectangles))
+            (lefts (array/map @ks (fn k (+ @entity.lowerBound (* @k @dx)))))
+            (fL (array/map @lefts (fn x (if (== @entity.functionPreset "sine") (* 3 (math/sin @x)) (if (== @entity.functionPreset "cubic") (* 0.1 (* @x (* @x @x))) (* 0.5 (* @x @x)))))))
+            (fR (array/map @lefts (fn x (if (== @entity.functionPreset "sine") (* 3 (math/sin (+ @x @dx))) (if (== @entity.functionPreset "cubic") (* 0.1 (* (+ @x @dx) (* (+ @x @dx) (+ @x @dx)))) (* 0.5 (* (+ @x @dx) (+ @x @dx))))))))
+            (fM (array/map @lefts (fn x (if (== @entity.functionPreset "sine") (* 3 (math/sin (+ @x (* 0.5 @dx)))) (if (== @entity.functionPreset "cubic") (* 0.1 (* (+ @x (* 0.5 @dx)) (* (+ @x (* 0.5 @dx)) (+ @x (* 0.5 @dx))))) (* 0.5 (* (+ @x (* 0.5 @dx)) (+ @x (* 0.5 @dx)))))))))
+            (heights (if (== @entity.method "left") @fL (if (== @entity.method "right") @fR (if (== @entity.method "midpoint") @fM (array/map @ks (fn k (* 0.5 (+ (array/nth @fL @k) (array/nth @fR @k)))))))))
+            (fCurve { label: "f", color: @config.curveColor, samples: (array/map @config.sampleXs (fn x { x: @x, y: (if (== @entity.functionPreset "sine") (* 3 (math/sin @x)) (if (== @entity.functionPreset "cubic") (* 0.1 (* @x (* @x @x))) (* 0.5 (* @x @x)))) })) })
+            (stepCurve { label: "rectangles", color: @config.rectColor, samples: (array/flatten (array/map @ks (fn k [ { x: (array/nth @lefts @k), y: (array/nth @heights @k) }, { x: (+ (array/nth @lefts @k) @dx), y: (array/nth @heights @k) } ]))) })
+          )
+          (do
+            (set @entity.approxArea (* @dx (array/sum @heights)))
+            (set @entity.exactArea (if (== @entity.functionPreset "sine") (* 3 (- (math/cos @entity.lowerBound) (math/cos @entity.upperBound))) (if (== @entity.functionPreset "cubic") (/ (- (math/pow @entity.upperBound 4) (math/pow @entity.lowerBound 4)) 40) (/ (- (math/pow @entity.upperBound 3) (math/pow @entity.lowerBound 3)) 6))))
+            (set @entity.curves [ @fCurve, @stepCurve ])
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: SET_METHOD, actionPayload: { method: "left" }, label: "Left", variant: secondary },
+                    { type: button, action: SET_METHOD, actionPayload: { method: "right" }, label: "Right", variant: secondary },
+                    { type: button, action: SET_METHOD, actionPayload: { method: "midpoint" }, label: "Midpoint", variant: secondary },
+                    { type: button, action: SET_METHOD, actionPayload: { method: "trapezoid" }, label: "Trapezoid", variant: secondary },
+                    { type: button, action: STEP_SUBDIVIDE, label: "Double rectangles", variant: primary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.xMin, xMax: @config.xMax, yMin: @config.yMin, yMax: @config.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: stack, direction: horizontal, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat "lower bound = " (math/round @entity.lowerBound 1)) },
+                        { type: range-slider, min: -5, max: 5, step: 0.5, value: @entity.lowerBound, showTooltip: true, onChange: SET_BOUNDS, actionPayload: { bound: "lower" } }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat "upper bound = " (math/round @entity.upperBound 1)) },
+                        { type: range-slider, min: -5, max: 5, step: 0.5, value: @entity.upperBound, showTooltip: true, onChange: SET_BOUNDS, actionPayload: { bound: "upper" } }
+                      ] }
+                  ] },
+                { type: typography, variant: body, content: (str/concat "Riemann sum (" @entity.method ", n = " @entity.rectangles ") ≈ " (math/round @entity.approxArea 4)) },
+                { type: typography, variant: body, content: (str/concat "Exact integral over [" (math/round @entity.lowerBound 1) ", " (math/round @entity.upperBound 1) "] = " (math/round @entity.exactArea 4) " · error " (math/round (math/abs (- @entity.approxArea @entity.exactArea)) 4)) }
+              ] }
+          ]
+        })
+        (emit INTEGRAL_UPDATED { method: @entity.method, rectangles: @entity.rectangles, lowerBound: @entity.lowerBound, upperBound: @entity.upperBound, approxArea: @entity.approxArea, exactArea: @entity.exactArea })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.functionPreset @config.functionPreset)
+        (set @entity.method @config.method)
+        (set @entity.rectangles @config.startRectangles)
+        (set @entity.lowerBound @config.lowerBound)
+        (set @entity.upperBound @config.upperBound)
+        (let (
+            (dx (/ (- @entity.upperBound @entity.lowerBound) @entity.rectangles))
+            (ks (array/take @config.binIndex @entity.rectangles))
+            (lefts (array/map @ks (fn k (+ @entity.lowerBound (* @k @dx)))))
+            (fL (array/map @lefts (fn x (if (== @entity.functionPreset "sine") (* 3 (math/sin @x)) (if (== @entity.functionPreset "cubic") (* 0.1 (* @x (* @x @x))) (* 0.5 (* @x @x)))))))
+            (fR (array/map @lefts (fn x (if (== @entity.functionPreset "sine") (* 3 (math/sin (+ @x @dx))) (if (== @entity.functionPreset "cubic") (* 0.1 (* (+ @x @dx) (* (+ @x @dx) (+ @x @dx)))) (* 0.5 (* (+ @x @dx) (+ @x @dx))))))))
+            (fM (array/map @lefts (fn x (if (== @entity.functionPreset "sine") (* 3 (math/sin (+ @x (* 0.5 @dx)))) (if (== @entity.functionPreset "cubic") (* 0.1 (* (+ @x (* 0.5 @dx)) (* (+ @x (* 0.5 @dx)) (+ @x (* 0.5 @dx))))) (* 0.5 (* (+ @x (* 0.5 @dx)) (+ @x (* 0.5 @dx)))))))))
+            (heights (if (== @entity.method "left") @fL (if (== @entity.method "right") @fR (if (== @entity.method "midpoint") @fM (array/map @ks (fn k (* 0.5 (+ (array/nth @fL @k) (array/nth @fR @k)))))))))
+            (fCurve { label: "f", color: @config.curveColor, samples: (array/map @config.sampleXs (fn x { x: @x, y: (if (== @entity.functionPreset "sine") (* 3 (math/sin @x)) (if (== @entity.functionPreset "cubic") (* 0.1 (* @x (* @x @x))) (* 0.5 (* @x @x)))) })) })
+            (stepCurve { label: "rectangles", color: @config.rectColor, samples: (array/flatten (array/map @ks (fn k [ { x: (array/nth @lefts @k), y: (array/nth @heights @k) }, { x: (+ (array/nth @lefts @k) @dx), y: (array/nth @heights @k) } ]))) })
+          )
+          (do
+            (set @entity.approxArea (* @dx (array/sum @heights)))
+            (set @entity.exactArea (if (== @entity.functionPreset "sine") (* 3 (- (math/cos @entity.lowerBound) (math/cos @entity.upperBound))) (if (== @entity.functionPreset "cubic") (/ (- (math/pow @entity.upperBound 4) (math/pow @entity.lowerBound 4)) 40) (/ (- (math/pow @entity.upperBound 3) (math/pow @entity.lowerBound 3)) 6))))
+            (set @entity.curves [ @fCurve, @stepCurve ])
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: SET_METHOD, actionPayload: { method: "left" }, label: "Left", variant: secondary },
+                    { type: button, action: SET_METHOD, actionPayload: { method: "right" }, label: "Right", variant: secondary },
+                    { type: button, action: SET_METHOD, actionPayload: { method: "midpoint" }, label: "Midpoint", variant: secondary },
+                    { type: button, action: SET_METHOD, actionPayload: { method: "trapezoid" }, label: "Trapezoid", variant: secondary },
+                    { type: button, action: STEP_SUBDIVIDE, label: "Double rectangles", variant: primary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.xMin, xMax: @config.xMax, yMin: @config.yMin, yMax: @config.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: stack, direction: horizontal, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat "lower bound = " (math/round @entity.lowerBound 1)) },
+                        { type: range-slider, min: -5, max: 5, step: 0.5, value: @entity.lowerBound, showTooltip: true, onChange: SET_BOUNDS, actionPayload: { bound: "lower" } }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat "upper bound = " (math/round @entity.upperBound 1)) },
+                        { type: range-slider, min: -5, max: 5, step: 0.5, value: @entity.upperBound, showTooltip: true, onChange: SET_BOUNDS, actionPayload: { bound: "upper" } }
+                      ] }
+                  ] },
+                { type: typography, variant: body, content: (str/concat "Riemann sum (" @entity.method ", n = " @entity.rectangles ") ≈ " (math/round @entity.approxArea 4)) },
+                { type: typography, variant: body, content: (str/concat "Exact integral over [" (math/round @entity.lowerBound 1) ", " (math/round @entity.upperBound 1) "] = " (math/round @entity.exactArea 4) " · error " (math/round (math/abs (- @entity.approxArea @entity.exactArea)) 4)) }
+              ] }
+          ]
+        })
+        (emit INTEGRAL_UPDATED { method: @entity.method, rectangles: @entity.rectangles, lowerBound: @entity.lowerBound, upperBound: @entity.upperBound, approxArea: @entity.approxArea, exactArea: @entity.exactArea })
+
+      STEP_SUBDIVIDE -> idle when (== @entity.active true)
+        (let (
+            (nn (math/min (* @entity.rectangles 2) @config.maxRectangles))
+            (dx (/ (- @entity.upperBound @entity.lowerBound) @nn))
+            (ks (array/take @config.binIndex @nn))
+            (lefts (array/map @ks (fn k (+ @entity.lowerBound (* @k @dx)))))
+            (fL (array/map @lefts (fn x (if (== @entity.functionPreset "sine") (* 3 (math/sin @x)) (if (== @entity.functionPreset "cubic") (* 0.1 (* @x (* @x @x))) (* 0.5 (* @x @x)))))))
+            (fR (array/map @lefts (fn x (if (== @entity.functionPreset "sine") (* 3 (math/sin (+ @x @dx))) (if (== @entity.functionPreset "cubic") (* 0.1 (* (+ @x @dx) (* (+ @x @dx) (+ @x @dx)))) (* 0.5 (* (+ @x @dx) (+ @x @dx))))))))
+            (fM (array/map @lefts (fn x (if (== @entity.functionPreset "sine") (* 3 (math/sin (+ @x (* 0.5 @dx)))) (if (== @entity.functionPreset "cubic") (* 0.1 (* (+ @x (* 0.5 @dx)) (* (+ @x (* 0.5 @dx)) (+ @x (* 0.5 @dx))))) (* 0.5 (* (+ @x (* 0.5 @dx)) (+ @x (* 0.5 @dx)))))))))
+            (heights (if (== @entity.method "left") @fL (if (== @entity.method "right") @fR (if (== @entity.method "midpoint") @fM (array/map @ks (fn k (* 0.5 (+ (array/nth @fL @k) (array/nth @fR @k)))))))))
+            (fCurve { label: "f", color: @config.curveColor, samples: (array/map @config.sampleXs (fn x { x: @x, y: (if (== @entity.functionPreset "sine") (* 3 (math/sin @x)) (if (== @entity.functionPreset "cubic") (* 0.1 (* @x (* @x @x))) (* 0.5 (* @x @x)))) })) })
+            (stepCurve { label: "rectangles", color: @config.rectColor, samples: (array/flatten (array/map @ks (fn k [ { x: (array/nth @lefts @k), y: (array/nth @heights @k) }, { x: (+ (array/nth @lefts @k) @dx), y: (array/nth @heights @k) } ]))) })
+          )
+          (do
+            (set @entity.rectangles @nn)
+            (set @entity.approxArea (* @dx (array/sum @heights)))
+            (set @entity.exactArea (if (== @entity.functionPreset "sine") (* 3 (- (math/cos @entity.lowerBound) (math/cos @entity.upperBound))) (if (== @entity.functionPreset "cubic") (/ (- (math/pow @entity.upperBound 4) (math/pow @entity.lowerBound 4)) 40) (/ (- (math/pow @entity.upperBound 3) (math/pow @entity.lowerBound 3)) 6))))
+            (set @entity.curves [ @fCurve, @stepCurve ])
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: SET_METHOD, actionPayload: { method: "left" }, label: "Left", variant: secondary },
+                    { type: button, action: SET_METHOD, actionPayload: { method: "right" }, label: "Right", variant: secondary },
+                    { type: button, action: SET_METHOD, actionPayload: { method: "midpoint" }, label: "Midpoint", variant: secondary },
+                    { type: button, action: SET_METHOD, actionPayload: { method: "trapezoid" }, label: "Trapezoid", variant: secondary },
+                    { type: button, action: STEP_SUBDIVIDE, label: "Double rectangles", variant: primary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.xMin, xMax: @config.xMax, yMin: @config.yMin, yMax: @config.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: stack, direction: horizontal, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat "lower bound = " (math/round @entity.lowerBound 1)) },
+                        { type: range-slider, min: -5, max: 5, step: 0.5, value: @entity.lowerBound, showTooltip: true, onChange: SET_BOUNDS, actionPayload: { bound: "lower" } }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat "upper bound = " (math/round @entity.upperBound 1)) },
+                        { type: range-slider, min: -5, max: 5, step: 0.5, value: @entity.upperBound, showTooltip: true, onChange: SET_BOUNDS, actionPayload: { bound: "upper" } }
+                      ] }
+                  ] },
+                { type: typography, variant: body, content: (str/concat "Riemann sum (" @entity.method ", n = " @entity.rectangles ") ≈ " (math/round @entity.approxArea 4)) },
+                { type: typography, variant: body, content: (str/concat "Exact integral over [" (math/round @entity.lowerBound 1) ", " (math/round @entity.upperBound 1) "] = " (math/round @entity.exactArea 4) " · error " (math/round (math/abs (- @entity.approxArea @entity.exactArea)) 4)) }
+              ] }
+          ]
+        })
+        (emit INTEGRAL_UPDATED { method: @entity.method, rectangles: @entity.rectangles, lowerBound: @entity.lowerBound, upperBound: @entity.upperBound, approxArea: @entity.approxArea, exactArea: @entity.exactArea })
+
+      SET_METHOD -> idle when (== @entity.active true)
+        (let (
+            (nm ?method)
+            (dx (/ (- @entity.upperBound @entity.lowerBound) @entity.rectangles))
+            (ks (array/take @config.binIndex @entity.rectangles))
+            (lefts (array/map @ks (fn k (+ @entity.lowerBound (* @k @dx)))))
+            (fL (array/map @lefts (fn x (if (== @entity.functionPreset "sine") (* 3 (math/sin @x)) (if (== @entity.functionPreset "cubic") (* 0.1 (* @x (* @x @x))) (* 0.5 (* @x @x)))))))
+            (fR (array/map @lefts (fn x (if (== @entity.functionPreset "sine") (* 3 (math/sin (+ @x @dx))) (if (== @entity.functionPreset "cubic") (* 0.1 (* (+ @x @dx) (* (+ @x @dx) (+ @x @dx)))) (* 0.5 (* (+ @x @dx) (+ @x @dx))))))))
+            (fM (array/map @lefts (fn x (if (== @entity.functionPreset "sine") (* 3 (math/sin (+ @x (* 0.5 @dx)))) (if (== @entity.functionPreset "cubic") (* 0.1 (* (+ @x (* 0.5 @dx)) (* (+ @x (* 0.5 @dx)) (+ @x (* 0.5 @dx))))) (* 0.5 (* (+ @x (* 0.5 @dx)) (+ @x (* 0.5 @dx)))))))))
+            (heights (if (== @nm "left") @fL (if (== @nm "right") @fR (if (== @nm "midpoint") @fM (array/map @ks (fn k (* 0.5 (+ (array/nth @fL @k) (array/nth @fR @k)))))))))
+            (fCurve { label: "f", color: @config.curveColor, samples: (array/map @config.sampleXs (fn x { x: @x, y: (if (== @entity.functionPreset "sine") (* 3 (math/sin @x)) (if (== @entity.functionPreset "cubic") (* 0.1 (* @x (* @x @x))) (* 0.5 (* @x @x)))) })) })
+            (stepCurve { label: "rectangles", color: @config.rectColor, samples: (array/flatten (array/map @ks (fn k [ { x: (array/nth @lefts @k), y: (array/nth @heights @k) }, { x: (+ (array/nth @lefts @k) @dx), y: (array/nth @heights @k) } ]))) })
+          )
+          (do
+            (set @entity.method @nm)
+            (set @entity.approxArea (* @dx (array/sum @heights)))
+            (set @entity.exactArea (if (== @entity.functionPreset "sine") (* 3 (- (math/cos @entity.lowerBound) (math/cos @entity.upperBound))) (if (== @entity.functionPreset "cubic") (/ (- (math/pow @entity.upperBound 4) (math/pow @entity.lowerBound 4)) 40) (/ (- (math/pow @entity.upperBound 3) (math/pow @entity.lowerBound 3)) 6))))
+            (set @entity.curves [ @fCurve, @stepCurve ])
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: SET_METHOD, actionPayload: { method: "left" }, label: "Left", variant: secondary },
+                    { type: button, action: SET_METHOD, actionPayload: { method: "right" }, label: "Right", variant: secondary },
+                    { type: button, action: SET_METHOD, actionPayload: { method: "midpoint" }, label: "Midpoint", variant: secondary },
+                    { type: button, action: SET_METHOD, actionPayload: { method: "trapezoid" }, label: "Trapezoid", variant: secondary },
+                    { type: button, action: STEP_SUBDIVIDE, label: "Double rectangles", variant: primary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.xMin, xMax: @config.xMax, yMin: @config.yMin, yMax: @config.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: stack, direction: horizontal, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat "lower bound = " (math/round @entity.lowerBound 1)) },
+                        { type: range-slider, min: -5, max: 5, step: 0.5, value: @entity.lowerBound, showTooltip: true, onChange: SET_BOUNDS, actionPayload: { bound: "lower" } }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat "upper bound = " (math/round @entity.upperBound 1)) },
+                        { type: range-slider, min: -5, max: 5, step: 0.5, value: @entity.upperBound, showTooltip: true, onChange: SET_BOUNDS, actionPayload: { bound: "upper" } }
+                      ] }
+                  ] },
+                { type: typography, variant: body, content: (str/concat "Riemann sum (" @entity.method ", n = " @entity.rectangles ") ≈ " (math/round @entity.approxArea 4)) },
+                { type: typography, variant: body, content: (str/concat "Exact integral over [" (math/round @entity.lowerBound 1) ", " (math/round @entity.upperBound 1) "] = " (math/round @entity.exactArea 4) " · error " (math/round (math/abs (- @entity.approxArea @entity.exactArea)) 4)) }
+              ] }
+          ]
+        })
+        (emit INTEGRAL_UPDATED { method: @entity.method, rectangles: @entity.rectangles, lowerBound: @entity.lowerBound, upperBound: @entity.upperBound, approxArea: @entity.approxArea, exactArea: @entity.exactArea })
+
+      SET_BOUNDS -> idle when (== @entity.active true)
+        (let (
+            (nlo (if (== ?bound "lower") (math/clamp ?value -5 (- @entity.upperBound 0.5)) @entity.lowerBound))
+            (nhi (if (== ?bound "upper") (math/clamp ?value (+ @nlo 0.5) 5) @entity.upperBound))
+            (dx (/ (- @nhi @nlo) @entity.rectangles))
+            (ks (array/take @config.binIndex @entity.rectangles))
+            (lefts (array/map @ks (fn k (+ @nlo (* @k @dx)))))
+            (fL (array/map @lefts (fn x (if (== @entity.functionPreset "sine") (* 3 (math/sin @x)) (if (== @entity.functionPreset "cubic") (* 0.1 (* @x (* @x @x))) (* 0.5 (* @x @x)))))))
+            (fR (array/map @lefts (fn x (if (== @entity.functionPreset "sine") (* 3 (math/sin (+ @x @dx))) (if (== @entity.functionPreset "cubic") (* 0.1 (* (+ @x @dx) (* (+ @x @dx) (+ @x @dx)))) (* 0.5 (* (+ @x @dx) (+ @x @dx))))))))
+            (fM (array/map @lefts (fn x (if (== @entity.functionPreset "sine") (* 3 (math/sin (+ @x (* 0.5 @dx)))) (if (== @entity.functionPreset "cubic") (* 0.1 (* (+ @x (* 0.5 @dx)) (* (+ @x (* 0.5 @dx)) (+ @x (* 0.5 @dx))))) (* 0.5 (* (+ @x (* 0.5 @dx)) (+ @x (* 0.5 @dx)))))))))
+            (heights (if (== @entity.method "left") @fL (if (== @entity.method "right") @fR (if (== @entity.method "midpoint") @fM (array/map @ks (fn k (* 0.5 (+ (array/nth @fL @k) (array/nth @fR @k)))))))))
+            (fCurve { label: "f", color: @config.curveColor, samples: (array/map @config.sampleXs (fn x { x: @x, y: (if (== @entity.functionPreset "sine") (* 3 (math/sin @x)) (if (== @entity.functionPreset "cubic") (* 0.1 (* @x (* @x @x))) (* 0.5 (* @x @x)))) })) })
+            (stepCurve { label: "rectangles", color: @config.rectColor, samples: (array/flatten (array/map @ks (fn k [ { x: (array/nth @lefts @k), y: (array/nth @heights @k) }, { x: (+ (array/nth @lefts @k) @dx), y: (array/nth @heights @k) } ]))) })
+          )
+          (do
+            (set @entity.lowerBound @nlo)
+            (set @entity.upperBound @nhi)
+            (set @entity.approxArea (* @dx (array/sum @heights)))
+            (set @entity.exactArea (if (== @entity.functionPreset "sine") (* 3 (- (math/cos @nlo) (math/cos @nhi))) (if (== @entity.functionPreset "cubic") (/ (- (math/pow @nhi 4) (math/pow @nlo 4)) 40) (/ (- (math/pow @nhi 3) (math/pow @nlo 3)) 6))))
+            (set @entity.curves [ @fCurve, @stepCurve ])
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: SET_METHOD, actionPayload: { method: "left" }, label: "Left", variant: secondary },
+                    { type: button, action: SET_METHOD, actionPayload: { method: "right" }, label: "Right", variant: secondary },
+                    { type: button, action: SET_METHOD, actionPayload: { method: "midpoint" }, label: "Midpoint", variant: secondary },
+                    { type: button, action: SET_METHOD, actionPayload: { method: "trapezoid" }, label: "Trapezoid", variant: secondary },
+                    { type: button, action: STEP_SUBDIVIDE, label: "Double rectangles", variant: primary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.xMin, xMax: @config.xMax, yMin: @config.yMin, yMax: @config.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: stack, direction: horizontal, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat "lower bound = " (math/round @entity.lowerBound 1)) },
+                        { type: range-slider, min: -5, max: 5, step: 0.5, value: @entity.lowerBound, showTooltip: true, onChange: SET_BOUNDS, actionPayload: { bound: "lower" } }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat "upper bound = " (math/round @entity.upperBound 1)) },
+                        { type: range-slider, min: -5, max: 5, step: 0.5, value: @entity.upperBound, showTooltip: true, onChange: SET_BOUNDS, actionPayload: { bound: "upper" } }
+                      ] }
+                  ] },
+                { type: typography, variant: body, content: (str/concat "Riemann sum (" @entity.method ", n = " @entity.rectangles ") ≈ " (math/round @entity.approxArea 4)) },
+                { type: typography, variant: body, content: (str/concat "Exact integral over [" (math/round @entity.lowerBound 1) ", " (math/round @entity.upperBound 1) "] = " (math/round @entity.exactArea 4) " · error " (math/round (math/abs (- @entity.approxArea @entity.exactArea)) 4)) }
+              ] }
+          ]
+        })
+        (emit INTEGRAL_UPDATED { method: @entity.method, rectangles: @entity.rectangles, lowerBound: @entity.lowerBound, upperBound: @entity.upperBound, approxArea: @entity.approxArea, exactArea: @entity.exactArea })
+
+      RESET -> idle when (== @entity.active true)
+        (let (
+            (dx (/ (- @config.upperBound @config.lowerBound) @config.startRectangles))
+            (ks (array/take @config.binIndex @config.startRectangles))
+            (lefts (array/map @ks (fn k (+ @config.lowerBound (* @k @dx)))))
+            (fL (array/map @lefts (fn x (if (== @config.functionPreset "sine") (* 3 (math/sin @x)) (if (== @config.functionPreset "cubic") (* 0.1 (* @x (* @x @x))) (* 0.5 (* @x @x)))))))
+            (fR (array/map @lefts (fn x (if (== @config.functionPreset "sine") (* 3 (math/sin (+ @x @dx))) (if (== @config.functionPreset "cubic") (* 0.1 (* (+ @x @dx) (* (+ @x @dx) (+ @x @dx)))) (* 0.5 (* (+ @x @dx) (+ @x @dx))))))))
+            (fM (array/map @lefts (fn x (if (== @config.functionPreset "sine") (* 3 (math/sin (+ @x (* 0.5 @dx)))) (if (== @config.functionPreset "cubic") (* 0.1 (* (+ @x (* 0.5 @dx)) (* (+ @x (* 0.5 @dx)) (+ @x (* 0.5 @dx))))) (* 0.5 (* (+ @x (* 0.5 @dx)) (+ @x (* 0.5 @dx)))))))))
+            (heights (if (== @config.method "left") @fL (if (== @config.method "right") @fR (if (== @config.method "midpoint") @fM (array/map @ks (fn k (* 0.5 (+ (array/nth @fL @k) (array/nth @fR @k)))))))))
+            (fCurve { label: "f", color: @config.curveColor, samples: (array/map @config.sampleXs (fn x { x: @x, y: (if (== @config.functionPreset "sine") (* 3 (math/sin @x)) (if (== @config.functionPreset "cubic") (* 0.1 (* @x (* @x @x))) (* 0.5 (* @x @x)))) })) })
+            (stepCurve { label: "rectangles", color: @config.rectColor, samples: (array/flatten (array/map @ks (fn k [ { x: (array/nth @lefts @k), y: (array/nth @heights @k) }, { x: (+ (array/nth @lefts @k) @dx), y: (array/nth @heights @k) } ]))) })
+          )
+          (do
+            (set @entity.functionPreset @config.functionPreset)
+            (set @entity.method @config.method)
+            (set @entity.rectangles @config.startRectangles)
+            (set @entity.lowerBound @config.lowerBound)
+            (set @entity.upperBound @config.upperBound)
+            (set @entity.approxArea (* @dx (array/sum @heights)))
+            (set @entity.exactArea (if (== @config.functionPreset "sine") (* 3 (- (math/cos @config.lowerBound) (math/cos @config.upperBound))) (if (== @config.functionPreset "cubic") (/ (- (math/pow @config.upperBound 4) (math/pow @config.lowerBound 4)) 40) (/ (- (math/pow @config.upperBound 3) (math/pow @config.lowerBound 3)) 6))))
+            (set @entity.curves [ @fCurve, @stepCurve ])
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: SET_METHOD, actionPayload: { method: "left" }, label: "Left", variant: secondary },
+                    { type: button, action: SET_METHOD, actionPayload: { method: "right" }, label: "Right", variant: secondary },
+                    { type: button, action: SET_METHOD, actionPayload: { method: "midpoint" }, label: "Midpoint", variant: secondary },
+                    { type: button, action: SET_METHOD, actionPayload: { method: "trapezoid" }, label: "Trapezoid", variant: secondary },
+                    { type: button, action: STEP_SUBDIVIDE, label: "Double rectangles", variant: primary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.xMin, xMax: @config.xMax, yMin: @config.yMin, yMax: @config.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: stack, direction: horizontal, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat "lower bound = " (math/round @entity.lowerBound 1)) },
+                        { type: range-slider, min: -5, max: 5, step: 0.5, value: @entity.lowerBound, showTooltip: true, onChange: SET_BOUNDS, actionPayload: { bound: "lower" } }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat "upper bound = " (math/round @entity.upperBound 1)) },
+                        { type: range-slider, min: -5, max: 5, step: 0.5, value: @entity.upperBound, showTooltip: true, onChange: SET_BOUNDS, actionPayload: { bound: "upper" } }
+                      ] }
+                  ] },
+                { type: typography, variant: body, content: (str/concat "Riemann sum (" @entity.method ", n = " @entity.rectangles ") ≈ " (math/round @entity.approxArea 4)) },
+                { type: typography, variant: body, content: (str/concat "Exact integral over [" (math/round @entity.lowerBound 1) ", " (math/round @entity.upperBound 1) "] = " (math/round @entity.exactArea 4) " · error " (math/round (math/abs (- @entity.approxArea @entity.exactArea)) 4)) }
+              ] }
+          ]
+        })
+        (emit INTEGRAL_UPDATED { method: @entity.method, rectangles: @entity.rectangles, lowerBound: @entity.lowerBound, upperBound: @entity.upperBound, approxArea: @entity.approxArea, exactArea: @entity.exactArea })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      SET_METHOD {
+        method : string
+      }
+        @description "Learner picked a Riemann-sum rule: left, right, midpoint, or trapezoid."
+        @tier "domain"
+      SET_BOUNDS {
+        bound : string
+        value : number
+      }
+        @description "Learner dragged a bound slider to move the lower or upper integration bound."
+        @tier "domain"
+    }
+
+    emits {
+      INTEGRAL_UPDATED -> external {
+        method : string
+        rectangles : number
+        lowerBound : number
+        upperBound : number
+        approxArea : number
+        exactArea : number
+      }
+        @description "The Riemann-sum state after each step or learner action — a composed listener (readout, convergence chart, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "riemann sum, integral, area under curve, rectangles, convergence"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      functionPreset : "parabola" | "cubic" | "sine" = parabola
+        @label "Function Preset"
+        @description "Which function is integrated: ½x², 0.1x³, or 3·sin(x). The exact readout uses its analytic antiderivative."
+        @synonyms "function, curve, integrand, parabola, cubic, sine"
+        @tier "domain"
+      method : "left" | "right" | "midpoint" | "trapezoid" = midpoint
+        @label "Riemann Rule"
+        @description "Which rectangle rule the accumulation starts with: left endpoint, right endpoint, midpoint, or trapezoid."
+        @synonyms "left rule, right rule, midpoint rule, trapezoid rule, rectangle method"
+        @tier "domain"
+      startRectangles : number = 4
+        @label "Start Rectangles"
+        @description "How many rectangles the sum starts with; each step doubles this up to maxRectangles."
+        @synonyms "rectangles, partitions, subdivisions, n"
+        @tier "domain"
+      maxRectangles : number = 64
+        @label "Max Rectangles"
+        @description "Cap on the rectangle count — doubling stops here."
+        @tier "domain"
+      lowerBound : number = -3
+        @label "Lower Bound"
+        @description "Starting lower integration bound."
+        @synonyms "lower limit, a, interval start"
+        @tier "domain"
+      upperBound : number = 3
+        @label "Upper Bound"
+        @description "Starting upper integration bound."
+        @synonyms "upper limit, b, interval end"
+        @tier "domain"
+      binIndex : [number] = [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63 ]
+        @label "Bin Index"
+        @description "Rectangle indices 0..maxRectangles-1 the accumulator maps over; length must match maxRectangles."
+        @tier "domain"
+      sampleXs : [number] = [ -6, -5.7, -5.4, -5.1, -4.8, -4.5, -4.2, -3.9, -3.6, -3.3, -3, -2.7, -2.4, -2.1, -1.8, -1.5, -1.2, -0.9, -0.6, -0.3, 0, 0.3, 0.6, 0.9, 1.2, 1.5, 1.8, 2.1, 2.4, 2.7, 3, 3.3, 3.6, 3.9, 4.2, 4.5, 4.8, 5.1, 5.4, 5.7, 6 ]
+        @label "Sample Xs"
+        @description "X coordinates the function is sampled at to draw its curve."
+        @tier "domain"
+      title : string = "Integral — Riemann Sums"
+        @label "Title"
+        @description "Title shown above the canvas."
+        @tier "presentation"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      xMin : number = -6
+        @label "X Min"
+        @description "Minimum x value on the canvas."
+        @tier "presentation"
+      xMax : number = 6
+        @label "X Max"
+        @description "Maximum x value on the canvas."
+        @tier "presentation"
+      yMin : number = -10
+        @label "Y Min"
+        @description "Minimum y value on the canvas."
+        @tier "presentation"
+      yMax : number = 10
+        @label "Y Max"
+        @description "Maximum y value on the canvas."
+        @tier "presentation"
+      showAxes : boolean = true
+        @label "Show Axes"
+        @tier "presentation"
+      showGrid : boolean = true
+        @label "Show Grid"
+        @tier "presentation"
+      gridStep : number = 1
+        @label "Grid Step"
+        @tier "presentation"
+      curveColor : string = "#2563eb"
+        @label "Function Color"
+        @tier "presentation"
+      rectColor : string = "#dc2626"
+        @label "Rectangle Color"
+        @tier "presentation"
+    }
+  }
+
+  page "/math-integral" as MathIntegralPage -> MathIntegralSim
+}

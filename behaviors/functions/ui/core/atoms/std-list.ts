@@ -208,7 +208,7 @@ export function stdList(params: StdListParams): OrbitalDefinition {
   });
 }
 
-type _StdListEntityName = 'ListItem';
+type _StdListEntityName = 'ListItem' | 'ConfirmAction' | 'ModalRecord';
 type _StdListListenTraitName = 'ListItemBrowse' | 'ListItemCreate' | 'ListItemEdit' | 'ListItemDelete' | 'ListItemPersistor';
 
 /**

@@ -32,12 +32,18 @@ import {
   stdLearningAlgorithmsBubblesortOrbital,
   StdLearningAlgorithmsBubblesortOrbitalManifest,
   isStdLearningAlgorithmsBubblesortOrbitalParams,
+  stdLearningAlgorithmsBstOrbital,
+  StdLearningAlgorithmsBstOrbitalManifest,
+  isStdLearningAlgorithmsBstOrbitalParams,
   stdLearningAlgorithmsDfsOrbital,
   StdLearningAlgorithmsDfsOrbitalManifest,
   isStdLearningAlgorithmsDfsOrbitalParams,
   stdLearningAlgorithmsDijkstraOrbital,
   StdLearningAlgorithmsDijkstraOrbitalManifest,
   isStdLearningAlgorithmsDijkstraOrbitalParams,
+  stdLearningAlgorithmsDpOrbital,
+  StdLearningAlgorithmsDpOrbitalManifest,
+  isStdLearningAlgorithmsDpOrbitalParams,
   stdLearningAlgorithmsFloodfillOrbital,
   StdLearningAlgorithmsFloodfillOrbitalManifest,
   isStdLearningAlgorithmsFloodfillOrbitalParams,
@@ -47,6 +53,9 @@ import {
   stdLearningAlgorithmsGridbfsOrbital,
   StdLearningAlgorithmsGridbfsOrbitalManifest,
   isStdLearningAlgorithmsGridbfsOrbitalParams,
+  stdLearningAlgorithmsHashingOrbital,
+  StdLearningAlgorithmsHashingOrbitalManifest,
+  isStdLearningAlgorithmsHashingOrbitalParams,
   stdLearningAlgorithmsHeapsortOrbital,
   StdLearningAlgorithmsHeapsortOrbitalManifest,
   isStdLearningAlgorithmsHeapsortOrbitalParams,
@@ -65,6 +74,9 @@ import {
   stdLearningAlgorithmsQuicksortOrbital,
   StdLearningAlgorithmsQuicksortOrbitalManifest,
   isStdLearningAlgorithmsQuicksortOrbitalParams,
+  stdLearningAlgorithmsRecursionOrbital,
+  StdLearningAlgorithmsRecursionOrbitalManifest,
+  isStdLearningAlgorithmsRecursionOrbitalParams,
   stdLearningAlgorithmsSelectionsortOrbital,
   StdLearningAlgorithmsSelectionsortOrbitalManifest,
   isStdLearningAlgorithmsSelectionsortOrbitalParams,
@@ -1182,6 +1194,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdLearningAlgorithmsBubblesortOrbitalManifest,
   }],
+  ['learning-algorithms::BstOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningAlgorithmsBstOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-algorithms::BstOrbital');
+      }
+      return stdLearningAlgorithmsBstOrbital(p);
+    },
+    manifest: StdLearningAlgorithmsBstOrbitalManifest,
+  }],
   ['learning-algorithms::DfsOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdLearningAlgorithmsDfsOrbitalParams(p)) {
@@ -1199,6 +1220,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdLearningAlgorithmsDijkstraOrbital(p);
     },
     manifest: StdLearningAlgorithmsDijkstraOrbitalManifest,
+  }],
+  ['learning-algorithms::DpOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningAlgorithmsDpOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-algorithms::DpOrbital');
+      }
+      return stdLearningAlgorithmsDpOrbital(p);
+    },
+    manifest: StdLearningAlgorithmsDpOrbitalManifest,
   }],
   ['learning-algorithms::FloodfillOrbital', {
     factory: (p: object): OrbitalDefinition => {
@@ -1226,6 +1256,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdLearningAlgorithmsGridbfsOrbital(p);
     },
     manifest: StdLearningAlgorithmsGridbfsOrbitalManifest,
+  }],
+  ['learning-algorithms::HashingOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningAlgorithmsHashingOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-algorithms::HashingOrbital');
+      }
+      return stdLearningAlgorithmsHashingOrbital(p);
+    },
+    manifest: StdLearningAlgorithmsHashingOrbitalManifest,
   }],
   ['learning-algorithms::HeapsortOrbital', {
     factory: (p: object): OrbitalDefinition => {
@@ -1280,6 +1319,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdLearningAlgorithmsQuicksortOrbital(p);
     },
     manifest: StdLearningAlgorithmsQuicksortOrbitalManifest,
+  }],
+  ['learning-algorithms::RecursionOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningAlgorithmsRecursionOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-algorithms::RecursionOrbital');
+      }
+      return stdLearningAlgorithmsRecursionOrbital(p);
+    },
+    manifest: StdLearningAlgorithmsRecursionOrbitalManifest,
   }],
   ['learning-algorithms::SelectionsortOrbital', {
     factory: (p: object): OrbitalDefinition => {

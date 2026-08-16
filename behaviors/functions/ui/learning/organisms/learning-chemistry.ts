@@ -41,7 +41,7 @@ export interface StdLearningChemistryConfig {
   width?: unknown;
 }
 
-type _StdLearningChemistryEntityName = 'DiffusionScene' | 'ReactionScene' | 'OsmosisScene';
+type _StdLearningChemistryEntityName = 'DiffusionScene' | 'ChemDiffusionState' | 'ReactionScene' | 'ChemReactionState' | 'OsmosisScene' | 'ChemOsmosisState';
 type _StdLearningChemistryListenTraitName = 'DiffusionEngine' | 'ReactionEngine' | 'OsmosisEngine';
 
 /**

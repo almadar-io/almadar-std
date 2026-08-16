@@ -226,6 +226,55 @@
             },
             "name": "points",
             "type": "array"
+          },
+          {
+            "items": {
+              "properties": {
+                "align": {
+                  "name": "align",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "left",
+                    "center",
+                    "right"
+                  ]
+                },
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "fontSize": {
+                  "name": "fontSize",
+                  "required": false,
+                  "type": "number"
+                },
+                "text": {
+                  "name": "text",
+                  "required": true,
+                  "type": "string"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "labelShapes",
+            "type": "array"
           }
         ],
         "id": "ent_01KZEEZFXFYX1T0W3PJA0A4F7M",
@@ -445,6 +494,7 @@
               "demandSlope",
               "equilibriumPrice",
               "equilibriumQuantity",
+              "labelShapes",
               "marketStatusLabel",
               "marketStatusMagnitude",
               "points",
@@ -800,25 +850,298 @@
                         [
                           {
                             "color": "@config.equilibriumColor",
-                            "label": "Equilibrium",
                             "radius": 6.0,
                             "x": "@eqQ",
                             "y": "@eqP"
                           },
                           {
                             "color": "@config.demandColor",
-                            "label": "Qd",
                             "radius": 5.0,
                             "x": "@qd",
                             "y": "@entity.price"
                           },
                           {
                             "color": "@config.supplyColor",
-                            "label": "Qs",
                             "radius": 5.0,
                             "x": "@qs",
                             "y": "@entity.price"
                           }
+                        ]
+                      ],
+                      [
+                        "labelClampLo",
+                        45.0
+                      ],
+                      [
+                        "labelClampHi",
+                        [
+                          "-",
+                          "@config.width",
+                          45.0
+                        ]
+                      ],
+                      [
+                        "eqLabelX",
+                        [
+                          "math/clamp",
+                          [
+                            "+",
+                            24.0,
+                            [
+                              "*",
+                              [
+                                "/",
+                                "@eqQ",
+                                "@config.maxQuantity"
+                              ],
+                              [
+                                "-",
+                                "@config.width",
+                                48.0
+                              ]
+                            ]
+                          ],
+                          "@labelClampLo",
+                          "@labelClampHi"
+                        ]
+                      ],
+                      [
+                        "eqLabelY",
+                        [
+                          "-",
+                          [
+                            "-",
+                            "@config.height",
+                            [
+                              "+",
+                              24.0,
+                              [
+                                "*",
+                                [
+                                  "/",
+                                  "@eqP",
+                                  "@config.maxPrice"
+                                ],
+                                [
+                                  "-",
+                                  "@config.height",
+                                  48.0
+                                ]
+                              ]
+                            ]
+                          ],
+                          14.0
+                        ]
+                      ],
+                      [
+                        "qdLabelX",
+                        [
+                          "-",
+                          [
+                            "math/clamp",
+                            [
+                              "+",
+                              24.0,
+                              [
+                                "*",
+                                [
+                                  "/",
+                                  "@qd",
+                                  "@config.maxQuantity"
+                                ],
+                                [
+                                  "-",
+                                  "@config.width",
+                                  48.0
+                                ]
+                              ]
+                            ],
+                            "@labelClampLo",
+                            "@labelClampHi"
+                          ],
+                          8.0
+                        ]
+                      ],
+                      [
+                        "qdLabelY",
+                        [
+                          "+",
+                          [
+                            "-",
+                            "@config.height",
+                            [
+                              "+",
+                              24.0,
+                              [
+                                "*",
+                                [
+                                  "/",
+                                  "@entity.price",
+                                  "@config.maxPrice"
+                                ],
+                                [
+                                  "-",
+                                  "@config.height",
+                                  48.0
+                                ]
+                              ]
+                            ]
+                          ],
+                          16.0
+                        ]
+                      ],
+                      [
+                        "qsLabelX",
+                        [
+                          "+",
+                          [
+                            "math/clamp",
+                            [
+                              "+",
+                              24.0,
+                              [
+                                "*",
+                                [
+                                  "/",
+                                  "@qs",
+                                  "@config.maxQuantity"
+                                ],
+                                [
+                                  "-",
+                                  "@config.width",
+                                  48.0
+                                ]
+                              ]
+                            ],
+                            "@labelClampLo",
+                            "@labelClampHi"
+                          ],
+                          8.0
+                        ]
+                      ],
+                      [
+                        "qsLabelY",
+                        "@qdLabelY"
+                      ],
+                      [
+                        "eqLabelVisible",
+                        [
+                          "and",
+                          [
+                            "and",
+                            [
+                              ">=",
+                              "@eqQ",
+                              0.0
+                            ],
+                            [
+                              "<=",
+                              "@eqQ",
+                              "@config.maxQuantity"
+                            ]
+                          ],
+                          [
+                            "and",
+                            [
+                              ">=",
+                              "@eqP",
+                              0.0
+                            ],
+                            [
+                              "<=",
+                              "@eqP",
+                              "@config.maxPrice"
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "qdLabelVisible",
+                        [
+                          "and",
+                          [
+                            ">=",
+                            "@qd",
+                            0.0
+                          ],
+                          [
+                            "<=",
+                            "@qd",
+                            "@config.maxQuantity"
+                          ]
+                        ]
+                      ],
+                      [
+                        "qsLabelVisible",
+                        [
+                          "and",
+                          [
+                            ">=",
+                            "@qs",
+                            0.0
+                          ],
+                          [
+                            "<=",
+                            "@qs",
+                            "@config.maxQuantity"
+                          ]
+                        ]
+                      ],
+                      [
+                        "labelShapes",
+                        [
+                          "array/concat",
+                          [
+                            "array/concat",
+                            [
+                              "if",
+                              "@eqLabelVisible",
+                              [
+                                {
+                                  "align": "center",
+                                  "color": "@config.equilibriumColor",
+                                  "fontSize": 12.0,
+                                  "text": "Equilibrium",
+                                  "type": "text",
+                                  "x": "@eqLabelX",
+                                  "y": "@eqLabelY"
+                                }
+                              ],
+                              []
+                            ],
+                            [
+                              "if",
+                              "@qdLabelVisible",
+                              [
+                                {
+                                  "align": "right",
+                                  "color": "@config.demandColor",
+                                  "fontSize": 12.0,
+                                  "text": "Qd",
+                                  "type": "text",
+                                  "x": "@qdLabelX",
+                                  "y": "@qdLabelY"
+                                }
+                              ],
+                              []
+                            ]
+                          ],
+                          [
+                            "if",
+                            "@qsLabelVisible",
+                            [
+                              {
+                                "align": "left",
+                                "color": "@config.supplyColor",
+                                "fontSize": 12.0,
+                                "text": "Qs",
+                                "type": "text",
+                                "x": "@qsLabelX",
+                                "y": "@qsLabelY"
+                              }
+                            ],
+                            []
+                          ]
                         ]
                       ]
                     ],
@@ -863,6 +1186,11 @@
                         "set",
                         "@entity.points",
                         "@marketPoints"
+                      ],
+                      [
+                        "set",
+                        "@entity.labelShapes",
+                        "@labelShapes"
                       ]
                     ]
                   ],
@@ -885,7 +1213,7 @@
                               "height": "@config.height",
                               "interactive": "@config.interactive",
                               "points": "@entity.points",
-                              "shapes": [],
+                              "shapes": "@entity.labelShapes",
                               "showAxes": true,
                               "showGrid": true,
                               "type": "math-canvas",
@@ -1344,25 +1672,298 @@
                         [
                           {
                             "color": "@config.equilibriumColor",
-                            "label": "Equilibrium",
                             "radius": 6.0,
                             "x": "@eqQ",
                             "y": "@eqP"
                           },
                           {
                             "color": "@config.demandColor",
-                            "label": "Qd",
                             "radius": 5.0,
                             "x": "@qd",
                             "y": "@entity.price"
                           },
                           {
                             "color": "@config.supplyColor",
-                            "label": "Qs",
                             "radius": 5.0,
                             "x": "@qs",
                             "y": "@entity.price"
                           }
+                        ]
+                      ],
+                      [
+                        "labelClampLo",
+                        45.0
+                      ],
+                      [
+                        "labelClampHi",
+                        [
+                          "-",
+                          "@config.width",
+                          45.0
+                        ]
+                      ],
+                      [
+                        "eqLabelX",
+                        [
+                          "math/clamp",
+                          [
+                            "+",
+                            24.0,
+                            [
+                              "*",
+                              [
+                                "/",
+                                "@eqQ",
+                                "@config.maxQuantity"
+                              ],
+                              [
+                                "-",
+                                "@config.width",
+                                48.0
+                              ]
+                            ]
+                          ],
+                          "@labelClampLo",
+                          "@labelClampHi"
+                        ]
+                      ],
+                      [
+                        "eqLabelY",
+                        [
+                          "-",
+                          [
+                            "-",
+                            "@config.height",
+                            [
+                              "+",
+                              24.0,
+                              [
+                                "*",
+                                [
+                                  "/",
+                                  "@eqP",
+                                  "@config.maxPrice"
+                                ],
+                                [
+                                  "-",
+                                  "@config.height",
+                                  48.0
+                                ]
+                              ]
+                            ]
+                          ],
+                          14.0
+                        ]
+                      ],
+                      [
+                        "qdLabelX",
+                        [
+                          "-",
+                          [
+                            "math/clamp",
+                            [
+                              "+",
+                              24.0,
+                              [
+                                "*",
+                                [
+                                  "/",
+                                  "@qd",
+                                  "@config.maxQuantity"
+                                ],
+                                [
+                                  "-",
+                                  "@config.width",
+                                  48.0
+                                ]
+                              ]
+                            ],
+                            "@labelClampLo",
+                            "@labelClampHi"
+                          ],
+                          8.0
+                        ]
+                      ],
+                      [
+                        "qdLabelY",
+                        [
+                          "+",
+                          [
+                            "-",
+                            "@config.height",
+                            [
+                              "+",
+                              24.0,
+                              [
+                                "*",
+                                [
+                                  "/",
+                                  "@entity.price",
+                                  "@config.maxPrice"
+                                ],
+                                [
+                                  "-",
+                                  "@config.height",
+                                  48.0
+                                ]
+                              ]
+                            ]
+                          ],
+                          16.0
+                        ]
+                      ],
+                      [
+                        "qsLabelX",
+                        [
+                          "+",
+                          [
+                            "math/clamp",
+                            [
+                              "+",
+                              24.0,
+                              [
+                                "*",
+                                [
+                                  "/",
+                                  "@qs",
+                                  "@config.maxQuantity"
+                                ],
+                                [
+                                  "-",
+                                  "@config.width",
+                                  48.0
+                                ]
+                              ]
+                            ],
+                            "@labelClampLo",
+                            "@labelClampHi"
+                          ],
+                          8.0
+                        ]
+                      ],
+                      [
+                        "qsLabelY",
+                        "@qdLabelY"
+                      ],
+                      [
+                        "eqLabelVisible",
+                        [
+                          "and",
+                          [
+                            "and",
+                            [
+                              ">=",
+                              "@eqQ",
+                              0.0
+                            ],
+                            [
+                              "<=",
+                              "@eqQ",
+                              "@config.maxQuantity"
+                            ]
+                          ],
+                          [
+                            "and",
+                            [
+                              ">=",
+                              "@eqP",
+                              0.0
+                            ],
+                            [
+                              "<=",
+                              "@eqP",
+                              "@config.maxPrice"
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "qdLabelVisible",
+                        [
+                          "and",
+                          [
+                            ">=",
+                            "@qd",
+                            0.0
+                          ],
+                          [
+                            "<=",
+                            "@qd",
+                            "@config.maxQuantity"
+                          ]
+                        ]
+                      ],
+                      [
+                        "qsLabelVisible",
+                        [
+                          "and",
+                          [
+                            ">=",
+                            "@qs",
+                            0.0
+                          ],
+                          [
+                            "<=",
+                            "@qs",
+                            "@config.maxQuantity"
+                          ]
+                        ]
+                      ],
+                      [
+                        "labelShapes",
+                        [
+                          "array/concat",
+                          [
+                            "array/concat",
+                            [
+                              "if",
+                              "@eqLabelVisible",
+                              [
+                                {
+                                  "align": "center",
+                                  "color": "@config.equilibriumColor",
+                                  "fontSize": 12.0,
+                                  "text": "Equilibrium",
+                                  "type": "text",
+                                  "x": "@eqLabelX",
+                                  "y": "@eqLabelY"
+                                }
+                              ],
+                              []
+                            ],
+                            [
+                              "if",
+                              "@qdLabelVisible",
+                              [
+                                {
+                                  "align": "right",
+                                  "color": "@config.demandColor",
+                                  "fontSize": 12.0,
+                                  "text": "Qd",
+                                  "type": "text",
+                                  "x": "@qdLabelX",
+                                  "y": "@qdLabelY"
+                                }
+                              ],
+                              []
+                            ]
+                          ],
+                          [
+                            "if",
+                            "@qsLabelVisible",
+                            [
+                              {
+                                "align": "left",
+                                "color": "@config.supplyColor",
+                                "fontSize": 12.0,
+                                "text": "Qs",
+                                "type": "text",
+                                "x": "@qsLabelX",
+                                "y": "@qsLabelY"
+                              }
+                            ],
+                            []
+                          ]
                         ]
                       ]
                     ],
@@ -1407,6 +2008,11 @@
                         "set",
                         "@entity.points",
                         "@marketPoints"
+                      ],
+                      [
+                        "set",
+                        "@entity.labelShapes",
+                        "@labelShapes"
                       ]
                     ]
                   ],
@@ -1429,7 +2035,7 @@
                               "height": "@config.height",
                               "interactive": "@config.interactive",
                               "points": "@entity.points",
-                              "shapes": [],
+                              "shapes": "@entity.labelShapes",
                               "showAxes": true,
                               "showGrid": true,
                               "type": "math-canvas",
@@ -1877,25 +2483,298 @@
                         [
                           {
                             "color": "@config.equilibriumColor",
-                            "label": "Equilibrium",
                             "radius": 6.0,
                             "x": "@eqQ",
                             "y": "@eqP"
                           },
                           {
                             "color": "@config.demandColor",
-                            "label": "Qd",
                             "radius": 5.0,
                             "x": "@qd",
                             "y": "@entity.price"
                           },
                           {
                             "color": "@config.supplyColor",
-                            "label": "Qs",
                             "radius": 5.0,
                             "x": "@qs",
                             "y": "@entity.price"
                           }
+                        ]
+                      ],
+                      [
+                        "labelClampLo",
+                        45.0
+                      ],
+                      [
+                        "labelClampHi",
+                        [
+                          "-",
+                          "@config.width",
+                          45.0
+                        ]
+                      ],
+                      [
+                        "eqLabelX",
+                        [
+                          "math/clamp",
+                          [
+                            "+",
+                            24.0,
+                            [
+                              "*",
+                              [
+                                "/",
+                                "@eqQ",
+                                "@config.maxQuantity"
+                              ],
+                              [
+                                "-",
+                                "@config.width",
+                                48.0
+                              ]
+                            ]
+                          ],
+                          "@labelClampLo",
+                          "@labelClampHi"
+                        ]
+                      ],
+                      [
+                        "eqLabelY",
+                        [
+                          "-",
+                          [
+                            "-",
+                            "@config.height",
+                            [
+                              "+",
+                              24.0,
+                              [
+                                "*",
+                                [
+                                  "/",
+                                  "@eqP",
+                                  "@config.maxPrice"
+                                ],
+                                [
+                                  "-",
+                                  "@config.height",
+                                  48.0
+                                ]
+                              ]
+                            ]
+                          ],
+                          14.0
+                        ]
+                      ],
+                      [
+                        "qdLabelX",
+                        [
+                          "-",
+                          [
+                            "math/clamp",
+                            [
+                              "+",
+                              24.0,
+                              [
+                                "*",
+                                [
+                                  "/",
+                                  "@qd",
+                                  "@config.maxQuantity"
+                                ],
+                                [
+                                  "-",
+                                  "@config.width",
+                                  48.0
+                                ]
+                              ]
+                            ],
+                            "@labelClampLo",
+                            "@labelClampHi"
+                          ],
+                          8.0
+                        ]
+                      ],
+                      [
+                        "qdLabelY",
+                        [
+                          "+",
+                          [
+                            "-",
+                            "@config.height",
+                            [
+                              "+",
+                              24.0,
+                              [
+                                "*",
+                                [
+                                  "/",
+                                  "@entity.price",
+                                  "@config.maxPrice"
+                                ],
+                                [
+                                  "-",
+                                  "@config.height",
+                                  48.0
+                                ]
+                              ]
+                            ]
+                          ],
+                          16.0
+                        ]
+                      ],
+                      [
+                        "qsLabelX",
+                        [
+                          "+",
+                          [
+                            "math/clamp",
+                            [
+                              "+",
+                              24.0,
+                              [
+                                "*",
+                                [
+                                  "/",
+                                  "@qs",
+                                  "@config.maxQuantity"
+                                ],
+                                [
+                                  "-",
+                                  "@config.width",
+                                  48.0
+                                ]
+                              ]
+                            ],
+                            "@labelClampLo",
+                            "@labelClampHi"
+                          ],
+                          8.0
+                        ]
+                      ],
+                      [
+                        "qsLabelY",
+                        "@qdLabelY"
+                      ],
+                      [
+                        "eqLabelVisible",
+                        [
+                          "and",
+                          [
+                            "and",
+                            [
+                              ">=",
+                              "@eqQ",
+                              0.0
+                            ],
+                            [
+                              "<=",
+                              "@eqQ",
+                              "@config.maxQuantity"
+                            ]
+                          ],
+                          [
+                            "and",
+                            [
+                              ">=",
+                              "@eqP",
+                              0.0
+                            ],
+                            [
+                              "<=",
+                              "@eqP",
+                              "@config.maxPrice"
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "qdLabelVisible",
+                        [
+                          "and",
+                          [
+                            ">=",
+                            "@qd",
+                            0.0
+                          ],
+                          [
+                            "<=",
+                            "@qd",
+                            "@config.maxQuantity"
+                          ]
+                        ]
+                      ],
+                      [
+                        "qsLabelVisible",
+                        [
+                          "and",
+                          [
+                            ">=",
+                            "@qs",
+                            0.0
+                          ],
+                          [
+                            "<=",
+                            "@qs",
+                            "@config.maxQuantity"
+                          ]
+                        ]
+                      ],
+                      [
+                        "labelShapes",
+                        [
+                          "array/concat",
+                          [
+                            "array/concat",
+                            [
+                              "if",
+                              "@eqLabelVisible",
+                              [
+                                {
+                                  "align": "center",
+                                  "color": "@config.equilibriumColor",
+                                  "fontSize": 12.0,
+                                  "text": "Equilibrium",
+                                  "type": "text",
+                                  "x": "@eqLabelX",
+                                  "y": "@eqLabelY"
+                                }
+                              ],
+                              []
+                            ],
+                            [
+                              "if",
+                              "@qdLabelVisible",
+                              [
+                                {
+                                  "align": "right",
+                                  "color": "@config.demandColor",
+                                  "fontSize": 12.0,
+                                  "text": "Qd",
+                                  "type": "text",
+                                  "x": "@qdLabelX",
+                                  "y": "@qdLabelY"
+                                }
+                              ],
+                              []
+                            ]
+                          ],
+                          [
+                            "if",
+                            "@qsLabelVisible",
+                            [
+                              {
+                                "align": "left",
+                                "color": "@config.supplyColor",
+                                "fontSize": 12.0,
+                                "text": "Qs",
+                                "type": "text",
+                                "x": "@qsLabelX",
+                                "y": "@qsLabelY"
+                              }
+                            ],
+                            []
+                          ]
                         ]
                       ]
                     ],
@@ -1945,6 +2824,11 @@
                         "set",
                         "@entity.points",
                         "@newPoints"
+                      ],
+                      [
+                        "set",
+                        "@entity.labelShapes",
+                        "@labelShapes"
                       ]
                     ]
                   ],
@@ -1967,7 +2851,7 @@
                               "height": "@config.height",
                               "interactive": "@config.interactive",
                               "points": "@entity.points",
-                              "shapes": [],
+                              "shapes": "@entity.labelShapes",
                               "showAxes": true,
                               "showGrid": true,
                               "type": "math-canvas",
@@ -2423,25 +3307,298 @@
                         [
                           {
                             "color": "@config.equilibriumColor",
-                            "label": "Equilibrium",
                             "radius": 6.0,
                             "x": "@eqQ",
                             "y": "@eqP"
                           },
                           {
                             "color": "@config.demandColor",
-                            "label": "Qd",
                             "radius": 5.0,
                             "x": "@qd",
                             "y": "@entity.price"
                           },
                           {
                             "color": "@config.supplyColor",
-                            "label": "Qs",
                             "radius": 5.0,
                             "x": "@qs",
                             "y": "@entity.price"
                           }
+                        ]
+                      ],
+                      [
+                        "labelClampLo",
+                        45.0
+                      ],
+                      [
+                        "labelClampHi",
+                        [
+                          "-",
+                          "@config.width",
+                          45.0
+                        ]
+                      ],
+                      [
+                        "eqLabelX",
+                        [
+                          "math/clamp",
+                          [
+                            "+",
+                            24.0,
+                            [
+                              "*",
+                              [
+                                "/",
+                                "@eqQ",
+                                "@config.maxQuantity"
+                              ],
+                              [
+                                "-",
+                                "@config.width",
+                                48.0
+                              ]
+                            ]
+                          ],
+                          "@labelClampLo",
+                          "@labelClampHi"
+                        ]
+                      ],
+                      [
+                        "eqLabelY",
+                        [
+                          "-",
+                          [
+                            "-",
+                            "@config.height",
+                            [
+                              "+",
+                              24.0,
+                              [
+                                "*",
+                                [
+                                  "/",
+                                  "@eqP",
+                                  "@config.maxPrice"
+                                ],
+                                [
+                                  "-",
+                                  "@config.height",
+                                  48.0
+                                ]
+                              ]
+                            ]
+                          ],
+                          14.0
+                        ]
+                      ],
+                      [
+                        "qdLabelX",
+                        [
+                          "-",
+                          [
+                            "math/clamp",
+                            [
+                              "+",
+                              24.0,
+                              [
+                                "*",
+                                [
+                                  "/",
+                                  "@qd",
+                                  "@config.maxQuantity"
+                                ],
+                                [
+                                  "-",
+                                  "@config.width",
+                                  48.0
+                                ]
+                              ]
+                            ],
+                            "@labelClampLo",
+                            "@labelClampHi"
+                          ],
+                          8.0
+                        ]
+                      ],
+                      [
+                        "qdLabelY",
+                        [
+                          "+",
+                          [
+                            "-",
+                            "@config.height",
+                            [
+                              "+",
+                              24.0,
+                              [
+                                "*",
+                                [
+                                  "/",
+                                  "@entity.price",
+                                  "@config.maxPrice"
+                                ],
+                                [
+                                  "-",
+                                  "@config.height",
+                                  48.0
+                                ]
+                              ]
+                            ]
+                          ],
+                          16.0
+                        ]
+                      ],
+                      [
+                        "qsLabelX",
+                        [
+                          "+",
+                          [
+                            "math/clamp",
+                            [
+                              "+",
+                              24.0,
+                              [
+                                "*",
+                                [
+                                  "/",
+                                  "@qs",
+                                  "@config.maxQuantity"
+                                ],
+                                [
+                                  "-",
+                                  "@config.width",
+                                  48.0
+                                ]
+                              ]
+                            ],
+                            "@labelClampLo",
+                            "@labelClampHi"
+                          ],
+                          8.0
+                        ]
+                      ],
+                      [
+                        "qsLabelY",
+                        "@qdLabelY"
+                      ],
+                      [
+                        "eqLabelVisible",
+                        [
+                          "and",
+                          [
+                            "and",
+                            [
+                              ">=",
+                              "@eqQ",
+                              0.0
+                            ],
+                            [
+                              "<=",
+                              "@eqQ",
+                              "@config.maxQuantity"
+                            ]
+                          ],
+                          [
+                            "and",
+                            [
+                              ">=",
+                              "@eqP",
+                              0.0
+                            ],
+                            [
+                              "<=",
+                              "@eqP",
+                              "@config.maxPrice"
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "qdLabelVisible",
+                        [
+                          "and",
+                          [
+                            ">=",
+                            "@qd",
+                            0.0
+                          ],
+                          [
+                            "<=",
+                            "@qd",
+                            "@config.maxQuantity"
+                          ]
+                        ]
+                      ],
+                      [
+                        "qsLabelVisible",
+                        [
+                          "and",
+                          [
+                            ">=",
+                            "@qs",
+                            0.0
+                          ],
+                          [
+                            "<=",
+                            "@qs",
+                            "@config.maxQuantity"
+                          ]
+                        ]
+                      ],
+                      [
+                        "labelShapes",
+                        [
+                          "array/concat",
+                          [
+                            "array/concat",
+                            [
+                              "if",
+                              "@eqLabelVisible",
+                              [
+                                {
+                                  "align": "center",
+                                  "color": "@config.equilibriumColor",
+                                  "fontSize": 12.0,
+                                  "text": "Equilibrium",
+                                  "type": "text",
+                                  "x": "@eqLabelX",
+                                  "y": "@eqLabelY"
+                                }
+                              ],
+                              []
+                            ],
+                            [
+                              "if",
+                              "@qdLabelVisible",
+                              [
+                                {
+                                  "align": "right",
+                                  "color": "@config.demandColor",
+                                  "fontSize": 12.0,
+                                  "text": "Qd",
+                                  "type": "text",
+                                  "x": "@qdLabelX",
+                                  "y": "@qdLabelY"
+                                }
+                              ],
+                              []
+                            ]
+                          ],
+                          [
+                            "if",
+                            "@qsLabelVisible",
+                            [
+                              {
+                                "align": "left",
+                                "color": "@config.supplyColor",
+                                "fontSize": 12.0,
+                                "text": "Qs",
+                                "type": "text",
+                                "x": "@qsLabelX",
+                                "y": "@qsLabelY"
+                              }
+                            ],
+                            []
+                          ]
                         ]
                       ]
                     ],
@@ -2491,6 +3648,11 @@
                         "set",
                         "@entity.points",
                         "@newPoints"
+                      ],
+                      [
+                        "set",
+                        "@entity.labelShapes",
+                        "@labelShapes"
                       ]
                     ]
                   ],
@@ -2513,7 +3675,7 @@
                               "height": "@config.height",
                               "interactive": "@config.interactive",
                               "points": "@entity.points",
-                              "shapes": [],
+                              "shapes": "@entity.labelShapes",
                               "showAxes": true,
                               "showGrid": true,
                               "type": "math-canvas",
@@ -2889,18 +4051,292 @@
                           "@eqPoint",
                           {
                             "color": "@config.demandColor",
-                            "label": "Qd",
                             "radius": 5.0,
                             "x": "@qd",
                             "y": "@newPrice"
                           },
                           {
                             "color": "@config.supplyColor",
-                            "label": "Qs",
                             "radius": 5.0,
                             "x": "@qs",
                             "y": "@newPrice"
                           }
+                        ]
+                      ],
+                      [
+                        "labelClampLo",
+                        45.0
+                      ],
+                      [
+                        "labelClampHi",
+                        [
+                          "-",
+                          "@config.width",
+                          45.0
+                        ]
+                      ],
+                      [
+                        "eqLabelX",
+                        [
+                          "math/clamp",
+                          [
+                            "+",
+                            24.0,
+                            [
+                              "*",
+                              [
+                                "/",
+                                "@entity.equilibriumQuantity",
+                                "@config.maxQuantity"
+                              ],
+                              [
+                                "-",
+                                "@config.width",
+                                48.0
+                              ]
+                            ]
+                          ],
+                          "@labelClampLo",
+                          "@labelClampHi"
+                        ]
+                      ],
+                      [
+                        "eqLabelY",
+                        [
+                          "-",
+                          [
+                            "-",
+                            "@config.height",
+                            [
+                              "+",
+                              24.0,
+                              [
+                                "*",
+                                [
+                                  "/",
+                                  "@entity.equilibriumPrice",
+                                  "@config.maxPrice"
+                                ],
+                                [
+                                  "-",
+                                  "@config.height",
+                                  48.0
+                                ]
+                              ]
+                            ]
+                          ],
+                          14.0
+                        ]
+                      ],
+                      [
+                        "qdLabelX",
+                        [
+                          "-",
+                          [
+                            "math/clamp",
+                            [
+                              "+",
+                              24.0,
+                              [
+                                "*",
+                                [
+                                  "/",
+                                  "@qd",
+                                  "@config.maxQuantity"
+                                ],
+                                [
+                                  "-",
+                                  "@config.width",
+                                  48.0
+                                ]
+                              ]
+                            ],
+                            "@labelClampLo",
+                            "@labelClampHi"
+                          ],
+                          8.0
+                        ]
+                      ],
+                      [
+                        "qdLabelY",
+                        [
+                          "+",
+                          [
+                            "-",
+                            "@config.height",
+                            [
+                              "+",
+                              24.0,
+                              [
+                                "*",
+                                [
+                                  "/",
+                                  "@newPrice",
+                                  "@config.maxPrice"
+                                ],
+                                [
+                                  "-",
+                                  "@config.height",
+                                  48.0
+                                ]
+                              ]
+                            ]
+                          ],
+                          16.0
+                        ]
+                      ],
+                      [
+                        "qsLabelX",
+                        [
+                          "+",
+                          [
+                            "math/clamp",
+                            [
+                              "+",
+                              24.0,
+                              [
+                                "*",
+                                [
+                                  "/",
+                                  "@qs",
+                                  "@config.maxQuantity"
+                                ],
+                                [
+                                  "-",
+                                  "@config.width",
+                                  48.0
+                                ]
+                              ]
+                            ],
+                            "@labelClampLo",
+                            "@labelClampHi"
+                          ],
+                          8.0
+                        ]
+                      ],
+                      [
+                        "qsLabelY",
+                        "@qdLabelY"
+                      ],
+                      [
+                        "eqLabelVisible",
+                        [
+                          "and",
+                          [
+                            "and",
+                            [
+                              ">=",
+                              "@entity.equilibriumQuantity",
+                              0.0
+                            ],
+                            [
+                              "<=",
+                              "@entity.equilibriumQuantity",
+                              "@config.maxQuantity"
+                            ]
+                          ],
+                          [
+                            "and",
+                            [
+                              ">=",
+                              "@entity.equilibriumPrice",
+                              0.0
+                            ],
+                            [
+                              "<=",
+                              "@entity.equilibriumPrice",
+                              "@config.maxPrice"
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "qdLabelVisible",
+                        [
+                          "and",
+                          [
+                            ">=",
+                            "@qd",
+                            0.0
+                          ],
+                          [
+                            "<=",
+                            "@qd",
+                            "@config.maxQuantity"
+                          ]
+                        ]
+                      ],
+                      [
+                        "qsLabelVisible",
+                        [
+                          "and",
+                          [
+                            ">=",
+                            "@qs",
+                            0.0
+                          ],
+                          [
+                            "<=",
+                            "@qs",
+                            "@config.maxQuantity"
+                          ]
+                        ]
+                      ],
+                      [
+                        "labelShapes",
+                        [
+                          "array/concat",
+                          [
+                            "array/concat",
+                            [
+                              "if",
+                              "@eqLabelVisible",
+                              [
+                                {
+                                  "align": "center",
+                                  "color": "@config.equilibriumColor",
+                                  "fontSize": 12.0,
+                                  "text": "Equilibrium",
+                                  "type": "text",
+                                  "x": "@eqLabelX",
+                                  "y": "@eqLabelY"
+                                }
+                              ],
+                              []
+                            ],
+                            [
+                              "if",
+                              "@qdLabelVisible",
+                              [
+                                {
+                                  "align": "right",
+                                  "color": "@config.demandColor",
+                                  "fontSize": 12.0,
+                                  "text": "Qd",
+                                  "type": "text",
+                                  "x": "@qdLabelX",
+                                  "y": "@qdLabelY"
+                                }
+                              ],
+                              []
+                            ]
+                          ],
+                          [
+                            "if",
+                            "@qsLabelVisible",
+                            [
+                              {
+                                "align": "left",
+                                "color": "@config.supplyColor",
+                                "fontSize": 12.0,
+                                "text": "Qs",
+                                "type": "text",
+                                "x": "@qsLabelX",
+                                "y": "@qsLabelY"
+                              }
+                            ],
+                            []
+                          ]
                         ]
                       ]
                     ],
@@ -2940,6 +4376,11 @@
                         "set",
                         "@entity.points",
                         "@newPoints"
+                      ],
+                      [
+                        "set",
+                        "@entity.labelShapes",
+                        "@labelShapes"
                       ]
                     ]
                   ],
@@ -2962,7 +4403,7 @@
                               "height": "@config.height",
                               "interactive": "@config.interactive",
                               "points": "@entity.points",
-                              "shapes": [],
+                              "shapes": "@entity.labelShapes",
                               "showAxes": true,
                               "showGrid": true,
                               "type": "math-canvas",

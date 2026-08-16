@@ -1,0 +1,906 @@
+[
+  {
+    "organism": "std-geo-urban",
+    "orbital": "GeoUrbanOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-geo-urban.ts",
+    "entities": [
+      {
+        "name": "GeoUrbanScene",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "selectedModel",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "zoneTags",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "score",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "attempts",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "checkReadout",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "mapShapes",
+            "type": "array",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "GeoUrbanSim",
+        "emittedEvents": [
+          "URBAN_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "URBAN_UPDATED",
+            "direction": "emit",
+            "description": "The urban model state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "urban model, Burgess, concentric zone, Hoyt, sector model, Harris-Ullman, multiple nuclei, land use, zone tagging, model fit",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "TOGGLE_MODEL",
+            "direction": "listen",
+            "description": "Learner toggled an urban model overlay (Burgess, Hoyt, or Harris-Ullman) on the city map.",
+            "tier": "domain"
+          },
+          {
+            "name": "TAG_ZONE",
+            "direction": "listen",
+            "description": "Learner cycled a zone's land-use tag to the next category.",
+            "tier": "domain"
+          },
+          {
+            "name": "CHECK",
+            "direction": "listen",
+            "description": "Learner asked how many zones are tagged as the selected model predicts.",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "animate",
+            "type": "boolean",
+            "default": false,
+            "label": "Animate",
+            "description": "Enable continuous redraw loop.",
+            "tier": "presentation"
+          },
+          {
+            "key": "cityLayout",
+            "type": "[GeoUrbanShape]",
+            "default": [
+              {
+                "color": "#38bdf8",
+                "lineWidth": 6,
+                "opacity": 0.35,
+                "type": "line",
+                "x1": 0,
+                "x2": 640,
+                "y1": 295,
+                "y2": 335
+              },
+              {
+                "color": "#475569",
+                "lineWidth": 3,
+                "opacity": 0.6,
+                "type": "line",
+                "x1": 60,
+                "x2": 580,
+                "y1": 220,
+                "y2": 220
+              },
+              {
+                "color": "#334155",
+                "fill": "#334155",
+                "height": 30,
+                "opacity": 0.3,
+                "type": "rect",
+                "width": 30,
+                "x": 305,
+                "y": 205
+              }
+            ],
+            "label": "City Layout",
+            "description": "Neutral base-map shapes always drawn under the zones and model overlays (river, transport corridor, central business district marker).",
+            "synonyms": "city map, base map, river, transport corridor, CBD",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "align": {
+                  "name": "align",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "left",
+                    "center",
+                    "right"
+                  ]
+                },
+                "axis": {
+                  "name": "axis",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "x",
+                    "y"
+                  ]
+                },
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "fill": {
+                  "name": "fill",
+                  "required": false,
+                  "type": "string"
+                },
+                "fontSize": {
+                  "name": "fontSize",
+                  "required": false,
+                  "type": "number"
+                },
+                "height": {
+                  "name": "height",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "lineWidth": {
+                  "name": "lineWidth",
+                  "required": false,
+                  "type": "number"
+                },
+                "max": {
+                  "name": "max",
+                  "required": false,
+                  "type": "number"
+                },
+                "min": {
+                  "name": "min",
+                  "required": false,
+                  "type": "number"
+                },
+                "opacity": {
+                  "name": "opacity",
+                  "required": false,
+                  "type": "number"
+                },
+                "path": {
+                  "name": "path",
+                  "required": false,
+                  "type": "string"
+                },
+                "points": {
+                  "name": "points",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "x": {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "y": {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "step": {
+                  "name": "step",
+                  "required": false,
+                  "type": "number"
+                },
+                "text": {
+                  "name": "text",
+                  "required": false,
+                  "type": "string"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string",
+                  "values": [
+                    "line",
+                    "arrow",
+                    "circle",
+                    "rect",
+                    "polygon",
+                    "path",
+                    "text",
+                    "axis",
+                    "grid"
+                  ]
+                },
+                "width": {
+                  "name": "width",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": false,
+                  "type": "number"
+                },
+                "x1": {
+                  "name": "x1",
+                  "required": false,
+                  "type": "number"
+                },
+                "x2": {
+                  "name": "x2",
+                  "required": false,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "y1": {
+                  "name": "y1",
+                  "required": false,
+                  "type": "number"
+                },
+                "y2": {
+                  "name": "y2",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 460,
+            "label": "Height",
+            "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "interactive",
+            "type": "boolean",
+            "default": false,
+            "label": "Interactive",
+            "description": "Enable pointer interaction on the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "models",
+            "type": "[GeoUrbanModel]",
+            "default": [
+              {
+                "code": "burgess",
+                "color": "#8b5cf6",
+                "expectations": [
+                  {
+                    "tag": "commerce",
+                    "zoneId": "z1"
+                  },
+                  {
+                    "tag": "industry",
+                    "zoneId": "z2"
+                  },
+                  {
+                    "tag": "industry",
+                    "zoneId": "z3"
+                  },
+                  {
+                    "tag": "industry",
+                    "zoneId": "z4"
+                  },
+                  {
+                    "tag": "residential",
+                    "zoneId": "z5"
+                  }
+                ],
+                "label": "Burgess Concentric",
+                "overlays": [
+                  {
+                    "lineWidth": 2,
+                    "radius": 70,
+                    "type": "circle",
+                    "x": 320,
+                    "y": 220
+                  },
+                  {
+                    "lineWidth": 2,
+                    "radius": 140,
+                    "type": "circle",
+                    "x": 320,
+                    "y": 220
+                  },
+                  {
+                    "lineWidth": 2,
+                    "radius": 210,
+                    "type": "circle",
+                    "x": 320,
+                    "y": 220
+                  }
+                ]
+              },
+              {
+                "code": "hoyt",
+                "color": "#0ea5e9",
+                "expectations": [
+                  {
+                    "tag": "commerce",
+                    "zoneId": "z1"
+                  },
+                  {
+                    "tag": "residential",
+                    "zoneId": "z2"
+                  },
+                  {
+                    "tag": "industry",
+                    "zoneId": "z3"
+                  },
+                  {
+                    "tag": "industry",
+                    "zoneId": "z4"
+                  },
+                  {
+                    "tag": "residential",
+                    "zoneId": "z5"
+                  }
+                ],
+                "label": "Hoyt Sector",
+                "overlays": [
+                  {
+                    "lineWidth": 2,
+                    "points": [
+                      {
+                        "x": 320,
+                        "y": 220
+                      },
+                      {
+                        "x": 640,
+                        "y": 170
+                      },
+                      {
+                        "x": 640,
+                        "y": 270
+                      }
+                    ],
+                    "type": "polygon"
+                  },
+                  {
+                    "lineWidth": 2,
+                    "points": [
+                      {
+                        "x": 320,
+                        "y": 220
+                      },
+                      {
+                        "x": 0,
+                        "y": 170
+                      },
+                      {
+                        "x": 0,
+                        "y": 270
+                      }
+                    ],
+                    "type": "polygon"
+                  }
+                ]
+              },
+              {
+                "code": "harris",
+                "color": "#e11d48",
+                "expectations": [
+                  {
+                    "tag": "commerce",
+                    "zoneId": "z1"
+                  },
+                  {
+                    "tag": "residential",
+                    "zoneId": "z2"
+                  },
+                  {
+                    "tag": "commerce",
+                    "zoneId": "z3"
+                  },
+                  {
+                    "tag": "industry",
+                    "zoneId": "z4"
+                  },
+                  {
+                    "tag": "residential",
+                    "zoneId": "z5"
+                  }
+                ],
+                "label": "Harris-Ullman Nuclei",
+                "overlays": [
+                  {
+                    "lineWidth": 2,
+                    "radius": 50,
+                    "type": "circle",
+                    "x": 320,
+                    "y": 220
+                  },
+                  {
+                    "lineWidth": 2,
+                    "radius": 55,
+                    "type": "circle",
+                    "x": 460,
+                    "y": 220
+                  },
+                  {
+                    "lineWidth": 2,
+                    "radius": 55,
+                    "type": "circle",
+                    "x": 180,
+                    "y": 220
+                  }
+                ]
+              }
+            ],
+            "label": "Urban Models",
+            "description": "The urban land-use models the learner can overlay; each declares its overlay shapes (recolored to the model color when active) and the land-use tag it predicts for every zone, used by Check Model Fit.",
+            "synonyms": "Burgess, concentric zone model, Hoyt, sector model, Harris-Ullman, multiple nuclei model, urban model, city structure",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "code": {
+                  "name": "code",
+                  "required": true,
+                  "type": "string"
+                },
+                "color": {
+                  "name": "color",
+                  "required": true,
+                  "type": "string"
+                },
+                "expectations": {
+                  "name": "expectations",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "tag": {
+                        "name": "tag",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "zoneId": {
+                        "name": "zoneId",
+                        "required": true,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "overlays": {
+                  "name": "overlays",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "align": {
+                        "name": "align",
+                        "required": false,
+                        "type": "string",
+                        "values": [
+                          "left",
+                          "center",
+                          "right"
+                        ]
+                      },
+                      "axis": {
+                        "name": "axis",
+                        "required": false,
+                        "type": "string",
+                        "values": [
+                          "x",
+                          "y"
+                        ]
+                      },
+                      "color": {
+                        "name": "color",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "fill": {
+                        "name": "fill",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "fontSize": {
+                        "name": "fontSize",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "height": {
+                        "name": "height",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "id": {
+                        "name": "id",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "label": {
+                        "name": "label",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "lineWidth": {
+                        "name": "lineWidth",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "max": {
+                        "name": "max",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "min": {
+                        "name": "min",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "opacity": {
+                        "name": "opacity",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "path": {
+                        "name": "path",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "points": {
+                        "name": "points",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                          "properties": {
+                            "x": {
+                              "name": "x",
+                              "required": true,
+                              "type": "number"
+                            },
+                            "y": {
+                              "name": "y",
+                              "required": true,
+                              "type": "number"
+                            }
+                          },
+                          "type": "object"
+                        }
+                      },
+                      "radius": {
+                        "name": "radius",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "step": {
+                        "name": "step",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "text": {
+                        "name": "text",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "type": {
+                        "name": "type",
+                        "required": true,
+                        "type": "string",
+                        "values": [
+                          "line",
+                          "arrow",
+                          "circle",
+                          "rect",
+                          "polygon",
+                          "path",
+                          "text",
+                          "axis",
+                          "grid"
+                        ]
+                      },
+                      "width": {
+                        "name": "width",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "x": {
+                        "name": "x",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "x1": {
+                        "name": "x1",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "x2": {
+                        "name": "x2",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "y": {
+                        "name": "y",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "y1": {
+                        "name": "y1",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "y2": {
+                        "name": "y2",
+                        "required": false,
+                        "type": "number"
+                      }
+                    },
+                    "type": "object"
+                  }
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "tags",
+            "type": "[GeoUrbanTag]",
+            "default": [
+              {
+                "color": "#f59e0b",
+                "label": "Commerce",
+                "value": "commerce"
+              },
+              {
+                "color": "#64748b",
+                "label": "Industry",
+                "value": "industry"
+              },
+              {
+                "color": "#22c55e",
+                "label": "Residential",
+                "value": "residential"
+              }
+            ],
+            "label": "Land-Use Tags",
+            "description": "Ordered land-use categories a zone button cycles through; also the vocabulary the models' expectations refer to.",
+            "synonyms": "land use, commercial, industrial, residential, zoning",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "value": {
+                  "name": "value",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "textColor",
+            "type": "string",
+            "default": "#1e293b",
+            "label": "Text Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Urban Land-Use Models",
+            "label": "Title",
+            "description": "Title shown above the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 640,
+            "label": "Width",
+            "description": "Canvas width in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "zones",
+            "type": "[GeoUrbanZone]",
+            "default": [
+              {
+                "id": "z1",
+                "label": "Central",
+                "radius": 32,
+                "x": 320,
+                "y": 220
+              },
+              {
+                "id": "z2",
+                "label": "North",
+                "radius": 30,
+                "x": 320,
+                "y": 110
+              },
+              {
+                "id": "z3",
+                "label": "East",
+                "radius": 30,
+                "x": 470,
+                "y": 220
+              },
+              {
+                "id": "z4",
+                "label": "West",
+                "radius": 30,
+                "x": 170,
+                "y": 220
+              },
+              {
+                "id": "z5",
+                "label": "South",
+                "radius": 30,
+                "x": 320,
+                "y": 340
+              }
+            ],
+            "label": "City Zones",
+            "description": "Taggable city zones drawn as circles on the map; the learner cycles each zone's land-use tag.",
+            "synonyms": "urban zone, city district, land-use zone, CBD, inner city, suburb",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "GeoUrbanScene",
+        "transitionEvents": [
+          "CHECK",
+          "INIT",
+          "MODE_SELECTED",
+          "TAG_ZONE",
+          "TOGGLE_MODEL"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "attempts",
+            "checkReadout",
+            "mapShapes",
+            "score",
+            "selectedModel",
+            "title",
+            "zoneTags"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "GeoUrbanPage",
+        "defaultPath": "/geo-urban",
+        "primaryEntity": "GeoUrbanScene"
+      }
+    ],
+    "emittedEvents": [
+      "URBAN_UPDATED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

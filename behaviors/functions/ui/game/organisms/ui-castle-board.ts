@@ -45,7 +45,7 @@ export interface StdUiCastleBoardConfig {
   units?: unknown;
 }
 
-type _StdUiCastleBoardEntityName = 'GameState';
+type _StdUiCastleBoardEntityName = 'GameState' | 'ScoreState';
 type _StdUiCastleBoardListenTraitName = 'Authority' | 'FxDecay' | 'RoundLogic' | 'ScoreKeeper' | 'AnimClock' | 'CastleClock' | 'CastleEconomy' | 'CastleWaves' | 'Player';
 
 /**

@@ -1,0 +1,487 @@
+[
+  {
+    "organism": "std-logic-gates",
+    "orbital": "LogicGatesOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-logic-gates.ts",
+    "entities": [
+      {
+        "name": "LogicGatesState",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "circuitIndex",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "inputs",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "gateValues",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "nodes",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "edges",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "propagated",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "prediction",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "feedback",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "LogicGatesSim",
+        "emittedEvents": [
+          "GATES_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "GATES_UPDATED",
+            "direction": "emit",
+            "description": "The circuit state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "circuit update, gate propagation, input toggle, output prediction, boolean circuit",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "TOGGLE_INPUT",
+            "direction": "listen",
+            "description": "Learner flipped one input pin between 0 and 1; any propagated values are cleared.",
+            "tier": "domain"
+          },
+          {
+            "name": "PREDICT_OUTPUT",
+            "direction": "listen",
+            "description": "Learner locked in a prediction for the output bulb before propagating.",
+            "tier": "domain"
+          },
+          {
+            "name": "PROPAGATE",
+            "direction": "listen",
+            "description": "Learner ran the circuit: values flow gate by gate from the input pins to the output bulb.",
+            "tier": "domain"
+          },
+          {
+            "name": "NEXT_CIRCUIT",
+            "direction": "listen",
+            "description": "Learner advanced to the next circuit in the roster.",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "backgroundColor",
+            "type": "string",
+            "default": "#f8fafc",
+            "label": "Background Color",
+            "description": "Canvas background color.",
+            "tier": "presentation"
+          },
+          {
+            "key": "challengeMode",
+            "type": "boolean",
+            "default": false,
+            "label": "Challenge Mode",
+            "description": "When true, propagation reveals no values until the learner has locked in an output prediction.",
+            "synonyms": "predict first, quiz mode, prediction challenge",
+            "tier": "domain"
+          },
+          {
+            "key": "circuits",
+            "type": "[LogicGateCircuit]",
+            "default": [
+              {
+                "edges": [
+                  {
+                    "from": "A",
+                    "to": "g1"
+                  },
+                  {
+                    "from": "B",
+                    "to": "g1"
+                  },
+                  {
+                    "from": "A",
+                    "to": "g2"
+                  },
+                  {
+                    "from": "B",
+                    "to": "g2"
+                  },
+                  {
+                    "from": "g1",
+                    "to": "out"
+                  },
+                  {
+                    "from": "g2",
+                    "to": "out"
+                  }
+                ],
+                "gates": [
+                  {
+                    "id": "g1",
+                    "kind": "AND",
+                    "x": 210,
+                    "y": 90
+                  },
+                  {
+                    "id": "g2",
+                    "kind": "OR",
+                    "x": 210,
+                    "y": 230
+                  },
+                  {
+                    "id": "out",
+                    "kind": "XOR",
+                    "x": 380,
+                    "y": 160
+                  }
+                ],
+                "id": "circuit-1",
+                "inputs": [
+                  {
+                    "id": "A",
+                    "label": "A",
+                    "value": false,
+                    "x": 60,
+                    "y": 90
+                  },
+                  {
+                    "id": "B",
+                    "label": "B",
+                    "value": false,
+                    "x": 60,
+                    "y": 230
+                  }
+                ],
+                "label": "Circuit 1 — (A AND B) XOR (A OR B)",
+                "output": "out"
+              },
+              {
+                "edges": [
+                  {
+                    "from": "A",
+                    "to": "g1"
+                  },
+                  {
+                    "from": "B",
+                    "to": "g1"
+                  },
+                  {
+                    "from": "g1",
+                    "to": "out"
+                  }
+                ],
+                "gates": [
+                  {
+                    "id": "g1",
+                    "kind": "XOR",
+                    "x": 220,
+                    "y": 160
+                  },
+                  {
+                    "id": "out",
+                    "kind": "NOT",
+                    "x": 380,
+                    "y": 160
+                  }
+                ],
+                "id": "circuit-2",
+                "inputs": [
+                  {
+                    "id": "A",
+                    "label": "A",
+                    "value": true,
+                    "x": 60,
+                    "y": 90
+                  },
+                  {
+                    "id": "B",
+                    "label": "B",
+                    "value": false,
+                    "x": 60,
+                    "y": 230
+                  }
+                ],
+                "label": "Circuit 2 — NOT (A XOR B)",
+                "output": "out"
+              }
+            ],
+            "label": "Circuits",
+            "description": "Roster of circuits; each declares its input pins, gates in topological evaluation order, the wires (from/to node ids), and the gate whose value lights the output bulb.",
+            "synonyms": "boolean circuit, logic gate, wiring diagram, gate network, digital logic",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "edges": {
+                  "name": "edges",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "from": {
+                        "name": "from",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "to": {
+                        "name": "to",
+                        "required": true,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "gates": {
+                  "name": "gates",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "id": {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "kind": {
+                        "name": "kind",
+                        "required": true,
+                        "type": "string",
+                        "values": [
+                          "AND",
+                          "OR",
+                          "NOT",
+                          "XOR"
+                        ]
+                      },
+                      "x": {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "y": {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "inputs": {
+                  "name": "inputs",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "id": {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "label": {
+                        "name": "label",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "value": {
+                        "name": "value",
+                        "required": false,
+                        "type": "boolean"
+                      },
+                      "x": {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "y": {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "output": {
+                  "name": "output",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "gateKinds",
+            "type": "[string]",
+            "default": [
+              "AND",
+              "OR",
+              "NOT",
+              "XOR"
+            ],
+            "label": "Gate Kinds",
+            "description": "The gate vocabulary used by the circuits: AND and OR combine two inputs, NOT inverts one, XOR is true when its inputs differ.",
+            "synonyms": "AND gate, OR gate, NOT gate, XOR gate, conjunction, disjunction, negation, exclusive or, logic gate",
+            "tier": "domain",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 340,
+            "label": "Height",
+            "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "inputCount",
+            "type": "number",
+            "default": 2,
+            "label": "Input Count",
+            "description": "How many of each circuit's input pins get toggle buttons.",
+            "tier": "domain"
+          },
+          {
+            "key": "interactive",
+            "type": "boolean",
+            "default": false,
+            "label": "Interactive",
+            "description": "Enable pointer interaction on the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "showIntermediate",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Intermediate Values",
+            "description": "After propagation, color every gate with its computed value; when false only the output bulb is revealed.",
+            "tier": "domain"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Boolean Circuit",
+            "label": "Title",
+            "description": "Title shown above the instrument.",
+            "tier": "presentation"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "description": "Canvas width in pixels.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "LogicGatesState",
+        "transitionEvents": [
+          "INIT",
+          "MODE_SELECTED",
+          "NEXT_CIRCUIT",
+          "PREDICT_OUTPUT",
+          "PROPAGATE",
+          "TOGGLE_INPUT"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "circuitIndex",
+            "edges",
+            "feedback",
+            "gateValues",
+            "inputs",
+            "nodes",
+            "prediction",
+            "propagated",
+            "title"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "LogicGatesPage",
+        "defaultPath": "/logic-gates",
+        "primaryEntity": "LogicGatesState"
+      }
+    ],
+    "emittedEvents": [
+      "GATES_UPDATED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

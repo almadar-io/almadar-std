@@ -240,7 +240,7 @@ export function stdGallery(params: StdGalleryParams): OrbitalDefinition {
   });
 }
 
-type _StdGalleryEntityName = 'GalleryItem';
+type _StdGalleryEntityName = 'GalleryItem' | 'SpinnerItem' | 'TypographyItem' | 'IconItem' | 'DividerItem' | 'MediaGalleryItem' | 'AlertItem';
 type _StdGalleryListenTraitName = 'LoadingSpinner' | 'LoadingCaption' | 'GalleryIcon' | 'TitleDivider' | 'MediaGalleryGrid' | 'ErrorAlert' | 'ReloadSpinner' | 'ReloadCaption' | 'RetrySpinner' | 'GalleryItemGallery';
 
 /**

@@ -1,0 +1,323 @@
+app std-algo-recursion "1.0.0"
+"Recursion tracer — steps through a recursive function (factorial/fib/hanoi): each call pushes a frame onto a visible call stack and spawns a recursion-tree node, returns pop and unwind; renders algorithm-canvas. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital RecursionEngineOrbital {
+  type AlgoBar = {
+    value : number!
+    color : string
+    label : string
+  }
+
+  entity RecursionState [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    frames : [AlgoBar]
+    depth : number = 0
+    calls : number = 0
+    unwinding : boolean = false
+    done : boolean = false
+    running : boolean = false
+    narration : string
+  }
+
+  trait RecursionSim -> @rebindable RecursionState [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.frames @config.frames)
+        (set @entity.depth 0)
+        (set @entity.calls 0)
+        (set @entity.unwinding false)
+        (set @entity.done false)
+        (set @entity.running @config.running)
+        (set @entity.narration "Press Call to invoke the function, or Run to auto-trace.")
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: STEP_CALL, label: "Call", variant: primary },
+                    { type: button, action: STEP_RETURN, label: "Return", variant: secondary },
+                    { type: button, action: RUN, label: "Run", variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: algorithm-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bars: (if @config.showStack @entity.frames []) },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit RECURSION_UPDATED { frames: @entity.frames, depth: @entity.depth, calls: @entity.calls, narration: @entity.narration })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.frames @config.frames)
+        (set @entity.depth 0)
+        (set @entity.calls 0)
+        (set @entity.unwinding false)
+        (set @entity.done false)
+        (set @entity.running @config.running)
+        (set @entity.narration "Press Call to invoke the function, or Run to auto-trace.")
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: STEP_CALL, label: "Call", variant: primary },
+                    { type: button, action: STEP_RETURN, label: "Return", variant: secondary },
+                    { type: button, action: RUN, label: "Run", variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: algorithm-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bars: (if @config.showStack @entity.frames []) },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit RECURSION_UPDATED { frames: @entity.frames, depth: @entity.depth, calls: @entity.calls, narration: @entity.narration })
+
+      STEP_CALL -> idle when (and (== @entity.active true) (and (not @entity.unwinding) (not @entity.done)))
+        (set @entity.depth (+ @entity.depth 1))
+        (set @entity.calls (+ @entity.calls 1))
+        (set @entity.frames (array/map @entity.frames
+          (if (== @index (- @entity.depth 1))
+            (object/merge @item {
+              value: @entity.depth
+              color: "#3b82f6"
+              label: (str/concat @config.functionPreset "(" (str/concat "" (- @config.initialInput (- @entity.depth 1))) ")")
+            })
+            @item)))
+        (set @entity.unwinding (>= @entity.depth @config.maxDepth))
+        (set @entity.narration (str/concat "call " (str/concat "" @entity.calls) " — push " @config.functionPreset " frame, depth " (str/concat "" @entity.depth) (if @config.showTree " · tree node spawned" "")))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: STEP_CALL, label: "Call", variant: primary },
+                    { type: button, action: STEP_RETURN, label: "Return", variant: secondary },
+                    { type: button, action: RUN, label: "Run", variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: algorithm-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bars: (if @config.showStack @entity.frames []) },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit RECURSION_UPDATED { frames: @entity.frames, depth: @entity.depth, calls: @entity.calls, narration: @entity.narration })
+
+      STEP_RETURN -> idle when (and (== @entity.active true) (> @entity.depth 0))
+        (set @entity.frames (array/map @entity.frames
+          (if (== @index (- @entity.depth 1))
+            (object/merge @item { value: 0, color: "#e2e8f0", label: "" })
+            @item)))
+        (set @entity.depth (- @entity.depth 1))
+        (set @entity.done (and @entity.unwinding (== @entity.depth 0)))
+        (set @entity.narration (str/concat "return — pop frame, depth " (str/concat "" @entity.depth)))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: STEP_CALL, label: "Call", variant: primary },
+                    { type: button, action: STEP_RETURN, label: "Return", variant: secondary },
+                    { type: button, action: RUN, label: "Run", variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: algorithm-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bars: (if @config.showStack @entity.frames []) },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit RECURSION_UPDATED { frames: @entity.frames, depth: @entity.depth, calls: @entity.calls, narration: @entity.narration })
+
+      RUN -> idle when (== @entity.active true)
+        (set @entity.running (not @entity.running))
+        (set @entity.narration (if @entity.running "Auto-tracing — tick pushes and pops frames." "Paused — step manually with Call/Return."))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: STEP_CALL, label: "Call", variant: primary },
+                    { type: button, action: STEP_RETURN, label: "Return", variant: secondary },
+                    { type: button, action: RUN, label: "Run", variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: algorithm-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bars: (if @config.showStack @entity.frames []) },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit RECURSION_UPDATED { frames: @entity.frames, depth: @entity.depth, calls: @entity.calls, narration: @entity.narration })
+
+      RESET -> idle when (== @entity.active true)
+        (set @entity.frames @config.frames)
+        (set @entity.depth 0)
+        (set @entity.calls 0)
+        (set @entity.unwinding false)
+        (set @entity.done false)
+        (set @entity.running false)
+        (set @entity.narration "Press Call to invoke the function, or Run to auto-trace.")
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: STEP_CALL, label: "Call", variant: primary },
+                    { type: button, action: STEP_RETURN, label: "Return", variant: secondary },
+                    { type: button, action: RUN, label: "Run", variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: algorithm-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bars: (if @config.showStack @entity.frames []) },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit RECURSION_UPDATED { frames: @entity.frames, depth: @entity.depth, calls: @entity.calls, narration: @entity.narration })
+    }
+
+    ticks {
+      recursionTick every 600ms
+        when (and @entity.active (and @entity.running (not @entity.done)))
+        (if @entity.unwinding
+          (do
+            (set @entity.frames (array/map @entity.frames
+              (if (== @index (- @entity.depth 1))
+                (object/merge @item { value: 0, color: "#e2e8f0", label: "" })
+                @item)))
+            (set @entity.depth (- @entity.depth 1))
+            (set @entity.done (== @entity.depth 0))
+            (set @entity.narration (str/concat "return — pop frame, depth " (str/concat "" @entity.depth))))
+          (do
+            (set @entity.depth (+ @entity.depth 1))
+            (set @entity.calls (+ @entity.calls 1))
+            (set @entity.frames (array/map @entity.frames
+              (if (== @index (- @entity.depth 1))
+                (object/merge @item {
+                  value: @entity.depth
+                  color: "#3b82f6"
+                  label: (str/concat @config.functionPreset "(" (str/concat "" (- @config.initialInput (- @entity.depth 1))) ")")
+                })
+                @item)))
+            (set @entity.unwinding (>= @entity.depth @config.maxDepth))
+            (set @entity.narration (str/concat "call " (str/concat "" @entity.calls) " — push " @config.functionPreset " frame, depth " (str/concat "" @entity.depth) (if @config.showTree " · tree node spawned" "")))))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: STEP_CALL, label: "Call", variant: primary },
+                    { type: button, action: STEP_RETURN, label: "Return", variant: secondary },
+                    { type: button, action: RUN, label: "Run", variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: algorithm-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bars: (if @config.showStack @entity.frames []) },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit RECURSION_UPDATED { frames: @entity.frames, depth: @entity.depth, calls: @entity.calls, narration: @entity.narration })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+    }
+
+    emits {
+      RECURSION_UPDATED -> external {
+        frames : [AlgoBar]
+        depth : number
+        calls : number
+        narration : string
+      }
+        @description "The call-stack state after each call/return/tick — a composed listener (recursion-tree canvas, readout) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "call stack, frame push, recursion step, unwind, trace"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      functionPreset : string = "factorial"
+        @label "Function Preset"
+        @description "Which recursive function the trace narrates — factorial, fib, or hanoi; presets relabel the frames, the push/pop mechanism is the same."
+        @synonyms "recursive function, preset, factorial, fibonacci, tower of hanoi"
+        @tier "domain"
+      initialInput : number = 5
+        @label "Initial Input"
+        @description "The argument the outermost call is made with; each nested call decrements it."
+        @synonyms "argument, input, n"
+        @tier "domain"
+      maxDepth : number = 6
+        @label "Max Depth"
+        @description "Deepest the call stack grows before the trace unwinds; keep it at or below the number of frame slots."
+        @tier "domain"
+      running : boolean = false
+        @label "Running"
+        @description "When true the tick auto-traces (push to maxDepth, then unwind); toggle with the Run button."
+        @tier "domain"
+      showTree : boolean = true
+        @label "Show Tree"
+        @description "Announce each spawned recursion-tree node in the narration and to composed tree-canvas listeners via RECURSION_UPDATED; the atom's own canvas draws the call stack."
+        @tier "presentation"
+      showStack : boolean = true
+        @label "Show Stack"
+        @description "Draw the call-stack frames on the canvas; turn off when a composed listener renders the stack itself."
+        @tier "presentation"
+      title : string = "Recursion"
+        @label "Title"
+        @description "Title shown above the canvas."
+        @tier "presentation"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      backgroundColor : string = "#f8fafc"
+        @label "Background Color"
+        @description "Canvas background color."
+        @tier "presentation"
+      frames : [AlgoBar] = [
+        { value: 0, color: "#e2e8f0", label: "" },
+        { value: 0, color: "#e2e8f0", label: "" },
+        { value: 0, color: "#e2e8f0", label: "" },
+        { value: 0, color: "#e2e8f0", label: "" },
+        { value: 0, color: "#e2e8f0", label: "" },
+        { value: 0, color: "#e2e8f0", label: "" },
+        { value: 0, color: "#e2e8f0", label: "" },
+        { value: 0, color: "#e2e8f0", label: "" }
+      ]
+        @label "Frame Slots"
+        @description "Pre-allocated call-stack slots; depth indexes into them. Keep the slot count at or above maxDepth."
+        @tier "presentation"
+    }
+  }
+
+  page "/algo-recursion" as RecursionEnginePage -> RecursionSim
+}

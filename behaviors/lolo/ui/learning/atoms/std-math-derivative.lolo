@@ -1,0 +1,453 @@
+app std-math-derivative "1.0.0"
+"Slope viewer — a point rides a curve with its tangent line; an optional secant through x and x + h converges to the tangent as h shrinks, and the slope readout is f′(x). Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital MathDerivativeOrbital {
+  type MathDerivativeSample = {
+    x : number!
+    y : number!
+  }
+  type MathDerivativeCurve = {
+    label : string
+    color : string
+    samples : [MathDerivativeSample]
+  }
+  type MathDerivativePoint = {
+    x : number!
+    y : number!
+    label : string
+    color : string
+    radius : number
+  }
+
+  entity MathDerivativeState [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    functionPreset : string
+    px : number
+    h : number
+    fx : number
+    slope : number
+    secantSlope : number
+    showSecant : boolean = false
+    curves : [MathDerivativeCurve]
+    points : [MathDerivativePoint]
+  }
+
+  trait MathDerivativeSim -> @rebindable MathDerivativeState [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.functionPreset @config.functionPreset)
+        (set @entity.px @config.initialX)
+        (set @entity.h @config.initialH)
+        (set @entity.showSecant @config.showSecant)
+        (let (
+            (fx (if (== @entity.functionPreset "sine") (* 3 (math/sin @entity.px)) (if (== @entity.functionPreset "cubic") (* 0.1 (* @entity.px (* @entity.px @entity.px))) (* 0.5 (* @entity.px @entity.px)))))
+            (slope (if (== @entity.functionPreset "sine") (* 3 (math/cos @entity.px)) (if (== @entity.functionPreset "cubic") (* 0.3 (* @entity.px @entity.px)) @entity.px)))
+            (fxh (if (== @entity.functionPreset "sine") (* 3 (math/sin (+ @entity.px @entity.h))) (if (== @entity.functionPreset "cubic") (* 0.1 (* (+ @entity.px @entity.h) (* (+ @entity.px @entity.h) (+ @entity.px @entity.h)))) (* 0.5 (* (+ @entity.px @entity.h) (+ @entity.px @entity.h))))))
+            (secSlope (/ (- @fxh @fx) @entity.h))
+            (fCurve { label: "f", color: @config.curveColor, samples: (array/map @config.sampleXs (fn x { x: @x, y: (if (== @entity.functionPreset "sine") (* 3 (math/sin @x)) (if (== @entity.functionPreset "cubic") (* 0.1 (* @x (* @x @x))) (* 0.5 (* @x @x)))) })) })
+            (tangent { label: "tangent", color: @config.tangentColor, samples: [ { x: @config.xMin, y: (+ @fx (* @slope (- @config.xMin @entity.px))) }, { x: @config.xMax, y: (+ @fx (* @slope (- @config.xMax @entity.px))) } ] })
+            (secant { label: "secant", color: @config.secantColor, samples: [ { x: @config.xMin, y: (+ @fx (* @secSlope (- @config.xMin @entity.px))) }, { x: @config.xMax, y: (+ @fx (* @secSlope (- @config.xMax @entity.px))) } ] })
+            (dCurve { label: "f′", color: @config.derivativeColor, samples: (array/map @config.sampleXs (fn x { x: @x, y: (if (== @entity.functionPreset "sine") (* 3 (math/cos @x)) (if (== @entity.functionPreset "cubic") (* 0.3 (* @x @x)) @x)) })) })
+            (withSecant (if @entity.showSecant [ @fCurve, @tangent, @secant ] [ @fCurve, @tangent ]))
+            (mainPt { x: @entity.px, y: @fx, label: "x", color: @config.pointColor, radius: 6 })
+          )
+          (do
+            (set @entity.fx @fx)
+            (set @entity.slope @slope)
+            (set @entity.secantSlope @secSlope)
+            (set @entity.curves (if @config.showDerivativeCurve (array/concat @withSecant [ @dCurve ]) @withSecant))
+            (set @entity.points (if @entity.showSecant [ @mainPt, { x: (+ @entity.px @entity.h), y: @fxh, label: "x + h", color: @config.secantColor, radius: 5 } ] [ @mainPt ]))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: SET_FUNCTION, actionPayload: { preset: "parabola" }, label: "x²", variant: secondary },
+                    { type: button, action: SET_FUNCTION, actionPayload: { preset: "cubic" }, label: "x³", variant: secondary },
+                    { type: button, action: SET_FUNCTION, actionPayload: { preset: "sine" }, label: "sin x", variant: secondary },
+                    { type: button, action: SHRINK_H, label: "Halve h", variant: primary },
+                    { type: button, action: TOGGLE_SECANT, label: (if @entity.showSecant "Hide secant" "Show secant"), variant: ghost }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.xMin, xMax: @config.xMax, yMin: @config.yMin, yMax: @config.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: [], interactive: false, animate: false },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat "x = " (math/round @entity.px 2)) },
+                    { type: range-slider, min: -5, max: 5, step: 0.25, value: @entity.px, showTooltip: true, onChange: MOVE_POINT }
+                  ] },
+                { type: typography, variant: body, content: (str/concat "f′(" (math/round @entity.px 2) ") = " (math/round @entity.slope 3) " — slope of the tangent at x") },
+                { type: typography, variant: body, content: (if @entity.showSecant (str/concat "h = " (math/round @entity.h 4) " · secant slope = " (math/round @entity.secantSlope 4) " — converges to f′(x) as h → 0") "") }
+              ] }
+          ]
+        })
+        (emit DERIVATIVE_UPDATED { x: @entity.px, fx: @entity.fx, slope: @entity.slope, h: @entity.h, secantSlope: @entity.secantSlope, functionPreset: @entity.functionPreset })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.functionPreset @config.functionPreset)
+        (set @entity.px @config.initialX)
+        (set @entity.h @config.initialH)
+        (set @entity.showSecant @config.showSecant)
+        (let (
+            (fx (if (== @entity.functionPreset "sine") (* 3 (math/sin @entity.px)) (if (== @entity.functionPreset "cubic") (* 0.1 (* @entity.px (* @entity.px @entity.px))) (* 0.5 (* @entity.px @entity.px)))))
+            (slope (if (== @entity.functionPreset "sine") (* 3 (math/cos @entity.px)) (if (== @entity.functionPreset "cubic") (* 0.3 (* @entity.px @entity.px)) @entity.px)))
+            (fxh (if (== @entity.functionPreset "sine") (* 3 (math/sin (+ @entity.px @entity.h))) (if (== @entity.functionPreset "cubic") (* 0.1 (* (+ @entity.px @entity.h) (* (+ @entity.px @entity.h) (+ @entity.px @entity.h)))) (* 0.5 (* (+ @entity.px @entity.h) (+ @entity.px @entity.h))))))
+            (secSlope (/ (- @fxh @fx) @entity.h))
+            (fCurve { label: "f", color: @config.curveColor, samples: (array/map @config.sampleXs (fn x { x: @x, y: (if (== @entity.functionPreset "sine") (* 3 (math/sin @x)) (if (== @entity.functionPreset "cubic") (* 0.1 (* @x (* @x @x))) (* 0.5 (* @x @x)))) })) })
+            (tangent { label: "tangent", color: @config.tangentColor, samples: [ { x: @config.xMin, y: (+ @fx (* @slope (- @config.xMin @entity.px))) }, { x: @config.xMax, y: (+ @fx (* @slope (- @config.xMax @entity.px))) } ] })
+            (secant { label: "secant", color: @config.secantColor, samples: [ { x: @config.xMin, y: (+ @fx (* @secSlope (- @config.xMin @entity.px))) }, { x: @config.xMax, y: (+ @fx (* @secSlope (- @config.xMax @entity.px))) } ] })
+            (dCurve { label: "f′", color: @config.derivativeColor, samples: (array/map @config.sampleXs (fn x { x: @x, y: (if (== @entity.functionPreset "sine") (* 3 (math/cos @x)) (if (== @entity.functionPreset "cubic") (* 0.3 (* @x @x)) @x)) })) })
+            (withSecant (if @entity.showSecant [ @fCurve, @tangent, @secant ] [ @fCurve, @tangent ]))
+            (mainPt { x: @entity.px, y: @fx, label: "x", color: @config.pointColor, radius: 6 })
+          )
+          (do
+            (set @entity.fx @fx)
+            (set @entity.slope @slope)
+            (set @entity.secantSlope @secSlope)
+            (set @entity.curves (if @config.showDerivativeCurve (array/concat @withSecant [ @dCurve ]) @withSecant))
+            (set @entity.points (if @entity.showSecant [ @mainPt, { x: (+ @entity.px @entity.h), y: @fxh, label: "x + h", color: @config.secantColor, radius: 5 } ] [ @mainPt ]))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: SET_FUNCTION, actionPayload: { preset: "parabola" }, label: "x²", variant: secondary },
+                    { type: button, action: SET_FUNCTION, actionPayload: { preset: "cubic" }, label: "x³", variant: secondary },
+                    { type: button, action: SET_FUNCTION, actionPayload: { preset: "sine" }, label: "sin x", variant: secondary },
+                    { type: button, action: SHRINK_H, label: "Halve h", variant: primary },
+                    { type: button, action: TOGGLE_SECANT, label: (if @entity.showSecant "Hide secant" "Show secant"), variant: ghost }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.xMin, xMax: @config.xMax, yMin: @config.yMin, yMax: @config.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: [], interactive: false, animate: false },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat "x = " (math/round @entity.px 2)) },
+                    { type: range-slider, min: -5, max: 5, step: 0.25, value: @entity.px, showTooltip: true, onChange: MOVE_POINT }
+                  ] },
+                { type: typography, variant: body, content: (str/concat "f′(" (math/round @entity.px 2) ") = " (math/round @entity.slope 3) " — slope of the tangent at x") },
+                { type: typography, variant: body, content: (if @entity.showSecant (str/concat "h = " (math/round @entity.h 4) " · secant slope = " (math/round @entity.secantSlope 4) " — converges to f′(x) as h → 0") "") }
+              ] }
+          ]
+        })
+        (emit DERIVATIVE_UPDATED { x: @entity.px, fx: @entity.fx, slope: @entity.slope, h: @entity.h, secantSlope: @entity.secantSlope, functionPreset: @entity.functionPreset })
+
+      MOVE_POINT -> idle when (== @entity.active true)
+        (let (
+            (npx (math/clamp ?value -5 5))
+            (fx (if (== @entity.functionPreset "sine") (* 3 (math/sin @npx)) (if (== @entity.functionPreset "cubic") (* 0.1 (* @npx (* @npx @npx))) (* 0.5 (* @npx @npx)))))
+            (slope (if (== @entity.functionPreset "sine") (* 3 (math/cos @npx)) (if (== @entity.functionPreset "cubic") (* 0.3 (* @npx @npx)) @npx)))
+            (fxh (if (== @entity.functionPreset "sine") (* 3 (math/sin (+ @npx @entity.h))) (if (== @entity.functionPreset "cubic") (* 0.1 (* (+ @npx @entity.h) (* (+ @npx @entity.h) (+ @npx @entity.h)))) (* 0.5 (* (+ @npx @entity.h) (+ @npx @entity.h))))))
+            (secSlope (/ (- @fxh @fx) @entity.h))
+            (fCurve { label: "f", color: @config.curveColor, samples: (array/map @config.sampleXs (fn x { x: @x, y: (if (== @entity.functionPreset "sine") (* 3 (math/sin @x)) (if (== @entity.functionPreset "cubic") (* 0.1 (* @x (* @x @x))) (* 0.5 (* @x @x)))) })) })
+            (tangent { label: "tangent", color: @config.tangentColor, samples: [ { x: @config.xMin, y: (+ @fx (* @slope (- @config.xMin @npx))) }, { x: @config.xMax, y: (+ @fx (* @slope (- @config.xMax @npx))) } ] })
+            (secant { label: "secant", color: @config.secantColor, samples: [ { x: @config.xMin, y: (+ @fx (* @secSlope (- @config.xMin @npx))) }, { x: @config.xMax, y: (+ @fx (* @secSlope (- @config.xMax @npx))) } ] })
+            (dCurve { label: "f′", color: @config.derivativeColor, samples: (array/map @config.sampleXs (fn x { x: @x, y: (if (== @entity.functionPreset "sine") (* 3 (math/cos @x)) (if (== @entity.functionPreset "cubic") (* 0.3 (* @x @x)) @x)) })) })
+            (withSecant (if @entity.showSecant [ @fCurve, @tangent, @secant ] [ @fCurve, @tangent ]))
+            (mainPt { x: @npx, y: @fx, label: "x", color: @config.pointColor, radius: 6 })
+          )
+          (do
+            (set @entity.px @npx)
+            (set @entity.fx @fx)
+            (set @entity.slope @slope)
+            (set @entity.secantSlope @secSlope)
+            (set @entity.curves (if @config.showDerivativeCurve (array/concat @withSecant [ @dCurve ]) @withSecant))
+            (set @entity.points (if @entity.showSecant [ @mainPt, { x: (+ @npx @entity.h), y: @fxh, label: "x + h", color: @config.secantColor, radius: 5 } ] [ @mainPt ]))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: SET_FUNCTION, actionPayload: { preset: "parabola" }, label: "x²", variant: secondary },
+                    { type: button, action: SET_FUNCTION, actionPayload: { preset: "cubic" }, label: "x³", variant: secondary },
+                    { type: button, action: SET_FUNCTION, actionPayload: { preset: "sine" }, label: "sin x", variant: secondary },
+                    { type: button, action: SHRINK_H, label: "Halve h", variant: primary },
+                    { type: button, action: TOGGLE_SECANT, label: (if @entity.showSecant "Hide secant" "Show secant"), variant: ghost }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.xMin, xMax: @config.xMax, yMin: @config.yMin, yMax: @config.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: [], interactive: false, animate: false },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat "x = " (math/round @entity.px 2)) },
+                    { type: range-slider, min: -5, max: 5, step: 0.25, value: @entity.px, showTooltip: true, onChange: MOVE_POINT }
+                  ] },
+                { type: typography, variant: body, content: (str/concat "f′(" (math/round @entity.px 2) ") = " (math/round @entity.slope 3) " — slope of the tangent at x") },
+                { type: typography, variant: body, content: (if @entity.showSecant (str/concat "h = " (math/round @entity.h 4) " · secant slope = " (math/round @entity.secantSlope 4) " — converges to f′(x) as h → 0") "") }
+              ] }
+          ]
+        })
+        (emit DERIVATIVE_UPDATED { x: @entity.px, fx: @entity.fx, slope: @entity.slope, h: @entity.h, secantSlope: @entity.secantSlope, functionPreset: @entity.functionPreset })
+
+      SHRINK_H -> idle when (== @entity.active true)
+        (let (
+            (nh (math/max (/ @entity.h 2) 0.0625))
+            (fx @entity.fx)
+            (slope @entity.slope)
+            (fxh (if (== @entity.functionPreset "sine") (* 3 (math/sin (+ @entity.px @nh))) (if (== @entity.functionPreset "cubic") (* 0.1 (* (+ @entity.px @nh) (* (+ @entity.px @nh) (+ @entity.px @nh)))) (* 0.5 (* (+ @entity.px @nh) (+ @entity.px @nh))))))
+            (secSlope (/ (- @fxh @fx) @nh))
+            (fCurve { label: "f", color: @config.curveColor, samples: (array/map @config.sampleXs (fn x { x: @x, y: (if (== @entity.functionPreset "sine") (* 3 (math/sin @x)) (if (== @entity.functionPreset "cubic") (* 0.1 (* @x (* @x @x))) (* 0.5 (* @x @x)))) })) })
+            (tangent { label: "tangent", color: @config.tangentColor, samples: [ { x: @config.xMin, y: (+ @fx (* @slope (- @config.xMin @entity.px))) }, { x: @config.xMax, y: (+ @fx (* @slope (- @config.xMax @entity.px))) } ] })
+            (secant { label: "secant", color: @config.secantColor, samples: [ { x: @config.xMin, y: (+ @fx (* @secSlope (- @config.xMin @entity.px))) }, { x: @config.xMax, y: (+ @fx (* @secSlope (- @config.xMax @entity.px))) } ] })
+            (dCurve { label: "f′", color: @config.derivativeColor, samples: (array/map @config.sampleXs (fn x { x: @x, y: (if (== @entity.functionPreset "sine") (* 3 (math/cos @x)) (if (== @entity.functionPreset "cubic") (* 0.3 (* @x @x)) @x)) })) })
+            (withSecant (if @entity.showSecant [ @fCurve, @tangent, @secant ] [ @fCurve, @tangent ]))
+            (mainPt { x: @entity.px, y: @fx, label: "x", color: @config.pointColor, radius: 6 })
+          )
+          (do
+            (set @entity.h @nh)
+            (set @entity.secantSlope @secSlope)
+            (set @entity.curves (if @config.showDerivativeCurve (array/concat @withSecant [ @dCurve ]) @withSecant))
+            (set @entity.points (if @entity.showSecant [ @mainPt, { x: (+ @entity.px @nh), y: @fxh, label: "x + h", color: @config.secantColor, radius: 5 } ] [ @mainPt ]))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: SET_FUNCTION, actionPayload: { preset: "parabola" }, label: "x²", variant: secondary },
+                    { type: button, action: SET_FUNCTION, actionPayload: { preset: "cubic" }, label: "x³", variant: secondary },
+                    { type: button, action: SET_FUNCTION, actionPayload: { preset: "sine" }, label: "sin x", variant: secondary },
+                    { type: button, action: SHRINK_H, label: "Halve h", variant: primary },
+                    { type: button, action: TOGGLE_SECANT, label: (if @entity.showSecant "Hide secant" "Show secant"), variant: ghost }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.xMin, xMax: @config.xMax, yMin: @config.yMin, yMax: @config.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: [], interactive: false, animate: false },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat "x = " (math/round @entity.px 2)) },
+                    { type: range-slider, min: -5, max: 5, step: 0.25, value: @entity.px, showTooltip: true, onChange: MOVE_POINT }
+                  ] },
+                { type: typography, variant: body, content: (str/concat "f′(" (math/round @entity.px 2) ") = " (math/round @entity.slope 3) " — slope of the tangent at x") },
+                { type: typography, variant: body, content: (if @entity.showSecant (str/concat "h = " (math/round @entity.h 4) " · secant slope = " (math/round @entity.secantSlope 4) " — converges to f′(x) as h → 0") "") }
+              ] }
+          ]
+        })
+        (emit DERIVATIVE_UPDATED { x: @entity.px, fx: @entity.fx, slope: @entity.slope, h: @entity.h, secantSlope: @entity.secantSlope, functionPreset: @entity.functionPreset })
+
+      SET_FUNCTION -> idle when (== @entity.active true)
+        (let (
+            (npreset ?preset)
+            (nh @config.initialH)
+            (fx (if (== @npreset "sine") (* 3 (math/sin @entity.px)) (if (== @npreset "cubic") (* 0.1 (* @entity.px (* @entity.px @entity.px))) (* 0.5 (* @entity.px @entity.px)))))
+            (slope (if (== @npreset "sine") (* 3 (math/cos @entity.px)) (if (== @npreset "cubic") (* 0.3 (* @entity.px @entity.px)) @entity.px)))
+            (fxh (if (== @npreset "sine") (* 3 (math/sin (+ @entity.px @nh))) (if (== @npreset "cubic") (* 0.1 (* (+ @entity.px @nh) (* (+ @entity.px @nh) (+ @entity.px @nh)))) (* 0.5 (* (+ @entity.px @nh) (+ @entity.px @nh))))))
+            (secSlope (/ (- @fxh @fx) @nh))
+            (fCurve { label: "f", color: @config.curveColor, samples: (array/map @config.sampleXs (fn x { x: @x, y: (if (== @npreset "sine") (* 3 (math/sin @x)) (if (== @npreset "cubic") (* 0.1 (* @x (* @x @x))) (* 0.5 (* @x @x)))) })) })
+            (tangent { label: "tangent", color: @config.tangentColor, samples: [ { x: @config.xMin, y: (+ @fx (* @slope (- @config.xMin @entity.px))) }, { x: @config.xMax, y: (+ @fx (* @slope (- @config.xMax @entity.px))) } ] })
+            (secant { label: "secant", color: @config.secantColor, samples: [ { x: @config.xMin, y: (+ @fx (* @secSlope (- @config.xMin @entity.px))) }, { x: @config.xMax, y: (+ @fx (* @secSlope (- @config.xMax @entity.px))) } ] })
+            (dCurve { label: "f′", color: @config.derivativeColor, samples: (array/map @config.sampleXs (fn x { x: @x, y: (if (== @npreset "sine") (* 3 (math/cos @x)) (if (== @npreset "cubic") (* 0.3 (* @x @x)) @x)) })) })
+            (withSecant (if @entity.showSecant [ @fCurve, @tangent, @secant ] [ @fCurve, @tangent ]))
+            (mainPt { x: @entity.px, y: @fx, label: "x", color: @config.pointColor, radius: 6 })
+          )
+          (do
+            (set @entity.functionPreset @npreset)
+            (set @entity.h @nh)
+            (set @entity.fx @fx)
+            (set @entity.slope @slope)
+            (set @entity.secantSlope @secSlope)
+            (set @entity.curves (if @config.showDerivativeCurve (array/concat @withSecant [ @dCurve ]) @withSecant))
+            (set @entity.points (if @entity.showSecant [ @mainPt, { x: (+ @entity.px @nh), y: @fxh, label: "x + h", color: @config.secantColor, radius: 5 } ] [ @mainPt ]))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: SET_FUNCTION, actionPayload: { preset: "parabola" }, label: "x²", variant: secondary },
+                    { type: button, action: SET_FUNCTION, actionPayload: { preset: "cubic" }, label: "x³", variant: secondary },
+                    { type: button, action: SET_FUNCTION, actionPayload: { preset: "sine" }, label: "sin x", variant: secondary },
+                    { type: button, action: SHRINK_H, label: "Halve h", variant: primary },
+                    { type: button, action: TOGGLE_SECANT, label: (if @entity.showSecant "Hide secant" "Show secant"), variant: ghost }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.xMin, xMax: @config.xMax, yMin: @config.yMin, yMax: @config.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: [], interactive: false, animate: false },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat "x = " (math/round @entity.px 2)) },
+                    { type: range-slider, min: -5, max: 5, step: 0.25, value: @entity.px, showTooltip: true, onChange: MOVE_POINT }
+                  ] },
+                { type: typography, variant: body, content: (str/concat "f′(" (math/round @entity.px 2) ") = " (math/round @entity.slope 3) " — slope of the tangent at x") },
+                { type: typography, variant: body, content: (if @entity.showSecant (str/concat "h = " (math/round @entity.h 4) " · secant slope = " (math/round @entity.secantSlope 4) " — converges to f′(x) as h → 0") "") }
+              ] }
+          ]
+        })
+        (emit DERIVATIVE_UPDATED { x: @entity.px, fx: @entity.fx, slope: @entity.slope, h: @entity.h, secantSlope: @entity.secantSlope, functionPreset: @entity.functionPreset })
+
+      TOGGLE_SECANT -> idle when (== @entity.active true)
+        (let (
+            (nsec (== @entity.showSecant false))
+            (secant { label: "secant", color: @config.secantColor, samples: [ { x: @config.xMin, y: (+ @entity.fx (* @entity.secantSlope (- @config.xMin @entity.px))) }, { x: @config.xMax, y: (+ @entity.fx (* @entity.secantSlope (- @config.xMax @entity.px))) } ] })
+            (fCurve (array/nth @entity.curves 0))
+            (tangent (array/nth @entity.curves 1))
+            (dCurve { label: "f′", color: @config.derivativeColor, samples: (array/map @config.sampleXs (fn x { x: @x, y: (if (== @entity.functionPreset "sine") (* 3 (math/cos @x)) (if (== @entity.functionPreset "cubic") (* 0.3 (* @x @x)) @x)) })) })
+            (withSecant (if @nsec [ @fCurve, @tangent, @secant ] [ @fCurve, @tangent ]))
+            (mainPt { x: @entity.px, y: @entity.fx, label: "x", color: @config.pointColor, radius: 6 })
+            (fxh (if (== @entity.functionPreset "sine") (* 3 (math/sin (+ @entity.px @entity.h))) (if (== @entity.functionPreset "cubic") (* 0.1 (* (+ @entity.px @entity.h) (* (+ @entity.px @entity.h) (+ @entity.px @entity.h)))) (* 0.5 (* (+ @entity.px @entity.h) (+ @entity.px @entity.h))))))
+          )
+          (do
+            (set @entity.showSecant @nsec)
+            (set @entity.curves (if @config.showDerivativeCurve (array/concat @withSecant [ @dCurve ]) @withSecant))
+            (set @entity.points (if @nsec [ @mainPt, { x: (+ @entity.px @entity.h), y: @fxh, label: "x + h", color: @config.secantColor, radius: 5 } ] [ @mainPt ]))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: SET_FUNCTION, actionPayload: { preset: "parabola" }, label: "x²", variant: secondary },
+                    { type: button, action: SET_FUNCTION, actionPayload: { preset: "cubic" }, label: "x³", variant: secondary },
+                    { type: button, action: SET_FUNCTION, actionPayload: { preset: "sine" }, label: "sin x", variant: secondary },
+                    { type: button, action: SHRINK_H, label: "Halve h", variant: primary },
+                    { type: button, action: TOGGLE_SECANT, label: (if @entity.showSecant "Hide secant" "Show secant"), variant: ghost }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.xMin, xMax: @config.xMax, yMin: @config.yMin, yMax: @config.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: [], interactive: false, animate: false },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat "x = " (math/round @entity.px 2)) },
+                    { type: range-slider, min: -5, max: 5, step: 0.25, value: @entity.px, showTooltip: true, onChange: MOVE_POINT }
+                  ] },
+                { type: typography, variant: body, content: (str/concat "f′(" (math/round @entity.px 2) ") = " (math/round @entity.slope 3) " — slope of the tangent at x") },
+                { type: typography, variant: body, content: (if @entity.showSecant (str/concat "h = " (math/round @entity.h 4) " · secant slope = " (math/round @entity.secantSlope 4) " — converges to f′(x) as h → 0") "") }
+              ] }
+          ]
+        })
+        (emit DERIVATIVE_UPDATED { x: @entity.px, fx: @entity.fx, slope: @entity.slope, h: @entity.h, secantSlope: @entity.secantSlope, functionPreset: @entity.functionPreset })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      MOVE_POINT {
+        value : number
+      }
+        @description "Learner dragged the x slider to move the point of tangency along the curve."
+        @tier "domain"
+      SET_FUNCTION {
+        preset : string
+      }
+        @description "Learner picked a different function preset; the secant resets to the initial h."
+        @tier "domain"
+    }
+
+    emits {
+      DERIVATIVE_UPDATED -> external {
+        x : number
+        fx : number
+        slope : number
+        h : number
+        secantSlope : number
+        functionPreset : string
+      }
+        @description "The point, tangent slope and secant state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "derivative, tangent slope, secant, rate of change, differentiation"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      functionPreset : "parabola" | "cubic" | "sine" = parabola
+        @label "Function Preset"
+        @description "Which function the point rides: ½x², 0.1x³, or 3·sin(x). The tangent uses its analytic derivative."
+        @synonyms "function, curve, preset, parabola, cubic, sine"
+        @tier "domain"
+      initialX : number = 1
+        @label "Initial x"
+        @description "Starting x coordinate of the point of tangency."
+        @synonyms "point of tangency, x coordinate"
+        @tier "domain"
+      initialH : number = 2
+        @label "Initial h"
+        @description "Starting offset between the secant's two intersection points; halving h converges the secant onto the tangent."
+        @synonyms "h, delta x, secant offset, step size"
+        @tier "domain"
+      sampleXs : [number] = [ -6, -5.7, -5.4, -5.1, -4.8, -4.5, -4.2, -3.9, -3.6, -3.3, -3, -2.7, -2.4, -2.1, -1.8, -1.5, -1.2, -0.9, -0.6, -0.3, 0, 0.3, 0.6, 0.9, 1.2, 1.5, 1.8, 2.1, 2.4, 2.7, 3, 3.3, 3.6, 3.9, 4.2, 4.5, 4.8, 5.1, 5.4, 5.7, 6 ]
+        @label "Sample Xs"
+        @description "X coordinates the function and its derivative are sampled at to draw their curves."
+        @tier "domain"
+      showSecant : boolean = true
+        @label "Show Secant"
+        @description "Draw the secant line through x and x + h alongside the tangent."
+        @synonyms "secant line, average rate of change"
+        @tier "presentation"
+      showDerivativeCurve : boolean = false
+        @label "Show Derivative Curve"
+        @description "Also plot the derivative f′ as its own curve under the function."
+        @synonyms "derivative curve, f prime, derived function"
+        @tier "presentation"
+      title : string = "Derivative — Slope Viewer"
+        @label "Title"
+        @description "Title shown above the canvas."
+        @tier "presentation"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      xMin : number = -6
+        @label "X Min"
+        @description "Minimum x value on the canvas."
+        @tier "presentation"
+      xMax : number = 6
+        @label "X Max"
+        @description "Maximum x value on the canvas."
+        @tier "presentation"
+      yMin : number = -10
+        @label "Y Min"
+        @description "Minimum y value on the canvas."
+        @tier "presentation"
+      yMax : number = 10
+        @label "Y Max"
+        @description "Maximum y value on the canvas."
+        @tier "presentation"
+      showAxes : boolean = true
+        @label "Show Axes"
+        @tier "presentation"
+      showGrid : boolean = true
+        @label "Show Grid"
+        @tier "presentation"
+      gridStep : number = 1
+        @label "Grid Step"
+        @tier "presentation"
+      curveColor : string = "#2563eb"
+        @label "Function Color"
+        @tier "presentation"
+      tangentColor : string = "#dc2626"
+        @label "Tangent Color"
+        @tier "presentation"
+      secantColor : string = "#16a34a"
+        @label "Secant Color"
+        @tier "presentation"
+      derivativeColor : string = "#9333ea"
+        @label "Derivative Curve Color"
+        @tier "presentation"
+      pointColor : string = "#dc2626"
+        @label "Point Color"
+        @tier "presentation"
+    }
+  }
+
+  page "/math-derivative" as MathDerivativePage -> MathDerivativeSim
+}

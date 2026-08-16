@@ -1,5 +1,5 @@
 {
-  "description": "std-notify-on-event — cross-orbital wiring atom. Subscribes to events from another orbital (e.g. CheckoutOrbital emits OrderPlaced, OrderRecordOrbital reacts via this atom) and dispatches a notification. Use when one orbital needs to react to or be notified about events that happen in another orbital — the wiring goes through this atom's `EventOccurred` listener which the molecule renames via traitOverrides.events to the upstream event name. Resolves recipient from `recipients` (first entry; multi-recipient fan-out is a future extension) or falls back to `@user.id`. Skips dispatch when the recipient is in `suppressionList`. Emits in-app `notify` when `notifyChannel` is `\"in-app\"`, or persists a `NotificationRecord` row for out-of-band delivery when channel is `\"email\"` or `\"sms\"`.",
+  "description": "std-notify-on-event — cross-orbital wiring atom. Subscribes to events from another orbital (e.g. CheckoutOrbital emits OrderPlaced, OrderRecordOrbital reacts via this atom) and dispatches a notification. Use when one orbital needs to react to or be notified about events that happen in another orbital — the wiring goes through this atom's `EventOccurred` listener which the molecule renames via traitOverrides.events to the upstream event name. Dispatch gates on `guardOp`: `eq` (default) does string-equality on `triggerStatus` against the upstream event's `status` field, exactly as before; `gt`/`lt`/`gte`/`lte` instead numerically compare `guardField` (read from the event's `data` payload) against `guardValue`, for threshold-crossing asks such as low-stock alerts. Resolves recipient from `recipients` (first entry; multi-recipient fan-out is a future extension), falling back to `fallbackRecipient` when set, or `@user.id` otherwise — set `fallbackRecipient` for system/ops alerts (e.g. low-stock, shipping) so the acting user isn't notified in place of the intended audience. Skips dispatch when the recipient is in `suppressionList`. Emits in-app `notify` when `notifyChannel` is `\"in-app\"` (default, unchanged). `\"email\"`/`\"sms\"`/`\"webhook\"` dispatch through call-service at event time (email.send / twilio.sendSMS / webhook.send respectively) and persist a `NotificationRecord` audit row with an honest `dispatched` flag — true only once the service call succeeds, false with the failure detail in `error` otherwise. `email` uses `emailSubject` (falls back to `template` when blank); `webhook` requires `webhookUrl` to actually dispatch (`webhookSecret` signs the payload) — a blank `webhookUrl` still records the audit row undispatched rather than failing.",
   "ledger": {
     "entries": {
       "ent_01KXG04FE9SA0FVQV9VJC8915N": {
@@ -23,6 +23,60 @@
         "bakedName": "NotificationDispatched",
         "curName": "NotificationDispatched",
         "id": "evt_01KXG04FE9R85M0QY4RN3YHY2G",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04FE9HSGJRHVVCWZJ77YF",
+        "renames": []
+      },
+      "evt_01M04F6YS127TQHFVXCJFWWND7": {
+        "bakedName": "NOTIFY_WEBHOOK_SENT",
+        "curName": "NOTIFY_WEBHOOK_SENT",
+        "id": "evt_01M04F6YS127TQHFVXCJFWWND7",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04FE9HSGJRHVVCWZJ77YF",
+        "renames": []
+      },
+      "evt_01M04F6YS147RT3HG7Y6RM5NPR": {
+        "bakedName": "NOTIFY_EMAIL_SENT",
+        "curName": "NOTIFY_EMAIL_SENT",
+        "id": "evt_01M04F6YS147RT3HG7Y6RM5NPR",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04FE9HSGJRHVVCWZJ77YF",
+        "renames": []
+      },
+      "evt_01M04F6YS15CD1HDJR5DFKANEB": {
+        "bakedName": "NOTIFY_SMS_SENT",
+        "curName": "NOTIFY_SMS_SENT",
+        "id": "evt_01M04F6YS15CD1HDJR5DFKANEB",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04FE9HSGJRHVVCWZJ77YF",
+        "renames": []
+      },
+      "evt_01M04F6YS177ZKDY0BWJCW5P4N": {
+        "bakedName": "NOTIFY_SMS_FAILED",
+        "curName": "NOTIFY_SMS_FAILED",
+        "id": "evt_01M04F6YS177ZKDY0BWJCW5P4N",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04FE9HSGJRHVVCWZJ77YF",
+        "renames": []
+      },
+      "evt_01M04F6YS1Q0G3YH9C9VDMXR18": {
+        "bakedName": "NOTIFY_EMAIL_FAILED",
+        "curName": "NOTIFY_EMAIL_FAILED",
+        "id": "evt_01M04F6YS1Q0G3YH9C9VDMXR18",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04FE9HSGJRHVVCWZJ77YF",
+        "renames": []
+      },
+      "evt_01M04F6YS1THM7EMY3BAB7CSCV": {
+        "bakedName": "NOTIFY_WEBHOOK_FAILED",
+        "curName": "NOTIFY_WEBHOOK_FAILED",
+        "id": "evt_01M04F6YS1THM7EMY3BAB7CSCV",
         "kind": "event",
         "owner": "workspace",
         "parent": "trt_01KXG04FE9HSGJRHVVCWZJ77YF",
@@ -102,6 +156,13 @@
             "type": "boolean"
           },
           {
+            "default": "",
+            "description": "Failure detail from the delivery service when dispatched is false (email/sms/webhook channels only).",
+            "name": "error",
+            "synonyms": "error message, failure reason, dispatch error",
+            "type": "string"
+          },
+          {
             "default": 0.0,
             "description": "Timestamp indicating when the notification record was created.",
             "name": "recordedAt",
@@ -132,10 +193,57 @@
         {
           "category": "lifecycle",
           "config": {
+            "emailSubject": {
+              "default": "",
+              "description": "Subject line used for the email channel. Falls back to `template` when blank. Ignored for other channels.",
+              "label": "Email subject",
+              "synonyms": "subject, subject line, email title, mail subject",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "fallbackRecipient": {
+              "default": "",
+              "description": "Recipient used when `recipients` is empty, instead of the acting user. The acting-user fallback (used when this is blank) is intended for personal notifications only — set this to an ops/team address (e.g. 'ops@example.com') for system alerts like low-stock or shipping notices, so the acting user isn't notified in place of the intended audience.",
+              "label": "Fallback recipient",
+              "synonyms": "default recipient, backup recipient, ops address, fallback address, notify default, alert owner",
+              "tier": "policy",
+              "type": "string"
+            },
             "frequencyCapPerWeek": {
               "default": 0.0,
               "description": "Max sends per (channel, recipient) per rolling 7-day window. 0 = uncapped. WIRING DEFERRED: needs stateful history query (gap — docs/Almadar_Std_Factories.md).",
               "label": "Frequency cap (per week)",
+              "tier": "policy",
+              "type": "number"
+            },
+            "guardField": {
+              "default": "",
+              "description": "Field read from the upstream event's `data` payload and compared against `guardValue` when `guardOp` is not `eq` (e.g. 'stockLevel', 'quantity'). Ignored when `guardOp` is `eq`.",
+              "label": "Guard field (numeric)",
+              "synonyms": "threshold field, numeric field, compare field, watched field, data field",
+              "tier": "policy",
+              "type": "string"
+            },
+            "guardOp": {
+              "default": "eq",
+              "description": "How to gate dispatch. `eq` (default) does string-equality via `triggerStatus` against the upstream event's `status` field, exactly as before. `gt`/`lt`/`gte`/`lte` instead numerically compare `guardField` (read from the event's `data` payload) against `guardValue` — e.g. fire only when a stock level drops below a threshold.",
+              "label": "Guard comparison",
+              "synonyms": "comparison operator, threshold operator, guard mode, trigger comparison, numeric gate, greater than, less than, threshold crossing",
+              "tier": "policy",
+              "type": "string",
+              "values": [
+                "eq",
+                "gt",
+                "lt",
+                "gte",
+                "lte"
+              ]
+            },
+            "guardValue": {
+              "default": 0.0,
+              "description": "Threshold compared against `guardField` when `guardOp` is not `eq` (e.g. fire when stock drops below 5).",
+              "label": "Guard value (numeric)",
+              "synonyms": "threshold, cutoff, limit, watermark, trigger value",
               "tier": "policy",
               "type": "number"
             },
@@ -152,11 +260,17 @@
             },
             "notifyChannel": {
               "default": "in-app",
-              "description": "Delivery channel: in-app, email, or sms",
+              "description": "Delivery channel. `in-app` (default) emits the in-app `notify` toast — unchanged from prior versions. `email`/`sms`/`webhook` dispatch through call-service at event time (email.send / twilio.sendSMS / webhook.send) and persist a NotificationRecord audit row with an honest `dispatched` flag: true only once the service call succeeds, false plus the failure detail in `error` otherwise. `webhook` requires `webhookUrl` to actually dispatch; a blank `webhookUrl` still records the audit row undispatched rather than failing.",
               "label": "Channel",
               "synonyms": "delivery method, notification channel, send via, dispatch through",
               "tier": "policy",
-              "type": "string"
+              "type": "string",
+              "values": [
+                "in-app",
+                "email",
+                "sms",
+                "webhook"
+              ]
             },
             "quietHours": {
               "default": {
@@ -182,7 +296,7 @@
             },
             "recipients": {
               "default": [],
-              "description": "Recipient ids/addresses. v1.1 uses the first entry; multi-recipient fan-out lands in v1.2 (gap). When empty, falls back to the authenticated user.",
+              "description": "Recipient ids/addresses. v1.1 uses the first entry; multi-recipient fan-out lands in v1.2 (gap). When empty, falls back to `fallbackRecipient` if set, otherwise the authenticated user.",
               "items": {
                 "type": "string"
               },
@@ -220,9 +334,25 @@
             },
             "triggerStatus": {
               "default": "",
-              "description": "When set, dispatch only when the upstream event's `status` field equals this value (e.g. fire only when a record becomes 'approved'). Empty = fire on every subscribed event.",
+              "description": "When `guardOp` is `eq` and this is set, dispatch only when the upstream event's `status` field equals this value (e.g. fire only when a record becomes 'approved'). Empty = fire on every subscribed event. Ignored when `guardOp` is a numeric comparison.",
               "label": "Trigger status",
               "synonyms": "on status, when status, status filter, only when, fire on, react on status",
+              "tier": "policy",
+              "type": "string"
+            },
+            "webhookSecret": {
+              "default": "",
+              "description": "Signing secret forwarded to the webhook service so the receiving endpoint can verify the payload. Ignored when `webhookUrl` is blank.",
+              "label": "Webhook secret",
+              "synonyms": "signing secret, hmac secret, webhook signature, shared secret",
+              "tier": "internal",
+              "type": "string"
+            },
+            "webhookUrl": {
+              "default": "",
+              "description": "Destination endpoint for the webhook channel. Dispatch only fires when this is non-blank; a blank URL on channel \"webhook\" records the audit row with dispatched:false instead of crashing (a consumer misconfiguration, not a failure).",
+              "label": "Webhook URL",
+              "synonyms": "webhook endpoint, callback url, target url, http endpoint, notify url",
               "tier": "policy",
               "type": "string"
             }
@@ -250,6 +380,104 @@
                 }
               ],
               "scope": "external"
+            },
+            {
+              "description": "email.send service result, flattened onto the payload by the call-service effect executor",
+              "event": "NOTIFY_EMAIL_SENT",
+              "eventId": "evt_01M04F6YS147RT3HG7Y6RM5NPR",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "tier": "secondary"
+            },
+            {
+              "description": "email.send service call failed — dispatched lands false and error carries the service detail",
+              "event": "NOTIFY_EMAIL_FAILED",
+              "eventId": "evt_01M04F6YS1Q0G3YH9C9VDMXR18",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "tier": "secondary"
+            },
+            {
+              "description": "twilio.sendSMS service result, flattened onto the payload by the call-service effect executor",
+              "event": "NOTIFY_SMS_SENT",
+              "eventId": "evt_01M04F6YS15CD1HDJR5DFKANEB",
+              "payloadSchema": [
+                {
+                  "name": "sid",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "tier": "secondary"
+            },
+            {
+              "description": "twilio.sendSMS service call failed — dispatched lands false and error carries the service detail",
+              "event": "NOTIFY_SMS_FAILED",
+              "eventId": "evt_01M04F6YS177ZKDY0BWJCW5P4N",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "tier": "secondary"
+            },
+            {
+              "description": "webhook.send service result, flattened onto the payload by the call-service effect executor",
+              "event": "NOTIFY_WEBHOOK_SENT",
+              "eventId": "evt_01M04F6YS127TQHFVXCJFWWND7",
+              "payloadSchema": [
+                {
+                  "name": "status",
+                  "required": true,
+                  "type": "number"
+                },
+                {
+                  "name": "ok",
+                  "required": true,
+                  "type": "boolean"
+                },
+                {
+                  "name": "durationMs",
+                  "required": true,
+                  "type": "number"
+                }
+              ],
+              "tier": "secondary"
+            },
+            {
+              "description": "webhook.send service call failed — dispatched lands false and error carries the service detail",
+              "event": "NOTIFY_WEBHOOK_FAILED",
+              "eventId": "evt_01M04F6YS1THM7EMY3BAB7CSCV",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "tier": "secondary"
             }
           ],
           "entityRefIds": {
@@ -276,6 +504,110 @@
                     "type": "string"
                   }
                 ]
+              },
+              {
+                "description": "email.send service result, flattened onto the payload by the call-service effect executor",
+                "id": "evt_01M04F6YS147RT3HG7Y6RM5NPR",
+                "key": "NOTIFY_EMAIL_SENT",
+                "name": "Notify Email Sent",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "status",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "secondary"
+              },
+              {
+                "description": "email.send service call failed — dispatched lands false and error carries the service detail",
+                "id": "evt_01M04F6YS1Q0G3YH9C9VDMXR18",
+                "key": "NOTIFY_EMAIL_FAILED",
+                "name": "Notify Email Failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "secondary"
+              },
+              {
+                "description": "twilio.sendSMS service result, flattened onto the payload by the call-service effect executor",
+                "id": "evt_01M04F6YS15CD1HDJR5DFKANEB",
+                "key": "NOTIFY_SMS_SENT",
+                "name": "Notify Sms Sent",
+                "payloadSchema": [
+                  {
+                    "name": "sid",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "status",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "secondary"
+              },
+              {
+                "description": "twilio.sendSMS service call failed — dispatched lands false and error carries the service detail",
+                "id": "evt_01M04F6YS177ZKDY0BWJCW5P4N",
+                "key": "NOTIFY_SMS_FAILED",
+                "name": "Notify Sms Failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "secondary"
+              },
+              {
+                "description": "webhook.send service result, flattened onto the payload by the call-service effect executor",
+                "id": "evt_01M04F6YS127TQHFVXCJFWWND7",
+                "key": "NOTIFY_WEBHOOK_SENT",
+                "name": "Notify Webhook Sent",
+                "payloadSchema": [
+                  {
+                    "name": "status",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "ok",
+                    "required": true,
+                    "type": "boolean"
+                  },
+                  {
+                    "name": "durationMs",
+                    "required": true,
+                    "type": "number"
+                  }
+                ],
+                "tier": "secondary"
+              },
+              {
+                "description": "webhook.send service call failed — dispatched lands false and error carries the service detail",
+                "id": "evt_01M04F6YS1THM7EMY3BAB7CSCV",
+                "key": "NOTIFY_WEBHOOK_FAILED",
+                "name": "Notify Webhook Failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "secondary"
               },
               {
                 "id": "evt_01KXG04FE9R85M0QY4RN3YHY2G",
@@ -323,7 +655,19 @@
                         ],
                         0.0
                       ],
-                      "@user.id",
+                      [
+                        "if",
+                        [
+                          "not",
+                          [
+                            "=",
+                            "@config.fallbackRecipient",
+                            ""
+                          ]
+                        ],
+                        "@config.fallbackRecipient",
+                        "@user.id"
+                      ],
                       [
                         "array/first",
                         "@config.recipients"
@@ -393,17 +737,106 @@
                         "@config.template"
                       ],
                       [
-                        "persist",
-                        "create",
-                        "NotificationRecord",
-                        {
-                          "channel": "@config.notifyChannel",
-                          "dispatched": false,
-                          "message": "@config.template",
-                          "recipient": "@entity.recipient",
-                          "recordedAt": 0.0,
-                          "severity": "@config.severity"
-                        }
+                        "if",
+                        [
+                          "=",
+                          "@config.notifyChannel",
+                          "email"
+                        ],
+                        [
+                          "call-service",
+                          "email",
+                          "send",
+                          {
+                            "body": "@config.template",
+                            "from": "",
+                            "subject": [
+                              "if",
+                              [
+                                "=",
+                                "@config.emailSubject",
+                                ""
+                              ],
+                              "@config.template",
+                              "@config.emailSubject"
+                            ],
+                            "to": "@entity.recipient"
+                          },
+                          {
+                            "emit": {
+                              "failure": "NOTIFY_EMAIL_FAILED",
+                              "success": "NOTIFY_EMAIL_SENT"
+                            }
+                          }
+                        ],
+                        [
+                          "if",
+                          [
+                            "=",
+                            "@config.notifyChannel",
+                            "sms"
+                          ],
+                          [
+                            "call-service",
+                            "twilio",
+                            "sendSMS",
+                            {
+                              "body": "@config.template",
+                              "to": "@entity.recipient"
+                            },
+                            {
+                              "emit": {
+                                "failure": "NOTIFY_SMS_FAILED",
+                                "success": "NOTIFY_SMS_SENT"
+                              }
+                            }
+                          ],
+                          [
+                            "if",
+                            [
+                              "not",
+                              [
+                                "=",
+                                "@config.webhookUrl",
+                                ""
+                              ]
+                            ],
+                            [
+                              "call-service",
+                              "webhook",
+                              "send",
+                              {
+                                "event": "@config.template",
+                                "payload": {
+                                  "message": "@config.template",
+                                  "recipient": "@entity.recipient",
+                                  "severity": "@config.severity"
+                                },
+                                "secret": "@config.webhookSecret",
+                                "url": "@config.webhookUrl"
+                              },
+                              {
+                                "emit": {
+                                  "failure": "NOTIFY_WEBHOOK_FAILED",
+                                  "success": "NOTIFY_WEBHOOK_SENT"
+                                }
+                              }
+                            ],
+                            [
+                              "persist",
+                              "create",
+                              "NotificationRecord",
+                              {
+                                "channel": "@config.notifyChannel",
+                                "dispatched": false,
+                                "message": "@config.template",
+                                "recipient": "@entity.recipient",
+                                "recordedAt": 0.0,
+                                "severity": "@config.severity"
+                              }
+                            ]
+                          ]
+                        ]
                       ]
                     ]
                   ],
@@ -422,18 +855,260 @@
                 "eventId": "evt_01KXG04FE9FBG7H2NH6HKT4ZAR",
                 "from": "idle",
                 "guard": [
-                  "or",
+                  "if",
                   [
                     "=",
-                    "@config.triggerStatus",
-                    ""
+                    "@config.guardOp",
+                    "eq"
                   ],
                   [
-                    "=",
-                    "@payload.status",
-                    "@config.triggerStatus"
+                    "or",
+                    [
+                      "=",
+                      "@config.triggerStatus",
+                      ""
+                    ],
+                    [
+                      "=",
+                      "@payload.status",
+                      "@config.triggerStatus"
+                    ]
+                  ],
+                  [
+                    "if",
+                    [
+                      "=",
+                      "@config.guardOp",
+                      "gt"
+                    ],
+                    [
+                      ">",
+                      [
+                        "object/get",
+                        "@payload.data",
+                        "@config.guardField"
+                      ],
+                      "@config.guardValue"
+                    ],
+                    [
+                      "if",
+                      [
+                        "=",
+                        "@config.guardOp",
+                        "lt"
+                      ],
+                      [
+                        "<",
+                        [
+                          "object/get",
+                          "@payload.data",
+                          "@config.guardField"
+                        ],
+                        "@config.guardValue"
+                      ],
+                      [
+                        "if",
+                        [
+                          "=",
+                          "@config.guardOp",
+                          "gte"
+                        ],
+                        [
+                          ">=",
+                          [
+                            "object/get",
+                            "@payload.data",
+                            "@config.guardField"
+                          ],
+                          "@config.guardValue"
+                        ],
+                        [
+                          "<=",
+                          [
+                            "object/get",
+                            "@payload.data",
+                            "@config.guardField"
+                          ],
+                          "@config.guardValue"
+                        ]
+                      ]
+                    ]
                   ]
                 ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.dispatched",
+                    true
+                  ],
+                  [
+                    "persist",
+                    "create",
+                    "NotificationRecord",
+                    {
+                      "channel": "@entity.channel",
+                      "dispatched": true,
+                      "message": "@entity.message",
+                      "recipient": "@entity.recipient",
+                      "recordedAt": 0.0,
+                      "severity": "@entity.severity"
+                    }
+                  ]
+                ],
+                "event": "NOTIFY_EMAIL_SENT",
+                "eventId": "evt_01M04F6YS147RT3HG7Y6RM5NPR",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.dispatched",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.error",
+                    "@payload.error"
+                  ],
+                  [
+                    "persist",
+                    "create",
+                    "NotificationRecord",
+                    {
+                      "channel": "@entity.channel",
+                      "dispatched": false,
+                      "error": "@entity.error",
+                      "message": "@entity.message",
+                      "recipient": "@entity.recipient",
+                      "recordedAt": 0.0,
+                      "severity": "@entity.severity"
+                    }
+                  ]
+                ],
+                "event": "NOTIFY_EMAIL_FAILED",
+                "eventId": "evt_01M04F6YS1Q0G3YH9C9VDMXR18",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.dispatched",
+                    true
+                  ],
+                  [
+                    "persist",
+                    "create",
+                    "NotificationRecord",
+                    {
+                      "channel": "@entity.channel",
+                      "dispatched": true,
+                      "message": "@entity.message",
+                      "recipient": "@entity.recipient",
+                      "recordedAt": 0.0,
+                      "severity": "@entity.severity"
+                    }
+                  ]
+                ],
+                "event": "NOTIFY_SMS_SENT",
+                "eventId": "evt_01M04F6YS15CD1HDJR5DFKANEB",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.dispatched",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.error",
+                    "@payload.error"
+                  ],
+                  [
+                    "persist",
+                    "create",
+                    "NotificationRecord",
+                    {
+                      "channel": "@entity.channel",
+                      "dispatched": false,
+                      "error": "@entity.error",
+                      "message": "@entity.message",
+                      "recipient": "@entity.recipient",
+                      "recordedAt": 0.0,
+                      "severity": "@entity.severity"
+                    }
+                  ]
+                ],
+                "event": "NOTIFY_SMS_FAILED",
+                "eventId": "evt_01M04F6YS177ZKDY0BWJCW5P4N",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.dispatched",
+                    true
+                  ],
+                  [
+                    "persist",
+                    "create",
+                    "NotificationRecord",
+                    {
+                      "channel": "@entity.channel",
+                      "dispatched": true,
+                      "message": "@entity.message",
+                      "recipient": "@entity.recipient",
+                      "recordedAt": 0.0,
+                      "severity": "@entity.severity"
+                    }
+                  ]
+                ],
+                "event": "NOTIFY_WEBHOOK_SENT",
+                "eventId": "evt_01M04F6YS127TQHFVXCJFWWND7",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.dispatched",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.error",
+                    "@payload.error"
+                  ],
+                  [
+                    "persist",
+                    "create",
+                    "NotificationRecord",
+                    {
+                      "channel": "@entity.channel",
+                      "dispatched": false,
+                      "error": "@entity.error",
+                      "message": "@entity.message",
+                      "recipient": "@entity.recipient",
+                      "recordedAt": 0.0,
+                      "severity": "@entity.severity"
+                    }
+                  ]
+                ],
+                "event": "NOTIFY_WEBHOOK_FAILED",
+                "eventId": "evt_01M04F6YS1THM7EMY3BAB7CSCV",
+                "from": "idle",
                 "to": "idle"
               }
             ]
@@ -443,5 +1118,5 @@
     }
   ],
   "schemaVersion": 1,
-  "version": "1.3.0"
+  "version": "1.5.0"
 }

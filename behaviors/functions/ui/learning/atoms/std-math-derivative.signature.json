@@ -1,0 +1,385 @@
+[
+  {
+    "organism": "std-math-derivative",
+    "orbital": "MathDerivativeOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-math-derivative.ts",
+    "entities": [
+      {
+        "name": "MathDerivativeState",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "functionPreset",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "px",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "h",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "fx",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "slope",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "secantSlope",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "showSecant",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "curves",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "points",
+            "type": "array",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "MathDerivativeSim",
+        "emittedEvents": [
+          "DERIVATIVE_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "DERIVATIVE_UPDATED",
+            "direction": "emit",
+            "description": "The point, tangent slope and secant state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "derivative, tangent slope, secant, rate of change, differentiation",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "MOVE_POINT",
+            "direction": "listen",
+            "description": "Learner dragged the x slider to move the point of tangency along the curve.",
+            "tier": "domain"
+          },
+          {
+            "name": "SHRINK_H",
+            "direction": "listen"
+          },
+          {
+            "name": "SET_FUNCTION",
+            "direction": "listen",
+            "description": "Learner picked a different function preset; the secant resets to the initial h.",
+            "tier": "domain"
+          },
+          {
+            "name": "TOGGLE_SECANT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "curveColor",
+            "type": "string",
+            "default": "#2563eb",
+            "label": "Function Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "derivativeColor",
+            "type": "string",
+            "default": "#9333ea",
+            "label": "Derivative Curve Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "functionPreset",
+            "type": "string",
+            "default": "parabola",
+            "label": "Function Preset",
+            "description": "Which function the point rides: ½x², 0.1x³, or 3·sin(x). The tangent uses its analytic derivative.",
+            "synonyms": "function, curve, preset, parabola, cubic, sine",
+            "tier": "domain",
+            "enumValues": [
+              "parabola",
+              "cubic",
+              "sine"
+            ]
+          },
+          {
+            "key": "gridStep",
+            "type": "number",
+            "default": 1,
+            "label": "Grid Step",
+            "tier": "presentation"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 400,
+            "label": "Height",
+            "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "initialH",
+            "type": "number",
+            "default": 2,
+            "label": "Initial h",
+            "description": "Starting offset between the secant's two intersection points; halving h converges the secant onto the tangent.",
+            "synonyms": "h, delta x, secant offset, step size",
+            "tier": "domain"
+          },
+          {
+            "key": "initialX",
+            "type": "number",
+            "default": 1,
+            "label": "Initial x",
+            "description": "Starting x coordinate of the point of tangency.",
+            "synonyms": "point of tangency, x coordinate",
+            "tier": "domain"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "pointColor",
+            "type": "string",
+            "default": "#dc2626",
+            "label": "Point Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "sampleXs",
+            "type": "[number]",
+            "default": [
+              -6,
+              -5.7,
+              -5.4,
+              -5.1,
+              -4.8,
+              -4.5,
+              -4.2,
+              -3.9,
+              -3.6,
+              -3.3,
+              -3,
+              -2.7,
+              -2.4,
+              -2.1,
+              -1.8,
+              -1.5,
+              -1.2,
+              -0.9,
+              -0.6,
+              -0.3,
+              0,
+              0.3,
+              0.6,
+              0.9,
+              1.2,
+              1.5,
+              1.8,
+              2.1,
+              2.4,
+              2.7,
+              3,
+              3.3,
+              3.6,
+              3.9,
+              4.2,
+              4.5,
+              4.8,
+              5.1,
+              5.4,
+              5.7,
+              6
+            ],
+            "label": "Sample Xs",
+            "description": "X coordinates the function and its derivative are sampled at to draw their curves.",
+            "tier": "domain",
+            "items": {
+              "type": "number"
+            }
+          },
+          {
+            "key": "secantColor",
+            "type": "string",
+            "default": "#16a34a",
+            "label": "Secant Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "showAxes",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Axes",
+            "tier": "presentation"
+          },
+          {
+            "key": "showDerivativeCurve",
+            "type": "boolean",
+            "default": false,
+            "label": "Show Derivative Curve",
+            "description": "Also plot the derivative f′ as its own curve under the function.",
+            "synonyms": "derivative curve, f prime, derived function",
+            "tier": "presentation"
+          },
+          {
+            "key": "showGrid",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Grid",
+            "tier": "presentation"
+          },
+          {
+            "key": "showSecant",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Secant",
+            "description": "Draw the secant line through x and x + h alongside the tangent.",
+            "synonyms": "secant line, average rate of change",
+            "tier": "presentation"
+          },
+          {
+            "key": "tangentColor",
+            "type": "string",
+            "default": "#dc2626",
+            "label": "Tangent Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Derivative — Slope Viewer",
+            "label": "Title",
+            "description": "Title shown above the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "description": "Canvas width in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "xMax",
+            "type": "number",
+            "default": 6,
+            "label": "X Max",
+            "description": "Maximum x value on the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "xMin",
+            "type": "number",
+            "default": -6,
+            "label": "X Min",
+            "description": "Minimum x value on the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "yMax",
+            "type": "number",
+            "default": 10,
+            "label": "Y Max",
+            "description": "Maximum y value on the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "yMin",
+            "type": "number",
+            "default": -10,
+            "label": "Y Min",
+            "description": "Minimum y value on the canvas.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "MathDerivativeState",
+        "transitionEvents": [
+          "INIT",
+          "MODE_SELECTED",
+          "MOVE_POINT",
+          "SET_FUNCTION",
+          "SHRINK_H",
+          "TOGGLE_SECANT"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "curves",
+            "functionPreset",
+            "fx",
+            "h",
+            "points",
+            "px",
+            "secantSlope",
+            "showSecant",
+            "slope",
+            "title"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "MathDerivativePage",
+        "defaultPath": "/math-derivative",
+        "primaryEntity": "MathDerivativeState"
+      }
+    ],
+    "emittedEvents": [
+      "DERIVATIVE_UPDATED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

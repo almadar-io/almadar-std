@@ -80,7 +80,7 @@ export interface StdUiHolidayRunnerBoardConfig {
   units?: EntityRow[];
 }
 
-type _StdUiHolidayRunnerBoardEntityName = 'HolidayRunnerBoardItem';
+type _StdUiHolidayRunnerBoardEntityName = 'HolidayRunnerBoardItem' | 'AnimTickItem';
 type _StdUiHolidayRunnerBoardListenTraitName = 'HolidayRunnerBoardRender' | 'AnimClock';
 
 /**

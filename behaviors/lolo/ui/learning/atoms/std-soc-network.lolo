@@ -1,0 +1,500 @@
+app std-soc-network "1.0.0"
+"Small-world network engine — a ring graph whose edges the learner rewires on and off: degree centrality is recomputed live, weak-tie bridges are highlighted, and a complex-contagion diffusion step spreads adoption through one strong tie or a pair of weak ties, on a biology-canvas. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital SocNetOrbital {
+  type SocNetNode = {
+    id : string!
+    x : number!
+    y : number!
+    radius : number
+    color : string
+    label : string
+  }
+  type SocNetEdge = {
+    from : string!
+    to : string!
+    color : string
+    label : string
+  }
+  type SocNetEdgeSpec = {
+    from : string!
+    to : string!
+  }
+
+  entity SocNetScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    nodeEnabled : [boolean]
+    edgeEnabled : [boolean]
+    adopted : [boolean]
+    adoptedCount : number
+    hubText : string
+    nodes : [SocNetNode]
+    edges : [SocNetEdge]
+  }
+
+  trait SocNetSim -> @rebindable SocNetScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (let (
+            (nodeCount (array/len @config.nodes))
+            (edgeCount (array/len @config.edges))
+            (enabledN (array/map (array/range @nodeCount) (fn i true)))
+            (enabledE (array/map (array/range @edgeCount) (fn j true)))
+            (adoptedInit (array/map (array/range @nodeCount) (fn i (== @i 0))))
+            (degrees (array/map (array/range @nodeCount) (fn i
+              (array/len (array/filter (array/range @edgeCount) (fn j
+                (or (== (object/get (array/nth @config.edges @j) from) (object/get (array/nth @config.nodes @i) id))
+                    (== (object/get (array/nth @config.edges @j) to) (object/get (array/nth @config.nodes @i) id)))))))))
+            (hubIdx (array/reduce (array/range @nodeCount) 0 (fn (acc i) (if (> (array/nth @degrees @i) (array/nth @degrees @acc)) @i @acc))))
+            (hubTxt (if (== @config.centralityMetric "reach")
+              (str/concat "Diffusion reach: 1 of " @nodeCount " nodes — press Run Diffusion to spread adoption.")
+              (str/concat "Degree-centrality hub: " (object/get (array/nth @config.nodes @hubIdx) label) " (degree " (array/nth @degrees @hubIdx) ")")))
+            (renderNodes (array/map (array/range @nodeCount) (fn i
+              (object/merge (array/nth @config.nodes @i) { color: (if (== @i 0) @config.adoptedNodeColor @config.nodeColor) }))))
+            (renderEdges (array/map (array/range @edgeCount) (fn j
+              { from: (object/get (array/nth @config.edges @j) from), to: (object/get (array/nth @config.edges @j) to), color: (if (< (array/nth @config.tieStrengths @j) @config.weakTieThreshold) @config.weakTieColor @config.strongTieColor), label: "" })))
+          )
+          (do
+            (set @entity.nodeEnabled @enabledN)
+            (set @entity.edgeEnabled @enabledE)
+            (set @entity.adopted @adoptedInit)
+            (set @entity.adoptedCount 1)
+            (set @entity.hubText @hubTxt)
+            (set @entity.nodes @renderNodes)
+            (set @entity.edges @renderEdges)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN_DIFFUSION, label: "Run Diffusion", variant: primary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: @entity.nodes, edges: @entity.edges, shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: @entity.hubText },
+                { type: typography, variant: caption, content: (str/concat "Adopted: " @entity.adoptedCount " of " (array/len @config.nodes) " — amber edges are weak-tie bridges; adoption spreads over one strong tie or two weak ties.") },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map (array/range (array/len @config.nodes)) (fn i { type: button, action: TOGGLE_NODE, actionPayload: { nodeId: (object/get (array/nth @config.nodes @i) id) }, label: (object/get (array/nth @config.nodes @i) label), variant: (if (array/nth @entity.nodeEnabled @i) "primary" "ghost") })) },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map (array/range (array/len @config.edges)) (fn j { type: button, action: TOGGLE_EDGE, actionPayload: { edgeIndex: @j }, label: (str/concat (object/get (array/nth @config.edges @j) from) "-" (object/get (array/nth @config.edges @j) to)), variant: (if (array/nth @entity.edgeEnabled @j) "secondary" "ghost") })) }
+              ] }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (let (
+            (nodeCount (array/len @config.nodes))
+            (edgeCount (array/len @config.edges))
+            (enabledN (array/map (array/range @nodeCount) (fn i true)))
+            (enabledE (array/map (array/range @edgeCount) (fn j true)))
+            (adoptedInit (array/map (array/range @nodeCount) (fn i (== @i 0))))
+            (degrees (array/map (array/range @nodeCount) (fn i
+              (array/len (array/filter (array/range @edgeCount) (fn j
+                (or (== (object/get (array/nth @config.edges @j) from) (object/get (array/nth @config.nodes @i) id))
+                    (== (object/get (array/nth @config.edges @j) to) (object/get (array/nth @config.nodes @i) id)))))))))
+            (hubIdx (array/reduce (array/range @nodeCount) 0 (fn (acc i) (if (> (array/nth @degrees @i) (array/nth @degrees @acc)) @i @acc))))
+            (hubTxt (if (== @config.centralityMetric "reach")
+              (str/concat "Diffusion reach: 1 of " @nodeCount " nodes — press Run Diffusion to spread adoption.")
+              (str/concat "Degree-centrality hub: " (object/get (array/nth @config.nodes @hubIdx) label) " (degree " (array/nth @degrees @hubIdx) ")")))
+            (renderNodes (array/map (array/range @nodeCount) (fn i
+              (object/merge (array/nth @config.nodes @i) { color: (if (== @i 0) @config.adoptedNodeColor @config.nodeColor) }))))
+            (renderEdges (array/map (array/range @edgeCount) (fn j
+              { from: (object/get (array/nth @config.edges @j) from), to: (object/get (array/nth @config.edges @j) to), color: (if (< (array/nth @config.tieStrengths @j) @config.weakTieThreshold) @config.weakTieColor @config.strongTieColor), label: "" })))
+          )
+          (do
+            (set @entity.nodeEnabled @enabledN)
+            (set @entity.edgeEnabled @enabledE)
+            (set @entity.adopted @adoptedInit)
+            (set @entity.adoptedCount 1)
+            (set @entity.hubText @hubTxt)
+            (set @entity.nodes @renderNodes)
+            (set @entity.edges @renderEdges)
+          )
+        )
+        (render-ui main {
+            type: box
+            padding: md
+            children: [
+              { type: stack, direction: vertical, gap: md, children: [
+                  { type: typography, variant: h4, content: @entity.title },
+                  { type: stack, direction: horizontal, gap: sm, children: [
+                      { type: button, action: RUN_DIFFUSION, label: "Run Diffusion", variant: primary },
+                      { type: button, action: RESET, label: "Reset", variant: ghost }
+                    ] },
+                  { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: @entity.nodes, edges: @entity.edges, shapes: [], interactive: @config.interactive, animate: @config.animate },
+                  { type: typography, variant: body, content: @entity.hubText },
+                  { type: typography, variant: caption, content: (str/concat "Adopted: " @entity.adoptedCount " of " (array/len @config.nodes) " — amber edges are weak-tie bridges; adoption spreads over one strong tie or two weak ties.") },
+                  { type: stack, direction: horizontal, gap: xs, children: (array/map (array/range (array/len @config.nodes)) (fn i { type: button, action: TOGGLE_NODE, actionPayload: { nodeId: (object/get (array/nth @config.nodes @i) id) }, label: (object/get (array/nth @config.nodes @i) label), variant: (if (array/nth @entity.nodeEnabled @i) "primary" "ghost") })) },
+                  { type: stack, direction: horizontal, gap: xs, children: (array/map (array/range (array/len @config.edges)) (fn j { type: button, action: TOGGLE_EDGE, actionPayload: { edgeIndex: @j }, label: (str/concat (object/get (array/nth @config.edges @j) from) "-" (object/get (array/nth @config.edges @j) to)), variant: (if (array/nth @entity.edgeEnabled @j) "secondary" "ghost") })) }
+                ] }
+            ]
+        })
+
+      TOGGLE_NODE -> idle when (== @entity.active true)
+        (let (
+            (nodeCount (array/len @config.nodes))
+            (edgeCount (array/len @config.edges))
+            (idx (array/first (array/filter (array/range @nodeCount) (fn i (== (object/get (array/nth @config.nodes @i) id) ?nodeId)))))
+            (newNodeEnabled (if (!= @idx null) (array/map (array/range @nodeCount) (fn i (if (== @i @idx) (not (array/nth @entity.nodeEnabled @i)) (array/nth @entity.nodeEnabled @i)))) @entity.nodeEnabled))
+            (degrees (array/map (array/range @nodeCount) (fn i
+              (if (array/nth @newNodeEnabled @i)
+                (array/len (array/filter (array/range @edgeCount) (fn j
+                  (and (array/nth @entity.edgeEnabled @j)
+                    (or (== (object/get (array/nth @config.edges @j) from) (object/get (array/nth @config.nodes @i) id))
+                        (== (object/get (array/nth @config.edges @j) to) (object/get (array/nth @config.nodes @i) id)))))))
+                -1))))
+            (hubIdx (array/reduce (array/range @nodeCount) 0 (fn (acc i) (if (> (array/nth @degrees @i) (array/nth @degrees @acc)) @i @acc))))
+            (reachCount (array/len (array/filter (array/range @nodeCount) (fn i (and (array/nth @newNodeEnabled @i) (array/nth @entity.adopted @i))))))
+            (hubTxt (if (== @config.centralityMetric "reach")
+              (str/concat "Diffusion reach: " @reachCount " of " @nodeCount " nodes.")
+              (str/concat "Degree-centrality hub: " (object/get (array/nth @config.nodes @hubIdx) label) " (degree " (array/nth @degrees @hubIdx) ")")))
+            (renderNodes (array/map (array/range @nodeCount) (fn i
+              (object/merge (array/nth @config.nodes @i) { color: (if (not (array/nth @newNodeEnabled @i)) @config.disabledNodeColor (if (array/nth @entity.adopted @i) @config.adoptedNodeColor @config.nodeColor)) }))))
+            (renderEdges (array/map
+              (array/filter (array/range @edgeCount) (fn j
+                (and (array/nth @entity.edgeEnabled @j)
+                  (and (> (array/len (array/filter (array/range @nodeCount) (fn k (and (== (object/get (array/nth @config.nodes @k) id) (object/get (array/nth @config.edges @j) from)) (array/nth @newNodeEnabled @k))))) 0)
+                       (> (array/len (array/filter (array/range @nodeCount) (fn k (and (== (object/get (array/nth @config.nodes @k) id) (object/get (array/nth @config.edges @j) to)) (array/nth @newNodeEnabled @k))))) 0)))))
+              (fn j { from: (object/get (array/nth @config.edges @j) from), to: (object/get (array/nth @config.edges @j) to), color: (if (< (array/nth @config.tieStrengths @j) @config.weakTieThreshold) @config.weakTieColor @config.strongTieColor), label: "" })))
+          )
+          (do
+            (set @entity.nodeEnabled @newNodeEnabled)
+            (set @entity.adoptedCount @reachCount)
+            (set @entity.hubText @hubTxt)
+            (set @entity.nodes @renderNodes)
+            (set @entity.edges @renderEdges)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN_DIFFUSION, label: "Run Diffusion", variant: primary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: @entity.nodes, edges: @entity.edges, shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: @entity.hubText },
+                { type: typography, variant: caption, content: (str/concat "Adopted: " @entity.adoptedCount " of " (array/len @config.nodes) " — amber edges are weak-tie bridges; adoption spreads over one strong tie or two weak ties.") },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map (array/range (array/len @config.nodes)) (fn i { type: button, action: TOGGLE_NODE, actionPayload: { nodeId: (object/get (array/nth @config.nodes @i) id) }, label: (object/get (array/nth @config.nodes @i) label), variant: (if (array/nth @entity.nodeEnabled @i) "primary" "ghost") })) },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map (array/range (array/len @config.edges)) (fn j { type: button, action: TOGGLE_EDGE, actionPayload: { edgeIndex: @j }, label: (str/concat (object/get (array/nth @config.edges @j) from) "-" (object/get (array/nth @config.edges @j) to)), variant: (if (array/nth @entity.edgeEnabled @j) "secondary" "ghost") })) }
+              ] }
+          ]
+        })
+        (emit NETWORK_UPDATED { nodeEnabled: @entity.nodeEnabled, edgeEnabled: @entity.edgeEnabled, adopted: @entity.adopted, adoptedCount: @entity.adoptedCount, hub: @entity.hubText })
+
+      TOGGLE_EDGE -> idle when (== @entity.active true)
+        (let (
+            (nodeCount (array/len @config.nodes))
+            (edgeCount (array/len @config.edges))
+            (newEdgeEnabled (array/map (array/range @edgeCount) (fn j (if (== @j ?edgeIndex) (not (array/nth @entity.edgeEnabled @j)) (array/nth @entity.edgeEnabled @j)))))
+            (degrees (array/map (array/range @nodeCount) (fn i
+              (if (array/nth @entity.nodeEnabled @i)
+                (array/len (array/filter (array/range @edgeCount) (fn j
+                  (and (array/nth @newEdgeEnabled @j)
+                    (or (== (object/get (array/nth @config.edges @j) from) (object/get (array/nth @config.nodes @i) id))
+                        (== (object/get (array/nth @config.edges @j) to) (object/get (array/nth @config.nodes @i) id)))))))
+                -1))))
+            (hubIdx (array/reduce (array/range @nodeCount) 0 (fn (acc i) (if (> (array/nth @degrees @i) (array/nth @degrees @acc)) @i @acc))))
+            (hubTxt (if (== @config.centralityMetric "reach")
+              (str/concat "Diffusion reach: " @entity.adoptedCount " of " @nodeCount " nodes.")
+              (str/concat "Degree-centrality hub: " (object/get (array/nth @config.nodes @hubIdx) label) " (degree " (array/nth @degrees @hubIdx) ")")))
+            (renderEdges (array/map
+              (array/filter (array/range @edgeCount) (fn j
+                (and (array/nth @newEdgeEnabled @j)
+                  (and (> (array/len (array/filter (array/range @nodeCount) (fn k (and (== (object/get (array/nth @config.nodes @k) id) (object/get (array/nth @config.edges @j) from)) (array/nth @entity.nodeEnabled @k))))) 0)
+                       (> (array/len (array/filter (array/range @nodeCount) (fn k (and (== (object/get (array/nth @config.nodes @k) id) (object/get (array/nth @config.edges @j) to)) (array/nth @entity.nodeEnabled @k))))) 0)))))
+              (fn j { from: (object/get (array/nth @config.edges @j) from), to: (object/get (array/nth @config.edges @j) to), color: (if (< (array/nth @config.tieStrengths @j) @config.weakTieThreshold) @config.weakTieColor @config.strongTieColor), label: "" })))
+          )
+          (do
+            (set @entity.edgeEnabled @newEdgeEnabled)
+            (set @entity.hubText @hubTxt)
+            (set @entity.edges @renderEdges)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN_DIFFUSION, label: "Run Diffusion", variant: primary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: @entity.nodes, edges: @entity.edges, shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: @entity.hubText },
+                { type: typography, variant: caption, content: (str/concat "Adopted: " @entity.adoptedCount " of " (array/len @config.nodes) " — amber edges are weak-tie bridges; adoption spreads over one strong tie or two weak ties.") },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map (array/range (array/len @config.nodes)) (fn i { type: button, action: TOGGLE_NODE, actionPayload: { nodeId: (object/get (array/nth @config.nodes @i) id) }, label: (object/get (array/nth @config.nodes @i) label), variant: (if (array/nth @entity.nodeEnabled @i) "primary" "ghost") })) },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map (array/range (array/len @config.edges)) (fn j { type: button, action: TOGGLE_EDGE, actionPayload: { edgeIndex: @j }, label: (str/concat (object/get (array/nth @config.edges @j) from) "-" (object/get (array/nth @config.edges @j) to)), variant: (if (array/nth @entity.edgeEnabled @j) "secondary" "ghost") })) }
+              ] }
+          ]
+        })
+        (emit NETWORK_UPDATED { nodeEnabled: @entity.nodeEnabled, edgeEnabled: @entity.edgeEnabled, adopted: @entity.adopted, adoptedCount: @entity.adoptedCount, hub: @entity.hubText })
+
+      RUN_DIFFUSION -> idle when (== @entity.active true)
+        (let (
+            (nodeCount (array/len @config.nodes))
+            (edgeCount (array/len @config.edges))
+            (newAdopted (array/map (array/range @nodeCount) (fn i
+              (if (array/nth @entity.adopted @i)
+                true
+                (if (not (array/nth @entity.nodeEnabled @i))
+                  false
+                  (let (
+                      (nid (object/get (array/nth @config.nodes @i) id))
+                      (strongAdopted (array/len (array/filter (array/range @edgeCount) (fn j
+                        (and (array/nth @entity.edgeEnabled @j)
+                          (and (>= (array/nth @config.tieStrengths @j) @config.weakTieThreshold)
+                            (let (
+                                (e (array/nth @config.edges @j))
+                                (fid (object/get @e from))
+                                (tid (object/get @e to))
+                                (otherId (if (== @fid @nid) @tid @fid))
+                              )
+                              (and (or (== @fid @nid) (== @tid @nid))
+                                (> (array/len (array/filter (array/range @nodeCount) (fn k (and (== (object/get (array/nth @config.nodes @k) id) @otherId) (array/nth @entity.adopted @k))))) 0)))))))))
+                      (weakAdopted (array/len (array/filter (array/range @edgeCount) (fn j
+                        (and (array/nth @entity.edgeEnabled @j)
+                          (and (< (array/nth @config.tieStrengths @j) @config.weakTieThreshold)
+                            (let (
+                                (e (array/nth @config.edges @j))
+                                (fid (object/get @e from))
+                                (tid (object/get @e to))
+                                (otherId (if (== @fid @nid) @tid @fid))
+                              )
+                              (and (or (== @fid @nid) (== @tid @nid))
+                                (> (array/len (array/filter (array/range @nodeCount) (fn k (and (== (object/get (array/nth @config.nodes @k) id) @otherId) (array/nth @entity.adopted @k))))) 0)))))))))
+                    )
+                    (or (>= @strongAdopted 1) (>= @weakAdopted 2))))))))
+            (reachCount (array/len (array/filter (array/range @nodeCount) (fn i (and (array/nth @entity.nodeEnabled @i) (array/nth @newAdopted @i))))))
+            (hubTxt (str/concat "Diffusion reach: " @reachCount " of " @nodeCount " nodes."))
+            (renderNodes (array/map (array/range @nodeCount) (fn i
+              (object/merge (array/nth @config.nodes @i) { color: (if (not (array/nth @entity.nodeEnabled @i)) @config.disabledNodeColor (if (array/nth @newAdopted @i) @config.adoptedNodeColor @config.nodeColor)) }))))
+          )
+          (do
+            (set @entity.adopted @newAdopted)
+            (set @entity.adoptedCount @reachCount)
+            (set @entity.hubText @hubTxt)
+            (set @entity.nodes @renderNodes)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN_DIFFUSION, label: "Run Diffusion", variant: primary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: @entity.nodes, edges: @entity.edges, shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: @entity.hubText },
+                { type: typography, variant: caption, content: (str/concat "Adopted: " @entity.adoptedCount " of " (array/len @config.nodes) " — amber edges are weak-tie bridges; adoption spreads over one strong tie or two weak ties.") },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map (array/range (array/len @config.nodes)) (fn i { type: button, action: TOGGLE_NODE, actionPayload: { nodeId: (object/get (array/nth @config.nodes @i) id) }, label: (object/get (array/nth @config.nodes @i) label), variant: (if (array/nth @entity.nodeEnabled @i) "primary" "ghost") })) },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map (array/range (array/len @config.edges)) (fn j { type: button, action: TOGGLE_EDGE, actionPayload: { edgeIndex: @j }, label: (str/concat (object/get (array/nth @config.edges @j) from) "-" (object/get (array/nth @config.edges @j) to)), variant: (if (array/nth @entity.edgeEnabled @j) "secondary" "ghost") })) }
+              ] }
+          ]
+        })
+        (emit NETWORK_UPDATED { nodeEnabled: @entity.nodeEnabled, edgeEnabled: @entity.edgeEnabled, adopted: @entity.adopted, adoptedCount: @entity.adoptedCount, hub: @entity.hubText })
+
+      RESET -> idle when (== @entity.active true)
+        (let (
+            (nodeCount (array/len @config.nodes))
+            (edgeCount (array/len @config.edges))
+            (enabledN (array/map (array/range @nodeCount) (fn i true)))
+            (enabledE (array/map (array/range @edgeCount) (fn j true)))
+            (adoptedInit (array/map (array/range @nodeCount) (fn i (== @i 0))))
+            (degrees (array/map (array/range @nodeCount) (fn i
+              (array/len (array/filter (array/range @edgeCount) (fn j
+                (or (== (object/get (array/nth @config.edges @j) from) (object/get (array/nth @config.nodes @i) id))
+                    (== (object/get (array/nth @config.edges @j) to) (object/get (array/nth @config.nodes @i) id)))))))))
+            (hubIdx (array/reduce (array/range @nodeCount) 0 (fn (acc i) (if (> (array/nth @degrees @i) (array/nth @degrees @acc)) @i @acc))))
+            (hubTxt (if (== @config.centralityMetric "reach")
+              (str/concat "Diffusion reach: 1 of " @nodeCount " nodes — press Run Diffusion to spread adoption.")
+              (str/concat "Degree-centrality hub: " (object/get (array/nth @config.nodes @hubIdx) label) " (degree " (array/nth @degrees @hubIdx) ")")))
+            (renderNodes (array/map (array/range @nodeCount) (fn i
+              (object/merge (array/nth @config.nodes @i) { color: (if (== @i 0) @config.adoptedNodeColor @config.nodeColor) }))))
+            (renderEdges (array/map (array/range @edgeCount) (fn j
+              { from: (object/get (array/nth @config.edges @j) from), to: (object/get (array/nth @config.edges @j) to), color: (if (< (array/nth @config.tieStrengths @j) @config.weakTieThreshold) @config.weakTieColor @config.strongTieColor), label: "" })))
+          )
+          (do
+            (set @entity.nodeEnabled @enabledN)
+            (set @entity.edgeEnabled @enabledE)
+            (set @entity.adopted @adoptedInit)
+            (set @entity.adoptedCount 1)
+            (set @entity.hubText @hubTxt)
+            (set @entity.nodes @renderNodes)
+            (set @entity.edges @renderEdges)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN_DIFFUSION, label: "Run Diffusion", variant: primary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: @entity.nodes, edges: @entity.edges, shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: @entity.hubText },
+                { type: typography, variant: caption, content: (str/concat "Adopted: " @entity.adoptedCount " of " (array/len @config.nodes) " — amber edges are weak-tie bridges; adoption spreads over one strong tie or two weak ties.") },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map (array/range (array/len @config.nodes)) (fn i { type: button, action: TOGGLE_NODE, actionPayload: { nodeId: (object/get (array/nth @config.nodes @i) id) }, label: (object/get (array/nth @config.nodes @i) label), variant: (if (array/nth @entity.nodeEnabled @i) "primary" "ghost") })) },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map (array/range (array/len @config.edges)) (fn j { type: button, action: TOGGLE_EDGE, actionPayload: { edgeIndex: @j }, label: (str/concat (object/get (array/nth @config.edges @j) from) "-" (object/get (array/nth @config.edges @j) to)), variant: (if (array/nth @entity.edgeEnabled @j) "secondary" "ghost") })) }
+              ] }
+          ]
+        })
+        (emit NETWORK_UPDATED { nodeEnabled: @entity.nodeEnabled, edgeEnabled: @entity.edgeEnabled, adopted: @entity.adopted, adoptedCount: @entity.adoptedCount, hub: @entity.hubText })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      TOGGLE_NODE {
+        nodeId : string
+      }
+        @description "Learner toggled a node on or off, removing it from the network (and its edges from view) or restoring it."
+        @tier "domain"
+      TOGGLE_EDGE {
+        edgeIndex : number
+      }
+        @description "Learner rewired an edge — toggled the edge at this index in the Edges list on or off."
+        @tier "domain"
+      RUN_DIFFUSION {
+      }
+        @description "Learner pressed Run Diffusion to advance the complex-contagion cascade by one step."
+        @tier "domain"
+      RESET {
+      }
+        @description "Learner pressed Reset to restore the initial network and clear all adoption."
+        @tier "domain"
+    }
+
+    emits {
+      NETWORK_UPDATED -> external {
+        nodeEnabled : [boolean]
+        edgeEnabled : [boolean]
+        adopted : [boolean]
+        adoptedCount : number
+        hub : string
+      }
+        @description "The network state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "network update, rewiring, tie toggle, diffusion cascade, centrality change, weak ties"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Small-World Network"
+        @label "Title"
+        @description "Title shown above the canvas."
+        @tier "presentation"
+      backgroundColor : string = "#f1f5f9"
+        @label "Background Color"
+        @tier "presentation"
+      width : number = 640
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 460
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      interactive : boolean = false
+        @label "Interactive"
+        @description "Enable pointer interaction on the canvas."
+        @tier "presentation"
+      animate : boolean = false
+        @label "Animate"
+        @description "Enable continuous redraw loop."
+        @tier "presentation"
+      nodeColor : string = "#64748b"
+        @label "Node Color"
+        @tier "presentation"
+      adoptedNodeColor : string = "#dc2626"
+        @label "Adopted Node Color"
+        @description "Color of a node that has adopted the diffusing trait."
+        @tier "presentation"
+      disabledNodeColor : string = "#cbd5e1"
+        @label "Disabled Node Color"
+        @description "Color of a node the learner toggled out of the network."
+        @tier "presentation"
+      strongTieColor : string = "#334155"
+        @label "Strong Tie Color"
+        @tier "presentation"
+      weakTieColor : string = "#f59e0b"
+        @label "Weak Tie Color"
+        @description "Color of weak-tie edges — the bridges Granovetter argued carry novel information across clusters."
+        @synonyms "weak ties, strength of weak ties, Granovetter, bridging ties"
+        @tier "presentation"
+      weakTieThreshold : number = 0.5
+        @label "Weak Tie Threshold"
+        @description "Tie strengths below this count as weak ties: drawn in the weak-tie color and, for diffusion, only adopted through when two or more adopted weak-tie neighbors exist."
+        @synonyms "weak ties, strength of weak ties, Granovetter, tie strength"
+        @tier "domain"
+      centralityMetric : "degree" | "reach" = "degree"
+        @label "Centrality Metric"
+        @description "Which readout the instrument emphasizes: degree centrality (the highest-degree hub) or diffusion reach (how many nodes the cascade has touched)."
+        @synonyms "centrality, degree centrality, network centrality, hub, diffusion reach"
+        @tier "domain"
+      nodes : [SocNetNode] = [
+        { id: "n0", x: 480, y: 210, radius: 16, color: "#64748b", label: "A" },
+        { id: "n1", x: 433, y: 323, radius: 16, color: "#64748b", label: "B" },
+        { id: "n2", x: 320, y: 370, radius: 16, color: "#64748b", label: "C" },
+        { id: "n3", x: 207, y: 323, radius: 16, color: "#64748b", label: "D" },
+        { id: "n4", x: 160, y: 210, radius: 16, color: "#64748b", label: "E" },
+        { id: "n5", x: 207, y: 97, radius: 16, color: "#64748b", label: "F" },
+        { id: "n6", x: 320, y: 50, radius: 16, color: "#64748b", label: "G" },
+        { id: "n7", x: 433, y: 97, radius: 16, color: "#64748b", label: "H" }
+      ]
+        @label "Nodes"
+        @description "Network nodes laid out on a ring. Node 0 (A) starts as the adoption seed for diffusion."
+        @synonyms "social network, network nodes, actors, agents"
+        @tier "domain"
+      edges : [SocNetEdgeSpec] = [
+        { from: "n0", to: "n1" },
+        { from: "n1", to: "n2" },
+        { from: "n2", to: "n3" },
+        { from: "n3", to: "n4" },
+        { from: "n4", to: "n5" },
+        { from: "n5", to: "n6" },
+        { from: "n6", to: "n7" },
+        { from: "n7", to: "n0" },
+        { from: "n0", to: "n4" },
+        { from: "n2", to: "n6" },
+        { from: "n1", to: "n5" }
+      ]
+        @label "Edges"
+        @description "Edge list, index-aligned with Tie Strengths: eight strong ring ties followed by long-range weak-tie bridges across the ring — the small-world rewiring the learner can toggle."
+        @synonyms "social network, network edges, ties, small-world network, rewiring"
+        @tier "domain"
+      tieStrengths : [number] = [0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.2, 0.2, 0.15]
+        @label "Tie Strengths"
+        @description "Strength (0-1) of each edge, index-aligned with Edges; values below the Weak Tie Threshold render as highlighted weak-tie bridges and follow the two-weak-tie contagion rule."
+        @synonyms "weak ties, strength of weak ties, Granovetter, tie strength, bridging ties"
+        @tier "domain"
+    }
+  }
+
+  page "/soc-network" as SocNetPage -> SocNetSim
+}

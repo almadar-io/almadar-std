@@ -50,7 +50,7 @@ export interface StdLearningAstronomyLabConfig {
   mode?: 'orbit' | 'stellar-evolution';
 }
 
-type _StdLearningAstronomyLabEntityName = 'AstronomyLabItem' | 'OrbitScene' | 'StellarScene';
+type _StdLearningAstronomyLabEntityName = 'AstronomyLabItem' | 'OrbitScene' | 'StellarScene' | 'AstroOrbitScene' | 'AstroStellarScene';
 type _StdLearningAstronomyLabListenTraitName = 'AstronomyLabRouter' | 'OrbitSim' | 'StellarSim';
 
 /**

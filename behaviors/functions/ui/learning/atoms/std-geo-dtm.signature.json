@@ -1,0 +1,360 @@
+[
+  {
+    "organism": "std-geo-dtm",
+    "orbital": "GeoDtmOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-geo-dtm.ts",
+    "entities": [
+      {
+        "name": "GeoDtmScene",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "stageIndex",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "birthRate",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "deathRate",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "stageName",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "stageDescription",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "matched",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "matchReadout",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "dtmCurves",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "dtmShapes",
+            "type": "array",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "GeoDtmSim",
+        "emittedEvents": [
+          "DTM_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "DTM_UPDATED",
+            "direction": "emit",
+            "description": "The demographic transition model state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "demographic transition, DTM stage, birth rate, death rate, natural increase, stage reproduced",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "NEXT_STAGE",
+            "direction": "listen",
+            "description": "Learner advanced to the next demographic transition stage.",
+            "tier": "domain"
+          },
+          {
+            "name": "PREV_STAGE",
+            "direction": "listen",
+            "description": "Learner returned to the previous demographic transition stage.",
+            "tier": "domain"
+          },
+          {
+            "name": "SET_RATES",
+            "direction": "listen",
+            "description": "Learner dragged a rate dial; target names which rate ('birth' or 'death').",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "animate",
+            "type": "boolean",
+            "default": false,
+            "label": "Animate",
+            "description": "Enable continuous redraw loop.",
+            "tier": "presentation"
+          },
+          {
+            "key": "axisColor",
+            "type": "string",
+            "default": "#94a3b8",
+            "label": "Axis Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "birthColor",
+            "type": "string",
+            "default": "#2563eb",
+            "label": "Birth Rate Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "birthRate",
+            "type": "number",
+            "default": 40,
+            "label": "Starting Birth Rate",
+            "description": "Starting birth-rate dial (per mille), the value the learner adjusts to reproduce each stage.",
+            "synonyms": "birth rate, fertility rate, natality, crude birth rate",
+            "tier": "domain"
+          },
+          {
+            "key": "deathColor",
+            "type": "string",
+            "default": "#dc2626",
+            "label": "Death Rate Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "deathRate",
+            "type": "number",
+            "default": 40,
+            "label": "Starting Death Rate",
+            "description": "Starting death-rate dial (per mille), the value the learner adjusts to reproduce each stage.",
+            "synonyms": "death rate, mortality rate, crude death rate",
+            "tier": "domain"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 460,
+            "label": "Height",
+            "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "interactive",
+            "type": "boolean",
+            "default": false,
+            "label": "Interactive",
+            "description": "Enable pointer interaction on the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "matchTolerance",
+            "type": "number",
+            "default": 3,
+            "label": "Match Tolerance",
+            "description": "Per-rate tolerance within which the learner's dials count as reproducing the current stage's target rates.",
+            "tier": "domain"
+          },
+          {
+            "key": "rateAxisMax",
+            "type": "number",
+            "default": 50,
+            "label": "Rate Axis Max",
+            "description": "Upper bound of the birth/death rate dials and the curve vertical axis, per mille.",
+            "tier": "presentation"
+          },
+          {
+            "key": "stageCount",
+            "type": "number",
+            "default": 5,
+            "label": "Stage Count",
+            "description": "Number of demographic transition stages the model steps through.",
+            "synonyms": "demographic transition, DTM, stage, demographic stages",
+            "tier": "domain"
+          },
+          {
+            "key": "stageMarkerColor",
+            "type": "string",
+            "default": "#7c3aed",
+            "label": "Stage Marker Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "stagePresets",
+            "type": "[GeoDtmStagePreset]",
+            "default": [
+              {
+                "birthRate": 40,
+                "deathRate": 38,
+                "description": "Pre-industrial: high birth and death rates cancel out, so population growth is near zero.",
+                "name": "High Stationary",
+                "stage": 1
+              },
+              {
+                "birthRate": 40,
+                "deathRate": 22,
+                "description": "Death rate falls with better food and sanitation while birth rate stays high — rapid natural increase.",
+                "name": "Early Expanding",
+                "stage": 2
+              },
+              {
+                "birthRate": 28,
+                "deathRate": 12,
+                "description": "Birth rate begins to fall with urbanization and contraception; growth slows.",
+                "name": "Late Expanding",
+                "stage": 3
+              },
+              {
+                "birthRate": 12,
+                "deathRate": 11,
+                "description": "Both rates low and roughly equal; population is large but stable.",
+                "name": "Low Stationary",
+                "stage": 4
+              },
+              {
+                "birthRate": 8,
+                "deathRate": 11,
+                "description": "Birth rate drops below death rate; the population ages and begins to shrink.",
+                "name": "Declining",
+                "stage": 5
+              }
+            ],
+            "label": "Stage Presets",
+            "description": "Ordered roster of demographic transition stages; each declares the target birth/death rates the learner must reproduce and a teaching description. Curve samples are interpolated between consecutive presets.",
+            "synonyms": "demographic transition stage, high stationary, early expanding, late expanding, low stationary, declining stage, natural increase",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "birthRate": {
+                  "name": "birthRate",
+                  "required": true,
+                  "type": "number"
+                },
+                "deathRate": {
+                  "name": "deathRate",
+                  "required": true,
+                  "type": "number"
+                },
+                "description": {
+                  "name": "description",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
+                "stage": {
+                  "name": "stage",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "textColor",
+            "type": "string",
+            "default": "#1e293b",
+            "label": "Text Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Demographic Transition Model",
+            "label": "Title",
+            "description": "Title shown above the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 640,
+            "label": "Width",
+            "description": "Canvas width in pixels.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "GeoDtmScene",
+        "transitionEvents": [
+          "INIT",
+          "MODE_SELECTED",
+          "NEXT_STAGE",
+          "PREV_STAGE",
+          "SET_RATES"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "birthRate",
+            "deathRate",
+            "dtmCurves",
+            "dtmShapes",
+            "matchReadout",
+            "matched",
+            "stageDescription",
+            "stageIndex",
+            "stageName",
+            "title"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "GeoDtmPage",
+        "defaultPath": "/geo-dtm",
+        "primaryEntity": "GeoDtmScene"
+      }
+    ],
+    "emittedEvents": [
+      "DTM_UPDATED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

@@ -1,0 +1,418 @@
+app std-psych-signal "1.0.0"
+"Signal-detection-theory engine — noise and signal+noise evidence distributions (unit-variance Gaussians separated by dPrime) are plotted on a math-canvas; the learner drags the decision criterion and the theoretical hit rate Φ(d′ − c) and false-alarm rate Φ(−c) recompute (the ROC point), and RUN_TRIALS samples empirical hits and false alarms at the configured base rate. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital PsychSignalOrbital {
+  type PsychSignalSample = {
+    x : number!
+    y : number!
+  }
+  type PsychSignalCurve = {
+    label : string
+    color : string
+    samples : [PsychSignalSample]!
+  }
+  type PsychSignalPoint = {
+    x : number!
+    y : number!
+    label : string
+    color : string
+    radius : number
+  }
+
+  entity PsychSignalScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    criterion : number
+    hitRate : number
+    falseAlarmRate : number
+    trialsRun : number
+    hits : number
+    falseAlarms : number
+    curves : [PsychSignalCurve]
+    points : [PsychSignalPoint]
+  }
+
+  trait PsychSignalSim -> @rebindable PsychSignalScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (let (
+            (zHit (- @config.dPrime @config.criterion))
+            (azHit (math/abs @zHit))
+            (tHit (/ 1 (+ 1 (* 0.2316419 @azHit))))
+            (polyHit (* @tHit (+ 0.31938153 (* @tHit (+ -0.356563782 (* @tHit (+ 1.781477937 (* @tHit (+ -1.821255978 (* @tHit 1.330274429))))))))))
+            (pdfHit (* 0.39894228 (exp (* -0.5 (* @zHit @zHit)))))
+            (cdfHitPos (- 1 (* @pdfHit @polyHit)))
+            (hitRate (if (>= @zHit 0) @cdfHitPos (- 1 @cdfHitPos)))
+            (zFa (- 0 @config.criterion))
+            (azFa (math/abs @zFa))
+            (tFa (/ 1 (+ 1 (* 0.2316419 @azFa))))
+            (polyFa (* @tFa (+ 0.31938153 (* @tFa (+ -0.356563782 (* @tFa (+ 1.781477937 (* @tFa (+ -1.821255978 (* @tFa 1.330274429))))))))))
+            (pdfFa (* 0.39894228 (exp (* -0.5 (* @zFa @zFa)))))
+            (cdfFaPos (- 1 (* @pdfFa @polyFa)))
+            (faRate (if (>= @zFa 0) @cdfFaPos (- 1 @cdfFaPos)))
+            (xHi (+ @config.dPrime 3))
+            (noiseSamples (array/map (array/range 41) (fn i (let ( (xv (+ -3 (* (/ @i 40) (+ @xHi 3)))) ) { x: @xv, y: (* 0.39894228 (exp (* -0.5 (* @xv @xv)))) }))))
+            (signalSamples (array/map (array/range 41) (fn i (let ( (xv (+ -3 (* (/ @i 40) (+ @xHi 3)))) (dv (- @xv @config.dPrime)) ) { x: @xv, y: (* 0.39894228 (exp (* -0.5 (* @dv @dv)))) }))))
+            (criterionSamples [ { x: @config.criterion, y: 0 }, { x: @config.criterion, y: 0.45 } ])
+            (seedCurves [
+                { label: "Noise", color: @config.noiseColor, samples: @noiseSamples },
+                { label: "Signal + Noise", color: @config.signalColor, samples: @signalSamples },
+                { label: "Criterion", color: @config.criterionColor, samples: @criterionSamples }
+              ])
+            (seedPoints [ { x: @config.criterion, y: 0.45, label: "Criterion", color: @config.criterionColor, radius: 5 } ])
+          )
+          (do
+            (set @entity.criterion @config.criterion)
+            (set @entity.hitRate @hitRate)
+            (set @entity.falseAlarmRate @faRate)
+            (set @entity.trialsRun 0)
+            (set @entity.hits 0)
+            (set @entity.falseAlarms 0)
+            (set @entity.curves @seedCurves)
+            (set @entity.points @seedPoints)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN_TRIALS, label: (str/concat "Run " @config.trialsPerRun " Trials"), variant: primary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat "Decision criterion: " (math/round @entity.criterion 2) " — drag to trade hits against false alarms") },
+                    { type: range-slider, min: -1, max: 3, step: 0.05, value: @entity.criterion, showTooltip: true, onChange: SET_CRITERION }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: -3, xMax: (+ @config.dPrime 3), yMin: 0, yMax: 0.5, showAxes: true, showGrid: false, gridStep: 1, curves: @entity.curves, points: @entity.points, vectors: [], shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: (str/concat "Hit rate: " (math/round @entity.hitRate 3) " — false-alarm rate: " (math/round @entity.falseAlarmRate 3) " — ROC point (FA, H): (" (math/round @entity.falseAlarmRate 2) ", " (math/round @entity.hitRate 2) ")") },
+                { type: typography, variant: caption, content: (str/concat "Empirical: " @entity.trialsRun " trials run — " @entity.hits " hits, " @entity.falseAlarms " false alarms (d' = " @config.dPrime ", base rate = " @config.baseRate ")") }
+              ] }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (let (
+            (zHit (- @config.dPrime @config.criterion))
+            (azHit (math/abs @zHit))
+            (tHit (/ 1 (+ 1 (* 0.2316419 @azHit))))
+            (polyHit (* @tHit (+ 0.31938153 (* @tHit (+ -0.356563782 (* @tHit (+ 1.781477937 (* @tHit (+ -1.821255978 (* @tHit 1.330274429))))))))))
+            (pdfHit (* 0.39894228 (exp (* -0.5 (* @zHit @zHit)))))
+            (cdfHitPos (- 1 (* @pdfHit @polyHit)))
+            (hitRate (if (>= @zHit 0) @cdfHitPos (- 1 @cdfHitPos)))
+            (zFa (- 0 @config.criterion))
+            (azFa (math/abs @zFa))
+            (tFa (/ 1 (+ 1 (* 0.2316419 @azFa))))
+            (polyFa (* @tFa (+ 0.31938153 (* @tFa (+ -0.356563782 (* @tFa (+ 1.781477937 (* @tFa (+ -1.821255978 (* @tFa 1.330274429))))))))))
+            (pdfFa (* 0.39894228 (exp (* -0.5 (* @zFa @zFa)))))
+            (cdfFaPos (- 1 (* @pdfFa @polyFa)))
+            (faRate (if (>= @zFa 0) @cdfFaPos (- 1 @cdfFaPos)))
+            (xHi (+ @config.dPrime 3))
+            (noiseSamples (array/map (array/range 41) (fn i (let ( (xv (+ -3 (* (/ @i 40) (+ @xHi 3)))) ) { x: @xv, y: (* 0.39894228 (exp (* -0.5 (* @xv @xv)))) }))))
+            (signalSamples (array/map (array/range 41) (fn i (let ( (xv (+ -3 (* (/ @i 40) (+ @xHi 3)))) (dv (- @xv @config.dPrime)) ) { x: @xv, y: (* 0.39894228 (exp (* -0.5 (* @dv @dv)))) }))))
+            (criterionSamples [ { x: @config.criterion, y: 0 }, { x: @config.criterion, y: 0.45 } ])
+            (seedCurves [
+                { label: "Noise", color: @config.noiseColor, samples: @noiseSamples },
+                { label: "Signal + Noise", color: @config.signalColor, samples: @signalSamples },
+                { label: "Criterion", color: @config.criterionColor, samples: @criterionSamples }
+              ])
+            (seedPoints [ { x: @config.criterion, y: 0.45, label: "Criterion", color: @config.criterionColor, radius: 5 } ])
+          )
+          (do
+            (set @entity.criterion @config.criterion)
+            (set @entity.hitRate @hitRate)
+            (set @entity.falseAlarmRate @faRate)
+            (set @entity.trialsRun 0)
+            (set @entity.hits 0)
+            (set @entity.falseAlarms 0)
+            (set @entity.curves @seedCurves)
+            (set @entity.points @seedPoints)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN_TRIALS, label: (str/concat "Run " @config.trialsPerRun " Trials"), variant: primary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat "Decision criterion: " (math/round @entity.criterion 2) " — drag to trade hits against false alarms") },
+                    { type: range-slider, min: -1, max: 3, step: 0.05, value: @entity.criterion, showTooltip: true, onChange: SET_CRITERION }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: -3, xMax: (+ @config.dPrime 3), yMin: 0, yMax: 0.5, showAxes: true, showGrid: false, gridStep: 1, curves: @entity.curves, points: @entity.points, vectors: [], shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: (str/concat "Hit rate: " (math/round @entity.hitRate 3) " — false-alarm rate: " (math/round @entity.falseAlarmRate 3) " — ROC point (FA, H): (" (math/round @entity.falseAlarmRate 2) ", " (math/round @entity.hitRate 2) ")") },
+                { type: typography, variant: caption, content: (str/concat "Empirical: " @entity.trialsRun " trials run — " @entity.hits " hits, " @entity.falseAlarms " false alarms (d' = " @config.dPrime ", base rate = " @config.baseRate ")") }
+              ] }
+          ]
+        })
+
+      SET_CRITERION -> idle when (== @entity.active true)
+        (set @entity.criterion ?value)
+        (let (
+            (zHit (- @config.dPrime @entity.criterion))
+            (azHit (math/abs @zHit))
+            (tHit (/ 1 (+ 1 (* 0.2316419 @azHit))))
+            (polyHit (* @tHit (+ 0.31938153 (* @tHit (+ -0.356563782 (* @tHit (+ 1.781477937 (* @tHit (+ -1.821255978 (* @tHit 1.330274429))))))))))
+            (pdfHit (* 0.39894228 (exp (* -0.5 (* @zHit @zHit)))))
+            (cdfHitPos (- 1 (* @pdfHit @polyHit)))
+            (hitRate (if (>= @zHit 0) @cdfHitPos (- 1 @cdfHitPos)))
+            (zFa (- 0 @entity.criterion))
+            (azFa (math/abs @zFa))
+            (tFa (/ 1 (+ 1 (* 0.2316419 @azFa))))
+            (polyFa (* @tFa (+ 0.31938153 (* @tFa (+ -0.356563782 (* @tFa (+ 1.781477937 (* @tFa (+ -1.821255978 (* @tFa 1.330274429))))))))))
+            (pdfFa (* 0.39894228 (exp (* -0.5 (* @zFa @zFa)))))
+            (cdfFaPos (- 1 (* @pdfFa @polyFa)))
+            (faRate (if (>= @zFa 0) @cdfFaPos (- 1 @cdfFaPos)))
+            (xHi (+ @config.dPrime 3))
+            (noiseSamples (array/map (array/range 41) (fn i (let ( (xv (+ -3 (* (/ @i 40) (+ @xHi 3)))) ) { x: @xv, y: (* 0.39894228 (exp (* -0.5 (* @xv @xv)))) }))))
+            (signalSamples (array/map (array/range 41) (fn i (let ( (xv (+ -3 (* (/ @i 40) (+ @xHi 3)))) (dv (- @xv @config.dPrime)) ) { x: @xv, y: (* 0.39894228 (exp (* -0.5 (* @dv @dv)))) }))))
+            (criterionSamples [ { x: @entity.criterion, y: 0 }, { x: @entity.criterion, y: 0.45 } ])
+            (newCurves [
+                { label: "Noise", color: @config.noiseColor, samples: @noiseSamples },
+                { label: "Signal + Noise", color: @config.signalColor, samples: @signalSamples },
+                { label: "Criterion", color: @config.criterionColor, samples: @criterionSamples }
+              ])
+            (newPoints [ { x: @entity.criterion, y: 0.45, label: "Criterion", color: @config.criterionColor, radius: 5 } ])
+          )
+          (do
+            (set @entity.hitRate @hitRate)
+            (set @entity.falseAlarmRate @faRate)
+            (set @entity.trialsRun 0)
+            (set @entity.hits 0)
+            (set @entity.falseAlarms 0)
+            (set @entity.curves @newCurves)
+            (set @entity.points @newPoints)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN_TRIALS, label: (str/concat "Run " @config.trialsPerRun " Trials"), variant: primary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat "Decision criterion: " (math/round @entity.criterion 2) " — drag to trade hits against false alarms") },
+                    { type: range-slider, min: -1, max: 3, step: 0.05, value: @entity.criterion, showTooltip: true, onChange: SET_CRITERION }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: -3, xMax: (+ @config.dPrime 3), yMin: 0, yMax: 0.5, showAxes: true, showGrid: false, gridStep: 1, curves: @entity.curves, points: @entity.points, vectors: [], shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: (str/concat "Hit rate: " (math/round @entity.hitRate 3) " — false-alarm rate: " (math/round @entity.falseAlarmRate 3) " — ROC point (FA, H): (" (math/round @entity.falseAlarmRate 2) ", " (math/round @entity.hitRate 2) ")") }
+              ] }
+          ]
+        })
+        (emit SIGNAL_UPDATED { criterion: @entity.criterion, hitRate: @entity.hitRate, falseAlarmRate: @entity.falseAlarmRate, trialsRun: @entity.trialsRun, hits: @entity.hits, falseAlarms: @entity.falseAlarms })
+
+      RUN_TRIALS -> idle when (== @entity.active true)
+        (let (
+            (outcome (array/reduce (array/range @config.trialsPerRun) { hits: 0, fas: 0 } (fn acc t (let (
+                    (signalPresent (< (math/random) @config.baseRate))
+                    (noiseSample (* 2 (- (+ (math/random) (+ (math/random) (math/random))) 1.5)))
+                    (evidence (if @signalPresent (+ @config.dPrime @noiseSample) @noiseSample))
+                    (saidYes (> @evidence @entity.criterion))
+                  )
+                  (if (and @saidYes @signalPresent)
+                    (object/merge @acc { hits: (+ (object/get @acc hits) 1) })
+                    (if (and @saidYes (not @signalPresent))
+                      (object/merge @acc { fas: (+ (object/get @acc fas) 1) })
+                      @acc))))))
+          )
+          (do
+            (set @entity.hits (+ @entity.hits (object/get @outcome hits)))
+            (set @entity.falseAlarms (+ @entity.falseAlarms (object/get @outcome fas)))
+            (set @entity.trialsRun (+ @entity.trialsRun @config.trialsPerRun))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN_TRIALS, label: (str/concat "Run " @config.trialsPerRun " Trials"), variant: primary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat "Decision criterion: " (math/round @entity.criterion 2) " — drag to trade hits against false alarms") },
+                    { type: range-slider, min: -1, max: 3, step: 0.05, value: @entity.criterion, showTooltip: true, onChange: SET_CRITERION }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: -3, xMax: (+ @config.dPrime 3), yMin: 0, yMax: 0.5, showAxes: true, showGrid: false, gridStep: 1, curves: @entity.curves, points: @entity.points, vectors: [], shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: (str/concat "Hit rate: " (math/round @entity.hitRate 3) " — false-alarm rate: " (math/round @entity.falseAlarmRate 3) " — ROC point (FA, H): (" (math/round @entity.falseAlarmRate 2) ", " (math/round @entity.hitRate 2) ")") },
+                { type: typography, variant: caption, content: (str/concat "Empirical: " @entity.trialsRun " trials run — " @entity.hits " hits, " @entity.falseAlarms " false alarms (d' = " @config.dPrime ", base rate = " @config.baseRate ")") }
+              ] }
+          ]
+        })
+        (emit SIGNAL_UPDATED { criterion: @entity.criterion, hitRate: @entity.hitRate, falseAlarmRate: @entity.falseAlarmRate, trialsRun: @entity.trialsRun, hits: @entity.hits, falseAlarms: @entity.falseAlarms })
+
+      RESET -> idle when (== @entity.active true)
+        (let (
+            (zHit (- @config.dPrime @config.criterion))
+            (azHit (math/abs @zHit))
+            (tHit (/ 1 (+ 1 (* 0.2316419 @azHit))))
+            (polyHit (* @tHit (+ 0.31938153 (* @tHit (+ -0.356563782 (* @tHit (+ 1.781477937 (* @tHit (+ -1.821255978 (* @tHit 1.330274429))))))))))
+            (pdfHit (* 0.39894228 (exp (* -0.5 (* @zHit @zHit)))))
+            (cdfHitPos (- 1 (* @pdfHit @polyHit)))
+            (hitRate (if (>= @zHit 0) @cdfHitPos (- 1 @cdfHitPos)))
+            (zFa (- 0 @config.criterion))
+            (azFa (math/abs @zFa))
+            (tFa (/ 1 (+ 1 (* 0.2316419 @azFa))))
+            (polyFa (* @tFa (+ 0.31938153 (* @tFa (+ -0.356563782 (* @tFa (+ 1.781477937 (* @tFa (+ -1.821255978 (* @tFa 1.330274429))))))))))
+            (pdfFa (* 0.39894228 (exp (* -0.5 (* @zFa @zFa)))))
+            (cdfFaPos (- 1 (* @pdfFa @polyFa)))
+            (faRate (if (>= @zFa 0) @cdfFaPos (- 1 @cdfFaPos)))
+            (xHi (+ @config.dPrime 3))
+            (noiseSamples (array/map (array/range 41) (fn i (let ( (xv (+ -3 (* (/ @i 40) (+ @xHi 3)))) ) { x: @xv, y: (* 0.39894228 (exp (* -0.5 (* @xv @xv)))) }))))
+            (signalSamples (array/map (array/range 41) (fn i (let ( (xv (+ -3 (* (/ @i 40) (+ @xHi 3)))) (dv (- @xv @config.dPrime)) ) { x: @xv, y: (* 0.39894228 (exp (* -0.5 (* @dv @dv)))) }))))
+            (criterionSamples [ { x: @config.criterion, y: 0 }, { x: @config.criterion, y: 0.45 } ])
+            (seedCurves [
+                { label: "Noise", color: @config.noiseColor, samples: @noiseSamples },
+                { label: "Signal + Noise", color: @config.signalColor, samples: @signalSamples },
+                { label: "Criterion", color: @config.criterionColor, samples: @criterionSamples }
+              ])
+            (seedPoints [ { x: @config.criterion, y: 0.45, label: "Criterion", color: @config.criterionColor, radius: 5 } ])
+          )
+          (do
+            (set @entity.criterion @config.criterion)
+            (set @entity.hitRate @hitRate)
+            (set @entity.falseAlarmRate @faRate)
+            (set @entity.trialsRun 0)
+            (set @entity.hits 0)
+            (set @entity.falseAlarms 0)
+            (set @entity.curves @seedCurves)
+            (set @entity.points @seedPoints)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN_TRIALS, label: (str/concat "Run " @config.trialsPerRun " Trials"), variant: primary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat "Decision criterion: " (math/round @entity.criterion 2) " — drag to trade hits against false alarms") },
+                    { type: range-slider, min: -1, max: 3, step: 0.05, value: @entity.criterion, showTooltip: true, onChange: SET_CRITERION }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: -3, xMax: (+ @config.dPrime 3), yMin: 0, yMax: 0.5, showAxes: true, showGrid: false, gridStep: 1, curves: @entity.curves, points: @entity.points, vectors: [], shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: (str/concat "Hit rate: " (math/round @entity.hitRate 3) " — false-alarm rate: " (math/round @entity.falseAlarmRate 3) " — ROC point (FA, H): (" (math/round @entity.falseAlarmRate 2) ", " (math/round @entity.hitRate 2) ")") },
+                { type: typography, variant: caption, content: (str/concat "Empirical: " @entity.trialsRun " trials run — " @entity.hits " hits, " @entity.falseAlarms " false alarms (d' = " @config.dPrime ", base rate = " @config.baseRate ")") }
+              ] }
+          ]
+        })
+        (emit SIGNAL_UPDATED { criterion: @entity.criterion, hitRate: @entity.hitRate, falseAlarmRate: @entity.falseAlarmRate, trialsRun: @entity.trialsRun, hits: @entity.hits, falseAlarms: @entity.falseAlarms })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      SET_CRITERION {
+        value : number
+      }
+        @description "Learner dragged the decision criterion; the theoretical hit and false-alarm rates recompute and the empirical counters re-anchor to zero."
+        @tier "domain"
+      RUN_TRIALS {
+      }
+        @description "Ran a batch of simulated detection trials at the configured base rate — each trial draws evidence from the noise or signal+noise distribution and scores a hit or false alarm against the criterion."
+        @tier "domain"
+      RESET {
+      }
+        @description "Learner reset the instrument — criterion, theoretical rates, and empirical counters return to their starting values."
+        @tier "domain"
+    }
+
+    emits {
+      SIGNAL_UPDATED -> external {
+        criterion : number
+        hitRate : number
+        falseAlarmRate : number
+        trialsRun : number
+        hits : number
+        falseAlarms : number
+      }
+        @description "The signal-detection state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "signal detection, SDT, d prime, criterion, hit rate, false alarm, ROC point, sensitivity, response bias"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Signal Detection Theory"
+        @label "Title"
+        @description "Title shown above the canvas."
+        @tier "presentation"
+      width : number = 640
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      interactive : boolean = false
+        @label "Interactive"
+        @description "Enable pointer interaction on the canvas."
+        @tier "presentation"
+      animate : boolean = false
+        @label "Animate"
+        @description "Enable continuous redraw loop."
+        @tier "presentation"
+      dPrime : number = 1.5
+        @label "d′ (Sensitivity)"
+        @description "Separation between the noise and signal+noise distributions, in standard deviations — the learner's sensitivity to the signal."
+        @synonyms "d prime, sensitivity, discriminability, signal strength, detectability"
+        @tier "domain"
+      criterion : number = 0.5
+        @label "Criterion"
+        @description "Initial decision threshold on the evidence axis; evidence above it triggers a 'signal present' response. Hit rate is Φ(d′ − c), false-alarm rate Φ(−c)."
+        @synonyms "decision criterion, response bias, threshold, beta, cutoff"
+        @tier "domain"
+      baseRate : number = 0.5
+        @label "Base Rate"
+        @description "Probability that a simulated trial actually contains a signal — governs the empirical hit/false-alarm mix in RUN_TRIALS."
+        @synonyms "base rate, signal prevalence, prior probability, signal probability"
+        @tier "domain"
+      trialsPerRun : number = 50
+        @label "Trials Per Run"
+        @description "Simulated detection trials per RUN_TRIALS click."
+        @tier "domain"
+      noiseColor : string = "#94a3b8"
+        @label "Noise Curve Color"
+        @description "Color of the noise distribution curve."
+        @tier "presentation"
+      signalColor : string = "#2563eb"
+        @label "Signal Curve Color"
+        @description "Color of the signal+noise distribution curve."
+        @tier "presentation"
+      criterionColor : string = "#dc2626"
+        @label "Criterion Color"
+        @description "Color of the criterion line and marker."
+        @tier "presentation"
+    }
+  }
+
+  page "/psych-signal" as PsychSignalPage -> PsychSignalSim
+}

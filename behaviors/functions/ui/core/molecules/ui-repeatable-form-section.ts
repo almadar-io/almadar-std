@@ -68,6 +68,8 @@ export interface StdUiRepeatableFormSectionConfig {
   className?: string;
   currentState?: string;
   emptyMessage?: string;
+  /** Default: `"id"` */
+  itemLabelField?: string;
   /** Default: `[{"addedAt":"Added At","addedInState":"Added In State","id":"Id"},{"addedAt":"Added At 2","addedInState":"Added In State 2","id":"Id 2"}]` */
   items?: EntityRow[];
   maxItems?: number;

@@ -1,0 +1,298 @@
+[
+  {
+    "organism": "std-algo-bst",
+    "orbital": "BstEngineOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-algo-bst.ts",
+    "entities": [
+      {
+        "name": "BstState",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "nodes",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "edges",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "entries",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "cursor",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "pending",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "descending",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "curId",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "curVal",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "curX",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "curOffset",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "depth",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "maxDepth",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "count",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "narration",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "BstSim",
+        "emittedEvents": [
+          "BST_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "BST_UPDATED",
+            "direction": "emit",
+            "description": "The tree after each insert/delete/traversal — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "binary search tree, insert, traversal, inorder, preorder, level order",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "INSERT_VALUE",
+            "direction": "listen"
+          },
+          {
+            "name": "DELETE_VALUE",
+            "direction": "listen"
+          },
+          {
+            "name": "RUN_TRAVERSAL",
+            "direction": "listen"
+          },
+          {
+            "name": "RESET",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "backgroundColor",
+            "type": "string",
+            "default": "#f8fafc",
+            "label": "Background Color",
+            "description": "Canvas background color.",
+            "tier": "presentation"
+          },
+          {
+            "key": "balanced",
+            "type": "boolean",
+            "default": false,
+            "label": "Balance Readout",
+            "description": "When true, each insert's narration reports the tree's current height against its node count so the learner can judge balance; no auto-rotation is performed.",
+            "synonyms": "balance, height, avl readout",
+            "tier": "domain"
+          },
+          {
+            "key": "baseOffset",
+            "type": "number",
+            "default": 150,
+            "label": "Base Offset",
+            "description": "Horizontal distance between the root and its children; halved at each deeper level.",
+            "tier": "presentation"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 400,
+            "label": "Height",
+            "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "levelGap",
+            "type": "number",
+            "default": 70,
+            "label": "Level Gap",
+            "description": "Vertical distance between tree levels in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "rootX",
+            "type": "number",
+            "default": 300,
+            "label": "Root X",
+            "description": "Canvas x-position of the root node.",
+            "tier": "presentation"
+          },
+          {
+            "key": "showComparisons",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Comparisons",
+            "description": "Include each left/right comparison in the narration while a value descends; turn off for a terse attach-only narration.",
+            "tier": "presentation"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Binary Search Tree",
+            "label": "Title",
+            "description": "Title shown above the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "traversalKind",
+            "type": "string",
+            "default": "inorder",
+            "label": "Traversal Kind",
+            "description": "Which sweep RUN_TRAVERSAL replays — inorder (sorted order, left to right), preorder (root before children), or levelorder (breadth first, top to bottom).",
+            "synonyms": "traversal, in-order, pre-order, level-order, sweep",
+            "tier": "domain"
+          },
+          {
+            "key": "values",
+            "type": "[number]",
+            "default": [
+              50,
+              30,
+              70,
+              20,
+              40,
+              60,
+              80
+            ],
+            "label": "Values",
+            "description": "The values INSERT_VALUE feeds into the tree, one per descent, in order.",
+            "synonyms": "keys, nodes to insert, dataset",
+            "tier": "domain",
+            "items": {
+              "type": "number"
+            }
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "description": "Canvas width in pixels.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "BstState",
+        "transitionEvents": [
+          "DELETE_VALUE",
+          "INIT",
+          "INSERT_VALUE",
+          "MODE_SELECTED",
+          "RESET",
+          "RUN_TRAVERSAL"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "count",
+            "curId",
+            "curOffset",
+            "curVal",
+            "curX",
+            "cursor",
+            "depth",
+            "descending",
+            "edges",
+            "entries",
+            "maxDepth",
+            "narration",
+            "nodes",
+            "pending",
+            "title"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "BstEnginePage",
+        "defaultPath": "/algo-bst",
+        "primaryEntity": "BstState"
+      }
+    ],
+    "emittedEvents": [
+      "BST_UPDATED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

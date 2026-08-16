@@ -1,5 +1,5 @@
 {
-  "description": "Eukaryotic cell-structure engine — a large steady nucleus ringed by organelles whose radii breathe at staggered phases on biology-canvas. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches.",
+  "description": "Eukaryotic cell-structure lab — a config-declared organelle roster the learner tours with Prev/Next; the selected organelle enlarges with a highlight ring and its function is narrated, and a progress readout tracks the tour. A plantMode knob adds chloroplast, cell wall, and central vacuole. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches.",
   "ledger": {
     "entries": {
       "ent_01KXG051CYPV2T3P7HNF8Q4VPW": {
@@ -19,19 +19,46 @@
         "parent": "trt_01KXG051CYK5P0PQAWJMZ2GWD7",
         "renames": []
       },
-      "evt_01KXG051D1A87DR8YPF2PZ1QWM": {
-        "bakedName": "CELL_UPDATED",
-        "curName": "CELL_UPDATED",
-        "id": "evt_01KXG051D1A87DR8YPF2PZ1QWM",
+      "evt_01KZEKSM17VR06M3E9HT80R2EK": {
+        "bakedName": "MODE_SELECTED",
+        "curName": "MODE_SELECTED",
+        "id": "evt_01KZEKSM17VR06M3E9HT80R2EK",
         "kind": "event",
         "owner": "workspace",
         "parent": "trt_01KXG051CYK5P0PQAWJMZ2GWD7",
         "renames": []
       },
-      "evt_01KZEKSM17VR06M3E9HT80R2EK": {
-        "bakedName": "MODE_SELECTED",
-        "curName": "MODE_SELECTED",
-        "id": "evt_01KZEKSM17VR06M3E9HT80R2EK",
+      "evt_01M04B0Y6V1D3KME12MPRJ0H1D": {
+        "bakedName": "NEXT",
+        "curName": "NEXT",
+        "id": "evt_01M04B0Y6V1D3KME12MPRJ0H1D",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG051CYK5P0PQAWJMZ2GWD7",
+        "renames": []
+      },
+      "evt_01M04B0Y6VA8DK3WZZDDPA6G5B": {
+        "bakedName": "RESET",
+        "curName": "RESET",
+        "id": "evt_01M04B0Y6VA8DK3WZZDDPA6G5B",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG051CYK5P0PQAWJMZ2GWD7",
+        "renames": []
+      },
+      "evt_01M04B0Y6VPJAGBG68SFTAXZ35": {
+        "bakedName": "CELL_SELECTED",
+        "curName": "CELL_SELECTED",
+        "id": "evt_01M04B0Y6VPJAGBG68SFTAXZ35",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG051CYK5P0PQAWJMZ2GWD7",
+        "renames": []
+      },
+      "evt_01M04B0Y6VSWES5RFV5CCWY99X": {
+        "bakedName": "PREV",
+        "curName": "PREV",
+        "id": "evt_01M04B0Y6VSWES5RFV5CCWY99X",
         "kind": "event",
         "owner": "workspace",
         "parent": "trt_01KXG051CYK5P0PQAWJMZ2GWD7",
@@ -84,11 +111,6 @@
             "type": "string"
           },
           {
-            "default": 0.0,
-            "name": "phase",
-            "type": "number"
-          },
-          {
             "items": {
               "properties": {
                 "color": {
@@ -98,7 +120,7 @@
                 },
                 "id": {
                   "name": "id",
-                  "required": false,
+                  "required": true,
                   "type": "string"
                 },
                 "kind": {
@@ -122,6 +144,11 @@
                   "required": false,
                   "type": "number"
                 },
+                "role": {
+                  "name": "role",
+                  "required": false,
+                  "type": "string"
+                },
                 "x": {
                   "name": "x",
                   "required": true,
@@ -135,13 +162,63 @@
               },
               "type": "object"
             },
-            "name": "nodes",
+            "name": "organelles",
+            "type": "array"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "from": {
+                  "name": "from",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "to": {
+                  "name": "to",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "name": "edges",
+            "type": "array"
+          },
+          {
+            "default": 0.0,
+            "name": "selectedIndex",
+            "type": "number"
+          },
+          {
+            "name": "selectedId",
+            "type": "string"
+          },
+          {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "name": "visitedIds",
             "type": "array"
           },
           {
             "default": false,
-            "name": "running",
+            "name": "tourComplete",
             "type": "boolean"
+          },
+          {
+            "name": "narration",
+            "type": "string"
           }
         ],
         "id": "ent_01KXG051CYPV2T3P7HNF8Q4VPW",
@@ -174,17 +251,29 @@
               "tier": "presentation",
               "type": "string"
             },
-            "edges": {
+            "coreEdges": {
               "default": [
                 {
                   "color": "#e2e8f0",
-                  "from": "mitochondria",
+                  "from": "mitochondrion",
                   "label": "",
                   "to": "nucleus"
                 },
                 {
                   "color": "#e2e8f0",
-                  "from": "ribosome",
+                  "from": "ribosomes",
+                  "label": "",
+                  "to": "nucleus"
+                },
+                {
+                  "color": "#e2e8f0",
+                  "from": "roughER",
+                  "label": "",
+                  "to": "nucleus"
+                },
+                {
+                  "color": "#e2e8f0",
+                  "from": "smoothER",
                   "label": "",
                   "to": "nucleus"
                 },
@@ -196,18 +285,12 @@
                 },
                 {
                   "color": "#e2e8f0",
-                  "from": "vacuole",
-                  "label": "",
-                  "to": "nucleus"
-                },
-                {
-                  "color": "#e2e8f0",
-                  "from": "chloroplast",
+                  "from": "lysosome",
                   "label": "",
                   "to": "nucleus"
                 }
               ],
-              "description": "Faint links tethering each organelle to the central nucleus.",
+              "description": "Faint tethers linking each core organelle to the nucleus.",
               "items": {
                 "properties": {
                   "color": {
@@ -233,82 +316,104 @@
                 },
                 "type": "object"
               },
-              "label": "Edges",
+              "label": "Core Edges",
               "tier": "presentation",
               "type": "[BioEdge]"
             },
-            "height": {
-              "default": 400.0,
-              "description": "Canvas height in pixels.",
-              "label": "Height",
-              "tier": "presentation",
-              "type": "number"
-            },
-            "matchMode": {
-              "default": "",
-              "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
-              "label": "Match Mode",
-              "tier": "presentation",
-              "type": "string"
-            },
-            "nodes": {
+            "coreOrganelles": {
               "default": [
+                {
+                  "color": "#475569",
+                  "id": "membrane",
+                  "kind": "cell",
+                  "label": "Cell Membrane",
+                  "radius": 160.0,
+                  "role": "Selectively permeable barrier that controls what enters and exits the cell.",
+                  "x": 300.0,
+                  "y": 200.0
+                },
+                {
+                  "color": "#7dd3fc",
+                  "id": "cytoplasm",
+                  "kind": "organelle",
+                  "label": "Cytoplasm",
+                  "radius": 10.0,
+                  "role": "Gel-like fluid filling the cell where organelles are suspended and metabolic reactions occur.",
+                  "x": 240.0,
+                  "y": 195.0
+                },
                 {
                   "color": "#2563eb",
                   "id": "nucleus",
                   "kind": "cell",
                   "label": "Nucleus",
-                  "radius": 34.0,
-                  "x": 300.0,
-                  "y": 200.0
+                  "radius": 46.0,
+                  "role": "Houses the cell's DNA and directs protein synthesis and cell division.",
+                  "x": 320.0,
+                  "y": 180.0
                 },
                 {
                   "color": "#dc2626",
-                  "id": "mitochondria",
+                  "id": "mitochondrion",
                   "kind": "organelle",
-                  "label": "Mitochondria",
-                  "radius": 14.0,
-                  "x": 170.0,
-                  "y": 120.0
+                  "label": "Mitochondrion",
+                  "radius": 20.0,
+                  "role": "The powerhouse of the cell — converts nutrients into ATP through cellular respiration.",
+                  "x": 185.0,
+                  "y": 145.0
                 },
                 {
                   "color": "#f59e0b",
-                  "id": "ribosome",
+                  "id": "ribosomes",
                   "kind": "organelle",
-                  "label": "Ribosome",
-                  "radius": 14.0,
-                  "x": 440.0,
-                  "y": 120.0
+                  "label": "Ribosomes",
+                  "radius": 9.0,
+                  "role": "Read messenger RNA and assemble amino acids into proteins.",
+                  "x": 425.0,
+                  "y": 145.0
                 },
                 {
                   "color": "#7c3aed",
-                  "id": "golgi",
+                  "id": "roughER",
                   "kind": "organelle",
-                  "label": "Golgi",
-                  "radius": 14.0,
-                  "x": 150.0,
-                  "y": 290.0
+                  "label": "Rough ER",
+                  "radius": 26.0,
+                  "role": "Ribosome-studded membrane network that folds and processes proteins destined for export.",
+                  "x": 190.0,
+                  "y": 265.0
+                },
+                {
+                  "color": "#a855f7",
+                  "id": "smoothER",
+                  "kind": "organelle",
+                  "label": "Smooth ER",
+                  "radius": 22.0,
+                  "role": "Synthesizes lipids and detoxifies harmful compounds; lacks ribosomes.",
+                  "x": 410.0,
+                  "y": 265.0
                 },
                 {
                   "color": "#0891b2",
-                  "id": "vacuole",
+                  "id": "golgi",
                   "kind": "organelle",
-                  "label": "Vacuole",
-                  "radius": 14.0,
-                  "x": 450.0,
-                  "y": 290.0
+                  "label": "Golgi Apparatus",
+                  "radius": 17.0,
+                  "role": "Packages, modifies, and ships proteins and lipids to their destinations.",
+                  "x": 320.0,
+                  "y": 318.0
                 },
                 {
-                  "color": "#16a34a",
-                  "id": "chloroplast",
+                  "color": "#eab308",
+                  "id": "lysosome",
                   "kind": "organelle",
-                  "label": "Chloroplast",
-                  "radius": 14.0,
-                  "x": 300.0,
-                  "y": 330.0
+                  "label": "Lysosome",
+                  "radius": 11.0,
+                  "role": "Contains digestive enzymes that break down waste, debris, and worn-out organelles.",
+                  "x": 445.0,
+                  "y": 205.0
                 }
               ],
-              "description": "A large central nucleus (kind cell) ringed by five organelles (kind organelle) — mitochondria, ribosome, golgi, vacuole, chloroplast; radius encodes the breathing pulse.",
+              "description": "The shared animal/plant organelle roster the tour steps through: membrane, cytoplasm, nucleus, mitochondrion, ribosomes, rough ER, smooth ER, Golgi apparatus, lysosome.",
               "items": {
                 "properties": {
                   "color": {
@@ -318,7 +423,7 @@
                   },
                   "id": {
                     "name": "id",
-                    "required": false,
+                    "required": true,
                     "type": "string"
                   },
                   "kind": {
@@ -342,6 +447,11 @@
                     "required": false,
                     "type": "number"
                   },
+                  "role": {
+                    "name": "role",
+                    "required": false,
+                    "type": "string"
+                  },
                   "x": {
                     "name": "x",
                     "required": true,
@@ -355,19 +465,168 @@
                 },
                 "type": "object"
               },
-              "label": "Nodes",
-              "tier": "presentation",
-              "type": "[BioNode]"
+              "label": "Core Organelles",
+              "tier": "domain",
+              "type": "[CellOrganelle]"
             },
-            "running": {
-              "default": true,
-              "description": "When true the tick advances the phase and recomputes every organelle radius; toggle to start/pause.",
-              "label": "Running",
+            "height": {
+              "default": 400.0,
+              "description": "Canvas height in pixels.",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "matchMode": {
+              "default": "",
+              "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+              "label": "Match Mode",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "plantEdges": {
+              "default": [
+                {
+                  "color": "#e2e8f0",
+                  "from": "chloroplast",
+                  "label": "",
+                  "to": "nucleus"
+                },
+                {
+                  "color": "#e2e8f0",
+                  "from": "vacuole",
+                  "label": "",
+                  "to": "nucleus"
+                }
+              ],
+              "description": "Faint tethers linking the plant-only organelles to the nucleus.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "from": {
+                    "name": "from",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "to": {
+                    "name": "to",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Plant Edges",
+              "tier": "presentation",
+              "type": "[BioEdge]"
+            },
+            "plantMode": {
+              "default": false,
+              "description": "When true, adds the chloroplast, cell wall, and central vacuole to the tour alongside the shared animal/plant organelles.",
+              "label": "Plant Mode",
+              "synonyms": "plant cell, chloroplast, cell wall, vacuole",
               "tier": "domain",
               "type": "boolean"
             },
+            "plantOrganelles": {
+              "default": [
+                {
+                  "color": "#15803d",
+                  "id": "cellWall",
+                  "kind": "cell",
+                  "label": "Cell Wall",
+                  "radius": 178.0,
+                  "role": "Rigid outer layer found in plant cells that provides structural support and protection.",
+                  "x": 300.0,
+                  "y": 200.0
+                },
+                {
+                  "color": "#16a34a",
+                  "id": "chloroplast",
+                  "kind": "organelle",
+                  "label": "Chloroplast",
+                  "radius": 15.0,
+                  "role": "Captures light energy and converts it into sugars through photosynthesis.",
+                  "x": 300.0,
+                  "y": 338.0
+                },
+                {
+                  "color": "#0e7490",
+                  "id": "vacuole",
+                  "kind": "organelle",
+                  "label": "Central Vacuole",
+                  "radius": 28.0,
+                  "role": "Large fluid-filled sac that maintains turgor pressure and stores water, nutrients, and waste.",
+                  "x": 250.0,
+                  "y": 230.0
+                }
+              ],
+              "description": "Appended to the tour when plantMode is true: cell wall, chloroplast, central vacuole.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "kind": {
+                    "name": "kind",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "cell",
+                      "organelle",
+                      "molecule",
+                      "organism"
+                    ]
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "radius": {
+                    "name": "radius",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "role": {
+                    "name": "role",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Plant Organelles",
+              "tier": "domain",
+              "type": "[CellOrganelle]"
+            },
             "title": {
-              "default": "Cell Structure",
+              "default": "Cell Structure Explorer",
               "description": "Title shown above the canvas.",
               "label": "Title",
               "tier": "presentation",
@@ -383,27 +642,43 @@
           },
           "emits": [
             {
-              "description": "The current cell scene each tick — a composed listener (readout, graph) can subscribe; a harmless no-op when the atom runs standalone.",
-              "event": "CELL_UPDATED",
-              "eventId": "evt_01KXG051D1A87DR8YPF2PZ1QWM",
+              "description": "Fires on INIT/MODE_SELECTED/Prev/Next/Reset with the currently selected organelle's id, label, and function text, plus whether every organelle has now been visited — a composed listener (readout, quiz) can subscribe; a harmless no-op when the atom runs standalone.",
+              "event": "CELL_SELECTED",
+              "eventId": "evt_01M04B0Y6VPJAGBG68SFTAXZ35",
               "payloadSchema": [
                 {
-                  "name": "nodes",
-                  "type": "[BioNode]"
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "label",
+                  "type": "string"
+                },
+                {
+                  "name": "role",
+                  "type": "string"
+                },
+                {
+                  "name": "tourComplete",
+                  "type": "boolean"
                 }
               ],
               "scope": "external",
-              "synonyms": "tick, frame, step, redraw",
+              "synonyms": "select, choose, organelle, explore, tour, pick",
               "tier": "domain"
             }
           ],
           "entityContract": {
             "provides": [
               "active",
-              "nodes",
-              "phase",
-              "running",
-              "title"
+              "edges",
+              "narration",
+              "organelles",
+              "selectedId",
+              "selectedIndex",
+              "title",
+              "tourComplete",
+              "visitedIds"
             ],
             "requires": []
           },
@@ -437,17 +712,44 @@
                 "tier": "domain"
               },
               {
-                "description": "The current cell scene each tick — a composed listener (readout, graph) can subscribe; a harmless no-op when the atom runs standalone.",
-                "id": "evt_01KXG051D1A87DR8YPF2PZ1QWM",
-                "key": "CELL_UPDATED",
-                "name": "Cell Updated",
+                "id": "evt_01M04B0Y6V1D3KME12MPRJ0H1D",
+                "key": "NEXT",
+                "name": "Next"
+              },
+              {
+                "id": "evt_01M04B0Y6VSWES5RFV5CCWY99X",
+                "key": "PREV",
+                "name": "Prev"
+              },
+              {
+                "id": "evt_01M04B0Y6VA8DK3WZZDDPA6G5B",
+                "key": "RESET",
+                "name": "Reset"
+              },
+              {
+                "description": "Fires on INIT/MODE_SELECTED/Prev/Next/Reset with the currently selected organelle's id, label, and function text, plus whether every organelle has now been visited — a composed listener (readout, quiz) can subscribe; a harmless no-op when the atom runs standalone.",
+                "id": "evt_01M04B0Y6VPJAGBG68SFTAXZ35",
+                "key": "CELL_SELECTED",
+                "name": "Cell Selected",
                 "payloadSchema": [
                   {
-                    "name": "nodes",
-                    "type": "[BioNode]"
+                    "name": "id",
+                    "type": "string"
+                  },
+                  {
+                    "name": "label",
+                    "type": "string"
+                  },
+                  {
+                    "name": "role",
+                    "type": "string"
+                  },
+                  {
+                    "name": "tourComplete",
+                    "type": "boolean"
                   }
                 ],
-                "synonyms": "tick, frame, step, redraw",
+                "synonyms": "select, choose, organelle, explore, tour, pick",
                 "tier": "domain"
               }
             ],
@@ -472,18 +774,95 @@
                   ],
                   [
                     "set",
-                    "@entity.phase",
+                    "@entity.organelles",
+                    [
+                      "if",
+                      "@config.plantMode",
+                      [
+                        "array/concat",
+                        "@config.plantOrganelles",
+                        "@config.coreOrganelles"
+                      ],
+                      "@config.coreOrganelles"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.edges",
+                    [
+                      "if",
+                      "@config.plantMode",
+                      [
+                        "array/concat",
+                        "@config.plantEdges",
+                        "@config.coreEdges"
+                      ],
+                      "@config.coreEdges"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.selectedIndex",
                     0.0
                   ],
                   [
                     "set",
-                    "@entity.nodes",
-                    "@config.nodes"
+                    "@entity.selectedId",
+                    [
+                      "object/get",
+                      [
+                        "array/nth",
+                        "@entity.organelles",
+                        0.0
+                      ],
+                      "id"
+                    ]
                   ],
                   [
                     "set",
-                    "@entity.running",
-                    "@config.running"
+                    "@entity.visitedIds",
+                    [
+                      [
+                        "object/get",
+                        [
+                          "array/nth",
+                          "@entity.organelles",
+                          0.0
+                        ],
+                        "id"
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.tourComplete",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.narration",
+                    [
+                      "str/concat",
+                      [
+                        "object/get",
+                        [
+                          "array/nth",
+                          "@entity.organelles",
+                          0.0
+                        ],
+                        "label"
+                      ],
+                      " — ",
+                      [
+                        "object/get",
+                        [
+                          "array/nth",
+                          "@entity.organelles",
+                          0.0
+                        ],
+                        "role"
+                      ]
+                    ]
                   ],
                   [
                     "render-ui",
@@ -498,12 +877,176 @@
                               "variant": "h4"
                             },
                             {
+                              "children": [
+                                {
+                                  "action": "PREV",
+                                  "label": "Prev",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "NEXT",
+                                  "label": "Next",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
                               "backgroundColor": "@config.backgroundColor",
-                              "edges": "@config.edges",
+                              "edges": "@entity.edges",
                               "height": "@config.height",
-                              "nodes": "@entity.nodes",
+                              "nodes": [
+                                "array/map",
+                                "@entity.organelles",
+                                [
+                                  "fn",
+                                  "n",
+                                  {
+                                    "color": [
+                                      "object/get",
+                                      "@n",
+                                      "color"
+                                    ],
+                                    "id": [
+                                      "object/get",
+                                      "@n",
+                                      "id"
+                                    ],
+                                    "kind": [
+                                      "object/get",
+                                      "@n",
+                                      "kind"
+                                    ],
+                                    "label": [
+                                      "object/get",
+                                      "@n",
+                                      "label"
+                                    ],
+                                    "radius": [
+                                      "if",
+                                      [
+                                        "==",
+                                        [
+                                          "object/get",
+                                          "@n",
+                                          "id"
+                                        ],
+                                        "@entity.selectedId"
+                                      ],
+                                      [
+                                        "*",
+                                        [
+                                          "object/get",
+                                          "@n",
+                                          "radius"
+                                        ],
+                                        1.4
+                                      ],
+                                      [
+                                        "object/get",
+                                        "@n",
+                                        "radius"
+                                      ]
+                                    ],
+                                    "x": [
+                                      "object/get",
+                                      "@n",
+                                      "x"
+                                    ],
+                                    "y": [
+                                      "object/get",
+                                      "@n",
+                                      "y"
+                                    ]
+                                  }
+                                ]
+                              ],
+                              "shapes": [
+                                {
+                                  "color": "#f59e0b",
+                                  "lineWidth": 4.0,
+                                  "radius": [
+                                    "+",
+                                    [
+                                      "object/get",
+                                      [
+                                        "array/nth",
+                                        "@entity.organelles",
+                                        "@entity.selectedIndex"
+                                      ],
+                                      "radius"
+                                    ],
+                                    10.0
+                                  ],
+                                  "type": "circle",
+                                  "x": [
+                                    "object/get",
+                                    [
+                                      "array/nth",
+                                      "@entity.organelles",
+                                      "@entity.selectedIndex"
+                                    ],
+                                    "x"
+                                  ],
+                                  "y": [
+                                    "object/get",
+                                    [
+                                      "array/nth",
+                                      "@entity.organelles",
+                                      "@entity.selectedIndex"
+                                    ],
+                                    "y"
+                                  ]
+                                }
+                              ],
                               "type": "biology-canvas",
                               "width": "@config.width"
+                            },
+                            {
+                              "content": "@entity.narration",
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Explored ",
+                                [
+                                  "str/concat",
+                                  "",
+                                  [
+                                    "array/len",
+                                    "@entity.visitedIds"
+                                  ]
+                                ],
+                                " of ",
+                                [
+                                  "str/concat",
+                                  "",
+                                  [
+                                    "array/len",
+                                    "@entity.organelles"
+                                  ]
+                                ],
+                                [
+                                  "if",
+                                  "@entity.tourComplete",
+                                  " — tour complete!",
+                                  ""
+                                ]
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
                             }
                           ],
                           "direction": "vertical",
@@ -517,9 +1060,28 @@
                   ],
                   [
                     "emit",
-                    "CELL_UPDATED",
+                    "CELL_SELECTED",
                     {
-                      "nodes": "@entity.nodes"
+                      "id": "@entity.selectedId",
+                      "label": [
+                        "object/get",
+                        [
+                          "array/nth",
+                          "@entity.organelles",
+                          0.0
+                        ],
+                        "label"
+                      ],
+                      "role": [
+                        "object/get",
+                        [
+                          "array/nth",
+                          "@entity.organelles",
+                          0.0
+                        ],
+                        "role"
+                      ],
+                      "tourComplete": false
                     }
                   ]
                 ],
@@ -547,18 +1109,95 @@
                   ],
                   [
                     "set",
-                    "@entity.phase",
+                    "@entity.organelles",
+                    [
+                      "if",
+                      "@config.plantMode",
+                      [
+                        "array/concat",
+                        "@config.plantOrganelles",
+                        "@config.coreOrganelles"
+                      ],
+                      "@config.coreOrganelles"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.edges",
+                    [
+                      "if",
+                      "@config.plantMode",
+                      [
+                        "array/concat",
+                        "@config.plantEdges",
+                        "@config.coreEdges"
+                      ],
+                      "@config.coreEdges"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.selectedIndex",
                     0.0
                   ],
                   [
                     "set",
-                    "@entity.nodes",
-                    "@config.nodes"
+                    "@entity.selectedId",
+                    [
+                      "object/get",
+                      [
+                        "array/nth",
+                        "@entity.organelles",
+                        0.0
+                      ],
+                      "id"
+                    ]
                   ],
                   [
                     "set",
-                    "@entity.running",
-                    "@config.running"
+                    "@entity.visitedIds",
+                    [
+                      [
+                        "object/get",
+                        [
+                          "array/nth",
+                          "@entity.organelles",
+                          0.0
+                        ],
+                        "id"
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.tourComplete",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.narration",
+                    [
+                      "str/concat",
+                      [
+                        "object/get",
+                        [
+                          "array/nth",
+                          "@entity.organelles",
+                          0.0
+                        ],
+                        "label"
+                      ],
+                      " — ",
+                      [
+                        "object/get",
+                        [
+                          "array/nth",
+                          "@entity.organelles",
+                          0.0
+                        ],
+                        "role"
+                      ]
+                    ]
                   ],
                   [
                     "render-ui",
@@ -573,12 +1212,176 @@
                               "variant": "h4"
                             },
                             {
+                              "children": [
+                                {
+                                  "action": "PREV",
+                                  "label": "Prev",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "NEXT",
+                                  "label": "Next",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
                               "backgroundColor": "@config.backgroundColor",
-                              "edges": "@config.edges",
+                              "edges": "@entity.edges",
                               "height": "@config.height",
-                              "nodes": "@entity.nodes",
+                              "nodes": [
+                                "array/map",
+                                "@entity.organelles",
+                                [
+                                  "fn",
+                                  "n",
+                                  {
+                                    "color": [
+                                      "object/get",
+                                      "@n",
+                                      "color"
+                                    ],
+                                    "id": [
+                                      "object/get",
+                                      "@n",
+                                      "id"
+                                    ],
+                                    "kind": [
+                                      "object/get",
+                                      "@n",
+                                      "kind"
+                                    ],
+                                    "label": [
+                                      "object/get",
+                                      "@n",
+                                      "label"
+                                    ],
+                                    "radius": [
+                                      "if",
+                                      [
+                                        "==",
+                                        [
+                                          "object/get",
+                                          "@n",
+                                          "id"
+                                        ],
+                                        "@entity.selectedId"
+                                      ],
+                                      [
+                                        "*",
+                                        [
+                                          "object/get",
+                                          "@n",
+                                          "radius"
+                                        ],
+                                        1.4
+                                      ],
+                                      [
+                                        "object/get",
+                                        "@n",
+                                        "radius"
+                                      ]
+                                    ],
+                                    "x": [
+                                      "object/get",
+                                      "@n",
+                                      "x"
+                                    ],
+                                    "y": [
+                                      "object/get",
+                                      "@n",
+                                      "y"
+                                    ]
+                                  }
+                                ]
+                              ],
+                              "shapes": [
+                                {
+                                  "color": "#f59e0b",
+                                  "lineWidth": 4.0,
+                                  "radius": [
+                                    "+",
+                                    [
+                                      "object/get",
+                                      [
+                                        "array/nth",
+                                        "@entity.organelles",
+                                        "@entity.selectedIndex"
+                                      ],
+                                      "radius"
+                                    ],
+                                    10.0
+                                  ],
+                                  "type": "circle",
+                                  "x": [
+                                    "object/get",
+                                    [
+                                      "array/nth",
+                                      "@entity.organelles",
+                                      "@entity.selectedIndex"
+                                    ],
+                                    "x"
+                                  ],
+                                  "y": [
+                                    "object/get",
+                                    [
+                                      "array/nth",
+                                      "@entity.organelles",
+                                      "@entity.selectedIndex"
+                                    ],
+                                    "y"
+                                  ]
+                                }
+                              ],
                               "type": "biology-canvas",
                               "width": "@config.width"
+                            },
+                            {
+                              "content": "@entity.narration",
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Explored ",
+                                [
+                                  "str/concat",
+                                  "",
+                                  [
+                                    "array/len",
+                                    "@entity.visitedIds"
+                                  ]
+                                ],
+                                " of ",
+                                [
+                                  "str/concat",
+                                  "",
+                                  [
+                                    "array/len",
+                                    "@entity.organelles"
+                                  ]
+                                ],
+                                [
+                                  "if",
+                                  "@entity.tourComplete",
+                                  " — tour complete!",
+                                  ""
+                                ]
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
                             }
                           ],
                           "direction": "vertical",
@@ -592,9 +1395,28 @@
                   ],
                   [
                     "emit",
-                    "CELL_UPDATED",
+                    "CELL_SELECTED",
                     {
-                      "nodes": "@entity.nodes"
+                      "id": "@entity.selectedId",
+                      "label": [
+                        "object/get",
+                        [
+                          "array/nth",
+                          "@entity.organelles",
+                          0.0
+                        ],
+                        "label"
+                      ],
+                      "role": [
+                        "object/get",
+                        [
+                          "array/nth",
+                          "@entity.organelles",
+                          0.0
+                        ],
+                        "role"
+                      ],
+                      "tourComplete": false
                     }
                   ]
                 ],
@@ -607,198 +1429,957 @@
                   "@config.matchMode"
                 ],
                 "to": "idle"
-              }
-            ]
-          },
-          "ticks": [
-            {
-              "effects": [
-                [
-                  "set",
-                  "@entity.phase",
+              },
+              {
+                "effects": [
                   [
-                    "+",
-                    "@entity.phase",
-                    3.0
-                  ]
-                ],
-                [
-                  "set",
-                  "@entity.nodes",
-                  [
-                    "array/map",
-                    "@entity.nodes",
+                    "set",
+                    "@entity.selectedIndex",
                     [
-                      "fn",
-                      "n",
+                      "math/mod",
                       [
-                        "if",
+                        "+",
+                        "@entity.selectedIndex",
+                        1.0
+                      ],
+                      [
+                        "array/len",
+                        "@entity.organelles"
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.selectedId",
+                    [
+                      "object/get",
+                      [
+                        "array/nth",
+                        "@entity.organelles",
+                        "@entity.selectedIndex"
+                      ],
+                      "id"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.visitedIds",
+                    [
+                      "if",
+                      [
+                        "array/includes",
+                        "@entity.visitedIds",
+                        "@entity.selectedId"
+                      ],
+                      "@entity.visitedIds",
+                      [
+                        "array/append",
+                        "@entity.visitedIds",
+                        "@entity.selectedId"
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.tourComplete",
+                    [
+                      "==",
+                      [
+                        "array/len",
+                        "@entity.visitedIds"
+                      ],
+                      [
+                        "array/len",
+                        "@entity.organelles"
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.narration",
+                    [
+                      "str/concat",
+                      [
+                        "object/get",
                         [
-                          "=",
-                          [
-                            "object/get",
-                            "@n",
-                            "kind"
-                          ],
-                          "cell"
+                          "array/nth",
+                          "@entity.organelles",
+                          "@entity.selectedIndex"
                         ],
-                        "@n",
+                        "label"
+                      ],
+                      " — ",
+                      [
+                        "object/get",
                         [
-                          "let",
-                          [
-                            [
-                              "off",
-                              [
-                                "if",
+                          "array/nth",
+                          "@entity.organelles",
+                          "@entity.selectedIndex"
+                        ],
+                        "role"
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "PREV",
+                                  "label": "Prev",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "NEXT",
+                                  "label": "Next",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "backgroundColor": "@config.backgroundColor",
+                              "edges": "@entity.edges",
+                              "height": "@config.height",
+                              "nodes": [
+                                "array/map",
+                                "@entity.organelles",
                                 [
-                                  "=",
-                                  [
-                                    "object/get",
-                                    "@n",
-                                    "id"
-                                  ],
-                                  "mitochondria"
-                                ],
-                                0.0,
-                                [
-                                  "if",
-                                  [
-                                    "=",
-                                    [
+                                  "fn",
+                                  "n",
+                                  {
+                                    "color": [
+                                      "object/get",
+                                      "@n",
+                                      "color"
+                                    ],
+                                    "id": [
                                       "object/get",
                                       "@n",
                                       "id"
                                     ],
-                                    "ribosome"
-                                  ],
-                                  40.0,
-                                  [
-                                    "if",
-                                    [
-                                      "=",
-                                      [
-                                        "object/get",
-                                        "@n",
-                                        "id"
-                                      ],
-                                      "golgi"
+                                    "kind": [
+                                      "object/get",
+                                      "@n",
+                                      "kind"
                                     ],
-                                    80.0,
-                                    [
+                                    "label": [
+                                      "object/get",
+                                      "@n",
+                                      "label"
+                                    ],
+                                    "radius": [
                                       "if",
                                       [
-                                        "=",
+                                        "==",
                                         [
                                           "object/get",
                                           "@n",
                                           "id"
                                         ],
-                                        "vacuole"
+                                        "@entity.selectedId"
                                       ],
-                                      120.0,
-                                      160.0
-                                    ]
-                                  ]
-                                ]
-                              ]
-                            ]
-                          ],
-                          [
-                            "let",
-                            [
-                              [
-                                "tw",
-                                [
-                                  "math/abs",
-                                  [
-                                    "-",
-                                    [
-                                      "math/mod",
                                       [
-                                        "+",
-                                        "@entity.phase",
-                                        "@off"
+                                        "*",
+                                        [
+                                          "object/get",
+                                          "@n",
+                                          "radius"
+                                        ],
+                                        1.4
                                       ],
-                                      240.0
+                                      [
+                                        "object/get",
+                                        "@n",
+                                        "radius"
+                                      ]
                                     ],
-                                    120.0
-                                  ]
-                                ]
-                              ]
-                            ],
-                            [
-                              "let",
-                              [
-                                [
-                                  "nr",
-                                  [
-                                    "+",
-                                    12.0,
-                                    [
-                                      "*",
-                                      "@tw",
-                                      0.05
+                                    "x": [
+                                      "object/get",
+                                      "@n",
+                                      "x"
+                                    ],
+                                    "y": [
+                                      "object/get",
+                                      "@n",
+                                      "y"
                                     ]
-                                  ]
+                                  }
                                 ]
                               ],
-                              [
-                                "object/merge",
-                                "@n",
+                              "shapes": [
                                 {
-                                  "radius": "@nr"
+                                  "color": "#f59e0b",
+                                  "lineWidth": 4.0,
+                                  "radius": [
+                                    "+",
+                                    [
+                                      "object/get",
+                                      [
+                                        "array/nth",
+                                        "@entity.organelles",
+                                        "@entity.selectedIndex"
+                                      ],
+                                      "radius"
+                                    ],
+                                    10.0
+                                  ],
+                                  "type": "circle",
+                                  "x": [
+                                    "object/get",
+                                    [
+                                      "array/nth",
+                                      "@entity.organelles",
+                                      "@entity.selectedIndex"
+                                    ],
+                                    "x"
+                                  ],
+                                  "y": [
+                                    "object/get",
+                                    [
+                                      "array/nth",
+                                      "@entity.organelles",
+                                      "@entity.selectedIndex"
+                                    ],
+                                    "y"
+                                  ]
                                 }
-                              ]
-                            ]
-                          ]
-                        ]
-                      ]
-                    ]
+                              ],
+                              "type": "biology-canvas",
+                              "width": "@config.width"
+                            },
+                            {
+                              "content": "@entity.narration",
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Explored ",
+                                [
+                                  "str/concat",
+                                  "",
+                                  [
+                                    "array/len",
+                                    "@entity.visitedIds"
+                                  ]
+                                ],
+                                " of ",
+                                [
+                                  "str/concat",
+                                  "",
+                                  [
+                                    "array/len",
+                                    "@entity.organelles"
+                                  ]
+                                ],
+                                [
+                                  "if",
+                                  "@entity.tourComplete",
+                                  " — tour complete!",
+                                  ""
+                                ]
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "CELL_SELECTED",
+                    {
+                      "id": "@entity.selectedId",
+                      "label": [
+                        "object/get",
+                        [
+                          "array/nth",
+                          "@entity.organelles",
+                          "@entity.selectedIndex"
+                        ],
+                        "label"
+                      ],
+                      "role": [
+                        "object/get",
+                        [
+                          "array/nth",
+                          "@entity.organelles",
+                          "@entity.selectedIndex"
+                        ],
+                        "role"
+                      ],
+                      "tourComplete": "@entity.tourComplete"
+                    }
                   ]
                 ],
-                [
-                  "render-ui",
-                  "main",
-                  {
-                    "children": [
-                      {
-                        "children": [
-                          {
-                            "content": "@entity.title",
-                            "type": "typography",
-                            "variant": "h4"
-                          },
-                          {
-                            "backgroundColor": "@config.backgroundColor",
-                            "edges": "@config.edges",
-                            "height": "@config.height",
-                            "nodes": "@entity.nodes",
-                            "type": "biology-canvas",
-                            "width": "@config.width"
-                          }
-                        ],
-                        "direction": "vertical",
-                        "gap": "md",
-                        "type": "stack"
-                      }
-                    ],
-                    "padding": "md",
-                    "type": "box"
-                  }
+                "event": "NEXT",
+                "eventId": "evt_01M04B0Y6V1D3KME12MPRJ0H1D",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
                 ],
-                [
-                  "emit",
-                  "CELL_UPDATED",
-                  {
-                    "nodes": "@entity.nodes"
-                  }
-                ]
-              ],
-              "guard": "@entity.running",
-              "interval": 32.0,
-              "name": "cellTick"
-            }
-          ]
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.selectedIndex",
+                    [
+                      "if",
+                      [
+                        "==",
+                        "@entity.selectedIndex",
+                        0.0
+                      ],
+                      [
+                        "-",
+                        [
+                          "array/len",
+                          "@entity.organelles"
+                        ],
+                        1.0
+                      ],
+                      [
+                        "-",
+                        "@entity.selectedIndex",
+                        1.0
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.selectedId",
+                    [
+                      "object/get",
+                      [
+                        "array/nth",
+                        "@entity.organelles",
+                        "@entity.selectedIndex"
+                      ],
+                      "id"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.visitedIds",
+                    [
+                      "if",
+                      [
+                        "array/includes",
+                        "@entity.visitedIds",
+                        "@entity.selectedId"
+                      ],
+                      "@entity.visitedIds",
+                      [
+                        "array/append",
+                        "@entity.visitedIds",
+                        "@entity.selectedId"
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.tourComplete",
+                    [
+                      "==",
+                      [
+                        "array/len",
+                        "@entity.visitedIds"
+                      ],
+                      [
+                        "array/len",
+                        "@entity.organelles"
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.narration",
+                    [
+                      "str/concat",
+                      [
+                        "object/get",
+                        [
+                          "array/nth",
+                          "@entity.organelles",
+                          "@entity.selectedIndex"
+                        ],
+                        "label"
+                      ],
+                      " — ",
+                      [
+                        "object/get",
+                        [
+                          "array/nth",
+                          "@entity.organelles",
+                          "@entity.selectedIndex"
+                        ],
+                        "role"
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "PREV",
+                                  "label": "Prev",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "NEXT",
+                                  "label": "Next",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "backgroundColor": "@config.backgroundColor",
+                              "edges": "@entity.edges",
+                              "height": "@config.height",
+                              "nodes": [
+                                "array/map",
+                                "@entity.organelles",
+                                [
+                                  "fn",
+                                  "n",
+                                  {
+                                    "color": [
+                                      "object/get",
+                                      "@n",
+                                      "color"
+                                    ],
+                                    "id": [
+                                      "object/get",
+                                      "@n",
+                                      "id"
+                                    ],
+                                    "kind": [
+                                      "object/get",
+                                      "@n",
+                                      "kind"
+                                    ],
+                                    "label": [
+                                      "object/get",
+                                      "@n",
+                                      "label"
+                                    ],
+                                    "radius": [
+                                      "if",
+                                      [
+                                        "==",
+                                        [
+                                          "object/get",
+                                          "@n",
+                                          "id"
+                                        ],
+                                        "@entity.selectedId"
+                                      ],
+                                      [
+                                        "*",
+                                        [
+                                          "object/get",
+                                          "@n",
+                                          "radius"
+                                        ],
+                                        1.4
+                                      ],
+                                      [
+                                        "object/get",
+                                        "@n",
+                                        "radius"
+                                      ]
+                                    ],
+                                    "x": [
+                                      "object/get",
+                                      "@n",
+                                      "x"
+                                    ],
+                                    "y": [
+                                      "object/get",
+                                      "@n",
+                                      "y"
+                                    ]
+                                  }
+                                ]
+                              ],
+                              "shapes": [
+                                {
+                                  "color": "#f59e0b",
+                                  "lineWidth": 4.0,
+                                  "radius": [
+                                    "+",
+                                    [
+                                      "object/get",
+                                      [
+                                        "array/nth",
+                                        "@entity.organelles",
+                                        "@entity.selectedIndex"
+                                      ],
+                                      "radius"
+                                    ],
+                                    10.0
+                                  ],
+                                  "type": "circle",
+                                  "x": [
+                                    "object/get",
+                                    [
+                                      "array/nth",
+                                      "@entity.organelles",
+                                      "@entity.selectedIndex"
+                                    ],
+                                    "x"
+                                  ],
+                                  "y": [
+                                    "object/get",
+                                    [
+                                      "array/nth",
+                                      "@entity.organelles",
+                                      "@entity.selectedIndex"
+                                    ],
+                                    "y"
+                                  ]
+                                }
+                              ],
+                              "type": "biology-canvas",
+                              "width": "@config.width"
+                            },
+                            {
+                              "content": "@entity.narration",
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Explored ",
+                                [
+                                  "str/concat",
+                                  "",
+                                  [
+                                    "array/len",
+                                    "@entity.visitedIds"
+                                  ]
+                                ],
+                                " of ",
+                                [
+                                  "str/concat",
+                                  "",
+                                  [
+                                    "array/len",
+                                    "@entity.organelles"
+                                  ]
+                                ],
+                                [
+                                  "if",
+                                  "@entity.tourComplete",
+                                  " — tour complete!",
+                                  ""
+                                ]
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "CELL_SELECTED",
+                    {
+                      "id": "@entity.selectedId",
+                      "label": [
+                        "object/get",
+                        [
+                          "array/nth",
+                          "@entity.organelles",
+                          "@entity.selectedIndex"
+                        ],
+                        "label"
+                      ],
+                      "role": [
+                        "object/get",
+                        [
+                          "array/nth",
+                          "@entity.organelles",
+                          "@entity.selectedIndex"
+                        ],
+                        "role"
+                      ],
+                      "tourComplete": "@entity.tourComplete"
+                    }
+                  ]
+                ],
+                "event": "PREV",
+                "eventId": "evt_01M04B0Y6VSWES5RFV5CCWY99X",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.selectedIndex",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.selectedId",
+                    [
+                      "object/get",
+                      [
+                        "array/nth",
+                        "@entity.organelles",
+                        0.0
+                      ],
+                      "id"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.visitedIds",
+                    [
+                      [
+                        "object/get",
+                        [
+                          "array/nth",
+                          "@entity.organelles",
+                          0.0
+                        ],
+                        "id"
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.tourComplete",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.narration",
+                    [
+                      "str/concat",
+                      [
+                        "object/get",
+                        [
+                          "array/nth",
+                          "@entity.organelles",
+                          0.0
+                        ],
+                        "label"
+                      ],
+                      " — ",
+                      [
+                        "object/get",
+                        [
+                          "array/nth",
+                          "@entity.organelles",
+                          0.0
+                        ],
+                        "role"
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "PREV",
+                                  "label": "Prev",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "NEXT",
+                                  "label": "Next",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "backgroundColor": "@config.backgroundColor",
+                              "edges": "@entity.edges",
+                              "height": "@config.height",
+                              "nodes": [
+                                "array/map",
+                                "@entity.organelles",
+                                [
+                                  "fn",
+                                  "n",
+                                  {
+                                    "color": [
+                                      "object/get",
+                                      "@n",
+                                      "color"
+                                    ],
+                                    "id": [
+                                      "object/get",
+                                      "@n",
+                                      "id"
+                                    ],
+                                    "kind": [
+                                      "object/get",
+                                      "@n",
+                                      "kind"
+                                    ],
+                                    "label": [
+                                      "object/get",
+                                      "@n",
+                                      "label"
+                                    ],
+                                    "radius": [
+                                      "if",
+                                      [
+                                        "==",
+                                        [
+                                          "object/get",
+                                          "@n",
+                                          "id"
+                                        ],
+                                        "@entity.selectedId"
+                                      ],
+                                      [
+                                        "*",
+                                        [
+                                          "object/get",
+                                          "@n",
+                                          "radius"
+                                        ],
+                                        1.4
+                                      ],
+                                      [
+                                        "object/get",
+                                        "@n",
+                                        "radius"
+                                      ]
+                                    ],
+                                    "x": [
+                                      "object/get",
+                                      "@n",
+                                      "x"
+                                    ],
+                                    "y": [
+                                      "object/get",
+                                      "@n",
+                                      "y"
+                                    ]
+                                  }
+                                ]
+                              ],
+                              "shapes": [
+                                {
+                                  "color": "#f59e0b",
+                                  "lineWidth": 4.0,
+                                  "radius": [
+                                    "+",
+                                    [
+                                      "object/get",
+                                      [
+                                        "array/nth",
+                                        "@entity.organelles",
+                                        "@entity.selectedIndex"
+                                      ],
+                                      "radius"
+                                    ],
+                                    10.0
+                                  ],
+                                  "type": "circle",
+                                  "x": [
+                                    "object/get",
+                                    [
+                                      "array/nth",
+                                      "@entity.organelles",
+                                      "@entity.selectedIndex"
+                                    ],
+                                    "x"
+                                  ],
+                                  "y": [
+                                    "object/get",
+                                    [
+                                      "array/nth",
+                                      "@entity.organelles",
+                                      "@entity.selectedIndex"
+                                    ],
+                                    "y"
+                                  ]
+                                }
+                              ],
+                              "type": "biology-canvas",
+                              "width": "@config.width"
+                            },
+                            {
+                              "content": "@entity.narration",
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Explored ",
+                                [
+                                  "str/concat",
+                                  "",
+                                  [
+                                    "array/len",
+                                    "@entity.visitedIds"
+                                  ]
+                                ],
+                                " of ",
+                                [
+                                  "str/concat",
+                                  "",
+                                  [
+                                    "array/len",
+                                    "@entity.organelles"
+                                  ]
+                                ],
+                                [
+                                  "if",
+                                  "@entity.tourComplete",
+                                  " — tour complete!",
+                                  ""
+                                ]
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "CELL_SELECTED",
+                    {
+                      "id": "@entity.selectedId",
+                      "label": [
+                        "object/get",
+                        [
+                          "array/nth",
+                          "@entity.organelles",
+                          0.0
+                        ],
+                        "label"
+                      ],
+                      "role": [
+                        "object/get",
+                        [
+                          "array/nth",
+                          "@entity.organelles",
+                          0.0
+                        ],
+                        "role"
+                      ],
+                      "tourComplete": false
+                    }
+                  ]
+                ],
+                "event": "RESET",
+                "eventId": "evt_01M04B0Y6VA8DK3WZZDDPA6G5B",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              }
+            ]
+          }
         }
       ]
     }

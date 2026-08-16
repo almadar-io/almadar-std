@@ -1,0 +1,425 @@
+app std-econ-monopoly "1.0.0"
+"Monopoly pricing engine — demand, marginal-revenue, marginal-cost and average-total-cost curves on a math-canvas; the learner sets output with a slider and sees the profit box, the deadweight-loss triangle versus the competitive benchmark (toggleable), and the markup over marginal cost. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital EconMonopolyOrbital {
+  type EconMonopolySample = {
+    x : number!
+    y : number!
+  }
+  type EconMonopolyCurve = {
+    label : string
+    color : string
+    samples : [EconMonopolySample]!
+  }
+  type EconMonopolyMarker = {
+    x : number!
+    y : number!
+    label : string
+    color : string
+    radius : number
+  }
+
+  entity EconMonopolyScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    quantity : number
+    price : number
+    marginalRevenue : number
+    marginalCost : number
+    averageTotalCost : number
+    profit : number
+    deadweightLoss : number
+    markup : number
+    monopolyQuantity : number
+    competitiveQuantity : number
+    competitivePrice : number
+    showBenchmark : boolean = false
+    curves : [EconMonopolyCurve]
+    points : [EconMonopolyMarker]
+  }
+
+  trait EconMonopolySim -> @rebindable EconMonopolyScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.showBenchmark false)
+        (let (
+            (qm (/ (- @config.demandIntercept @config.mcIntercept) (+ (* 2 @config.demandSlope) @config.mcSlope)))
+            (qc (/ (- @config.demandIntercept @config.mcIntercept) (+ @config.demandSlope @config.mcSlope)))
+            (pc (- @config.demandIntercept (* @config.demandSlope @qc)))
+            (q (math/max 0.5 (/ @qc 2)))
+            (p (- @config.demandIntercept (* @config.demandSlope @q)))
+            (mr (- @config.demandIntercept (* 2 @config.demandSlope @q)))
+            (mc (+ @config.mcIntercept (* @config.mcSlope @q)))
+            (atc (+ (/ @config.fixedCost @q) @config.mcIntercept (/ (* @config.mcSlope @q) 2)))
+            (profitVal (* (- @p @atc) @q))
+            (dwl (* 0.5 (math/max 0 (- @qc @q)) (math/max 0 (- @p @mc))))
+            (markupVal (- @p @mc))
+            (demandZeroQ (math/min @config.maxQuantity (/ @config.demandIntercept @config.demandSlope)))
+            (demandZeroP (math/max 0 (- @config.demandIntercept (* @config.demandSlope @demandZeroQ))))
+            (mrZeroQ (math/min @config.maxQuantity (/ @config.demandIntercept (* 2 @config.demandSlope))))
+            (mrZeroP (math/max 0 (- @config.demandIntercept (* 2 @config.demandSlope @mrZeroQ))))
+            (mcEndP (+ @config.mcIntercept (* @config.mcSlope @config.maxQuantity)))
+            (atcStart (+ (/ @config.fixedCost 0.5) @config.mcIntercept (/ (* @config.mcSlope 0.5) 2)))
+            (atcEnd (+ (/ @config.fixedCost @config.maxQuantity) @config.mcIntercept (/ (* @config.mcSlope @config.maxQuantity) 2)))
+            (profitRect { label: "Profit", color: @config.profitColor, samples: [ { x: 0, y: @atc }, { x: @q, y: @atc }, { x: @q, y: @p }, { x: 0, y: @p }, { x: 0, y: @atc } ] })
+            (dwlTri { label: "Deadweight Loss", color: @config.dwlColor, samples: [ { x: @q, y: @p }, { x: @q, y: @mc }, { x: @qc, y: @pc }, { x: @q, y: @p } ] })
+            (benchLine { label: "Competitive Price", color: @config.benchmarkColor, samples: [ { x: 0, y: @pc }, { x: @config.maxQuantity, y: @pc } ] })
+            (baseCurves [
+                { label: "Demand", color: @config.demandColor, samples: [ { x: 0, y: @config.demandIntercept }, { x: @demandZeroQ, y: @demandZeroP } ] },
+                { label: "MR", color: @config.mrColor, samples: [ { x: 0, y: @config.demandIntercept }, { x: @mrZeroQ, y: @mrZeroP } ] },
+                { label: "MC", color: @config.mcColor, samples: [ { x: 0, y: @config.mcIntercept }, { x: @config.maxQuantity, y: @mcEndP } ] },
+                { label: "ATC", color: @config.atcColor, samples: [ { x: 0.5, y: @atcStart }, { x: @config.maxQuantity, y: @atcEnd } ] }
+              ])
+            (newCurves (if @entity.showBenchmark [ (array/nth @baseCurves 0), (array/nth @baseCurves 1), (array/nth @baseCurves 2), (array/nth @baseCurves 3), @profitRect, @dwlTri, @benchLine ] [ (array/nth @baseCurves 0), (array/nth @baseCurves 1), (array/nth @baseCurves 2), (array/nth @baseCurves 3), @profitRect, @dwlTri ]))
+            (basePoints [
+                { x: @q, y: @p, label: "Your Output", color: @config.demandColor, radius: 6 },
+                { x: @q, y: @mc, label: "MC", color: @config.mcColor, radius: 5 },
+                { x: @qm, y: (- @config.demandIntercept (* 2 @config.demandSlope @qm)), label: "MR = MC", color: @config.mrColor, radius: 5 }
+              ])
+            (newPoints (if @entity.showBenchmark [ (array/nth @basePoints 0), (array/nth @basePoints 1), (array/nth @basePoints 2), { x: @qc, y: @pc, label: "Competitive", color: @config.benchmarkColor, radius: 6 } ] @basePoints))
+          )
+          (do
+            (set @entity.quantity @q)
+            (set @entity.price @p)
+            (set @entity.marginalRevenue @mr)
+            (set @entity.marginalCost @mc)
+            (set @entity.averageTotalCost @atc)
+            (set @entity.profit @profitVal)
+            (set @entity.deadweightLoss @dwl)
+            (set @entity.markup @markupVal)
+            (set @entity.monopolyQuantity @qm)
+            (set @entity.competitiveQuantity @qc)
+            (set @entity.competitivePrice @pc)
+            (set @entity.curves @newCurves)
+            (set @entity.points @newPoints)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: TOGGLE_COMPETITIVE_BENCHMARK, label: (if @entity.showBenchmark "Hide Competitive Benchmark" "Show Competitive Benchmark"), variant: secondary, size: sm }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.maxQuantity, yMin: 0, yMax: @config.maxPrice, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat "Your output: " (math/round @entity.quantity 2) " units (profit-max " (math/round @entity.monopolyQuantity 2) ")") },
+                    { type: range-slider, min: 1, max: @config.maxQuantity, step: @config.quantityStep, value: @entity.quantity, showTooltip: true, onChange: SET_QUANTITY }
+                  ] },
+                { type: divider },
+                { type: typography, variant: body, content: (str/concat "Price $" (math/round @entity.price 2) " — ATC $" (math/round @entity.averageTotalCost 2) " — profit $" (math/round @entity.profit 2)) },
+                { type: typography, variant: body, content: (str/concat "Markup over MC $" (math/round @entity.markup 2) " — deadweight loss $" (math/round @entity.deadweightLoss 2) " vs competitive Q " (math/round @entity.competitiveQuantity 2) " at $" (math/round @entity.competitivePrice 2)) },
+                { type: alert, variant: (if (> @entity.profit 0.0001) "success" (if (< @entity.profit -0.0001) "error" "warning")), message: (if (> @entity.profit 0.0001) (str/concat "Positive economic profit of $" (math/round @entity.profit 2) " — the green box is (price − ATC) × quantity.") (if (< @entity.profit -0.0001) (str/concat "A loss of $" (math/round (math/abs @entity.profit) 2) " — price is below average total cost at this output.") "Breaking even — price equals average total cost.")) }
+              ] }
+          ]
+        })
+        (emit MONOPOLY_UPDATED { quantity: @entity.quantity, price: @entity.price, profit: @entity.profit, deadweightLoss: @entity.deadweightLoss, markup: @entity.markup, showBenchmark: @entity.showBenchmark })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.showBenchmark false)
+        (let (
+            (qm (/ (- @config.demandIntercept @config.mcIntercept) (+ (* 2 @config.demandSlope) @config.mcSlope)))
+            (qc (/ (- @config.demandIntercept @config.mcIntercept) (+ @config.demandSlope @config.mcSlope)))
+            (pc (- @config.demandIntercept (* @config.demandSlope @qc)))
+            (q (math/max 0.5 (/ @qc 2)))
+            (p (- @config.demandIntercept (* @config.demandSlope @q)))
+            (mr (- @config.demandIntercept (* 2 @config.demandSlope @q)))
+            (mc (+ @config.mcIntercept (* @config.mcSlope @q)))
+            (atc (+ (/ @config.fixedCost @q) @config.mcIntercept (/ (* @config.mcSlope @q) 2)))
+            (profitVal (* (- @p @atc) @q))
+            (dwl (* 0.5 (math/max 0 (- @qc @q)) (math/max 0 (- @p @mc))))
+            (markupVal (- @p @mc))
+            (demandZeroQ (math/min @config.maxQuantity (/ @config.demandIntercept @config.demandSlope)))
+            (demandZeroP (math/max 0 (- @config.demandIntercept (* @config.demandSlope @demandZeroQ))))
+            (mrZeroQ (math/min @config.maxQuantity (/ @config.demandIntercept (* 2 @config.demandSlope))))
+            (mrZeroP (math/max 0 (- @config.demandIntercept (* 2 @config.demandSlope @mrZeroQ))))
+            (mcEndP (+ @config.mcIntercept (* @config.mcSlope @config.maxQuantity)))
+            (atcStart (+ (/ @config.fixedCost 0.5) @config.mcIntercept (/ (* @config.mcSlope 0.5) 2)))
+            (atcEnd (+ (/ @config.fixedCost @config.maxQuantity) @config.mcIntercept (/ (* @config.mcSlope @config.maxQuantity) 2)))
+            (profitRect { label: "Profit", color: @config.profitColor, samples: [ { x: 0, y: @atc }, { x: @q, y: @atc }, { x: @q, y: @p }, { x: 0, y: @p }, { x: 0, y: @atc } ] })
+            (dwlTri { label: "Deadweight Loss", color: @config.dwlColor, samples: [ { x: @q, y: @p }, { x: @q, y: @mc }, { x: @qc, y: @pc }, { x: @q, y: @p } ] })
+            (benchLine { label: "Competitive Price", color: @config.benchmarkColor, samples: [ { x: 0, y: @pc }, { x: @config.maxQuantity, y: @pc } ] })
+            (baseCurves [
+                { label: "Demand", color: @config.demandColor, samples: [ { x: 0, y: @config.demandIntercept }, { x: @demandZeroQ, y: @demandZeroP } ] },
+                { label: "MR", color: @config.mrColor, samples: [ { x: 0, y: @config.demandIntercept }, { x: @mrZeroQ, y: @mrZeroP } ] },
+                { label: "MC", color: @config.mcColor, samples: [ { x: 0, y: @config.mcIntercept }, { x: @config.maxQuantity, y: @mcEndP } ] },
+                { label: "ATC", color: @config.atcColor, samples: [ { x: 0.5, y: @atcStart }, { x: @config.maxQuantity, y: @atcEnd } ] }
+              ])
+            (newCurves (if @entity.showBenchmark [ (array/nth @baseCurves 0), (array/nth @baseCurves 1), (array/nth @baseCurves 2), (array/nth @baseCurves 3), @profitRect, @dwlTri, @benchLine ] [ (array/nth @baseCurves 0), (array/nth @baseCurves 1), (array/nth @baseCurves 2), (array/nth @baseCurves 3), @profitRect, @dwlTri ]))
+            (basePoints [
+                { x: @q, y: @p, label: "Your Output", color: @config.demandColor, radius: 6 },
+                { x: @q, y: @mc, label: "MC", color: @config.mcColor, radius: 5 },
+                { x: @qm, y: (- @config.demandIntercept (* 2 @config.demandSlope @qm)), label: "MR = MC", color: @config.mrColor, radius: 5 }
+              ])
+            (newPoints (if @entity.showBenchmark [ (array/nth @basePoints 0), (array/nth @basePoints 1), (array/nth @basePoints 2), { x: @qc, y: @pc, label: "Competitive", color: @config.benchmarkColor, radius: 6 } ] @basePoints))
+          )
+          (do
+            (set @entity.quantity @q)
+            (set @entity.price @p)
+            (set @entity.marginalRevenue @mr)
+            (set @entity.marginalCost @mc)
+            (set @entity.averageTotalCost @atc)
+            (set @entity.profit @profitVal)
+            (set @entity.deadweightLoss @dwl)
+            (set @entity.markup @markupVal)
+            (set @entity.monopolyQuantity @qm)
+            (set @entity.competitiveQuantity @qc)
+            (set @entity.competitivePrice @pc)
+            (set @entity.curves @newCurves)
+            (set @entity.points @newPoints)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: TOGGLE_COMPETITIVE_BENCHMARK, label: (if @entity.showBenchmark "Hide Competitive Benchmark" "Show Competitive Benchmark"), variant: secondary, size: sm }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.maxQuantity, yMin: 0, yMax: @config.maxPrice, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat "Your output: " (math/round @entity.quantity 2) " units (profit-max " (math/round @entity.monopolyQuantity 2) ")") },
+                    { type: range-slider, min: 1, max: @config.maxQuantity, step: @config.quantityStep, value: @entity.quantity, showTooltip: true, onChange: SET_QUANTITY }
+                  ] },
+                { type: divider },
+                { type: typography, variant: body, content: (str/concat "Price $" (math/round @entity.price 2) " — ATC $" (math/round @entity.averageTotalCost 2) " — profit $" (math/round @entity.profit 2)) },
+                { type: typography, variant: body, content: (str/concat "Markup over MC $" (math/round @entity.markup 2) " — deadweight loss $" (math/round @entity.deadweightLoss 2) " vs competitive Q " (math/round @entity.competitiveQuantity 2) " at $" (math/round @entity.competitivePrice 2)) },
+                { type: alert, variant: (if (> @entity.profit 0.0001) "success" (if (< @entity.profit -0.0001) "error" "warning")), message: (if (> @entity.profit 0.0001) (str/concat "Positive economic profit of $" (math/round @entity.profit 2) " — the green box is (price − ATC) × quantity.") (if (< @entity.profit -0.0001) (str/concat "A loss of $" (math/round (math/abs @entity.profit) 2) " — price is below average total cost at this output.") "Breaking even — price equals average total cost.")) }
+              ] }
+          ]
+        })
+        (emit MONOPOLY_UPDATED { quantity: @entity.quantity, price: @entity.price, profit: @entity.profit, deadweightLoss: @entity.deadweightLoss, markup: @entity.markup, showBenchmark: @entity.showBenchmark })
+
+      SET_QUANTITY -> idle when (== @entity.active true)
+        (let (
+            (q (math/max 0.5 (math/clamp ?value 0 @config.maxQuantity)))
+            (p (- @config.demandIntercept (* @config.demandSlope @q)))
+            (mr (- @config.demandIntercept (* 2 @config.demandSlope @q)))
+            (mc (+ @config.mcIntercept (* @config.mcSlope @q)))
+            (atc (+ (/ @config.fixedCost @q) @config.mcIntercept (/ (* @config.mcSlope @q) 2)))
+            (profitVal (* (- @p @atc) @q))
+            (dwl (* 0.5 (math/max 0 (- @entity.competitiveQuantity @q)) (math/max 0 (- @p @mc))))
+            (markupVal (- @p @mc))
+            (profitRect { label: "Profit", color: @config.profitColor, samples: [ { x: 0, y: @atc }, { x: @q, y: @atc }, { x: @q, y: @p }, { x: 0, y: @p }, { x: 0, y: @atc } ] })
+            (dwlTri { label: "Deadweight Loss", color: @config.dwlColor, samples: [ { x: @q, y: @p }, { x: @q, y: @mc }, { x: @entity.competitiveQuantity, y: @entity.competitivePrice }, { x: @q, y: @p } ] })
+            (benchLine { label: "Competitive Price", color: @config.benchmarkColor, samples: [ { x: 0, y: @entity.competitivePrice }, { x: @config.maxQuantity, y: @entity.competitivePrice } ] })
+            (baseCurves [
+                (array/nth @entity.curves 0),
+                (array/nth @entity.curves 1),
+                (array/nth @entity.curves 2),
+                (array/nth @entity.curves 3)
+              ])
+            (newCurves (if @entity.showBenchmark [ (array/nth @baseCurves 0), (array/nth @baseCurves 1), (array/nth @baseCurves 2), (array/nth @baseCurves 3), @profitRect, @dwlTri, @benchLine ] [ (array/nth @baseCurves 0), (array/nth @baseCurves 1), (array/nth @baseCurves 2), (array/nth @baseCurves 3), @profitRect, @dwlTri ]))
+            (basePoints [
+                { x: @q, y: @p, label: "Your Output", color: @config.demandColor, radius: 6 },
+                { x: @q, y: @mc, label: "MC", color: @config.mcColor, radius: 5 },
+                (array/nth @entity.points 2)
+              ])
+            (newPoints (if @entity.showBenchmark [ (array/nth @basePoints 0), (array/nth @basePoints 1), (array/nth @basePoints 2), { x: @entity.competitiveQuantity, y: @entity.competitivePrice, label: "Competitive", color: @config.benchmarkColor, radius: 6 } ] @basePoints))
+          )
+          (do
+            (set @entity.quantity @q)
+            (set @entity.price @p)
+            (set @entity.marginalRevenue @mr)
+            (set @entity.marginalCost @mc)
+            (set @entity.averageTotalCost @atc)
+            (set @entity.profit @profitVal)
+            (set @entity.deadweightLoss @dwl)
+            (set @entity.markup @markupVal)
+            (set @entity.curves @newCurves)
+            (set @entity.points @newPoints)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: TOGGLE_COMPETITIVE_BENCHMARK, label: (if @entity.showBenchmark "Hide Competitive Benchmark" "Show Competitive Benchmark"), variant: secondary, size: sm }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.maxQuantity, yMin: 0, yMax: @config.maxPrice, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat "Your output: " (math/round @entity.quantity 2) " units (profit-max " (math/round @entity.monopolyQuantity 2) ")") },
+                    { type: range-slider, min: 1, max: @config.maxQuantity, step: @config.quantityStep, value: @entity.quantity, showTooltip: true, onChange: SET_QUANTITY }
+                  ] },
+                { type: divider },
+                { type: typography, variant: body, content: (str/concat "Price $" (math/round @entity.price 2) " — ATC $" (math/round @entity.averageTotalCost 2) " — profit $" (math/round @entity.profit 2)) },
+                { type: typography, variant: body, content: (str/concat "Markup over MC $" (math/round @entity.markup 2) " — deadweight loss $" (math/round @entity.deadweightLoss 2) " vs competitive Q " (math/round @entity.competitiveQuantity 2) " at $" (math/round @entity.competitivePrice 2)) },
+                { type: alert, variant: (if (> @entity.profit 0.0001) "success" (if (< @entity.profit -0.0001) "error" "warning")), message: (if (> @entity.profit 0.0001) (str/concat "Positive economic profit of $" (math/round @entity.profit 2) " — the green box is (price − ATC) × quantity.") (if (< @entity.profit -0.0001) (str/concat "A loss of $" (math/round (math/abs @entity.profit) 2) " — price is below average total cost at this output.") "Breaking even — price equals average total cost.")) }
+              ] }
+          ]
+        })
+        (emit MONOPOLY_UPDATED { quantity: @entity.quantity, price: @entity.price, profit: @entity.profit, deadweightLoss: @entity.deadweightLoss, markup: @entity.markup, showBenchmark: @entity.showBenchmark })
+
+      TOGGLE_COMPETITIVE_BENCHMARK -> idle when (== @entity.active true)
+        (let (
+            (newShow (if @entity.showBenchmark false true))
+            (benchLine { label: "Competitive Price", color: @config.benchmarkColor, samples: [ { x: 0, y: @entity.competitivePrice }, { x: @config.maxQuantity, y: @entity.competitivePrice } ] })
+            (newCurves (if @newShow [ (array/nth @entity.curves 0), (array/nth @entity.curves 1), (array/nth @entity.curves 2), (array/nth @entity.curves 3), (array/nth @entity.curves 4), (array/nth @entity.curves 5), @benchLine ] [ (array/nth @entity.curves 0), (array/nth @entity.curves 1), (array/nth @entity.curves 2), (array/nth @entity.curves 3), (array/nth @entity.curves 4), (array/nth @entity.curves 5) ]))
+            (newPoints (if @newShow [ (array/nth @entity.points 0), (array/nth @entity.points 1), (array/nth @entity.points 2), { x: @entity.competitiveQuantity, y: @entity.competitivePrice, label: "Competitive", color: @config.benchmarkColor, radius: 6 } ] [ (array/nth @entity.points 0), (array/nth @entity.points 1), (array/nth @entity.points 2) ]))
+          )
+          (do
+            (set @entity.showBenchmark @newShow)
+            (set @entity.curves @newCurves)
+            (set @entity.points @newPoints)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: TOGGLE_COMPETITIVE_BENCHMARK, label: (if @entity.showBenchmark "Hide Competitive Benchmark" "Show Competitive Benchmark"), variant: secondary, size: sm }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.maxQuantity, yMin: 0, yMax: @config.maxPrice, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat "Your output: " (math/round @entity.quantity 2) " units (profit-max " (math/round @entity.monopolyQuantity 2) ")") },
+                    { type: range-slider, min: 1, max: @config.maxQuantity, step: @config.quantityStep, value: @entity.quantity, showTooltip: true, onChange: SET_QUANTITY }
+                  ] },
+                { type: divider },
+                { type: typography, variant: body, content: (str/concat "Price $" (math/round @entity.price 2) " — ATC $" (math/round @entity.averageTotalCost 2) " — profit $" (math/round @entity.profit 2)) },
+                { type: typography, variant: body, content: (str/concat "Markup over MC $" (math/round @entity.markup 2) " — deadweight loss $" (math/round @entity.deadweightLoss 2) " vs competitive Q " (math/round @entity.competitiveQuantity 2) " at $" (math/round @entity.competitivePrice 2)) },
+                { type: alert, variant: (if (> @entity.profit 0.0001) "success" (if (< @entity.profit -0.0001) "error" "warning")), message: (if (> @entity.profit 0.0001) (str/concat "Positive economic profit of $" (math/round @entity.profit 2) " — the green box is (price − ATC) × quantity.") (if (< @entity.profit -0.0001) (str/concat "A loss of $" (math/round (math/abs @entity.profit) 2) " — price is below average total cost at this output.") "Breaking even — price equals average total cost.")) }
+              ] }
+          ]
+        })
+        (emit MONOPOLY_UPDATED { quantity: @entity.quantity, price: @entity.price, profit: @entity.profit, deadweightLoss: @entity.deadweightLoss, markup: @entity.markup, showBenchmark: @entity.showBenchmark })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      SET_QUANTITY {
+        value : number
+      }
+        @description "Learner dragged the output slider to set the monopolist's quantity."
+        @tier "domain"
+      TOGGLE_COMPETITIVE_BENCHMARK {
+      }
+        @description "Learner toggled the competitive-benchmark overlay (competitive price line and equilibrium marker)."
+        @tier "domain"
+    }
+
+    emits {
+      MONOPOLY_UPDATED -> external {
+        quantity : number
+        price : number
+        profit : number
+        deadweightLoss : number
+        markup : number
+        showBenchmark : boolean
+      }
+        @description "The monopoly state after each learner action — a composed listener (readout, chart, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "monopoly, market power, monopoly pricing, deadweight loss, markup, marginal revenue, profit maximization, MR equals MC"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Monopoly Pricing"
+        @label "Title"
+        @description "Title shown above the canvas."
+        @tier "presentation"
+      width : number = 640
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 440
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      gridStep : number = 10
+        @label "Grid Step"
+        @description "Spacing between gridlines on the canvas, in data units (quantity/price)."
+        @tier "presentation"
+      interactive : boolean = false
+        @label "Interactive"
+        @description "Enable pointer interaction on the canvas."
+        @tier "presentation"
+      animate : boolean = false
+        @label "Animate"
+        @description "Enable continuous redraw loop."
+        @tier "presentation"
+      demandIntercept : number = 100
+        @label "Demand Intercept"
+        @description "Choke price — the price at which quantity demanded falls to zero (P = intercept − slope × Q); also the MR curve's intercept."
+        @synonyms "demand, choke price, maximum willingness to pay, demand curve intercept, inverse demand"
+        @tier "domain"
+      demandSlope : number = 1
+        @label "Demand Slope"
+        @description "How much price falls for each additional unit sold; the MR curve falls twice as fast."
+        @synonyms "demand slope, marginal revenue slope, price sensitivity"
+        @tier "domain"
+      mcIntercept : number = 10
+        @label "MC Intercept"
+        @description "Marginal cost of the first unit (MC = intercept + slope × Q); the MC curve's vertical intercept."
+        @synonyms "marginal cost, MC, cost of the first unit"
+        @tier "domain"
+      mcSlope : number = 1
+        @label "MC Slope"
+        @description "How much marginal cost rises per additional unit produced."
+        @synonyms "marginal cost slope, diminishing returns, rising marginal cost"
+        @tier "domain"
+      fixedCost : number = 200
+        @label "Fixed Cost"
+        @description "Total fixed cost; enters average total cost as fixedCost / Q and pulls ATC up at low output."
+        @synonyms "fixed cost, overhead, total fixed cost, ATC"
+        @tier "domain"
+      quantityStep : number = 1
+        @label "Quantity Step"
+        @description "Slider increment for the output control."
+        @tier "presentation"
+      maxQuantity : number = 90
+        @label "Max Quantity (axis)"
+        @description "Right edge of the quantity axis, and the output slider's maximum, in units."
+        @tier "presentation"
+      maxPrice : number = 100
+        @label "Max Price (axis)"
+        @description "Top edge of the price axis, in currency units."
+        @tier "presentation"
+      demandColor : string = "#dc2626"
+        @label "Demand Curve Color"
+        @tier "presentation"
+      mrColor : string = "#f59e0b"
+        @label "MR Curve Color"
+        @tier "presentation"
+      mcColor : string = "#2563eb"
+        @label "MC Curve Color"
+        @tier "presentation"
+      atcColor : string = "#64748b"
+        @label "ATC Curve Color"
+        @tier "presentation"
+      profitColor : string = "#16a34a"
+        @label "Profit Box Color"
+        @tier "presentation"
+      dwlColor : string = "#9333ea"
+        @label "Deadweight Loss Color"
+        @tier "presentation"
+      benchmarkColor : string = "#0891b2"
+        @label "Benchmark Color"
+        @tier "presentation"
+    }
+  }
+
+  page "/econ-monopoly" as EconMonopolyPage -> EconMonopolySim
+}

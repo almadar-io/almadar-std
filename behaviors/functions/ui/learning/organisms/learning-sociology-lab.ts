@@ -50,7 +50,7 @@ export interface StdLearningSociologyLabConfig {
   mode?: 'stratification' | 'imagination';
 }
 
-type _StdLearningSociologyLabEntityName = 'SociologyLabItem' | 'StratificationScene' | 'ImaginationScene';
+type _StdLearningSociologyLabEntityName = 'SociologyLabItem' | 'StratificationScene' | 'ImaginationScene' | 'SocStratScene' | 'SocImaginationScene';
 type _StdLearningSociologyLabListenTraitName = 'SociologyLabRouter' | 'StratificationSim' | 'ImaginationSim';
 
 /**

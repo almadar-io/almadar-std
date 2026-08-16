@@ -45,7 +45,7 @@ export interface StdLearningProbabilityConfig {
   width?: unknown;
 }
 
-type _StdLearningProbabilityEntityName = 'GaltonScene' | 'WalkScene' | 'MonteCarloScene';
+type _StdLearningProbabilityEntityName = 'GaltonScene' | 'GaltonState' | 'WalkScene' | 'WalkState' | 'MonteCarloScene' | 'MonteCarloState';
 type _StdLearningProbabilityListenTraitName = 'GaltonEngine' | 'WalkEngine' | 'MonteCarloEngine';
 
 /**

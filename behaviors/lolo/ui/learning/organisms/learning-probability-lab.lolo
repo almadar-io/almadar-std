@@ -1,9 +1,13 @@
 app learning-probability-lab "1.0.0"
-"Probability lab organism — dice, coin-flip, and general distribution/histogram displays (all a declarative math-canvas plotter driven by config data), an animated random-walk display (converged onto the existing std-prob-walk tick-based integrator), and an interactive Bayes' theorem simulator with a population-grid visualization and evidence trials — composed from the std-prob-trials, std-prob-walk, and std-prob-bayes instrument atoms behind a mode router."
+"Probability lab organism — dice, coin-flip, and general distribution/histogram displays (all a declarative math-canvas plotter driven by config data), an animated random-walk display (converged onto the existing std-prob-walk tick-based integrator), an interactive Bayes' theorem simulator with a population-grid visualization and evidence trials, a Central Limit Theorem sampling engine with a growing means-histogram, a binomial trial accumulator converging to the theoretical PMF, a least-squares regression explorer with live r/R², and a confidence-interval capture display — composed from the std-prob-trials, std-prob-walk, std-prob-bayes, std-prob-clt, std-prob-binomial, std-prob-regression, and std-prob-confidence instrument atoms behind a mode router."
 orbital ProbabilityLabOrbital {
   uses ProbTrials from "std/behaviors/std-prob-trials"
   uses ProbWalk from "std/behaviors/std-prob-walk"
   uses ProbBayes from "std/behaviors/std-prob-bayes"
+  uses ProbClt from "std/behaviors/std-prob-clt"
+  uses ProbBinomial from "std/behaviors/std-prob-binomial"
+  uses ProbRegression from "std/behaviors/std-prob-regression"
+  uses ProbConfidence from "std/behaviors/std-prob-confidence"
 
   type ProbabilityLabPoint = {
     x : number!
@@ -47,6 +51,19 @@ orbital ProbabilityLabOrbital {
   type ProbabilityLabShapePoint = {
     x : number!
     y : number!
+  }
+  type ProbabilityLabRegPoint = {
+    id : string
+    x : number!
+    y : number!
+    label : string
+    color : string
+    radius : number
+  }
+  type ProbabilityLabInterval = {
+    lo : number!
+    hi : number!
+    captured : boolean!
   }
 
   entity ProbabilityLabItem [runtime] {
@@ -108,6 +125,57 @@ orbital ProbabilityLabOrbital {
     shapes : [ProbabilityLabShape]
   }
 
+  entity CltScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    sampleSize : number
+    means : [number]
+    drawsRun : number
+    lastSampleMean : number
+    shapes : [ProbabilityLabShape]
+  }
+
+  entity BinomialScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    biasP : number
+    counts : [number]
+    runsRun : number
+    lastHeads : number
+    shapes : [ProbabilityLabShape]
+  }
+
+  entity RegressionScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    points : [ProbabilityLabRegPoint]
+    slope : number
+    intercept : number
+    r : number
+    rSquared : number
+    guessSlope : number
+    guessIntercept : number
+    guessScore : number
+    revealed : boolean = false
+    curves : [ProbabilityLabCurve]
+    shapes : [ProbabilityLabShape]
+  }
+
+  entity ConfidenceScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    level : number
+    intervals : [ProbabilityLabInterval]
+    intervalsDrawn : number
+    captures : number
+    lastCaptured : boolean = false
+    shapes : [ProbabilityLabShape]
+  }
+
   trait ProbabilityLabRouter -> @rebindable ProbabilityLabItem [lifecycle, instance] {
     initial: idle
 
@@ -125,10 +193,10 @@ orbital ProbabilityLabOrbital {
     }
 
     config {
-      mode : "dice" | "coins" | "random-walk" | "distribution" | "bayes" = distribution
+      mode : "dice" | "coins" | "random-walk" | "distribution" | "bayes" | "clt" | "binomial" | "regression" | "confidence" = distribution
         @label "Mode"
         @description "What kind of probability or statistics visualization to render."
-        @synonyms "chance, probability, statistics, dice, coin flip, random walk, sampling, distribution, histogram, law of large numbers, expected value, bayes theorem, bayesian, conditional probability, base rate, base rate fallacy, prior probability, posterior probability, likelihood ratio, positive predictive value, false positive paradox"
+        @synonyms "chance, probability, statistics, dice, coin flip, random walk, sampling, distribution, histogram, law of large numbers, expected value, bayes theorem, bayesian, conditional probability, base rate, base rate fallacy, prior probability, posterior probability, likelihood ratio, positive predictive value, false positive paradox, central limit theorem, sampling distribution, sample mean, binomial, binomial distribution, pmf, regression, least squares, line of best fit, correlation, scatter plot, confidence interval, capture rate, interval estimate"
         @tier "domain"
     }
   }
@@ -183,5 +251,45 @@ orbital ProbabilityLabOrbital {
     }
   }
 
-  page "/learning/probability-lab" as ProbabilityLabPage -> ProbabilityLabRouter, DiceSim, CoinsSim, DistributionSim, RandomWalkSim, BayesSim
+  trait CltSim = ProbClt.traits.ProbCltSim -> CltScene {
+    listens {
+      ProbabilityLabRouter.MODE_SELECTED -> MODE_SELECTED
+    }
+    config {
+      matchMode: "clt"
+      title: "Probability Lab"
+    }
+  }
+
+  trait BinomialSim = ProbBinomial.traits.ProbBinomialSim -> BinomialScene {
+    listens {
+      ProbabilityLabRouter.MODE_SELECTED -> MODE_SELECTED
+    }
+    config {
+      matchMode: "binomial"
+      title: "Probability Lab"
+    }
+  }
+
+  trait RegressionSim = ProbRegression.traits.ProbRegressionSim -> RegressionScene {
+    listens {
+      ProbabilityLabRouter.MODE_SELECTED -> MODE_SELECTED
+    }
+    config {
+      matchMode: "regression"
+      title: "Probability Lab"
+    }
+  }
+
+  trait ConfidenceSim = ProbConfidence.traits.ProbConfidenceSim -> ConfidenceScene {
+    listens {
+      ProbabilityLabRouter.MODE_SELECTED -> MODE_SELECTED
+    }
+    config {
+      matchMode: "confidence"
+      title: "Probability Lab"
+    }
+  }
+
+  page "/learning/probability-lab" as ProbabilityLabPage -> ProbabilityLabRouter, DiceSim, CoinsSim, DistributionSim, RandomWalkSim, BayesSim, CltSim, BinomialSim, RegressionSim, ConfidenceSim
 }

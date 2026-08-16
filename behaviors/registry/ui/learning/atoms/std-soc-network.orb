@@ -1,0 +1,4334 @@
+{
+  "description": "Small-world network engine — a ring graph whose edges the learner rewires on and off: degree centrality is recomputed live, weak-tie bridges are highlighted, and a complex-contagion diffusion step spreads adoption through one strong tie or a pair of weak ties, on a biology-canvas. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches.",
+  "ledger": {
+    "entries": {
+      "ent_01M04DG95PP79XNC0FD5YKA5P1": {
+        "bakedName": "SocNetScene",
+        "curName": "SocNetScene",
+        "id": "ent_01M04DG95PP79XNC0FD5YKA5P1",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "evt_01M04DG95PCKNEX8CZZW5CYGBM": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01M04DG95PCKNEX8CZZW5CYGBM",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M04DG95PQ296H5SBBKMBMEJQ",
+        "renames": []
+      },
+      "evt_01M04DG95QQWG7NQ2DC89KY543": {
+        "bakedName": "TOGGLE_EDGE",
+        "curName": "TOGGLE_EDGE",
+        "id": "evt_01M04DG95QQWG7NQ2DC89KY543",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M04DG95PQ296H5SBBKMBMEJQ",
+        "renames": []
+      },
+      "evt_01M04DG95QSDDX63MHGHQP5A0E": {
+        "bakedName": "MODE_SELECTED",
+        "curName": "MODE_SELECTED",
+        "id": "evt_01M04DG95QSDDX63MHGHQP5A0E",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M04DG95PQ296H5SBBKMBMEJQ",
+        "renames": []
+      },
+      "evt_01M04DG95QSDXPB4MGG0XBM72V": {
+        "bakedName": "RUN_DIFFUSION",
+        "curName": "RUN_DIFFUSION",
+        "id": "evt_01M04DG95QSDXPB4MGG0XBM72V",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M04DG95PQ296H5SBBKMBMEJQ",
+        "renames": []
+      },
+      "evt_01M04DG95QT2WBGMT32KT863XN": {
+        "bakedName": "TOGGLE_NODE",
+        "curName": "TOGGLE_NODE",
+        "id": "evt_01M04DG95QT2WBGMT32KT863XN",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M04DG95PQ296H5SBBKMBMEJQ",
+        "renames": []
+      },
+      "evt_01M04DG95QTT09BA6DCDE39G1W": {
+        "bakedName": "RESET",
+        "curName": "RESET",
+        "id": "evt_01M04DG95QTT09BA6DCDE39G1W",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M04DG95PQ296H5SBBKMBMEJQ",
+        "renames": []
+      },
+      "evt_01M04DG95QYKF769C604N9G9SZ": {
+        "bakedName": "NETWORK_UPDATED",
+        "curName": "NETWORK_UPDATED",
+        "id": "evt_01M04DG95QYKF769C604N9G9SZ",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M04DG95PQ296H5SBBKMBMEJQ",
+        "renames": []
+      },
+      "orb_01M04DG95PQX3AV5R1Q8T4EBHG": {
+        "bakedName": "SocNetOrbital",
+        "curName": "SocNetOrbital",
+        "id": "orb_01M04DG95PQX3AV5R1Q8T4EBHG",
+        "kind": "orbital",
+        "owner": "workspace",
+        "renames": []
+      },
+      "pag_01M04DG95R5WR4PHYSTSJM88K9": {
+        "bakedName": "SocNetPage",
+        "curName": "SocNetPage",
+        "id": "pag_01M04DG95R5WR4PHYSTSJM88K9",
+        "kind": "page",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M04DG95PQ296H5SBBKMBMEJQ": {
+        "bakedName": "SocNetSim",
+        "curName": "SocNetSim",
+        "id": "trt_01M04DG95PQ296H5SBBKMBMEJQ",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      }
+    },
+    "schemaVersion": 1
+  },
+  "name": "std-soc-network",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": false,
+            "name": "active",
+            "type": "boolean"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "items": {
+              "type": "boolean"
+            },
+            "name": "nodeEnabled",
+            "type": "array"
+          },
+          {
+            "items": {
+              "type": "boolean"
+            },
+            "name": "edgeEnabled",
+            "type": "array"
+          },
+          {
+            "items": {
+              "type": "boolean"
+            },
+            "name": "adopted",
+            "type": "array"
+          },
+          {
+            "name": "adoptedCount",
+            "type": "number"
+          },
+          {
+            "name": "hubText",
+            "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "nodes",
+            "type": "array"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "from": {
+                  "name": "from",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "to": {
+                  "name": "to",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "name": "edges",
+            "type": "array"
+          }
+        ],
+        "id": "ent_01M04DG95PP79XNC0FD5YKA5P1",
+        "name": "SocNetScene",
+        "persistence": "runtime"
+      },
+      "id": "orb_01M04DG95PQX3AV5R1Q8T4EBHG",
+      "name": "SocNetOrbital",
+      "pages": [
+        {
+          "id": "pag_01M04DG95R5WR4PHYSTSJM88K9",
+          "name": "SocNetPage",
+          "path": "/soc-network",
+          "traits": [
+            {
+              "ref": "SocNetSim",
+              "refId": "trt_01M04DG95PQ296H5SBBKMBMEJQ"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "adoptedNodeColor": {
+              "default": "#dc2626",
+              "description": "Color of a node that has adopted the diffusing trait.",
+              "label": "Adopted Node Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "animate": {
+              "default": false,
+              "description": "Enable continuous redraw loop.",
+              "label": "Animate",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "backgroundColor": {
+              "default": "#f1f5f9",
+              "label": "Background Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "centralityMetric": {
+              "default": "degree",
+              "description": "Which readout the instrument emphasizes: degree centrality (the highest-degree hub) or diffusion reach (how many nodes the cascade has touched).",
+              "label": "Centrality Metric",
+              "synonyms": "centrality, degree centrality, network centrality, hub, diffusion reach",
+              "tier": "domain",
+              "type": "string",
+              "values": [
+                "degree",
+                "reach"
+              ]
+            },
+            "disabledNodeColor": {
+              "default": "#cbd5e1",
+              "description": "Color of a node the learner toggled out of the network.",
+              "label": "Disabled Node Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "edges": {
+              "default": [
+                {
+                  "from": "n0",
+                  "to": "n1"
+                },
+                {
+                  "from": "n1",
+                  "to": "n2"
+                },
+                {
+                  "from": "n2",
+                  "to": "n3"
+                },
+                {
+                  "from": "n3",
+                  "to": "n4"
+                },
+                {
+                  "from": "n4",
+                  "to": "n5"
+                },
+                {
+                  "from": "n5",
+                  "to": "n6"
+                },
+                {
+                  "from": "n6",
+                  "to": "n7"
+                },
+                {
+                  "from": "n7",
+                  "to": "n0"
+                },
+                {
+                  "from": "n0",
+                  "to": "n4"
+                },
+                {
+                  "from": "n2",
+                  "to": "n6"
+                },
+                {
+                  "from": "n1",
+                  "to": "n5"
+                }
+              ],
+              "description": "Edge list, index-aligned with Tie Strengths: eight strong ring ties followed by long-range weak-tie bridges across the ring — the small-world rewiring the learner can toggle.",
+              "items": {
+                "properties": {
+                  "from": {
+                    "name": "from",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "to": {
+                    "name": "to",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Edges",
+              "synonyms": "social network, network edges, ties, small-world network, rewiring",
+              "tier": "domain",
+              "type": "[SocNetEdgeSpec]"
+            },
+            "height": {
+              "default": 460.0,
+              "description": "Canvas height in pixels.",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "interactive": {
+              "default": false,
+              "description": "Enable pointer interaction on the canvas.",
+              "label": "Interactive",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "matchMode": {
+              "default": "",
+              "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+              "label": "Match Mode",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "nodeColor": {
+              "default": "#64748b",
+              "label": "Node Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "nodes": {
+              "default": [
+                {
+                  "color": "#64748b",
+                  "id": "n0",
+                  "label": "A",
+                  "radius": 16.0,
+                  "x": 480.0,
+                  "y": 210.0
+                },
+                {
+                  "color": "#64748b",
+                  "id": "n1",
+                  "label": "B",
+                  "radius": 16.0,
+                  "x": 433.0,
+                  "y": 323.0
+                },
+                {
+                  "color": "#64748b",
+                  "id": "n2",
+                  "label": "C",
+                  "radius": 16.0,
+                  "x": 320.0,
+                  "y": 370.0
+                },
+                {
+                  "color": "#64748b",
+                  "id": "n3",
+                  "label": "D",
+                  "radius": 16.0,
+                  "x": 207.0,
+                  "y": 323.0
+                },
+                {
+                  "color": "#64748b",
+                  "id": "n4",
+                  "label": "E",
+                  "radius": 16.0,
+                  "x": 160.0,
+                  "y": 210.0
+                },
+                {
+                  "color": "#64748b",
+                  "id": "n5",
+                  "label": "F",
+                  "radius": 16.0,
+                  "x": 207.0,
+                  "y": 97.0
+                },
+                {
+                  "color": "#64748b",
+                  "id": "n6",
+                  "label": "G",
+                  "radius": 16.0,
+                  "x": 320.0,
+                  "y": 50.0
+                },
+                {
+                  "color": "#64748b",
+                  "id": "n7",
+                  "label": "H",
+                  "radius": 16.0,
+                  "x": 433.0,
+                  "y": 97.0
+                }
+              ],
+              "description": "Network nodes laid out on a ring. Node 0 (A) starts as the adoption seed for diffusion.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "radius": {
+                    "name": "radius",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Nodes",
+              "synonyms": "social network, network nodes, actors, agents",
+              "tier": "domain",
+              "type": "[SocNetNode]"
+            },
+            "strongTieColor": {
+              "default": "#334155",
+              "label": "Strong Tie Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "tieStrengths": {
+              "default": [
+                0.9,
+                0.9,
+                0.9,
+                0.9,
+                0.9,
+                0.9,
+                0.9,
+                0.9,
+                0.2,
+                0.2,
+                0.15
+              ],
+              "description": "Strength (0-1) of each edge, index-aligned with Edges; values below the Weak Tie Threshold render as highlighted weak-tie bridges and follow the two-weak-tie contagion rule.",
+              "items": {
+                "type": "number"
+              },
+              "label": "Tie Strengths",
+              "synonyms": "weak ties, strength of weak ties, Granovetter, tie strength, bridging ties",
+              "tier": "domain",
+              "type": "[number]"
+            },
+            "title": {
+              "default": "Small-World Network",
+              "description": "Title shown above the canvas.",
+              "label": "Title",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "weakTieColor": {
+              "default": "#f59e0b",
+              "description": "Color of weak-tie edges — the bridges Granovetter argued carry novel information across clusters.",
+              "label": "Weak Tie Color",
+              "synonyms": "weak ties, strength of weak ties, Granovetter, bridging ties",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "weakTieThreshold": {
+              "default": 0.5,
+              "description": "Tie strengths below this count as weak ties: drawn in the weak-tie color and, for diffusion, only adopted through when two or more adopted weak-tie neighbors exist.",
+              "label": "Weak Tie Threshold",
+              "synonyms": "weak ties, strength of weak ties, Granovetter, tie strength",
+              "tier": "domain",
+              "type": "number"
+            },
+            "width": {
+              "default": 640.0,
+              "description": "Canvas width in pixels.",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "The network state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+              "event": "NETWORK_UPDATED",
+              "eventId": "evt_01M04DG95QYKF769C604N9G9SZ",
+              "payloadSchema": [
+                {
+                  "name": "nodeEnabled",
+                  "type": "[boolean]"
+                },
+                {
+                  "name": "edgeEnabled",
+                  "type": "[boolean]"
+                },
+                {
+                  "name": "adopted",
+                  "type": "[boolean]"
+                },
+                {
+                  "name": "adoptedCount",
+                  "type": "number"
+                },
+                {
+                  "name": "hub",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "network update, rewiring, tie toggle, diffusion cascade, centrality change, weak ties",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "active",
+              "adopted",
+              "adoptedCount",
+              "edgeEnabled",
+              "edges",
+              "hubText",
+              "nodeEnabled",
+              "nodes",
+              "title"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "entityRefIds": {
+            "SocNetScene": "ent_01M04DG95PP79XNC0FD5YKA5P1"
+          },
+          "id": "trt_01M04DG95PQ296H5SBBKMBMEJQ",
+          "linkedEntity": "SocNetScene",
+          "linkedEntityId": "ent_01M04DG95PP79XNC0FD5YKA5P1",
+          "name": "SocNetSim",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "id": "evt_01M04DG95PCKNEX8CZZW5CYGBM",
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+                "id": "evt_01M04DG95QSDDX63MHGHQP5A0E",
+                "key": "MODE_SELECTED",
+                "name": "Mode Selected",
+                "payloadSchema": [
+                  {
+                    "name": "mode",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Learner toggled a node on or off, removing it from the network (and its edges from view) or restoring it.",
+                "id": "evt_01M04DG95QT2WBGMT32KT863XN",
+                "key": "TOGGLE_NODE",
+                "name": "Toggle Node",
+                "payloadSchema": [
+                  {
+                    "name": "nodeId",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Learner rewired an edge — toggled the edge at this index in the Edges list on or off.",
+                "id": "evt_01M04DG95QQWG7NQ2DC89KY543",
+                "key": "TOGGLE_EDGE",
+                "name": "Toggle Edge",
+                "payloadSchema": [
+                  {
+                    "name": "edgeIndex",
+                    "type": "number"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Learner pressed Run Diffusion to advance the complex-contagion cascade by one step.",
+                "id": "evt_01M04DG95QSDXPB4MGG0XBM72V",
+                "key": "RUN_DIFFUSION",
+                "name": "Run Diffusion",
+                "tier": "domain"
+              },
+              {
+                "description": "Learner pressed Reset to restore the initial network and clear all adoption.",
+                "id": "evt_01M04DG95QTT09BA6DCDE39G1W",
+                "key": "RESET",
+                "name": "Reset",
+                "tier": "domain"
+              },
+              {
+                "description": "The network state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+                "id": "evt_01M04DG95QYKF769C604N9G9SZ",
+                "key": "NETWORK_UPDATED",
+                "name": "Network Updated",
+                "payloadSchema": [
+                  {
+                    "name": "nodeEnabled",
+                    "type": "[boolean]"
+                  },
+                  {
+                    "name": "edgeEnabled",
+                    "type": "[boolean]"
+                  },
+                  {
+                    "name": "adopted",
+                    "type": "[boolean]"
+                  },
+                  {
+                    "name": "adoptedCount",
+                    "type": "number"
+                  },
+                  {
+                    "name": "hub",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "network update, rewiring, tie toggle, diffusion cascade, centrality change, weak ties",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "nodeCount",
+                        [
+                          "array/len",
+                          "@config.nodes"
+                        ]
+                      ],
+                      [
+                        "edgeCount",
+                        [
+                          "array/len",
+                          "@config.edges"
+                        ]
+                      ],
+                      [
+                        "enabledN",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@nodeCount"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            true
+                          ]
+                        ]
+                      ],
+                      [
+                        "enabledE",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@edgeCount"
+                          ],
+                          [
+                            "fn",
+                            "j",
+                            true
+                          ]
+                        ]
+                      ],
+                      [
+                        "adoptedInit",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@nodeCount"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "==",
+                              "@i",
+                              0.0
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "degrees",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@nodeCount"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "array/len",
+                              [
+                                "array/filter",
+                                [
+                                  "array/range",
+                                  "@edgeCount"
+                                ],
+                                [
+                                  "fn",
+                                  "j",
+                                  [
+                                    "or",
+                                    [
+                                      "==",
+                                      [
+                                        "object/get",
+                                        [
+                                          "array/nth",
+                                          "@config.edges",
+                                          "@j"
+                                        ],
+                                        "from"
+                                      ],
+                                      [
+                                        "object/get",
+                                        [
+                                          "array/nth",
+                                          "@config.nodes",
+                                          "@i"
+                                        ],
+                                        "id"
+                                      ]
+                                    ],
+                                    [
+                                      "==",
+                                      [
+                                        "object/get",
+                                        [
+                                          "array/nth",
+                                          "@config.edges",
+                                          "@j"
+                                        ],
+                                        "to"
+                                      ],
+                                      [
+                                        "object/get",
+                                        [
+                                          "array/nth",
+                                          "@config.nodes",
+                                          "@i"
+                                        ],
+                                        "id"
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "hubIdx",
+                        [
+                          "array/reduce",
+                          [
+                            "array/range",
+                            "@nodeCount"
+                          ],
+                          0.0,
+                          [
+                            "fn",
+                            [
+                              "acc",
+                              "i"
+                            ],
+                            [
+                              "if",
+                              [
+                                ">",
+                                [
+                                  "array/nth",
+                                  "@degrees",
+                                  "@i"
+                                ],
+                                [
+                                  "array/nth",
+                                  "@degrees",
+                                  "@acc"
+                                ]
+                              ],
+                              "@i",
+                              "@acc"
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "hubTxt",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@config.centralityMetric",
+                            "reach"
+                          ],
+                          [
+                            "str/concat",
+                            "Diffusion reach: 1 of ",
+                            "@nodeCount",
+                            " nodes — press Run Diffusion to spread adoption."
+                          ],
+                          [
+                            "str/concat",
+                            "Degree-centrality hub: ",
+                            [
+                              "object/get",
+                              [
+                                "array/nth",
+                                "@config.nodes",
+                                "@hubIdx"
+                              ],
+                              "label"
+                            ],
+                            " (degree ",
+                            [
+                              "array/nth",
+                              "@degrees",
+                              "@hubIdx"
+                            ],
+                            ")"
+                          ]
+                        ]
+                      ],
+                      [
+                        "renderNodes",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@nodeCount"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "object/merge",
+                              [
+                                "array/nth",
+                                "@config.nodes",
+                                "@i"
+                              ],
+                              {
+                                "color": [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@i",
+                                    0.0
+                                  ],
+                                  "@config.adoptedNodeColor",
+                                  "@config.nodeColor"
+                                ]
+                              }
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "renderEdges",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@edgeCount"
+                          ],
+                          [
+                            "fn",
+                            "j",
+                            {
+                              "color": [
+                                "if",
+                                [
+                                  "<",
+                                  [
+                                    "array/nth",
+                                    "@config.tieStrengths",
+                                    "@j"
+                                  ],
+                                  "@config.weakTieThreshold"
+                                ],
+                                "@config.weakTieColor",
+                                "@config.strongTieColor"
+                              ],
+                              "from": [
+                                "object/get",
+                                [
+                                  "array/nth",
+                                  "@config.edges",
+                                  "@j"
+                                ],
+                                "from"
+                              ],
+                              "label": "",
+                              "to": [
+                                "object/get",
+                                [
+                                  "array/nth",
+                                  "@config.edges",
+                                  "@j"
+                                ],
+                                "to"
+                              ]
+                            }
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.nodeEnabled",
+                        "@enabledN"
+                      ],
+                      [
+                        "set",
+                        "@entity.edgeEnabled",
+                        "@enabledE"
+                      ],
+                      [
+                        "set",
+                        "@entity.adopted",
+                        "@adoptedInit"
+                      ],
+                      [
+                        "set",
+                        "@entity.adoptedCount",
+                        1.0
+                      ],
+                      [
+                        "set",
+                        "@entity.hubText",
+                        "@hubTxt"
+                      ],
+                      [
+                        "set",
+                        "@entity.nodes",
+                        "@renderNodes"
+                      ],
+                      [
+                        "set",
+                        "@entity.edges",
+                        "@renderEdges"
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "RUN_DIFFUSION",
+                                  "label": "Run Diffusion",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "animate": "@config.animate",
+                              "backgroundColor": "@config.backgroundColor",
+                              "edges": "@entity.edges",
+                              "height": "@config.height",
+                              "interactive": "@config.interactive",
+                              "nodes": "@entity.nodes",
+                              "shapes": [],
+                              "type": "biology-canvas",
+                              "width": "@config.width"
+                            },
+                            {
+                              "content": "@entity.hubText",
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Adopted: ",
+                                "@entity.adoptedCount",
+                                " of ",
+                                [
+                                  "array/len",
+                                  "@config.nodes"
+                                ],
+                                " — amber edges are weak-tie bridges; adoption spreads over one strong tie or two weak ties."
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "children": [
+                                "array/map",
+                                [
+                                  "array/range",
+                                  [
+                                    "array/len",
+                                    "@config.nodes"
+                                  ]
+                                ],
+                                [
+                                  "fn",
+                                  "i",
+                                  {
+                                    "action": "TOGGLE_NODE",
+                                    "actionPayload": {
+                                      "nodeId": [
+                                        "object/get",
+                                        [
+                                          "array/nth",
+                                          "@config.nodes",
+                                          "@i"
+                                        ],
+                                        "id"
+                                      ]
+                                    },
+                                    "label": [
+                                      "object/get",
+                                      [
+                                        "array/nth",
+                                        "@config.nodes",
+                                        "@i"
+                                      ],
+                                      "label"
+                                    ],
+                                    "type": "button",
+                                    "variant": [
+                                      "if",
+                                      [
+                                        "array/nth",
+                                        "@entity.nodeEnabled",
+                                        "@i"
+                                      ],
+                                      "primary",
+                                      "ghost"
+                                    ]
+                                  }
+                                ]
+                              ],
+                              "direction": "horizontal",
+                              "gap": "xs",
+                              "type": "stack"
+                            },
+                            {
+                              "children": [
+                                "array/map",
+                                [
+                                  "array/range",
+                                  [
+                                    "array/len",
+                                    "@config.edges"
+                                  ]
+                                ],
+                                [
+                                  "fn",
+                                  "j",
+                                  {
+                                    "action": "TOGGLE_EDGE",
+                                    "actionPayload": {
+                                      "edgeIndex": "@j"
+                                    },
+                                    "label": [
+                                      "str/concat",
+                                      [
+                                        "object/get",
+                                        [
+                                          "array/nth",
+                                          "@config.edges",
+                                          "@j"
+                                        ],
+                                        "from"
+                                      ],
+                                      "-",
+                                      [
+                                        "object/get",
+                                        [
+                                          "array/nth",
+                                          "@config.edges",
+                                          "@j"
+                                        ],
+                                        "to"
+                                      ]
+                                    ],
+                                    "type": "button",
+                                    "variant": [
+                                      "if",
+                                      [
+                                        "array/nth",
+                                        "@entity.edgeEnabled",
+                                        "@j"
+                                      ],
+                                      "secondary",
+                                      "ghost"
+                                    ]
+                                  }
+                                ]
+                              ],
+                              "direction": "horizontal",
+                              "gap": "xs",
+                              "type": "stack"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01M04DG95PCKNEX8CZZW5CYGBM",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@config.matchMode",
+                  ""
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "nodeCount",
+                        [
+                          "array/len",
+                          "@config.nodes"
+                        ]
+                      ],
+                      [
+                        "edgeCount",
+                        [
+                          "array/len",
+                          "@config.edges"
+                        ]
+                      ],
+                      [
+                        "enabledN",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@nodeCount"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            true
+                          ]
+                        ]
+                      ],
+                      [
+                        "enabledE",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@edgeCount"
+                          ],
+                          [
+                            "fn",
+                            "j",
+                            true
+                          ]
+                        ]
+                      ],
+                      [
+                        "adoptedInit",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@nodeCount"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "==",
+                              "@i",
+                              0.0
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "degrees",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@nodeCount"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "array/len",
+                              [
+                                "array/filter",
+                                [
+                                  "array/range",
+                                  "@edgeCount"
+                                ],
+                                [
+                                  "fn",
+                                  "j",
+                                  [
+                                    "or",
+                                    [
+                                      "==",
+                                      [
+                                        "object/get",
+                                        [
+                                          "array/nth",
+                                          "@config.edges",
+                                          "@j"
+                                        ],
+                                        "from"
+                                      ],
+                                      [
+                                        "object/get",
+                                        [
+                                          "array/nth",
+                                          "@config.nodes",
+                                          "@i"
+                                        ],
+                                        "id"
+                                      ]
+                                    ],
+                                    [
+                                      "==",
+                                      [
+                                        "object/get",
+                                        [
+                                          "array/nth",
+                                          "@config.edges",
+                                          "@j"
+                                        ],
+                                        "to"
+                                      ],
+                                      [
+                                        "object/get",
+                                        [
+                                          "array/nth",
+                                          "@config.nodes",
+                                          "@i"
+                                        ],
+                                        "id"
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "hubIdx",
+                        [
+                          "array/reduce",
+                          [
+                            "array/range",
+                            "@nodeCount"
+                          ],
+                          0.0,
+                          [
+                            "fn",
+                            [
+                              "acc",
+                              "i"
+                            ],
+                            [
+                              "if",
+                              [
+                                ">",
+                                [
+                                  "array/nth",
+                                  "@degrees",
+                                  "@i"
+                                ],
+                                [
+                                  "array/nth",
+                                  "@degrees",
+                                  "@acc"
+                                ]
+                              ],
+                              "@i",
+                              "@acc"
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "hubTxt",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@config.centralityMetric",
+                            "reach"
+                          ],
+                          [
+                            "str/concat",
+                            "Diffusion reach: 1 of ",
+                            "@nodeCount",
+                            " nodes — press Run Diffusion to spread adoption."
+                          ],
+                          [
+                            "str/concat",
+                            "Degree-centrality hub: ",
+                            [
+                              "object/get",
+                              [
+                                "array/nth",
+                                "@config.nodes",
+                                "@hubIdx"
+                              ],
+                              "label"
+                            ],
+                            " (degree ",
+                            [
+                              "array/nth",
+                              "@degrees",
+                              "@hubIdx"
+                            ],
+                            ")"
+                          ]
+                        ]
+                      ],
+                      [
+                        "renderNodes",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@nodeCount"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "object/merge",
+                              [
+                                "array/nth",
+                                "@config.nodes",
+                                "@i"
+                              ],
+                              {
+                                "color": [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@i",
+                                    0.0
+                                  ],
+                                  "@config.adoptedNodeColor",
+                                  "@config.nodeColor"
+                                ]
+                              }
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "renderEdges",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@edgeCount"
+                          ],
+                          [
+                            "fn",
+                            "j",
+                            {
+                              "color": [
+                                "if",
+                                [
+                                  "<",
+                                  [
+                                    "array/nth",
+                                    "@config.tieStrengths",
+                                    "@j"
+                                  ],
+                                  "@config.weakTieThreshold"
+                                ],
+                                "@config.weakTieColor",
+                                "@config.strongTieColor"
+                              ],
+                              "from": [
+                                "object/get",
+                                [
+                                  "array/nth",
+                                  "@config.edges",
+                                  "@j"
+                                ],
+                                "from"
+                              ],
+                              "label": "",
+                              "to": [
+                                "object/get",
+                                [
+                                  "array/nth",
+                                  "@config.edges",
+                                  "@j"
+                                ],
+                                "to"
+                              ]
+                            }
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.nodeEnabled",
+                        "@enabledN"
+                      ],
+                      [
+                        "set",
+                        "@entity.edgeEnabled",
+                        "@enabledE"
+                      ],
+                      [
+                        "set",
+                        "@entity.adopted",
+                        "@adoptedInit"
+                      ],
+                      [
+                        "set",
+                        "@entity.adoptedCount",
+                        1.0
+                      ],
+                      [
+                        "set",
+                        "@entity.hubText",
+                        "@hubTxt"
+                      ],
+                      [
+                        "set",
+                        "@entity.nodes",
+                        "@renderNodes"
+                      ],
+                      [
+                        "set",
+                        "@entity.edges",
+                        "@renderEdges"
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "RUN_DIFFUSION",
+                                  "label": "Run Diffusion",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "animate": "@config.animate",
+                              "backgroundColor": "@config.backgroundColor",
+                              "edges": "@entity.edges",
+                              "height": "@config.height",
+                              "interactive": "@config.interactive",
+                              "nodes": "@entity.nodes",
+                              "shapes": [],
+                              "type": "biology-canvas",
+                              "width": "@config.width"
+                            },
+                            {
+                              "content": "@entity.hubText",
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Adopted: ",
+                                "@entity.adoptedCount",
+                                " of ",
+                                [
+                                  "array/len",
+                                  "@config.nodes"
+                                ],
+                                " — amber edges are weak-tie bridges; adoption spreads over one strong tie or two weak ties."
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "children": [
+                                "array/map",
+                                [
+                                  "array/range",
+                                  [
+                                    "array/len",
+                                    "@config.nodes"
+                                  ]
+                                ],
+                                [
+                                  "fn",
+                                  "i",
+                                  {
+                                    "action": "TOGGLE_NODE",
+                                    "actionPayload": {
+                                      "nodeId": [
+                                        "object/get",
+                                        [
+                                          "array/nth",
+                                          "@config.nodes",
+                                          "@i"
+                                        ],
+                                        "id"
+                                      ]
+                                    },
+                                    "label": [
+                                      "object/get",
+                                      [
+                                        "array/nth",
+                                        "@config.nodes",
+                                        "@i"
+                                      ],
+                                      "label"
+                                    ],
+                                    "type": "button",
+                                    "variant": [
+                                      "if",
+                                      [
+                                        "array/nth",
+                                        "@entity.nodeEnabled",
+                                        "@i"
+                                      ],
+                                      "primary",
+                                      "ghost"
+                                    ]
+                                  }
+                                ]
+                              ],
+                              "direction": "horizontal",
+                              "gap": "xs",
+                              "type": "stack"
+                            },
+                            {
+                              "children": [
+                                "array/map",
+                                [
+                                  "array/range",
+                                  [
+                                    "array/len",
+                                    "@config.edges"
+                                  ]
+                                ],
+                                [
+                                  "fn",
+                                  "j",
+                                  {
+                                    "action": "TOGGLE_EDGE",
+                                    "actionPayload": {
+                                      "edgeIndex": "@j"
+                                    },
+                                    "label": [
+                                      "str/concat",
+                                      [
+                                        "object/get",
+                                        [
+                                          "array/nth",
+                                          "@config.edges",
+                                          "@j"
+                                        ],
+                                        "from"
+                                      ],
+                                      "-",
+                                      [
+                                        "object/get",
+                                        [
+                                          "array/nth",
+                                          "@config.edges",
+                                          "@j"
+                                        ],
+                                        "to"
+                                      ]
+                                    ],
+                                    "type": "button",
+                                    "variant": [
+                                      "if",
+                                      [
+                                        "array/nth",
+                                        "@entity.edgeEnabled",
+                                        "@j"
+                                      ],
+                                      "secondary",
+                                      "ghost"
+                                    ]
+                                  }
+                                ]
+                              ],
+                              "direction": "horizontal",
+                              "gap": "xs",
+                              "type": "stack"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ]
+                ],
+                "event": "MODE_SELECTED",
+                "eventId": "evt_01M04DG95QSDDX63MHGHQP5A0E",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@payload.mode",
+                  "@config.matchMode"
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "let",
+                    [
+                      [
+                        "nodeCount",
+                        [
+                          "array/len",
+                          "@config.nodes"
+                        ]
+                      ],
+                      [
+                        "edgeCount",
+                        [
+                          "array/len",
+                          "@config.edges"
+                        ]
+                      ],
+                      [
+                        "idx",
+                        [
+                          "array/first",
+                          [
+                            "array/filter",
+                            [
+                              "array/range",
+                              "@nodeCount"
+                            ],
+                            [
+                              "fn",
+                              "i",
+                              [
+                                "==",
+                                [
+                                  "object/get",
+                                  [
+                                    "array/nth",
+                                    "@config.nodes",
+                                    "@i"
+                                  ],
+                                  "id"
+                                ],
+                                "@payload.nodeId"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "newNodeEnabled",
+                        [
+                          "if",
+                          [
+                            "!=",
+                            "@idx",
+                            null
+                          ],
+                          [
+                            "array/map",
+                            [
+                              "array/range",
+                              "@nodeCount"
+                            ],
+                            [
+                              "fn",
+                              "i",
+                              [
+                                "if",
+                                [
+                                  "==",
+                                  "@i",
+                                  "@idx"
+                                ],
+                                [
+                                  "not",
+                                  [
+                                    "array/nth",
+                                    "@entity.nodeEnabled",
+                                    "@i"
+                                  ]
+                                ],
+                                [
+                                  "array/nth",
+                                  "@entity.nodeEnabled",
+                                  "@i"
+                                ]
+                              ]
+                            ]
+                          ],
+                          "@entity.nodeEnabled"
+                        ]
+                      ],
+                      [
+                        "degrees",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@nodeCount"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "if",
+                              [
+                                "array/nth",
+                                "@newNodeEnabled",
+                                "@i"
+                              ],
+                              [
+                                "array/len",
+                                [
+                                  "array/filter",
+                                  [
+                                    "array/range",
+                                    "@edgeCount"
+                                  ],
+                                  [
+                                    "fn",
+                                    "j",
+                                    [
+                                      "and",
+                                      [
+                                        "array/nth",
+                                        "@entity.edgeEnabled",
+                                        "@j"
+                                      ],
+                                      [
+                                        "or",
+                                        [
+                                          "==",
+                                          [
+                                            "object/get",
+                                            [
+                                              "array/nth",
+                                              "@config.edges",
+                                              "@j"
+                                            ],
+                                            "from"
+                                          ],
+                                          [
+                                            "object/get",
+                                            [
+                                              "array/nth",
+                                              "@config.nodes",
+                                              "@i"
+                                            ],
+                                            "id"
+                                          ]
+                                        ],
+                                        [
+                                          "==",
+                                          [
+                                            "object/get",
+                                            [
+                                              "array/nth",
+                                              "@config.edges",
+                                              "@j"
+                                            ],
+                                            "to"
+                                          ],
+                                          [
+                                            "object/get",
+                                            [
+                                              "array/nth",
+                                              "@config.nodes",
+                                              "@i"
+                                            ],
+                                            "id"
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              -1.0
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "hubIdx",
+                        [
+                          "array/reduce",
+                          [
+                            "array/range",
+                            "@nodeCount"
+                          ],
+                          0.0,
+                          [
+                            "fn",
+                            [
+                              "acc",
+                              "i"
+                            ],
+                            [
+                              "if",
+                              [
+                                ">",
+                                [
+                                  "array/nth",
+                                  "@degrees",
+                                  "@i"
+                                ],
+                                [
+                                  "array/nth",
+                                  "@degrees",
+                                  "@acc"
+                                ]
+                              ],
+                              "@i",
+                              "@acc"
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "reachCount",
+                        [
+                          "array/len",
+                          [
+                            "array/filter",
+                            [
+                              "array/range",
+                              "@nodeCount"
+                            ],
+                            [
+                              "fn",
+                              "i",
+                              [
+                                "and",
+                                [
+                                  "array/nth",
+                                  "@newNodeEnabled",
+                                  "@i"
+                                ],
+                                [
+                                  "array/nth",
+                                  "@entity.adopted",
+                                  "@i"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "hubTxt",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@config.centralityMetric",
+                            "reach"
+                          ],
+                          [
+                            "str/concat",
+                            "Diffusion reach: ",
+                            "@reachCount",
+                            " of ",
+                            "@nodeCount",
+                            " nodes."
+                          ],
+                          [
+                            "str/concat",
+                            "Degree-centrality hub: ",
+                            [
+                              "object/get",
+                              [
+                                "array/nth",
+                                "@config.nodes",
+                                "@hubIdx"
+                              ],
+                              "label"
+                            ],
+                            " (degree ",
+                            [
+                              "array/nth",
+                              "@degrees",
+                              "@hubIdx"
+                            ],
+                            ")"
+                          ]
+                        ]
+                      ],
+                      [
+                        "renderNodes",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@nodeCount"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "object/merge",
+                              [
+                                "array/nth",
+                                "@config.nodes",
+                                "@i"
+                              ],
+                              {
+                                "color": [
+                                  "if",
+                                  [
+                                    "not",
+                                    [
+                                      "array/nth",
+                                      "@newNodeEnabled",
+                                      "@i"
+                                    ]
+                                  ],
+                                  "@config.disabledNodeColor",
+                                  [
+                                    "if",
+                                    [
+                                      "array/nth",
+                                      "@entity.adopted",
+                                      "@i"
+                                    ],
+                                    "@config.adoptedNodeColor",
+                                    "@config.nodeColor"
+                                  ]
+                                ]
+                              }
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "renderEdges",
+                        [
+                          "array/map",
+                          [
+                            "array/filter",
+                            [
+                              "array/range",
+                              "@edgeCount"
+                            ],
+                            [
+                              "fn",
+                              "j",
+                              [
+                                "and",
+                                [
+                                  "array/nth",
+                                  "@entity.edgeEnabled",
+                                  "@j"
+                                ],
+                                [
+                                  "and",
+                                  [
+                                    ">",
+                                    [
+                                      "array/len",
+                                      [
+                                        "array/filter",
+                                        [
+                                          "array/range",
+                                          "@nodeCount"
+                                        ],
+                                        [
+                                          "fn",
+                                          "k",
+                                          [
+                                            "and",
+                                            [
+                                              "==",
+                                              [
+                                                "object/get",
+                                                [
+                                                  "array/nth",
+                                                  "@config.nodes",
+                                                  "@k"
+                                                ],
+                                                "id"
+                                              ],
+                                              [
+                                                "object/get",
+                                                [
+                                                  "array/nth",
+                                                  "@config.edges",
+                                                  "@j"
+                                                ],
+                                                "from"
+                                              ]
+                                            ],
+                                            [
+                                              "array/nth",
+                                              "@newNodeEnabled",
+                                              "@k"
+                                            ]
+                                          ]
+                                        ]
+                                      ]
+                                    ],
+                                    0.0
+                                  ],
+                                  [
+                                    ">",
+                                    [
+                                      "array/len",
+                                      [
+                                        "array/filter",
+                                        [
+                                          "array/range",
+                                          "@nodeCount"
+                                        ],
+                                        [
+                                          "fn",
+                                          "k",
+                                          [
+                                            "and",
+                                            [
+                                              "==",
+                                              [
+                                                "object/get",
+                                                [
+                                                  "array/nth",
+                                                  "@config.nodes",
+                                                  "@k"
+                                                ],
+                                                "id"
+                                              ],
+                                              [
+                                                "object/get",
+                                                [
+                                                  "array/nth",
+                                                  "@config.edges",
+                                                  "@j"
+                                                ],
+                                                "to"
+                                              ]
+                                            ],
+                                            [
+                                              "array/nth",
+                                              "@newNodeEnabled",
+                                              "@k"
+                                            ]
+                                          ]
+                                        ]
+                                      ]
+                                    ],
+                                    0.0
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ],
+                          [
+                            "fn",
+                            "j",
+                            {
+                              "color": [
+                                "if",
+                                [
+                                  "<",
+                                  [
+                                    "array/nth",
+                                    "@config.tieStrengths",
+                                    "@j"
+                                  ],
+                                  "@config.weakTieThreshold"
+                                ],
+                                "@config.weakTieColor",
+                                "@config.strongTieColor"
+                              ],
+                              "from": [
+                                "object/get",
+                                [
+                                  "array/nth",
+                                  "@config.edges",
+                                  "@j"
+                                ],
+                                "from"
+                              ],
+                              "label": "",
+                              "to": [
+                                "object/get",
+                                [
+                                  "array/nth",
+                                  "@config.edges",
+                                  "@j"
+                                ],
+                                "to"
+                              ]
+                            }
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.nodeEnabled",
+                        "@newNodeEnabled"
+                      ],
+                      [
+                        "set",
+                        "@entity.adoptedCount",
+                        "@reachCount"
+                      ],
+                      [
+                        "set",
+                        "@entity.hubText",
+                        "@hubTxt"
+                      ],
+                      [
+                        "set",
+                        "@entity.nodes",
+                        "@renderNodes"
+                      ],
+                      [
+                        "set",
+                        "@entity.edges",
+                        "@renderEdges"
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "RUN_DIFFUSION",
+                                  "label": "Run Diffusion",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "animate": "@config.animate",
+                              "backgroundColor": "@config.backgroundColor",
+                              "edges": "@entity.edges",
+                              "height": "@config.height",
+                              "interactive": "@config.interactive",
+                              "nodes": "@entity.nodes",
+                              "shapes": [],
+                              "type": "biology-canvas",
+                              "width": "@config.width"
+                            },
+                            {
+                              "content": "@entity.hubText",
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Adopted: ",
+                                "@entity.adoptedCount",
+                                " of ",
+                                [
+                                  "array/len",
+                                  "@config.nodes"
+                                ],
+                                " — amber edges are weak-tie bridges; adoption spreads over one strong tie or two weak ties."
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "children": [
+                                "array/map",
+                                [
+                                  "array/range",
+                                  [
+                                    "array/len",
+                                    "@config.nodes"
+                                  ]
+                                ],
+                                [
+                                  "fn",
+                                  "i",
+                                  {
+                                    "action": "TOGGLE_NODE",
+                                    "actionPayload": {
+                                      "nodeId": [
+                                        "object/get",
+                                        [
+                                          "array/nth",
+                                          "@config.nodes",
+                                          "@i"
+                                        ],
+                                        "id"
+                                      ]
+                                    },
+                                    "label": [
+                                      "object/get",
+                                      [
+                                        "array/nth",
+                                        "@config.nodes",
+                                        "@i"
+                                      ],
+                                      "label"
+                                    ],
+                                    "type": "button",
+                                    "variant": [
+                                      "if",
+                                      [
+                                        "array/nth",
+                                        "@entity.nodeEnabled",
+                                        "@i"
+                                      ],
+                                      "primary",
+                                      "ghost"
+                                    ]
+                                  }
+                                ]
+                              ],
+                              "direction": "horizontal",
+                              "gap": "xs",
+                              "type": "stack"
+                            },
+                            {
+                              "children": [
+                                "array/map",
+                                [
+                                  "array/range",
+                                  [
+                                    "array/len",
+                                    "@config.edges"
+                                  ]
+                                ],
+                                [
+                                  "fn",
+                                  "j",
+                                  {
+                                    "action": "TOGGLE_EDGE",
+                                    "actionPayload": {
+                                      "edgeIndex": "@j"
+                                    },
+                                    "label": [
+                                      "str/concat",
+                                      [
+                                        "object/get",
+                                        [
+                                          "array/nth",
+                                          "@config.edges",
+                                          "@j"
+                                        ],
+                                        "from"
+                                      ],
+                                      "-",
+                                      [
+                                        "object/get",
+                                        [
+                                          "array/nth",
+                                          "@config.edges",
+                                          "@j"
+                                        ],
+                                        "to"
+                                      ]
+                                    ],
+                                    "type": "button",
+                                    "variant": [
+                                      "if",
+                                      [
+                                        "array/nth",
+                                        "@entity.edgeEnabled",
+                                        "@j"
+                                      ],
+                                      "secondary",
+                                      "ghost"
+                                    ]
+                                  }
+                                ]
+                              ],
+                              "direction": "horizontal",
+                              "gap": "xs",
+                              "type": "stack"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "NETWORK_UPDATED",
+                    {
+                      "adopted": "@entity.adopted",
+                      "adoptedCount": "@entity.adoptedCount",
+                      "edgeEnabled": "@entity.edgeEnabled",
+                      "hub": "@entity.hubText",
+                      "nodeEnabled": "@entity.nodeEnabled"
+                    }
+                  ]
+                ],
+                "event": "TOGGLE_NODE",
+                "eventId": "evt_01M04DG95QT2WBGMT32KT863XN",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "let",
+                    [
+                      [
+                        "nodeCount",
+                        [
+                          "array/len",
+                          "@config.nodes"
+                        ]
+                      ],
+                      [
+                        "edgeCount",
+                        [
+                          "array/len",
+                          "@config.edges"
+                        ]
+                      ],
+                      [
+                        "newEdgeEnabled",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@edgeCount"
+                          ],
+                          [
+                            "fn",
+                            "j",
+                            [
+                              "if",
+                              [
+                                "==",
+                                "@j",
+                                "@payload.edgeIndex"
+                              ],
+                              [
+                                "not",
+                                [
+                                  "array/nth",
+                                  "@entity.edgeEnabled",
+                                  "@j"
+                                ]
+                              ],
+                              [
+                                "array/nth",
+                                "@entity.edgeEnabled",
+                                "@j"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "degrees",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@nodeCount"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "if",
+                              [
+                                "array/nth",
+                                "@entity.nodeEnabled",
+                                "@i"
+                              ],
+                              [
+                                "array/len",
+                                [
+                                  "array/filter",
+                                  [
+                                    "array/range",
+                                    "@edgeCount"
+                                  ],
+                                  [
+                                    "fn",
+                                    "j",
+                                    [
+                                      "and",
+                                      [
+                                        "array/nth",
+                                        "@newEdgeEnabled",
+                                        "@j"
+                                      ],
+                                      [
+                                        "or",
+                                        [
+                                          "==",
+                                          [
+                                            "object/get",
+                                            [
+                                              "array/nth",
+                                              "@config.edges",
+                                              "@j"
+                                            ],
+                                            "from"
+                                          ],
+                                          [
+                                            "object/get",
+                                            [
+                                              "array/nth",
+                                              "@config.nodes",
+                                              "@i"
+                                            ],
+                                            "id"
+                                          ]
+                                        ],
+                                        [
+                                          "==",
+                                          [
+                                            "object/get",
+                                            [
+                                              "array/nth",
+                                              "@config.edges",
+                                              "@j"
+                                            ],
+                                            "to"
+                                          ],
+                                          [
+                                            "object/get",
+                                            [
+                                              "array/nth",
+                                              "@config.nodes",
+                                              "@i"
+                                            ],
+                                            "id"
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              -1.0
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "hubIdx",
+                        [
+                          "array/reduce",
+                          [
+                            "array/range",
+                            "@nodeCount"
+                          ],
+                          0.0,
+                          [
+                            "fn",
+                            [
+                              "acc",
+                              "i"
+                            ],
+                            [
+                              "if",
+                              [
+                                ">",
+                                [
+                                  "array/nth",
+                                  "@degrees",
+                                  "@i"
+                                ],
+                                [
+                                  "array/nth",
+                                  "@degrees",
+                                  "@acc"
+                                ]
+                              ],
+                              "@i",
+                              "@acc"
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "hubTxt",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@config.centralityMetric",
+                            "reach"
+                          ],
+                          [
+                            "str/concat",
+                            "Diffusion reach: ",
+                            "@entity.adoptedCount",
+                            " of ",
+                            "@nodeCount",
+                            " nodes."
+                          ],
+                          [
+                            "str/concat",
+                            "Degree-centrality hub: ",
+                            [
+                              "object/get",
+                              [
+                                "array/nth",
+                                "@config.nodes",
+                                "@hubIdx"
+                              ],
+                              "label"
+                            ],
+                            " (degree ",
+                            [
+                              "array/nth",
+                              "@degrees",
+                              "@hubIdx"
+                            ],
+                            ")"
+                          ]
+                        ]
+                      ],
+                      [
+                        "renderEdges",
+                        [
+                          "array/map",
+                          [
+                            "array/filter",
+                            [
+                              "array/range",
+                              "@edgeCount"
+                            ],
+                            [
+                              "fn",
+                              "j",
+                              [
+                                "and",
+                                [
+                                  "array/nth",
+                                  "@newEdgeEnabled",
+                                  "@j"
+                                ],
+                                [
+                                  "and",
+                                  [
+                                    ">",
+                                    [
+                                      "array/len",
+                                      [
+                                        "array/filter",
+                                        [
+                                          "array/range",
+                                          "@nodeCount"
+                                        ],
+                                        [
+                                          "fn",
+                                          "k",
+                                          [
+                                            "and",
+                                            [
+                                              "==",
+                                              [
+                                                "object/get",
+                                                [
+                                                  "array/nth",
+                                                  "@config.nodes",
+                                                  "@k"
+                                                ],
+                                                "id"
+                                              ],
+                                              [
+                                                "object/get",
+                                                [
+                                                  "array/nth",
+                                                  "@config.edges",
+                                                  "@j"
+                                                ],
+                                                "from"
+                                              ]
+                                            ],
+                                            [
+                                              "array/nth",
+                                              "@entity.nodeEnabled",
+                                              "@k"
+                                            ]
+                                          ]
+                                        ]
+                                      ]
+                                    ],
+                                    0.0
+                                  ],
+                                  [
+                                    ">",
+                                    [
+                                      "array/len",
+                                      [
+                                        "array/filter",
+                                        [
+                                          "array/range",
+                                          "@nodeCount"
+                                        ],
+                                        [
+                                          "fn",
+                                          "k",
+                                          [
+                                            "and",
+                                            [
+                                              "==",
+                                              [
+                                                "object/get",
+                                                [
+                                                  "array/nth",
+                                                  "@config.nodes",
+                                                  "@k"
+                                                ],
+                                                "id"
+                                              ],
+                                              [
+                                                "object/get",
+                                                [
+                                                  "array/nth",
+                                                  "@config.edges",
+                                                  "@j"
+                                                ],
+                                                "to"
+                                              ]
+                                            ],
+                                            [
+                                              "array/nth",
+                                              "@entity.nodeEnabled",
+                                              "@k"
+                                            ]
+                                          ]
+                                        ]
+                                      ]
+                                    ],
+                                    0.0
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ],
+                          [
+                            "fn",
+                            "j",
+                            {
+                              "color": [
+                                "if",
+                                [
+                                  "<",
+                                  [
+                                    "array/nth",
+                                    "@config.tieStrengths",
+                                    "@j"
+                                  ],
+                                  "@config.weakTieThreshold"
+                                ],
+                                "@config.weakTieColor",
+                                "@config.strongTieColor"
+                              ],
+                              "from": [
+                                "object/get",
+                                [
+                                  "array/nth",
+                                  "@config.edges",
+                                  "@j"
+                                ],
+                                "from"
+                              ],
+                              "label": "",
+                              "to": [
+                                "object/get",
+                                [
+                                  "array/nth",
+                                  "@config.edges",
+                                  "@j"
+                                ],
+                                "to"
+                              ]
+                            }
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.edgeEnabled",
+                        "@newEdgeEnabled"
+                      ],
+                      [
+                        "set",
+                        "@entity.hubText",
+                        "@hubTxt"
+                      ],
+                      [
+                        "set",
+                        "@entity.edges",
+                        "@renderEdges"
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "RUN_DIFFUSION",
+                                  "label": "Run Diffusion",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "animate": "@config.animate",
+                              "backgroundColor": "@config.backgroundColor",
+                              "edges": "@entity.edges",
+                              "height": "@config.height",
+                              "interactive": "@config.interactive",
+                              "nodes": "@entity.nodes",
+                              "shapes": [],
+                              "type": "biology-canvas",
+                              "width": "@config.width"
+                            },
+                            {
+                              "content": "@entity.hubText",
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Adopted: ",
+                                "@entity.adoptedCount",
+                                " of ",
+                                [
+                                  "array/len",
+                                  "@config.nodes"
+                                ],
+                                " — amber edges are weak-tie bridges; adoption spreads over one strong tie or two weak ties."
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "children": [
+                                "array/map",
+                                [
+                                  "array/range",
+                                  [
+                                    "array/len",
+                                    "@config.nodes"
+                                  ]
+                                ],
+                                [
+                                  "fn",
+                                  "i",
+                                  {
+                                    "action": "TOGGLE_NODE",
+                                    "actionPayload": {
+                                      "nodeId": [
+                                        "object/get",
+                                        [
+                                          "array/nth",
+                                          "@config.nodes",
+                                          "@i"
+                                        ],
+                                        "id"
+                                      ]
+                                    },
+                                    "label": [
+                                      "object/get",
+                                      [
+                                        "array/nth",
+                                        "@config.nodes",
+                                        "@i"
+                                      ],
+                                      "label"
+                                    ],
+                                    "type": "button",
+                                    "variant": [
+                                      "if",
+                                      [
+                                        "array/nth",
+                                        "@entity.nodeEnabled",
+                                        "@i"
+                                      ],
+                                      "primary",
+                                      "ghost"
+                                    ]
+                                  }
+                                ]
+                              ],
+                              "direction": "horizontal",
+                              "gap": "xs",
+                              "type": "stack"
+                            },
+                            {
+                              "children": [
+                                "array/map",
+                                [
+                                  "array/range",
+                                  [
+                                    "array/len",
+                                    "@config.edges"
+                                  ]
+                                ],
+                                [
+                                  "fn",
+                                  "j",
+                                  {
+                                    "action": "TOGGLE_EDGE",
+                                    "actionPayload": {
+                                      "edgeIndex": "@j"
+                                    },
+                                    "label": [
+                                      "str/concat",
+                                      [
+                                        "object/get",
+                                        [
+                                          "array/nth",
+                                          "@config.edges",
+                                          "@j"
+                                        ],
+                                        "from"
+                                      ],
+                                      "-",
+                                      [
+                                        "object/get",
+                                        [
+                                          "array/nth",
+                                          "@config.edges",
+                                          "@j"
+                                        ],
+                                        "to"
+                                      ]
+                                    ],
+                                    "type": "button",
+                                    "variant": [
+                                      "if",
+                                      [
+                                        "array/nth",
+                                        "@entity.edgeEnabled",
+                                        "@j"
+                                      ],
+                                      "secondary",
+                                      "ghost"
+                                    ]
+                                  }
+                                ]
+                              ],
+                              "direction": "horizontal",
+                              "gap": "xs",
+                              "type": "stack"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "NETWORK_UPDATED",
+                    {
+                      "adopted": "@entity.adopted",
+                      "adoptedCount": "@entity.adoptedCount",
+                      "edgeEnabled": "@entity.edgeEnabled",
+                      "hub": "@entity.hubText",
+                      "nodeEnabled": "@entity.nodeEnabled"
+                    }
+                  ]
+                ],
+                "event": "TOGGLE_EDGE",
+                "eventId": "evt_01M04DG95QQWG7NQ2DC89KY543",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "let",
+                    [
+                      [
+                        "nodeCount",
+                        [
+                          "array/len",
+                          "@config.nodes"
+                        ]
+                      ],
+                      [
+                        "edgeCount",
+                        [
+                          "array/len",
+                          "@config.edges"
+                        ]
+                      ],
+                      [
+                        "newAdopted",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@nodeCount"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "if",
+                              [
+                                "array/nth",
+                                "@entity.adopted",
+                                "@i"
+                              ],
+                              true,
+                              [
+                                "if",
+                                [
+                                  "not",
+                                  [
+                                    "array/nth",
+                                    "@entity.nodeEnabled",
+                                    "@i"
+                                  ]
+                                ],
+                                false,
+                                [
+                                  "let",
+                                  [
+                                    [
+                                      "nid",
+                                      [
+                                        "object/get",
+                                        [
+                                          "array/nth",
+                                          "@config.nodes",
+                                          "@i"
+                                        ],
+                                        "id"
+                                      ]
+                                    ],
+                                    [
+                                      "strongAdopted",
+                                      [
+                                        "array/len",
+                                        [
+                                          "array/filter",
+                                          [
+                                            "array/range",
+                                            "@edgeCount"
+                                          ],
+                                          [
+                                            "fn",
+                                            "j",
+                                            [
+                                              "and",
+                                              [
+                                                "array/nth",
+                                                "@entity.edgeEnabled",
+                                                "@j"
+                                              ],
+                                              [
+                                                "and",
+                                                [
+                                                  ">=",
+                                                  [
+                                                    "array/nth",
+                                                    "@config.tieStrengths",
+                                                    "@j"
+                                                  ],
+                                                  "@config.weakTieThreshold"
+                                                ],
+                                                [
+                                                  "let",
+                                                  [
+                                                    [
+                                                      "e",
+                                                      [
+                                                        "array/nth",
+                                                        "@config.edges",
+                                                        "@j"
+                                                      ]
+                                                    ],
+                                                    [
+                                                      "fid",
+                                                      [
+                                                        "object/get",
+                                                        "@e",
+                                                        "from"
+                                                      ]
+                                                    ],
+                                                    [
+                                                      "tid",
+                                                      [
+                                                        "object/get",
+                                                        "@e",
+                                                        "to"
+                                                      ]
+                                                    ],
+                                                    [
+                                                      "otherId",
+                                                      [
+                                                        "if",
+                                                        [
+                                                          "==",
+                                                          "@fid",
+                                                          "@nid"
+                                                        ],
+                                                        "@tid",
+                                                        "@fid"
+                                                      ]
+                                                    ]
+                                                  ],
+                                                  [
+                                                    "and",
+                                                    [
+                                                      "or",
+                                                      [
+                                                        "==",
+                                                        "@fid",
+                                                        "@nid"
+                                                      ],
+                                                      [
+                                                        "==",
+                                                        "@tid",
+                                                        "@nid"
+                                                      ]
+                                                    ],
+                                                    [
+                                                      ">",
+                                                      [
+                                                        "array/len",
+                                                        [
+                                                          "array/filter",
+                                                          [
+                                                            "array/range",
+                                                            "@nodeCount"
+                                                          ],
+                                                          [
+                                                            "fn",
+                                                            "k",
+                                                            [
+                                                              "and",
+                                                              [
+                                                                "==",
+                                                                [
+                                                                  "object/get",
+                                                                  [
+                                                                    "array/nth",
+                                                                    "@config.nodes",
+                                                                    "@k"
+                                                                  ],
+                                                                  "id"
+                                                                ],
+                                                                "@otherId"
+                                                              ],
+                                                              [
+                                                                "array/nth",
+                                                                "@entity.adopted",
+                                                                "@k"
+                                                              ]
+                                                            ]
+                                                          ]
+                                                        ]
+                                                      ],
+                                                      0.0
+                                                    ]
+                                                  ]
+                                                ]
+                                              ]
+                                            ]
+                                          ]
+                                        ]
+                                      ]
+                                    ],
+                                    [
+                                      "weakAdopted",
+                                      [
+                                        "array/len",
+                                        [
+                                          "array/filter",
+                                          [
+                                            "array/range",
+                                            "@edgeCount"
+                                          ],
+                                          [
+                                            "fn",
+                                            "j",
+                                            [
+                                              "and",
+                                              [
+                                                "array/nth",
+                                                "@entity.edgeEnabled",
+                                                "@j"
+                                              ],
+                                              [
+                                                "and",
+                                                [
+                                                  "<",
+                                                  [
+                                                    "array/nth",
+                                                    "@config.tieStrengths",
+                                                    "@j"
+                                                  ],
+                                                  "@config.weakTieThreshold"
+                                                ],
+                                                [
+                                                  "let",
+                                                  [
+                                                    [
+                                                      "e",
+                                                      [
+                                                        "array/nth",
+                                                        "@config.edges",
+                                                        "@j"
+                                                      ]
+                                                    ],
+                                                    [
+                                                      "fid",
+                                                      [
+                                                        "object/get",
+                                                        "@e",
+                                                        "from"
+                                                      ]
+                                                    ],
+                                                    [
+                                                      "tid",
+                                                      [
+                                                        "object/get",
+                                                        "@e",
+                                                        "to"
+                                                      ]
+                                                    ],
+                                                    [
+                                                      "otherId",
+                                                      [
+                                                        "if",
+                                                        [
+                                                          "==",
+                                                          "@fid",
+                                                          "@nid"
+                                                        ],
+                                                        "@tid",
+                                                        "@fid"
+                                                      ]
+                                                    ]
+                                                  ],
+                                                  [
+                                                    "and",
+                                                    [
+                                                      "or",
+                                                      [
+                                                        "==",
+                                                        "@fid",
+                                                        "@nid"
+                                                      ],
+                                                      [
+                                                        "==",
+                                                        "@tid",
+                                                        "@nid"
+                                                      ]
+                                                    ],
+                                                    [
+                                                      ">",
+                                                      [
+                                                        "array/len",
+                                                        [
+                                                          "array/filter",
+                                                          [
+                                                            "array/range",
+                                                            "@nodeCount"
+                                                          ],
+                                                          [
+                                                            "fn",
+                                                            "k",
+                                                            [
+                                                              "and",
+                                                              [
+                                                                "==",
+                                                                [
+                                                                  "object/get",
+                                                                  [
+                                                                    "array/nth",
+                                                                    "@config.nodes",
+                                                                    "@k"
+                                                                  ],
+                                                                  "id"
+                                                                ],
+                                                                "@otherId"
+                                                              ],
+                                                              [
+                                                                "array/nth",
+                                                                "@entity.adopted",
+                                                                "@k"
+                                                              ]
+                                                            ]
+                                                          ]
+                                                        ]
+                                                      ],
+                                                      0.0
+                                                    ]
+                                                  ]
+                                                ]
+                                              ]
+                                            ]
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "or",
+                                    [
+                                      ">=",
+                                      "@strongAdopted",
+                                      1.0
+                                    ],
+                                    [
+                                      ">=",
+                                      "@weakAdopted",
+                                      2.0
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "reachCount",
+                        [
+                          "array/len",
+                          [
+                            "array/filter",
+                            [
+                              "array/range",
+                              "@nodeCount"
+                            ],
+                            [
+                              "fn",
+                              "i",
+                              [
+                                "and",
+                                [
+                                  "array/nth",
+                                  "@entity.nodeEnabled",
+                                  "@i"
+                                ],
+                                [
+                                  "array/nth",
+                                  "@newAdopted",
+                                  "@i"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "hubTxt",
+                        [
+                          "str/concat",
+                          "Diffusion reach: ",
+                          "@reachCount",
+                          " of ",
+                          "@nodeCount",
+                          " nodes."
+                        ]
+                      ],
+                      [
+                        "renderNodes",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@nodeCount"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "object/merge",
+                              [
+                                "array/nth",
+                                "@config.nodes",
+                                "@i"
+                              ],
+                              {
+                                "color": [
+                                  "if",
+                                  [
+                                    "not",
+                                    [
+                                      "array/nth",
+                                      "@entity.nodeEnabled",
+                                      "@i"
+                                    ]
+                                  ],
+                                  "@config.disabledNodeColor",
+                                  [
+                                    "if",
+                                    [
+                                      "array/nth",
+                                      "@newAdopted",
+                                      "@i"
+                                    ],
+                                    "@config.adoptedNodeColor",
+                                    "@config.nodeColor"
+                                  ]
+                                ]
+                              }
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.adopted",
+                        "@newAdopted"
+                      ],
+                      [
+                        "set",
+                        "@entity.adoptedCount",
+                        "@reachCount"
+                      ],
+                      [
+                        "set",
+                        "@entity.hubText",
+                        "@hubTxt"
+                      ],
+                      [
+                        "set",
+                        "@entity.nodes",
+                        "@renderNodes"
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "RUN_DIFFUSION",
+                                  "label": "Run Diffusion",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "animate": "@config.animate",
+                              "backgroundColor": "@config.backgroundColor",
+                              "edges": "@entity.edges",
+                              "height": "@config.height",
+                              "interactive": "@config.interactive",
+                              "nodes": "@entity.nodes",
+                              "shapes": [],
+                              "type": "biology-canvas",
+                              "width": "@config.width"
+                            },
+                            {
+                              "content": "@entity.hubText",
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Adopted: ",
+                                "@entity.adoptedCount",
+                                " of ",
+                                [
+                                  "array/len",
+                                  "@config.nodes"
+                                ],
+                                " — amber edges are weak-tie bridges; adoption spreads over one strong tie or two weak ties."
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "children": [
+                                "array/map",
+                                [
+                                  "array/range",
+                                  [
+                                    "array/len",
+                                    "@config.nodes"
+                                  ]
+                                ],
+                                [
+                                  "fn",
+                                  "i",
+                                  {
+                                    "action": "TOGGLE_NODE",
+                                    "actionPayload": {
+                                      "nodeId": [
+                                        "object/get",
+                                        [
+                                          "array/nth",
+                                          "@config.nodes",
+                                          "@i"
+                                        ],
+                                        "id"
+                                      ]
+                                    },
+                                    "label": [
+                                      "object/get",
+                                      [
+                                        "array/nth",
+                                        "@config.nodes",
+                                        "@i"
+                                      ],
+                                      "label"
+                                    ],
+                                    "type": "button",
+                                    "variant": [
+                                      "if",
+                                      [
+                                        "array/nth",
+                                        "@entity.nodeEnabled",
+                                        "@i"
+                                      ],
+                                      "primary",
+                                      "ghost"
+                                    ]
+                                  }
+                                ]
+                              ],
+                              "direction": "horizontal",
+                              "gap": "xs",
+                              "type": "stack"
+                            },
+                            {
+                              "children": [
+                                "array/map",
+                                [
+                                  "array/range",
+                                  [
+                                    "array/len",
+                                    "@config.edges"
+                                  ]
+                                ],
+                                [
+                                  "fn",
+                                  "j",
+                                  {
+                                    "action": "TOGGLE_EDGE",
+                                    "actionPayload": {
+                                      "edgeIndex": "@j"
+                                    },
+                                    "label": [
+                                      "str/concat",
+                                      [
+                                        "object/get",
+                                        [
+                                          "array/nth",
+                                          "@config.edges",
+                                          "@j"
+                                        ],
+                                        "from"
+                                      ],
+                                      "-",
+                                      [
+                                        "object/get",
+                                        [
+                                          "array/nth",
+                                          "@config.edges",
+                                          "@j"
+                                        ],
+                                        "to"
+                                      ]
+                                    ],
+                                    "type": "button",
+                                    "variant": [
+                                      "if",
+                                      [
+                                        "array/nth",
+                                        "@entity.edgeEnabled",
+                                        "@j"
+                                      ],
+                                      "secondary",
+                                      "ghost"
+                                    ]
+                                  }
+                                ]
+                              ],
+                              "direction": "horizontal",
+                              "gap": "xs",
+                              "type": "stack"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "NETWORK_UPDATED",
+                    {
+                      "adopted": "@entity.adopted",
+                      "adoptedCount": "@entity.adoptedCount",
+                      "edgeEnabled": "@entity.edgeEnabled",
+                      "hub": "@entity.hubText",
+                      "nodeEnabled": "@entity.nodeEnabled"
+                    }
+                  ]
+                ],
+                "event": "RUN_DIFFUSION",
+                "eventId": "evt_01M04DG95QSDXPB4MGG0XBM72V",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "let",
+                    [
+                      [
+                        "nodeCount",
+                        [
+                          "array/len",
+                          "@config.nodes"
+                        ]
+                      ],
+                      [
+                        "edgeCount",
+                        [
+                          "array/len",
+                          "@config.edges"
+                        ]
+                      ],
+                      [
+                        "enabledN",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@nodeCount"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            true
+                          ]
+                        ]
+                      ],
+                      [
+                        "enabledE",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@edgeCount"
+                          ],
+                          [
+                            "fn",
+                            "j",
+                            true
+                          ]
+                        ]
+                      ],
+                      [
+                        "adoptedInit",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@nodeCount"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "==",
+                              "@i",
+                              0.0
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "degrees",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@nodeCount"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "array/len",
+                              [
+                                "array/filter",
+                                [
+                                  "array/range",
+                                  "@edgeCount"
+                                ],
+                                [
+                                  "fn",
+                                  "j",
+                                  [
+                                    "or",
+                                    [
+                                      "==",
+                                      [
+                                        "object/get",
+                                        [
+                                          "array/nth",
+                                          "@config.edges",
+                                          "@j"
+                                        ],
+                                        "from"
+                                      ],
+                                      [
+                                        "object/get",
+                                        [
+                                          "array/nth",
+                                          "@config.nodes",
+                                          "@i"
+                                        ],
+                                        "id"
+                                      ]
+                                    ],
+                                    [
+                                      "==",
+                                      [
+                                        "object/get",
+                                        [
+                                          "array/nth",
+                                          "@config.edges",
+                                          "@j"
+                                        ],
+                                        "to"
+                                      ],
+                                      [
+                                        "object/get",
+                                        [
+                                          "array/nth",
+                                          "@config.nodes",
+                                          "@i"
+                                        ],
+                                        "id"
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "hubIdx",
+                        [
+                          "array/reduce",
+                          [
+                            "array/range",
+                            "@nodeCount"
+                          ],
+                          0.0,
+                          [
+                            "fn",
+                            [
+                              "acc",
+                              "i"
+                            ],
+                            [
+                              "if",
+                              [
+                                ">",
+                                [
+                                  "array/nth",
+                                  "@degrees",
+                                  "@i"
+                                ],
+                                [
+                                  "array/nth",
+                                  "@degrees",
+                                  "@acc"
+                                ]
+                              ],
+                              "@i",
+                              "@acc"
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "hubTxt",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@config.centralityMetric",
+                            "reach"
+                          ],
+                          [
+                            "str/concat",
+                            "Diffusion reach: 1 of ",
+                            "@nodeCount",
+                            " nodes — press Run Diffusion to spread adoption."
+                          ],
+                          [
+                            "str/concat",
+                            "Degree-centrality hub: ",
+                            [
+                              "object/get",
+                              [
+                                "array/nth",
+                                "@config.nodes",
+                                "@hubIdx"
+                              ],
+                              "label"
+                            ],
+                            " (degree ",
+                            [
+                              "array/nth",
+                              "@degrees",
+                              "@hubIdx"
+                            ],
+                            ")"
+                          ]
+                        ]
+                      ],
+                      [
+                        "renderNodes",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@nodeCount"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "object/merge",
+                              [
+                                "array/nth",
+                                "@config.nodes",
+                                "@i"
+                              ],
+                              {
+                                "color": [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@i",
+                                    0.0
+                                  ],
+                                  "@config.adoptedNodeColor",
+                                  "@config.nodeColor"
+                                ]
+                              }
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "renderEdges",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            "@edgeCount"
+                          ],
+                          [
+                            "fn",
+                            "j",
+                            {
+                              "color": [
+                                "if",
+                                [
+                                  "<",
+                                  [
+                                    "array/nth",
+                                    "@config.tieStrengths",
+                                    "@j"
+                                  ],
+                                  "@config.weakTieThreshold"
+                                ],
+                                "@config.weakTieColor",
+                                "@config.strongTieColor"
+                              ],
+                              "from": [
+                                "object/get",
+                                [
+                                  "array/nth",
+                                  "@config.edges",
+                                  "@j"
+                                ],
+                                "from"
+                              ],
+                              "label": "",
+                              "to": [
+                                "object/get",
+                                [
+                                  "array/nth",
+                                  "@config.edges",
+                                  "@j"
+                                ],
+                                "to"
+                              ]
+                            }
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.nodeEnabled",
+                        "@enabledN"
+                      ],
+                      [
+                        "set",
+                        "@entity.edgeEnabled",
+                        "@enabledE"
+                      ],
+                      [
+                        "set",
+                        "@entity.adopted",
+                        "@adoptedInit"
+                      ],
+                      [
+                        "set",
+                        "@entity.adoptedCount",
+                        1.0
+                      ],
+                      [
+                        "set",
+                        "@entity.hubText",
+                        "@hubTxt"
+                      ],
+                      [
+                        "set",
+                        "@entity.nodes",
+                        "@renderNodes"
+                      ],
+                      [
+                        "set",
+                        "@entity.edges",
+                        "@renderEdges"
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "RUN_DIFFUSION",
+                                  "label": "Run Diffusion",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "animate": "@config.animate",
+                              "backgroundColor": "@config.backgroundColor",
+                              "edges": "@entity.edges",
+                              "height": "@config.height",
+                              "interactive": "@config.interactive",
+                              "nodes": "@entity.nodes",
+                              "shapes": [],
+                              "type": "biology-canvas",
+                              "width": "@config.width"
+                            },
+                            {
+                              "content": "@entity.hubText",
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Adopted: ",
+                                "@entity.adoptedCount",
+                                " of ",
+                                [
+                                  "array/len",
+                                  "@config.nodes"
+                                ],
+                                " — amber edges are weak-tie bridges; adoption spreads over one strong tie or two weak ties."
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "children": [
+                                "array/map",
+                                [
+                                  "array/range",
+                                  [
+                                    "array/len",
+                                    "@config.nodes"
+                                  ]
+                                ],
+                                [
+                                  "fn",
+                                  "i",
+                                  {
+                                    "action": "TOGGLE_NODE",
+                                    "actionPayload": {
+                                      "nodeId": [
+                                        "object/get",
+                                        [
+                                          "array/nth",
+                                          "@config.nodes",
+                                          "@i"
+                                        ],
+                                        "id"
+                                      ]
+                                    },
+                                    "label": [
+                                      "object/get",
+                                      [
+                                        "array/nth",
+                                        "@config.nodes",
+                                        "@i"
+                                      ],
+                                      "label"
+                                    ],
+                                    "type": "button",
+                                    "variant": [
+                                      "if",
+                                      [
+                                        "array/nth",
+                                        "@entity.nodeEnabled",
+                                        "@i"
+                                      ],
+                                      "primary",
+                                      "ghost"
+                                    ]
+                                  }
+                                ]
+                              ],
+                              "direction": "horizontal",
+                              "gap": "xs",
+                              "type": "stack"
+                            },
+                            {
+                              "children": [
+                                "array/map",
+                                [
+                                  "array/range",
+                                  [
+                                    "array/len",
+                                    "@config.edges"
+                                  ]
+                                ],
+                                [
+                                  "fn",
+                                  "j",
+                                  {
+                                    "action": "TOGGLE_EDGE",
+                                    "actionPayload": {
+                                      "edgeIndex": "@j"
+                                    },
+                                    "label": [
+                                      "str/concat",
+                                      [
+                                        "object/get",
+                                        [
+                                          "array/nth",
+                                          "@config.edges",
+                                          "@j"
+                                        ],
+                                        "from"
+                                      ],
+                                      "-",
+                                      [
+                                        "object/get",
+                                        [
+                                          "array/nth",
+                                          "@config.edges",
+                                          "@j"
+                                        ],
+                                        "to"
+                                      ]
+                                    ],
+                                    "type": "button",
+                                    "variant": [
+                                      "if",
+                                      [
+                                        "array/nth",
+                                        "@entity.edgeEnabled",
+                                        "@j"
+                                      ],
+                                      "secondary",
+                                      "ghost"
+                                    ]
+                                  }
+                                ]
+                              ],
+                              "direction": "horizontal",
+                              "gap": "xs",
+                              "type": "stack"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "NETWORK_UPDATED",
+                    {
+                      "adopted": "@entity.adopted",
+                      "adoptedCount": "@entity.adoptedCount",
+                      "edgeEnabled": "@entity.edgeEnabled",
+                      "hub": "@entity.hubText",
+                      "nodeEnabled": "@entity.nodeEnabled"
+                    }
+                  ]
+                ],
+                "event": "RESET",
+                "eventId": "evt_01M04DG95QTT09BA6DCDE39G1W",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 1,
+  "version": "1.0.0"
+}

@@ -1,0 +1,402 @@
+[
+  {
+    "organism": "std-math-quadratic",
+    "orbital": "MathQuadraticOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-math-quadratic.ts",
+    "entities": [
+      {
+        "name": "MathQuadraticState",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "a",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "b",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "c",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "vertexX",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "vertexY",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "discriminant",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "equationLabel",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "rootsLabel",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "curves",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "points",
+            "type": "array",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "MathQuadraticSim",
+        "emittedEvents": [
+          "QUADRATIC_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "QUADRATIC_UPDATED",
+            "direction": "emit",
+            "description": "The parabola's coefficients and derived readouts after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "parabola update, quadratic, coefficients, vertex, roots, discriminant",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "SET_A",
+            "direction": "listen",
+            "description": "Learner dragged the leading-coefficient slider to set a in y = ax² + bx + c.",
+            "tier": "domain"
+          },
+          {
+            "name": "SET_B",
+            "direction": "listen",
+            "description": "Learner dragged the linear-coefficient slider to set b in y = ax² + bx + c.",
+            "tier": "domain"
+          },
+          {
+            "name": "SET_C",
+            "direction": "listen",
+            "description": "Learner dragged the constant-term slider to set c in y = ax² + bx + c.",
+            "tier": "domain"
+          },
+          {
+            "name": "RESET",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "axisColor",
+            "type": "string",
+            "default": "#94a3b8",
+            "label": "Axis Line Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "curveColor",
+            "type": "string",
+            "default": "#2563eb",
+            "label": "Parabola Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "focusColor",
+            "type": "string",
+            "default": "#9333ea",
+            "label": "Focus Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "form",
+            "type": "string",
+            "default": "standard",
+            "label": "Equation Form",
+            "description": "Which algebraic form the equation readout shows: standard ax² + bx + c, vertex a(x − h)² + k, or factored a(x − r₁)(x − r₂).",
+            "synonyms": "standard form, vertex form, factored form, completing the square",
+            "tier": "domain",
+            "enumValues": [
+              "standard",
+              "vertex",
+              "factored"
+            ]
+          },
+          {
+            "key": "gridStep",
+            "type": "number",
+            "default": 1,
+            "label": "Grid Step",
+            "tier": "presentation"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 400,
+            "label": "Height",
+            "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "initialA",
+            "type": "number",
+            "default": 1,
+            "label": "Initial a",
+            "description": "Starting leading coefficient a in y = ax² + bx + c — controls the parabola's opening direction and width.",
+            "synonyms": "leading coefficient, quadratic coefficient, opening, vertical stretch",
+            "tier": "domain"
+          },
+          {
+            "key": "initialB",
+            "type": "number",
+            "default": 0,
+            "label": "Initial b",
+            "description": "Starting linear coefficient b — moves the parabola's axis of symmetry off the y-axis.",
+            "synonyms": "linear coefficient, axis shift",
+            "tier": "domain"
+          },
+          {
+            "key": "initialC",
+            "type": "number",
+            "default": 0,
+            "label": "Initial c",
+            "description": "Starting constant term c — the parabola's y-intercept.",
+            "synonyms": "constant term, y-intercept",
+            "tier": "domain"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "rootColor",
+            "type": "string",
+            "default": "#16a34a",
+            "label": "Root Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "sampleXs",
+            "type": "[number]",
+            "default": [
+              -10,
+              -9.5,
+              -9,
+              -8.5,
+              -8,
+              -7.5,
+              -7,
+              -6.5,
+              -6,
+              -5.5,
+              -5,
+              -4.5,
+              -4,
+              -3.5,
+              -3,
+              -2.5,
+              -2,
+              -1.5,
+              -1,
+              -0.5,
+              0,
+              0.5,
+              1,
+              1.5,
+              2,
+              2.5,
+              3,
+              3.5,
+              4,
+              4.5,
+              5,
+              5.5,
+              6,
+              6.5,
+              7,
+              7.5,
+              8,
+              8.5,
+              9,
+              9.5,
+              10
+            ],
+            "label": "Sample Xs",
+            "description": "X coordinates the parabola is sampled at to draw its curve.",
+            "tier": "domain",
+            "items": {
+              "type": "number"
+            }
+          },
+          {
+            "key": "showAxes",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Axes",
+            "tier": "presentation"
+          },
+          {
+            "key": "showDiscriminant",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Discriminant",
+            "description": "Show the discriminant Δ = b² − 4ac readout under the canvas.",
+            "synonyms": "discriminant, delta, nature of roots",
+            "tier": "presentation"
+          },
+          {
+            "key": "showFocus",
+            "type": "boolean",
+            "default": false,
+            "label": "Show Focus",
+            "description": "Mark the parabola's focus point (h, k + 1/4a) on the canvas.",
+            "synonyms": "focus, focal point",
+            "tier": "presentation"
+          },
+          {
+            "key": "showGrid",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Grid",
+            "tier": "presentation"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Quadratic Explorer",
+            "label": "Title",
+            "description": "Title shown above the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "vertexColor",
+            "type": "string",
+            "default": "#dc2626",
+            "label": "Vertex Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "description": "Canvas width in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "xMax",
+            "type": "number",
+            "default": 10,
+            "label": "X Max",
+            "description": "Maximum x value on the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "xMin",
+            "type": "number",
+            "default": -10,
+            "label": "X Min",
+            "description": "Minimum x value on the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "yMax",
+            "type": "number",
+            "default": 10,
+            "label": "Y Max",
+            "description": "Maximum y value on the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "yMin",
+            "type": "number",
+            "default": -10,
+            "label": "Y Min",
+            "description": "Minimum y value on the canvas.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "MathQuadraticState",
+        "transitionEvents": [
+          "INIT",
+          "MODE_SELECTED",
+          "RESET",
+          "SET_A",
+          "SET_B",
+          "SET_C"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "a",
+            "active",
+            "b",
+            "c",
+            "curves",
+            "discriminant",
+            "equationLabel",
+            "points",
+            "rootsLabel",
+            "title",
+            "vertexX",
+            "vertexY"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "MathQuadraticPage",
+        "defaultPath": "/math-quadratic",
+        "primaryEntity": "MathQuadraticState"
+      }
+    ],
+    "emittedEvents": [
+      "QUADRATIC_UPDATED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

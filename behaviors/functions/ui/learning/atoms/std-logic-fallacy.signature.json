@@ -1,0 +1,356 @@
+[
+  {
+    "organism": "std-logic-fallacy",
+    "orbital": "LogicFallacyOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-logic-fallacy.ts",
+    "entities": [
+      {
+        "name": "LogicFallacyState",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "itemIndex",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "selectedLabel",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "revealed",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "feedback",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "correctCount",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "attemptedCount",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "cardShapes",
+            "type": "array",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "LogicFallacySim",
+        "emittedEvents": [
+          "FALLACY_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "FALLACY_UPDATED",
+            "direction": "emit",
+            "description": "The classification state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "fallacy classification, verdict, running score, argument card, informal fallacy",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "PICK_LABEL",
+            "direction": "listen",
+            "description": "Learner classified the current argument as valid or as a named fallacy; the first pick per item is verdicted and scored.",
+            "tier": "domain"
+          },
+          {
+            "name": "REVEAL_ANSWER",
+            "direction": "listen",
+            "description": "Learner asked for the answer and its explanation.",
+            "tier": "domain"
+          },
+          {
+            "name": "NEXT_ITEM",
+            "direction": "listen",
+            "description": "Learner advanced to the next argument card in the corpus.",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "backgroundColor",
+            "type": "string",
+            "default": "#f8fafc",
+            "label": "Background Color",
+            "description": "Canvas background color.",
+            "tier": "presentation"
+          },
+          {
+            "key": "corpus",
+            "type": "[LogicFallacyItem]",
+            "default": [
+              {
+                "answer": "ad-hominem",
+                "explanation": "It attacks the person rather than the argument — ad hominem.",
+                "hint": "Does this engage the plan, or the person?",
+                "text": "You're only against the plan because you never liked me."
+              },
+              {
+                "answer": "false-dilemma",
+                "explanation": "It presents two extremes as the only possibilities — false dilemma.",
+                "hint": "Are those really the only two options?",
+                "text": "We either ban all cars or accept choking smog forever."
+              },
+              {
+                "answer": "affirming-the-consequent",
+                "explanation": "From P→Q and Q it concludes P — affirming the consequent.",
+                "hint": "Can the match be cancelled for another reason?",
+                "text": "If it rains, the match is cancelled. The match is cancelled, so it rained."
+              },
+              {
+                "answer": "straw-man",
+                "explanation": "It exaggerates the position into something easier to attack — straw man.",
+                "hint": "Is that really what he argued?",
+                "text": "He wants the library closed? Next he'll want books banned."
+              },
+              {
+                "answer": "valid",
+                "explanation": "The conclusion follows necessarily from the premises — a valid argument.",
+                "hint": "Does the conclusion follow from the premises?",
+                "text": "All mammals breathe air. Whales are mammals, so whales breathe air."
+              }
+            ],
+            "label": "Corpus",
+            "description": "Argument cards (text, correct classification, hint, explanation) presented one at a time; the answer must be one of the fallacySet values.",
+            "synonyms": "argument card, corpus, exercise set, fallacy example, argument",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "answer": {
+                  "name": "answer",
+                  "required": true,
+                  "type": "string"
+                },
+                "explanation": {
+                  "name": "explanation",
+                  "required": false,
+                  "type": "string"
+                },
+                "hint": {
+                  "name": "hint",
+                  "required": false,
+                  "type": "string"
+                },
+                "text": {
+                  "name": "text",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "correctColor",
+            "type": "string",
+            "default": "#86efac",
+            "label": "Correct Color",
+            "description": "Box color of the correct label once revealed.",
+            "tier": "presentation"
+          },
+          {
+            "key": "fallacySet",
+            "type": "[LogicFallacyLabel]",
+            "default": [
+              {
+                "color": "#cbd5e1",
+                "label": "Valid",
+                "value": "valid"
+              },
+              {
+                "color": "#fca5a5",
+                "label": "Ad Hominem",
+                "value": "ad-hominem"
+              },
+              {
+                "color": "#fdba74",
+                "label": "Straw Man",
+                "value": "straw-man"
+              },
+              {
+                "color": "#fde68a",
+                "label": "False Dilemma",
+                "value": "false-dilemma"
+              },
+              {
+                "color": "#c4b5fd",
+                "label": "Affirming the Consequent",
+                "value": "affirming-the-consequent"
+              }
+            ],
+            "label": "Fallacy Set",
+            "description": "The classification labels offered as buttons and drawn as the canvas boxes; value is the machine key, label and color are what the learner sees.",
+            "synonyms": "fallacy, ad hominem, straw man, false dilemma, affirming the consequent, informal fallacy, valid argument",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "value": {
+                  "name": "value",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 160,
+            "label": "Height",
+            "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "incorrectColor",
+            "type": "string",
+            "default": "#ef4444",
+            "label": "Incorrect Color",
+            "description": "Box color of a wrong selected label once revealed.",
+            "tier": "presentation"
+          },
+          {
+            "key": "interactive",
+            "type": "boolean",
+            "default": false,
+            "label": "Interactive",
+            "description": "Enable pointer interaction on the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "passScore",
+            "type": "number",
+            "default": 4,
+            "label": "Pass Score",
+            "description": "Number of correct classifications the learner is aiming for, shown next to the running score.",
+            "synonyms": "mastery threshold, target score, passing grade",
+            "tier": "domain"
+          },
+          {
+            "key": "showHint",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Hint",
+            "description": "Show the current card's hint caption before the answer is revealed.",
+            "tier": "domain"
+          },
+          {
+            "key": "shuffle",
+            "type": "boolean",
+            "default": false,
+            "label": "Shuffle",
+            "description": "When true, Next Argument advances by a stride of 3 through the corpus, interleaving cards instead of stepping linearly.",
+            "tier": "domain"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Fallacy Classifier",
+            "label": "Title",
+            "description": "Title shown above the instrument.",
+            "tier": "presentation"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 640,
+            "label": "Width",
+            "description": "Canvas width in pixels.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "LogicFallacyState",
+        "transitionEvents": [
+          "INIT",
+          "MODE_SELECTED",
+          "NEXT_ITEM",
+          "PICK_LABEL",
+          "REVEAL_ANSWER"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "attemptedCount",
+            "cardShapes",
+            "correctCount",
+            "feedback",
+            "itemIndex",
+            "revealed",
+            "selectedLabel",
+            "title"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "LogicFallacyPage",
+        "defaultPath": "/logic-fallacy",
+        "primaryEntity": "LogicFallacyState"
+      }
+    ],
+    "emittedEvents": [
+      "FALLACY_UPDATED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

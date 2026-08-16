@@ -43,7 +43,7 @@ export interface StdUiArenaBoard3dConfig {
   units?: unknown;
 }
 
-type _StdUiArenaBoard3dEntityName = 'GameState';
+type _StdUiArenaBoard3dEntityName = 'GameState' | 'ChaseState' | 'FxState' | 'RoundState';
 type _StdUiArenaBoard3dListenTraitName = 'ChaseAI' | 'FxDecay' | 'RoundLogic' | 'ArenaView';
 
 /**

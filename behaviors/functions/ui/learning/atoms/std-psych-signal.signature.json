@@ -1,0 +1,260 @@
+[
+  {
+    "organism": "std-psych-signal",
+    "orbital": "PsychSignalOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-psych-signal.ts",
+    "entities": [
+      {
+        "name": "PsychSignalScene",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "criterion",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "hitRate",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "falseAlarmRate",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "trialsRun",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "hits",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "falseAlarms",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "curves",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "points",
+            "type": "array",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "PsychSignalSim",
+        "emittedEvents": [
+          "SIGNAL_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "SIGNAL_UPDATED",
+            "direction": "emit",
+            "description": "The signal-detection state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "signal detection, SDT, d prime, criterion, hit rate, false alarm, ROC point, sensitivity, response bias",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "SET_CRITERION",
+            "direction": "listen",
+            "description": "Learner dragged the decision criterion; the theoretical hit and false-alarm rates recompute and the empirical counters re-anchor to zero.",
+            "tier": "domain"
+          },
+          {
+            "name": "RUN_TRIALS",
+            "direction": "listen",
+            "description": "Ran a batch of simulated detection trials at the configured base rate — each trial draws evidence from the noise or signal+noise distribution and scores a hit or false alarm against the criterion.",
+            "tier": "domain"
+          },
+          {
+            "name": "RESET",
+            "direction": "listen",
+            "description": "Learner reset the instrument — criterion, theoretical rates, and empirical counters return to their starting values.",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "animate",
+            "type": "boolean",
+            "default": false,
+            "label": "Animate",
+            "description": "Enable continuous redraw loop.",
+            "tier": "presentation"
+          },
+          {
+            "key": "baseRate",
+            "type": "number",
+            "default": 0.5,
+            "label": "Base Rate",
+            "description": "Probability that a simulated trial actually contains a signal — governs the empirical hit/false-alarm mix in RUN_TRIALS.",
+            "synonyms": "base rate, signal prevalence, prior probability, signal probability",
+            "tier": "domain"
+          },
+          {
+            "key": "criterion",
+            "type": "number",
+            "default": 0.5,
+            "label": "Criterion",
+            "description": "Initial decision threshold on the evidence axis; evidence above it triggers a 'signal present' response. Hit rate is Φ(d′ − c), false-alarm rate Φ(−c).",
+            "synonyms": "decision criterion, response bias, threshold, beta, cutoff",
+            "tier": "domain"
+          },
+          {
+            "key": "criterionColor",
+            "type": "string",
+            "default": "#dc2626",
+            "label": "Criterion Color",
+            "description": "Color of the criterion line and marker.",
+            "tier": "presentation"
+          },
+          {
+            "key": "dPrime",
+            "type": "number",
+            "default": 1.5,
+            "label": "d′ (Sensitivity)",
+            "description": "Separation between the noise and signal+noise distributions, in standard deviations — the learner's sensitivity to the signal.",
+            "synonyms": "d prime, sensitivity, discriminability, signal strength, detectability",
+            "tier": "domain"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 400,
+            "label": "Height",
+            "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "interactive",
+            "type": "boolean",
+            "default": false,
+            "label": "Interactive",
+            "description": "Enable pointer interaction on the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "noiseColor",
+            "type": "string",
+            "default": "#94a3b8",
+            "label": "Noise Curve Color",
+            "description": "Color of the noise distribution curve.",
+            "tier": "presentation"
+          },
+          {
+            "key": "signalColor",
+            "type": "string",
+            "default": "#2563eb",
+            "label": "Signal Curve Color",
+            "description": "Color of the signal+noise distribution curve.",
+            "tier": "presentation"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Signal Detection Theory",
+            "label": "Title",
+            "description": "Title shown above the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "trialsPerRun",
+            "type": "number",
+            "default": 50,
+            "label": "Trials Per Run",
+            "description": "Simulated detection trials per RUN_TRIALS click.",
+            "tier": "domain"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 640,
+            "label": "Width",
+            "description": "Canvas width in pixels.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "PsychSignalScene",
+        "transitionEvents": [
+          "INIT",
+          "MODE_SELECTED",
+          "RESET",
+          "RUN_TRIALS",
+          "SET_CRITERION"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "criterion",
+            "curves",
+            "falseAlarmRate",
+            "falseAlarms",
+            "hitRate",
+            "hits",
+            "points",
+            "title",
+            "trialsRun"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "PsychSignalPage",
+        "defaultPath": "/psych-signal",
+        "primaryEntity": "PsychSignalScene"
+      }
+    ],
+    "emittedEvents": [
+      "SIGNAL_UPDATED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

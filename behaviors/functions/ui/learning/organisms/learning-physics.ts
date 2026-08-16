@@ -47,7 +47,7 @@ export interface StdLearningPhysicsConfig {
   width?: unknown;
 }
 
-type _StdLearningPhysicsEntityName = 'ProjectileScene' | 'FreeFallScene' | 'SpringScene' | 'FrictionScene' | 'CircularScene' | 'PendulumScene' | 'CollisionScene' | 'InclineScene' | 'OrbitScene' | 'GasScene' | 'MagneticScene' | 'WaveScene' | 'ReflectionScene';
+type _StdLearningPhysicsEntityName = 'ProjectileScene' | 'ProjectileState' | 'FreeFallScene' | 'FreeFallState' | 'SpringScene' | 'SpringState' | 'FrictionScene' | 'FrictionState' | 'CircularScene' | 'CircularState' | 'PendulumScene' | 'PendulumState' | 'CollisionScene' | 'CollisionState' | 'InclineScene' | 'InclineState' | 'OrbitScene' | 'OrbitState' | 'GasScene' | 'GasState' | 'MagneticScene' | 'MagneticState' | 'WaveScene' | 'WaveState' | 'ReflectionScene' | 'ReflectionState';
 type _StdLearningPhysicsListenTraitName = 'ProjectileEngine' | 'FreeFallEngine' | 'SpringEngine' | 'FrictionEngine' | 'CircularEngine' | 'PendulumEngine' | 'CollisionEngine' | 'InclineEngine' | 'OrbitEngine' | 'GasEngine' | 'MagneticEngine' | 'WaveEngine' | 'ReflectionEngine';
 
 /**

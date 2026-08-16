@@ -159,7 +159,7 @@ export function stdKnowledgeTracing(params: StdKnowledgeTracingParams): OrbitalD
   });
 }
 
-type _StdKnowledgeTracingEntityName = 'KnowledgeState';
+type _StdKnowledgeTracingEntityName = 'KnowledgeState' | 'Posterior' | 'LabeledExample';
 type _StdKnowledgeTracingListenTraitName = 'ObservationRelay' | 'PosteriorTracker' | 'Labels';
 
 /**

@@ -44,6 +44,13 @@
             "synonyms": "sent, delivered, status"
           },
           {
+            "name": "error",
+            "type": "string",
+            "required": false,
+            "description": "Failure detail from the delivery service when dispatched is false (email/sms/webhook channels only).",
+            "synonyms": "error message, failure reason, dispatch error"
+          },
+          {
             "name": "recordedAt",
             "type": "number",
             "required": false,
@@ -58,7 +65,13 @@
       {
         "name": "NotifyOnEventListener",
         "emittedEvents": [
-          "NotificationDispatched"
+          "NotificationDispatched",
+          "NOTIFY_EMAIL_SENT",
+          "NOTIFY_EMAIL_FAILED",
+          "NOTIFY_SMS_SENT",
+          "NOTIFY_SMS_FAILED",
+          "NOTIFY_WEBHOOK_SENT",
+          "NOTIFY_WEBHOOK_FAILED"
         ],
         "listenedEvents": [],
         "events": [
@@ -67,17 +80,105 @@
             "direction": "emit"
           },
           {
+            "name": "NOTIFY_EMAIL_SENT",
+            "direction": "emit",
+            "description": "email.send service result, flattened onto the payload by the call-service effect executor",
+            "tier": "secondary"
+          },
+          {
+            "name": "NOTIFY_EMAIL_FAILED",
+            "direction": "emit",
+            "description": "email.send service call failed — dispatched lands false and error carries the service detail",
+            "tier": "secondary"
+          },
+          {
+            "name": "NOTIFY_SMS_SENT",
+            "direction": "emit",
+            "description": "twilio.sendSMS service result, flattened onto the payload by the call-service effect executor",
+            "tier": "secondary"
+          },
+          {
+            "name": "NOTIFY_SMS_FAILED",
+            "direction": "emit",
+            "description": "twilio.sendSMS service call failed — dispatched lands false and error carries the service detail",
+            "tier": "secondary"
+          },
+          {
+            "name": "NOTIFY_WEBHOOK_SENT",
+            "direction": "emit",
+            "description": "webhook.send service result, flattened onto the payload by the call-service effect executor",
+            "tier": "secondary"
+          },
+          {
+            "name": "NOTIFY_WEBHOOK_FAILED",
+            "direction": "emit",
+            "description": "webhook.send service call failed — dispatched lands false and error carries the service detail",
+            "tier": "secondary"
+          },
+          {
             "name": "EventOccurred",
             "direction": "listen"
           }
         ],
         "overridableConfigKeys": [
           {
+            "key": "emailSubject",
+            "type": "string",
+            "default": "",
+            "label": "Email subject",
+            "description": "Subject line used for the email channel. Falls back to `template` when blank. Ignored for other channels.",
+            "synonyms": "subject, subject line, email title, mail subject",
+            "tier": "presentation"
+          },
+          {
+            "key": "fallbackRecipient",
+            "type": "string",
+            "default": "",
+            "label": "Fallback recipient",
+            "description": "Recipient used when `recipients` is empty, instead of the acting user. The acting-user fallback (used when this is blank) is intended for personal notifications only — set this to an ops/team address (e.g. 'ops@example.com') for system alerts like low-stock or shipping notices, so the acting user isn't notified in place of the intended audience.",
+            "synonyms": "default recipient, backup recipient, ops address, fallback address, notify default, alert owner",
+            "tier": "policy"
+          },
+          {
             "key": "frequencyCapPerWeek",
             "type": "number",
             "default": 0,
             "label": "Frequency cap (per week)",
             "description": "Max sends per (channel, recipient) per rolling 7-day window. 0 = uncapped. WIRING DEFERRED: needs stateful history query (gap — docs/Almadar_Std_Factories.md).",
+            "tier": "policy"
+          },
+          {
+            "key": "guardField",
+            "type": "string",
+            "default": "",
+            "label": "Guard field (numeric)",
+            "description": "Field read from the upstream event's `data` payload and compared against `guardValue` when `guardOp` is not `eq` (e.g. 'stockLevel', 'quantity'). Ignored when `guardOp` is `eq`.",
+            "synonyms": "threshold field, numeric field, compare field, watched field, data field",
+            "tier": "policy"
+          },
+          {
+            "key": "guardOp",
+            "type": "string",
+            "default": "eq",
+            "label": "Guard comparison",
+            "description": "How to gate dispatch. `eq` (default) does string-equality via `triggerStatus` against the upstream event's `status` field, exactly as before. `gt`/`lt`/`gte`/`lte` instead numerically compare `guardField` (read from the event's `data` payload) against `guardValue` — e.g. fire only when a stock level drops below a threshold.",
+            "synonyms": "comparison operator, threshold operator, guard mode, trigger comparison, numeric gate, greater than, less than, threshold crossing",
+            "tier": "policy",
+            "enumValues": [
+              "eq",
+              "gt",
+              "lt",
+              "gte",
+              "lte"
+            ]
+          },
+          {
+            "key": "guardValue",
+            "type": "number",
+            "default": 0,
+            "label": "Guard value (numeric)",
+            "description": "Threshold compared against `guardField` when `guardOp` is not `eq` (e.g. fire when stock drops below 5).",
+            "synonyms": "threshold, cutoff, limit, watermark, trigger value",
             "tier": "policy"
           },
           {
@@ -97,9 +198,15 @@
             "type": "string",
             "default": "in-app",
             "label": "Channel",
-            "description": "Delivery channel: in-app, email, or sms",
+            "description": "Delivery channel. `in-app` (default) emits the in-app `notify` toast — unchanged from prior versions. `email`/`sms`/`webhook` dispatch through call-service at event time (email.send / twilio.sendSMS / webhook.send) and persist a NotificationRecord audit row with an honest `dispatched` flag: true only once the service call succeeds, false plus the failure detail in `error` otherwise. `webhook` requires `webhookUrl` to actually dispatch; a blank `webhookUrl` still records the audit row undispatched rather than failing.",
             "synonyms": "delivery method, notification channel, send via, dispatch through",
-            "tier": "policy"
+            "tier": "policy",
+            "enumValues": [
+              "in-app",
+              "email",
+              "sms",
+              "webhook"
+            ]
           },
           {
             "key": "quietHours",
@@ -129,7 +236,7 @@
             "type": "[string]",
             "default": [],
             "label": "Recipients",
-            "description": "Recipient ids/addresses. v1.1 uses the first entry; multi-recipient fan-out lands in v1.2 (gap). When empty, falls back to the authenticated user.",
+            "description": "Recipient ids/addresses. v1.1 uses the first entry; multi-recipient fan-out lands in v1.2 (gap). When empty, falls back to `fallbackRecipient` if set, otherwise the authenticated user.",
             "synonyms": "targets, addressees, notify to",
             "tier": "policy",
             "items": {
@@ -171,15 +278,39 @@
             "type": "string",
             "default": "",
             "label": "Trigger status",
-            "description": "When set, dispatch only when the upstream event's `status` field equals this value (e.g. fire only when a record becomes 'approved'). Empty = fire on every subscribed event.",
+            "description": "When `guardOp` is `eq` and this is set, dispatch only when the upstream event's `status` field equals this value (e.g. fire only when a record becomes 'approved'). Empty = fire on every subscribed event. Ignored when `guardOp` is a numeric comparison.",
             "synonyms": "on status, when status, status filter, only when, fire on, react on status",
+            "tier": "policy"
+          },
+          {
+            "key": "webhookSecret",
+            "type": "string",
+            "default": "",
+            "label": "Webhook secret",
+            "description": "Signing secret forwarded to the webhook service so the receiving endpoint can verify the payload. Ignored when `webhookUrl` is blank.",
+            "synonyms": "signing secret, hmac secret, webhook signature, shared secret",
+            "tier": "internal"
+          },
+          {
+            "key": "webhookUrl",
+            "type": "string",
+            "default": "",
+            "label": "Webhook URL",
+            "description": "Destination endpoint for the webhook channel. Dispatch only fires when this is non-blank; a blank URL on channel \"webhook\" records the audit row with dispatched:false instead of crashing (a consumer misconfiguration, not a failure).",
+            "synonyms": "webhook endpoint, callback url, target url, http endpoint, notify url",
             "tier": "policy"
           }
         ],
         "capabilities": [],
         "linkedEntity": "NotificationRecord",
         "transitionEvents": [
-          "EventOccurred"
+          "EventOccurred",
+          "NOTIFY_EMAIL_FAILED",
+          "NOTIFY_EMAIL_SENT",
+          "NOTIFY_SMS_FAILED",
+          "NOTIFY_SMS_SENT",
+          "NOTIFY_WEBHOOK_FAILED",
+          "NOTIFY_WEBHOOK_SENT"
         ],
         "effectEntityRefs": [
           "NotificationRecord"
@@ -194,6 +325,12 @@
       }
     ],
     "emittedEvents": [
+      "NOTIFY_EMAIL_FAILED",
+      "NOTIFY_EMAIL_SENT",
+      "NOTIFY_SMS_FAILED",
+      "NOTIFY_SMS_SENT",
+      "NOTIFY_WEBHOOK_FAILED",
+      "NOTIFY_WEBHOOK_SENT",
       "NotificationDispatched"
     ],
     "listenedEvents": [],

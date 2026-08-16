@@ -1,0 +1,586 @@
+app std-math-matrix "1.0.0"
+"Linear-transform engine — 2×2 matrix entries (or rotation/scale/shear/reflection presets) morph a shape and the basis vectors live on the plane, with a determinant readout. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital MathMatrixOrbital {
+  type MathMatrixSample = {
+    x : number!
+    y : number!
+  }
+  type MathMatrixCurve = {
+    label : string
+    color : string
+    samples : [MathMatrixSample]
+  }
+  type MathMatrixVector = {
+    x : number!
+    y : number!
+    vx : number!
+    vy : number!
+    color : string
+    label : string
+  }
+
+  entity MathMatrixState [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    m11 : number
+    m12 : number
+    m21 : number
+    m22 : number
+    t11 : number
+    t12 : number
+    t21 : number
+    t22 : number
+    determinant : number
+    animating : boolean = false
+    animT : number = 0
+    showBasis : boolean = false
+    curves : [MathMatrixCurve]
+    vectors : [MathMatrixVector]
+  }
+
+  trait MathMatrixSim -> @rebindable MathMatrixState [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.t11 (array/nth @config.matrix 0))
+        (set @entity.t12 (array/nth @config.matrix 1))
+        (set @entity.t21 (array/nth @config.matrix 2))
+        (set @entity.t22 (array/nth @config.matrix 3))
+        (set @entity.m11 @entity.t11)
+        (set @entity.m12 @entity.t12)
+        (set @entity.m21 @entity.t21)
+        (set @entity.m22 @entity.t22)
+        (set @entity.showBasis @config.showBasisVectors)
+        (set @entity.animating false)
+        (set @entity.animT 0)
+        (let (
+            (corners (if (== @config.shape "triangle") [ { x: 0, y: 1.5 }, { x: -1.5, y: -1 }, { x: 1.5, y: -1 }, { x: 0, y: 1.5 } ] (if (== @config.shape "arrow") [ { x: 0, y: 2 }, { x: -1, y: 0 }, { x: -0.3, y: 0 }, { x: -0.3, y: -2 }, { x: 0.3, y: -2 }, { x: 0.3, y: 0 }, { x: 1, y: 0 }, { x: 0, y: 2 } ] [ { x: -1, y: -1 }, { x: 1, y: -1 }, { x: 1, y: 1 }, { x: -1, y: 1 }, { x: -1, y: -1 } ])))
+            (ghostCurve { label: "original", color: @config.ghostColor, samples: @corners })
+            (shapeCurve { label: "transformed", color: @config.shapeColor, samples: (array/map @corners (fn p { x: (+ (* @entity.m11 (object/get @p x)) (* @entity.m12 (object/get @p y))), y: (+ (* @entity.m21 (object/get @p x)) (* @entity.m22 (object/get @p y))) })) })
+          )
+          (do
+            (set @entity.determinant (- (* @entity.t11 @entity.t22) (* @entity.t12 @entity.t21)))
+            (set @entity.curves [ @ghostCurve, @shapeCurve ])
+            (set @entity.vectors (if @entity.showBasis [ { x: 0, y: 0, vx: @entity.m11, vy: @entity.m21, color: @config.basisColor1, label: "e₁′" }, { x: 0, y: 0, vx: @entity.m12, vy: @entity.m22, color: @config.basisColor2, label: "e₂′" } ] []))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: APPLY_PRESET, actionPayload: { preset: "identity" }, label: "Identity", variant: secondary },
+                    { type: button, action: APPLY_PRESET, actionPayload: { preset: "rotation" }, label: "Rotate 30°", variant: secondary },
+                    { type: button, action: APPLY_PRESET, actionPayload: { preset: "scale" }, label: "Scale ×1.5", variant: secondary },
+                    { type: button, action: APPLY_PRESET, actionPayload: { preset: "shear" }, label: "Shear", variant: secondary },
+                    { type: button, action: APPLY_PRESET, actionPayload: { preset: "reflect" }, label: "Reflect", variant: secondary },
+                    { type: button, action: ANIMATE_TRANSFORM, label: "Animate", variant: primary },
+                    { type: button, action: TOGGLE_BASIS, label: (if @entity.showBasis "Hide basis" "Show basis"), variant: ghost }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.xMin, xMax: @config.xMax, yMin: @config.yMin, yMax: @config.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: @entity.vectors, shapes: [], interactive: false, animate: false },
+                { type: stack, direction: horizontal, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat "m₁₁ = " (math/round @entity.m11 2)) },
+                        { type: range-slider, min: -2.5, max: 2.5, step: 0.1, value: @entity.m11, showTooltip: true, onChange: SET_ENTRY, actionPayload: { entry: "m11" } }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat "m₁₂ = " (math/round @entity.m12 2)) },
+                        { type: range-slider, min: -2.5, max: 2.5, step: 0.1, value: @entity.m12, showTooltip: true, onChange: SET_ENTRY, actionPayload: { entry: "m12" } }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat "m₂₁ = " (math/round @entity.m21 2)) },
+                        { type: range-slider, min: -2.5, max: 2.5, step: 0.1, value: @entity.m21, showTooltip: true, onChange: SET_ENTRY, actionPayload: { entry: "m21" } }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat "m₂₂ = " (math/round @entity.m22 2)) },
+                        { type: range-slider, min: -2.5, max: 2.5, step: 0.1, value: @entity.m22, showTooltip: true, onChange: SET_ENTRY, actionPayload: { entry: "m22" } }
+                      ] }
+                  ] },
+                { type: typography, variant: body, content: (str/concat "[ " (math/round @entity.m11 2) "  " (math/round @entity.m12 2) " ]") },
+                { type: typography, variant: body, content: (str/concat "[ " (math/round @entity.m21 2) "  " (math/round @entity.m22 2) " ]   det = " (math/round @entity.determinant 3) " — area scale factor") }
+              ] }
+          ]
+        })
+        (emit MATRIX_UPDATED { m11: @entity.m11, m12: @entity.m12, m21: @entity.m21, m22: @entity.m22, determinant: @entity.determinant })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.t11 (array/nth @config.matrix 0))
+        (set @entity.t12 (array/nth @config.matrix 1))
+        (set @entity.t21 (array/nth @config.matrix 2))
+        (set @entity.t22 (array/nth @config.matrix 3))
+        (set @entity.m11 @entity.t11)
+        (set @entity.m12 @entity.t12)
+        (set @entity.m21 @entity.t21)
+        (set @entity.m22 @entity.t22)
+        (set @entity.showBasis @config.showBasisVectors)
+        (set @entity.animating false)
+        (set @entity.animT 0)
+        (let (
+            (corners (if (== @config.shape "triangle") [ { x: 0, y: 1.5 }, { x: -1.5, y: -1 }, { x: 1.5, y: -1 }, { x: 0, y: 1.5 } ] (if (== @config.shape "arrow") [ { x: 0, y: 2 }, { x: -1, y: 0 }, { x: -0.3, y: 0 }, { x: -0.3, y: -2 }, { x: 0.3, y: -2 }, { x: 0.3, y: 0 }, { x: 1, y: 0 }, { x: 0, y: 2 } ] [ { x: -1, y: -1 }, { x: 1, y: -1 }, { x: 1, y: 1 }, { x: -1, y: 1 }, { x: -1, y: -1 } ])))
+            (ghostCurve { label: "original", color: @config.ghostColor, samples: @corners })
+            (shapeCurve { label: "transformed", color: @config.shapeColor, samples: (array/map @corners (fn p { x: (+ (* @entity.m11 (object/get @p x)) (* @entity.m12 (object/get @p y))), y: (+ (* @entity.m21 (object/get @p x)) (* @entity.m22 (object/get @p y))) })) })
+          )
+          (do
+            (set @entity.determinant (- (* @entity.t11 @entity.t22) (* @entity.t12 @entity.t21)))
+            (set @entity.curves [ @ghostCurve, @shapeCurve ])
+            (set @entity.vectors (if @entity.showBasis [ { x: 0, y: 0, vx: @entity.m11, vy: @entity.m21, color: @config.basisColor1, label: "e₁′" }, { x: 0, y: 0, vx: @entity.m12, vy: @entity.m22, color: @config.basisColor2, label: "e₂′" } ] []))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: APPLY_PRESET, actionPayload: { preset: "identity" }, label: "Identity", variant: secondary },
+                    { type: button, action: APPLY_PRESET, actionPayload: { preset: "rotation" }, label: "Rotate 30°", variant: secondary },
+                    { type: button, action: APPLY_PRESET, actionPayload: { preset: "scale" }, label: "Scale ×1.5", variant: secondary },
+                    { type: button, action: APPLY_PRESET, actionPayload: { preset: "shear" }, label: "Shear", variant: secondary },
+                    { type: button, action: APPLY_PRESET, actionPayload: { preset: "reflect" }, label: "Reflect", variant: secondary },
+                    { type: button, action: ANIMATE_TRANSFORM, label: "Animate", variant: primary },
+                    { type: button, action: TOGGLE_BASIS, label: (if @entity.showBasis "Hide basis" "Show basis"), variant: ghost }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.xMin, xMax: @config.xMax, yMin: @config.yMin, yMax: @config.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: @entity.vectors, shapes: [], interactive: false, animate: false },
+                { type: stack, direction: horizontal, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat "m₁₁ = " (math/round @entity.m11 2)) },
+                        { type: range-slider, min: -2.5, max: 2.5, step: 0.1, value: @entity.m11, showTooltip: true, onChange: SET_ENTRY, actionPayload: { entry: "m11" } }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat "m₁₂ = " (math/round @entity.m12 2)) },
+                        { type: range-slider, min: -2.5, max: 2.5, step: 0.1, value: @entity.m12, showTooltip: true, onChange: SET_ENTRY, actionPayload: { entry: "m12" } }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat "m₂₁ = " (math/round @entity.m21 2)) },
+                        { type: range-slider, min: -2.5, max: 2.5, step: 0.1, value: @entity.m21, showTooltip: true, onChange: SET_ENTRY, actionPayload: { entry: "m21" } }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat "m₂₂ = " (math/round @entity.m22 2)) },
+                        { type: range-slider, min: -2.5, max: 2.5, step: 0.1, value: @entity.m22, showTooltip: true, onChange: SET_ENTRY, actionPayload: { entry: "m22" } }
+                      ] }
+                  ] },
+                { type: typography, variant: body, content: (str/concat "[ " (math/round @entity.m11 2) "  " (math/round @entity.m12 2) " ]") },
+                { type: typography, variant: body, content: (str/concat "[ " (math/round @entity.m21 2) "  " (math/round @entity.m22 2) " ]   det = " (math/round @entity.determinant 3) " — area scale factor") }
+              ] }
+          ]
+        })
+        (emit MATRIX_UPDATED { m11: @entity.m11, m12: @entity.m12, m21: @entity.m21, m22: @entity.m22, determinant: @entity.determinant })
+
+      SET_ENTRY -> idle when (== @entity.active true)
+        (let (
+            (nt11 (if (== ?entry "m11") (math/clamp ?value -2.5 2.5) @entity.t11))
+            (nt12 (if (== ?entry "m12") (math/clamp ?value -2.5 2.5) @entity.t12))
+            (nt21 (if (== ?entry "m21") (math/clamp ?value -2.5 2.5) @entity.t21))
+            (nt22 (if (== ?entry "m22") (math/clamp ?value -2.5 2.5) @entity.t22))
+            (corners (if (== @config.shape "triangle") [ { x: 0, y: 1.5 }, { x: -1.5, y: -1 }, { x: 1.5, y: -1 }, { x: 0, y: 1.5 } ] (if (== @config.shape "arrow") [ { x: 0, y: 2 }, { x: -1, y: 0 }, { x: -0.3, y: 0 }, { x: -0.3, y: -2 }, { x: 0.3, y: -2 }, { x: 0.3, y: 0 }, { x: 1, y: 0 }, { x: 0, y: 2 } ] [ { x: -1, y: -1 }, { x: 1, y: -1 }, { x: 1, y: 1 }, { x: -1, y: 1 }, { x: -1, y: -1 } ])))
+            (ghostCurve { label: "original", color: @config.ghostColor, samples: @corners })
+            (shapeCurve { label: "transformed", color: @config.shapeColor, samples: (array/map @corners (fn p { x: (+ (* @nt11 (object/get @p x)) (* @nt12 (object/get @p y))), y: (+ (* @nt21 (object/get @p x)) (* @nt22 (object/get @p y))) })) })
+          )
+          (do
+            (set @entity.t11 @nt11)
+            (set @entity.t12 @nt12)
+            (set @entity.t21 @nt21)
+            (set @entity.t22 @nt22)
+            (set @entity.m11 @nt11)
+            (set @entity.m12 @nt12)
+            (set @entity.m21 @nt21)
+            (set @entity.m22 @nt22)
+            (set @entity.animating false)
+            (set @entity.animT 0)
+            (set @entity.determinant (- (* @nt11 @nt22) (* @nt12 @nt21)))
+            (set @entity.curves [ @ghostCurve, @shapeCurve ])
+            (set @entity.vectors (if @entity.showBasis [ { x: 0, y: 0, vx: @nt11, vy: @nt21, color: @config.basisColor1, label: "e₁′" }, { x: 0, y: 0, vx: @nt12, vy: @nt22, color: @config.basisColor2, label: "e₂′" } ] []))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: APPLY_PRESET, actionPayload: { preset: "identity" }, label: "Identity", variant: secondary },
+                    { type: button, action: APPLY_PRESET, actionPayload: { preset: "rotation" }, label: "Rotate 30°", variant: secondary },
+                    { type: button, action: APPLY_PRESET, actionPayload: { preset: "scale" }, label: "Scale ×1.5", variant: secondary },
+                    { type: button, action: APPLY_PRESET, actionPayload: { preset: "shear" }, label: "Shear", variant: secondary },
+                    { type: button, action: APPLY_PRESET, actionPayload: { preset: "reflect" }, label: "Reflect", variant: secondary },
+                    { type: button, action: ANIMATE_TRANSFORM, label: "Animate", variant: primary },
+                    { type: button, action: TOGGLE_BASIS, label: (if @entity.showBasis "Hide basis" "Show basis"), variant: ghost }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.xMin, xMax: @config.xMax, yMin: @config.yMin, yMax: @config.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: @entity.vectors, shapes: [], interactive: false, animate: false },
+                { type: stack, direction: horizontal, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat "m₁₁ = " (math/round @entity.m11 2)) },
+                        { type: range-slider, min: -2.5, max: 2.5, step: 0.1, value: @entity.m11, showTooltip: true, onChange: SET_ENTRY, actionPayload: { entry: "m11" } }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat "m₁₂ = " (math/round @entity.m12 2)) },
+                        { type: range-slider, min: -2.5, max: 2.5, step: 0.1, value: @entity.m12, showTooltip: true, onChange: SET_ENTRY, actionPayload: { entry: "m12" } }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat "m₂₁ = " (math/round @entity.m21 2)) },
+                        { type: range-slider, min: -2.5, max: 2.5, step: 0.1, value: @entity.m21, showTooltip: true, onChange: SET_ENTRY, actionPayload: { entry: "m21" } }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat "m₂₂ = " (math/round @entity.m22 2)) },
+                        { type: range-slider, min: -2.5, max: 2.5, step: 0.1, value: @entity.m22, showTooltip: true, onChange: SET_ENTRY, actionPayload: { entry: "m22" } }
+                      ] }
+                  ] },
+                { type: typography, variant: body, content: (str/concat "[ " (math/round @entity.m11 2) "  " (math/round @entity.m12 2) " ]") },
+                { type: typography, variant: body, content: (str/concat "[ " (math/round @entity.m21 2) "  " (math/round @entity.m22 2) " ]   det = " (math/round @entity.determinant 3) " — area scale factor") }
+              ] }
+          ]
+        })
+        (emit MATRIX_UPDATED { m11: @entity.m11, m12: @entity.m12, m21: @entity.m21, m22: @entity.m22, determinant: @entity.determinant })
+
+      APPLY_PRESET -> idle when (== @entity.active true)
+        (let (
+            (nt11 (if (== ?preset "rotation") 0.866 (if (== ?preset "scale") 1.5 (if (== ?preset "reflect") -1 1))))
+            (nt12 (if (== ?preset "rotation") -0.5 (if (== ?preset "shear") 1 0)))
+            (nt21 (if (== ?preset "rotation") 0.5 0))
+            (nt22 (if (== ?preset "rotation") 0.866 (if (== ?preset "scale") 1.5 1)))
+            (corners (if (== @config.shape "triangle") [ { x: 0, y: 1.5 }, { x: -1.5, y: -1 }, { x: 1.5, y: -1 }, { x: 0, y: 1.5 } ] (if (== @config.shape "arrow") [ { x: 0, y: 2 }, { x: -1, y: 0 }, { x: -0.3, y: 0 }, { x: -0.3, y: -2 }, { x: 0.3, y: -2 }, { x: 0.3, y: 0 }, { x: 1, y: 0 }, { x: 0, y: 2 } ] [ { x: -1, y: -1 }, { x: 1, y: -1 }, { x: 1, y: 1 }, { x: -1, y: 1 }, { x: -1, y: -1 } ])))
+            (ghostCurve { label: "original", color: @config.ghostColor, samples: @corners })
+            (shapeCurve { label: "transformed", color: @config.shapeColor, samples: (array/map @corners (fn p { x: (+ (* @nt11 (object/get @p x)) (* @nt12 (object/get @p y))), y: (+ (* @nt21 (object/get @p x)) (* @nt22 (object/get @p y))) })) })
+          )
+          (do
+            (set @entity.t11 @nt11)
+            (set @entity.t12 @nt12)
+            (set @entity.t21 @nt21)
+            (set @entity.t22 @nt22)
+            (set @entity.m11 @nt11)
+            (set @entity.m12 @nt12)
+            (set @entity.m21 @nt21)
+            (set @entity.m22 @nt22)
+            (set @entity.animating false)
+            (set @entity.animT 0)
+            (set @entity.determinant (- (* @nt11 @nt22) (* @nt12 @nt21)))
+            (set @entity.curves [ @ghostCurve, @shapeCurve ])
+            (set @entity.vectors (if @entity.showBasis [ { x: 0, y: 0, vx: @nt11, vy: @nt21, color: @config.basisColor1, label: "e₁′" }, { x: 0, y: 0, vx: @nt12, vy: @nt22, color: @config.basisColor2, label: "e₂′" } ] []))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: APPLY_PRESET, actionPayload: { preset: "identity" }, label: "Identity", variant: secondary },
+                    { type: button, action: APPLY_PRESET, actionPayload: { preset: "rotation" }, label: "Rotate 30°", variant: secondary },
+                    { type: button, action: APPLY_PRESET, actionPayload: { preset: "scale" }, label: "Scale ×1.5", variant: secondary },
+                    { type: button, action: APPLY_PRESET, actionPayload: { preset: "shear" }, label: "Shear", variant: secondary },
+                    { type: button, action: APPLY_PRESET, actionPayload: { preset: "reflect" }, label: "Reflect", variant: secondary },
+                    { type: button, action: ANIMATE_TRANSFORM, label: "Animate", variant: primary },
+                    { type: button, action: TOGGLE_BASIS, label: (if @entity.showBasis "Hide basis" "Show basis"), variant: ghost }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.xMin, xMax: @config.xMax, yMin: @config.yMin, yMax: @config.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: @entity.vectors, shapes: [], interactive: false, animate: false },
+                { type: stack, direction: horizontal, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat "m₁₁ = " (math/round @entity.m11 2)) },
+                        { type: range-slider, min: -2.5, max: 2.5, step: 0.1, value: @entity.m11, showTooltip: true, onChange: SET_ENTRY, actionPayload: { entry: "m11" } }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat "m₁₂ = " (math/round @entity.m12 2)) },
+                        { type: range-slider, min: -2.5, max: 2.5, step: 0.1, value: @entity.m12, showTooltip: true, onChange: SET_ENTRY, actionPayload: { entry: "m12" } }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat "m₂₁ = " (math/round @entity.m21 2)) },
+                        { type: range-slider, min: -2.5, max: 2.5, step: 0.1, value: @entity.m21, showTooltip: true, onChange: SET_ENTRY, actionPayload: { entry: "m21" } }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat "m₂₂ = " (math/round @entity.m22 2)) },
+                        { type: range-slider, min: -2.5, max: 2.5, step: 0.1, value: @entity.m22, showTooltip: true, onChange: SET_ENTRY, actionPayload: { entry: "m22" } }
+                      ] }
+                  ] },
+                { type: typography, variant: body, content: (str/concat "[ " (math/round @entity.m11 2) "  " (math/round @entity.m12 2) " ]") },
+                { type: typography, variant: body, content: (str/concat "[ " (math/round @entity.m21 2) "  " (math/round @entity.m22 2) " ]   det = " (math/round @entity.determinant 3) " — area scale factor") }
+              ] }
+          ]
+        })
+        (emit MATRIX_UPDATED { m11: @entity.m11, m12: @entity.m12, m21: @entity.m21, m22: @entity.m22, determinant: @entity.determinant })
+
+      TOGGLE_BASIS -> idle when (== @entity.active true)
+        (set @entity.showBasis (== @entity.showBasis false))
+        (set @entity.vectors (if @entity.showBasis [ { x: 0, y: 0, vx: @entity.m11, vy: @entity.m21, color: @config.basisColor1, label: "e₁′" }, { x: 0, y: 0, vx: @entity.m12, vy: @entity.m22, color: @config.basisColor2, label: "e₂′" } ] []))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: APPLY_PRESET, actionPayload: { preset: "identity" }, label: "Identity", variant: secondary },
+                    { type: button, action: APPLY_PRESET, actionPayload: { preset: "rotation" }, label: "Rotate 30°", variant: secondary },
+                    { type: button, action: APPLY_PRESET, actionPayload: { preset: "scale" }, label: "Scale ×1.5", variant: secondary },
+                    { type: button, action: APPLY_PRESET, actionPayload: { preset: "shear" }, label: "Shear", variant: secondary },
+                    { type: button, action: APPLY_PRESET, actionPayload: { preset: "reflect" }, label: "Reflect", variant: secondary },
+                    { type: button, action: ANIMATE_TRANSFORM, label: "Animate", variant: primary },
+                    { type: button, action: TOGGLE_BASIS, label: (if @entity.showBasis "Hide basis" "Show basis"), variant: ghost }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.xMin, xMax: @config.xMax, yMin: @config.yMin, yMax: @config.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: @entity.vectors, shapes: [], interactive: false, animate: false },
+                { type: stack, direction: horizontal, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat "m₁₁ = " (math/round @entity.m11 2)) },
+                        { type: range-slider, min: -2.5, max: 2.5, step: 0.1, value: @entity.m11, showTooltip: true, onChange: SET_ENTRY, actionPayload: { entry: "m11" } }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat "m₁₂ = " (math/round @entity.m12 2)) },
+                        { type: range-slider, min: -2.5, max: 2.5, step: 0.1, value: @entity.m12, showTooltip: true, onChange: SET_ENTRY, actionPayload: { entry: "m12" } }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat "m₂₁ = " (math/round @entity.m21 2)) },
+                        { type: range-slider, min: -2.5, max: 2.5, step: 0.1, value: @entity.m21, showTooltip: true, onChange: SET_ENTRY, actionPayload: { entry: "m21" } }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat "m₂₂ = " (math/round @entity.m22 2)) },
+                        { type: range-slider, min: -2.5, max: 2.5, step: 0.1, value: @entity.m22, showTooltip: true, onChange: SET_ENTRY, actionPayload: { entry: "m22" } }
+                      ] }
+                  ] },
+                { type: typography, variant: body, content: (str/concat "[ " (math/round @entity.m11 2) "  " (math/round @entity.m12 2) " ]") },
+                { type: typography, variant: body, content: (str/concat "[ " (math/round @entity.m21 2) "  " (math/round @entity.m22 2) " ]   det = " (math/round @entity.determinant 3) " — area scale factor") }
+              ] }
+          ]
+        })
+        (emit MATRIX_UPDATED { m11: @entity.m11, m12: @entity.m12, m21: @entity.m21, m22: @entity.m22, determinant: @entity.determinant })
+
+      ANIMATE_TRANSFORM -> idle when (== @entity.active true)
+        (set @entity.animating true)
+        (set @entity.animT 0)
+        (set @entity.m11 1)
+        (set @entity.m12 0)
+        (set @entity.m21 0)
+        (set @entity.m22 1)
+        (let (
+            (corners (if (== @config.shape "triangle") [ { x: 0, y: 1.5 }, { x: -1.5, y: -1 }, { x: 1.5, y: -1 }, { x: 0, y: 1.5 } ] (if (== @config.shape "arrow") [ { x: 0, y: 2 }, { x: -1, y: 0 }, { x: -0.3, y: 0 }, { x: -0.3, y: -2 }, { x: 0.3, y: -2 }, { x: 0.3, y: 0 }, { x: 1, y: 0 }, { x: 0, y: 2 } ] [ { x: -1, y: -1 }, { x: 1, y: -1 }, { x: 1, y: 1 }, { x: -1, y: 1 }, { x: -1, y: -1 } ])))
+            (ghostCurve { label: "original", color: @config.ghostColor, samples: @corners })
+            (shapeCurve { label: "transformed", color: @config.shapeColor, samples: @corners })
+          )
+          (do
+            (set @entity.curves [ @ghostCurve, @shapeCurve ])
+            (set @entity.vectors (if @entity.showBasis [ { x: 0, y: 0, vx: 1, vy: 0, color: @config.basisColor1, label: "e₁′" }, { x: 0, y: 0, vx: 0, vy: 1, color: @config.basisColor2, label: "e₂′" } ] []))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: APPLY_PRESET, actionPayload: { preset: "identity" }, label: "Identity", variant: secondary },
+                    { type: button, action: APPLY_PRESET, actionPayload: { preset: "rotation" }, label: "Rotate 30°", variant: secondary },
+                    { type: button, action: APPLY_PRESET, actionPayload: { preset: "scale" }, label: "Scale ×1.5", variant: secondary },
+                    { type: button, action: APPLY_PRESET, actionPayload: { preset: "shear" }, label: "Shear", variant: secondary },
+                    { type: button, action: APPLY_PRESET, actionPayload: { preset: "reflect" }, label: "Reflect", variant: secondary },
+                    { type: button, action: ANIMATE_TRANSFORM, label: "Animate", variant: primary },
+                    { type: button, action: TOGGLE_BASIS, label: (if @entity.showBasis "Hide basis" "Show basis"), variant: ghost }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.xMin, xMax: @config.xMax, yMin: @config.yMin, yMax: @config.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: @entity.vectors, shapes: [], interactive: false, animate: false },
+                { type: stack, direction: horizontal, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat "m₁₁ = " (math/round @entity.m11 2)) },
+                        { type: range-slider, min: -2.5, max: 2.5, step: 0.1, value: @entity.m11, showTooltip: true, onChange: SET_ENTRY, actionPayload: { entry: "m11" } }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat "m₁₂ = " (math/round @entity.m12 2)) },
+                        { type: range-slider, min: -2.5, max: 2.5, step: 0.1, value: @entity.m12, showTooltip: true, onChange: SET_ENTRY, actionPayload: { entry: "m12" } }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat "m₂₁ = " (math/round @entity.m21 2)) },
+                        { type: range-slider, min: -2.5, max: 2.5, step: 0.1, value: @entity.m21, showTooltip: true, onChange: SET_ENTRY, actionPayload: { entry: "m21" } }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat "m₂₂ = " (math/round @entity.m22 2)) },
+                        { type: range-slider, min: -2.5, max: 2.5, step: 0.1, value: @entity.m22, showTooltip: true, onChange: SET_ENTRY, actionPayload: { entry: "m22" } }
+                      ] }
+                  ] },
+                { type: typography, variant: body, content: (str/concat "[ " (math/round @entity.m11 2) "  " (math/round @entity.m12 2) " ]") },
+                { type: typography, variant: body, content: (str/concat "[ " (math/round @entity.m21 2) "  " (math/round @entity.m22 2) " ]   det = " (math/round @entity.determinant 3) " — area scale factor") }
+              ] }
+          ]
+        })
+        (emit MATRIX_UPDATED { m11: @entity.m11, m12: @entity.m12, m21: @entity.m21, m22: @entity.m22, determinant: @entity.determinant })
+    }
+
+    ticks {
+      matrixTick every 48ms
+        when @entity.animating
+        (let (
+            (nt (math/min (+ @entity.animT 0.04) 1))
+            (dm11 (math/lerp 1 @entity.t11 @nt))
+            (dm12 (math/lerp 0 @entity.t12 @nt))
+            (dm21 (math/lerp 0 @entity.t21 @nt))
+            (dm22 (math/lerp 1 @entity.t22 @nt))
+            (corners (if (== @config.shape "triangle") [ { x: 0, y: 1.5 }, { x: -1.5, y: -1 }, { x: 1.5, y: -1 }, { x: 0, y: 1.5 } ] (if (== @config.shape "arrow") [ { x: 0, y: 2 }, { x: -1, y: 0 }, { x: -0.3, y: 0 }, { x: -0.3, y: -2 }, { x: 0.3, y: -2 }, { x: 0.3, y: 0 }, { x: 1, y: 0 }, { x: 0, y: 2 } ] [ { x: -1, y: -1 }, { x: 1, y: -1 }, { x: 1, y: 1 }, { x: -1, y: 1 }, { x: -1, y: -1 } ])))
+            (ghostCurve { label: "original", color: @config.ghostColor, samples: @corners })
+            (shapeCurve { label: "transformed", color: @config.shapeColor, samples: (array/map @corners (fn p { x: (+ (* @dm11 (object/get @p x)) (* @dm12 (object/get @p y))), y: (+ (* @dm21 (object/get @p x)) (* @dm22 (object/get @p y))) })) })
+          )
+          (do
+            (set @entity.animT @nt)
+            (set @entity.animating (< @nt 1))
+            (set @entity.m11 @dm11)
+            (set @entity.m12 @dm12)
+            (set @entity.m21 @dm21)
+            (set @entity.m22 @dm22)
+            (set @entity.curves [ @ghostCurve, @shapeCurve ])
+            (set @entity.vectors (if @entity.showBasis [ { x: 0, y: 0, vx: @dm11, vy: @dm21, color: @config.basisColor1, label: "e₁′" }, { x: 0, y: 0, vx: @dm12, vy: @dm22, color: @config.basisColor2, label: "e₂′" } ] []))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: APPLY_PRESET, actionPayload: { preset: "identity" }, label: "Identity", variant: secondary },
+                    { type: button, action: APPLY_PRESET, actionPayload: { preset: "rotation" }, label: "Rotate 30°", variant: secondary },
+                    { type: button, action: APPLY_PRESET, actionPayload: { preset: "scale" }, label: "Scale ×1.5", variant: secondary },
+                    { type: button, action: APPLY_PRESET, actionPayload: { preset: "shear" }, label: "Shear", variant: secondary },
+                    { type: button, action: APPLY_PRESET, actionPayload: { preset: "reflect" }, label: "Reflect", variant: secondary },
+                    { type: button, action: ANIMATE_TRANSFORM, label: "Animate", variant: primary },
+                    { type: button, action: TOGGLE_BASIS, label: (if @entity.showBasis "Hide basis" "Show basis"), variant: ghost }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.xMin, xMax: @config.xMax, yMin: @config.yMin, yMax: @config.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: @entity.vectors, shapes: [], interactive: false, animate: false },
+                { type: stack, direction: horizontal, gap: md, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat "m₁₁ = " (math/round @entity.m11 2)) },
+                        { type: range-slider, min: -2.5, max: 2.5, step: 0.1, value: @entity.m11, showTooltip: true, onChange: SET_ENTRY, actionPayload: { entry: "m11" } }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat "m₁₂ = " (math/round @entity.m12 2)) },
+                        { type: range-slider, min: -2.5, max: 2.5, step: 0.1, value: @entity.m12, showTooltip: true, onChange: SET_ENTRY, actionPayload: { entry: "m12" } }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat "m₂₁ = " (math/round @entity.m21 2)) },
+                        { type: range-slider, min: -2.5, max: 2.5, step: 0.1, value: @entity.m21, showTooltip: true, onChange: SET_ENTRY, actionPayload: { entry: "m21" } }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat "m₂₂ = " (math/round @entity.m22 2)) },
+                        { type: range-slider, min: -2.5, max: 2.5, step: 0.1, value: @entity.m22, showTooltip: true, onChange: SET_ENTRY, actionPayload: { entry: "m22" } }
+                      ] }
+                  ] },
+                { type: typography, variant: body, content: (str/concat "[ " (math/round @entity.m11 2) "  " (math/round @entity.m12 2) " ]") },
+                { type: typography, variant: body, content: (str/concat "[ " (math/round @entity.m21 2) "  " (math/round @entity.m22 2) " ]   det = " (math/round @entity.determinant 3) " — area scale factor") }
+              ] }
+          ]
+        })
+        (emit MATRIX_UPDATED { m11: @entity.m11, m12: @entity.m12, m21: @entity.m21, m22: @entity.m22, determinant: @entity.determinant })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      SET_ENTRY {
+        entry : string
+        value : number
+      }
+        @description "Learner dragged an entry slider to set one of the four 2×2 matrix entries."
+        @tier "domain"
+      APPLY_PRESET {
+        preset : string
+      }
+        @description "Learner picked a named transform: identity, rotation, scale, shear, or reflection."
+        @tier "domain"
+    }
+
+    emits {
+      MATRIX_UPDATED -> external {
+        m11 : number
+        m12 : number
+        m21 : number
+        m22 : number
+        determinant : number
+      }
+        @description "The matrix entries and determinant after each learner action or animation tick — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "matrix, linear transformation, basis vectors, determinant, rotation, shear"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      matrix : [number] = [ 1, 0, 0, 1 ]
+        @label "Initial Matrix"
+        @description "Starting 2×2 matrix entries in row-major order: [m11, m12, m21, m22]."
+        @synonyms "matrix entries, linear transformation, identity matrix"
+        @tier "domain"
+      shape : "square" | "triangle" | "arrow" = square
+        @label "Shape"
+        @description "Which plane figure the transform morphs: a unit square, a triangle, or an arrow."
+        @synonyms "shape, figure, unit square, test shape"
+        @tier "domain"
+      showBasisVectors : boolean = true
+        @label "Show Basis Vectors"
+        @description "Draw the transformed basis vectors e₁′ and e₂′ (the matrix's columns) from the origin."
+        @synonyms "basis vectors, e1, e2, column vectors"
+        @tier "presentation"
+      title : string = "Matrix Transform"
+        @label "Title"
+        @description "Title shown above the canvas."
+        @tier "presentation"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      xMin : number = -4
+        @label "X Min"
+        @description "Minimum x value on the canvas."
+        @tier "presentation"
+      xMax : number = 4
+        @label "X Max"
+        @description "Maximum x value on the canvas."
+        @tier "presentation"
+      yMin : number = -4
+        @label "Y Min"
+        @description "Minimum y value on the canvas."
+        @tier "presentation"
+      yMax : number = 4
+        @label "Y Max"
+        @description "Maximum y value on the canvas."
+        @tier "presentation"
+      showAxes : boolean = true
+        @label "Show Axes"
+        @tier "presentation"
+      showGrid : boolean = true
+        @label "Show Grid"
+        @tier "presentation"
+      gridStep : number = 1
+        @label "Grid Step"
+        @tier "presentation"
+      shapeColor : string = "#2563eb"
+        @label "Shape Color"
+        @tier "presentation"
+      ghostColor : string = "#94a3b8"
+        @label "Original Shape Color"
+        @tier "presentation"
+      basisColor1 : string = "#dc2626"
+        @label "First Basis Vector Color"
+        @tier "presentation"
+      basisColor2 : string = "#16a34a"
+        @label "Second Basis Vector Color"
+        @tier "presentation"
+    }
+  }
+
+  page "/math-matrix" as MathMatrixPage -> MathMatrixSim
+}

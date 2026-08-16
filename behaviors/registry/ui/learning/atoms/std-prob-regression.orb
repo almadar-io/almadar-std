@@ -1,0 +1,4438 @@
+{
+  "description": "Least-squares explorer — scatter points on a math-canvas; the regression line, residual segments, r and R² recompute live as points are added or moved, with an optional guess-the-line mode scored against the least-squares fit. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches.",
+  "ledger": {
+    "entries": {
+      "ent_01KZNF6QX3BQDBH8800C23KJK9": {
+        "bakedName": "ProbRegressionScene",
+        "curName": "ProbRegressionScene",
+        "id": "ent_01KZNF6QX3BQDBH8800C23KJK9",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "evt_01KZNF6QX3BMH6WJBQTTK60E9X": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01KZNF6QX3BMH6WJBQTTK60E9X",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZNF6QX3FGR9DX8M0S1CJTV4",
+        "renames": []
+      },
+      "evt_01KZNF6QX4409YFPBFCCSH10H8": {
+        "bakedName": "DRAG_POINT",
+        "curName": "DRAG_POINT",
+        "id": "evt_01KZNF6QX4409YFPBFCCSH10H8",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZNF6QX3FGR9DX8M0S1CJTV4",
+        "renames": []
+      },
+      "evt_01KZNF6QX48KAC7ASBTRJB1DW4": {
+        "bakedName": "GUESS_LINE",
+        "curName": "GUESS_LINE",
+        "id": "evt_01KZNF6QX48KAC7ASBTRJB1DW4",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZNF6QX3FGR9DX8M0S1CJTV4",
+        "renames": []
+      },
+      "evt_01KZNF6QX4AESAT1S9KFE24TS4": {
+        "bakedName": "REVEAL_FIT",
+        "curName": "REVEAL_FIT",
+        "id": "evt_01KZNF6QX4AESAT1S9KFE24TS4",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZNF6QX3FGR9DX8M0S1CJTV4",
+        "renames": []
+      },
+      "evt_01KZNF6QX4BQ2B7Z9PG473N71W": {
+        "bakedName": "MODE_SELECTED",
+        "curName": "MODE_SELECTED",
+        "id": "evt_01KZNF6QX4BQ2B7Z9PG473N71W",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZNF6QX3FGR9DX8M0S1CJTV4",
+        "renames": []
+      },
+      "evt_01KZNF6QX4F0KB1PKBYXXXC8X6": {
+        "bakedName": "ADD_POINT",
+        "curName": "ADD_POINT",
+        "id": "evt_01KZNF6QX4F0KB1PKBYXXXC8X6",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZNF6QX3FGR9DX8M0S1CJTV4",
+        "renames": []
+      },
+      "evt_01KZNF6QX4T6PWHRRFKRVJ3JYN": {
+        "bakedName": "REGRESSION_UPDATED",
+        "curName": "REGRESSION_UPDATED",
+        "id": "evt_01KZNF6QX4T6PWHRRFKRVJ3JYN",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZNF6QX3FGR9DX8M0S1CJTV4",
+        "renames": []
+      },
+      "orb_01KZNF6QX3E1RN31QWVXWEZYQB": {
+        "bakedName": "ProbRegressionOrbital",
+        "curName": "ProbRegressionOrbital",
+        "id": "orb_01KZNF6QX3E1RN31QWVXWEZYQB",
+        "kind": "orbital",
+        "owner": "workspace",
+        "renames": []
+      },
+      "pag_01KZNF6QX52J7EFCFHHF4SVC4H": {
+        "bakedName": "ProbRegressionPage",
+        "curName": "ProbRegressionPage",
+        "id": "pag_01KZNF6QX52J7EFCFHHF4SVC4H",
+        "kind": "page",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01KZNF6QX3FGR9DX8M0S1CJTV4": {
+        "bakedName": "ProbRegressionSim",
+        "curName": "ProbRegressionSim",
+        "id": "trt_01KZNF6QX3FGR9DX8M0S1CJTV4",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      }
+    },
+    "schemaVersion": 1
+  },
+  "name": "std-prob-regression",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": false,
+            "name": "active",
+            "type": "boolean"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "points",
+            "type": "array"
+          },
+          {
+            "name": "slope",
+            "type": "number"
+          },
+          {
+            "name": "intercept",
+            "type": "number"
+          },
+          {
+            "name": "r",
+            "type": "number"
+          },
+          {
+            "name": "rSquared",
+            "type": "number"
+          },
+          {
+            "name": "guessSlope",
+            "type": "number"
+          },
+          {
+            "name": "guessIntercept",
+            "type": "number"
+          },
+          {
+            "name": "guessScore",
+            "type": "number"
+          },
+          {
+            "default": false,
+            "name": "revealed",
+            "type": "boolean"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "samples": {
+                  "items": {
+                    "properties": {
+                      "x": {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "y": {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "name": "samples",
+                  "required": false,
+                  "type": "array"
+                }
+              },
+              "type": "object"
+            },
+            "name": "curves",
+            "type": "array"
+          },
+          {
+            "items": {
+              "properties": {
+                "align": {
+                  "name": "align",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "left",
+                    "center",
+                    "right"
+                  ]
+                },
+                "axis": {
+                  "name": "axis",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "x",
+                    "y"
+                  ]
+                },
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "fill": {
+                  "name": "fill",
+                  "required": false,
+                  "type": "string"
+                },
+                "fontSize": {
+                  "name": "fontSize",
+                  "required": false,
+                  "type": "number"
+                },
+                "height": {
+                  "name": "height",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "lineWidth": {
+                  "name": "lineWidth",
+                  "required": false,
+                  "type": "number"
+                },
+                "max": {
+                  "name": "max",
+                  "required": false,
+                  "type": "number"
+                },
+                "min": {
+                  "name": "min",
+                  "required": false,
+                  "type": "number"
+                },
+                "opacity": {
+                  "name": "opacity",
+                  "required": false,
+                  "type": "number"
+                },
+                "path": {
+                  "name": "path",
+                  "required": false,
+                  "type": "string"
+                },
+                "points": {
+                  "items": {
+                    "properties": {
+                      "x": {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "y": {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "name": "points",
+                  "required": false,
+                  "type": "array"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "step": {
+                  "name": "step",
+                  "required": false,
+                  "type": "number"
+                },
+                "text": {
+                  "name": "text",
+                  "required": false,
+                  "type": "string"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string",
+                  "values": [
+                    "line",
+                    "arrow",
+                    "circle",
+                    "rect",
+                    "polygon",
+                    "path",
+                    "text",
+                    "axis",
+                    "grid"
+                  ]
+                },
+                "width": {
+                  "name": "width",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": false,
+                  "type": "number"
+                },
+                "x1": {
+                  "name": "x1",
+                  "required": false,
+                  "type": "number"
+                },
+                "x2": {
+                  "name": "x2",
+                  "required": false,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "y1": {
+                  "name": "y1",
+                  "required": false,
+                  "type": "number"
+                },
+                "y2": {
+                  "name": "y2",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "shapes",
+            "type": "array"
+          }
+        ],
+        "id": "ent_01KZNF6QX3BQDBH8800C23KJK9",
+        "name": "ProbRegressionScene",
+        "persistence": "runtime"
+      },
+      "id": "orb_01KZNF6QX3E1RN31QWVXWEZYQB",
+      "name": "ProbRegressionOrbital",
+      "pages": [
+        {
+          "id": "pag_01KZNF6QX52J7EFCFHHF4SVC4H",
+          "name": "ProbRegressionPage",
+          "path": "/prob-regression",
+          "traits": [
+            {
+              "ref": "ProbRegressionSim",
+              "refId": "trt_01KZNF6QX3FGR9DX8M0S1CJTV4"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "guessMode": {
+              "default": true,
+              "description": "When true the learner's guessed line is shown instead of the fit until Reveal Fit, and the guess is scored against least squares.",
+              "label": "Guess Mode",
+              "synonyms": "guess the line, prediction, estimate the fit",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "height": {
+              "default": 400.0,
+              "description": "Canvas height in pixels.",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "initialPoints": {
+              "default": [
+                {
+                  "color": "#334155",
+                  "id": "p0",
+                  "label": "",
+                  "radius": 5.0,
+                  "x": 15.0,
+                  "y": 25.0
+                },
+                {
+                  "color": "#334155",
+                  "id": "p1",
+                  "label": "",
+                  "radius": 5.0,
+                  "x": 32.0,
+                  "y": 40.0
+                },
+                {
+                  "color": "#334155",
+                  "id": "p2",
+                  "label": "",
+                  "radius": 5.0,
+                  "x": 48.0,
+                  "y": 44.0
+                },
+                {
+                  "color": "#334155",
+                  "id": "p3",
+                  "label": "",
+                  "radius": 5.0,
+                  "x": 63.0,
+                  "y": 62.0
+                },
+                {
+                  "color": "#334155",
+                  "id": "p4",
+                  "label": "",
+                  "radius": 5.0,
+                  "x": 80.0,
+                  "y": 70.0
+                }
+              ],
+              "description": "Scatter points the canvas starts with, in 0–100 data coordinates.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "radius": {
+                    "name": "radius",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Initial Points",
+              "tier": "domain",
+              "type": "[ProbRegressionPoint]"
+            },
+            "matchMode": {
+              "default": "",
+              "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+              "label": "Match Mode",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "showR": {
+              "default": true,
+              "description": "Show the correlation coefficient r and coefficient of determination R² under the canvas.",
+              "label": "Show r and R²",
+              "synonyms": "correlation coefficient, r squared, goodness of fit",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "showResiduals": {
+              "default": true,
+              "description": "Draw vertical segments from each point to the regression line — the errors least squares minimizes.",
+              "label": "Show Residuals",
+              "synonyms": "residuals, errors, deviations",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "title": {
+              "default": "Least Squares",
+              "description": "Title shown above the canvas.",
+              "label": "Title",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "width": {
+              "default": 600.0,
+              "description": "Canvas width in pixels.",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "The least-squares fit after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+              "event": "REGRESSION_UPDATED",
+              "eventId": "evt_01KZNF6QX4T6PWHRRFKRVJ3JYN",
+              "payloadSchema": [
+                {
+                  "name": "slope",
+                  "type": "number"
+                },
+                {
+                  "name": "intercept",
+                  "type": "number"
+                },
+                {
+                  "name": "r",
+                  "type": "number"
+                },
+                {
+                  "name": "rSquared",
+                  "type": "number"
+                },
+                {
+                  "name": "pointCount",
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "regression update, least squares, line of best fit, correlation",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "active",
+              "curves",
+              "guessIntercept",
+              "guessScore",
+              "guessSlope",
+              "intercept",
+              "points",
+              "r",
+              "rSquared",
+              "revealed",
+              "shapes",
+              "slope",
+              "title"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "entityRefIds": {
+            "ProbRegressionScene": "ent_01KZNF6QX3BQDBH8800C23KJK9"
+          },
+          "id": "trt_01KZNF6QX3FGR9DX8M0S1CJTV4",
+          "linkedEntity": "ProbRegressionScene",
+          "linkedEntityId": "ent_01KZNF6QX3BQDBH8800C23KJK9",
+          "name": "ProbRegressionSim",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "id": "evt_01KZNF6QX3BMH6WJBQTTK60E9X",
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+                "id": "evt_01KZNF6QX4BQ2B7Z9PG473N71W",
+                "key": "MODE_SELECTED",
+                "name": "Mode Selected",
+                "payloadSchema": [
+                  {
+                    "name": "mode",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "id": "evt_01KZNF6QX4F0KB1PKBYXXXC8X6",
+                "key": "ADD_POINT",
+                "name": "Add Point"
+              },
+              {
+                "description": "A scatter point was dragged — id names the point, x/y its new coordinates; the fit recomputes live.",
+                "id": "evt_01KZNF6QX4409YFPBFCCSH10H8",
+                "key": "DRAG_POINT",
+                "name": "Drag Point",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  },
+                  {
+                    "name": "x",
+                    "type": "number"
+                  },
+                  {
+                    "name": "y",
+                    "type": "number"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Learner dragged a guess-the-line slider — param is slope or intercept; the guess is scored against the least-squares fit.",
+                "id": "evt_01KZNF6QX48KAC7ASBTRJB1DW4",
+                "key": "GUESS_LINE",
+                "name": "Guess Line",
+                "payloadSchema": [
+                  {
+                    "name": "param",
+                    "type": "string"
+                  },
+                  {
+                    "name": "value",
+                    "type": "number"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "id": "evt_01KZNF6QX4AESAT1S9KFE24TS4",
+                "key": "REVEAL_FIT",
+                "name": "Reveal Fit"
+              },
+              {
+                "description": "The least-squares fit after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+                "id": "evt_01KZNF6QX4T6PWHRRFKRVJ3JYN",
+                "key": "REGRESSION_UPDATED",
+                "name": "Regression Updated",
+                "payloadSchema": [
+                  {
+                    "name": "slope",
+                    "type": "number"
+                  },
+                  {
+                    "name": "intercept",
+                    "type": "number"
+                  },
+                  {
+                    "name": "r",
+                    "type": "number"
+                  },
+                  {
+                    "name": "rSquared",
+                    "type": "number"
+                  },
+                  {
+                    "name": "pointCount",
+                    "type": "number"
+                  }
+                ],
+                "synonyms": "regression update, least squares, line of best fit, correlation",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.points",
+                    "@config.initialPoints"
+                  ],
+                  [
+                    "set",
+                    "@entity.guessSlope",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.guessIntercept",
+                    50.0
+                  ],
+                  [
+                    "set",
+                    "@entity.revealed",
+                    false
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "pts",
+                        "@config.initialPoints"
+                      ],
+                      [
+                        "n",
+                        [
+                          "array/len",
+                          "@pts"
+                        ]
+                      ],
+                      [
+                        "meanX",
+                        [
+                          "if",
+                          [
+                            ">",
+                            "@n",
+                            0.0
+                          ],
+                          [
+                            "/",
+                            [
+                              "array/reduce",
+                              "@pts",
+                              0.0,
+                              [
+                                "fn",
+                                [
+                                  "acc",
+                                  "p"
+                                ],
+                                [
+                                  "+",
+                                  "@acc",
+                                  [
+                                    "object/get",
+                                    "@p",
+                                    "x"
+                                  ]
+                                ]
+                              ]
+                            ],
+                            "@n"
+                          ],
+                          0.0
+                        ]
+                      ],
+                      [
+                        "meanY",
+                        [
+                          "if",
+                          [
+                            ">",
+                            "@n",
+                            0.0
+                          ],
+                          [
+                            "/",
+                            [
+                              "array/reduce",
+                              "@pts",
+                              0.0,
+                              [
+                                "fn",
+                                [
+                                  "acc",
+                                  "p"
+                                ],
+                                [
+                                  "+",
+                                  "@acc",
+                                  [
+                                    "object/get",
+                                    "@p",
+                                    "y"
+                                  ]
+                                ]
+                              ]
+                            ],
+                            "@n"
+                          ],
+                          0.0
+                        ]
+                      ],
+                      [
+                        "sxx",
+                        [
+                          "array/reduce",
+                          "@pts",
+                          0.0,
+                          [
+                            "fn",
+                            [
+                              "acc",
+                              "p"
+                            ],
+                            [
+                              "let",
+                              [
+                                [
+                                  "dx",
+                                  [
+                                    "-",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "x"
+                                    ],
+                                    "@meanX"
+                                  ]
+                                ]
+                              ],
+                              [
+                                "+",
+                                "@acc",
+                                [
+                                  "*",
+                                  "@dx",
+                                  "@dx"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "syy",
+                        [
+                          "array/reduce",
+                          "@pts",
+                          0.0,
+                          [
+                            "fn",
+                            [
+                              "acc",
+                              "p"
+                            ],
+                            [
+                              "let",
+                              [
+                                [
+                                  "dy",
+                                  [
+                                    "-",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "y"
+                                    ],
+                                    "@meanY"
+                                  ]
+                                ]
+                              ],
+                              [
+                                "+",
+                                "@acc",
+                                [
+                                  "*",
+                                  "@dy",
+                                  "@dy"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "sxy",
+                        [
+                          "array/reduce",
+                          "@pts",
+                          0.0,
+                          [
+                            "fn",
+                            [
+                              "acc",
+                              "p"
+                            ],
+                            [
+                              "+",
+                              "@acc",
+                              [
+                                "*",
+                                [
+                                  "-",
+                                  [
+                                    "object/get",
+                                    "@p",
+                                    "x"
+                                  ],
+                                  "@meanX"
+                                ],
+                                [
+                                  "-",
+                                  [
+                                    "object/get",
+                                    "@p",
+                                    "y"
+                                  ],
+                                  "@meanY"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "newSlope",
+                        [
+                          "if",
+                          [
+                            ">",
+                            "@sxx",
+                            0.0
+                          ],
+                          [
+                            "/",
+                            "@sxy",
+                            "@sxx"
+                          ],
+                          0.0
+                        ]
+                      ],
+                      [
+                        "newIntercept",
+                        [
+                          "-",
+                          "@meanY",
+                          [
+                            "*",
+                            "@newSlope",
+                            "@meanX"
+                          ]
+                        ]
+                      ],
+                      [
+                        "newR",
+                        [
+                          "if",
+                          [
+                            "and",
+                            [
+                              ">",
+                              "@sxx",
+                              0.0
+                            ],
+                            [
+                              ">",
+                              "@syy",
+                              0.0
+                            ]
+                          ],
+                          [
+                            "/",
+                            "@sxy",
+                            [
+                              "math/sqrt",
+                              [
+                                "*",
+                                "@sxx",
+                                "@syy"
+                              ]
+                            ]
+                          ],
+                          0.0
+                        ]
+                      ],
+                      [
+                        "plotW",
+                        [
+                          "-",
+                          "@config.width",
+                          48.0
+                        ]
+                      ],
+                      [
+                        "plotH",
+                        [
+                          "-",
+                          "@config.height",
+                          48.0
+                        ]
+                      ],
+                      [
+                        "residualShapes",
+                        [
+                          "if",
+                          "@config.showResiduals",
+                          [
+                            "array/map",
+                            "@pts",
+                            [
+                              "fn",
+                              "p",
+                              [
+                                "let",
+                                [
+                                  [
+                                    "px",
+                                    [
+                                      "+",
+                                      24.0,
+                                      [
+                                        "*",
+                                        [
+                                          "/",
+                                          [
+                                            "object/get",
+                                            "@p",
+                                            "x"
+                                          ],
+                                          100.0
+                                        ],
+                                        "@plotW"
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "py",
+                                    [
+                                      "-",
+                                      "@config.height",
+                                      [
+                                        "+",
+                                        24.0,
+                                        [
+                                          "*",
+                                          [
+                                            "/",
+                                            [
+                                              "object/get",
+                                              "@p",
+                                              "y"
+                                            ],
+                                            100.0
+                                          ],
+                                          "@plotH"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "pyLine",
+                                    [
+                                      "-",
+                                      "@config.height",
+                                      [
+                                        "+",
+                                        24.0,
+                                        [
+                                          "*",
+                                          [
+                                            "/",
+                                            [
+                                              "+",
+                                              [
+                                                "*",
+                                                "@newSlope",
+                                                [
+                                                  "object/get",
+                                                  "@p",
+                                                  "x"
+                                                ]
+                                              ],
+                                              "@newIntercept"
+                                            ],
+                                            100.0
+                                          ],
+                                          "@plotH"
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                {
+                                  "color": "#f59e0b",
+                                  "lineWidth": 1.0,
+                                  "opacity": 0.7,
+                                  "type": "line",
+                                  "x1": "@px",
+                                  "x2": "@px",
+                                  "y1": "@py",
+                                  "y2": "@pyLine"
+                                }
+                              ]
+                            ]
+                          ],
+                          []
+                        ]
+                      ],
+                      [
+                        "fitCurve",
+                        {
+                          "color": "#2563eb",
+                          "label": "least squares",
+                          "samples": [
+                            {
+                              "x": 0.0,
+                              "y": [
+                                "math/clamp",
+                                "@newIntercept",
+                                0.0,
+                                100.0
+                              ]
+                            },
+                            {
+                              "x": 100.0,
+                              "y": [
+                                "math/clamp",
+                                [
+                                  "+",
+                                  [
+                                    "*",
+                                    "@newSlope",
+                                    100.0
+                                  ],
+                                  "@newIntercept"
+                                ],
+                                0.0,
+                                100.0
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.slope",
+                        "@newSlope"
+                      ],
+                      [
+                        "set",
+                        "@entity.intercept",
+                        "@newIntercept"
+                      ],
+                      [
+                        "set",
+                        "@entity.r",
+                        "@newR"
+                      ],
+                      [
+                        "set",
+                        "@entity.rSquared",
+                        [
+                          "*",
+                          "@newR",
+                          "@newR"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.guessScore",
+                        0.0
+                      ],
+                      [
+                        "set",
+                        "@entity.shapes",
+                        "@residualShapes"
+                      ],
+                      [
+                        "set",
+                        "@entity.curves",
+                        [
+                          "array/append",
+                          [],
+                          "@fitCurve"
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "ADD_POINT",
+                                  "label": "Add Point",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "REVEAL_FIT",
+                                  "label": "Reveal Fit",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Guess slope: ",
+                                [
+                                  "math/round",
+                                  "@entity.guessSlope",
+                                  2.0
+                                ]
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "action": "GUESS_LINE",
+                              "actionPayload": {
+                                "param": "slope"
+                              },
+                              "max": 3.0,
+                              "min": -3.0,
+                              "showTooltip": true,
+                              "step": 0.05,
+                              "type": "range-slider",
+                              "value": "@entity.guessSlope"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Guess intercept: ",
+                                [
+                                  "math/round",
+                                  "@entity.guessIntercept",
+                                  1.0
+                                ]
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "action": "GUESS_LINE",
+                              "actionPayload": {
+                                "param": "intercept"
+                              },
+                              "max": 100.0,
+                              "min": 0.0,
+                              "showTooltip": true,
+                              "step": 1.0,
+                              "type": "range-slider",
+                              "value": "@entity.guessIntercept"
+                            },
+                            {
+                              "animate": false,
+                              "curves": "@entity.curves",
+                              "gridStep": 20.0,
+                              "height": "@config.height",
+                              "interactive": true,
+                              "points": "@entity.points",
+                              "shapes": "@entity.shapes",
+                              "showAxes": true,
+                              "showGrid": true,
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": 100.0,
+                              "xMin": 0.0,
+                              "yMax": 100.0,
+                              "yMin": 0.0
+                            },
+                            {
+                              "content": [
+                                "if",
+                                "@config.showR",
+                                [
+                                  "str/concat",
+                                  "r = ",
+                                  [
+                                    "math/round",
+                                    "@entity.r",
+                                    3.0
+                                  ],
+                                  " — R² = ",
+                                  [
+                                    "math/round",
+                                    "@entity.rSquared",
+                                    3.0
+                                  ],
+                                  " — guess score ",
+                                  "@entity.guessScore",
+                                  "%"
+                                ],
+                                ""
+                              ],
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01KZNF6QX3BMH6WJBQTTK60E9X",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@config.matchMode",
+                  ""
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.points",
+                    "@config.initialPoints"
+                  ],
+                  [
+                    "set",
+                    "@entity.guessSlope",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.guessIntercept",
+                    50.0
+                  ],
+                  [
+                    "set",
+                    "@entity.revealed",
+                    false
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "pts",
+                        "@config.initialPoints"
+                      ],
+                      [
+                        "n",
+                        [
+                          "array/len",
+                          "@pts"
+                        ]
+                      ],
+                      [
+                        "meanX",
+                        [
+                          "if",
+                          [
+                            ">",
+                            "@n",
+                            0.0
+                          ],
+                          [
+                            "/",
+                            [
+                              "array/reduce",
+                              "@pts",
+                              0.0,
+                              [
+                                "fn",
+                                [
+                                  "acc",
+                                  "p"
+                                ],
+                                [
+                                  "+",
+                                  "@acc",
+                                  [
+                                    "object/get",
+                                    "@p",
+                                    "x"
+                                  ]
+                                ]
+                              ]
+                            ],
+                            "@n"
+                          ],
+                          0.0
+                        ]
+                      ],
+                      [
+                        "meanY",
+                        [
+                          "if",
+                          [
+                            ">",
+                            "@n",
+                            0.0
+                          ],
+                          [
+                            "/",
+                            [
+                              "array/reduce",
+                              "@pts",
+                              0.0,
+                              [
+                                "fn",
+                                [
+                                  "acc",
+                                  "p"
+                                ],
+                                [
+                                  "+",
+                                  "@acc",
+                                  [
+                                    "object/get",
+                                    "@p",
+                                    "y"
+                                  ]
+                                ]
+                              ]
+                            ],
+                            "@n"
+                          ],
+                          0.0
+                        ]
+                      ],
+                      [
+                        "sxx",
+                        [
+                          "array/reduce",
+                          "@pts",
+                          0.0,
+                          [
+                            "fn",
+                            [
+                              "acc",
+                              "p"
+                            ],
+                            [
+                              "let",
+                              [
+                                [
+                                  "dx",
+                                  [
+                                    "-",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "x"
+                                    ],
+                                    "@meanX"
+                                  ]
+                                ]
+                              ],
+                              [
+                                "+",
+                                "@acc",
+                                [
+                                  "*",
+                                  "@dx",
+                                  "@dx"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "syy",
+                        [
+                          "array/reduce",
+                          "@pts",
+                          0.0,
+                          [
+                            "fn",
+                            [
+                              "acc",
+                              "p"
+                            ],
+                            [
+                              "let",
+                              [
+                                [
+                                  "dy",
+                                  [
+                                    "-",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "y"
+                                    ],
+                                    "@meanY"
+                                  ]
+                                ]
+                              ],
+                              [
+                                "+",
+                                "@acc",
+                                [
+                                  "*",
+                                  "@dy",
+                                  "@dy"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "sxy",
+                        [
+                          "array/reduce",
+                          "@pts",
+                          0.0,
+                          [
+                            "fn",
+                            [
+                              "acc",
+                              "p"
+                            ],
+                            [
+                              "+",
+                              "@acc",
+                              [
+                                "*",
+                                [
+                                  "-",
+                                  [
+                                    "object/get",
+                                    "@p",
+                                    "x"
+                                  ],
+                                  "@meanX"
+                                ],
+                                [
+                                  "-",
+                                  [
+                                    "object/get",
+                                    "@p",
+                                    "y"
+                                  ],
+                                  "@meanY"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "newSlope",
+                        [
+                          "if",
+                          [
+                            ">",
+                            "@sxx",
+                            0.0
+                          ],
+                          [
+                            "/",
+                            "@sxy",
+                            "@sxx"
+                          ],
+                          0.0
+                        ]
+                      ],
+                      [
+                        "newIntercept",
+                        [
+                          "-",
+                          "@meanY",
+                          [
+                            "*",
+                            "@newSlope",
+                            "@meanX"
+                          ]
+                        ]
+                      ],
+                      [
+                        "newR",
+                        [
+                          "if",
+                          [
+                            "and",
+                            [
+                              ">",
+                              "@sxx",
+                              0.0
+                            ],
+                            [
+                              ">",
+                              "@syy",
+                              0.0
+                            ]
+                          ],
+                          [
+                            "/",
+                            "@sxy",
+                            [
+                              "math/sqrt",
+                              [
+                                "*",
+                                "@sxx",
+                                "@syy"
+                              ]
+                            ]
+                          ],
+                          0.0
+                        ]
+                      ],
+                      [
+                        "plotW",
+                        [
+                          "-",
+                          "@config.width",
+                          48.0
+                        ]
+                      ],
+                      [
+                        "plotH",
+                        [
+                          "-",
+                          "@config.height",
+                          48.0
+                        ]
+                      ],
+                      [
+                        "residualShapes",
+                        [
+                          "if",
+                          "@config.showResiduals",
+                          [
+                            "array/map",
+                            "@pts",
+                            [
+                              "fn",
+                              "p",
+                              [
+                                "let",
+                                [
+                                  [
+                                    "px",
+                                    [
+                                      "+",
+                                      24.0,
+                                      [
+                                        "*",
+                                        [
+                                          "/",
+                                          [
+                                            "object/get",
+                                            "@p",
+                                            "x"
+                                          ],
+                                          100.0
+                                        ],
+                                        "@plotW"
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "py",
+                                    [
+                                      "-",
+                                      "@config.height",
+                                      [
+                                        "+",
+                                        24.0,
+                                        [
+                                          "*",
+                                          [
+                                            "/",
+                                            [
+                                              "object/get",
+                                              "@p",
+                                              "y"
+                                            ],
+                                            100.0
+                                          ],
+                                          "@plotH"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "pyLine",
+                                    [
+                                      "-",
+                                      "@config.height",
+                                      [
+                                        "+",
+                                        24.0,
+                                        [
+                                          "*",
+                                          [
+                                            "/",
+                                            [
+                                              "+",
+                                              [
+                                                "*",
+                                                "@newSlope",
+                                                [
+                                                  "object/get",
+                                                  "@p",
+                                                  "x"
+                                                ]
+                                              ],
+                                              "@newIntercept"
+                                            ],
+                                            100.0
+                                          ],
+                                          "@plotH"
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                {
+                                  "color": "#f59e0b",
+                                  "lineWidth": 1.0,
+                                  "opacity": 0.7,
+                                  "type": "line",
+                                  "x1": "@px",
+                                  "x2": "@px",
+                                  "y1": "@py",
+                                  "y2": "@pyLine"
+                                }
+                              ]
+                            ]
+                          ],
+                          []
+                        ]
+                      ],
+                      [
+                        "fitCurve",
+                        {
+                          "color": "#2563eb",
+                          "label": "least squares",
+                          "samples": [
+                            {
+                              "x": 0.0,
+                              "y": [
+                                "math/clamp",
+                                "@newIntercept",
+                                0.0,
+                                100.0
+                              ]
+                            },
+                            {
+                              "x": 100.0,
+                              "y": [
+                                "math/clamp",
+                                [
+                                  "+",
+                                  [
+                                    "*",
+                                    "@newSlope",
+                                    100.0
+                                  ],
+                                  "@newIntercept"
+                                ],
+                                0.0,
+                                100.0
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.slope",
+                        "@newSlope"
+                      ],
+                      [
+                        "set",
+                        "@entity.intercept",
+                        "@newIntercept"
+                      ],
+                      [
+                        "set",
+                        "@entity.r",
+                        "@newR"
+                      ],
+                      [
+                        "set",
+                        "@entity.rSquared",
+                        [
+                          "*",
+                          "@newR",
+                          "@newR"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.guessScore",
+                        0.0
+                      ],
+                      [
+                        "set",
+                        "@entity.shapes",
+                        "@residualShapes"
+                      ],
+                      [
+                        "set",
+                        "@entity.curves",
+                        [
+                          "array/append",
+                          [],
+                          "@fitCurve"
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "ADD_POINT",
+                                  "label": "Add Point",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "REVEAL_FIT",
+                                  "label": "Reveal Fit",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Guess slope: ",
+                                [
+                                  "math/round",
+                                  "@entity.guessSlope",
+                                  2.0
+                                ]
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "action": "GUESS_LINE",
+                              "actionPayload": {
+                                "param": "slope"
+                              },
+                              "max": 3.0,
+                              "min": -3.0,
+                              "showTooltip": true,
+                              "step": 0.05,
+                              "type": "range-slider",
+                              "value": "@entity.guessSlope"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Guess intercept: ",
+                                [
+                                  "math/round",
+                                  "@entity.guessIntercept",
+                                  1.0
+                                ]
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "action": "GUESS_LINE",
+                              "actionPayload": {
+                                "param": "intercept"
+                              },
+                              "max": 100.0,
+                              "min": 0.0,
+                              "showTooltip": true,
+                              "step": 1.0,
+                              "type": "range-slider",
+                              "value": "@entity.guessIntercept"
+                            },
+                            {
+                              "animate": false,
+                              "curves": "@entity.curves",
+                              "gridStep": 20.0,
+                              "height": "@config.height",
+                              "interactive": true,
+                              "points": "@entity.points",
+                              "shapes": "@entity.shapes",
+                              "showAxes": true,
+                              "showGrid": true,
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": 100.0,
+                              "xMin": 0.0,
+                              "yMax": 100.0,
+                              "yMin": 0.0
+                            },
+                            {
+                              "content": [
+                                "if",
+                                "@config.showR",
+                                [
+                                  "str/concat",
+                                  "r = ",
+                                  [
+                                    "math/round",
+                                    "@entity.r",
+                                    3.0
+                                  ],
+                                  " — R² = ",
+                                  [
+                                    "math/round",
+                                    "@entity.rSquared",
+                                    3.0
+                                  ],
+                                  " — guess score ",
+                                  "@entity.guessScore",
+                                  "%"
+                                ],
+                                ""
+                              ],
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ]
+                ],
+                "event": "MODE_SELECTED",
+                "eventId": "evt_01KZNF6QX4BQ2B7Z9PG473N71W",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@payload.mode",
+                  "@config.matchMode"
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "let",
+                    [
+                      [
+                        "newPoint",
+                        {
+                          "color": "#334155",
+                          "id": [
+                            "str/concat",
+                            "p",
+                            [
+                              "array/len",
+                              "@entity.points"
+                            ]
+                          ],
+                          "label": "",
+                          "radius": 5.0,
+                          "x": [
+                            "math/round",
+                            [
+                              "+",
+                              5.0,
+                              [
+                                "*",
+                                [
+                                  "math/random"
+                                ],
+                                90.0
+                              ]
+                            ]
+                          ],
+                          "y": [
+                            "math/round",
+                            [
+                              "+",
+                              5.0,
+                              [
+                                "*",
+                                [
+                                  "math/random"
+                                ],
+                                90.0
+                              ]
+                            ]
+                          ]
+                        }
+                      ],
+                      [
+                        "pts",
+                        [
+                          "array/append",
+                          "@entity.points",
+                          "@newPoint"
+                        ]
+                      ],
+                      [
+                        "n",
+                        [
+                          "array/len",
+                          "@pts"
+                        ]
+                      ],
+                      [
+                        "meanX",
+                        [
+                          "/",
+                          [
+                            "array/reduce",
+                            "@pts",
+                            0.0,
+                            [
+                              "fn",
+                              [
+                                "acc",
+                                "p"
+                              ],
+                              [
+                                "+",
+                                "@acc",
+                                [
+                                  "object/get",
+                                  "@p",
+                                  "x"
+                                ]
+                              ]
+                            ]
+                          ],
+                          "@n"
+                        ]
+                      ],
+                      [
+                        "meanY",
+                        [
+                          "/",
+                          [
+                            "array/reduce",
+                            "@pts",
+                            0.0,
+                            [
+                              "fn",
+                              [
+                                "acc",
+                                "p"
+                              ],
+                              [
+                                "+",
+                                "@acc",
+                                [
+                                  "object/get",
+                                  "@p",
+                                  "y"
+                                ]
+                              ]
+                            ]
+                          ],
+                          "@n"
+                        ]
+                      ],
+                      [
+                        "sxx",
+                        [
+                          "array/reduce",
+                          "@pts",
+                          0.0,
+                          [
+                            "fn",
+                            [
+                              "acc",
+                              "p"
+                            ],
+                            [
+                              "let",
+                              [
+                                [
+                                  "dx",
+                                  [
+                                    "-",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "x"
+                                    ],
+                                    "@meanX"
+                                  ]
+                                ]
+                              ],
+                              [
+                                "+",
+                                "@acc",
+                                [
+                                  "*",
+                                  "@dx",
+                                  "@dx"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "syy",
+                        [
+                          "array/reduce",
+                          "@pts",
+                          0.0,
+                          [
+                            "fn",
+                            [
+                              "acc",
+                              "p"
+                            ],
+                            [
+                              "let",
+                              [
+                                [
+                                  "dy",
+                                  [
+                                    "-",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "y"
+                                    ],
+                                    "@meanY"
+                                  ]
+                                ]
+                              ],
+                              [
+                                "+",
+                                "@acc",
+                                [
+                                  "*",
+                                  "@dy",
+                                  "@dy"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "sxy",
+                        [
+                          "array/reduce",
+                          "@pts",
+                          0.0,
+                          [
+                            "fn",
+                            [
+                              "acc",
+                              "p"
+                            ],
+                            [
+                              "+",
+                              "@acc",
+                              [
+                                "*",
+                                [
+                                  "-",
+                                  [
+                                    "object/get",
+                                    "@p",
+                                    "x"
+                                  ],
+                                  "@meanX"
+                                ],
+                                [
+                                  "-",
+                                  [
+                                    "object/get",
+                                    "@p",
+                                    "y"
+                                  ],
+                                  "@meanY"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "newSlope",
+                        [
+                          "if",
+                          [
+                            ">",
+                            "@sxx",
+                            0.0
+                          ],
+                          [
+                            "/",
+                            "@sxy",
+                            "@sxx"
+                          ],
+                          0.0
+                        ]
+                      ],
+                      [
+                        "newIntercept",
+                        [
+                          "-",
+                          "@meanY",
+                          [
+                            "*",
+                            "@newSlope",
+                            "@meanX"
+                          ]
+                        ]
+                      ],
+                      [
+                        "newR",
+                        [
+                          "if",
+                          [
+                            "and",
+                            [
+                              ">",
+                              "@sxx",
+                              0.0
+                            ],
+                            [
+                              ">",
+                              "@syy",
+                              0.0
+                            ]
+                          ],
+                          [
+                            "/",
+                            "@sxy",
+                            [
+                              "math/sqrt",
+                              [
+                                "*",
+                                "@sxx",
+                                "@syy"
+                              ]
+                            ]
+                          ],
+                          0.0
+                        ]
+                      ],
+                      [
+                        "plotW",
+                        [
+                          "-",
+                          "@config.width",
+                          48.0
+                        ]
+                      ],
+                      [
+                        "plotH",
+                        [
+                          "-",
+                          "@config.height",
+                          48.0
+                        ]
+                      ],
+                      [
+                        "residualShapes",
+                        [
+                          "if",
+                          "@config.showResiduals",
+                          [
+                            "array/map",
+                            "@pts",
+                            [
+                              "fn",
+                              "p",
+                              [
+                                "let",
+                                [
+                                  [
+                                    "px",
+                                    [
+                                      "+",
+                                      24.0,
+                                      [
+                                        "*",
+                                        [
+                                          "/",
+                                          [
+                                            "object/get",
+                                            "@p",
+                                            "x"
+                                          ],
+                                          100.0
+                                        ],
+                                        "@plotW"
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "py",
+                                    [
+                                      "-",
+                                      "@config.height",
+                                      [
+                                        "+",
+                                        24.0,
+                                        [
+                                          "*",
+                                          [
+                                            "/",
+                                            [
+                                              "object/get",
+                                              "@p",
+                                              "y"
+                                            ],
+                                            100.0
+                                          ],
+                                          "@plotH"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "pyLine",
+                                    [
+                                      "-",
+                                      "@config.height",
+                                      [
+                                        "+",
+                                        24.0,
+                                        [
+                                          "*",
+                                          [
+                                            "/",
+                                            [
+                                              "+",
+                                              [
+                                                "*",
+                                                "@newSlope",
+                                                [
+                                                  "object/get",
+                                                  "@p",
+                                                  "x"
+                                                ]
+                                              ],
+                                              "@newIntercept"
+                                            ],
+                                            100.0
+                                          ],
+                                          "@plotH"
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                {
+                                  "color": "#f59e0b",
+                                  "lineWidth": 1.0,
+                                  "opacity": 0.7,
+                                  "type": "line",
+                                  "x1": "@px",
+                                  "x2": "@px",
+                                  "y1": "@py",
+                                  "y2": "@pyLine"
+                                }
+                              ]
+                            ]
+                          ],
+                          []
+                        ]
+                      ],
+                      [
+                        "fitCurve",
+                        {
+                          "color": "#2563eb",
+                          "label": "least squares",
+                          "samples": [
+                            {
+                              "x": 0.0,
+                              "y": [
+                                "math/clamp",
+                                "@newIntercept",
+                                0.0,
+                                100.0
+                              ]
+                            },
+                            {
+                              "x": 100.0,
+                              "y": [
+                                "math/clamp",
+                                [
+                                  "+",
+                                  [
+                                    "*",
+                                    "@newSlope",
+                                    100.0
+                                  ],
+                                  "@newIntercept"
+                                ],
+                                0.0,
+                                100.0
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      [
+                        "guessCurve",
+                        {
+                          "color": "#dc2626",
+                          "label": "your guess",
+                          "samples": [
+                            {
+                              "x": 0.0,
+                              "y": [
+                                "math/clamp",
+                                "@entity.guessIntercept",
+                                0.0,
+                                100.0
+                              ]
+                            },
+                            {
+                              "x": 100.0,
+                              "y": [
+                                "math/clamp",
+                                [
+                                  "+",
+                                  [
+                                    "*",
+                                    "@entity.guessSlope",
+                                    100.0
+                                  ],
+                                  "@entity.guessIntercept"
+                                ],
+                                0.0,
+                                100.0
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.points",
+                        "@pts"
+                      ],
+                      [
+                        "set",
+                        "@entity.slope",
+                        "@newSlope"
+                      ],
+                      [
+                        "set",
+                        "@entity.intercept",
+                        "@newIntercept"
+                      ],
+                      [
+                        "set",
+                        "@entity.r",
+                        "@newR"
+                      ],
+                      [
+                        "set",
+                        "@entity.rSquared",
+                        [
+                          "*",
+                          "@newR",
+                          "@newR"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.shapes",
+                        "@residualShapes"
+                      ],
+                      [
+                        "set",
+                        "@entity.curves",
+                        [
+                          "if",
+                          [
+                            "and",
+                            "@config.guessMode",
+                            [
+                              "not",
+                              "@entity.revealed"
+                            ]
+                          ],
+                          [
+                            "array/append",
+                            [],
+                            "@guessCurve"
+                          ],
+                          [
+                            "if",
+                            "@config.guessMode",
+                            [
+                              "array/append",
+                              [
+                                "array/append",
+                                [],
+                                "@guessCurve"
+                              ],
+                              "@fitCurve"
+                            ],
+                            [
+                              "array/append",
+                              [],
+                              "@fitCurve"
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "ADD_POINT",
+                                  "label": "Add Point",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "REVEAL_FIT",
+                                  "label": "Reveal Fit",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Guess slope: ",
+                                [
+                                  "math/round",
+                                  "@entity.guessSlope",
+                                  2.0
+                                ]
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "action": "GUESS_LINE",
+                              "actionPayload": {
+                                "param": "slope"
+                              },
+                              "max": 3.0,
+                              "min": -3.0,
+                              "showTooltip": true,
+                              "step": 0.05,
+                              "type": "range-slider",
+                              "value": "@entity.guessSlope"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Guess intercept: ",
+                                [
+                                  "math/round",
+                                  "@entity.guessIntercept",
+                                  1.0
+                                ]
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "action": "GUESS_LINE",
+                              "actionPayload": {
+                                "param": "intercept"
+                              },
+                              "max": 100.0,
+                              "min": 0.0,
+                              "showTooltip": true,
+                              "step": 1.0,
+                              "type": "range-slider",
+                              "value": "@entity.guessIntercept"
+                            },
+                            {
+                              "animate": false,
+                              "curves": "@entity.curves",
+                              "gridStep": 20.0,
+                              "height": "@config.height",
+                              "interactive": true,
+                              "points": "@entity.points",
+                              "shapes": "@entity.shapes",
+                              "showAxes": true,
+                              "showGrid": true,
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": 100.0,
+                              "xMin": 0.0,
+                              "yMax": 100.0,
+                              "yMin": 0.0
+                            },
+                            {
+                              "content": [
+                                "if",
+                                "@config.showR",
+                                [
+                                  "str/concat",
+                                  "r = ",
+                                  [
+                                    "math/round",
+                                    "@entity.r",
+                                    3.0
+                                  ],
+                                  " — R² = ",
+                                  [
+                                    "math/round",
+                                    "@entity.rSquared",
+                                    3.0
+                                  ],
+                                  " — guess score ",
+                                  "@entity.guessScore",
+                                  "%"
+                                ],
+                                ""
+                              ],
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "REGRESSION_UPDATED",
+                    {
+                      "intercept": "@entity.intercept",
+                      "pointCount": [
+                        "array/len",
+                        "@entity.points"
+                      ],
+                      "r": "@entity.r",
+                      "rSquared": "@entity.rSquared",
+                      "slope": "@entity.slope"
+                    }
+                  ]
+                ],
+                "event": "ADD_POINT",
+                "eventId": "evt_01KZNF6QX4F0KB1PKBYXXXC8X6",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "let",
+                    [
+                      [
+                        "pts",
+                        [
+                          "array/map",
+                          "@entity.points",
+                          [
+                            "fn",
+                            "p",
+                            [
+                              "if",
+                              [
+                                "==",
+                                [
+                                  "object/get",
+                                  "@p",
+                                  "id"
+                                ],
+                                "@payload.id"
+                              ],
+                              [
+                                "object/merge",
+                                "@p",
+                                {
+                                  "x": [
+                                    "math/clamp",
+                                    "@payload.x",
+                                    0.0,
+                                    100.0
+                                  ],
+                                  "y": [
+                                    "math/clamp",
+                                    "@payload.y",
+                                    0.0,
+                                    100.0
+                                  ]
+                                }
+                              ],
+                              "@p"
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "n",
+                        [
+                          "array/len",
+                          "@pts"
+                        ]
+                      ],
+                      [
+                        "meanX",
+                        [
+                          "if",
+                          [
+                            ">",
+                            "@n",
+                            0.0
+                          ],
+                          [
+                            "/",
+                            [
+                              "array/reduce",
+                              "@pts",
+                              0.0,
+                              [
+                                "fn",
+                                [
+                                  "acc",
+                                  "p"
+                                ],
+                                [
+                                  "+",
+                                  "@acc",
+                                  [
+                                    "object/get",
+                                    "@p",
+                                    "x"
+                                  ]
+                                ]
+                              ]
+                            ],
+                            "@n"
+                          ],
+                          0.0
+                        ]
+                      ],
+                      [
+                        "meanY",
+                        [
+                          "if",
+                          [
+                            ">",
+                            "@n",
+                            0.0
+                          ],
+                          [
+                            "/",
+                            [
+                              "array/reduce",
+                              "@pts",
+                              0.0,
+                              [
+                                "fn",
+                                [
+                                  "acc",
+                                  "p"
+                                ],
+                                [
+                                  "+",
+                                  "@acc",
+                                  [
+                                    "object/get",
+                                    "@p",
+                                    "y"
+                                  ]
+                                ]
+                              ]
+                            ],
+                            "@n"
+                          ],
+                          0.0
+                        ]
+                      ],
+                      [
+                        "sxx",
+                        [
+                          "array/reduce",
+                          "@pts",
+                          0.0,
+                          [
+                            "fn",
+                            [
+                              "acc",
+                              "p"
+                            ],
+                            [
+                              "let",
+                              [
+                                [
+                                  "dx",
+                                  [
+                                    "-",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "x"
+                                    ],
+                                    "@meanX"
+                                  ]
+                                ]
+                              ],
+                              [
+                                "+",
+                                "@acc",
+                                [
+                                  "*",
+                                  "@dx",
+                                  "@dx"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "syy",
+                        [
+                          "array/reduce",
+                          "@pts",
+                          0.0,
+                          [
+                            "fn",
+                            [
+                              "acc",
+                              "p"
+                            ],
+                            [
+                              "let",
+                              [
+                                [
+                                  "dy",
+                                  [
+                                    "-",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "y"
+                                    ],
+                                    "@meanY"
+                                  ]
+                                ]
+                              ],
+                              [
+                                "+",
+                                "@acc",
+                                [
+                                  "*",
+                                  "@dy",
+                                  "@dy"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "sxy",
+                        [
+                          "array/reduce",
+                          "@pts",
+                          0.0,
+                          [
+                            "fn",
+                            [
+                              "acc",
+                              "p"
+                            ],
+                            [
+                              "+",
+                              "@acc",
+                              [
+                                "*",
+                                [
+                                  "-",
+                                  [
+                                    "object/get",
+                                    "@p",
+                                    "x"
+                                  ],
+                                  "@meanX"
+                                ],
+                                [
+                                  "-",
+                                  [
+                                    "object/get",
+                                    "@p",
+                                    "y"
+                                  ],
+                                  "@meanY"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "newSlope",
+                        [
+                          "if",
+                          [
+                            ">",
+                            "@sxx",
+                            0.0
+                          ],
+                          [
+                            "/",
+                            "@sxy",
+                            "@sxx"
+                          ],
+                          0.0
+                        ]
+                      ],
+                      [
+                        "newIntercept",
+                        [
+                          "-",
+                          "@meanY",
+                          [
+                            "*",
+                            "@newSlope",
+                            "@meanX"
+                          ]
+                        ]
+                      ],
+                      [
+                        "newR",
+                        [
+                          "if",
+                          [
+                            "and",
+                            [
+                              ">",
+                              "@sxx",
+                              0.0
+                            ],
+                            [
+                              ">",
+                              "@syy",
+                              0.0
+                            ]
+                          ],
+                          [
+                            "/",
+                            "@sxy",
+                            [
+                              "math/sqrt",
+                              [
+                                "*",
+                                "@sxx",
+                                "@syy"
+                              ]
+                            ]
+                          ],
+                          0.0
+                        ]
+                      ],
+                      [
+                        "plotW",
+                        [
+                          "-",
+                          "@config.width",
+                          48.0
+                        ]
+                      ],
+                      [
+                        "plotH",
+                        [
+                          "-",
+                          "@config.height",
+                          48.0
+                        ]
+                      ],
+                      [
+                        "residualShapes",
+                        [
+                          "if",
+                          "@config.showResiduals",
+                          [
+                            "array/map",
+                            "@pts",
+                            [
+                              "fn",
+                              "p",
+                              [
+                                "let",
+                                [
+                                  [
+                                    "px",
+                                    [
+                                      "+",
+                                      24.0,
+                                      [
+                                        "*",
+                                        [
+                                          "/",
+                                          [
+                                            "object/get",
+                                            "@p",
+                                            "x"
+                                          ],
+                                          100.0
+                                        ],
+                                        "@plotW"
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "py",
+                                    [
+                                      "-",
+                                      "@config.height",
+                                      [
+                                        "+",
+                                        24.0,
+                                        [
+                                          "*",
+                                          [
+                                            "/",
+                                            [
+                                              "object/get",
+                                              "@p",
+                                              "y"
+                                            ],
+                                            100.0
+                                          ],
+                                          "@plotH"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "pyLine",
+                                    [
+                                      "-",
+                                      "@config.height",
+                                      [
+                                        "+",
+                                        24.0,
+                                        [
+                                          "*",
+                                          [
+                                            "/",
+                                            [
+                                              "+",
+                                              [
+                                                "*",
+                                                "@newSlope",
+                                                [
+                                                  "object/get",
+                                                  "@p",
+                                                  "x"
+                                                ]
+                                              ],
+                                              "@newIntercept"
+                                            ],
+                                            100.0
+                                          ],
+                                          "@plotH"
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                {
+                                  "color": "#f59e0b",
+                                  "lineWidth": 1.0,
+                                  "opacity": 0.7,
+                                  "type": "line",
+                                  "x1": "@px",
+                                  "x2": "@px",
+                                  "y1": "@py",
+                                  "y2": "@pyLine"
+                                }
+                              ]
+                            ]
+                          ],
+                          []
+                        ]
+                      ],
+                      [
+                        "fitCurve",
+                        {
+                          "color": "#2563eb",
+                          "label": "least squares",
+                          "samples": [
+                            {
+                              "x": 0.0,
+                              "y": [
+                                "math/clamp",
+                                "@newIntercept",
+                                0.0,
+                                100.0
+                              ]
+                            },
+                            {
+                              "x": 100.0,
+                              "y": [
+                                "math/clamp",
+                                [
+                                  "+",
+                                  [
+                                    "*",
+                                    "@newSlope",
+                                    100.0
+                                  ],
+                                  "@newIntercept"
+                                ],
+                                0.0,
+                                100.0
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      [
+                        "guessCurve",
+                        {
+                          "color": "#dc2626",
+                          "label": "your guess",
+                          "samples": [
+                            {
+                              "x": 0.0,
+                              "y": [
+                                "math/clamp",
+                                "@entity.guessIntercept",
+                                0.0,
+                                100.0
+                              ]
+                            },
+                            {
+                              "x": 100.0,
+                              "y": [
+                                "math/clamp",
+                                [
+                                  "+",
+                                  [
+                                    "*",
+                                    "@entity.guessSlope",
+                                    100.0
+                                  ],
+                                  "@entity.guessIntercept"
+                                ],
+                                0.0,
+                                100.0
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.points",
+                        "@pts"
+                      ],
+                      [
+                        "set",
+                        "@entity.slope",
+                        "@newSlope"
+                      ],
+                      [
+                        "set",
+                        "@entity.intercept",
+                        "@newIntercept"
+                      ],
+                      [
+                        "set",
+                        "@entity.r",
+                        "@newR"
+                      ],
+                      [
+                        "set",
+                        "@entity.rSquared",
+                        [
+                          "*",
+                          "@newR",
+                          "@newR"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.shapes",
+                        "@residualShapes"
+                      ],
+                      [
+                        "set",
+                        "@entity.curves",
+                        [
+                          "if",
+                          [
+                            "and",
+                            "@config.guessMode",
+                            [
+                              "not",
+                              "@entity.revealed"
+                            ]
+                          ],
+                          [
+                            "array/append",
+                            [],
+                            "@guessCurve"
+                          ],
+                          [
+                            "if",
+                            "@config.guessMode",
+                            [
+                              "array/append",
+                              [
+                                "array/append",
+                                [],
+                                "@guessCurve"
+                              ],
+                              "@fitCurve"
+                            ],
+                            [
+                              "array/append",
+                              [],
+                              "@fitCurve"
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "ADD_POINT",
+                                  "label": "Add Point",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "REVEAL_FIT",
+                                  "label": "Reveal Fit",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Guess slope: ",
+                                [
+                                  "math/round",
+                                  "@entity.guessSlope",
+                                  2.0
+                                ]
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "action": "GUESS_LINE",
+                              "actionPayload": {
+                                "param": "slope"
+                              },
+                              "max": 3.0,
+                              "min": -3.0,
+                              "showTooltip": true,
+                              "step": 0.05,
+                              "type": "range-slider",
+                              "value": "@entity.guessSlope"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Guess intercept: ",
+                                [
+                                  "math/round",
+                                  "@entity.guessIntercept",
+                                  1.0
+                                ]
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "action": "GUESS_LINE",
+                              "actionPayload": {
+                                "param": "intercept"
+                              },
+                              "max": 100.0,
+                              "min": 0.0,
+                              "showTooltip": true,
+                              "step": 1.0,
+                              "type": "range-slider",
+                              "value": "@entity.guessIntercept"
+                            },
+                            {
+                              "animate": false,
+                              "curves": "@entity.curves",
+                              "gridStep": 20.0,
+                              "height": "@config.height",
+                              "interactive": true,
+                              "points": "@entity.points",
+                              "shapes": "@entity.shapes",
+                              "showAxes": true,
+                              "showGrid": true,
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": 100.0,
+                              "xMin": 0.0,
+                              "yMax": 100.0,
+                              "yMin": 0.0
+                            },
+                            {
+                              "content": [
+                                "if",
+                                "@config.showR",
+                                [
+                                  "str/concat",
+                                  "r = ",
+                                  [
+                                    "math/round",
+                                    "@entity.r",
+                                    3.0
+                                  ],
+                                  " — R² = ",
+                                  [
+                                    "math/round",
+                                    "@entity.rSquared",
+                                    3.0
+                                  ],
+                                  " — guess score ",
+                                  "@entity.guessScore",
+                                  "%"
+                                ],
+                                ""
+                              ],
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "REGRESSION_UPDATED",
+                    {
+                      "intercept": "@entity.intercept",
+                      "pointCount": [
+                        "array/len",
+                        "@entity.points"
+                      ],
+                      "r": "@entity.r",
+                      "rSquared": "@entity.rSquared",
+                      "slope": "@entity.slope"
+                    }
+                  ]
+                ],
+                "event": "DRAG_POINT",
+                "eventId": "evt_01KZNF6QX4409YFPBFCCSH10H8",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "let",
+                    [
+                      [
+                        "gSlope",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@payload.param",
+                            "slope"
+                          ],
+                          "@payload.value",
+                          "@entity.guessSlope"
+                        ]
+                      ],
+                      [
+                        "gIntercept",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@payload.param",
+                            "intercept"
+                          ],
+                          "@payload.value",
+                          "@entity.guessIntercept"
+                        ]
+                      ],
+                      [
+                        "pts",
+                        "@entity.points"
+                      ],
+                      [
+                        "n",
+                        [
+                          "array/len",
+                          "@pts"
+                        ]
+                      ],
+                      [
+                        "meanX",
+                        [
+                          "if",
+                          [
+                            ">",
+                            "@n",
+                            0.0
+                          ],
+                          [
+                            "/",
+                            [
+                              "array/reduce",
+                              "@pts",
+                              0.0,
+                              [
+                                "fn",
+                                [
+                                  "acc",
+                                  "p"
+                                ],
+                                [
+                                  "+",
+                                  "@acc",
+                                  [
+                                    "object/get",
+                                    "@p",
+                                    "x"
+                                  ]
+                                ]
+                              ]
+                            ],
+                            "@n"
+                          ],
+                          0.0
+                        ]
+                      ],
+                      [
+                        "meanY",
+                        [
+                          "if",
+                          [
+                            ">",
+                            "@n",
+                            0.0
+                          ],
+                          [
+                            "/",
+                            [
+                              "array/reduce",
+                              "@pts",
+                              0.0,
+                              [
+                                "fn",
+                                [
+                                  "acc",
+                                  "p"
+                                ],
+                                [
+                                  "+",
+                                  "@acc",
+                                  [
+                                    "object/get",
+                                    "@p",
+                                    "y"
+                                  ]
+                                ]
+                              ]
+                            ],
+                            "@n"
+                          ],
+                          0.0
+                        ]
+                      ],
+                      [
+                        "sxx",
+                        [
+                          "array/reduce",
+                          "@pts",
+                          0.0,
+                          [
+                            "fn",
+                            [
+                              "acc",
+                              "p"
+                            ],
+                            [
+                              "let",
+                              [
+                                [
+                                  "dx",
+                                  [
+                                    "-",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "x"
+                                    ],
+                                    "@meanX"
+                                  ]
+                                ]
+                              ],
+                              [
+                                "+",
+                                "@acc",
+                                [
+                                  "*",
+                                  "@dx",
+                                  "@dx"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "sxy",
+                        [
+                          "array/reduce",
+                          "@pts",
+                          0.0,
+                          [
+                            "fn",
+                            [
+                              "acc",
+                              "p"
+                            ],
+                            [
+                              "+",
+                              "@acc",
+                              [
+                                "*",
+                                [
+                                  "-",
+                                  [
+                                    "object/get",
+                                    "@p",
+                                    "x"
+                                  ],
+                                  "@meanX"
+                                ],
+                                [
+                                  "-",
+                                  [
+                                    "object/get",
+                                    "@p",
+                                    "y"
+                                  ],
+                                  "@meanY"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "newSlope",
+                        [
+                          "if",
+                          [
+                            ">",
+                            "@sxx",
+                            0.0
+                          ],
+                          [
+                            "/",
+                            "@sxy",
+                            "@sxx"
+                          ],
+                          0.0
+                        ]
+                      ],
+                      [
+                        "newIntercept",
+                        [
+                          "-",
+                          "@meanY",
+                          [
+                            "*",
+                            "@newSlope",
+                            "@meanX"
+                          ]
+                        ]
+                      ],
+                      [
+                        "ssFit",
+                        [
+                          "array/reduce",
+                          "@pts",
+                          0.0,
+                          [
+                            "fn",
+                            [
+                              "acc",
+                              "p"
+                            ],
+                            [
+                              "let",
+                              [
+                                [
+                                  "e",
+                                  [
+                                    "-",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "y"
+                                    ],
+                                    [
+                                      "+",
+                                      [
+                                        "*",
+                                        "@newSlope",
+                                        [
+                                          "object/get",
+                                          "@p",
+                                          "x"
+                                        ]
+                                      ],
+                                      "@newIntercept"
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              [
+                                "+",
+                                "@acc",
+                                [
+                                  "*",
+                                  "@e",
+                                  "@e"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "ssGuess",
+                        [
+                          "array/reduce",
+                          "@pts",
+                          0.0,
+                          [
+                            "fn",
+                            [
+                              "acc",
+                              "p"
+                            ],
+                            [
+                              "let",
+                              [
+                                [
+                                  "e",
+                                  [
+                                    "-",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "y"
+                                    ],
+                                    [
+                                      "+",
+                                      [
+                                        "*",
+                                        "@gSlope",
+                                        [
+                                          "object/get",
+                                          "@p",
+                                          "x"
+                                        ]
+                                      ],
+                                      "@gIntercept"
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              [
+                                "+",
+                                "@acc",
+                                [
+                                  "*",
+                                  "@e",
+                                  "@e"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "newScore",
+                        [
+                          "if",
+                          [
+                            ">",
+                            "@ssGuess",
+                            0.0
+                          ],
+                          [
+                            "math/round",
+                            [
+                              "math/clamp",
+                              [
+                                "*",
+                                100.0,
+                                [
+                                  "/",
+                                  "@ssFit",
+                                  "@ssGuess"
+                                ]
+                              ],
+                              0.0,
+                              100.0
+                            ]
+                          ],
+                          100.0
+                        ]
+                      ],
+                      [
+                        "guessCurve",
+                        {
+                          "color": "#dc2626",
+                          "label": "your guess",
+                          "samples": [
+                            {
+                              "x": 0.0,
+                              "y": [
+                                "math/clamp",
+                                "@gIntercept",
+                                0.0,
+                                100.0
+                              ]
+                            },
+                            {
+                              "x": 100.0,
+                              "y": [
+                                "math/clamp",
+                                [
+                                  "+",
+                                  [
+                                    "*",
+                                    "@gSlope",
+                                    100.0
+                                  ],
+                                  "@gIntercept"
+                                ],
+                                0.0,
+                                100.0
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      [
+                        "fitCurve",
+                        {
+                          "color": "#2563eb",
+                          "label": "least squares",
+                          "samples": [
+                            {
+                              "x": 0.0,
+                              "y": [
+                                "math/clamp",
+                                "@newIntercept",
+                                0.0,
+                                100.0
+                              ]
+                            },
+                            {
+                              "x": 100.0,
+                              "y": [
+                                "math/clamp",
+                                [
+                                  "+",
+                                  [
+                                    "*",
+                                    "@newSlope",
+                                    100.0
+                                  ],
+                                  "@newIntercept"
+                                ],
+                                0.0,
+                                100.0
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.guessSlope",
+                        "@gSlope"
+                      ],
+                      [
+                        "set",
+                        "@entity.guessIntercept",
+                        "@gIntercept"
+                      ],
+                      [
+                        "set",
+                        "@entity.guessScore",
+                        "@newScore"
+                      ],
+                      [
+                        "set",
+                        "@entity.curves",
+                        [
+                          "if",
+                          [
+                            "and",
+                            "@config.guessMode",
+                            [
+                              "not",
+                              "@entity.revealed"
+                            ]
+                          ],
+                          [
+                            "array/append",
+                            [],
+                            "@guessCurve"
+                          ],
+                          [
+                            "if",
+                            "@config.guessMode",
+                            [
+                              "array/append",
+                              [
+                                "array/append",
+                                [],
+                                "@guessCurve"
+                              ],
+                              "@fitCurve"
+                            ],
+                            [
+                              "array/append",
+                              [],
+                              "@fitCurve"
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "ADD_POINT",
+                                  "label": "Add Point",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "REVEAL_FIT",
+                                  "label": "Reveal Fit",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Guess slope: ",
+                                [
+                                  "math/round",
+                                  "@entity.guessSlope",
+                                  2.0
+                                ]
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "action": "GUESS_LINE",
+                              "actionPayload": {
+                                "param": "slope"
+                              },
+                              "max": 3.0,
+                              "min": -3.0,
+                              "showTooltip": true,
+                              "step": 0.05,
+                              "type": "range-slider",
+                              "value": "@entity.guessSlope"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Guess intercept: ",
+                                [
+                                  "math/round",
+                                  "@entity.guessIntercept",
+                                  1.0
+                                ]
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "action": "GUESS_LINE",
+                              "actionPayload": {
+                                "param": "intercept"
+                              },
+                              "max": 100.0,
+                              "min": 0.0,
+                              "showTooltip": true,
+                              "step": 1.0,
+                              "type": "range-slider",
+                              "value": "@entity.guessIntercept"
+                            },
+                            {
+                              "animate": false,
+                              "curves": "@entity.curves",
+                              "gridStep": 20.0,
+                              "height": "@config.height",
+                              "interactive": true,
+                              "points": "@entity.points",
+                              "shapes": "@entity.shapes",
+                              "showAxes": true,
+                              "showGrid": true,
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": 100.0,
+                              "xMin": 0.0,
+                              "yMax": 100.0,
+                              "yMin": 0.0
+                            },
+                            {
+                              "content": [
+                                "if",
+                                "@config.showR",
+                                [
+                                  "str/concat",
+                                  "r = ",
+                                  [
+                                    "math/round",
+                                    "@entity.r",
+                                    3.0
+                                  ],
+                                  " — R² = ",
+                                  [
+                                    "math/round",
+                                    "@entity.rSquared",
+                                    3.0
+                                  ],
+                                  " — guess score ",
+                                  "@entity.guessScore",
+                                  "%"
+                                ],
+                                ""
+                              ],
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "REGRESSION_UPDATED",
+                    {
+                      "intercept": "@entity.intercept",
+                      "pointCount": [
+                        "array/len",
+                        "@entity.points"
+                      ],
+                      "r": "@entity.r",
+                      "rSquared": "@entity.rSquared",
+                      "slope": "@entity.slope"
+                    }
+                  ]
+                ],
+                "event": "GUESS_LINE",
+                "eventId": "evt_01KZNF6QX48KAC7ASBTRJB1DW4",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.revealed",
+                    true
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "fitCurve",
+                        {
+                          "color": "#2563eb",
+                          "label": "least squares",
+                          "samples": [
+                            {
+                              "x": 0.0,
+                              "y": [
+                                "math/clamp",
+                                "@entity.intercept",
+                                0.0,
+                                100.0
+                              ]
+                            },
+                            {
+                              "x": 100.0,
+                              "y": [
+                                "math/clamp",
+                                [
+                                  "+",
+                                  [
+                                    "*",
+                                    "@entity.slope",
+                                    100.0
+                                  ],
+                                  "@entity.intercept"
+                                ],
+                                0.0,
+                                100.0
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      [
+                        "guessCurve",
+                        {
+                          "color": "#dc2626",
+                          "label": "your guess",
+                          "samples": [
+                            {
+                              "x": 0.0,
+                              "y": [
+                                "math/clamp",
+                                "@entity.guessIntercept",
+                                0.0,
+                                100.0
+                              ]
+                            },
+                            {
+                              "x": 100.0,
+                              "y": [
+                                "math/clamp",
+                                [
+                                  "+",
+                                  [
+                                    "*",
+                                    "@entity.guessSlope",
+                                    100.0
+                                  ],
+                                  "@entity.guessIntercept"
+                                ],
+                                0.0,
+                                100.0
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    ],
+                    [
+                      "set",
+                      "@entity.curves",
+                      [
+                        "if",
+                        "@config.guessMode",
+                        [
+                          "array/append",
+                          [
+                            "array/append",
+                            [],
+                            "@guessCurve"
+                          ],
+                          "@fitCurve"
+                        ],
+                        [
+                          "array/append",
+                          [],
+                          "@fitCurve"
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "ADD_POINT",
+                                  "label": "Add Point",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "REVEAL_FIT",
+                                  "label": "Reveal Fit",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Guess slope: ",
+                                [
+                                  "math/round",
+                                  "@entity.guessSlope",
+                                  2.0
+                                ]
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "action": "GUESS_LINE",
+                              "actionPayload": {
+                                "param": "slope"
+                              },
+                              "max": 3.0,
+                              "min": -3.0,
+                              "showTooltip": true,
+                              "step": 0.05,
+                              "type": "range-slider",
+                              "value": "@entity.guessSlope"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "Guess intercept: ",
+                                [
+                                  "math/round",
+                                  "@entity.guessIntercept",
+                                  1.0
+                                ]
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "action": "GUESS_LINE",
+                              "actionPayload": {
+                                "param": "intercept"
+                              },
+                              "max": 100.0,
+                              "min": 0.0,
+                              "showTooltip": true,
+                              "step": 1.0,
+                              "type": "range-slider",
+                              "value": "@entity.guessIntercept"
+                            },
+                            {
+                              "animate": false,
+                              "curves": "@entity.curves",
+                              "gridStep": 20.0,
+                              "height": "@config.height",
+                              "interactive": true,
+                              "points": "@entity.points",
+                              "shapes": "@entity.shapes",
+                              "showAxes": true,
+                              "showGrid": true,
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": 100.0,
+                              "xMin": 0.0,
+                              "yMax": 100.0,
+                              "yMin": 0.0
+                            },
+                            {
+                              "content": [
+                                "if",
+                                "@config.showR",
+                                [
+                                  "str/concat",
+                                  "r = ",
+                                  [
+                                    "math/round",
+                                    "@entity.r",
+                                    3.0
+                                  ],
+                                  " — R² = ",
+                                  [
+                                    "math/round",
+                                    "@entity.rSquared",
+                                    3.0
+                                  ],
+                                  " — guess score ",
+                                  "@entity.guessScore",
+                                  "%"
+                                ],
+                                ""
+                              ],
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "REGRESSION_UPDATED",
+                    {
+                      "intercept": "@entity.intercept",
+                      "pointCount": [
+                        "array/len",
+                        "@entity.points"
+                      ],
+                      "r": "@entity.r",
+                      "rSquared": "@entity.rSquared",
+                      "slope": "@entity.slope"
+                    }
+                  ]
+                ],
+                "event": "REVEAL_FIT",
+                "eventId": "evt_01KZNF6QX4AESAT1S9KFE24TS4",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 1,
+  "version": "1.0.0"
+}

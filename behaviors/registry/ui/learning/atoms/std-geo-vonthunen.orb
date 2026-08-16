@@ -1,0 +1,4229 @@
+{
+  "description": "Von Thünen bid-rent engine — each crop draws a bid-rent line (rent versus distance to market) on a math-canvas; the transport-cost and market-price dials shift every line's slope and intercept, and the concentric ring boundaries (line intersections) redraw live. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches.",
+  "ledger": {
+    "entries": {
+      "ent_01M0492BBKG9RQ8KRD1J4ZV5Z8": {
+        "bakedName": "GeoVonThunenScene",
+        "curName": "GeoVonThunenScene",
+        "id": "ent_01M0492BBKG9RQ8KRD1J4ZV5Z8",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "evt_01M0492BBKMMX151HA4M6RSFVS": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01M0492BBKMMX151HA4M6RSFVS",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M0492BBKF7BF1QAD0YY9XAD5",
+        "renames": []
+      },
+      "evt_01M0492BBM54H0FS96TAFKQ93W": {
+        "bakedName": "SET_COST",
+        "curName": "SET_COST",
+        "id": "evt_01M0492BBM54H0FS96TAFKQ93W",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M0492BBKF7BF1QAD0YY9XAD5",
+        "renames": []
+      },
+      "evt_01M0492BBM5GJJD92X0AR62H9T": {
+        "bakedName": "RESET",
+        "curName": "RESET",
+        "id": "evt_01M0492BBM5GJJD92X0AR62H9T",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M0492BBKF7BF1QAD0YY9XAD5",
+        "renames": []
+      },
+      "evt_01M0492BBMK3EX59QHXBAJDPSK": {
+        "bakedName": "MODE_SELECTED",
+        "curName": "MODE_SELECTED",
+        "id": "evt_01M0492BBMK3EX59QHXBAJDPSK",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M0492BBKF7BF1QAD0YY9XAD5",
+        "renames": []
+      },
+      "evt_01M0492BBMSBYFD7ED5DRDWS9T": {
+        "bakedName": "VONTHUNEN_UPDATED",
+        "curName": "VONTHUNEN_UPDATED",
+        "id": "evt_01M0492BBMSBYFD7ED5DRDWS9T",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M0492BBKF7BF1QAD0YY9XAD5",
+        "renames": []
+      },
+      "evt_01M0492BBMVGY30TPA3YC2WNRC": {
+        "bakedName": "SET_PRICE",
+        "curName": "SET_PRICE",
+        "id": "evt_01M0492BBMVGY30TPA3YC2WNRC",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M0492BBKF7BF1QAD0YY9XAD5",
+        "renames": []
+      },
+      "orb_01M0492BBKQCMYW22Q1MRNGQ6S": {
+        "bakedName": "GeoVonThunenOrbital",
+        "curName": "GeoVonThunenOrbital",
+        "id": "orb_01M0492BBKQCMYW22Q1MRNGQ6S",
+        "kind": "orbital",
+        "owner": "workspace",
+        "renames": []
+      },
+      "pag_01M0492BBNWBHGWW8D2932RRJC": {
+        "bakedName": "GeoVonThunenPage",
+        "curName": "GeoVonThunenPage",
+        "id": "pag_01M0492BBNWBHGWW8D2932RRJC",
+        "kind": "page",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M0492BBKF7BF1QAD0YY9XAD5": {
+        "bakedName": "GeoVonThunenSim",
+        "curName": "GeoVonThunenSim",
+        "id": "trt_01M0492BBKF7BF1QAD0YY9XAD5",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      }
+    },
+    "schemaVersion": 1
+  },
+  "name": "std-geo-vonthunen",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": false,
+            "name": "active",
+            "type": "boolean"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "transportCost",
+            "type": "number"
+          },
+          {
+            "name": "marketPrice",
+            "type": "number"
+          },
+          {
+            "items": {
+              "type": "number"
+            },
+            "name": "ringBoundaries",
+            "type": "array"
+          },
+          {
+            "name": "boundariesReadout",
+            "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "samples": {
+                  "items": {
+                    "properties": {
+                      "x": {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "y": {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "name": "samples",
+                  "required": true,
+                  "type": "array"
+                }
+              },
+              "type": "object"
+            },
+            "name": "rentCurves",
+            "type": "array"
+          },
+          {
+            "items": {
+              "properties": {
+                "align": {
+                  "name": "align",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "left",
+                    "center",
+                    "right"
+                  ]
+                },
+                "axis": {
+                  "name": "axis",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "x",
+                    "y"
+                  ]
+                },
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "fill": {
+                  "name": "fill",
+                  "required": false,
+                  "type": "string"
+                },
+                "fontSize": {
+                  "name": "fontSize",
+                  "required": false,
+                  "type": "number"
+                },
+                "height": {
+                  "name": "height",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "lineWidth": {
+                  "name": "lineWidth",
+                  "required": false,
+                  "type": "number"
+                },
+                "max": {
+                  "name": "max",
+                  "required": false,
+                  "type": "number"
+                },
+                "min": {
+                  "name": "min",
+                  "required": false,
+                  "type": "number"
+                },
+                "opacity": {
+                  "name": "opacity",
+                  "required": false,
+                  "type": "number"
+                },
+                "path": {
+                  "name": "path",
+                  "required": false,
+                  "type": "string"
+                },
+                "points": {
+                  "items": {
+                    "properties": {
+                      "x": {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "y": {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "name": "points",
+                  "required": false,
+                  "type": "array"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "step": {
+                  "name": "step",
+                  "required": false,
+                  "type": "number"
+                },
+                "text": {
+                  "name": "text",
+                  "required": false,
+                  "type": "string"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string",
+                  "values": [
+                    "line",
+                    "arrow",
+                    "circle",
+                    "rect",
+                    "polygon",
+                    "path",
+                    "text",
+                    "axis",
+                    "grid"
+                  ]
+                },
+                "width": {
+                  "name": "width",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": false,
+                  "type": "number"
+                },
+                "x1": {
+                  "name": "x1",
+                  "required": false,
+                  "type": "number"
+                },
+                "x2": {
+                  "name": "x2",
+                  "required": false,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "y1": {
+                  "name": "y1",
+                  "required": false,
+                  "type": "number"
+                },
+                "y2": {
+                  "name": "y2",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "vonThunenShapes",
+            "type": "array"
+          }
+        ],
+        "id": "ent_01M0492BBKG9RQ8KRD1J4ZV5Z8",
+        "name": "GeoVonThunenScene",
+        "persistence": "runtime"
+      },
+      "id": "orb_01M0492BBKQCMYW22Q1MRNGQ6S",
+      "name": "GeoVonThunenOrbital",
+      "pages": [
+        {
+          "id": "pag_01M0492BBNWBHGWW8D2932RRJC",
+          "name": "GeoVonThunenPage",
+          "path": "/geo-vonthunen",
+          "traits": [
+            {
+              "ref": "GeoVonThunenSim",
+              "refId": "trt_01M0492BBKF7BF1QAD0YY9XAD5"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "animate": {
+              "default": false,
+              "description": "Enable continuous redraw loop.",
+              "label": "Animate",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "axisColor": {
+              "default": "#94a3b8",
+              "label": "Axis Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "boundaryColor": {
+              "default": "#7c3aed",
+              "label": "Boundary Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "crops": {
+              "default": [
+                {
+                  "basePrice": 60.0,
+                  "color": "#16a34a",
+                  "fixedCost": 50.0,
+                  "id": "horticulture",
+                  "label": "Market Gardening",
+                  "transportRate": 40.0,
+                  "yieldPerHa": 10.0
+                },
+                {
+                  "basePrice": 50.0,
+                  "color": "#f59e0b",
+                  "fixedCost": 40.0,
+                  "id": "dairy",
+                  "label": "Dairy",
+                  "transportRate": 25.0,
+                  "yieldPerHa": 8.0
+                },
+                {
+                  "basePrice": 40.0,
+                  "color": "#a16207",
+                  "fixedCost": 30.0,
+                  "id": "grain",
+                  "label": "Grain",
+                  "transportRate": 10.0,
+                  "yieldPerHa": 6.0
+                },
+                {
+                  "basePrice": 30.0,
+                  "color": "#7c2d12",
+                  "fixedCost": 20.0,
+                  "id": "ranching",
+                  "label": "Ranching",
+                  "transportRate": 3.0,
+                  "yieldPerHa": 4.0
+                }
+              ],
+              "description": "Ordered innermost-to-outermost roster of crops; each declares yield per hectare, base market price, fixed production cost, and per-km transport rate. Bid-rent line for a crop: rent(d) = basePrice x priceDial x yield - fixedCost - transportRate x costDial x d.",
+              "items": {
+                "properties": {
+                  "basePrice": {
+                    "name": "basePrice",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "color": {
+                    "name": "color",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "fixedCost": {
+                    "name": "fixedCost",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "transportRate": {
+                    "name": "transportRate",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "yieldPerHa": {
+                    "name": "yieldPerHa",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Crops",
+              "synonyms": "crop, land use, bid rent, rent gradient, yield, transport rate, market gardening, dairy, grain, ranching",
+              "tier": "domain",
+              "type": "[GeoVonThunenCrop]"
+            },
+            "distanceAxisMax": {
+              "default": 30.0,
+              "description": "Upper bound of the distance-from-market axis, in km.",
+              "label": "Distance Axis Max",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "height": {
+              "default": 460.0,
+              "description": "Canvas height in pixels.",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "interactive": {
+              "default": false,
+              "description": "Enable pointer interaction on the canvas.",
+              "label": "Interactive",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "marketPrices": {
+              "default": 1.0,
+              "description": "Starting market-price dial — multiplies every crop's base price, raising or lowering all bid-rent intercepts.",
+              "label": "Starting Market Price Multiplier",
+              "synonyms": "market price, commodity price, farm gate price",
+              "tier": "domain",
+              "type": "number"
+            },
+            "matchMode": {
+              "default": "",
+              "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+              "label": "Match Mode",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "rentAxisMax": {
+              "default": 600.0,
+              "description": "Upper bound of the bid-rent vertical axis.",
+              "label": "Rent Axis Max",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "textColor": {
+              "default": "#1e293b",
+              "label": "Text Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "title": {
+              "default": "Von Thünen Bid-Rent Rings",
+              "description": "Title shown above the canvas.",
+              "label": "Title",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "transportCosts": {
+              "default": 1.0,
+              "description": "Starting transport-cost dial — multiplies every crop's per-km transport rate, steepening or flattening all bid-rent lines.",
+              "label": "Starting Transport Cost Multiplier",
+              "synonyms": "transport cost, freight rate, transportation cost, distance decay",
+              "tier": "domain",
+              "type": "number"
+            },
+            "width": {
+              "default": 640.0,
+              "description": "Canvas width in pixels.",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "The von Thünen state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+              "event": "VONTHUNEN_UPDATED",
+              "eventId": "evt_01M0492BBMSBYFD7ED5DRDWS9T",
+              "payloadSchema": [
+                {
+                  "name": "transportCost",
+                  "type": "number"
+                },
+                {
+                  "name": "marketPrice",
+                  "type": "number"
+                },
+                {
+                  "name": "ringBoundaries",
+                  "type": "[number]"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "von Thunen, bid-rent, bid rent curve, land rent, transport cost, market price, agricultural rings, concentric rings, ring boundary",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "active",
+              "boundariesReadout",
+              "marketPrice",
+              "rentCurves",
+              "ringBoundaries",
+              "title",
+              "transportCost",
+              "vonThunenShapes"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "entityRefIds": {
+            "GeoVonThunenScene": "ent_01M0492BBKG9RQ8KRD1J4ZV5Z8"
+          },
+          "id": "trt_01M0492BBKF7BF1QAD0YY9XAD5",
+          "linkedEntity": "GeoVonThunenScene",
+          "linkedEntityId": "ent_01M0492BBKG9RQ8KRD1J4ZV5Z8",
+          "name": "GeoVonThunenSim",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "id": "evt_01M0492BBKMMX151HA4M6RSFVS",
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+                "id": "evt_01M0492BBMK3EX59QHXBAJDPSK",
+                "key": "MODE_SELECTED",
+                "name": "Mode Selected",
+                "payloadSchema": [
+                  {
+                    "name": "mode",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Learner dragged the transport-cost multiplier dial.",
+                "id": "evt_01M0492BBM54H0FS96TAFKQ93W",
+                "key": "SET_COST",
+                "name": "Set Cost",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "number"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Learner dragged the market-price multiplier dial.",
+                "id": "evt_01M0492BBMVGY30TPA3YC2WNRC",
+                "key": "SET_PRICE",
+                "name": "Set Price",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "number"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Learner reset both dials to the configured starting values.",
+                "id": "evt_01M0492BBM5GJJD92X0AR62H9T",
+                "key": "RESET",
+                "name": "Reset",
+                "tier": "domain"
+              },
+              {
+                "description": "The von Thünen state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+                "id": "evt_01M0492BBMSBYFD7ED5DRDWS9T",
+                "key": "VONTHUNEN_UPDATED",
+                "name": "Vonthunen Updated",
+                "payloadSchema": [
+                  {
+                    "name": "transportCost",
+                    "type": "number"
+                  },
+                  {
+                    "name": "marketPrice",
+                    "type": "number"
+                  },
+                  {
+                    "name": "ringBoundaries",
+                    "type": "[number]"
+                  }
+                ],
+                "synonyms": "von Thunen, bid-rent, bid rent curve, land rent, transport cost, market price, agricultural rings, concentric rings, ring boundary",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.transportCost",
+                    "@config.transportCosts"
+                  ],
+                  [
+                    "set",
+                    "@entity.marketPrice",
+                    "@config.marketPrices"
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "plotLeft",
+                        50.0
+                      ],
+                      [
+                        "plotRight",
+                        [
+                          "-",
+                          "@config.width",
+                          30.0
+                        ]
+                      ],
+                      [
+                        "plotWidthPx",
+                        [
+                          "-",
+                          "@plotRight",
+                          "@plotLeft"
+                        ]
+                      ],
+                      [
+                        "plotTop",
+                        30.0
+                      ],
+                      [
+                        "plotBottom",
+                        [
+                          "-",
+                          "@config.height",
+                          50.0
+                        ]
+                      ],
+                      [
+                        "plotHeightPx",
+                        [
+                          "-",
+                          "@plotBottom",
+                          "@plotTop"
+                        ]
+                      ],
+                      [
+                        "cropLines",
+                        [
+                          "array/map",
+                          "@config.crops",
+                          [
+                            "fn",
+                            "c",
+                            [
+                              "let",
+                              [
+                                [
+                                  "intercept",
+                                  [
+                                    "-",
+                                    [
+                                      "*",
+                                      [
+                                        "*",
+                                        [
+                                          "object/get",
+                                          "@c",
+                                          "basePrice"
+                                        ],
+                                        "@entity.marketPrice"
+                                      ],
+                                      [
+                                        "object/get",
+                                        "@c",
+                                        "yieldPerHa"
+                                      ]
+                                    ],
+                                    [
+                                      "object/get",
+                                      "@c",
+                                      "fixedCost"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "slope",
+                                  [
+                                    "*",
+                                    [
+                                      "object/get",
+                                      "@c",
+                                      "transportRate"
+                                    ],
+                                    "@entity.transportCost"
+                                  ]
+                                ]
+                              ],
+                              {
+                                "color": [
+                                  "object/get",
+                                  "@c",
+                                  "color"
+                                ],
+                                "intercept": "@intercept",
+                                "label": [
+                                  "object/get",
+                                  "@c",
+                                  "label"
+                                ],
+                                "slope": "@slope"
+                              }
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "rentCurves",
+                        [
+                          "array/map",
+                          "@cropLines",
+                          [
+                            "fn",
+                            "cl",
+                            {
+                              "color": [
+                                "object/get",
+                                "@cl",
+                                "color"
+                              ],
+                              "label": [
+                                "object/get",
+                                "@cl",
+                                "label"
+                              ],
+                              "samples": [
+                                {
+                                  "x": "@plotLeft",
+                                  "y": [
+                                    "-",
+                                    "@plotBottom",
+                                    [
+                                      "*",
+                                      [
+                                        "/",
+                                        [
+                                          "math/max",
+                                          0.0,
+                                          [
+                                            "object/get",
+                                            "@cl",
+                                            "intercept"
+                                          ]
+                                        ],
+                                        "@config.rentAxisMax"
+                                      ],
+                                      "@plotHeightPx"
+                                    ]
+                                  ]
+                                },
+                                {
+                                  "x": "@plotRight",
+                                  "y": [
+                                    "-",
+                                    "@plotBottom",
+                                    [
+                                      "*",
+                                      [
+                                        "/",
+                                        [
+                                          "math/max",
+                                          0.0,
+                                          [
+                                            "-",
+                                            [
+                                              "object/get",
+                                              "@cl",
+                                              "intercept"
+                                            ],
+                                            [
+                                              "*",
+                                              [
+                                                "object/get",
+                                                "@cl",
+                                                "slope"
+                                              ],
+                                              "@config.distanceAxisMax"
+                                            ]
+                                          ]
+                                        ],
+                                        "@config.rentAxisMax"
+                                      ],
+                                      "@plotHeightPx"
+                                    ]
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        ]
+                      ],
+                      [
+                        "boundaryRows",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            [
+                              "math/max",
+                              0.0,
+                              [
+                                "-",
+                                [
+                                  "array/len",
+                                  "@cropLines"
+                                ],
+                                1.0
+                              ]
+                            ]
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "let",
+                              [
+                                [
+                                  "inner",
+                                  [
+                                    "array/nth",
+                                    "@cropLines",
+                                    "@i"
+                                  ]
+                                ],
+                                [
+                                  "outer",
+                                  [
+                                    "array/nth",
+                                    "@cropLines",
+                                    [
+                                      "+",
+                                      "@i",
+                                      1.0
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "raw",
+                                  [
+                                    "/",
+                                    [
+                                      "-",
+                                      [
+                                        "object/get",
+                                        "@inner",
+                                        "intercept"
+                                      ],
+                                      [
+                                        "object/get",
+                                        "@outer",
+                                        "intercept"
+                                      ]
+                                    ],
+                                    [
+                                      "math/max",
+                                      0.0001,
+                                      [
+                                        "-",
+                                        [
+                                          "object/get",
+                                          "@inner",
+                                          "slope"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "@outer",
+                                          "slope"
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              [
+                                "math/clamp",
+                                "@raw",
+                                0.0,
+                                "@config.distanceAxisMax"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "ringBoundaries",
+                        "@boundaryRows"
+                      ],
+                      [
+                        "boundaryShapes",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            [
+                              "array/len",
+                              "@boundaryRows"
+                            ]
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "let",
+                              [
+                                [
+                                  "b",
+                                  [
+                                    "array/nth",
+                                    "@boundaryRows",
+                                    "@i"
+                                  ]
+                                ],
+                                [
+                                  "xPos",
+                                  [
+                                    "+",
+                                    "@plotLeft",
+                                    [
+                                      "*",
+                                      [
+                                        "/",
+                                        "@b",
+                                        "@config.distanceAxisMax"
+                                      ],
+                                      "@plotWidthPx"
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              {
+                                "color": "@config.boundaryColor",
+                                "lineWidth": 2.0,
+                                "type": "line",
+                                "x1": "@xPos",
+                                "x2": "@xPos",
+                                "y1": "@plotTop",
+                                "y2": "@plotBottom"
+                              }
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "cropLabels",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            [
+                              "array/len",
+                              "@cropLines"
+                            ]
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "let",
+                              [
+                                [
+                                  "cl",
+                                  [
+                                    "array/nth",
+                                    "@cropLines",
+                                    "@i"
+                                  ]
+                                ],
+                                [
+                                  "leftB",
+                                  [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@i",
+                                      0.0
+                                    ],
+                                    0.0,
+                                    [
+                                      "array/nth",
+                                      "@boundaryRows",
+                                      [
+                                        "-",
+                                        "@i",
+                                        1.0
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "rightB",
+                                  [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@i",
+                                      [
+                                        "-",
+                                        [
+                                          "array/len",
+                                          "@cropLines"
+                                        ],
+                                        1.0
+                                      ]
+                                    ],
+                                    "@config.distanceAxisMax",
+                                    [
+                                      "array/nth",
+                                      "@boundaryRows",
+                                      "@i"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "midX",
+                                  [
+                                    "+",
+                                    "@plotLeft",
+                                    [
+                                      "*",
+                                      [
+                                        "/",
+                                        [
+                                          "/",
+                                          [
+                                            "+",
+                                            "@leftB",
+                                            "@rightB"
+                                          ],
+                                          2.0
+                                        ],
+                                        "@config.distanceAxisMax"
+                                      ],
+                                      "@plotWidthPx"
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              {
+                                "align": "center",
+                                "color": [
+                                  "object/get",
+                                  "@cl",
+                                  "color"
+                                ],
+                                "fontSize": 11.0,
+                                "text": [
+                                  "object/get",
+                                  "@cl",
+                                  "label"
+                                ],
+                                "type": "text",
+                                "x": "@midX",
+                                "y": [
+                                  "+",
+                                  "@plotBottom",
+                                  16.0
+                                ]
+                              }
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "axisShapes",
+                        [
+                          {
+                            "color": "@config.axisColor",
+                            "lineWidth": 1.0,
+                            "type": "line",
+                            "x1": "@plotLeft",
+                            "x2": "@plotRight",
+                            "y1": "@plotBottom",
+                            "y2": "@plotBottom"
+                          },
+                          {
+                            "color": "@config.axisColor",
+                            "lineWidth": 1.0,
+                            "type": "line",
+                            "x1": "@plotLeft",
+                            "x2": "@plotLeft",
+                            "y1": "@plotTop",
+                            "y2": "@plotBottom"
+                          }
+                        ]
+                      ],
+                      [
+                        "vonThunenShapes",
+                        [
+                          "array/concat",
+                          [
+                            "array/concat",
+                            "@axisShapes",
+                            "@boundaryShapes"
+                          ],
+                          "@cropLabels"
+                        ]
+                      ],
+                      [
+                        "boundariesReadout",
+                        [
+                          "str/concat",
+                          "Ring boundaries (km): ",
+                          [
+                            "str/join",
+                            [
+                              "array/map",
+                              "@boundaryRows",
+                              [
+                                "fn",
+                                "b",
+                                [
+                                  "math/round",
+                                  "@b",
+                                  1.0
+                                ]
+                              ]
+                            ],
+                            ", "
+                          ],
+                          " — market price x",
+                          "@entity.marketPrice",
+                          ", transport cost x",
+                          "@entity.transportCost"
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.ringBoundaries",
+                        "@ringBoundaries"
+                      ],
+                      [
+                        "set",
+                        "@entity.boundariesReadout",
+                        "@boundariesReadout"
+                      ],
+                      [
+                        "set",
+                        "@entity.rentCurves",
+                        "@rentCurves"
+                      ],
+                      [
+                        "set",
+                        "@entity.vonThunenShapes",
+                        "@vonThunenShapes"
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "animate": "@config.animate",
+                              "curves": "@entity.rentCurves",
+                              "gridStep": 1.0,
+                              "height": "@config.height",
+                              "interactive": "@config.interactive",
+                              "points": [],
+                              "shapes": "@entity.vonThunenShapes",
+                              "showAxes": false,
+                              "showGrid": false,
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": "@config.width",
+                              "xMin": 0.0,
+                              "yMax": "@config.height",
+                              "yMin": 0.0
+                            },
+                            {
+                              "children": [
+                                {
+                                  "content": [
+                                    "str/concat",
+                                    "Transport cost multiplier: x",
+                                    "@entity.transportCost"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "max": 3.0,
+                                  "min": 0.5,
+                                  "onChange": "SET_COST",
+                                  "showTooltip": true,
+                                  "step": 0.1,
+                                  "type": "range-slider",
+                                  "value": "@entity.transportCost"
+                                },
+                                {
+                                  "content": [
+                                    "str/concat",
+                                    "Market price multiplier: x",
+                                    "@entity.marketPrice"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "max": 2.0,
+                                  "min": 0.5,
+                                  "onChange": "SET_PRICE",
+                                  "showTooltip": true,
+                                  "step": 0.1,
+                                  "type": "range-slider",
+                                  "value": "@entity.marketPrice"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "xs",
+                              "type": "stack"
+                            },
+                            {
+                              "content": "@entity.boundariesReadout",
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "children": [
+                                "array/map",
+                                "@config.crops",
+                                [
+                                  "fn",
+                                  "c",
+                                  {
+                                    "label": [
+                                      "object/get",
+                                      "@c",
+                                      "label"
+                                    ],
+                                    "type": "badge",
+                                    "variant": "neutral"
+                                  }
+                                ]
+                              ],
+                              "direction": "horizontal",
+                              "gap": "xs",
+                              "type": "stack"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01M0492BBKMMX151HA4M6RSFVS",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@config.matchMode",
+                  ""
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.transportCost",
+                    "@config.transportCosts"
+                  ],
+                  [
+                    "set",
+                    "@entity.marketPrice",
+                    "@config.marketPrices"
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "plotLeft",
+                        50.0
+                      ],
+                      [
+                        "plotRight",
+                        [
+                          "-",
+                          "@config.width",
+                          30.0
+                        ]
+                      ],
+                      [
+                        "plotWidthPx",
+                        [
+                          "-",
+                          "@plotRight",
+                          "@plotLeft"
+                        ]
+                      ],
+                      [
+                        "plotTop",
+                        30.0
+                      ],
+                      [
+                        "plotBottom",
+                        [
+                          "-",
+                          "@config.height",
+                          50.0
+                        ]
+                      ],
+                      [
+                        "plotHeightPx",
+                        [
+                          "-",
+                          "@plotBottom",
+                          "@plotTop"
+                        ]
+                      ],
+                      [
+                        "cropLines",
+                        [
+                          "array/map",
+                          "@config.crops",
+                          [
+                            "fn",
+                            "c",
+                            [
+                              "let",
+                              [
+                                [
+                                  "intercept",
+                                  [
+                                    "-",
+                                    [
+                                      "*",
+                                      [
+                                        "*",
+                                        [
+                                          "object/get",
+                                          "@c",
+                                          "basePrice"
+                                        ],
+                                        "@entity.marketPrice"
+                                      ],
+                                      [
+                                        "object/get",
+                                        "@c",
+                                        "yieldPerHa"
+                                      ]
+                                    ],
+                                    [
+                                      "object/get",
+                                      "@c",
+                                      "fixedCost"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "slope",
+                                  [
+                                    "*",
+                                    [
+                                      "object/get",
+                                      "@c",
+                                      "transportRate"
+                                    ],
+                                    "@entity.transportCost"
+                                  ]
+                                ]
+                              ],
+                              {
+                                "color": [
+                                  "object/get",
+                                  "@c",
+                                  "color"
+                                ],
+                                "intercept": "@intercept",
+                                "label": [
+                                  "object/get",
+                                  "@c",
+                                  "label"
+                                ],
+                                "slope": "@slope"
+                              }
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "rentCurves",
+                        [
+                          "array/map",
+                          "@cropLines",
+                          [
+                            "fn",
+                            "cl",
+                            {
+                              "color": [
+                                "object/get",
+                                "@cl",
+                                "color"
+                              ],
+                              "label": [
+                                "object/get",
+                                "@cl",
+                                "label"
+                              ],
+                              "samples": [
+                                {
+                                  "x": "@plotLeft",
+                                  "y": [
+                                    "-",
+                                    "@plotBottom",
+                                    [
+                                      "*",
+                                      [
+                                        "/",
+                                        [
+                                          "math/max",
+                                          0.0,
+                                          [
+                                            "object/get",
+                                            "@cl",
+                                            "intercept"
+                                          ]
+                                        ],
+                                        "@config.rentAxisMax"
+                                      ],
+                                      "@plotHeightPx"
+                                    ]
+                                  ]
+                                },
+                                {
+                                  "x": "@plotRight",
+                                  "y": [
+                                    "-",
+                                    "@plotBottom",
+                                    [
+                                      "*",
+                                      [
+                                        "/",
+                                        [
+                                          "math/max",
+                                          0.0,
+                                          [
+                                            "-",
+                                            [
+                                              "object/get",
+                                              "@cl",
+                                              "intercept"
+                                            ],
+                                            [
+                                              "*",
+                                              [
+                                                "object/get",
+                                                "@cl",
+                                                "slope"
+                                              ],
+                                              "@config.distanceAxisMax"
+                                            ]
+                                          ]
+                                        ],
+                                        "@config.rentAxisMax"
+                                      ],
+                                      "@plotHeightPx"
+                                    ]
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        ]
+                      ],
+                      [
+                        "boundaryRows",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            [
+                              "math/max",
+                              0.0,
+                              [
+                                "-",
+                                [
+                                  "array/len",
+                                  "@cropLines"
+                                ],
+                                1.0
+                              ]
+                            ]
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "let",
+                              [
+                                [
+                                  "inner",
+                                  [
+                                    "array/nth",
+                                    "@cropLines",
+                                    "@i"
+                                  ]
+                                ],
+                                [
+                                  "outer",
+                                  [
+                                    "array/nth",
+                                    "@cropLines",
+                                    [
+                                      "+",
+                                      "@i",
+                                      1.0
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "raw",
+                                  [
+                                    "/",
+                                    [
+                                      "-",
+                                      [
+                                        "object/get",
+                                        "@inner",
+                                        "intercept"
+                                      ],
+                                      [
+                                        "object/get",
+                                        "@outer",
+                                        "intercept"
+                                      ]
+                                    ],
+                                    [
+                                      "math/max",
+                                      0.0001,
+                                      [
+                                        "-",
+                                        [
+                                          "object/get",
+                                          "@inner",
+                                          "slope"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "@outer",
+                                          "slope"
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              [
+                                "math/clamp",
+                                "@raw",
+                                0.0,
+                                "@config.distanceAxisMax"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "ringBoundaries",
+                        "@boundaryRows"
+                      ],
+                      [
+                        "boundaryShapes",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            [
+                              "array/len",
+                              "@boundaryRows"
+                            ]
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "let",
+                              [
+                                [
+                                  "b",
+                                  [
+                                    "array/nth",
+                                    "@boundaryRows",
+                                    "@i"
+                                  ]
+                                ],
+                                [
+                                  "xPos",
+                                  [
+                                    "+",
+                                    "@plotLeft",
+                                    [
+                                      "*",
+                                      [
+                                        "/",
+                                        "@b",
+                                        "@config.distanceAxisMax"
+                                      ],
+                                      "@plotWidthPx"
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              {
+                                "color": "@config.boundaryColor",
+                                "lineWidth": 2.0,
+                                "type": "line",
+                                "x1": "@xPos",
+                                "x2": "@xPos",
+                                "y1": "@plotTop",
+                                "y2": "@plotBottom"
+                              }
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "cropLabels",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            [
+                              "array/len",
+                              "@cropLines"
+                            ]
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "let",
+                              [
+                                [
+                                  "cl",
+                                  [
+                                    "array/nth",
+                                    "@cropLines",
+                                    "@i"
+                                  ]
+                                ],
+                                [
+                                  "leftB",
+                                  [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@i",
+                                      0.0
+                                    ],
+                                    0.0,
+                                    [
+                                      "array/nth",
+                                      "@boundaryRows",
+                                      [
+                                        "-",
+                                        "@i",
+                                        1.0
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "rightB",
+                                  [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@i",
+                                      [
+                                        "-",
+                                        [
+                                          "array/len",
+                                          "@cropLines"
+                                        ],
+                                        1.0
+                                      ]
+                                    ],
+                                    "@config.distanceAxisMax",
+                                    [
+                                      "array/nth",
+                                      "@boundaryRows",
+                                      "@i"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "midX",
+                                  [
+                                    "+",
+                                    "@plotLeft",
+                                    [
+                                      "*",
+                                      [
+                                        "/",
+                                        [
+                                          "/",
+                                          [
+                                            "+",
+                                            "@leftB",
+                                            "@rightB"
+                                          ],
+                                          2.0
+                                        ],
+                                        "@config.distanceAxisMax"
+                                      ],
+                                      "@plotWidthPx"
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              {
+                                "align": "center",
+                                "color": [
+                                  "object/get",
+                                  "@cl",
+                                  "color"
+                                ],
+                                "fontSize": 11.0,
+                                "text": [
+                                  "object/get",
+                                  "@cl",
+                                  "label"
+                                ],
+                                "type": "text",
+                                "x": "@midX",
+                                "y": [
+                                  "+",
+                                  "@plotBottom",
+                                  16.0
+                                ]
+                              }
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "axisShapes",
+                        [
+                          {
+                            "color": "@config.axisColor",
+                            "lineWidth": 1.0,
+                            "type": "line",
+                            "x1": "@plotLeft",
+                            "x2": "@plotRight",
+                            "y1": "@plotBottom",
+                            "y2": "@plotBottom"
+                          },
+                          {
+                            "color": "@config.axisColor",
+                            "lineWidth": 1.0,
+                            "type": "line",
+                            "x1": "@plotLeft",
+                            "x2": "@plotLeft",
+                            "y1": "@plotTop",
+                            "y2": "@plotBottom"
+                          }
+                        ]
+                      ],
+                      [
+                        "vonThunenShapes",
+                        [
+                          "array/concat",
+                          [
+                            "array/concat",
+                            "@axisShapes",
+                            "@boundaryShapes"
+                          ],
+                          "@cropLabels"
+                        ]
+                      ],
+                      [
+                        "boundariesReadout",
+                        [
+                          "str/concat",
+                          "Ring boundaries (km): ",
+                          [
+                            "str/join",
+                            [
+                              "array/map",
+                              "@boundaryRows",
+                              [
+                                "fn",
+                                "b",
+                                [
+                                  "math/round",
+                                  "@b",
+                                  1.0
+                                ]
+                              ]
+                            ],
+                            ", "
+                          ],
+                          " — market price x",
+                          "@entity.marketPrice",
+                          ", transport cost x",
+                          "@entity.transportCost"
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.ringBoundaries",
+                        "@ringBoundaries"
+                      ],
+                      [
+                        "set",
+                        "@entity.boundariesReadout",
+                        "@boundariesReadout"
+                      ],
+                      [
+                        "set",
+                        "@entity.rentCurves",
+                        "@rentCurves"
+                      ],
+                      [
+                        "set",
+                        "@entity.vonThunenShapes",
+                        "@vonThunenShapes"
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "animate": "@config.animate",
+                              "curves": "@entity.rentCurves",
+                              "gridStep": 1.0,
+                              "height": "@config.height",
+                              "interactive": "@config.interactive",
+                              "points": [],
+                              "shapes": "@entity.vonThunenShapes",
+                              "showAxes": false,
+                              "showGrid": false,
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": "@config.width",
+                              "xMin": 0.0,
+                              "yMax": "@config.height",
+                              "yMin": 0.0
+                            },
+                            {
+                              "children": [
+                                {
+                                  "content": [
+                                    "str/concat",
+                                    "Transport cost multiplier: x",
+                                    "@entity.transportCost"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "max": 3.0,
+                                  "min": 0.5,
+                                  "onChange": "SET_COST",
+                                  "showTooltip": true,
+                                  "step": 0.1,
+                                  "type": "range-slider",
+                                  "value": "@entity.transportCost"
+                                },
+                                {
+                                  "content": [
+                                    "str/concat",
+                                    "Market price multiplier: x",
+                                    "@entity.marketPrice"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "max": 2.0,
+                                  "min": 0.5,
+                                  "onChange": "SET_PRICE",
+                                  "showTooltip": true,
+                                  "step": 0.1,
+                                  "type": "range-slider",
+                                  "value": "@entity.marketPrice"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "xs",
+                              "type": "stack"
+                            },
+                            {
+                              "content": "@entity.boundariesReadout",
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "children": [
+                                "array/map",
+                                "@config.crops",
+                                [
+                                  "fn",
+                                  "c",
+                                  {
+                                    "label": [
+                                      "object/get",
+                                      "@c",
+                                      "label"
+                                    ],
+                                    "type": "badge",
+                                    "variant": "neutral"
+                                  }
+                                ]
+                              ],
+                              "direction": "horizontal",
+                              "gap": "xs",
+                              "type": "stack"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ]
+                ],
+                "event": "MODE_SELECTED",
+                "eventId": "evt_01M0492BBMK3EX59QHXBAJDPSK",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@payload.mode",
+                  "@config.matchMode"
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.transportCost",
+                    "@payload.value"
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "plotLeft",
+                        50.0
+                      ],
+                      [
+                        "plotRight",
+                        [
+                          "-",
+                          "@config.width",
+                          30.0
+                        ]
+                      ],
+                      [
+                        "plotWidthPx",
+                        [
+                          "-",
+                          "@plotRight",
+                          "@plotLeft"
+                        ]
+                      ],
+                      [
+                        "plotTop",
+                        30.0
+                      ],
+                      [
+                        "plotBottom",
+                        [
+                          "-",
+                          "@config.height",
+                          50.0
+                        ]
+                      ],
+                      [
+                        "plotHeightPx",
+                        [
+                          "-",
+                          "@plotBottom",
+                          "@plotTop"
+                        ]
+                      ],
+                      [
+                        "cropLines",
+                        [
+                          "array/map",
+                          "@config.crops",
+                          [
+                            "fn",
+                            "c",
+                            [
+                              "let",
+                              [
+                                [
+                                  "intercept",
+                                  [
+                                    "-",
+                                    [
+                                      "*",
+                                      [
+                                        "*",
+                                        [
+                                          "object/get",
+                                          "@c",
+                                          "basePrice"
+                                        ],
+                                        "@entity.marketPrice"
+                                      ],
+                                      [
+                                        "object/get",
+                                        "@c",
+                                        "yieldPerHa"
+                                      ]
+                                    ],
+                                    [
+                                      "object/get",
+                                      "@c",
+                                      "fixedCost"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "slope",
+                                  [
+                                    "*",
+                                    [
+                                      "object/get",
+                                      "@c",
+                                      "transportRate"
+                                    ],
+                                    "@entity.transportCost"
+                                  ]
+                                ]
+                              ],
+                              {
+                                "color": [
+                                  "object/get",
+                                  "@c",
+                                  "color"
+                                ],
+                                "intercept": "@intercept",
+                                "label": [
+                                  "object/get",
+                                  "@c",
+                                  "label"
+                                ],
+                                "slope": "@slope"
+                              }
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "rentCurves",
+                        [
+                          "array/map",
+                          "@cropLines",
+                          [
+                            "fn",
+                            "cl",
+                            {
+                              "color": [
+                                "object/get",
+                                "@cl",
+                                "color"
+                              ],
+                              "label": [
+                                "object/get",
+                                "@cl",
+                                "label"
+                              ],
+                              "samples": [
+                                {
+                                  "x": "@plotLeft",
+                                  "y": [
+                                    "-",
+                                    "@plotBottom",
+                                    [
+                                      "*",
+                                      [
+                                        "/",
+                                        [
+                                          "math/max",
+                                          0.0,
+                                          [
+                                            "object/get",
+                                            "@cl",
+                                            "intercept"
+                                          ]
+                                        ],
+                                        "@config.rentAxisMax"
+                                      ],
+                                      "@plotHeightPx"
+                                    ]
+                                  ]
+                                },
+                                {
+                                  "x": "@plotRight",
+                                  "y": [
+                                    "-",
+                                    "@plotBottom",
+                                    [
+                                      "*",
+                                      [
+                                        "/",
+                                        [
+                                          "math/max",
+                                          0.0,
+                                          [
+                                            "-",
+                                            [
+                                              "object/get",
+                                              "@cl",
+                                              "intercept"
+                                            ],
+                                            [
+                                              "*",
+                                              [
+                                                "object/get",
+                                                "@cl",
+                                                "slope"
+                                              ],
+                                              "@config.distanceAxisMax"
+                                            ]
+                                          ]
+                                        ],
+                                        "@config.rentAxisMax"
+                                      ],
+                                      "@plotHeightPx"
+                                    ]
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        ]
+                      ],
+                      [
+                        "boundaryRows",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            [
+                              "math/max",
+                              0.0,
+                              [
+                                "-",
+                                [
+                                  "array/len",
+                                  "@cropLines"
+                                ],
+                                1.0
+                              ]
+                            ]
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "let",
+                              [
+                                [
+                                  "inner",
+                                  [
+                                    "array/nth",
+                                    "@cropLines",
+                                    "@i"
+                                  ]
+                                ],
+                                [
+                                  "outer",
+                                  [
+                                    "array/nth",
+                                    "@cropLines",
+                                    [
+                                      "+",
+                                      "@i",
+                                      1.0
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "raw",
+                                  [
+                                    "/",
+                                    [
+                                      "-",
+                                      [
+                                        "object/get",
+                                        "@inner",
+                                        "intercept"
+                                      ],
+                                      [
+                                        "object/get",
+                                        "@outer",
+                                        "intercept"
+                                      ]
+                                    ],
+                                    [
+                                      "math/max",
+                                      0.0001,
+                                      [
+                                        "-",
+                                        [
+                                          "object/get",
+                                          "@inner",
+                                          "slope"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "@outer",
+                                          "slope"
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              [
+                                "math/clamp",
+                                "@raw",
+                                0.0,
+                                "@config.distanceAxisMax"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "ringBoundaries",
+                        "@boundaryRows"
+                      ],
+                      [
+                        "boundaryShapes",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            [
+                              "array/len",
+                              "@boundaryRows"
+                            ]
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "let",
+                              [
+                                [
+                                  "b",
+                                  [
+                                    "array/nth",
+                                    "@boundaryRows",
+                                    "@i"
+                                  ]
+                                ],
+                                [
+                                  "xPos",
+                                  [
+                                    "+",
+                                    "@plotLeft",
+                                    [
+                                      "*",
+                                      [
+                                        "/",
+                                        "@b",
+                                        "@config.distanceAxisMax"
+                                      ],
+                                      "@plotWidthPx"
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              {
+                                "color": "@config.boundaryColor",
+                                "lineWidth": 2.0,
+                                "type": "line",
+                                "x1": "@xPos",
+                                "x2": "@xPos",
+                                "y1": "@plotTop",
+                                "y2": "@plotBottom"
+                              }
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "cropLabels",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            [
+                              "array/len",
+                              "@cropLines"
+                            ]
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "let",
+                              [
+                                [
+                                  "cl",
+                                  [
+                                    "array/nth",
+                                    "@cropLines",
+                                    "@i"
+                                  ]
+                                ],
+                                [
+                                  "leftB",
+                                  [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@i",
+                                      0.0
+                                    ],
+                                    0.0,
+                                    [
+                                      "array/nth",
+                                      "@boundaryRows",
+                                      [
+                                        "-",
+                                        "@i",
+                                        1.0
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "rightB",
+                                  [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@i",
+                                      [
+                                        "-",
+                                        [
+                                          "array/len",
+                                          "@cropLines"
+                                        ],
+                                        1.0
+                                      ]
+                                    ],
+                                    "@config.distanceAxisMax",
+                                    [
+                                      "array/nth",
+                                      "@boundaryRows",
+                                      "@i"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "midX",
+                                  [
+                                    "+",
+                                    "@plotLeft",
+                                    [
+                                      "*",
+                                      [
+                                        "/",
+                                        [
+                                          "/",
+                                          [
+                                            "+",
+                                            "@leftB",
+                                            "@rightB"
+                                          ],
+                                          2.0
+                                        ],
+                                        "@config.distanceAxisMax"
+                                      ],
+                                      "@plotWidthPx"
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              {
+                                "align": "center",
+                                "color": [
+                                  "object/get",
+                                  "@cl",
+                                  "color"
+                                ],
+                                "fontSize": 11.0,
+                                "text": [
+                                  "object/get",
+                                  "@cl",
+                                  "label"
+                                ],
+                                "type": "text",
+                                "x": "@midX",
+                                "y": [
+                                  "+",
+                                  "@plotBottom",
+                                  16.0
+                                ]
+                              }
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "axisShapes",
+                        [
+                          {
+                            "color": "@config.axisColor",
+                            "lineWidth": 1.0,
+                            "type": "line",
+                            "x1": "@plotLeft",
+                            "x2": "@plotRight",
+                            "y1": "@plotBottom",
+                            "y2": "@plotBottom"
+                          },
+                          {
+                            "color": "@config.axisColor",
+                            "lineWidth": 1.0,
+                            "type": "line",
+                            "x1": "@plotLeft",
+                            "x2": "@plotLeft",
+                            "y1": "@plotTop",
+                            "y2": "@plotBottom"
+                          }
+                        ]
+                      ],
+                      [
+                        "vonThunenShapes",
+                        [
+                          "array/concat",
+                          [
+                            "array/concat",
+                            "@axisShapes",
+                            "@boundaryShapes"
+                          ],
+                          "@cropLabels"
+                        ]
+                      ],
+                      [
+                        "boundariesReadout",
+                        [
+                          "str/concat",
+                          "Ring boundaries (km): ",
+                          [
+                            "str/join",
+                            [
+                              "array/map",
+                              "@boundaryRows",
+                              [
+                                "fn",
+                                "b",
+                                [
+                                  "math/round",
+                                  "@b",
+                                  1.0
+                                ]
+                              ]
+                            ],
+                            ", "
+                          ],
+                          " — market price x",
+                          "@entity.marketPrice",
+                          ", transport cost x",
+                          "@entity.transportCost"
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.ringBoundaries",
+                        "@ringBoundaries"
+                      ],
+                      [
+                        "set",
+                        "@entity.boundariesReadout",
+                        "@boundariesReadout"
+                      ],
+                      [
+                        "set",
+                        "@entity.rentCurves",
+                        "@rentCurves"
+                      ],
+                      [
+                        "set",
+                        "@entity.vonThunenShapes",
+                        "@vonThunenShapes"
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "animate": "@config.animate",
+                              "curves": "@entity.rentCurves",
+                              "gridStep": 1.0,
+                              "height": "@config.height",
+                              "interactive": "@config.interactive",
+                              "points": [],
+                              "shapes": "@entity.vonThunenShapes",
+                              "showAxes": false,
+                              "showGrid": false,
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": "@config.width",
+                              "xMin": 0.0,
+                              "yMax": "@config.height",
+                              "yMin": 0.0
+                            },
+                            {
+                              "children": [
+                                {
+                                  "content": [
+                                    "str/concat",
+                                    "Transport cost multiplier: x",
+                                    "@entity.transportCost"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "max": 3.0,
+                                  "min": 0.5,
+                                  "onChange": "SET_COST",
+                                  "showTooltip": true,
+                                  "step": 0.1,
+                                  "type": "range-slider",
+                                  "value": "@entity.transportCost"
+                                },
+                                {
+                                  "content": [
+                                    "str/concat",
+                                    "Market price multiplier: x",
+                                    "@entity.marketPrice"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "max": 2.0,
+                                  "min": 0.5,
+                                  "onChange": "SET_PRICE",
+                                  "showTooltip": true,
+                                  "step": 0.1,
+                                  "type": "range-slider",
+                                  "value": "@entity.marketPrice"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "xs",
+                              "type": "stack"
+                            },
+                            {
+                              "content": "@entity.boundariesReadout",
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "children": [
+                                "array/map",
+                                "@config.crops",
+                                [
+                                  "fn",
+                                  "c",
+                                  {
+                                    "label": [
+                                      "object/get",
+                                      "@c",
+                                      "label"
+                                    ],
+                                    "type": "badge",
+                                    "variant": "neutral"
+                                  }
+                                ]
+                              ],
+                              "direction": "horizontal",
+                              "gap": "xs",
+                              "type": "stack"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "VONTHUNEN_UPDATED",
+                    {
+                      "marketPrice": "@entity.marketPrice",
+                      "ringBoundaries": "@entity.ringBoundaries",
+                      "transportCost": "@entity.transportCost"
+                    }
+                  ]
+                ],
+                "event": "SET_COST",
+                "eventId": "evt_01M0492BBM54H0FS96TAFKQ93W",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.marketPrice",
+                    "@payload.value"
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "plotLeft",
+                        50.0
+                      ],
+                      [
+                        "plotRight",
+                        [
+                          "-",
+                          "@config.width",
+                          30.0
+                        ]
+                      ],
+                      [
+                        "plotWidthPx",
+                        [
+                          "-",
+                          "@plotRight",
+                          "@plotLeft"
+                        ]
+                      ],
+                      [
+                        "plotTop",
+                        30.0
+                      ],
+                      [
+                        "plotBottom",
+                        [
+                          "-",
+                          "@config.height",
+                          50.0
+                        ]
+                      ],
+                      [
+                        "plotHeightPx",
+                        [
+                          "-",
+                          "@plotBottom",
+                          "@plotTop"
+                        ]
+                      ],
+                      [
+                        "cropLines",
+                        [
+                          "array/map",
+                          "@config.crops",
+                          [
+                            "fn",
+                            "c",
+                            [
+                              "let",
+                              [
+                                [
+                                  "intercept",
+                                  [
+                                    "-",
+                                    [
+                                      "*",
+                                      [
+                                        "*",
+                                        [
+                                          "object/get",
+                                          "@c",
+                                          "basePrice"
+                                        ],
+                                        "@entity.marketPrice"
+                                      ],
+                                      [
+                                        "object/get",
+                                        "@c",
+                                        "yieldPerHa"
+                                      ]
+                                    ],
+                                    [
+                                      "object/get",
+                                      "@c",
+                                      "fixedCost"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "slope",
+                                  [
+                                    "*",
+                                    [
+                                      "object/get",
+                                      "@c",
+                                      "transportRate"
+                                    ],
+                                    "@entity.transportCost"
+                                  ]
+                                ]
+                              ],
+                              {
+                                "color": [
+                                  "object/get",
+                                  "@c",
+                                  "color"
+                                ],
+                                "intercept": "@intercept",
+                                "label": [
+                                  "object/get",
+                                  "@c",
+                                  "label"
+                                ],
+                                "slope": "@slope"
+                              }
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "rentCurves",
+                        [
+                          "array/map",
+                          "@cropLines",
+                          [
+                            "fn",
+                            "cl",
+                            {
+                              "color": [
+                                "object/get",
+                                "@cl",
+                                "color"
+                              ],
+                              "label": [
+                                "object/get",
+                                "@cl",
+                                "label"
+                              ],
+                              "samples": [
+                                {
+                                  "x": "@plotLeft",
+                                  "y": [
+                                    "-",
+                                    "@plotBottom",
+                                    [
+                                      "*",
+                                      [
+                                        "/",
+                                        [
+                                          "math/max",
+                                          0.0,
+                                          [
+                                            "object/get",
+                                            "@cl",
+                                            "intercept"
+                                          ]
+                                        ],
+                                        "@config.rentAxisMax"
+                                      ],
+                                      "@plotHeightPx"
+                                    ]
+                                  ]
+                                },
+                                {
+                                  "x": "@plotRight",
+                                  "y": [
+                                    "-",
+                                    "@plotBottom",
+                                    [
+                                      "*",
+                                      [
+                                        "/",
+                                        [
+                                          "math/max",
+                                          0.0,
+                                          [
+                                            "-",
+                                            [
+                                              "object/get",
+                                              "@cl",
+                                              "intercept"
+                                            ],
+                                            [
+                                              "*",
+                                              [
+                                                "object/get",
+                                                "@cl",
+                                                "slope"
+                                              ],
+                                              "@config.distanceAxisMax"
+                                            ]
+                                          ]
+                                        ],
+                                        "@config.rentAxisMax"
+                                      ],
+                                      "@plotHeightPx"
+                                    ]
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        ]
+                      ],
+                      [
+                        "boundaryRows",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            [
+                              "math/max",
+                              0.0,
+                              [
+                                "-",
+                                [
+                                  "array/len",
+                                  "@cropLines"
+                                ],
+                                1.0
+                              ]
+                            ]
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "let",
+                              [
+                                [
+                                  "inner",
+                                  [
+                                    "array/nth",
+                                    "@cropLines",
+                                    "@i"
+                                  ]
+                                ],
+                                [
+                                  "outer",
+                                  [
+                                    "array/nth",
+                                    "@cropLines",
+                                    [
+                                      "+",
+                                      "@i",
+                                      1.0
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "raw",
+                                  [
+                                    "/",
+                                    [
+                                      "-",
+                                      [
+                                        "object/get",
+                                        "@inner",
+                                        "intercept"
+                                      ],
+                                      [
+                                        "object/get",
+                                        "@outer",
+                                        "intercept"
+                                      ]
+                                    ],
+                                    [
+                                      "math/max",
+                                      0.0001,
+                                      [
+                                        "-",
+                                        [
+                                          "object/get",
+                                          "@inner",
+                                          "slope"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "@outer",
+                                          "slope"
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              [
+                                "math/clamp",
+                                "@raw",
+                                0.0,
+                                "@config.distanceAxisMax"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "ringBoundaries",
+                        "@boundaryRows"
+                      ],
+                      [
+                        "boundaryShapes",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            [
+                              "array/len",
+                              "@boundaryRows"
+                            ]
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "let",
+                              [
+                                [
+                                  "b",
+                                  [
+                                    "array/nth",
+                                    "@boundaryRows",
+                                    "@i"
+                                  ]
+                                ],
+                                [
+                                  "xPos",
+                                  [
+                                    "+",
+                                    "@plotLeft",
+                                    [
+                                      "*",
+                                      [
+                                        "/",
+                                        "@b",
+                                        "@config.distanceAxisMax"
+                                      ],
+                                      "@plotWidthPx"
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              {
+                                "color": "@config.boundaryColor",
+                                "lineWidth": 2.0,
+                                "type": "line",
+                                "x1": "@xPos",
+                                "x2": "@xPos",
+                                "y1": "@plotTop",
+                                "y2": "@plotBottom"
+                              }
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "cropLabels",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            [
+                              "array/len",
+                              "@cropLines"
+                            ]
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "let",
+                              [
+                                [
+                                  "cl",
+                                  [
+                                    "array/nth",
+                                    "@cropLines",
+                                    "@i"
+                                  ]
+                                ],
+                                [
+                                  "leftB",
+                                  [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@i",
+                                      0.0
+                                    ],
+                                    0.0,
+                                    [
+                                      "array/nth",
+                                      "@boundaryRows",
+                                      [
+                                        "-",
+                                        "@i",
+                                        1.0
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "rightB",
+                                  [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@i",
+                                      [
+                                        "-",
+                                        [
+                                          "array/len",
+                                          "@cropLines"
+                                        ],
+                                        1.0
+                                      ]
+                                    ],
+                                    "@config.distanceAxisMax",
+                                    [
+                                      "array/nth",
+                                      "@boundaryRows",
+                                      "@i"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "midX",
+                                  [
+                                    "+",
+                                    "@plotLeft",
+                                    [
+                                      "*",
+                                      [
+                                        "/",
+                                        [
+                                          "/",
+                                          [
+                                            "+",
+                                            "@leftB",
+                                            "@rightB"
+                                          ],
+                                          2.0
+                                        ],
+                                        "@config.distanceAxisMax"
+                                      ],
+                                      "@plotWidthPx"
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              {
+                                "align": "center",
+                                "color": [
+                                  "object/get",
+                                  "@cl",
+                                  "color"
+                                ],
+                                "fontSize": 11.0,
+                                "text": [
+                                  "object/get",
+                                  "@cl",
+                                  "label"
+                                ],
+                                "type": "text",
+                                "x": "@midX",
+                                "y": [
+                                  "+",
+                                  "@plotBottom",
+                                  16.0
+                                ]
+                              }
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "axisShapes",
+                        [
+                          {
+                            "color": "@config.axisColor",
+                            "lineWidth": 1.0,
+                            "type": "line",
+                            "x1": "@plotLeft",
+                            "x2": "@plotRight",
+                            "y1": "@plotBottom",
+                            "y2": "@plotBottom"
+                          },
+                          {
+                            "color": "@config.axisColor",
+                            "lineWidth": 1.0,
+                            "type": "line",
+                            "x1": "@plotLeft",
+                            "x2": "@plotLeft",
+                            "y1": "@plotTop",
+                            "y2": "@plotBottom"
+                          }
+                        ]
+                      ],
+                      [
+                        "vonThunenShapes",
+                        [
+                          "array/concat",
+                          [
+                            "array/concat",
+                            "@axisShapes",
+                            "@boundaryShapes"
+                          ],
+                          "@cropLabels"
+                        ]
+                      ],
+                      [
+                        "boundariesReadout",
+                        [
+                          "str/concat",
+                          "Ring boundaries (km): ",
+                          [
+                            "str/join",
+                            [
+                              "array/map",
+                              "@boundaryRows",
+                              [
+                                "fn",
+                                "b",
+                                [
+                                  "math/round",
+                                  "@b",
+                                  1.0
+                                ]
+                              ]
+                            ],
+                            ", "
+                          ],
+                          " — market price x",
+                          "@entity.marketPrice",
+                          ", transport cost x",
+                          "@entity.transportCost"
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.ringBoundaries",
+                        "@ringBoundaries"
+                      ],
+                      [
+                        "set",
+                        "@entity.boundariesReadout",
+                        "@boundariesReadout"
+                      ],
+                      [
+                        "set",
+                        "@entity.rentCurves",
+                        "@rentCurves"
+                      ],
+                      [
+                        "set",
+                        "@entity.vonThunenShapes",
+                        "@vonThunenShapes"
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "animate": "@config.animate",
+                              "curves": "@entity.rentCurves",
+                              "gridStep": 1.0,
+                              "height": "@config.height",
+                              "interactive": "@config.interactive",
+                              "points": [],
+                              "shapes": "@entity.vonThunenShapes",
+                              "showAxes": false,
+                              "showGrid": false,
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": "@config.width",
+                              "xMin": 0.0,
+                              "yMax": "@config.height",
+                              "yMin": 0.0
+                            },
+                            {
+                              "children": [
+                                {
+                                  "content": [
+                                    "str/concat",
+                                    "Transport cost multiplier: x",
+                                    "@entity.transportCost"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "max": 3.0,
+                                  "min": 0.5,
+                                  "onChange": "SET_COST",
+                                  "showTooltip": true,
+                                  "step": 0.1,
+                                  "type": "range-slider",
+                                  "value": "@entity.transportCost"
+                                },
+                                {
+                                  "content": [
+                                    "str/concat",
+                                    "Market price multiplier: x",
+                                    "@entity.marketPrice"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "max": 2.0,
+                                  "min": 0.5,
+                                  "onChange": "SET_PRICE",
+                                  "showTooltip": true,
+                                  "step": 0.1,
+                                  "type": "range-slider",
+                                  "value": "@entity.marketPrice"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "xs",
+                              "type": "stack"
+                            },
+                            {
+                              "content": "@entity.boundariesReadout",
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "children": [
+                                "array/map",
+                                "@config.crops",
+                                [
+                                  "fn",
+                                  "c",
+                                  {
+                                    "label": [
+                                      "object/get",
+                                      "@c",
+                                      "label"
+                                    ],
+                                    "type": "badge",
+                                    "variant": "neutral"
+                                  }
+                                ]
+                              ],
+                              "direction": "horizontal",
+                              "gap": "xs",
+                              "type": "stack"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "VONTHUNEN_UPDATED",
+                    {
+                      "marketPrice": "@entity.marketPrice",
+                      "ringBoundaries": "@entity.ringBoundaries",
+                      "transportCost": "@entity.transportCost"
+                    }
+                  ]
+                ],
+                "event": "SET_PRICE",
+                "eventId": "evt_01M0492BBMVGY30TPA3YC2WNRC",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.transportCost",
+                    "@config.transportCosts"
+                  ],
+                  [
+                    "set",
+                    "@entity.marketPrice",
+                    "@config.marketPrices"
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "plotLeft",
+                        50.0
+                      ],
+                      [
+                        "plotRight",
+                        [
+                          "-",
+                          "@config.width",
+                          30.0
+                        ]
+                      ],
+                      [
+                        "plotWidthPx",
+                        [
+                          "-",
+                          "@plotRight",
+                          "@plotLeft"
+                        ]
+                      ],
+                      [
+                        "plotTop",
+                        30.0
+                      ],
+                      [
+                        "plotBottom",
+                        [
+                          "-",
+                          "@config.height",
+                          50.0
+                        ]
+                      ],
+                      [
+                        "plotHeightPx",
+                        [
+                          "-",
+                          "@plotBottom",
+                          "@plotTop"
+                        ]
+                      ],
+                      [
+                        "cropLines",
+                        [
+                          "array/map",
+                          "@config.crops",
+                          [
+                            "fn",
+                            "c",
+                            [
+                              "let",
+                              [
+                                [
+                                  "intercept",
+                                  [
+                                    "-",
+                                    [
+                                      "*",
+                                      [
+                                        "*",
+                                        [
+                                          "object/get",
+                                          "@c",
+                                          "basePrice"
+                                        ],
+                                        "@entity.marketPrice"
+                                      ],
+                                      [
+                                        "object/get",
+                                        "@c",
+                                        "yieldPerHa"
+                                      ]
+                                    ],
+                                    [
+                                      "object/get",
+                                      "@c",
+                                      "fixedCost"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "slope",
+                                  [
+                                    "*",
+                                    [
+                                      "object/get",
+                                      "@c",
+                                      "transportRate"
+                                    ],
+                                    "@entity.transportCost"
+                                  ]
+                                ]
+                              ],
+                              {
+                                "color": [
+                                  "object/get",
+                                  "@c",
+                                  "color"
+                                ],
+                                "intercept": "@intercept",
+                                "label": [
+                                  "object/get",
+                                  "@c",
+                                  "label"
+                                ],
+                                "slope": "@slope"
+                              }
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "rentCurves",
+                        [
+                          "array/map",
+                          "@cropLines",
+                          [
+                            "fn",
+                            "cl",
+                            {
+                              "color": [
+                                "object/get",
+                                "@cl",
+                                "color"
+                              ],
+                              "label": [
+                                "object/get",
+                                "@cl",
+                                "label"
+                              ],
+                              "samples": [
+                                {
+                                  "x": "@plotLeft",
+                                  "y": [
+                                    "-",
+                                    "@plotBottom",
+                                    [
+                                      "*",
+                                      [
+                                        "/",
+                                        [
+                                          "math/max",
+                                          0.0,
+                                          [
+                                            "object/get",
+                                            "@cl",
+                                            "intercept"
+                                          ]
+                                        ],
+                                        "@config.rentAxisMax"
+                                      ],
+                                      "@plotHeightPx"
+                                    ]
+                                  ]
+                                },
+                                {
+                                  "x": "@plotRight",
+                                  "y": [
+                                    "-",
+                                    "@plotBottom",
+                                    [
+                                      "*",
+                                      [
+                                        "/",
+                                        [
+                                          "math/max",
+                                          0.0,
+                                          [
+                                            "-",
+                                            [
+                                              "object/get",
+                                              "@cl",
+                                              "intercept"
+                                            ],
+                                            [
+                                              "*",
+                                              [
+                                                "object/get",
+                                                "@cl",
+                                                "slope"
+                                              ],
+                                              "@config.distanceAxisMax"
+                                            ]
+                                          ]
+                                        ],
+                                        "@config.rentAxisMax"
+                                      ],
+                                      "@plotHeightPx"
+                                    ]
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        ]
+                      ],
+                      [
+                        "boundaryRows",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            [
+                              "math/max",
+                              0.0,
+                              [
+                                "-",
+                                [
+                                  "array/len",
+                                  "@cropLines"
+                                ],
+                                1.0
+                              ]
+                            ]
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "let",
+                              [
+                                [
+                                  "inner",
+                                  [
+                                    "array/nth",
+                                    "@cropLines",
+                                    "@i"
+                                  ]
+                                ],
+                                [
+                                  "outer",
+                                  [
+                                    "array/nth",
+                                    "@cropLines",
+                                    [
+                                      "+",
+                                      "@i",
+                                      1.0
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "raw",
+                                  [
+                                    "/",
+                                    [
+                                      "-",
+                                      [
+                                        "object/get",
+                                        "@inner",
+                                        "intercept"
+                                      ],
+                                      [
+                                        "object/get",
+                                        "@outer",
+                                        "intercept"
+                                      ]
+                                    ],
+                                    [
+                                      "math/max",
+                                      0.0001,
+                                      [
+                                        "-",
+                                        [
+                                          "object/get",
+                                          "@inner",
+                                          "slope"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "@outer",
+                                          "slope"
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              [
+                                "math/clamp",
+                                "@raw",
+                                0.0,
+                                "@config.distanceAxisMax"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "ringBoundaries",
+                        "@boundaryRows"
+                      ],
+                      [
+                        "boundaryShapes",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            [
+                              "array/len",
+                              "@boundaryRows"
+                            ]
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "let",
+                              [
+                                [
+                                  "b",
+                                  [
+                                    "array/nth",
+                                    "@boundaryRows",
+                                    "@i"
+                                  ]
+                                ],
+                                [
+                                  "xPos",
+                                  [
+                                    "+",
+                                    "@plotLeft",
+                                    [
+                                      "*",
+                                      [
+                                        "/",
+                                        "@b",
+                                        "@config.distanceAxisMax"
+                                      ],
+                                      "@plotWidthPx"
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              {
+                                "color": "@config.boundaryColor",
+                                "lineWidth": 2.0,
+                                "type": "line",
+                                "x1": "@xPos",
+                                "x2": "@xPos",
+                                "y1": "@plotTop",
+                                "y2": "@plotBottom"
+                              }
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "cropLabels",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            [
+                              "array/len",
+                              "@cropLines"
+                            ]
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            [
+                              "let",
+                              [
+                                [
+                                  "cl",
+                                  [
+                                    "array/nth",
+                                    "@cropLines",
+                                    "@i"
+                                  ]
+                                ],
+                                [
+                                  "leftB",
+                                  [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@i",
+                                      0.0
+                                    ],
+                                    0.0,
+                                    [
+                                      "array/nth",
+                                      "@boundaryRows",
+                                      [
+                                        "-",
+                                        "@i",
+                                        1.0
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "rightB",
+                                  [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@i",
+                                      [
+                                        "-",
+                                        [
+                                          "array/len",
+                                          "@cropLines"
+                                        ],
+                                        1.0
+                                      ]
+                                    ],
+                                    "@config.distanceAxisMax",
+                                    [
+                                      "array/nth",
+                                      "@boundaryRows",
+                                      "@i"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "midX",
+                                  [
+                                    "+",
+                                    "@plotLeft",
+                                    [
+                                      "*",
+                                      [
+                                        "/",
+                                        [
+                                          "/",
+                                          [
+                                            "+",
+                                            "@leftB",
+                                            "@rightB"
+                                          ],
+                                          2.0
+                                        ],
+                                        "@config.distanceAxisMax"
+                                      ],
+                                      "@plotWidthPx"
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              {
+                                "align": "center",
+                                "color": [
+                                  "object/get",
+                                  "@cl",
+                                  "color"
+                                ],
+                                "fontSize": 11.0,
+                                "text": [
+                                  "object/get",
+                                  "@cl",
+                                  "label"
+                                ],
+                                "type": "text",
+                                "x": "@midX",
+                                "y": [
+                                  "+",
+                                  "@plotBottom",
+                                  16.0
+                                ]
+                              }
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "axisShapes",
+                        [
+                          {
+                            "color": "@config.axisColor",
+                            "lineWidth": 1.0,
+                            "type": "line",
+                            "x1": "@plotLeft",
+                            "x2": "@plotRight",
+                            "y1": "@plotBottom",
+                            "y2": "@plotBottom"
+                          },
+                          {
+                            "color": "@config.axisColor",
+                            "lineWidth": 1.0,
+                            "type": "line",
+                            "x1": "@plotLeft",
+                            "x2": "@plotLeft",
+                            "y1": "@plotTop",
+                            "y2": "@plotBottom"
+                          }
+                        ]
+                      ],
+                      [
+                        "vonThunenShapes",
+                        [
+                          "array/concat",
+                          [
+                            "array/concat",
+                            "@axisShapes",
+                            "@boundaryShapes"
+                          ],
+                          "@cropLabels"
+                        ]
+                      ],
+                      [
+                        "boundariesReadout",
+                        [
+                          "str/concat",
+                          "Ring boundaries (km): ",
+                          [
+                            "str/join",
+                            [
+                              "array/map",
+                              "@boundaryRows",
+                              [
+                                "fn",
+                                "b",
+                                [
+                                  "math/round",
+                                  "@b",
+                                  1.0
+                                ]
+                              ]
+                            ],
+                            ", "
+                          ],
+                          " — market price x",
+                          "@entity.marketPrice",
+                          ", transport cost x",
+                          "@entity.transportCost"
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.ringBoundaries",
+                        "@ringBoundaries"
+                      ],
+                      [
+                        "set",
+                        "@entity.boundariesReadout",
+                        "@boundariesReadout"
+                      ],
+                      [
+                        "set",
+                        "@entity.rentCurves",
+                        "@rentCurves"
+                      ],
+                      [
+                        "set",
+                        "@entity.vonThunenShapes",
+                        "@vonThunenShapes"
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "animate": "@config.animate",
+                              "curves": "@entity.rentCurves",
+                              "gridStep": 1.0,
+                              "height": "@config.height",
+                              "interactive": "@config.interactive",
+                              "points": [],
+                              "shapes": "@entity.vonThunenShapes",
+                              "showAxes": false,
+                              "showGrid": false,
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": "@config.width",
+                              "xMin": 0.0,
+                              "yMax": "@config.height",
+                              "yMin": 0.0
+                            },
+                            {
+                              "children": [
+                                {
+                                  "content": [
+                                    "str/concat",
+                                    "Transport cost multiplier: x",
+                                    "@entity.transportCost"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "max": 3.0,
+                                  "min": 0.5,
+                                  "onChange": "SET_COST",
+                                  "showTooltip": true,
+                                  "step": 0.1,
+                                  "type": "range-slider",
+                                  "value": "@entity.transportCost"
+                                },
+                                {
+                                  "content": [
+                                    "str/concat",
+                                    "Market price multiplier: x",
+                                    "@entity.marketPrice"
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "max": 2.0,
+                                  "min": 0.5,
+                                  "onChange": "SET_PRICE",
+                                  "showTooltip": true,
+                                  "step": 0.1,
+                                  "type": "range-slider",
+                                  "value": "@entity.marketPrice"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "xs",
+                              "type": "stack"
+                            },
+                            {
+                              "content": "@entity.boundariesReadout",
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "children": [
+                                "array/map",
+                                "@config.crops",
+                                [
+                                  "fn",
+                                  "c",
+                                  {
+                                    "label": [
+                                      "object/get",
+                                      "@c",
+                                      "label"
+                                    ],
+                                    "type": "badge",
+                                    "variant": "neutral"
+                                  }
+                                ]
+                              ],
+                              "direction": "horizontal",
+                              "gap": "xs",
+                              "type": "stack"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "VONTHUNEN_UPDATED",
+                    {
+                      "marketPrice": "@entity.marketPrice",
+                      "ringBoundaries": "@entity.ringBoundaries",
+                      "transportCost": "@entity.transportCost"
+                    }
+                  ]
+                ],
+                "event": "RESET",
+                "eventId": "evt_01M0492BBM5GJJD92X0AR62H9T",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 1,
+  "version": "1.0.0"
+}

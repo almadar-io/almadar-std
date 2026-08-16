@@ -41,7 +41,7 @@ export interface StdLearningMathConfig {
   width?: unknown;
 }
 
-type _StdLearningMathEntityName = 'VectorScene' | 'LinearScene' | 'NumberlineScene' | 'SequenceScene' | 'UnitCircleScene' | 'SineWaveScene';
+type _StdLearningMathEntityName = 'VectorScene' | 'MathVectorsState' | 'LinearScene' | 'MathLinearState' | 'NumberlineScene' | 'MathNumberlineState' | 'SequenceScene' | 'MathSequenceState' | 'UnitCircleScene' | 'MathUnitCircleState' | 'SineWaveScene' | 'MathSineWaveState';
 type _StdLearningMathListenTraitName = 'VectorEngine' | 'LinearEngine' | 'NumberlineEngine' | 'SequenceEngine' | 'UnitCircleEngine' | 'SineWaveEngine';
 
 /**

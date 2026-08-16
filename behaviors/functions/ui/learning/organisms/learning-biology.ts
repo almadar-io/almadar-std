@@ -43,7 +43,7 @@ export interface StdLearningBiologyConfig {
   width?: unknown;
 }
 
-type _StdLearningBiologyEntityName = 'PopulationScene' | 'FoodwebScene' | 'MitosisScene' | 'CellScene';
+type _StdLearningBiologyEntityName = 'PopulationScene' | 'BioPopulationState' | 'FoodwebScene' | 'BioFoodwebState' | 'MitosisScene' | 'BioMitosisState' | 'CellScene' | 'BioCellState';
 type _StdLearningBiologyListenTraitName = 'PopulationEngine' | 'FoodwebEngine' | 'MitosisEngine' | 'CellEngine';
 
 /**

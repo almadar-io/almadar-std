@@ -3,6 +3,10 @@ app learning-sociology-lab "1.0.0"
 orbital SociologyLabOrbital {
   uses SocStratification from "std/behaviors/std-soc-stratification"
   uses SocImagination from "std/behaviors/std-soc-imagination"
+  uses SocNetwork from "std/behaviors/std-soc-network"
+  uses SocConformity from "std/behaviors/std-soc-conformity"
+  uses SocDeviance from "std/behaviors/std-soc-deviance"
+  uses SocMobility from "std/behaviors/std-soc-mobility"
 
   type SociologyLabShape = {
     type : "line" | "arrow" | "circle" | "rect" | "polygon" | "path" | "text" | "axis" | "grid"!
@@ -60,6 +64,55 @@ orbital SociologyLabOrbital {
     explanationText : string
   }
 
+  entity NetworkScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    nodeEnabled : [boolean]
+    edgeEnabled : [boolean]
+    adopted : [boolean]
+    adoptedCount : number
+    hubText : string
+    nodes : [SociologyLabNode]
+    edges : [SociologyLabEdge]
+  }
+
+  entity ConformityScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    opinions : [number]
+    devianceRate : number
+    stepCount : number
+    majorityPct : number
+    nodes : [SociologyLabNode]
+  }
+
+  entity DevianceScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    nodes : [SociologyLabNode]
+    edges : [SociologyLabEdge]
+    itemIndex : number
+    score : number
+    answeredCorrectly : boolean
+    feedbackText : string
+    explanationText : string
+  }
+
+  entity MobilityScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    matrix : [number]
+    showBenchmark : boolean
+    immobilityRate : number
+    upwardRate : number
+    ragsToRiches : number
+    shapes : [SociologyLabShape]
+  }
+
   trait SociologyLabRouter -> @rebindable SociologyLabItem [lifecycle, instance] {
     initial: idle
 
@@ -77,10 +130,10 @@ orbital SociologyLabOrbital {
     }
 
     config {
-      mode : "stratification" | "imagination" = stratification
+      mode : "stratification" | "imagination" | "network" | "conformity" | "deviance" | "mobility" = stratification
         @label "Mode"
-        @description "Which sociology simulation to render: social stratification and mobility across generations, or the Sociological Imagination exercise linking personal troubles to public issues."
-        @synonyms "sociology, social stratification, class stratification, social class, class strata, class structure, upper class, middle class, working class, lower class, social mobility, intergenerational mobility, mobility index, income inequality, wealth inequality, Gini index, Gini coefficient, Lorenz curve, sociological imagination, C. Wright Mills, Mills, personal trouble, public issue, biography and history, structural unemployment, social structure"
+        @description "Which sociology simulation to render: social stratification and mobility across generations, the Sociological Imagination exercise linking personal troubles to public issues, a small-world network rewiring and diffusion sandbox, a conformity/deviance agent simulation, a labeling-theory classification exercise, or an intergenerational mobility transition matrix."
+        @synonyms "sociology, social stratification, class stratification, social class, class strata, class structure, upper class, middle class, working class, lower class, social mobility, intergenerational mobility, mobility index, income inequality, wealth inequality, Gini index, Gini coefficient, Lorenz curve, sociological imagination, C. Wright Mills, Mills, personal trouble, public issue, biography and history, structural unemployment, social structure, social network, small-world network, weak ties, strength of weak ties, Granovetter, degree centrality, diffusion, conformity, deviance, nonconformity, Merton, reference group, peer influence, labeling theory, Lemert, primary deviance, secondary deviance, formal sanction, informal sanction, social control, transition matrix, quintile, rags to riches, immobility, Great Gatsby curve"
         @tier "domain"
     }
   }

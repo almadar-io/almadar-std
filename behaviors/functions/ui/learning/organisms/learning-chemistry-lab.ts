@@ -50,7 +50,7 @@ export interface StdLearningChemistryLabConfig {
   mode?: 'molecule' | 'reaction' | 'titration';
 }
 
-type _StdLearningChemistryLabEntityName = 'ChemistryLabItem' | 'MoleculeScene' | 'ReactionScene' | 'TitrationScene';
+type _StdLearningChemistryLabEntityName = 'ChemistryLabItem' | 'MoleculeScene' | 'ReactionScene' | 'TitrationScene' | 'ChemMoleculeScene' | 'ChemReactionState' | 'ChemTitrationScene';
 type _StdLearningChemistryLabListenTraitName = 'ChemistryLabRouter' | 'MoleculeSim' | 'ReactionSim' | 'TitrationSim';
 
 /**

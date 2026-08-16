@@ -1,0 +1,4343 @@
+{
+  "description": "Slope viewer — a point rides a curve with its tangent line; an optional secant through x and x + h converges to the tangent as h shrinks, and the slope readout is f′(x). Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches.",
+  "ledger": {
+    "entries": {
+      "ent_01KZNG49Z9Y4CQPPF4KMDGXT34": {
+        "bakedName": "MathDerivativeState",
+        "curName": "MathDerivativeState",
+        "id": "ent_01KZNG49Z9Y4CQPPF4KMDGXT34",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "evt_01KZNG49Z95MG97X2BQ7XPPFF6": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01KZNG49Z95MG97X2BQ7XPPFF6",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZNG49Z9PN5G71KD9252P98Y",
+        "renames": []
+      },
+      "evt_01KZNG49ZA0SQAVZ4EF1NTSMQC": {
+        "bakedName": "DERIVATIVE_UPDATED",
+        "curName": "DERIVATIVE_UPDATED",
+        "id": "evt_01KZNG49ZA0SQAVZ4EF1NTSMQC",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZNG49Z9PN5G71KD9252P98Y",
+        "renames": []
+      },
+      "evt_01KZNG49ZA1QYE64NRMFJ6Z6WG": {
+        "bakedName": "MODE_SELECTED",
+        "curName": "MODE_SELECTED",
+        "id": "evt_01KZNG49ZA1QYE64NRMFJ6Z6WG",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZNG49Z9PN5G71KD9252P98Y",
+        "renames": []
+      },
+      "evt_01KZNG49ZA2X36CBXJZR08JJ76": {
+        "bakedName": "TOGGLE_SECANT",
+        "curName": "TOGGLE_SECANT",
+        "id": "evt_01KZNG49ZA2X36CBXJZR08JJ76",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZNG49Z9PN5G71KD9252P98Y",
+        "renames": []
+      },
+      "evt_01KZNG49ZA7XCKK2CSRN2JP77S": {
+        "bakedName": "SET_FUNCTION",
+        "curName": "SET_FUNCTION",
+        "id": "evt_01KZNG49ZA7XCKK2CSRN2JP77S",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZNG49Z9PN5G71KD9252P98Y",
+        "renames": []
+      },
+      "evt_01KZNG49ZANDWC6HVS0PXYYFDN": {
+        "bakedName": "MOVE_POINT",
+        "curName": "MOVE_POINT",
+        "id": "evt_01KZNG49ZANDWC6HVS0PXYYFDN",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZNG49Z9PN5G71KD9252P98Y",
+        "renames": []
+      },
+      "evt_01KZNG49ZAZ824J0YRH49EQZ4Z": {
+        "bakedName": "SHRINK_H",
+        "curName": "SHRINK_H",
+        "id": "evt_01KZNG49ZAZ824J0YRH49EQZ4Z",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZNG49Z9PN5G71KD9252P98Y",
+        "renames": []
+      },
+      "orb_01KZNG49Z9JNHE4CYMQZRBBNT4": {
+        "bakedName": "MathDerivativeOrbital",
+        "curName": "MathDerivativeOrbital",
+        "id": "orb_01KZNG49Z9JNHE4CYMQZRBBNT4",
+        "kind": "orbital",
+        "owner": "workspace",
+        "renames": []
+      },
+      "pag_01KZNG49ZBZXDJTKXWFNPH05FG": {
+        "bakedName": "MathDerivativePage",
+        "curName": "MathDerivativePage",
+        "id": "pag_01KZNG49ZBZXDJTKXWFNPH05FG",
+        "kind": "page",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01KZNG49Z9PN5G71KD9252P98Y": {
+        "bakedName": "MathDerivativeSim",
+        "curName": "MathDerivativeSim",
+        "id": "trt_01KZNG49Z9PN5G71KD9252P98Y",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      }
+    },
+    "schemaVersion": 1
+  },
+  "name": "std-math-derivative",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": false,
+            "name": "active",
+            "type": "boolean"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "functionPreset",
+            "type": "string"
+          },
+          {
+            "name": "px",
+            "type": "number"
+          },
+          {
+            "name": "h",
+            "type": "number"
+          },
+          {
+            "name": "fx",
+            "type": "number"
+          },
+          {
+            "name": "slope",
+            "type": "number"
+          },
+          {
+            "name": "secantSlope",
+            "type": "number"
+          },
+          {
+            "default": false,
+            "name": "showSecant",
+            "type": "boolean"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "samples": {
+                  "items": {
+                    "properties": {
+                      "x": {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "y": {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "name": "samples",
+                  "required": false,
+                  "type": "array"
+                }
+              },
+              "type": "object"
+            },
+            "name": "curves",
+            "type": "array"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "points",
+            "type": "array"
+          }
+        ],
+        "id": "ent_01KZNG49Z9Y4CQPPF4KMDGXT34",
+        "name": "MathDerivativeState",
+        "persistence": "runtime"
+      },
+      "id": "orb_01KZNG49Z9JNHE4CYMQZRBBNT4",
+      "name": "MathDerivativeOrbital",
+      "pages": [
+        {
+          "id": "pag_01KZNG49ZBZXDJTKXWFNPH05FG",
+          "name": "MathDerivativePage",
+          "path": "/math-derivative",
+          "traits": [
+            {
+              "ref": "MathDerivativeSim",
+              "refId": "trt_01KZNG49Z9PN5G71KD9252P98Y"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "curveColor": {
+              "default": "#2563eb",
+              "label": "Function Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "derivativeColor": {
+              "default": "#9333ea",
+              "label": "Derivative Curve Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "functionPreset": {
+              "default": "parabola",
+              "description": "Which function the point rides: ½x², 0.1x³, or 3·sin(x). The tangent uses its analytic derivative.",
+              "label": "Function Preset",
+              "synonyms": "function, curve, preset, parabola, cubic, sine",
+              "tier": "domain",
+              "type": "string",
+              "values": [
+                "parabola",
+                "cubic",
+                "sine"
+              ]
+            },
+            "gridStep": {
+              "default": 1.0,
+              "label": "Grid Step",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "height": {
+              "default": 400.0,
+              "description": "Canvas height in pixels.",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "initialH": {
+              "default": 2.0,
+              "description": "Starting offset between the secant's two intersection points; halving h converges the secant onto the tangent.",
+              "label": "Initial h",
+              "synonyms": "h, delta x, secant offset, step size",
+              "tier": "domain",
+              "type": "number"
+            },
+            "initialX": {
+              "default": 1.0,
+              "description": "Starting x coordinate of the point of tangency.",
+              "label": "Initial x",
+              "synonyms": "point of tangency, x coordinate",
+              "tier": "domain",
+              "type": "number"
+            },
+            "matchMode": {
+              "default": "",
+              "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+              "label": "Match Mode",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "pointColor": {
+              "default": "#dc2626",
+              "label": "Point Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "sampleXs": {
+              "default": [
+                -6.0,
+                -5.7,
+                -5.4,
+                -5.1,
+                -4.8,
+                -4.5,
+                -4.2,
+                -3.9,
+                -3.6,
+                -3.3,
+                -3.0,
+                -2.7,
+                -2.4,
+                -2.1,
+                -1.8,
+                -1.5,
+                -1.2,
+                -0.9,
+                -0.6,
+                -0.3,
+                0.0,
+                0.3,
+                0.6,
+                0.9,
+                1.2,
+                1.5,
+                1.8,
+                2.1,
+                2.4,
+                2.7,
+                3.0,
+                3.3,
+                3.6,
+                3.9,
+                4.2,
+                4.5,
+                4.8,
+                5.1,
+                5.4,
+                5.7,
+                6.0
+              ],
+              "description": "X coordinates the function and its derivative are sampled at to draw their curves.",
+              "items": {
+                "type": "number"
+              },
+              "label": "Sample Xs",
+              "tier": "domain",
+              "type": "[number]"
+            },
+            "secantColor": {
+              "default": "#16a34a",
+              "label": "Secant Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "showAxes": {
+              "default": true,
+              "label": "Show Axes",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "showDerivativeCurve": {
+              "default": false,
+              "description": "Also plot the derivative f′ as its own curve under the function.",
+              "label": "Show Derivative Curve",
+              "synonyms": "derivative curve, f prime, derived function",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "showGrid": {
+              "default": true,
+              "label": "Show Grid",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "showSecant": {
+              "default": true,
+              "description": "Draw the secant line through x and x + h alongside the tangent.",
+              "label": "Show Secant",
+              "synonyms": "secant line, average rate of change",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "tangentColor": {
+              "default": "#dc2626",
+              "label": "Tangent Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "title": {
+              "default": "Derivative — Slope Viewer",
+              "description": "Title shown above the canvas.",
+              "label": "Title",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "width": {
+              "default": 600.0,
+              "description": "Canvas width in pixels.",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "xMax": {
+              "default": 6.0,
+              "description": "Maximum x value on the canvas.",
+              "label": "X Max",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "xMin": {
+              "default": -6.0,
+              "description": "Minimum x value on the canvas.",
+              "label": "X Min",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "yMax": {
+              "default": 10.0,
+              "description": "Maximum y value on the canvas.",
+              "label": "Y Max",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "yMin": {
+              "default": -10.0,
+              "description": "Minimum y value on the canvas.",
+              "label": "Y Min",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "The point, tangent slope and secant state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+              "event": "DERIVATIVE_UPDATED",
+              "eventId": "evt_01KZNG49ZA0SQAVZ4EF1NTSMQC",
+              "payloadSchema": [
+                {
+                  "name": "x",
+                  "type": "number"
+                },
+                {
+                  "name": "fx",
+                  "type": "number"
+                },
+                {
+                  "name": "slope",
+                  "type": "number"
+                },
+                {
+                  "name": "h",
+                  "type": "number"
+                },
+                {
+                  "name": "secantSlope",
+                  "type": "number"
+                },
+                {
+                  "name": "functionPreset",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "derivative, tangent slope, secant, rate of change, differentiation",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "active",
+              "curves",
+              "functionPreset",
+              "fx",
+              "h",
+              "points",
+              "px",
+              "secantSlope",
+              "showSecant",
+              "slope",
+              "title"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "entityRefIds": {
+            "MathDerivativeState": "ent_01KZNG49Z9Y4CQPPF4KMDGXT34"
+          },
+          "id": "trt_01KZNG49Z9PN5G71KD9252P98Y",
+          "linkedEntity": "MathDerivativeState",
+          "linkedEntityId": "ent_01KZNG49Z9Y4CQPPF4KMDGXT34",
+          "name": "MathDerivativeSim",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "id": "evt_01KZNG49Z95MG97X2BQ7XPPFF6",
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+                "id": "evt_01KZNG49ZA1QYE64NRMFJ6Z6WG",
+                "key": "MODE_SELECTED",
+                "name": "Mode Selected",
+                "payloadSchema": [
+                  {
+                    "name": "mode",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Learner dragged the x slider to move the point of tangency along the curve.",
+                "id": "evt_01KZNG49ZANDWC6HVS0PXYYFDN",
+                "key": "MOVE_POINT",
+                "name": "Move Point",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "number"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "id": "evt_01KZNG49ZAZ824J0YRH49EQZ4Z",
+                "key": "SHRINK_H",
+                "name": "Shrink H"
+              },
+              {
+                "description": "Learner picked a different function preset; the secant resets to the initial h.",
+                "id": "evt_01KZNG49ZA7XCKK2CSRN2JP77S",
+                "key": "SET_FUNCTION",
+                "name": "Set Function",
+                "payloadSchema": [
+                  {
+                    "name": "preset",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "id": "evt_01KZNG49ZA2X36CBXJZR08JJ76",
+                "key": "TOGGLE_SECANT",
+                "name": "Toggle Secant"
+              },
+              {
+                "description": "The point, tangent slope and secant state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+                "id": "evt_01KZNG49ZA0SQAVZ4EF1NTSMQC",
+                "key": "DERIVATIVE_UPDATED",
+                "name": "Derivative Updated",
+                "payloadSchema": [
+                  {
+                    "name": "x",
+                    "type": "number"
+                  },
+                  {
+                    "name": "fx",
+                    "type": "number"
+                  },
+                  {
+                    "name": "slope",
+                    "type": "number"
+                  },
+                  {
+                    "name": "h",
+                    "type": "number"
+                  },
+                  {
+                    "name": "secantSlope",
+                    "type": "number"
+                  },
+                  {
+                    "name": "functionPreset",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "derivative, tangent slope, secant, rate of change, differentiation",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.functionPreset",
+                    "@config.functionPreset"
+                  ],
+                  [
+                    "set",
+                    "@entity.px",
+                    "@config.initialX"
+                  ],
+                  [
+                    "set",
+                    "@entity.h",
+                    "@config.initialH"
+                  ],
+                  [
+                    "set",
+                    "@entity.showSecant",
+                    "@config.showSecant"
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "fx",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@entity.functionPreset",
+                            "sine"
+                          ],
+                          [
+                            "*",
+                            3.0,
+                            [
+                              "math/sin",
+                              "@entity.px"
+                            ]
+                          ],
+                          [
+                            "if",
+                            [
+                              "==",
+                              "@entity.functionPreset",
+                              "cubic"
+                            ],
+                            [
+                              "*",
+                              0.1,
+                              [
+                                "*",
+                                "@entity.px",
+                                [
+                                  "*",
+                                  "@entity.px",
+                                  "@entity.px"
+                                ]
+                              ]
+                            ],
+                            [
+                              "*",
+                              0.5,
+                              [
+                                "*",
+                                "@entity.px",
+                                "@entity.px"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "slope",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@entity.functionPreset",
+                            "sine"
+                          ],
+                          [
+                            "*",
+                            3.0,
+                            [
+                              "math/cos",
+                              "@entity.px"
+                            ]
+                          ],
+                          [
+                            "if",
+                            [
+                              "==",
+                              "@entity.functionPreset",
+                              "cubic"
+                            ],
+                            [
+                              "*",
+                              0.3,
+                              [
+                                "*",
+                                "@entity.px",
+                                "@entity.px"
+                              ]
+                            ],
+                            "@entity.px"
+                          ]
+                        ]
+                      ],
+                      [
+                        "fxh",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@entity.functionPreset",
+                            "sine"
+                          ],
+                          [
+                            "*",
+                            3.0,
+                            [
+                              "math/sin",
+                              [
+                                "+",
+                                "@entity.px",
+                                "@entity.h"
+                              ]
+                            ]
+                          ],
+                          [
+                            "if",
+                            [
+                              "==",
+                              "@entity.functionPreset",
+                              "cubic"
+                            ],
+                            [
+                              "*",
+                              0.1,
+                              [
+                                "*",
+                                [
+                                  "+",
+                                  "@entity.px",
+                                  "@entity.h"
+                                ],
+                                [
+                                  "*",
+                                  [
+                                    "+",
+                                    "@entity.px",
+                                    "@entity.h"
+                                  ],
+                                  [
+                                    "+",
+                                    "@entity.px",
+                                    "@entity.h"
+                                  ]
+                                ]
+                              ]
+                            ],
+                            [
+                              "*",
+                              0.5,
+                              [
+                                "*",
+                                [
+                                  "+",
+                                  "@entity.px",
+                                  "@entity.h"
+                                ],
+                                [
+                                  "+",
+                                  "@entity.px",
+                                  "@entity.h"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "secSlope",
+                        [
+                          "/",
+                          [
+                            "-",
+                            "@fxh",
+                            "@fx"
+                          ],
+                          "@entity.h"
+                        ]
+                      ],
+                      [
+                        "fCurve",
+                        {
+                          "color": "@config.curveColor",
+                          "label": "f",
+                          "samples": [
+                            "array/map",
+                            "@config.sampleXs",
+                            [
+                              "fn",
+                              "x",
+                              {
+                                "x": "@x",
+                                "y": [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@entity.functionPreset",
+                                    "sine"
+                                  ],
+                                  [
+                                    "*",
+                                    3.0,
+                                    [
+                                      "math/sin",
+                                      "@x"
+                                    ]
+                                  ],
+                                  [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@entity.functionPreset",
+                                      "cubic"
+                                    ],
+                                    [
+                                      "*",
+                                      0.1,
+                                      [
+                                        "*",
+                                        "@x",
+                                        [
+                                          "*",
+                                          "@x",
+                                          "@x"
+                                        ]
+                                      ]
+                                    ],
+                                    [
+                                      "*",
+                                      0.5,
+                                      [
+                                        "*",
+                                        "@x",
+                                        "@x"
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              }
+                            ]
+                          ]
+                        }
+                      ],
+                      [
+                        "tangent",
+                        {
+                          "color": "@config.tangentColor",
+                          "label": "tangent",
+                          "samples": [
+                            {
+                              "x": "@config.xMin",
+                              "y": [
+                                "+",
+                                "@fx",
+                                [
+                                  "*",
+                                  "@slope",
+                                  [
+                                    "-",
+                                    "@config.xMin",
+                                    "@entity.px"
+                                  ]
+                                ]
+                              ]
+                            },
+                            {
+                              "x": "@config.xMax",
+                              "y": [
+                                "+",
+                                "@fx",
+                                [
+                                  "*",
+                                  "@slope",
+                                  [
+                                    "-",
+                                    "@config.xMax",
+                                    "@entity.px"
+                                  ]
+                                ]
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      [
+                        "secant",
+                        {
+                          "color": "@config.secantColor",
+                          "label": "secant",
+                          "samples": [
+                            {
+                              "x": "@config.xMin",
+                              "y": [
+                                "+",
+                                "@fx",
+                                [
+                                  "*",
+                                  "@secSlope",
+                                  [
+                                    "-",
+                                    "@config.xMin",
+                                    "@entity.px"
+                                  ]
+                                ]
+                              ]
+                            },
+                            {
+                              "x": "@config.xMax",
+                              "y": [
+                                "+",
+                                "@fx",
+                                [
+                                  "*",
+                                  "@secSlope",
+                                  [
+                                    "-",
+                                    "@config.xMax",
+                                    "@entity.px"
+                                  ]
+                                ]
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      [
+                        "dCurve",
+                        {
+                          "color": "@config.derivativeColor",
+                          "label": "f′",
+                          "samples": [
+                            "array/map",
+                            "@config.sampleXs",
+                            [
+                              "fn",
+                              "x",
+                              {
+                                "x": "@x",
+                                "y": [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@entity.functionPreset",
+                                    "sine"
+                                  ],
+                                  [
+                                    "*",
+                                    3.0,
+                                    [
+                                      "math/cos",
+                                      "@x"
+                                    ]
+                                  ],
+                                  [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@entity.functionPreset",
+                                      "cubic"
+                                    ],
+                                    [
+                                      "*",
+                                      0.3,
+                                      [
+                                        "*",
+                                        "@x",
+                                        "@x"
+                                      ]
+                                    ],
+                                    "@x"
+                                  ]
+                                ]
+                              }
+                            ]
+                          ]
+                        }
+                      ],
+                      [
+                        "withSecant",
+                        [
+                          "if",
+                          "@entity.showSecant",
+                          [
+                            "@fCurve",
+                            "@tangent",
+                            "@secant"
+                          ],
+                          [
+                            "@fCurve",
+                            "@tangent"
+                          ]
+                        ]
+                      ],
+                      [
+                        "mainPt",
+                        {
+                          "color": "@config.pointColor",
+                          "label": "x",
+                          "radius": 6.0,
+                          "x": "@entity.px",
+                          "y": "@fx"
+                        }
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.fx",
+                        "@fx"
+                      ],
+                      [
+                        "set",
+                        "@entity.slope",
+                        "@slope"
+                      ],
+                      [
+                        "set",
+                        "@entity.secantSlope",
+                        "@secSlope"
+                      ],
+                      [
+                        "set",
+                        "@entity.curves",
+                        [
+                          "if",
+                          "@config.showDerivativeCurve",
+                          [
+                            "array/concat",
+                            "@withSecant",
+                            [
+                              "@dCurve"
+                            ]
+                          ],
+                          "@withSecant"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.points",
+                        [
+                          "if",
+                          "@entity.showSecant",
+                          [
+                            "@mainPt",
+                            {
+                              "color": "@config.secantColor",
+                              "label": "x + h",
+                              "radius": 5.0,
+                              "x": [
+                                "+",
+                                "@entity.px",
+                                "@entity.h"
+                              ],
+                              "y": "@fxh"
+                            }
+                          ],
+                          [
+                            "@mainPt"
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "SET_FUNCTION",
+                                  "actionPayload": {
+                                    "preset": "parabola"
+                                  },
+                                  "label": "x²",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "SET_FUNCTION",
+                                  "actionPayload": {
+                                    "preset": "cubic"
+                                  },
+                                  "label": "x³",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "SET_FUNCTION",
+                                  "actionPayload": {
+                                    "preset": "sine"
+                                  },
+                                  "label": "sin x",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "SHRINK_H",
+                                  "label": "Halve h",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "TOGGLE_SECANT",
+                                  "label": [
+                                    "if",
+                                    "@entity.showSecant",
+                                    "Hide secant",
+                                    "Show secant"
+                                  ],
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "animate": false,
+                              "curves": "@entity.curves",
+                              "gridStep": "@config.gridStep",
+                              "height": "@config.height",
+                              "interactive": false,
+                              "points": "@entity.points",
+                              "shapes": [],
+                              "showAxes": "@config.showAxes",
+                              "showGrid": "@config.showGrid",
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": "@config.xMax",
+                              "xMin": "@config.xMin",
+                              "yMax": "@config.yMax",
+                              "yMin": "@config.yMin"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "content": [
+                                    "str/concat",
+                                    "x = ",
+                                    [
+                                      "math/round",
+                                      "@entity.px",
+                                      2.0
+                                    ]
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "max": 5.0,
+                                  "min": -5.0,
+                                  "onChange": "MOVE_POINT",
+                                  "showTooltip": true,
+                                  "step": 0.25,
+                                  "type": "range-slider",
+                                  "value": "@entity.px"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "xs",
+                              "type": "stack"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "f′(",
+                                [
+                                  "math/round",
+                                  "@entity.px",
+                                  2.0
+                                ],
+                                ") = ",
+                                [
+                                  "math/round",
+                                  "@entity.slope",
+                                  3.0
+                                ],
+                                " — slope of the tangent at x"
+                              ],
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "content": [
+                                "if",
+                                "@entity.showSecant",
+                                [
+                                  "str/concat",
+                                  "h = ",
+                                  [
+                                    "math/round",
+                                    "@entity.h",
+                                    4.0
+                                  ],
+                                  " · secant slope = ",
+                                  [
+                                    "math/round",
+                                    "@entity.secantSlope",
+                                    4.0
+                                  ],
+                                  " — converges to f′(x) as h → 0"
+                                ],
+                                ""
+                              ],
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "DERIVATIVE_UPDATED",
+                    {
+                      "functionPreset": "@entity.functionPreset",
+                      "fx": "@entity.fx",
+                      "h": "@entity.h",
+                      "secantSlope": "@entity.secantSlope",
+                      "slope": "@entity.slope",
+                      "x": "@entity.px"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01KZNG49Z95MG97X2BQ7XPPFF6",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@config.matchMode",
+                  ""
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.active",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.functionPreset",
+                    "@config.functionPreset"
+                  ],
+                  [
+                    "set",
+                    "@entity.px",
+                    "@config.initialX"
+                  ],
+                  [
+                    "set",
+                    "@entity.h",
+                    "@config.initialH"
+                  ],
+                  [
+                    "set",
+                    "@entity.showSecant",
+                    "@config.showSecant"
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "fx",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@entity.functionPreset",
+                            "sine"
+                          ],
+                          [
+                            "*",
+                            3.0,
+                            [
+                              "math/sin",
+                              "@entity.px"
+                            ]
+                          ],
+                          [
+                            "if",
+                            [
+                              "==",
+                              "@entity.functionPreset",
+                              "cubic"
+                            ],
+                            [
+                              "*",
+                              0.1,
+                              [
+                                "*",
+                                "@entity.px",
+                                [
+                                  "*",
+                                  "@entity.px",
+                                  "@entity.px"
+                                ]
+                              ]
+                            ],
+                            [
+                              "*",
+                              0.5,
+                              [
+                                "*",
+                                "@entity.px",
+                                "@entity.px"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "slope",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@entity.functionPreset",
+                            "sine"
+                          ],
+                          [
+                            "*",
+                            3.0,
+                            [
+                              "math/cos",
+                              "@entity.px"
+                            ]
+                          ],
+                          [
+                            "if",
+                            [
+                              "==",
+                              "@entity.functionPreset",
+                              "cubic"
+                            ],
+                            [
+                              "*",
+                              0.3,
+                              [
+                                "*",
+                                "@entity.px",
+                                "@entity.px"
+                              ]
+                            ],
+                            "@entity.px"
+                          ]
+                        ]
+                      ],
+                      [
+                        "fxh",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@entity.functionPreset",
+                            "sine"
+                          ],
+                          [
+                            "*",
+                            3.0,
+                            [
+                              "math/sin",
+                              [
+                                "+",
+                                "@entity.px",
+                                "@entity.h"
+                              ]
+                            ]
+                          ],
+                          [
+                            "if",
+                            [
+                              "==",
+                              "@entity.functionPreset",
+                              "cubic"
+                            ],
+                            [
+                              "*",
+                              0.1,
+                              [
+                                "*",
+                                [
+                                  "+",
+                                  "@entity.px",
+                                  "@entity.h"
+                                ],
+                                [
+                                  "*",
+                                  [
+                                    "+",
+                                    "@entity.px",
+                                    "@entity.h"
+                                  ],
+                                  [
+                                    "+",
+                                    "@entity.px",
+                                    "@entity.h"
+                                  ]
+                                ]
+                              ]
+                            ],
+                            [
+                              "*",
+                              0.5,
+                              [
+                                "*",
+                                [
+                                  "+",
+                                  "@entity.px",
+                                  "@entity.h"
+                                ],
+                                [
+                                  "+",
+                                  "@entity.px",
+                                  "@entity.h"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "secSlope",
+                        [
+                          "/",
+                          [
+                            "-",
+                            "@fxh",
+                            "@fx"
+                          ],
+                          "@entity.h"
+                        ]
+                      ],
+                      [
+                        "fCurve",
+                        {
+                          "color": "@config.curveColor",
+                          "label": "f",
+                          "samples": [
+                            "array/map",
+                            "@config.sampleXs",
+                            [
+                              "fn",
+                              "x",
+                              {
+                                "x": "@x",
+                                "y": [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@entity.functionPreset",
+                                    "sine"
+                                  ],
+                                  [
+                                    "*",
+                                    3.0,
+                                    [
+                                      "math/sin",
+                                      "@x"
+                                    ]
+                                  ],
+                                  [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@entity.functionPreset",
+                                      "cubic"
+                                    ],
+                                    [
+                                      "*",
+                                      0.1,
+                                      [
+                                        "*",
+                                        "@x",
+                                        [
+                                          "*",
+                                          "@x",
+                                          "@x"
+                                        ]
+                                      ]
+                                    ],
+                                    [
+                                      "*",
+                                      0.5,
+                                      [
+                                        "*",
+                                        "@x",
+                                        "@x"
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              }
+                            ]
+                          ]
+                        }
+                      ],
+                      [
+                        "tangent",
+                        {
+                          "color": "@config.tangentColor",
+                          "label": "tangent",
+                          "samples": [
+                            {
+                              "x": "@config.xMin",
+                              "y": [
+                                "+",
+                                "@fx",
+                                [
+                                  "*",
+                                  "@slope",
+                                  [
+                                    "-",
+                                    "@config.xMin",
+                                    "@entity.px"
+                                  ]
+                                ]
+                              ]
+                            },
+                            {
+                              "x": "@config.xMax",
+                              "y": [
+                                "+",
+                                "@fx",
+                                [
+                                  "*",
+                                  "@slope",
+                                  [
+                                    "-",
+                                    "@config.xMax",
+                                    "@entity.px"
+                                  ]
+                                ]
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      [
+                        "secant",
+                        {
+                          "color": "@config.secantColor",
+                          "label": "secant",
+                          "samples": [
+                            {
+                              "x": "@config.xMin",
+                              "y": [
+                                "+",
+                                "@fx",
+                                [
+                                  "*",
+                                  "@secSlope",
+                                  [
+                                    "-",
+                                    "@config.xMin",
+                                    "@entity.px"
+                                  ]
+                                ]
+                              ]
+                            },
+                            {
+                              "x": "@config.xMax",
+                              "y": [
+                                "+",
+                                "@fx",
+                                [
+                                  "*",
+                                  "@secSlope",
+                                  [
+                                    "-",
+                                    "@config.xMax",
+                                    "@entity.px"
+                                  ]
+                                ]
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      [
+                        "dCurve",
+                        {
+                          "color": "@config.derivativeColor",
+                          "label": "f′",
+                          "samples": [
+                            "array/map",
+                            "@config.sampleXs",
+                            [
+                              "fn",
+                              "x",
+                              {
+                                "x": "@x",
+                                "y": [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@entity.functionPreset",
+                                    "sine"
+                                  ],
+                                  [
+                                    "*",
+                                    3.0,
+                                    [
+                                      "math/cos",
+                                      "@x"
+                                    ]
+                                  ],
+                                  [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@entity.functionPreset",
+                                      "cubic"
+                                    ],
+                                    [
+                                      "*",
+                                      0.3,
+                                      [
+                                        "*",
+                                        "@x",
+                                        "@x"
+                                      ]
+                                    ],
+                                    "@x"
+                                  ]
+                                ]
+                              }
+                            ]
+                          ]
+                        }
+                      ],
+                      [
+                        "withSecant",
+                        [
+                          "if",
+                          "@entity.showSecant",
+                          [
+                            "@fCurve",
+                            "@tangent",
+                            "@secant"
+                          ],
+                          [
+                            "@fCurve",
+                            "@tangent"
+                          ]
+                        ]
+                      ],
+                      [
+                        "mainPt",
+                        {
+                          "color": "@config.pointColor",
+                          "label": "x",
+                          "radius": 6.0,
+                          "x": "@entity.px",
+                          "y": "@fx"
+                        }
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.fx",
+                        "@fx"
+                      ],
+                      [
+                        "set",
+                        "@entity.slope",
+                        "@slope"
+                      ],
+                      [
+                        "set",
+                        "@entity.secantSlope",
+                        "@secSlope"
+                      ],
+                      [
+                        "set",
+                        "@entity.curves",
+                        [
+                          "if",
+                          "@config.showDerivativeCurve",
+                          [
+                            "array/concat",
+                            "@withSecant",
+                            [
+                              "@dCurve"
+                            ]
+                          ],
+                          "@withSecant"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.points",
+                        [
+                          "if",
+                          "@entity.showSecant",
+                          [
+                            "@mainPt",
+                            {
+                              "color": "@config.secantColor",
+                              "label": "x + h",
+                              "radius": 5.0,
+                              "x": [
+                                "+",
+                                "@entity.px",
+                                "@entity.h"
+                              ],
+                              "y": "@fxh"
+                            }
+                          ],
+                          [
+                            "@mainPt"
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "SET_FUNCTION",
+                                  "actionPayload": {
+                                    "preset": "parabola"
+                                  },
+                                  "label": "x²",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "SET_FUNCTION",
+                                  "actionPayload": {
+                                    "preset": "cubic"
+                                  },
+                                  "label": "x³",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "SET_FUNCTION",
+                                  "actionPayload": {
+                                    "preset": "sine"
+                                  },
+                                  "label": "sin x",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "SHRINK_H",
+                                  "label": "Halve h",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "TOGGLE_SECANT",
+                                  "label": [
+                                    "if",
+                                    "@entity.showSecant",
+                                    "Hide secant",
+                                    "Show secant"
+                                  ],
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "animate": false,
+                              "curves": "@entity.curves",
+                              "gridStep": "@config.gridStep",
+                              "height": "@config.height",
+                              "interactive": false,
+                              "points": "@entity.points",
+                              "shapes": [],
+                              "showAxes": "@config.showAxes",
+                              "showGrid": "@config.showGrid",
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": "@config.xMax",
+                              "xMin": "@config.xMin",
+                              "yMax": "@config.yMax",
+                              "yMin": "@config.yMin"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "content": [
+                                    "str/concat",
+                                    "x = ",
+                                    [
+                                      "math/round",
+                                      "@entity.px",
+                                      2.0
+                                    ]
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "max": 5.0,
+                                  "min": -5.0,
+                                  "onChange": "MOVE_POINT",
+                                  "showTooltip": true,
+                                  "step": 0.25,
+                                  "type": "range-slider",
+                                  "value": "@entity.px"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "xs",
+                              "type": "stack"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "f′(",
+                                [
+                                  "math/round",
+                                  "@entity.px",
+                                  2.0
+                                ],
+                                ") = ",
+                                [
+                                  "math/round",
+                                  "@entity.slope",
+                                  3.0
+                                ],
+                                " — slope of the tangent at x"
+                              ],
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "content": [
+                                "if",
+                                "@entity.showSecant",
+                                [
+                                  "str/concat",
+                                  "h = ",
+                                  [
+                                    "math/round",
+                                    "@entity.h",
+                                    4.0
+                                  ],
+                                  " · secant slope = ",
+                                  [
+                                    "math/round",
+                                    "@entity.secantSlope",
+                                    4.0
+                                  ],
+                                  " — converges to f′(x) as h → 0"
+                                ],
+                                ""
+                              ],
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "DERIVATIVE_UPDATED",
+                    {
+                      "functionPreset": "@entity.functionPreset",
+                      "fx": "@entity.fx",
+                      "h": "@entity.h",
+                      "secantSlope": "@entity.secantSlope",
+                      "slope": "@entity.slope",
+                      "x": "@entity.px"
+                    }
+                  ]
+                ],
+                "event": "MODE_SELECTED",
+                "eventId": "evt_01KZNG49ZA1QYE64NRMFJ6Z6WG",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@payload.mode",
+                  "@config.matchMode"
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "let",
+                    [
+                      [
+                        "npx",
+                        [
+                          "math/clamp",
+                          "@payload.value",
+                          -5.0,
+                          5.0
+                        ]
+                      ],
+                      [
+                        "fx",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@entity.functionPreset",
+                            "sine"
+                          ],
+                          [
+                            "*",
+                            3.0,
+                            [
+                              "math/sin",
+                              "@npx"
+                            ]
+                          ],
+                          [
+                            "if",
+                            [
+                              "==",
+                              "@entity.functionPreset",
+                              "cubic"
+                            ],
+                            [
+                              "*",
+                              0.1,
+                              [
+                                "*",
+                                "@npx",
+                                [
+                                  "*",
+                                  "@npx",
+                                  "@npx"
+                                ]
+                              ]
+                            ],
+                            [
+                              "*",
+                              0.5,
+                              [
+                                "*",
+                                "@npx",
+                                "@npx"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "slope",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@entity.functionPreset",
+                            "sine"
+                          ],
+                          [
+                            "*",
+                            3.0,
+                            [
+                              "math/cos",
+                              "@npx"
+                            ]
+                          ],
+                          [
+                            "if",
+                            [
+                              "==",
+                              "@entity.functionPreset",
+                              "cubic"
+                            ],
+                            [
+                              "*",
+                              0.3,
+                              [
+                                "*",
+                                "@npx",
+                                "@npx"
+                              ]
+                            ],
+                            "@npx"
+                          ]
+                        ]
+                      ],
+                      [
+                        "fxh",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@entity.functionPreset",
+                            "sine"
+                          ],
+                          [
+                            "*",
+                            3.0,
+                            [
+                              "math/sin",
+                              [
+                                "+",
+                                "@npx",
+                                "@entity.h"
+                              ]
+                            ]
+                          ],
+                          [
+                            "if",
+                            [
+                              "==",
+                              "@entity.functionPreset",
+                              "cubic"
+                            ],
+                            [
+                              "*",
+                              0.1,
+                              [
+                                "*",
+                                [
+                                  "+",
+                                  "@npx",
+                                  "@entity.h"
+                                ],
+                                [
+                                  "*",
+                                  [
+                                    "+",
+                                    "@npx",
+                                    "@entity.h"
+                                  ],
+                                  [
+                                    "+",
+                                    "@npx",
+                                    "@entity.h"
+                                  ]
+                                ]
+                              ]
+                            ],
+                            [
+                              "*",
+                              0.5,
+                              [
+                                "*",
+                                [
+                                  "+",
+                                  "@npx",
+                                  "@entity.h"
+                                ],
+                                [
+                                  "+",
+                                  "@npx",
+                                  "@entity.h"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "secSlope",
+                        [
+                          "/",
+                          [
+                            "-",
+                            "@fxh",
+                            "@fx"
+                          ],
+                          "@entity.h"
+                        ]
+                      ],
+                      [
+                        "fCurve",
+                        {
+                          "color": "@config.curveColor",
+                          "label": "f",
+                          "samples": [
+                            "array/map",
+                            "@config.sampleXs",
+                            [
+                              "fn",
+                              "x",
+                              {
+                                "x": "@x",
+                                "y": [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@entity.functionPreset",
+                                    "sine"
+                                  ],
+                                  [
+                                    "*",
+                                    3.0,
+                                    [
+                                      "math/sin",
+                                      "@x"
+                                    ]
+                                  ],
+                                  [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@entity.functionPreset",
+                                      "cubic"
+                                    ],
+                                    [
+                                      "*",
+                                      0.1,
+                                      [
+                                        "*",
+                                        "@x",
+                                        [
+                                          "*",
+                                          "@x",
+                                          "@x"
+                                        ]
+                                      ]
+                                    ],
+                                    [
+                                      "*",
+                                      0.5,
+                                      [
+                                        "*",
+                                        "@x",
+                                        "@x"
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              }
+                            ]
+                          ]
+                        }
+                      ],
+                      [
+                        "tangent",
+                        {
+                          "color": "@config.tangentColor",
+                          "label": "tangent",
+                          "samples": [
+                            {
+                              "x": "@config.xMin",
+                              "y": [
+                                "+",
+                                "@fx",
+                                [
+                                  "*",
+                                  "@slope",
+                                  [
+                                    "-",
+                                    "@config.xMin",
+                                    "@npx"
+                                  ]
+                                ]
+                              ]
+                            },
+                            {
+                              "x": "@config.xMax",
+                              "y": [
+                                "+",
+                                "@fx",
+                                [
+                                  "*",
+                                  "@slope",
+                                  [
+                                    "-",
+                                    "@config.xMax",
+                                    "@npx"
+                                  ]
+                                ]
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      [
+                        "secant",
+                        {
+                          "color": "@config.secantColor",
+                          "label": "secant",
+                          "samples": [
+                            {
+                              "x": "@config.xMin",
+                              "y": [
+                                "+",
+                                "@fx",
+                                [
+                                  "*",
+                                  "@secSlope",
+                                  [
+                                    "-",
+                                    "@config.xMin",
+                                    "@npx"
+                                  ]
+                                ]
+                              ]
+                            },
+                            {
+                              "x": "@config.xMax",
+                              "y": [
+                                "+",
+                                "@fx",
+                                [
+                                  "*",
+                                  "@secSlope",
+                                  [
+                                    "-",
+                                    "@config.xMax",
+                                    "@npx"
+                                  ]
+                                ]
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      [
+                        "dCurve",
+                        {
+                          "color": "@config.derivativeColor",
+                          "label": "f′",
+                          "samples": [
+                            "array/map",
+                            "@config.sampleXs",
+                            [
+                              "fn",
+                              "x",
+                              {
+                                "x": "@x",
+                                "y": [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@entity.functionPreset",
+                                    "sine"
+                                  ],
+                                  [
+                                    "*",
+                                    3.0,
+                                    [
+                                      "math/cos",
+                                      "@x"
+                                    ]
+                                  ],
+                                  [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@entity.functionPreset",
+                                      "cubic"
+                                    ],
+                                    [
+                                      "*",
+                                      0.3,
+                                      [
+                                        "*",
+                                        "@x",
+                                        "@x"
+                                      ]
+                                    ],
+                                    "@x"
+                                  ]
+                                ]
+                              }
+                            ]
+                          ]
+                        }
+                      ],
+                      [
+                        "withSecant",
+                        [
+                          "if",
+                          "@entity.showSecant",
+                          [
+                            "@fCurve",
+                            "@tangent",
+                            "@secant"
+                          ],
+                          [
+                            "@fCurve",
+                            "@tangent"
+                          ]
+                        ]
+                      ],
+                      [
+                        "mainPt",
+                        {
+                          "color": "@config.pointColor",
+                          "label": "x",
+                          "radius": 6.0,
+                          "x": "@npx",
+                          "y": "@fx"
+                        }
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.px",
+                        "@npx"
+                      ],
+                      [
+                        "set",
+                        "@entity.fx",
+                        "@fx"
+                      ],
+                      [
+                        "set",
+                        "@entity.slope",
+                        "@slope"
+                      ],
+                      [
+                        "set",
+                        "@entity.secantSlope",
+                        "@secSlope"
+                      ],
+                      [
+                        "set",
+                        "@entity.curves",
+                        [
+                          "if",
+                          "@config.showDerivativeCurve",
+                          [
+                            "array/concat",
+                            "@withSecant",
+                            [
+                              "@dCurve"
+                            ]
+                          ],
+                          "@withSecant"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.points",
+                        [
+                          "if",
+                          "@entity.showSecant",
+                          [
+                            "@mainPt",
+                            {
+                              "color": "@config.secantColor",
+                              "label": "x + h",
+                              "radius": 5.0,
+                              "x": [
+                                "+",
+                                "@npx",
+                                "@entity.h"
+                              ],
+                              "y": "@fxh"
+                            }
+                          ],
+                          [
+                            "@mainPt"
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "SET_FUNCTION",
+                                  "actionPayload": {
+                                    "preset": "parabola"
+                                  },
+                                  "label": "x²",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "SET_FUNCTION",
+                                  "actionPayload": {
+                                    "preset": "cubic"
+                                  },
+                                  "label": "x³",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "SET_FUNCTION",
+                                  "actionPayload": {
+                                    "preset": "sine"
+                                  },
+                                  "label": "sin x",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "SHRINK_H",
+                                  "label": "Halve h",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "TOGGLE_SECANT",
+                                  "label": [
+                                    "if",
+                                    "@entity.showSecant",
+                                    "Hide secant",
+                                    "Show secant"
+                                  ],
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "animate": false,
+                              "curves": "@entity.curves",
+                              "gridStep": "@config.gridStep",
+                              "height": "@config.height",
+                              "interactive": false,
+                              "points": "@entity.points",
+                              "shapes": [],
+                              "showAxes": "@config.showAxes",
+                              "showGrid": "@config.showGrid",
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": "@config.xMax",
+                              "xMin": "@config.xMin",
+                              "yMax": "@config.yMax",
+                              "yMin": "@config.yMin"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "content": [
+                                    "str/concat",
+                                    "x = ",
+                                    [
+                                      "math/round",
+                                      "@entity.px",
+                                      2.0
+                                    ]
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "max": 5.0,
+                                  "min": -5.0,
+                                  "onChange": "MOVE_POINT",
+                                  "showTooltip": true,
+                                  "step": 0.25,
+                                  "type": "range-slider",
+                                  "value": "@entity.px"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "xs",
+                              "type": "stack"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "f′(",
+                                [
+                                  "math/round",
+                                  "@entity.px",
+                                  2.0
+                                ],
+                                ") = ",
+                                [
+                                  "math/round",
+                                  "@entity.slope",
+                                  3.0
+                                ],
+                                " — slope of the tangent at x"
+                              ],
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "content": [
+                                "if",
+                                "@entity.showSecant",
+                                [
+                                  "str/concat",
+                                  "h = ",
+                                  [
+                                    "math/round",
+                                    "@entity.h",
+                                    4.0
+                                  ],
+                                  " · secant slope = ",
+                                  [
+                                    "math/round",
+                                    "@entity.secantSlope",
+                                    4.0
+                                  ],
+                                  " — converges to f′(x) as h → 0"
+                                ],
+                                ""
+                              ],
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "DERIVATIVE_UPDATED",
+                    {
+                      "functionPreset": "@entity.functionPreset",
+                      "fx": "@entity.fx",
+                      "h": "@entity.h",
+                      "secantSlope": "@entity.secantSlope",
+                      "slope": "@entity.slope",
+                      "x": "@entity.px"
+                    }
+                  ]
+                ],
+                "event": "MOVE_POINT",
+                "eventId": "evt_01KZNG49ZANDWC6HVS0PXYYFDN",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "let",
+                    [
+                      [
+                        "nh",
+                        [
+                          "math/max",
+                          [
+                            "/",
+                            "@entity.h",
+                            2.0
+                          ],
+                          0.0625
+                        ]
+                      ],
+                      [
+                        "fx",
+                        "@entity.fx"
+                      ],
+                      [
+                        "slope",
+                        "@entity.slope"
+                      ],
+                      [
+                        "fxh",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@entity.functionPreset",
+                            "sine"
+                          ],
+                          [
+                            "*",
+                            3.0,
+                            [
+                              "math/sin",
+                              [
+                                "+",
+                                "@entity.px",
+                                "@nh"
+                              ]
+                            ]
+                          ],
+                          [
+                            "if",
+                            [
+                              "==",
+                              "@entity.functionPreset",
+                              "cubic"
+                            ],
+                            [
+                              "*",
+                              0.1,
+                              [
+                                "*",
+                                [
+                                  "+",
+                                  "@entity.px",
+                                  "@nh"
+                                ],
+                                [
+                                  "*",
+                                  [
+                                    "+",
+                                    "@entity.px",
+                                    "@nh"
+                                  ],
+                                  [
+                                    "+",
+                                    "@entity.px",
+                                    "@nh"
+                                  ]
+                                ]
+                              ]
+                            ],
+                            [
+                              "*",
+                              0.5,
+                              [
+                                "*",
+                                [
+                                  "+",
+                                  "@entity.px",
+                                  "@nh"
+                                ],
+                                [
+                                  "+",
+                                  "@entity.px",
+                                  "@nh"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "secSlope",
+                        [
+                          "/",
+                          [
+                            "-",
+                            "@fxh",
+                            "@fx"
+                          ],
+                          "@nh"
+                        ]
+                      ],
+                      [
+                        "fCurve",
+                        {
+                          "color": "@config.curveColor",
+                          "label": "f",
+                          "samples": [
+                            "array/map",
+                            "@config.sampleXs",
+                            [
+                              "fn",
+                              "x",
+                              {
+                                "x": "@x",
+                                "y": [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@entity.functionPreset",
+                                    "sine"
+                                  ],
+                                  [
+                                    "*",
+                                    3.0,
+                                    [
+                                      "math/sin",
+                                      "@x"
+                                    ]
+                                  ],
+                                  [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@entity.functionPreset",
+                                      "cubic"
+                                    ],
+                                    [
+                                      "*",
+                                      0.1,
+                                      [
+                                        "*",
+                                        "@x",
+                                        [
+                                          "*",
+                                          "@x",
+                                          "@x"
+                                        ]
+                                      ]
+                                    ],
+                                    [
+                                      "*",
+                                      0.5,
+                                      [
+                                        "*",
+                                        "@x",
+                                        "@x"
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              }
+                            ]
+                          ]
+                        }
+                      ],
+                      [
+                        "tangent",
+                        {
+                          "color": "@config.tangentColor",
+                          "label": "tangent",
+                          "samples": [
+                            {
+                              "x": "@config.xMin",
+                              "y": [
+                                "+",
+                                "@fx",
+                                [
+                                  "*",
+                                  "@slope",
+                                  [
+                                    "-",
+                                    "@config.xMin",
+                                    "@entity.px"
+                                  ]
+                                ]
+                              ]
+                            },
+                            {
+                              "x": "@config.xMax",
+                              "y": [
+                                "+",
+                                "@fx",
+                                [
+                                  "*",
+                                  "@slope",
+                                  [
+                                    "-",
+                                    "@config.xMax",
+                                    "@entity.px"
+                                  ]
+                                ]
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      [
+                        "secant",
+                        {
+                          "color": "@config.secantColor",
+                          "label": "secant",
+                          "samples": [
+                            {
+                              "x": "@config.xMin",
+                              "y": [
+                                "+",
+                                "@fx",
+                                [
+                                  "*",
+                                  "@secSlope",
+                                  [
+                                    "-",
+                                    "@config.xMin",
+                                    "@entity.px"
+                                  ]
+                                ]
+                              ]
+                            },
+                            {
+                              "x": "@config.xMax",
+                              "y": [
+                                "+",
+                                "@fx",
+                                [
+                                  "*",
+                                  "@secSlope",
+                                  [
+                                    "-",
+                                    "@config.xMax",
+                                    "@entity.px"
+                                  ]
+                                ]
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      [
+                        "dCurve",
+                        {
+                          "color": "@config.derivativeColor",
+                          "label": "f′",
+                          "samples": [
+                            "array/map",
+                            "@config.sampleXs",
+                            [
+                              "fn",
+                              "x",
+                              {
+                                "x": "@x",
+                                "y": [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@entity.functionPreset",
+                                    "sine"
+                                  ],
+                                  [
+                                    "*",
+                                    3.0,
+                                    [
+                                      "math/cos",
+                                      "@x"
+                                    ]
+                                  ],
+                                  [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@entity.functionPreset",
+                                      "cubic"
+                                    ],
+                                    [
+                                      "*",
+                                      0.3,
+                                      [
+                                        "*",
+                                        "@x",
+                                        "@x"
+                                      ]
+                                    ],
+                                    "@x"
+                                  ]
+                                ]
+                              }
+                            ]
+                          ]
+                        }
+                      ],
+                      [
+                        "withSecant",
+                        [
+                          "if",
+                          "@entity.showSecant",
+                          [
+                            "@fCurve",
+                            "@tangent",
+                            "@secant"
+                          ],
+                          [
+                            "@fCurve",
+                            "@tangent"
+                          ]
+                        ]
+                      ],
+                      [
+                        "mainPt",
+                        {
+                          "color": "@config.pointColor",
+                          "label": "x",
+                          "radius": 6.0,
+                          "x": "@entity.px",
+                          "y": "@fx"
+                        }
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.h",
+                        "@nh"
+                      ],
+                      [
+                        "set",
+                        "@entity.secantSlope",
+                        "@secSlope"
+                      ],
+                      [
+                        "set",
+                        "@entity.curves",
+                        [
+                          "if",
+                          "@config.showDerivativeCurve",
+                          [
+                            "array/concat",
+                            "@withSecant",
+                            [
+                              "@dCurve"
+                            ]
+                          ],
+                          "@withSecant"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.points",
+                        [
+                          "if",
+                          "@entity.showSecant",
+                          [
+                            "@mainPt",
+                            {
+                              "color": "@config.secantColor",
+                              "label": "x + h",
+                              "radius": 5.0,
+                              "x": [
+                                "+",
+                                "@entity.px",
+                                "@nh"
+                              ],
+                              "y": "@fxh"
+                            }
+                          ],
+                          [
+                            "@mainPt"
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "SET_FUNCTION",
+                                  "actionPayload": {
+                                    "preset": "parabola"
+                                  },
+                                  "label": "x²",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "SET_FUNCTION",
+                                  "actionPayload": {
+                                    "preset": "cubic"
+                                  },
+                                  "label": "x³",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "SET_FUNCTION",
+                                  "actionPayload": {
+                                    "preset": "sine"
+                                  },
+                                  "label": "sin x",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "SHRINK_H",
+                                  "label": "Halve h",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "TOGGLE_SECANT",
+                                  "label": [
+                                    "if",
+                                    "@entity.showSecant",
+                                    "Hide secant",
+                                    "Show secant"
+                                  ],
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "animate": false,
+                              "curves": "@entity.curves",
+                              "gridStep": "@config.gridStep",
+                              "height": "@config.height",
+                              "interactive": false,
+                              "points": "@entity.points",
+                              "shapes": [],
+                              "showAxes": "@config.showAxes",
+                              "showGrid": "@config.showGrid",
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": "@config.xMax",
+                              "xMin": "@config.xMin",
+                              "yMax": "@config.yMax",
+                              "yMin": "@config.yMin"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "content": [
+                                    "str/concat",
+                                    "x = ",
+                                    [
+                                      "math/round",
+                                      "@entity.px",
+                                      2.0
+                                    ]
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "max": 5.0,
+                                  "min": -5.0,
+                                  "onChange": "MOVE_POINT",
+                                  "showTooltip": true,
+                                  "step": 0.25,
+                                  "type": "range-slider",
+                                  "value": "@entity.px"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "xs",
+                              "type": "stack"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "f′(",
+                                [
+                                  "math/round",
+                                  "@entity.px",
+                                  2.0
+                                ],
+                                ") = ",
+                                [
+                                  "math/round",
+                                  "@entity.slope",
+                                  3.0
+                                ],
+                                " — slope of the tangent at x"
+                              ],
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "content": [
+                                "if",
+                                "@entity.showSecant",
+                                [
+                                  "str/concat",
+                                  "h = ",
+                                  [
+                                    "math/round",
+                                    "@entity.h",
+                                    4.0
+                                  ],
+                                  " · secant slope = ",
+                                  [
+                                    "math/round",
+                                    "@entity.secantSlope",
+                                    4.0
+                                  ],
+                                  " — converges to f′(x) as h → 0"
+                                ],
+                                ""
+                              ],
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "DERIVATIVE_UPDATED",
+                    {
+                      "functionPreset": "@entity.functionPreset",
+                      "fx": "@entity.fx",
+                      "h": "@entity.h",
+                      "secantSlope": "@entity.secantSlope",
+                      "slope": "@entity.slope",
+                      "x": "@entity.px"
+                    }
+                  ]
+                ],
+                "event": "SHRINK_H",
+                "eventId": "evt_01KZNG49ZAZ824J0YRH49EQZ4Z",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "let",
+                    [
+                      [
+                        "npreset",
+                        "@payload.preset"
+                      ],
+                      [
+                        "nh",
+                        "@config.initialH"
+                      ],
+                      [
+                        "fx",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@npreset",
+                            "sine"
+                          ],
+                          [
+                            "*",
+                            3.0,
+                            [
+                              "math/sin",
+                              "@entity.px"
+                            ]
+                          ],
+                          [
+                            "if",
+                            [
+                              "==",
+                              "@npreset",
+                              "cubic"
+                            ],
+                            [
+                              "*",
+                              0.1,
+                              [
+                                "*",
+                                "@entity.px",
+                                [
+                                  "*",
+                                  "@entity.px",
+                                  "@entity.px"
+                                ]
+                              ]
+                            ],
+                            [
+                              "*",
+                              0.5,
+                              [
+                                "*",
+                                "@entity.px",
+                                "@entity.px"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "slope",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@npreset",
+                            "sine"
+                          ],
+                          [
+                            "*",
+                            3.0,
+                            [
+                              "math/cos",
+                              "@entity.px"
+                            ]
+                          ],
+                          [
+                            "if",
+                            [
+                              "==",
+                              "@npreset",
+                              "cubic"
+                            ],
+                            [
+                              "*",
+                              0.3,
+                              [
+                                "*",
+                                "@entity.px",
+                                "@entity.px"
+                              ]
+                            ],
+                            "@entity.px"
+                          ]
+                        ]
+                      ],
+                      [
+                        "fxh",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@npreset",
+                            "sine"
+                          ],
+                          [
+                            "*",
+                            3.0,
+                            [
+                              "math/sin",
+                              [
+                                "+",
+                                "@entity.px",
+                                "@nh"
+                              ]
+                            ]
+                          ],
+                          [
+                            "if",
+                            [
+                              "==",
+                              "@npreset",
+                              "cubic"
+                            ],
+                            [
+                              "*",
+                              0.1,
+                              [
+                                "*",
+                                [
+                                  "+",
+                                  "@entity.px",
+                                  "@nh"
+                                ],
+                                [
+                                  "*",
+                                  [
+                                    "+",
+                                    "@entity.px",
+                                    "@nh"
+                                  ],
+                                  [
+                                    "+",
+                                    "@entity.px",
+                                    "@nh"
+                                  ]
+                                ]
+                              ]
+                            ],
+                            [
+                              "*",
+                              0.5,
+                              [
+                                "*",
+                                [
+                                  "+",
+                                  "@entity.px",
+                                  "@nh"
+                                ],
+                                [
+                                  "+",
+                                  "@entity.px",
+                                  "@nh"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "secSlope",
+                        [
+                          "/",
+                          [
+                            "-",
+                            "@fxh",
+                            "@fx"
+                          ],
+                          "@nh"
+                        ]
+                      ],
+                      [
+                        "fCurve",
+                        {
+                          "color": "@config.curveColor",
+                          "label": "f",
+                          "samples": [
+                            "array/map",
+                            "@config.sampleXs",
+                            [
+                              "fn",
+                              "x",
+                              {
+                                "x": "@x",
+                                "y": [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@npreset",
+                                    "sine"
+                                  ],
+                                  [
+                                    "*",
+                                    3.0,
+                                    [
+                                      "math/sin",
+                                      "@x"
+                                    ]
+                                  ],
+                                  [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@npreset",
+                                      "cubic"
+                                    ],
+                                    [
+                                      "*",
+                                      0.1,
+                                      [
+                                        "*",
+                                        "@x",
+                                        [
+                                          "*",
+                                          "@x",
+                                          "@x"
+                                        ]
+                                      ]
+                                    ],
+                                    [
+                                      "*",
+                                      0.5,
+                                      [
+                                        "*",
+                                        "@x",
+                                        "@x"
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              }
+                            ]
+                          ]
+                        }
+                      ],
+                      [
+                        "tangent",
+                        {
+                          "color": "@config.tangentColor",
+                          "label": "tangent",
+                          "samples": [
+                            {
+                              "x": "@config.xMin",
+                              "y": [
+                                "+",
+                                "@fx",
+                                [
+                                  "*",
+                                  "@slope",
+                                  [
+                                    "-",
+                                    "@config.xMin",
+                                    "@entity.px"
+                                  ]
+                                ]
+                              ]
+                            },
+                            {
+                              "x": "@config.xMax",
+                              "y": [
+                                "+",
+                                "@fx",
+                                [
+                                  "*",
+                                  "@slope",
+                                  [
+                                    "-",
+                                    "@config.xMax",
+                                    "@entity.px"
+                                  ]
+                                ]
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      [
+                        "secant",
+                        {
+                          "color": "@config.secantColor",
+                          "label": "secant",
+                          "samples": [
+                            {
+                              "x": "@config.xMin",
+                              "y": [
+                                "+",
+                                "@fx",
+                                [
+                                  "*",
+                                  "@secSlope",
+                                  [
+                                    "-",
+                                    "@config.xMin",
+                                    "@entity.px"
+                                  ]
+                                ]
+                              ]
+                            },
+                            {
+                              "x": "@config.xMax",
+                              "y": [
+                                "+",
+                                "@fx",
+                                [
+                                  "*",
+                                  "@secSlope",
+                                  [
+                                    "-",
+                                    "@config.xMax",
+                                    "@entity.px"
+                                  ]
+                                ]
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      [
+                        "dCurve",
+                        {
+                          "color": "@config.derivativeColor",
+                          "label": "f′",
+                          "samples": [
+                            "array/map",
+                            "@config.sampleXs",
+                            [
+                              "fn",
+                              "x",
+                              {
+                                "x": "@x",
+                                "y": [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@npreset",
+                                    "sine"
+                                  ],
+                                  [
+                                    "*",
+                                    3.0,
+                                    [
+                                      "math/cos",
+                                      "@x"
+                                    ]
+                                  ],
+                                  [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@npreset",
+                                      "cubic"
+                                    ],
+                                    [
+                                      "*",
+                                      0.3,
+                                      [
+                                        "*",
+                                        "@x",
+                                        "@x"
+                                      ]
+                                    ],
+                                    "@x"
+                                  ]
+                                ]
+                              }
+                            ]
+                          ]
+                        }
+                      ],
+                      [
+                        "withSecant",
+                        [
+                          "if",
+                          "@entity.showSecant",
+                          [
+                            "@fCurve",
+                            "@tangent",
+                            "@secant"
+                          ],
+                          [
+                            "@fCurve",
+                            "@tangent"
+                          ]
+                        ]
+                      ],
+                      [
+                        "mainPt",
+                        {
+                          "color": "@config.pointColor",
+                          "label": "x",
+                          "radius": 6.0,
+                          "x": "@entity.px",
+                          "y": "@fx"
+                        }
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.functionPreset",
+                        "@npreset"
+                      ],
+                      [
+                        "set",
+                        "@entity.h",
+                        "@nh"
+                      ],
+                      [
+                        "set",
+                        "@entity.fx",
+                        "@fx"
+                      ],
+                      [
+                        "set",
+                        "@entity.slope",
+                        "@slope"
+                      ],
+                      [
+                        "set",
+                        "@entity.secantSlope",
+                        "@secSlope"
+                      ],
+                      [
+                        "set",
+                        "@entity.curves",
+                        [
+                          "if",
+                          "@config.showDerivativeCurve",
+                          [
+                            "array/concat",
+                            "@withSecant",
+                            [
+                              "@dCurve"
+                            ]
+                          ],
+                          "@withSecant"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.points",
+                        [
+                          "if",
+                          "@entity.showSecant",
+                          [
+                            "@mainPt",
+                            {
+                              "color": "@config.secantColor",
+                              "label": "x + h",
+                              "radius": 5.0,
+                              "x": [
+                                "+",
+                                "@entity.px",
+                                "@nh"
+                              ],
+                              "y": "@fxh"
+                            }
+                          ],
+                          [
+                            "@mainPt"
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "SET_FUNCTION",
+                                  "actionPayload": {
+                                    "preset": "parabola"
+                                  },
+                                  "label": "x²",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "SET_FUNCTION",
+                                  "actionPayload": {
+                                    "preset": "cubic"
+                                  },
+                                  "label": "x³",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "SET_FUNCTION",
+                                  "actionPayload": {
+                                    "preset": "sine"
+                                  },
+                                  "label": "sin x",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "SHRINK_H",
+                                  "label": "Halve h",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "TOGGLE_SECANT",
+                                  "label": [
+                                    "if",
+                                    "@entity.showSecant",
+                                    "Hide secant",
+                                    "Show secant"
+                                  ],
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "animate": false,
+                              "curves": "@entity.curves",
+                              "gridStep": "@config.gridStep",
+                              "height": "@config.height",
+                              "interactive": false,
+                              "points": "@entity.points",
+                              "shapes": [],
+                              "showAxes": "@config.showAxes",
+                              "showGrid": "@config.showGrid",
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": "@config.xMax",
+                              "xMin": "@config.xMin",
+                              "yMax": "@config.yMax",
+                              "yMin": "@config.yMin"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "content": [
+                                    "str/concat",
+                                    "x = ",
+                                    [
+                                      "math/round",
+                                      "@entity.px",
+                                      2.0
+                                    ]
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "max": 5.0,
+                                  "min": -5.0,
+                                  "onChange": "MOVE_POINT",
+                                  "showTooltip": true,
+                                  "step": 0.25,
+                                  "type": "range-slider",
+                                  "value": "@entity.px"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "xs",
+                              "type": "stack"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "f′(",
+                                [
+                                  "math/round",
+                                  "@entity.px",
+                                  2.0
+                                ],
+                                ") = ",
+                                [
+                                  "math/round",
+                                  "@entity.slope",
+                                  3.0
+                                ],
+                                " — slope of the tangent at x"
+                              ],
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "content": [
+                                "if",
+                                "@entity.showSecant",
+                                [
+                                  "str/concat",
+                                  "h = ",
+                                  [
+                                    "math/round",
+                                    "@entity.h",
+                                    4.0
+                                  ],
+                                  " · secant slope = ",
+                                  [
+                                    "math/round",
+                                    "@entity.secantSlope",
+                                    4.0
+                                  ],
+                                  " — converges to f′(x) as h → 0"
+                                ],
+                                ""
+                              ],
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "DERIVATIVE_UPDATED",
+                    {
+                      "functionPreset": "@entity.functionPreset",
+                      "fx": "@entity.fx",
+                      "h": "@entity.h",
+                      "secantSlope": "@entity.secantSlope",
+                      "slope": "@entity.slope",
+                      "x": "@entity.px"
+                    }
+                  ]
+                ],
+                "event": "SET_FUNCTION",
+                "eventId": "evt_01KZNG49ZA7XCKK2CSRN2JP77S",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "let",
+                    [
+                      [
+                        "nsec",
+                        [
+                          "==",
+                          "@entity.showSecant",
+                          false
+                        ]
+                      ],
+                      [
+                        "secant",
+                        {
+                          "color": "@config.secantColor",
+                          "label": "secant",
+                          "samples": [
+                            {
+                              "x": "@config.xMin",
+                              "y": [
+                                "+",
+                                "@entity.fx",
+                                [
+                                  "*",
+                                  "@entity.secantSlope",
+                                  [
+                                    "-",
+                                    "@config.xMin",
+                                    "@entity.px"
+                                  ]
+                                ]
+                              ]
+                            },
+                            {
+                              "x": "@config.xMax",
+                              "y": [
+                                "+",
+                                "@entity.fx",
+                                [
+                                  "*",
+                                  "@entity.secantSlope",
+                                  [
+                                    "-",
+                                    "@config.xMax",
+                                    "@entity.px"
+                                  ]
+                                ]
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      [
+                        "fCurve",
+                        [
+                          "array/nth",
+                          "@entity.curves",
+                          0.0
+                        ]
+                      ],
+                      [
+                        "tangent",
+                        [
+                          "array/nth",
+                          "@entity.curves",
+                          1.0
+                        ]
+                      ],
+                      [
+                        "dCurve",
+                        {
+                          "color": "@config.derivativeColor",
+                          "label": "f′",
+                          "samples": [
+                            "array/map",
+                            "@config.sampleXs",
+                            [
+                              "fn",
+                              "x",
+                              {
+                                "x": "@x",
+                                "y": [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@entity.functionPreset",
+                                    "sine"
+                                  ],
+                                  [
+                                    "*",
+                                    3.0,
+                                    [
+                                      "math/cos",
+                                      "@x"
+                                    ]
+                                  ],
+                                  [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@entity.functionPreset",
+                                      "cubic"
+                                    ],
+                                    [
+                                      "*",
+                                      0.3,
+                                      [
+                                        "*",
+                                        "@x",
+                                        "@x"
+                                      ]
+                                    ],
+                                    "@x"
+                                  ]
+                                ]
+                              }
+                            ]
+                          ]
+                        }
+                      ],
+                      [
+                        "withSecant",
+                        [
+                          "if",
+                          "@nsec",
+                          [
+                            "@fCurve",
+                            "@tangent",
+                            "@secant"
+                          ],
+                          [
+                            "@fCurve",
+                            "@tangent"
+                          ]
+                        ]
+                      ],
+                      [
+                        "mainPt",
+                        {
+                          "color": "@config.pointColor",
+                          "label": "x",
+                          "radius": 6.0,
+                          "x": "@entity.px",
+                          "y": "@entity.fx"
+                        }
+                      ],
+                      [
+                        "fxh",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@entity.functionPreset",
+                            "sine"
+                          ],
+                          [
+                            "*",
+                            3.0,
+                            [
+                              "math/sin",
+                              [
+                                "+",
+                                "@entity.px",
+                                "@entity.h"
+                              ]
+                            ]
+                          ],
+                          [
+                            "if",
+                            [
+                              "==",
+                              "@entity.functionPreset",
+                              "cubic"
+                            ],
+                            [
+                              "*",
+                              0.1,
+                              [
+                                "*",
+                                [
+                                  "+",
+                                  "@entity.px",
+                                  "@entity.h"
+                                ],
+                                [
+                                  "*",
+                                  [
+                                    "+",
+                                    "@entity.px",
+                                    "@entity.h"
+                                  ],
+                                  [
+                                    "+",
+                                    "@entity.px",
+                                    "@entity.h"
+                                  ]
+                                ]
+                              ]
+                            ],
+                            [
+                              "*",
+                              0.5,
+                              [
+                                "*",
+                                [
+                                  "+",
+                                  "@entity.px",
+                                  "@entity.h"
+                                ],
+                                [
+                                  "+",
+                                  "@entity.px",
+                                  "@entity.h"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.showSecant",
+                        "@nsec"
+                      ],
+                      [
+                        "set",
+                        "@entity.curves",
+                        [
+                          "if",
+                          "@config.showDerivativeCurve",
+                          [
+                            "array/concat",
+                            "@withSecant",
+                            [
+                              "@dCurve"
+                            ]
+                          ],
+                          "@withSecant"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.points",
+                        [
+                          "if",
+                          "@nsec",
+                          [
+                            "@mainPt",
+                            {
+                              "color": "@config.secantColor",
+                              "label": "x + h",
+                              "radius": 5.0,
+                              "x": [
+                                "+",
+                                "@entity.px",
+                                "@entity.h"
+                              ],
+                              "y": "@fxh"
+                            }
+                          ],
+                          [
+                            "@mainPt"
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "SET_FUNCTION",
+                                  "actionPayload": {
+                                    "preset": "parabola"
+                                  },
+                                  "label": "x²",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "SET_FUNCTION",
+                                  "actionPayload": {
+                                    "preset": "cubic"
+                                  },
+                                  "label": "x³",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "SET_FUNCTION",
+                                  "actionPayload": {
+                                    "preset": "sine"
+                                  },
+                                  "label": "sin x",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "SHRINK_H",
+                                  "label": "Halve h",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "TOGGLE_SECANT",
+                                  "label": [
+                                    "if",
+                                    "@entity.showSecant",
+                                    "Hide secant",
+                                    "Show secant"
+                                  ],
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "animate": false,
+                              "curves": "@entity.curves",
+                              "gridStep": "@config.gridStep",
+                              "height": "@config.height",
+                              "interactive": false,
+                              "points": "@entity.points",
+                              "shapes": [],
+                              "showAxes": "@config.showAxes",
+                              "showGrid": "@config.showGrid",
+                              "type": "math-canvas",
+                              "vectors": [],
+                              "width": "@config.width",
+                              "xMax": "@config.xMax",
+                              "xMin": "@config.xMin",
+                              "yMax": "@config.yMax",
+                              "yMin": "@config.yMin"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "content": [
+                                    "str/concat",
+                                    "x = ",
+                                    [
+                                      "math/round",
+                                      "@entity.px",
+                                      2.0
+                                    ]
+                                  ],
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "max": 5.0,
+                                  "min": -5.0,
+                                  "onChange": "MOVE_POINT",
+                                  "showTooltip": true,
+                                  "step": 0.25,
+                                  "type": "range-slider",
+                                  "value": "@entity.px"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "xs",
+                              "type": "stack"
+                            },
+                            {
+                              "content": [
+                                "str/concat",
+                                "f′(",
+                                [
+                                  "math/round",
+                                  "@entity.px",
+                                  2.0
+                                ],
+                                ") = ",
+                                [
+                                  "math/round",
+                                  "@entity.slope",
+                                  3.0
+                                ],
+                                " — slope of the tangent at x"
+                              ],
+                              "type": "typography",
+                              "variant": "body"
+                            },
+                            {
+                              "content": [
+                                "if",
+                                "@entity.showSecant",
+                                [
+                                  "str/concat",
+                                  "h = ",
+                                  [
+                                    "math/round",
+                                    "@entity.h",
+                                    4.0
+                                  ],
+                                  " · secant slope = ",
+                                  [
+                                    "math/round",
+                                    "@entity.secantSlope",
+                                    4.0
+                                  ],
+                                  " — converges to f′(x) as h → 0"
+                                ],
+                                ""
+                              ],
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "DERIVATIVE_UPDATED",
+                    {
+                      "functionPreset": "@entity.functionPreset",
+                      "fx": "@entity.fx",
+                      "h": "@entity.h",
+                      "secantSlope": "@entity.secantSlope",
+                      "slope": "@entity.slope",
+                      "x": "@entity.px"
+                    }
+                  ]
+                ],
+                "event": "TOGGLE_SECANT",
+                "eventId": "evt_01KZNG49ZA2X36CBXJZR08JJ76",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 1,
+  "version": "1.0.0"
+}

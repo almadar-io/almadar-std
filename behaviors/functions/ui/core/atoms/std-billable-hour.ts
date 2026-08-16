@@ -140,7 +140,7 @@ export function stdBillableHour(params: StdBillableHourParams): OrbitalDefinitio
   });
 }
 
-type _StdBillableHourEntityName = 'BillableHour';
+type _StdBillableHourEntityName = 'BillableHour' | 'TableViewItem';
 type _StdBillableHourListenTraitName = 'DenseHoursTable' | 'BillableHourTimesheet';
 
 /**

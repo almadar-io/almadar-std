@@ -192,7 +192,7 @@ export function stdEsignFlow(params: StdEsignFlowParams): OrbitalDefinition {
   });
 }
 
-type _StdEsignFlowEntityName = 'SignatureSession';
+type _StdEsignFlowEntityName = 'SignatureSession' | 'StoredFile' | 'ESignRequest' | 'ModalRecord' | 'ConfirmAction';
 type _StdEsignFlowListenTraitName = 'SignatureSessionBrowse' | 'SignatureSessionCreate' | 'SignatureSessionDelete' | 'SignatureSessionPersistor';
 
 /**

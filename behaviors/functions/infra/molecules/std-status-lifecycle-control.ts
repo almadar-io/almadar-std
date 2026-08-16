@@ -151,7 +151,7 @@ export function stdStatusLifecycleControl(params: StdStatusLifecycleControlParam
   });
 }
 
-type _StdStatusLifecycleControlEntityName = 'StatusControlItem';
+type _StdStatusLifecycleControlEntityName = 'StatusControlItem' | 'BadgeItem';
 type _StdStatusLifecycleControlListenTraitName = 'StatusLifecycleControl' | 'InlineBadgeRender1';
 
 /**

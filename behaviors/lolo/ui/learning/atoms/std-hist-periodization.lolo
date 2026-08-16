@@ -1,0 +1,483 @@
+app std-hist-periodization "1.0.0"
+"Periodization instrument — the learner places events on a timeline and draws era boundaries, then checks the result against the canonical boundaries within a year tolerance on a math-canvas. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital HistPeriodizationOrbital {
+  type HistPeriodizationShapePoint = {
+    x : number!
+    y : number!
+  }
+  type HistPeriodizationShape = {
+    type : "line" | "arrow" | "circle" | "rect" | "polygon" | "path" | "text" | "axis" | "grid"!
+    id : string
+    x : number
+    y : number
+    x1 : number
+    y1 : number
+    x2 : number
+    y2 : number
+    radius : number
+    width : number
+    height : number
+    points : [HistPeriodizationShapePoint]
+    path : string
+    text : string
+    label : string
+    fontSize : number
+    align : "left" | "center" | "right"
+    axis : "x" | "y"
+    min : number
+    max : number
+    step : number
+    color : string
+    fill : string
+    lineWidth : number
+    opacity : number
+  }
+  type HistPeriodizationEvent = {
+    id : string!
+    label : string!
+    year : number!
+  }
+
+  entity HistPeriodizationScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    placements : [json]
+    boundaries : [number]
+    checked : boolean = false
+    score : number
+    verdict : string
+    shapes : [HistPeriodizationShape]
+  }
+
+  trait HistPeriodizationSim -> @rebindable HistPeriodizationScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.placements [])
+        (set @entity.boundaries [])
+        (set @entity.checked false)
+        (set @entity.score 0)
+        (set @entity.verdict "")
+        (let (
+            (plotW (- @config.width (+ @config.axisMarginLeft @config.axisMarginRight)))
+            (yearSpan (- @config.maxYear @config.minYear))
+            (axisShapes [
+              { type: line, id: "axis", x1: @config.axisMarginLeft, y1: @config.axisY, x2: (- @config.width @config.axisMarginRight), y2: @config.axisY, color: "#44403c", lineWidth: 2, opacity: 1 }
+            ])
+            (tickShapes (array/flatten (array/map @config.yearTicks (fn yr (let (
+                (tx (+ @config.axisMarginLeft (* (- @yr @config.minYear) (/ @plotW @yearSpan))))
+              )
+              [
+                { type: line, id: (str/concat "tick-" @yr), x1: @tx, y1: (- @config.axisY 6), x2: @tx, y2: (+ @config.axisY 6), color: "#44403c", lineWidth: 1, opacity: 1 },
+                { type: text, id: (str/concat "tick-label-" @yr), x: @tx, y: (+ @config.axisY 24), text: (str/concat "" @yr), fontSize: 11, align: "center", color: "#78716c" }
+              ]
+            )))))
+            (placementShapes (array/flatten (array/map @entity.placements (fn pl (let (
+                (ev (array/find @config.events (fn e (== @e.id (object/get @pl eventId)))))
+                (px (+ @config.axisMarginLeft (* (- (object/get @pl year) @config.minYear) (/ @plotW @yearSpan))))
+              )
+              [
+                { type: circle, id: (str/concat "placed-" (object/get @pl eventId)), x: @px, y: (- @config.axisY 40), radius: 7, color: "#1d4ed8", fill: "#1d4ed8", opacity: 1, lineWidth: 1 },
+                { type: text, id: (str/concat "placed-label-" (object/get @pl eventId)), x: @px, y: (- @config.axisY 58), text: (object/get @ev label), fontSize: 10, align: "center", color: "#1d4ed8" }
+              ]
+            )))))
+            (boundaryShapes (array/map @entity.boundaries (fn b (let (
+                (bx (+ @config.axisMarginLeft (* (- @b @config.minYear) (/ @plotW @yearSpan))))
+              )
+              { type: line, id: (str/concat "boundary-" @b), x1: @bx, y1: (- @config.axisY 90), x2: @bx, y2: (+ @config.axisY 10), color: "#b45309", lineWidth: 2, opacity: 0.9 }
+            ))))
+            (canonicalShapes (if @entity.checked (array/map @config.canonicalBoundaries (fn cb (let (
+                (cx (+ @config.axisMarginLeft (* (- @cb @config.minYear) (/ @plotW @yearSpan))))
+              )
+              { type: line, id: (str/concat "canonical-" @cb), x1: @cx, y1: (- @config.axisY 110), x2: @cx, y2: (+ @config.axisY 10), color: "#15803d", lineWidth: 1.5, opacity: 0.7 }
+            ))) []))
+          )
+          (do
+            (set @entity.shapes (array/concat (array/concat (array/concat (array/concat @axisShapes @tickShapes) @placementShapes) @boundaryShapes) @canonicalShapes))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: "Place each event on the timeline and draw era boundaries, then check against the canonical periodization." },
+                { type: stack, direction: vertical, gap: sm, children: (array/map @config.events (fn e { type: stack, direction: vertical, gap: xs, children: [ { type: typography, variant: body, content: (if (!= (array/find @entity.placements (fn pl (== (object/get @pl eventId) @e.id))) null) (str/concat @e.label " — placed") @e.label) }, { type: stack, direction: horizontal, gap: xs, children: (array/map @config.yearTicks (fn yr { type: button, action: PLACE_EVENT, actionPayload: { eventId: @e.id, year: @yr }, label: (str/concat "" @yr), variant: (if (== (object/get (array/find @entity.placements (fn pl (== (object/get @pl eventId) @e.id))) year 0) @yr) "primary" "ghost"), size: sm })) } ] })) },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.yearTicks (fn yr { type: button, action: SET_BOUNDARY, actionPayload: { year: @yr }, label: (str/concat "Boundary " @yr), variant: (if (array/includes @entity.boundaries @yr) "primary" "ghost"), size: sm })) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: CHECK, label: "Check", variant: primary }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: (if @entity.checked @entity.verdict "Place events and boundaries, then press Check.") }
+              ] }
+          ]
+        })
+        (emit PERIODIZATION_UPDATED { placements: @entity.placements, boundaries: @entity.boundaries, checked: @entity.checked, score: @entity.score })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.placements [])
+        (set @entity.boundaries [])
+        (set @entity.checked false)
+        (set @entity.score 0)
+        (set @entity.verdict "")
+        (let (
+            (plotW (- @config.width (+ @config.axisMarginLeft @config.axisMarginRight)))
+            (yearSpan (- @config.maxYear @config.minYear))
+            (axisShapes [
+              { type: line, id: "axis", x1: @config.axisMarginLeft, y1: @config.axisY, x2: (- @config.width @config.axisMarginRight), y2: @config.axisY, color: "#44403c", lineWidth: 2, opacity: 1 }
+            ])
+            (tickShapes (array/flatten (array/map @config.yearTicks (fn yr (let (
+                (tx (+ @config.axisMarginLeft (* (- @yr @config.minYear) (/ @plotW @yearSpan))))
+              )
+              [
+                { type: line, id: (str/concat "tick-" @yr), x1: @tx, y1: (- @config.axisY 6), x2: @tx, y2: (+ @config.axisY 6), color: "#44403c", lineWidth: 1, opacity: 1 },
+                { type: text, id: (str/concat "tick-label-" @yr), x: @tx, y: (+ @config.axisY 24), text: (str/concat "" @yr), fontSize: 11, align: "center", color: "#78716c" }
+              ]
+            )))))
+            (placementShapes (array/flatten (array/map @entity.placements (fn pl (let (
+                (ev (array/find @config.events (fn e (== @e.id (object/get @pl eventId)))))
+                (px (+ @config.axisMarginLeft (* (- (object/get @pl year) @config.minYear) (/ @plotW @yearSpan))))
+              )
+              [
+                { type: circle, id: (str/concat "placed-" (object/get @pl eventId)), x: @px, y: (- @config.axisY 40), radius: 7, color: "#1d4ed8", fill: "#1d4ed8", opacity: 1, lineWidth: 1 },
+                { type: text, id: (str/concat "placed-label-" (object/get @pl eventId)), x: @px, y: (- @config.axisY 58), text: (object/get @ev label), fontSize: 10, align: "center", color: "#1d4ed8" }
+              ]
+            )))))
+            (boundaryShapes (array/map @entity.boundaries (fn b (let (
+                (bx (+ @config.axisMarginLeft (* (- @b @config.minYear) (/ @plotW @yearSpan))))
+              )
+              { type: line, id: (str/concat "boundary-" @b), x1: @bx, y1: (- @config.axisY 90), x2: @bx, y2: (+ @config.axisY 10), color: "#b45309", lineWidth: 2, opacity: 0.9 }
+            ))))
+            (canonicalShapes (if @entity.checked (array/map @config.canonicalBoundaries (fn cb (let (
+                (cx (+ @config.axisMarginLeft (* (- @cb @config.minYear) (/ @plotW @yearSpan))))
+              )
+              { type: line, id: (str/concat "canonical-" @cb), x1: @cx, y1: (- @config.axisY 110), x2: @cx, y2: (+ @config.axisY 10), color: "#15803d", lineWidth: 1.5, opacity: 0.7 }
+            ))) []))
+          )
+          (do
+            (set @entity.shapes (array/concat (array/concat (array/concat (array/concat @axisShapes @tickShapes) @placementShapes) @boundaryShapes) @canonicalShapes))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: "Place each event on the timeline and draw era boundaries, then check against the canonical periodization." },
+                { type: stack, direction: vertical, gap: sm, children: (array/map @config.events (fn e { type: stack, direction: vertical, gap: xs, children: [ { type: typography, variant: body, content: (if (!= (array/find @entity.placements (fn pl (== (object/get @pl eventId) @e.id))) null) (str/concat @e.label " — placed") @e.label) }, { type: stack, direction: horizontal, gap: xs, children: (array/map @config.yearTicks (fn yr { type: button, action: PLACE_EVENT, actionPayload: { eventId: @e.id, year: @yr }, label: (str/concat "" @yr), variant: (if (== (object/get (array/find @entity.placements (fn pl (== (object/get @pl eventId) @e.id))) year 0) @yr) "primary" "ghost"), size: sm })) } ] })) },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.yearTicks (fn yr { type: button, action: SET_BOUNDARY, actionPayload: { year: @yr }, label: (str/concat "Boundary " @yr), variant: (if (array/includes @entity.boundaries @yr) "primary" "ghost"), size: sm })) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: CHECK, label: "Check", variant: primary }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: (if @entity.checked @entity.verdict "Place events and boundaries, then press Check.") }
+              ] }
+          ]
+        })
+        (emit PERIODIZATION_UPDATED { placements: @entity.placements, boundaries: @entity.boundaries, checked: @entity.checked, score: @entity.score })
+
+      PLACE_EVENT -> idle when (== @entity.active true)
+        (set @entity.placements (array/concat (array/filter @entity.placements (fn p (!= (object/get @p eventId) ?eventId))) [{ eventId: ?eventId, year: ?year }]))
+        (set @entity.checked false)
+        (let (
+            (plotW (- @config.width (+ @config.axisMarginLeft @config.axisMarginRight)))
+            (yearSpan (- @config.maxYear @config.minYear))
+            (axisShapes [
+              { type: line, id: "axis", x1: @config.axisMarginLeft, y1: @config.axisY, x2: (- @config.width @config.axisMarginRight), y2: @config.axisY, color: "#44403c", lineWidth: 2, opacity: 1 }
+            ])
+            (tickShapes (array/flatten (array/map @config.yearTicks (fn yr (let (
+                (tx (+ @config.axisMarginLeft (* (- @yr @config.minYear) (/ @plotW @yearSpan))))
+              )
+              [
+                { type: line, id: (str/concat "tick-" @yr), x1: @tx, y1: (- @config.axisY 6), x2: @tx, y2: (+ @config.axisY 6), color: "#44403c", lineWidth: 1, opacity: 1 },
+                { type: text, id: (str/concat "tick-label-" @yr), x: @tx, y: (+ @config.axisY 24), text: (str/concat "" @yr), fontSize: 11, align: "center", color: "#78716c" }
+              ]
+            )))))
+            (placementShapes (array/flatten (array/map @entity.placements (fn pl (let (
+                (ev (array/find @config.events (fn e (== @e.id (object/get @pl eventId)))))
+                (px (+ @config.axisMarginLeft (* (- (object/get @pl year) @config.minYear) (/ @plotW @yearSpan))))
+              )
+              [
+                { type: circle, id: (str/concat "placed-" (object/get @pl eventId)), x: @px, y: (- @config.axisY 40), radius: 7, color: "#1d4ed8", fill: "#1d4ed8", opacity: 1, lineWidth: 1 },
+                { type: text, id: (str/concat "placed-label-" (object/get @pl eventId)), x: @px, y: (- @config.axisY 58), text: (object/get @ev label), fontSize: 10, align: "center", color: "#1d4ed8" }
+              ]
+            )))))
+            (boundaryShapes (array/map @entity.boundaries (fn b (let (
+                (bx (+ @config.axisMarginLeft (* (- @b @config.minYear) (/ @plotW @yearSpan))))
+              )
+              { type: line, id: (str/concat "boundary-" @b), x1: @bx, y1: (- @config.axisY 90), x2: @bx, y2: (+ @config.axisY 10), color: "#b45309", lineWidth: 2, opacity: 0.9 }
+            ))))
+            (canonicalShapes (if @entity.checked (array/map @config.canonicalBoundaries (fn cb (let (
+                (cx (+ @config.axisMarginLeft (* (- @cb @config.minYear) (/ @plotW @yearSpan))))
+              )
+              { type: line, id: (str/concat "canonical-" @cb), x1: @cx, y1: (- @config.axisY 110), x2: @cx, y2: (+ @config.axisY 10), color: "#15803d", lineWidth: 1.5, opacity: 0.7 }
+            ))) []))
+          )
+          (do
+            (set @entity.shapes (array/concat (array/concat (array/concat (array/concat @axisShapes @tickShapes) @placementShapes) @boundaryShapes) @canonicalShapes))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: "Place each event on the timeline and draw era boundaries, then check against the canonical periodization." },
+                { type: stack, direction: vertical, gap: sm, children: (array/map @config.events (fn e { type: stack, direction: vertical, gap: xs, children: [ { type: typography, variant: body, content: (if (!= (array/find @entity.placements (fn pl (== (object/get @pl eventId) @e.id))) null) (str/concat @e.label " — placed") @e.label) }, { type: stack, direction: horizontal, gap: xs, children: (array/map @config.yearTicks (fn yr { type: button, action: PLACE_EVENT, actionPayload: { eventId: @e.id, year: @yr }, label: (str/concat "" @yr), variant: (if (== (object/get (array/find @entity.placements (fn pl (== (object/get @pl eventId) @e.id))) year 0) @yr) "primary" "ghost"), size: sm })) } ] })) },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.yearTicks (fn yr { type: button, action: SET_BOUNDARY, actionPayload: { year: @yr }, label: (str/concat "Boundary " @yr), variant: (if (array/includes @entity.boundaries @yr) "primary" "ghost"), size: sm })) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: CHECK, label: "Check", variant: primary }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: (if @entity.checked @entity.verdict "Place events and boundaries, then press Check.") }
+              ] }
+          ]
+        })
+        (emit PERIODIZATION_UPDATED { placements: @entity.placements, boundaries: @entity.boundaries, checked: @entity.checked, score: @entity.score })
+
+      SET_BOUNDARY -> idle when (== @entity.active true)
+        (set @entity.boundaries (if (array/includes @entity.boundaries ?year) (array/filter @entity.boundaries (fn b (!= @b ?year))) (array/concat @entity.boundaries [?year])))
+        (set @entity.checked false)
+        (let (
+            (plotW (- @config.width (+ @config.axisMarginLeft @config.axisMarginRight)))
+            (yearSpan (- @config.maxYear @config.minYear))
+            (axisShapes [
+              { type: line, id: "axis", x1: @config.axisMarginLeft, y1: @config.axisY, x2: (- @config.width @config.axisMarginRight), y2: @config.axisY, color: "#44403c", lineWidth: 2, opacity: 1 }
+            ])
+            (tickShapes (array/flatten (array/map @config.yearTicks (fn yr (let (
+                (tx (+ @config.axisMarginLeft (* (- @yr @config.minYear) (/ @plotW @yearSpan))))
+              )
+              [
+                { type: line, id: (str/concat "tick-" @yr), x1: @tx, y1: (- @config.axisY 6), x2: @tx, y2: (+ @config.axisY 6), color: "#44403c", lineWidth: 1, opacity: 1 },
+                { type: text, id: (str/concat "tick-label-" @yr), x: @tx, y: (+ @config.axisY 24), text: (str/concat "" @yr), fontSize: 11, align: "center", color: "#78716c" }
+              ]
+            )))))
+            (placementShapes (array/flatten (array/map @entity.placements (fn pl (let (
+                (ev (array/find @config.events (fn e (== @e.id (object/get @pl eventId)))))
+                (px (+ @config.axisMarginLeft (* (- (object/get @pl year) @config.minYear) (/ @plotW @yearSpan))))
+              )
+              [
+                { type: circle, id: (str/concat "placed-" (object/get @pl eventId)), x: @px, y: (- @config.axisY 40), radius: 7, color: "#1d4ed8", fill: "#1d4ed8", opacity: 1, lineWidth: 1 },
+                { type: text, id: (str/concat "placed-label-" (object/get @pl eventId)), x: @px, y: (- @config.axisY 58), text: (object/get @ev label), fontSize: 10, align: "center", color: "#1d4ed8" }
+              ]
+            )))))
+            (boundaryShapes (array/map @entity.boundaries (fn b (let (
+                (bx (+ @config.axisMarginLeft (* (- @b @config.minYear) (/ @plotW @yearSpan))))
+              )
+              { type: line, id: (str/concat "boundary-" @b), x1: @bx, y1: (- @config.axisY 90), x2: @bx, y2: (+ @config.axisY 10), color: "#b45309", lineWidth: 2, opacity: 0.9 }
+            ))))
+            (canonicalShapes (if @entity.checked (array/map @config.canonicalBoundaries (fn cb (let (
+                (cx (+ @config.axisMarginLeft (* (- @cb @config.minYear) (/ @plotW @yearSpan))))
+              )
+              { type: line, id: (str/concat "canonical-" @cb), x1: @cx, y1: (- @config.axisY 110), x2: @cx, y2: (+ @config.axisY 10), color: "#15803d", lineWidth: 1.5, opacity: 0.7 }
+            ))) []))
+          )
+          (do
+            (set @entity.shapes (array/concat (array/concat (array/concat (array/concat @axisShapes @tickShapes) @placementShapes) @boundaryShapes) @canonicalShapes))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: "Place each event on the timeline and draw era boundaries, then check against the canonical periodization." },
+                { type: stack, direction: vertical, gap: sm, children: (array/map @config.events (fn e { type: stack, direction: vertical, gap: xs, children: [ { type: typography, variant: body, content: (if (!= (array/find @entity.placements (fn pl (== (object/get @pl eventId) @e.id))) null) (str/concat @e.label " — placed") @e.label) }, { type: stack, direction: horizontal, gap: xs, children: (array/map @config.yearTicks (fn yr { type: button, action: PLACE_EVENT, actionPayload: { eventId: @e.id, year: @yr }, label: (str/concat "" @yr), variant: (if (== (object/get (array/find @entity.placements (fn pl (== (object/get @pl eventId) @e.id))) year 0) @yr) "primary" "ghost"), size: sm })) } ] })) },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.yearTicks (fn yr { type: button, action: SET_BOUNDARY, actionPayload: { year: @yr }, label: (str/concat "Boundary " @yr), variant: (if (array/includes @entity.boundaries @yr) "primary" "ghost"), size: sm })) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: CHECK, label: "Check", variant: primary }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: (if @entity.checked @entity.verdict "Place events and boundaries, then press Check.") }
+              ] }
+          ]
+        })
+        (emit PERIODIZATION_UPDATED { placements: @entity.placements, boundaries: @entity.boundaries, checked: @entity.checked, score: @entity.score })
+
+      CHECK -> idle when (== @entity.active true)
+        (set @entity.checked true)
+        (set @entity.score (+ (array/len (array/filter @config.events (fn e (let (
+            (pl (array/find @entity.placements (fn p (== (object/get @p eventId) @e.id))))
+          )
+          (and (!= @pl null) (<= (math/abs (- (object/get @pl year) @e.year)) @config.toleranceYears))
+        )))) (array/len (array/filter @config.canonicalBoundaries (fn cb (>= (array/len (array/filter @entity.boundaries (fn b (<= (math/abs (- @b @cb)) @config.toleranceYears)))) 1))))))
+        (set @entity.verdict (str/concat "Score " @entity.score " of " (+ (array/len @config.events) (array/len @config.canonicalBoundaries)) " — placements and era boundaries within " @config.toleranceYears " years count as correct."))
+        (let (
+            (plotW (- @config.width (+ @config.axisMarginLeft @config.axisMarginRight)))
+            (yearSpan (- @config.maxYear @config.minYear))
+            (axisShapes [
+              { type: line, id: "axis", x1: @config.axisMarginLeft, y1: @config.axisY, x2: (- @config.width @config.axisMarginRight), y2: @config.axisY, color: "#44403c", lineWidth: 2, opacity: 1 }
+            ])
+            (tickShapes (array/flatten (array/map @config.yearTicks (fn yr (let (
+                (tx (+ @config.axisMarginLeft (* (- @yr @config.minYear) (/ @plotW @yearSpan))))
+              )
+              [
+                { type: line, id: (str/concat "tick-" @yr), x1: @tx, y1: (- @config.axisY 6), x2: @tx, y2: (+ @config.axisY 6), color: "#44403c", lineWidth: 1, opacity: 1 },
+                { type: text, id: (str/concat "tick-label-" @yr), x: @tx, y: (+ @config.axisY 24), text: (str/concat "" @yr), fontSize: 11, align: "center", color: "#78716c" }
+              ]
+            )))))
+            (placementShapes (array/flatten (array/map @entity.placements (fn pl (let (
+                (ev (array/find @config.events (fn e (== @e.id (object/get @pl eventId)))))
+                (px (+ @config.axisMarginLeft (* (- (object/get @pl year) @config.minYear) (/ @plotW @yearSpan))))
+              )
+              [
+                { type: circle, id: (str/concat "placed-" (object/get @pl eventId)), x: @px, y: (- @config.axisY 40), radius: 7, color: "#1d4ed8", fill: "#1d4ed8", opacity: 1, lineWidth: 1 },
+                { type: text, id: (str/concat "placed-label-" (object/get @pl eventId)), x: @px, y: (- @config.axisY 58), text: (object/get @ev label), fontSize: 10, align: "center", color: "#1d4ed8" }
+              ]
+            )))))
+            (boundaryShapes (array/map @entity.boundaries (fn b (let (
+                (bx (+ @config.axisMarginLeft (* (- @b @config.minYear) (/ @plotW @yearSpan))))
+              )
+              { type: line, id: (str/concat "boundary-" @b), x1: @bx, y1: (- @config.axisY 90), x2: @bx, y2: (+ @config.axisY 10), color: "#b45309", lineWidth: 2, opacity: 0.9 }
+            ))))
+            (canonicalShapes (if @entity.checked (array/map @config.canonicalBoundaries (fn cb (let (
+                (cx (+ @config.axisMarginLeft (* (- @cb @config.minYear) (/ @plotW @yearSpan))))
+              )
+              { type: line, id: (str/concat "canonical-" @cb), x1: @cx, y1: (- @config.axisY 110), x2: @cx, y2: (+ @config.axisY 10), color: "#15803d", lineWidth: 1.5, opacity: 0.7 }
+            ))) []))
+          )
+          (do
+            (set @entity.shapes (array/concat (array/concat (array/concat (array/concat @axisShapes @tickShapes) @placementShapes) @boundaryShapes) @canonicalShapes))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: "Place each event on the timeline and draw era boundaries, then check against the canonical periodization." },
+                { type: stack, direction: vertical, gap: sm, children: (array/map @config.events (fn e { type: stack, direction: vertical, gap: xs, children: [ { type: typography, variant: body, content: (if (!= (array/find @entity.placements (fn pl (== (object/get @pl eventId) @e.id))) null) (str/concat @e.label " — placed") @e.label) }, { type: stack, direction: horizontal, gap: xs, children: (array/map @config.yearTicks (fn yr { type: button, action: PLACE_EVENT, actionPayload: { eventId: @e.id, year: @yr }, label: (str/concat "" @yr), variant: (if (== (object/get (array/find @entity.placements (fn pl (== (object/get @pl eventId) @e.id))) year 0) @yr) "primary" "ghost"), size: sm })) } ] })) },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.yearTicks (fn yr { type: button, action: SET_BOUNDARY, actionPayload: { year: @yr }, label: (str/concat "Boundary " @yr), variant: (if (array/includes @entity.boundaries @yr) "primary" "ghost"), size: sm })) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: CHECK, label: "Check", variant: primary }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: (if @entity.checked @entity.verdict "Place events and boundaries, then press Check.") }
+              ] }
+          ]
+        })
+        (emit PERIODIZATION_UPDATED { placements: @entity.placements, boundaries: @entity.boundaries, checked: @entity.checked, score: @entity.score })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      PLACE_EVENT {
+        eventId : string
+        year : number
+      }
+        @description "Learner placed an event at a year on the timeline; re-placing moves the marker."
+        @tier "domain"
+      SET_BOUNDARY {
+        year : number
+      }
+        @description "Learner toggled an era boundary at a year on the timeline."
+        @tier "domain"
+      CHECK {
+      }
+        @description "Learner asked for the score comparing their placements and boundaries against the canonical periodization within the year tolerance."
+        @tier "domain"
+    }
+
+    emits {
+      PERIODIZATION_UPDATED -> external {
+        placements : [json]
+        boundaries : [number]
+        checked : boolean
+        score : number
+      }
+        @description "The periodization instrument state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "periodization update, era boundaries, timeline placement, period boundaries, historical periods"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Periodization"
+        @label "Title"
+        @description "Title shown above the lab."
+        @tier "presentation"
+      width : number = 680
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 320
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      interactive : boolean = false
+        @label "Interactive"
+        @description "Enable pointer interaction on the canvas."
+        @tier "presentation"
+      animate : boolean = false
+        @label "Animate"
+        @description "Enable continuous redraw loop."
+        @tier "presentation"
+      minYear : number = 1750
+        @label "Minimum Year"
+        @description "First year on the timeline axis."
+        @tier "domain"
+      maxYear : number = 1850
+        @label "Maximum Year"
+        @description "Last year on the timeline axis."
+        @tier "domain"
+      axisY : number = 200
+        @label "Axis Y"
+        @description "Canvas y-position of the timeline axis."
+        @tier "presentation"
+      axisMarginLeft : number = 60
+        @label "Axis Margin Left"
+        @tier "presentation"
+      axisMarginRight : number = 40
+        @label "Axis Margin Right"
+        @tier "presentation"
+      yearTicks : [number] = [1750, 1760, 1770, 1780, 1790, 1800, 1810, 1820, 1830, 1840, 1850]
+        @label "Year Ticks"
+        @description "Selectable years on the timeline — each is both a placement target for events and a toggle point for era boundaries."
+        @synonyms "year ticks, timeline ticks, decade marks"
+        @tier "domain"
+      events : [HistPeriodizationEvent] = [
+        { id: "seven-years-war-ends", label: "Seven Years' War Ends", year: 1763 },
+        { id: "american-independence", label: "American Independence Declared", year: 1776 },
+        { id: "french-revolution", label: "French Revolution Begins", year: 1789 },
+        { id: "haitian-revolution", label: "Haitian Revolution Begins", year: 1791 },
+        { id: "napoleon-emperor", label: "Napoleon Crowned Emperor", year: 1804 },
+        { id: "congress-vienna", label: "Congress of Vienna", year: 1815 },
+        { id: "revolutions-1848", label: "Revolutions of 1848", year: 1848 }
+      ]
+        @label "Events"
+        @description "Roster of events the learner places on the timeline, each with its canonical year."
+        @synonyms "event roster, timeline events, age of revolutions, atlantic revolutions"
+        @tier "domain"
+      canonicalBoundaries : [number] = [1775, 1815]
+        @label "Canonical Boundaries"
+        @description "The canonical era-boundary years (here: the outbreak of the Atlantic revolutions and the Congress of Vienna settlement) the learner's drawn boundaries are scored against."
+        @synonyms "canonical boundaries, era boundaries, period boundaries, turning years"
+        @tier "domain"
+      toleranceYears : number = 10
+        @label "Tolerance Years"
+        @description "A placement or boundary counts as correct when it lands within this many years of the canonical year."
+        @synonyms "year tolerance, margin of error"
+        @tier "domain"
+    }
+  }
+
+  page "/hist-periodization" as HistPeriodizationPage -> HistPeriodizationSim
+}

@@ -1,5 +1,5 @@
 {
-  "description": "std-cross-reference — join-table primitive for N:M relationships. Listens for LinkRequested/UnlinkRequested/FETCH_LINKS_FOR and manages the junction collection (default CrossRefLink [persistent: cross_ref_links]). Rebind via linkedEntity to your consumer junction. Emits LinkCreated, LinkRemoved, LinksLoaded as external broadcasts for downstream consumers.",
+  "description": "std-cross-reference — join-table primitive for N:M relationships. Listens for LinkRequested/UnlinkRequested/FETCH_LINKS_FOR and manages the junction collection (default CrossRefLink [persistent: cross_ref_links]). Rebind via linkedEntity={YourJunction} to your consumer junction; if your junction's id fields differ from leftId/rightId, override them with fields{} renames at the call site. A rebind target must supply leftId, rightId, createdAt, filteredLinks. Emits LinkCreated, LinkRemoved, LinksLoaded as external broadcasts for downstream consumers.",
   "ledger": {
     "entries": {
       "ent_01KXG04F9CP8JSW26MMJ9DP9SQ": {
@@ -189,48 +189,6 @@
       "traits": [
         {
           "category": "lifecycle",
-          "config": {
-            "junctionEntity": {
-              "default": "",
-              "description": "Persistent entity used as the join table",
-              "label": "Junction entity",
-              "synonyms": "join table, link table, bridge table, junction table, mapping table",
-              "tier": "internal",
-              "type": "entity"
-            },
-            "leftEntity": {
-              "default": "",
-              "description": "Entity type on the left side of the N:M relationship",
-              "label": "Left entity",
-              "synonyms": "left side, source entity, from entity, parent entity",
-              "tier": "internal",
-              "type": "entity"
-            },
-            "leftIdField": {
-              "default": "",
-              "description": "Junction column holding the left entity's id",
-              "label": "Left FK field",
-              "synonyms": "left foreign key, left FK, source key, parent key",
-              "tier": "internal",
-              "type": "string"
-            },
-            "rightEntity": {
-              "default": "",
-              "description": "Entity type on the right side of the N:M relationship",
-              "label": "Right entity",
-              "synonyms": "right side, target entity, to entity, child entity, related entity",
-              "tier": "internal",
-              "type": "entity"
-            },
-            "rightIdField": {
-              "default": "",
-              "description": "Junction column holding the right entity's id",
-              "label": "Right FK field",
-              "synonyms": "right foreign key, right FK, target key, child key",
-              "tier": "internal",
-              "type": "string"
-            }
-          },
           "emits": [
             {
               "event": "LinkCreated",
@@ -300,6 +258,14 @@
               "scope": "external"
             }
           ],
+          "entityContract": {
+            "provides": [
+              "filteredLinks",
+              "leftId"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
           "entityRefIds": {
             "CrossRefLink": "ent_01KXG04F9CP8JSW26MMJ9DP9SQ"
           },

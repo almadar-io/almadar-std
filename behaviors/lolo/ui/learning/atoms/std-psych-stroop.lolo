@@ -1,0 +1,420 @@
+app std-psych-stroop "1.0.0"
+"Stroop-task engine — the learner names the ink color of each displayed word while the word itself names a (matching or conflicting) color; congruent and incongruent trials are scored separately and the interference aggregate (congruent accuracy − incongruent accuracy) is tracked, with the stimulus rendered as a text shape on a math-canvas. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital PsychStroopOrbital {
+  type PsychStroopShapePoint = {
+    x : number!
+    y : number!
+  }
+  type PsychStroopShape = {
+    type : "line" | "arrow" | "circle" | "rect" | "polygon" | "path" | "text" | "axis" | "grid"!
+    id : string
+    x : number
+    y : number
+    x1 : number
+    y1 : number
+    x2 : number
+    y2 : number
+    radius : number
+    width : number
+    height : number
+    points : [PsychStroopShapePoint]
+    path : string
+    text : string
+    label : string
+    fontSize : number
+    align : "left" | "center" | "right"
+    axis : "x" | "y"
+    min : number
+    max : number
+    step : number
+    color : string
+    fill : string
+    lineWidth : number
+    opacity : number
+  }
+  type PsychStroopStimulus = {
+    word : string!
+    ink : string!
+    inkName : string!
+    congruent : boolean
+  }
+
+  entity PsychStroopScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    trialIndex : number
+    trialsRun : number
+    currentWord : string
+    currentInk : string
+    currentInkName : string
+    currentCongruent : boolean
+    correctCount : number
+    congruentCorrect : number
+    congruentAttempts : number
+    incongruentCorrect : number
+    incongruentAttempts : number
+    congruentAccuracy : number
+    incongruentAccuracy : number
+    interference : number
+    feedback : string
+    shapes : [PsychStroopShape]
+    answerButtons : [json]
+  }
+
+  trait PsychStroopSim -> @rebindable PsychStroopScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (let (
+            (stim (array/nth @config.stimuli 0))
+            (inkNames (array/reduce @config.stimuli [] (fn acc s (if (array/includes @acc (object/get @s inkName)) @acc (array/append @acc (object/get @s inkName))))))
+            (answerButtons (array/map @inkNames (fn ink { type: button, action: ANSWER_COLOR, actionPayload: { color: @ink }, label: @ink, variant: "secondary" })))
+            (seedShapes [
+                { type: text, id: "stimulus", x: (/ @config.width 2), y: (/ @config.height 2), text: (object/get @stim word), fontSize: @config.wordFontSize, align: "center", color: (object/get @stim ink) },
+                { type: text, id: "prompt", x: (/ @config.width 2), y: (+ (/ @config.height 2) 60), text: "Name the INK color — ignore the word", fontSize: 14, align: "center", color: "#64748b" }
+              ])
+          )
+          (do
+            (set @entity.trialIndex 0)
+            (set @entity.trialsRun 0)
+            (set @entity.currentWord (object/get @stim word))
+            (set @entity.currentInk (object/get @stim ink))
+            (set @entity.currentInkName (object/get @stim inkName))
+            (set @entity.currentCongruent (object/get @stim congruent))
+            (set @entity.correctCount 0)
+            (set @entity.congruentCorrect 0)
+            (set @entity.congruentAttempts 0)
+            (set @entity.incongruentCorrect 0)
+            (set @entity.incongruentAttempts 0)
+            (set @entity.congruentAccuracy 1)
+            (set @entity.incongruentAccuracy 1)
+            (set @entity.interference 0)
+            (set @entity.feedback "")
+            (set @entity.shapes @seedShapes)
+            (set @entity.answerButtons @answerButtons)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: NEXT_TRIAL, label: "Next Trial", variant: primary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: horizontal, gap: sm, children: @entity.answerButtons },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: badge, label: (if (== @entity.feedback "") "Answer the ink color" @entity.feedback), variant: (if (== @entity.feedback "Correct") "success" (if (== @entity.feedback "") "neutral" "danger")) },
+                    { type: typography, variant: caption, content: (str/concat "Trial " @entity.trialsRun " of " @config.trialCount " — correct: " @entity.correctCount) }
+                  ] },
+                { type: typography, variant: body, content: (str/concat "Interference (congruent accuracy − incongruent accuracy): " (math/round @entity.interference 3)) },
+                { type: alert, variant: (if (>= @entity.trialsRun @config.trialCount) "success" "info"), message: (if (>= @entity.trialsRun @config.trialCount) (str/concat "Session complete — congruent accuracy " (math/round @entity.congruentAccuracy 2) ", incongruent accuracy " (math/round @entity.incongruentAccuracy 2)) "Name the ink color of each word — ignore what the word says.") }
+              ] }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (let (
+            (stim (array/nth @config.stimuli 0))
+            (inkNames (array/reduce @config.stimuli [] (fn acc s (if (array/includes @acc (object/get @s inkName)) @acc (array/append @acc (object/get @s inkName))))))
+            (answerButtons (array/map @inkNames (fn ink { type: button, action: ANSWER_COLOR, actionPayload: { color: @ink }, label: @ink, variant: "secondary" })))
+            (seedShapes [
+                { type: text, id: "stimulus", x: (/ @config.width 2), y: (/ @config.height 2), text: (object/get @stim word), fontSize: @config.wordFontSize, align: "center", color: (object/get @stim ink) },
+                { type: text, id: "prompt", x: (/ @config.width 2), y: (+ (/ @config.height 2) 60), text: "Name the INK color — ignore the word", fontSize: 14, align: "center", color: "#64748b" }
+              ])
+          )
+          (do
+            (set @entity.trialIndex 0)
+            (set @entity.trialsRun 0)
+            (set @entity.currentWord (object/get @stim word))
+            (set @entity.currentInk (object/get @stim ink))
+            (set @entity.currentInkName (object/get @stim inkName))
+            (set @entity.currentCongruent (object/get @stim congruent))
+            (set @entity.correctCount 0)
+            (set @entity.congruentCorrect 0)
+            (set @entity.congruentAttempts 0)
+            (set @entity.incongruentCorrect 0)
+            (set @entity.incongruentAttempts 0)
+            (set @entity.congruentAccuracy 1)
+            (set @entity.incongruentAccuracy 1)
+            (set @entity.interference 0)
+            (set @entity.feedback "")
+            (set @entity.shapes @seedShapes)
+            (set @entity.answerButtons @answerButtons)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: NEXT_TRIAL, label: "Next Trial", variant: primary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: horizontal, gap: sm, children: @entity.answerButtons },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: badge, label: (if (== @entity.feedback "") "Answer the ink color" @entity.feedback), variant: (if (== @entity.feedback "Correct") "success" (if (== @entity.feedback "") "neutral" "danger")) },
+                    { type: typography, variant: caption, content: (str/concat "Trial " @entity.trialsRun " of " @config.trialCount " — correct: " @entity.correctCount) }
+                  ] },
+                { type: typography, variant: body, content: (str/concat "Interference (congruent accuracy − incongruent accuracy): " (math/round @entity.interference 3)) },
+                { type: alert, variant: (if (>= @entity.trialsRun @config.trialCount) "success" "info"), message: (if (>= @entity.trialsRun @config.trialCount) (str/concat "Session complete — congruent accuracy " (math/round @entity.congruentAccuracy 2) ", incongruent accuracy " (math/round @entity.incongruentAccuracy 2)) "Name the ink color of each word — ignore what the word says.") }
+              ] }
+          ]
+        })
+
+      ANSWER_COLOR -> idle when (== @entity.active true)
+        (let (
+            (correct (== ?color @entity.currentInkName))
+            (newCorrect (if @correct (+ @entity.correctCount 1) @entity.correctCount))
+            (newCongCorr (if (and @entity.currentCongruent @correct) (+ @entity.congruentCorrect 1) @entity.congruentCorrect))
+            (newCongAtt (if @entity.currentCongruent (+ @entity.congruentAttempts 1) @entity.congruentAttempts))
+            (newIncCorr (if (and (not @entity.currentCongruent) @correct) (+ @entity.incongruentCorrect 1) @entity.incongruentCorrect))
+            (newIncAtt (if @entity.currentCongruent @entity.incongruentAttempts (+ @entity.incongruentAttempts 1)))
+            (congAcc (if (> @newCongAtt 0) (/ @newCongCorr @newCongAtt) 1))
+            (incAcc (if (> @newIncAtt 0) (/ @newIncCorr @newIncAtt) 1))
+            (newInterference (- @congAcc @incAcc))
+            (newFeedback (if @correct "Correct" (str/concat "Incorrect — the ink was " @entity.currentInkName)))
+          )
+          (do
+            (set @entity.correctCount @newCorrect)
+            (set @entity.congruentCorrect @newCongCorr)
+            (set @entity.congruentAttempts @newCongAtt)
+            (set @entity.incongruentCorrect @newIncCorr)
+            (set @entity.incongruentAttempts @newIncAtt)
+            (set @entity.congruentAccuracy @congAcc)
+            (set @entity.incongruentAccuracy @incAcc)
+            (set @entity.interference @newInterference)
+            (set @entity.feedback @newFeedback)
+            (set @entity.trialsRun (+ @entity.trialsRun 1))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: NEXT_TRIAL, label: "Next Trial", variant: primary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: horizontal, gap: sm, children: @entity.answerButtons },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: badge, label: (if (== @entity.feedback "") "Answer the ink color" @entity.feedback), variant: (if (== @entity.feedback "Correct") "success" (if (== @entity.feedback "") "neutral" "danger")) },
+                    { type: typography, variant: caption, content: (str/concat "Trial " @entity.trialsRun " of " @config.trialCount " — correct: " @entity.correctCount) }
+                  ] },
+                { type: typography, variant: body, content: (str/concat "Interference (congruent accuracy − incongruent accuracy): " (math/round @entity.interference 3)) },
+                { type: alert, variant: (if (>= @entity.trialsRun @config.trialCount) "success" "info"), message: (if (>= @entity.trialsRun @config.trialCount) (str/concat "Session complete — congruent accuracy " (math/round @entity.congruentAccuracy 2) ", incongruent accuracy " (math/round @entity.incongruentAccuracy 2)) "Name the ink color of each word — ignore what the word says.") }
+              ] }
+          ]
+        })
+        (emit STROOP_UPDATED { trialsRun: @entity.trialsRun, correctCount: @entity.correctCount, congruentAccuracy: @entity.congruentAccuracy, incongruentAccuracy: @entity.incongruentAccuracy, interference: @entity.interference })
+
+      NEXT_TRIAL -> idle when (== @entity.active true)
+        (let (
+            (totalAtt (+ @entity.congruentAttempts @entity.incongruentAttempts))
+            (congFrac (if (> @totalAtt 0) (/ @entity.congruentAttempts @totalAtt) 0))
+            (wantIncongruent (> @congFrac @config.congruentRatio))
+            (pool0 (if @wantIncongruent
+                (array/filter @config.stimuli (fn s (not (object/get @s congruent))))
+                (array/filter @config.stimuli (fn s (object/get @s congruent)))))
+            (pool (if (> (array/len @pool0) 0) @pool0 @config.stimuli))
+            (nextIndex (math/mod (+ @entity.trialIndex 1) (array/len @pool)))
+            (stim (array/nth @pool @nextIndex))
+            (newShapes [
+                { type: text, id: "stimulus", x: (/ @config.width 2), y: (/ @config.height 2), text: (object/get @stim word), fontSize: @config.wordFontSize, align: "center", color: (object/get @stim ink) },
+                { type: text, id: "prompt", x: (/ @config.width 2), y: (+ (/ @config.height 2) 60), text: "Name the INK color — ignore the word", fontSize: 14, align: "center", color: "#64748b" }
+              ])
+          )
+          (do
+            (set @entity.trialIndex @nextIndex)
+            (set @entity.currentWord (object/get @stim word))
+            (set @entity.currentInk (object/get @stim ink))
+            (set @entity.currentInkName (object/get @stim inkName))
+            (set @entity.currentCongruent (object/get @stim congruent))
+            (set @entity.feedback "")
+            (set @entity.shapes @newShapes)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: NEXT_TRIAL, label: "Next Trial", variant: primary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: horizontal, gap: sm, children: @entity.answerButtons },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: badge, label: (if (== @entity.feedback "") "Answer the ink color" @entity.feedback), variant: (if (== @entity.feedback "Correct") "success" (if (== @entity.feedback "") "neutral" "danger")) },
+                    { type: typography, variant: caption, content: (str/concat "Trial " @entity.trialsRun " of " @config.trialCount " — correct: " @entity.correctCount) }
+                  ] },
+                { type: typography, variant: body, content: (str/concat "Interference (congruent accuracy − incongruent accuracy): " (math/round @entity.interference 3)) },
+                { type: alert, variant: (if (>= @entity.trialsRun @config.trialCount) "success" "info"), message: (if (>= @entity.trialsRun @config.trialCount) (str/concat "Session complete — congruent accuracy " (math/round @entity.congruentAccuracy 2) ", incongruent accuracy " (math/round @entity.incongruentAccuracy 2)) "Name the ink color of each word — ignore what the word says.") }
+              ] }
+          ]
+        })
+        (emit STROOP_UPDATED { trialsRun: @entity.trialsRun, correctCount: @entity.correctCount, congruentAccuracy: @entity.congruentAccuracy, incongruentAccuracy: @entity.incongruentAccuracy, interference: @entity.interference })
+
+      RESET -> idle when (== @entity.active true)
+        (let (
+            (stim (array/nth @config.stimuli 0))
+            (inkNames (array/reduce @config.stimuli [] (fn acc s (if (array/includes @acc (object/get @s inkName)) @acc (array/append @acc (object/get @s inkName))))))
+            (answerButtons (array/map @inkNames (fn ink { type: button, action: ANSWER_COLOR, actionPayload: { color: @ink }, label: @ink, variant: "secondary" })))
+            (seedShapes [
+                { type: text, id: "stimulus", x: (/ @config.width 2), y: (/ @config.height 2), text: (object/get @stim word), fontSize: @config.wordFontSize, align: "center", color: (object/get @stim ink) },
+                { type: text, id: "prompt", x: (/ @config.width 2), y: (+ (/ @config.height 2) 60), text: "Name the INK color — ignore the word", fontSize: 14, align: "center", color: "#64748b" }
+              ])
+          )
+          (do
+            (set @entity.trialIndex 0)
+            (set @entity.trialsRun 0)
+            (set @entity.currentWord (object/get @stim word))
+            (set @entity.currentInk (object/get @stim ink))
+            (set @entity.currentInkName (object/get @stim inkName))
+            (set @entity.currentCongruent (object/get @stim congruent))
+            (set @entity.correctCount 0)
+            (set @entity.congruentCorrect 0)
+            (set @entity.congruentAttempts 0)
+            (set @entity.incongruentCorrect 0)
+            (set @entity.incongruentAttempts 0)
+            (set @entity.congruentAccuracy 1)
+            (set @entity.incongruentAccuracy 1)
+            (set @entity.interference 0)
+            (set @entity.feedback "")
+            (set @entity.shapes @seedShapes)
+            (set @entity.answerButtons @answerButtons)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: NEXT_TRIAL, label: "Next Trial", variant: primary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: horizontal, gap: sm, children: @entity.answerButtons },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: badge, label: (if (== @entity.feedback "") "Answer the ink color" @entity.feedback), variant: (if (== @entity.feedback "Correct") "success" (if (== @entity.feedback "") "neutral" "danger")) },
+                    { type: typography, variant: caption, content: (str/concat "Trial " @entity.trialsRun " of " @config.trialCount " — correct: " @entity.correctCount) }
+                  ] },
+                { type: typography, variant: body, content: (str/concat "Interference (congruent accuracy − incongruent accuracy): " (math/round @entity.interference 3)) },
+                { type: alert, variant: (if (>= @entity.trialsRun @config.trialCount) "success" "info"), message: (if (>= @entity.trialsRun @config.trialCount) (str/concat "Session complete — congruent accuracy " (math/round @entity.congruentAccuracy 2) ", incongruent accuracy " (math/round @entity.incongruentAccuracy 2)) "Name the ink color of each word — ignore what the word says.") }
+              ] }
+          ]
+        })
+        (emit STROOP_UPDATED { trialsRun: @entity.trialsRun, correctCount: @entity.correctCount, congruentAccuracy: @entity.congruentAccuracy, incongruentAccuracy: @entity.incongruentAccuracy, interference: @entity.interference })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      ANSWER_COLOR {
+        color : string
+      }
+        @description "Learner named the ink color of the current word; scored against the stimulus's inkName, bucketed by congruence."
+        @tier "domain"
+      NEXT_TRIAL {
+      }
+        @description "Advanced to the next stimulus, steered by congruentRatio: when the running congruent fraction exceeds the target, the next trial is drawn from the incongruent pool."
+        @tier "domain"
+      RESET {
+      }
+        @description "Learner reset the session — trial counters, accuracies, interference, and feedback return to their starting values."
+        @tier "domain"
+    }
+
+    emits {
+      STROOP_UPDATED -> external {
+        trialsRun : number
+        correctCount : number
+        congruentAccuracy : number
+        incongruentAccuracy : number
+        interference : number
+      }
+        @description "The Stroop scoring state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "stroop, stroop effect, interference, incongruent trial, cognitive control, selective attention"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Stroop Task"
+        @label "Title"
+        @description "Title shown above the canvas."
+        @tier "presentation"
+      width : number = 640
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 300
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      interactive : boolean = false
+        @label "Interactive"
+        @description "Enable pointer interaction on the canvas."
+        @tier "presentation"
+      animate : boolean = false
+        @label "Animate"
+        @description "Enable continuous redraw loop."
+        @tier "presentation"
+      trialCount : number = 20
+        @label "Trial Count"
+        @description "Number of trials in a session; the completion alert appears once this many answers have been scored."
+        @synonyms "session length, number of trials, trials per session"
+        @tier "domain"
+      congruentRatio : number = 0.5
+        @label "Congruent Ratio"
+        @description "Target proportion of congruent trials; NEXT_TRIAL steers into the incongruent pool whenever the running congruent fraction exceeds this."
+        @synonyms "congruence proportion, congruent trial proportion, trial mix"
+        @tier "domain"
+      stimuli : [PsychStroopStimulus] = [
+        { word: "RED", ink: "#dc2626", inkName: "red", congruent: true },
+        { word: "BLUE", ink: "#2563eb", inkName: "blue", congruent: true },
+        { word: "GREEN", ink: "#16a34a", inkName: "green", congruent: true },
+        { word: "YELLOW", ink: "#ca8a04", inkName: "yellow", congruent: true },
+        { word: "RED", ink: "#2563eb", inkName: "blue", congruent: false },
+        { word: "BLUE", ink: "#16a34a", inkName: "green", congruent: false },
+        { word: "GREEN", ink: "#ca8a04", inkName: "yellow", congruent: false },
+        { word: "YELLOW", ink: "#dc2626", inkName: "red", congruent: false }
+      ]
+        @label "Stimuli"
+        @description "Word-in-ink trials — the displayed word, the hex color it is painted in, the answer name of that ink, and whether word and ink match (congruent)."
+        @synonyms "stroop stimuli, word-color pairs, incongruent stimuli, color words"
+        @tier "domain"
+      wordFontSize : number = 48
+        @label "Word Font Size"
+        @description "Font size of the stimulus word on the canvas."
+        @tier "presentation"
+    }
+  }
+
+  page "/psych-stroop" as PsychStroopPage -> PsychStroopSim
+}

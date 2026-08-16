@@ -1,0 +1,492 @@
+app std-ling-ipa "1.0.0"
+"IPA consonant-chart explorer and quiz — the learner selects a place × manner cell to reveal its symbol and an example word on a math-canvas chart grid, then flips into a scored quiz that asks for the manner of articulation of a shown symbol. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital LingIpaOrbital {
+  type LingIpaShapePoint = {
+    x : number!
+    y : number!
+  }
+  type LingIpaShape = {
+    type : "line" | "arrow" | "circle" | "rect" | "polygon" | "path" | "text" | "axis" | "grid"!
+    id : string
+    x : number
+    y : number
+    x1 : number
+    y1 : number
+    x2 : number
+    y2 : number
+    radius : number
+    width : number
+    height : number
+    points : [LingIpaShapePoint]
+    path : string
+    text : string
+    label : string
+    fontSize : number
+    align : "left" | "center" | "right"
+    axis : "x" | "y"
+    min : number
+    max : number
+    step : number
+    color : string
+    fill : string
+    lineWidth : number
+    opacity : number
+  }
+  type LingIpaSymbol = {
+    place : string!
+    manner : string!
+    symbol : string!
+    example : string!
+  }
+
+  entity LingIpaScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    renderChildren : [json]
+    shapes : [LingIpaShape]
+    selectedPlace : string
+    selectedManner : string
+    selectedSymbol : string
+    selectedExample : string
+    quizIndex : number
+    quizScore : number
+    quizTotal : number
+    quizAnswered : boolean
+    quizFeedback : string
+  }
+
+  trait LingIpaSim -> @rebindable LingIpaScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.selectedPlace "")
+        (set @entity.selectedManner "")
+        (set @entity.selectedSymbol "")
+        (set @entity.selectedExample "")
+        (set @entity.quizIndex 0)
+        (set @entity.quizScore 0)
+        (set @entity.quizTotal 0)
+        (set @entity.quizAnswered false)
+        (set @entity.quizFeedback "")
+        (let (
+            (placeCount (array/len @config.placesOfArticulation))
+            (mannerCount (array/len @config.manners))
+            (cellCount (* @placeCount @mannerCount))
+            (headerShapes (array/map (array/range @mannerCount) (fn j { type: "text", id: (str/concat "mh" @j), x: (+ @config.gridLeft @config.labelWidth (* @j @config.cellWidth) (/ @config.cellWidth 2)), y: @config.gridTop, text: (array/nth @config.manners @j), fontSize: @config.headerFontSize, align: "center", color: @config.headerColor })))
+            (rowLabelShapes (array/map (array/range @placeCount) (fn i { type: "text", id: (str/concat "pl" @i), x: @config.gridLeft, y: (+ @config.gridTop @config.headerHeight (* @i @config.cellHeight) (/ @config.cellHeight 2) 5), text: (array/nth @config.placesOfArticulation @i), fontSize: @config.headerFontSize, align: "left", color: @config.headerColor })))
+            (cellShapes (array/flatten (array/map (array/range @cellCount) (fn k (let (
+                    (i (math/floor (/ @k @mannerCount)))
+                    (j (math/mod @k @mannerCount))
+                    (placeName (array/nth @config.placesOfArticulation @i))
+                    (mannerName (array/nth @config.manners @j))
+                    (cellX (+ @config.gridLeft @config.labelWidth (* @j @config.cellWidth)))
+                    (cellY (+ @config.gridTop @config.headerHeight (* @i @config.cellHeight)))
+                    (found (array/find @config.symbolSet (fn s (and (== (object/get @s place) @placeName) (== (object/get @s manner) @mannerName)))))
+                  )
+                  (if (!= @found null)
+                    [
+                      { type: "rect", id: (str/concat "cell" @k), x: @cellX, y: @cellY, width: @config.cellWidth, height: @config.cellHeight, color: @config.cellBorderColor, fill: @config.cellFill },
+                      { type: "text", id: (str/concat "sym" @k), x: (+ @cellX (/ @config.cellWidth 2)), y: (+ @cellY (/ @config.cellHeight 2) 7), text: (object/get @found symbol), fontSize: @config.symbolFontSize, align: "center", color: @config.symbolColor }
+                    ]
+                    [
+                      { type: "rect", id: (str/concat "cell" @k), x: @cellX, y: @cellY, width: @config.cellWidth, height: @config.cellHeight, color: @config.cellBorderColor, fill: @config.emptyCellFill }
+                    ])
+                )))))
+            (gridShapes (array/concat (array/concat @headerShapes @rowLabelShapes) @cellShapes))
+            (quizItem (array/nth @config.symbolSet (math/mod @entity.quizIndex (array/len @config.symbolSet))))
+            (quizQuestion (str/concat "Quiz: which manner of articulation is /" (object/get @quizItem symbol) "/ (as in \"" (object/get @quizItem example) "\")?"))
+            (scoreLabel (str/concat "Score: " @entity.quizScore "/" @entity.quizTotal))
+          )
+          (do
+            (set @entity.shapes @gridShapes)
+            (set @entity.renderChildren (array/concat [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: "Pick a consonant below to light up its place × manner cell on the IPA chart." },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: false },
+                { type: typography, variant: body, content: "No cell selected yet." },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.symbolSet (fn s { type: button, action: SELECT_CELL, actionPayload: { place: (object/get @s place), manner: (object/get @s manner) }, label: (str/concat "/" (object/get @s symbol) "/ " (object/get @s example)), variant: secondary, size: sm })) }
+              ] (if @config.quizMode [
+                { type: typography, variant: caption, content: @quizQuestion },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.manners (fn m { type: button, action: ANSWER_QUIZ, actionPayload: { answer: @m }, label: @m, variant: primary, size: sm })) },
+                { type: typography, variant: body, content: (str/concat @entity.quizFeedback " " @scoreLabel) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: NEXT_QUIZ, label: "Next Quiz Item", variant: ghost }
+                  ] }
+              ] [])))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: @entity.renderChildren }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.selectedPlace "")
+        (set @entity.selectedManner "")
+        (set @entity.selectedSymbol "")
+        (set @entity.selectedExample "")
+        (set @entity.quizIndex 0)
+        (set @entity.quizScore 0)
+        (set @entity.quizTotal 0)
+        (set @entity.quizAnswered false)
+        (set @entity.quizFeedback "")
+        (let (
+            (placeCount (array/len @config.placesOfArticulation))
+            (mannerCount (array/len @config.manners))
+            (cellCount (* @placeCount @mannerCount))
+            (headerShapes (array/map (array/range @mannerCount) (fn j { type: "text", id: (str/concat "mh" @j), x: (+ @config.gridLeft @config.labelWidth (* @j @config.cellWidth) (/ @config.cellWidth 2)), y: @config.gridTop, text: (array/nth @config.manners @j), fontSize: @config.headerFontSize, align: "center", color: @config.headerColor })))
+            (rowLabelShapes (array/map (array/range @placeCount) (fn i { type: "text", id: (str/concat "pl" @i), x: @config.gridLeft, y: (+ @config.gridTop @config.headerHeight (* @i @config.cellHeight) (/ @config.cellHeight 2) 5), text: (array/nth @config.placesOfArticulation @i), fontSize: @config.headerFontSize, align: "left", color: @config.headerColor })))
+            (cellShapes (array/flatten (array/map (array/range @cellCount) (fn k (let (
+                    (i (math/floor (/ @k @mannerCount)))
+                    (j (math/mod @k @mannerCount))
+                    (placeName (array/nth @config.placesOfArticulation @i))
+                    (mannerName (array/nth @config.manners @j))
+                    (cellX (+ @config.gridLeft @config.labelWidth (* @j @config.cellWidth)))
+                    (cellY (+ @config.gridTop @config.headerHeight (* @i @config.cellHeight)))
+                    (found (array/find @config.symbolSet (fn s (and (== (object/get @s place) @placeName) (== (object/get @s manner) @mannerName)))))
+                  )
+                  (if (!= @found null)
+                    [
+                      { type: "rect", id: (str/concat "cell" @k), x: @cellX, y: @cellY, width: @config.cellWidth, height: @config.cellHeight, color: @config.cellBorderColor, fill: @config.cellFill },
+                      { type: "text", id: (str/concat "sym" @k), x: (+ @cellX (/ @config.cellWidth 2)), y: (+ @cellY (/ @config.cellHeight 2) 7), text: (object/get @found symbol), fontSize: @config.symbolFontSize, align: "center", color: @config.symbolColor }
+                    ]
+                    [
+                      { type: "rect", id: (str/concat "cell" @k), x: @cellX, y: @cellY, width: @config.cellWidth, height: @config.cellHeight, color: @config.cellBorderColor, fill: @config.emptyCellFill }
+                    ])
+                )))))
+            (gridShapes (array/concat (array/concat @headerShapes @rowLabelShapes) @cellShapes))
+            (quizItem (array/nth @config.symbolSet (math/mod @entity.quizIndex (array/len @config.symbolSet))))
+            (quizQuestion (str/concat "Quiz: which manner of articulation is /" (object/get @quizItem symbol) "/ (as in \"" (object/get @quizItem example) "\")?"))
+            (scoreLabel (str/concat "Score: " @entity.quizScore "/" @entity.quizTotal))
+          )
+          (do
+            (set @entity.shapes @gridShapes)
+            (set @entity.renderChildren (array/concat [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: "Pick a consonant below to light up its place × manner cell on the IPA chart." },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: false },
+                { type: typography, variant: body, content: "No cell selected yet." },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.symbolSet (fn s { type: button, action: SELECT_CELL, actionPayload: { place: (object/get @s place), manner: (object/get @s manner) }, label: (str/concat "/" (object/get @s symbol) "/ " (object/get @s example)), variant: secondary, size: sm })) }
+              ] (if @config.quizMode [
+                { type: typography, variant: caption, content: @quizQuestion },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.manners (fn m { type: button, action: ANSWER_QUIZ, actionPayload: { answer: @m }, label: @m, variant: primary, size: sm })) },
+                { type: typography, variant: body, content: (str/concat @entity.quizFeedback " " @scoreLabel) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: NEXT_QUIZ, label: "Next Quiz Item", variant: ghost }
+                  ] }
+              ] [])))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: @entity.renderChildren }
+          ]
+        })
+
+      SELECT_CELL -> idle when (== @entity.active true)
+        (let (
+            (found (array/find @config.symbolSet (fn s (and (== (object/get @s place) ?place) (== (object/get @s manner) ?manner)))))
+            (hasSymbol (!= @found null))
+            (placeCount (array/len @config.placesOfArticulation))
+            (mannerCount (array/len @config.manners))
+            (cellCount (* @placeCount @mannerCount))
+            (headerShapes (array/map (array/range @mannerCount) (fn j { type: "text", id: (str/concat "mh" @j), x: (+ @config.gridLeft @config.labelWidth (* @j @config.cellWidth) (/ @config.cellWidth 2)), y: @config.gridTop, text: (array/nth @config.manners @j), fontSize: @config.headerFontSize, align: "center", color: @config.headerColor })))
+            (rowLabelShapes (array/map (array/range @placeCount) (fn i { type: "text", id: (str/concat "pl" @i), x: @config.gridLeft, y: (+ @config.gridTop @config.headerHeight (* @i @config.cellHeight) (/ @config.cellHeight 2) 5), text: (array/nth @config.placesOfArticulation @i), fontSize: @config.headerFontSize, align: "left", color: @config.headerColor })))
+            (cellShapes (array/flatten (array/map (array/range @cellCount) (fn k (let (
+                    (i (math/floor (/ @k @mannerCount)))
+                    (j (math/mod @k @mannerCount))
+                    (placeName (array/nth @config.placesOfArticulation @i))
+                    (mannerName (array/nth @config.manners @j))
+                    (cellX (+ @config.gridLeft @config.labelWidth (* @j @config.cellWidth)))
+                    (cellY (+ @config.gridTop @config.headerHeight (* @i @config.cellHeight)))
+                    (cellEntry (array/find @config.symbolSet (fn s (and (== (object/get @s place) @placeName) (== (object/get @s manner) @mannerName)))))
+                    (isSelected (and (== @placeName ?place) (== @mannerName ?manner)))
+                  )
+                  (if (!= @cellEntry null)
+                    [
+                      { type: "rect", id: (str/concat "cell" @k), x: @cellX, y: @cellY, width: @config.cellWidth, height: @config.cellHeight, color: @config.cellBorderColor, fill: (if @isSelected @config.selectedCellFill @config.cellFill) },
+                      { type: "text", id: (str/concat "sym" @k), x: (+ @cellX (/ @config.cellWidth 2)), y: (+ @cellY (/ @config.cellHeight 2) 7), text: (object/get @cellEntry symbol), fontSize: @config.symbolFontSize, align: "center", color: @config.symbolColor }
+                    ]
+                    [
+                      { type: "rect", id: (str/concat "cell" @k), x: @cellX, y: @cellY, width: @config.cellWidth, height: @config.cellHeight, color: @config.cellBorderColor, fill: @config.emptyCellFill }
+                    ])
+                )))))
+            (gridShapes (array/concat (array/concat @headerShapes @rowLabelShapes) @cellShapes))
+            (selectionText (if @hasSymbol
+                (str/concat "Selected: /" (object/get @found symbol) "/ — " (object/get @found place) " " (object/get @found manner) ", as in \"" (object/get @found example) "\".")
+                "That place × manner pairing has no consonant in this symbol set."))
+            (quizItem (array/nth @config.symbolSet (math/mod @entity.quizIndex (array/len @config.symbolSet))))
+            (quizQuestion (str/concat "Quiz: which manner of articulation is /" (object/get @quizItem symbol) "/ (as in \"" (object/get @quizItem example) "\")?"))
+            (scoreLabel (str/concat "Score: " @entity.quizScore "/" @entity.quizTotal))
+          )
+          (do
+            (set @entity.selectedPlace (if @hasSymbol ?place @entity.selectedPlace))
+            (set @entity.selectedManner (if @hasSymbol ?manner @entity.selectedManner))
+            (set @entity.selectedSymbol (if @hasSymbol (object/get @found symbol) @entity.selectedSymbol))
+            (set @entity.selectedExample (if @hasSymbol (object/get @found example) @entity.selectedExample))
+            (set @entity.shapes @gridShapes)
+            (set @entity.renderChildren (array/concat [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: "Pick a consonant below to light up its place × manner cell on the IPA chart." },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: false },
+                { type: typography, variant: body, content: @selectionText },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.symbolSet (fn s { type: button, action: SELECT_CELL, actionPayload: { place: (object/get @s place), manner: (object/get @s manner) }, label: (str/concat "/" (object/get @s symbol) "/ " (object/get @s example)), variant: secondary, size: sm })) }
+              ] (if @config.quizMode [
+                { type: typography, variant: caption, content: @quizQuestion },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.manners (fn m { type: button, action: ANSWER_QUIZ, actionPayload: { answer: @m }, label: @m, variant: primary, size: sm })) },
+                { type: typography, variant: body, content: (str/concat @entity.quizFeedback " " @scoreLabel) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: NEXT_QUIZ, label: "Next Quiz Item", variant: ghost }
+                  ] }
+              ] [])))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: @entity.renderChildren }
+          ]
+        })
+        (emit IPA_UPDATED { selectedPlace: @entity.selectedPlace, selectedManner: @entity.selectedManner, selectedSymbol: @entity.selectedSymbol, quizScore: @entity.quizScore, quizTotal: @entity.quizTotal, quizFeedback: @entity.quizFeedback })
+
+      ANSWER_QUIZ -> idle when (== @entity.active true)
+        (let (
+            (quizItem (array/nth @config.symbolSet (math/mod @entity.quizIndex (array/len @config.symbolSet))))
+            (correct (== ?answer (object/get @quizItem manner)))
+            (already @entity.quizAnswered)
+            (newScore (if (and @correct (not @already)) (+ @entity.quizScore 1) @entity.quizScore))
+            (newTotal (if @already @entity.quizTotal (+ @entity.quizTotal 1)))
+            (feedback (if @already
+                "Already answered — press Next Quiz Item to continue."
+                (if @correct
+                  (str/concat "Correct — /" (object/get @quizItem symbol) "/ is a " (object/get @quizItem place) " " (object/get @quizItem manner) ".")
+                  (str/concat "Not quite — /" (object/get @quizItem symbol) "/ is a " (object/get @quizItem place) " " (object/get @quizItem manner) "."))))
+            (quizQuestion (str/concat "Quiz: which manner of articulation is /" (object/get @quizItem symbol) "/ (as in \"" (object/get @quizItem example) "\")?"))
+            (scoreLabel (str/concat "Score: " @newScore "/" @newTotal))
+            (selectionText (if (== @entity.selectedSymbol "")
+                "No cell selected yet."
+                (str/concat "Selected: /" @entity.selectedSymbol "/ — " @entity.selectedPlace " " @entity.selectedManner ", as in \"" @entity.selectedExample "\".")))
+          )
+          (do
+            (set @entity.quizScore @newScore)
+            (set @entity.quizTotal @newTotal)
+            (set @entity.quizAnswered true)
+            (set @entity.quizFeedback @feedback)
+            (set @entity.renderChildren (array/concat [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: "Pick a consonant below to light up its place × manner cell on the IPA chart." },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: false },
+                { type: typography, variant: body, content: @selectionText },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.symbolSet (fn s { type: button, action: SELECT_CELL, actionPayload: { place: (object/get @s place), manner: (object/get @s manner) }, label: (str/concat "/" (object/get @s symbol) "/ " (object/get @s example)), variant: secondary, size: sm })) }
+              ] (if @config.quizMode [
+                { type: typography, variant: caption, content: @quizQuestion },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.manners (fn m { type: button, action: ANSWER_QUIZ, actionPayload: { answer: @m }, label: @m, variant: primary, size: sm })) },
+                { type: typography, variant: body, content: (str/concat @entity.quizFeedback " " @scoreLabel) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: NEXT_QUIZ, label: "Next Quiz Item", variant: ghost }
+                  ] }
+              ] [])))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: @entity.renderChildren }
+          ]
+        })
+        (emit IPA_UPDATED { selectedPlace: @entity.selectedPlace, selectedManner: @entity.selectedManner, selectedSymbol: @entity.selectedSymbol, quizScore: @entity.quizScore, quizTotal: @entity.quizTotal, quizFeedback: @entity.quizFeedback })
+
+      NEXT_QUIZ -> idle when (== @entity.active true)
+        (let (
+            (nextIndex (math/mod (+ @entity.quizIndex 1) (array/len @config.symbolSet)))
+            (quizItem (array/nth @config.symbolSet @nextIndex))
+            (quizQuestion (str/concat "Quiz: which manner of articulation is /" (object/get @quizItem symbol) "/ (as in \"" (object/get @quizItem example) "\")?"))
+            (scoreLabel (str/concat "Score: " @entity.quizScore "/" @entity.quizTotal))
+            (selectionText (if (== @entity.selectedSymbol "")
+                "No cell selected yet."
+                (str/concat "Selected: /" @entity.selectedSymbol "/ — " @entity.selectedPlace " " @entity.selectedManner ", as in \"" @entity.selectedExample "\".")))
+          )
+          (do
+            (set @entity.quizIndex @nextIndex)
+            (set @entity.quizAnswered false)
+            (set @entity.quizFeedback "")
+            (set @entity.renderChildren (array/concat [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: "Pick a consonant below to light up its place × manner cell on the IPA chart." },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: false },
+                { type: typography, variant: body, content: @selectionText },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.symbolSet (fn s { type: button, action: SELECT_CELL, actionPayload: { place: (object/get @s place), manner: (object/get @s manner) }, label: (str/concat "/" (object/get @s symbol) "/ " (object/get @s example)), variant: secondary, size: sm })) }
+              ] (if @config.quizMode [
+                { type: typography, variant: caption, content: @quizQuestion },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.manners (fn m { type: button, action: ANSWER_QUIZ, actionPayload: { answer: @m }, label: @m, variant: primary, size: sm })) },
+                { type: typography, variant: body, content: (str/concat @entity.quizFeedback " " @scoreLabel) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: NEXT_QUIZ, label: "Next Quiz Item", variant: ghost }
+                  ] }
+              ] [])))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: @entity.renderChildren }
+          ]
+        })
+        (emit IPA_UPDATED { selectedPlace: @entity.selectedPlace, selectedManner: @entity.selectedManner, selectedSymbol: @entity.selectedSymbol, quizScore: @entity.quizScore, quizTotal: @entity.quizTotal, quizFeedback: @entity.quizFeedback })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      SELECT_CELL {
+        place : string
+        manner : string
+      }
+        @description "Learner picked a consonant button; the matching place × manner cell lights up and its symbol and example word are shown."
+        @tier "domain"
+      ANSWER_QUIZ {
+        answer : string
+      }
+        @description "Learner answered the quiz prompt by choosing a manner of articulation for the shown symbol; scored when not already answered."
+        @tier "domain"
+      NEXT_QUIZ {
+      }
+        @description "Learner advanced the quiz to the next symbol, clearing the answered flag and feedback."
+        @tier "domain"
+    }
+
+    emits {
+      IPA_UPDATED -> external {
+        selectedPlace : string
+        selectedManner : string
+        selectedSymbol : string
+        quizScore : number
+        quizTotal : number
+        quizFeedback : string
+      }
+        @description "The IPA explorer state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "IPA chart update, consonant selected, quiz answer, manner of articulation quiz"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "IPA Chart Explorer"
+        @label "Title"
+        @description "Title shown above the canvas."
+        @tier "presentation"
+      placesOfArticulation : [string] = ["bilabial", "labiodental", "alveolar", "velar", "glottal"]
+        @label "Places of Articulation"
+        @description "Row labels of the consonant chart — where in the vocal tract the constriction is made."
+        @synonyms "place of articulation, articulator, point of articulation"
+        @tier "domain"
+      manners : [string] = ["plosive", "nasal", "fricative", "approximant"]
+        @label "Manners of Articulation"
+        @description "Column labels of the consonant chart — how the airstream is obstructed; also the quiz answer options."
+        @synonyms "manner of articulation, obstruction type, plosive, fricative, nasal, approximant"
+        @tier "domain"
+      symbolSet : [LingIpaSymbol] = [
+        { place: "bilabial", manner: "plosive", symbol: "p", example: "pat" },
+        { place: "bilabial", manner: "plosive", symbol: "b", example: "bat" },
+        { place: "bilabial", manner: "nasal", symbol: "m", example: "mat" },
+        { place: "labiodental", manner: "fricative", symbol: "f", example: "fat" },
+        { place: "labiodental", manner: "fricative", symbol: "v", example: "vat" },
+        { place: "alveolar", manner: "plosive", symbol: "t", example: "top" },
+        { place: "alveolar", manner: "plosive", symbol: "d", example: "dog" },
+        { place: "alveolar", manner: "nasal", symbol: "n", example: "nap" },
+        { place: "alveolar", manner: "fricative", symbol: "s", example: "sip" },
+        { place: "alveolar", manner: "fricative", symbol: "z", example: "zip" },
+        { place: "alveolar", manner: "approximant", symbol: "ɹ", example: "red" },
+        { place: "velar", manner: "plosive", symbol: "k", example: "cat" },
+        { place: "velar", manner: "plosive", symbol: "g", example: "go" },
+        { place: "velar", manner: "nasal", symbol: "ŋ", example: "sing" },
+        { place: "glottal", manner: "plosive", symbol: "ʔ", example: "uh-oh" },
+        { place: "glottal", manner: "fricative", symbol: "h", example: "hat" }
+      ]
+        @label "Symbol Set"
+        @description "The consonants placed on the chart. Each entry pins one IPA symbol to its place × manner cell and carries an example word; empty cells are drawn faint to show real gaps in the inventory."
+        @synonyms "IPA symbols, consonant inventory, phoneme chart, International Phonetic Alphabet"
+        @tier "domain"
+      quizMode : boolean = true
+        @label "Quiz Mode"
+        @description "When true, a scored quiz row appears under the chart — the learner names the manner of articulation of each shown symbol."
+        @tier "domain"
+      width : number = 560
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 320
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      interactive : boolean = false
+        @label "Interactive"
+        @description "Enable pointer interaction on the canvas."
+        @tier "presentation"
+      gridLeft : number = 20
+        @label "Grid Left (px)"
+        @tier "presentation"
+      gridTop : number = 24
+        @label "Grid Top (px)"
+        @tier "presentation"
+      labelWidth : number = 110
+        @label "Row Label Width (px)"
+        @tier "presentation"
+      headerHeight : number = 30
+        @label "Column Header Height (px)"
+        @tier "presentation"
+      cellWidth : number = 96
+        @label "Cell Width (px)"
+        @tier "presentation"
+      cellHeight : number = 44
+        @label "Cell Height (px)"
+        @tier "presentation"
+      headerFontSize : number = 13
+        @label "Header Font Size"
+        @tier "presentation"
+      symbolFontSize : number = 20
+        @label "Symbol Font Size"
+        @tier "presentation"
+      headerColor : string = "#475569"
+        @label "Header Text Color"
+        @tier "presentation"
+      cellBorderColor : string = "#94a3b8"
+        @label "Cell Border Color"
+        @tier "presentation"
+      cellFill : string = "#ffffff"
+        @label "Cell Fill Color"
+        @tier "presentation"
+      emptyCellFill : string = "#f1f5f9"
+        @label "Empty Cell Fill Color"
+        @tier "presentation"
+      selectedCellFill : string = "#fde68a"
+        @label "Selected Cell Fill Color"
+        @tier "presentation"
+      symbolColor : string = "#0f172a"
+        @label "Symbol Text Color"
+        @tier "presentation"
+    }
+  }
+
+  page "/ling-ipa" as LingIpaPage -> LingIpaSim
+}

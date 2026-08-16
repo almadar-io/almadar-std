@@ -1,0 +1,317 @@
+[
+  {
+    "organism": "std-prob-regression",
+    "orbital": "ProbRegressionOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-prob-regression.ts",
+    "entities": [
+      {
+        "name": "ProbRegressionScene",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "points",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "slope",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "intercept",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "r",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "rSquared",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "guessSlope",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "guessIntercept",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "guessScore",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "revealed",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "curves",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "shapes",
+            "type": "array",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "ProbRegressionSim",
+        "emittedEvents": [
+          "REGRESSION_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "REGRESSION_UPDATED",
+            "direction": "emit",
+            "description": "The least-squares fit after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "regression update, least squares, line of best fit, correlation",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "ADD_POINT",
+            "direction": "listen"
+          },
+          {
+            "name": "DRAG_POINT",
+            "direction": "listen",
+            "description": "A scatter point was dragged — id names the point, x/y its new coordinates; the fit recomputes live.",
+            "tier": "domain"
+          },
+          {
+            "name": "GUESS_LINE",
+            "direction": "listen",
+            "description": "Learner dragged a guess-the-line slider — param is slope or intercept; the guess is scored against the least-squares fit.",
+            "tier": "domain"
+          },
+          {
+            "name": "REVEAL_FIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "guessMode",
+            "type": "boolean",
+            "default": true,
+            "label": "Guess Mode",
+            "description": "When true the learner's guessed line is shown instead of the fit until Reveal Fit, and the guess is scored against least squares.",
+            "synonyms": "guess the line, prediction, estimate the fit",
+            "tier": "domain"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 400,
+            "label": "Height",
+            "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "initialPoints",
+            "type": "[ProbRegressionPoint]",
+            "default": [
+              {
+                "color": "#334155",
+                "id": "p0",
+                "label": "",
+                "radius": 5,
+                "x": 15,
+                "y": 25
+              },
+              {
+                "color": "#334155",
+                "id": "p1",
+                "label": "",
+                "radius": 5,
+                "x": 32,
+                "y": 40
+              },
+              {
+                "color": "#334155",
+                "id": "p2",
+                "label": "",
+                "radius": 5,
+                "x": 48,
+                "y": 44
+              },
+              {
+                "color": "#334155",
+                "id": "p3",
+                "label": "",
+                "radius": 5,
+                "x": 63,
+                "y": 62
+              },
+              {
+                "color": "#334155",
+                "id": "p4",
+                "label": "",
+                "radius": 5,
+                "x": 80,
+                "y": 70
+              }
+            ],
+            "label": "Initial Points",
+            "description": "Scatter points the canvas starts with, in 0–100 data coordinates.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "showR",
+            "type": "boolean",
+            "default": true,
+            "label": "Show r and R²",
+            "description": "Show the correlation coefficient r and coefficient of determination R² under the canvas.",
+            "synonyms": "correlation coefficient, r squared, goodness of fit",
+            "tier": "domain"
+          },
+          {
+            "key": "showResiduals",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Residuals",
+            "description": "Draw vertical segments from each point to the regression line — the errors least squares minimizes.",
+            "synonyms": "residuals, errors, deviations",
+            "tier": "domain"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Least Squares",
+            "label": "Title",
+            "description": "Title shown above the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "description": "Canvas width in pixels.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "ProbRegressionScene",
+        "transitionEvents": [
+          "ADD_POINT",
+          "DRAG_POINT",
+          "GUESS_LINE",
+          "INIT",
+          "MODE_SELECTED",
+          "REVEAL_FIT"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "curves",
+            "guessIntercept",
+            "guessScore",
+            "guessSlope",
+            "intercept",
+            "points",
+            "r",
+            "rSquared",
+            "revealed",
+            "shapes",
+            "slope",
+            "title"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "ProbRegressionPage",
+        "defaultPath": "/prob-regression",
+        "primaryEntity": "ProbRegressionScene"
+      }
+    ],
+    "emittedEvents": [
+      "REGRESSION_UPDATED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

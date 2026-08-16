@@ -45,7 +45,7 @@ export interface StdUiTanksBoardConfig {
   units?: unknown;
 }
 
-type _StdUiTanksBoardEntityName = 'GameState';
+type _StdUiTanksBoardEntityName = 'GameState' | 'ScoreState';
 type _StdUiTanksBoardListenTraitName = 'Authority' | 'FxDecay' | 'RoundLogic' | 'ScoreKeeper' | 'AnimClock' | 'Player';
 
 /**

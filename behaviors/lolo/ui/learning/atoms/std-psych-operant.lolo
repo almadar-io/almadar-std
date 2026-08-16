@@ -1,0 +1,432 @@
+app std-psych-operant "1.0.0"
+"Operant-conditioning engine — FR/VR/FI/VI reinforcement schedules drive a cumulative-response curve: ratio schedules make a reinforcer available after a fixed (or alternating variable) number of responses, interval schedules after a fixed (or alternating variable) amount of time, and each delivered reinforcer inserts a post-reinforcement pause that draws the characteristic scallop on a math-canvas. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital PsychOperantOrbital {
+  type PsychOperantSample = {
+    x : number!
+    y : number!
+  }
+  type PsychOperantCurve = {
+    label : string
+    color : string
+    samples : [PsychOperantSample]!
+  }
+  type PsychOperantPoint = {
+    x : number!
+    y : number!
+    label : string
+    color : string
+    radius : number
+  }
+
+  entity PsychOperantScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    schedule : string
+    responseCount : number
+    reinforcerCount : number
+    responsesSinceReinforcer : number
+    timeSinceReinforcer : number
+    totalTime : number
+    nextTarget : number
+    pendingReinforcer : boolean
+    cumulative : [PsychOperantSample]
+    curves : [PsychOperantCurve]
+    points : [PsychOperantPoint]
+  }
+
+  trait PsychOperantSim -> @rebindable PsychOperantScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (let (
+            (seedCumulative [ { x: 0, y: 0 } ])
+            (seedCurves [ { label: "Cumulative Responses", color: @config.curveColor, samples: @seedCumulative } ])
+          )
+          (do
+            (set @entity.schedule @config.scheduleType)
+            (set @entity.responseCount 0)
+            (set @entity.reinforcerCount 0)
+            (set @entity.responsesSinceReinforcer 0)
+            (set @entity.timeSinceReinforcer 0)
+            (set @entity.totalTime 0)
+            (set @entity.nextTarget (if (== @config.scheduleType "vi") @config.intervalLength @config.ratioN))
+            (set @entity.pendingReinforcer false)
+            (set @entity.cumulative @seedCumulative)
+            (set @entity.curves @seedCurves)
+            (set @entity.points [])
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: EMIT_RESPONSE, label: "Emit Response", variant: primary },
+                    { type: button, action: DELIVER_REINFORCER, label: "Deliver Reinforcer", variant: (if @entity.pendingReinforcer "danger" "secondary") },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: stack, direction: horizontal, gap: xs, children: [
+                    { type: button, action: SET_SCHEDULE, actionPayload: { schedule: "fr" }, label: "FR", variant: (if (== @entity.schedule "fr") "primary" "ghost"), size: sm },
+                    { type: button, action: SET_SCHEDULE, actionPayload: { schedule: "vr" }, label: "VR", variant: (if (== @entity.schedule "vr") "primary" "ghost"), size: sm },
+                    { type: button, action: SET_SCHEDULE, actionPayload: { schedule: "fi" }, label: "FI", variant: (if (== @entity.schedule "fi") "primary" "ghost"), size: sm },
+                    { type: button, action: SET_SCHEDULE, actionPayload: { schedule: "vi" }, label: "VI", variant: (if (== @entity.schedule "vi") "primary" "ghost"), size: sm }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.timeCap, yMin: 0, yMax: @config.responseCap, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: badge, label: (if @entity.pendingReinforcer "Reinforcer Available" "Working"), variant: (if @entity.pendingReinforcer "success" "neutral") },
+                    { type: typography, variant: caption, content: (str/concat "Schedule: " @entity.schedule " — responses: " @entity.responseCount " — reinforcers: " @entity.reinforcerCount) }
+                  ] }
+              ] }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (let (
+            (seedCumulative [ { x: 0, y: 0 } ])
+            (seedCurves [ { label: "Cumulative Responses", color: @config.curveColor, samples: @seedCumulative } ])
+          )
+          (do
+            (set @entity.schedule @config.scheduleType)
+            (set @entity.responseCount 0)
+            (set @entity.reinforcerCount 0)
+            (set @entity.responsesSinceReinforcer 0)
+            (set @entity.timeSinceReinforcer 0)
+            (set @entity.totalTime 0)
+            (set @entity.nextTarget (if (== @config.scheduleType "vi") @config.intervalLength @config.ratioN))
+            (set @entity.pendingReinforcer false)
+            (set @entity.cumulative @seedCumulative)
+            (set @entity.curves @seedCurves)
+            (set @entity.points [])
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: EMIT_RESPONSE, label: "Emit Response", variant: primary },
+                    { type: button, action: DELIVER_REINFORCER, label: "Deliver Reinforcer", variant: (if @entity.pendingReinforcer "danger" "secondary") },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: stack, direction: horizontal, gap: xs, children: [
+                    { type: button, action: SET_SCHEDULE, actionPayload: { schedule: "fr" }, label: "FR", variant: (if (== @entity.schedule "fr") "primary" "ghost"), size: sm },
+                    { type: button, action: SET_SCHEDULE, actionPayload: { schedule: "vr" }, label: "VR", variant: (if (== @entity.schedule "vr") "primary" "ghost"), size: sm },
+                    { type: button, action: SET_SCHEDULE, actionPayload: { schedule: "fi" }, label: "FI", variant: (if (== @entity.schedule "fi") "primary" "ghost"), size: sm },
+                    { type: button, action: SET_SCHEDULE, actionPayload: { schedule: "vi" }, label: "VI", variant: (if (== @entity.schedule "vi") "primary" "ghost"), size: sm }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.timeCap, yMin: 0, yMax: @config.responseCap, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: badge, label: (if @entity.pendingReinforcer "Reinforcer Available" "Working"), variant: (if @entity.pendingReinforcer "success" "neutral") },
+                    { type: typography, variant: caption, content: (str/concat "Schedule: " @entity.schedule " — responses: " @entity.responseCount " — reinforcers: " @entity.reinforcerCount) }
+                  ] }
+              ] }
+          ]
+        })
+
+      EMIT_RESPONSE -> idle when (== @entity.active true)
+        (let (
+            (newResponses (+ @entity.responseCount @config.responseRate))
+            (newSince (+ @entity.responsesSinceReinforcer @config.responseRate))
+            (newTime (+ @entity.totalTime 1))
+            (newTimeSince (+ @entity.timeSinceReinforcer 1))
+            (earned (if (== @entity.schedule "fr")
+                (>= @newSince @config.ratioN)
+                (if (== @entity.schedule "vr")
+                  (>= @newSince @entity.nextTarget)
+                  (if (== @entity.schedule "fi")
+                    (>= @newTimeSince @config.intervalLength)
+                    (>= @newTimeSince @entity.nextTarget)))))
+            (newPending (if @entity.pendingReinforcer true @earned))
+            (newCumulative (array/append @entity.cumulative { x: @newTime, y: @newResponses }))
+            (newCurves [ { label: "Cumulative Responses", color: @config.curveColor, samples: @newCumulative } ])
+            (newPoints (if @newPending [ { x: @newTime, y: @newResponses, label: "Reinforcer Available", color: @config.reinforcerColor, radius: 6 } ] []))
+          )
+          (do
+            (set @entity.responseCount @newResponses)
+            (set @entity.responsesSinceReinforcer @newSince)
+            (set @entity.totalTime @newTime)
+            (set @entity.timeSinceReinforcer @newTimeSince)
+            (set @entity.pendingReinforcer @newPending)
+            (set @entity.cumulative @newCumulative)
+            (set @entity.curves @newCurves)
+            (set @entity.points @newPoints)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: EMIT_RESPONSE, label: "Emit Response", variant: primary },
+                    { type: button, action: DELIVER_REINFORCER, label: "Deliver Reinforcer", variant: (if @entity.pendingReinforcer "danger" "secondary") },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: stack, direction: horizontal, gap: xs, children: [
+                    { type: button, action: SET_SCHEDULE, actionPayload: { schedule: "fr" }, label: "FR", variant: (if (== @entity.schedule "fr") "primary" "ghost"), size: sm },
+                    { type: button, action: SET_SCHEDULE, actionPayload: { schedule: "vr" }, label: "VR", variant: (if (== @entity.schedule "vr") "primary" "ghost"), size: sm },
+                    { type: button, action: SET_SCHEDULE, actionPayload: { schedule: "fi" }, label: "FI", variant: (if (== @entity.schedule "fi") "primary" "ghost"), size: sm },
+                    { type: button, action: SET_SCHEDULE, actionPayload: { schedule: "vi" }, label: "VI", variant: (if (== @entity.schedule "vi") "primary" "ghost"), size: sm }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.timeCap, yMin: 0, yMax: @config.responseCap, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: badge, label: (if @entity.pendingReinforcer "Reinforcer Available" "Working"), variant: (if @entity.pendingReinforcer "success" "neutral") },
+                    { type: typography, variant: caption, content: (str/concat "Schedule: " @entity.schedule " — responses: " @entity.responseCount " — reinforcers: " @entity.reinforcerCount) }
+                  ] }
+              ] }
+          ]
+        })
+        (emit OPERANT_UPDATED { responseCount: @entity.responseCount, reinforcerCount: @entity.reinforcerCount, schedule: @entity.schedule, pendingReinforcer: @entity.pendingReinforcer })
+
+      DELIVER_REINFORCER -> idle when (== @entity.active true)
+        (let (
+            (deliver @entity.pendingReinforcer)
+            (newReinforcers (if @deliver (+ @entity.reinforcerCount 1) @entity.reinforcerCount))
+            (newTime (if @deliver (+ @entity.totalTime 2) @entity.totalTime))
+            (newCumulative (if @deliver (array/append @entity.cumulative { x: @newTime, y: @entity.responseCount }) @entity.cumulative))
+            (halfRatio (math/floor (/ @config.ratioN 2)))
+            (halfInterval (math/floor (/ @config.intervalLength 2)))
+            (ratioTarget (if (== (math/mod @newReinforcers 2) 0) (+ @config.ratioN @halfRatio) (math/max 1 (- @config.ratioN @halfRatio))))
+            (intervalTarget (if (== (math/mod @newReinforcers 2) 0) (+ @config.intervalLength @halfInterval) (math/max 1 (- @config.intervalLength @halfInterval))))
+            (newTarget (if @deliver (if (== @entity.schedule "vr") @ratioTarget (if (== @entity.schedule "vi") @intervalTarget @entity.nextTarget)) @entity.nextTarget))
+            (newCurves [ { label: "Cumulative Responses", color: @config.curveColor, samples: @newCumulative } ])
+            (newPoints (if @deliver [ { x: @newTime, y: @entity.responseCount, label: "Reinforced", color: @config.reinforcerColor, radius: 6 } ] @entity.points))
+          )
+          (do
+            (set @entity.reinforcerCount @newReinforcers)
+            (set @entity.totalTime @newTime)
+            (set @entity.responsesSinceReinforcer (if @deliver 0 @entity.responsesSinceReinforcer))
+            (set @entity.timeSinceReinforcer (if @deliver 0 @entity.timeSinceReinforcer))
+            (set @entity.pendingReinforcer false)
+            (set @entity.nextTarget @newTarget)
+            (set @entity.cumulative @newCumulative)
+            (set @entity.curves @newCurves)
+            (set @entity.points @newPoints)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: EMIT_RESPONSE, label: "Emit Response", variant: primary },
+                    { type: button, action: DELIVER_REINFORCER, label: "Deliver Reinforcer", variant: (if @entity.pendingReinforcer "danger" "secondary") },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: stack, direction: horizontal, gap: xs, children: [
+                    { type: button, action: SET_SCHEDULE, actionPayload: { schedule: "fr" }, label: "FR", variant: (if (== @entity.schedule "fr") "primary" "ghost"), size: sm },
+                    { type: button, action: SET_SCHEDULE, actionPayload: { schedule: "vr" }, label: "VR", variant: (if (== @entity.schedule "vr") "primary" "ghost"), size: sm },
+                    { type: button, action: SET_SCHEDULE, actionPayload: { schedule: "fi" }, label: "FI", variant: (if (== @entity.schedule "fi") "primary" "ghost"), size: sm },
+                    { type: button, action: SET_SCHEDULE, actionPayload: { schedule: "vi" }, label: "VI", variant: (if (== @entity.schedule "vi") "primary" "ghost"), size: sm }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.timeCap, yMin: 0, yMax: @config.responseCap, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: badge, label: (if @entity.pendingReinforcer "Reinforcer Available" "Working"), variant: (if @entity.pendingReinforcer "success" "neutral") },
+                    { type: typography, variant: caption, content: (str/concat "Schedule: " @entity.schedule " — responses: " @entity.responseCount " — reinforcers: " @entity.reinforcerCount) }
+                  ] }
+              ] }
+          ]
+        })
+        (emit OPERANT_UPDATED { responseCount: @entity.responseCount, reinforcerCount: @entity.reinforcerCount, schedule: @entity.schedule, pendingReinforcer: @entity.pendingReinforcer })
+
+      SET_SCHEDULE -> idle when (== @entity.active true)
+        (set @entity.schedule ?schedule)
+        (set @entity.pendingReinforcer false)
+        (set @entity.responsesSinceReinforcer 0)
+        (set @entity.timeSinceReinforcer 0)
+        (set @entity.nextTarget (if (== ?schedule "vi") @config.intervalLength @config.ratioN))
+        (set @entity.points [])
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: EMIT_RESPONSE, label: "Emit Response", variant: primary },
+                    { type: button, action: DELIVER_REINFORCER, label: "Deliver Reinforcer", variant: (if @entity.pendingReinforcer "danger" "secondary") },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: stack, direction: horizontal, gap: xs, children: [
+                    { type: button, action: SET_SCHEDULE, actionPayload: { schedule: "fr" }, label: "FR", variant: (if (== @entity.schedule "fr") "primary" "ghost"), size: sm },
+                    { type: button, action: SET_SCHEDULE, actionPayload: { schedule: "vr" }, label: "VR", variant: (if (== @entity.schedule "vr") "primary" "ghost"), size: sm },
+                    { type: button, action: SET_SCHEDULE, actionPayload: { schedule: "fi" }, label: "FI", variant: (if (== @entity.schedule "fi") "primary" "ghost"), size: sm },
+                    { type: button, action: SET_SCHEDULE, actionPayload: { schedule: "vi" }, label: "VI", variant: (if (== @entity.schedule "vi") "primary" "ghost"), size: sm }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.timeCap, yMin: 0, yMax: @config.responseCap, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: badge, label: (if @entity.pendingReinforcer "Reinforcer Available" "Working"), variant: (if @entity.pendingReinforcer "success" "neutral") },
+                    { type: typography, variant: caption, content: (str/concat "Schedule: " @entity.schedule " — responses: " @entity.responseCount " — reinforcers: " @entity.reinforcerCount) }
+                  ] }
+              ] }
+          ]
+        })
+        (emit OPERANT_UPDATED { responseCount: @entity.responseCount, reinforcerCount: @entity.reinforcerCount, schedule: @entity.schedule, pendingReinforcer: @entity.pendingReinforcer })
+
+      RESET -> idle when (== @entity.active true)
+        (let (
+            (seedCumulative [ { x: 0, y: 0 } ])
+            (seedCurves [ { label: "Cumulative Responses", color: @config.curveColor, samples: @seedCumulative } ])
+          )
+          (do
+            (set @entity.schedule @config.scheduleType)
+            (set @entity.responseCount 0)
+            (set @entity.reinforcerCount 0)
+            (set @entity.responsesSinceReinforcer 0)
+            (set @entity.timeSinceReinforcer 0)
+            (set @entity.totalTime 0)
+            (set @entity.nextTarget (if (== @config.scheduleType "vi") @config.intervalLength @config.ratioN))
+            (set @entity.pendingReinforcer false)
+            (set @entity.cumulative @seedCumulative)
+            (set @entity.curves @seedCurves)
+            (set @entity.points [])
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: EMIT_RESPONSE, label: "Emit Response", variant: primary },
+                    { type: button, action: DELIVER_REINFORCER, label: "Deliver Reinforcer", variant: (if @entity.pendingReinforcer "danger" "secondary") },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: stack, direction: horizontal, gap: xs, children: [
+                    { type: button, action: SET_SCHEDULE, actionPayload: { schedule: "fr" }, label: "FR", variant: (if (== @entity.schedule "fr") "primary" "ghost"), size: sm },
+                    { type: button, action: SET_SCHEDULE, actionPayload: { schedule: "vr" }, label: "VR", variant: (if (== @entity.schedule "vr") "primary" "ghost"), size: sm },
+                    { type: button, action: SET_SCHEDULE, actionPayload: { schedule: "fi" }, label: "FI", variant: (if (== @entity.schedule "fi") "primary" "ghost"), size: sm },
+                    { type: button, action: SET_SCHEDULE, actionPayload: { schedule: "vi" }, label: "VI", variant: (if (== @entity.schedule "vi") "primary" "ghost"), size: sm }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.timeCap, yMin: 0, yMax: @config.responseCap, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: badge, label: (if @entity.pendingReinforcer "Reinforcer Available" "Working"), variant: (if @entity.pendingReinforcer "success" "neutral") },
+                    { type: typography, variant: caption, content: (str/concat "Schedule: " @entity.schedule " — responses: " @entity.responseCount " — reinforcers: " @entity.reinforcerCount) }
+                  ] }
+              ] }
+          ]
+        })
+        (emit OPERANT_UPDATED { responseCount: @entity.responseCount, reinforcerCount: @entity.reinforcerCount, schedule: @entity.schedule, pendingReinforcer: @entity.pendingReinforcer })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      EMIT_RESPONSE {
+      }
+        @description "Learner emitted a burst of responses (a lever-press batch); ratio schedules count the responses, interval schedules count the elapsed time, and either may make a reinforcer available."
+        @tier "domain"
+      DELIVER_REINFORCER {
+      }
+        @description "Learner collected the available reinforcer — a post-reinforcement pause flattens the cumulative record (the scallop) and variable schedules pick their next target."
+        @tier "domain"
+      SET_SCHEDULE {
+        schedule : string
+      }
+        @description "Learner switched the reinforcement schedule (fr, vr, fi, vi); progress toward the next reinforcer restarts."
+        @tier "domain"
+      RESET {
+      }
+        @description "Learner reset the cumulative record — responses, reinforcers, and elapsed time return to their starting values."
+        @tier "domain"
+    }
+
+    emits {
+      OPERANT_UPDATED -> external {
+        responseCount : number
+        reinforcerCount : number
+        schedule : string
+        pendingReinforcer : boolean
+      }
+        @description "The operant state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "operant conditioning, reinforcement schedule, cumulative record, Skinner, scallop, instrumental conditioning"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Operant Conditioning"
+        @label "Title"
+        @description "Title shown above the canvas."
+        @tier "presentation"
+      width : number = 640
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 440
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      gridStep : number = 10
+        @label "Grid Step"
+        @description "Spacing between gridlines on the canvas."
+        @tier "presentation"
+      interactive : boolean = false
+        @label "Interactive"
+        @description "Enable pointer interaction on the canvas."
+        @tier "presentation"
+      animate : boolean = false
+        @label "Animate"
+        @description "Enable continuous redraw loop."
+        @tier "presentation"
+      scheduleType : "fr" | "vr" | "fi" | "vi" = fr
+        @label "Schedule Type"
+        @description "Reinforcement schedule: fixed ratio (every ratioN responses), variable ratio (targets alternating around ratioN), fixed interval (every intervalLength time units), variable interval (targets alternating around intervalLength)."
+        @synonyms "fixed ratio, variable ratio, fixed interval, variable interval, reinforcement schedule, Skinner box, operant schedule"
+        @tier "domain"
+      ratioN : number = 5
+        @label "Ratio N"
+        @description "Responses required per reinforcer on ratio schedules; VR alternates between ratioN ± half."
+        @synonyms "ratio requirement, fixed ratio size, response requirement"
+        @tier "domain"
+      intervalLength : number = 4
+        @label "Interval Length"
+        @description "Time units required per reinforcer on interval schedules; VI alternates between intervalLength ± half."
+        @synonyms "interval requirement, fixed interval length, inter-reinforcement interval"
+        @tier "domain"
+      responseRate : number = 5
+        @label "Response Rate"
+        @description "Responses emitted per EMIT_RESPONSE click — one lever-press batch."
+        @synonyms "response burst, lever press rate, response batch"
+        @tier "domain"
+      timeCap : number = 60
+        @label "Time Cap"
+        @description "X-axis maximum of the cumulative record, in time units."
+        @tier "domain"
+      responseCap : number = 300
+        @label "Response Cap"
+        @description "Y-axis maximum of the cumulative record, in cumulative responses."
+        @tier "domain"
+      curveColor : string = "#2563eb"
+        @label "Curve Color"
+        @description "Color of the cumulative-response curve."
+        @tier "presentation"
+      reinforcerColor : string = "#16a34a"
+        @label "Reinforcer Color"
+        @description "Color of the reinforcement markers on the cumulative record."
+        @tier "presentation"
+    }
+  }
+
+  page "/psych-operant" as PsychOperantPage -> PsychOperantSim
+}

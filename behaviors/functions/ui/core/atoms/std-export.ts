@@ -147,7 +147,7 @@ export function stdExport(params: StdExportParams): OrbitalDefinition {
   });
 }
 
-type _StdExportEntityName = 'ExportPanel';
+type _StdExportEntityName = 'ExportPanel' | 'ButtonItem' | 'MenuItem';
 type _StdExportListenTraitName = 'Button1' | 'Menu1' | 'ExportMenu';
 
 /**

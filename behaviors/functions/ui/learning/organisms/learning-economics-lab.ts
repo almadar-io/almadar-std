@@ -50,7 +50,7 @@ export interface StdLearningEconomicsLabConfig {
   mode?: 'market' | 'allocation';
 }
 
-type _StdLearningEconomicsLabEntityName = 'EconomicsLabItem' | 'MarketScene' | 'PpfScene';
+type _StdLearningEconomicsLabEntityName = 'EconomicsLabItem' | 'MarketScene' | 'PpfScene' | 'EconMarketScene' | 'EconPpfScene';
 type _StdLearningEconomicsLabListenTraitName = 'EconomicsLabRouter' | 'MarketSim' | 'PpfSim';
 
 /**

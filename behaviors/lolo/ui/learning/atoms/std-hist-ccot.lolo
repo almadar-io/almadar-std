@@ -1,0 +1,528 @@
+app std-hist-ccot "1.0.0"
+"CCOT (continuity and change over time) instrument — the learner moves a time cursor along an indicator curve, tags each era as continuity or a turning point, and checks the verdict against the canonical reading on a math-canvas. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital HistCcotOrbital {
+  type HistCcotShapePoint = {
+    x : number!
+    y : number!
+  }
+  type HistCcotShape = {
+    type : "line" | "arrow" | "circle" | "rect" | "polygon" | "path" | "text" | "axis" | "grid"!
+    id : string
+    x : number
+    y : number
+    x1 : number
+    y1 : number
+    x2 : number
+    y2 : number
+    radius : number
+    width : number
+    height : number
+    points : [HistCcotShapePoint]
+    path : string
+    text : string
+    label : string
+    fontSize : number
+    align : "left" | "center" | "right"
+    axis : "x" | "y"
+    min : number
+    max : number
+    step : number
+    color : string
+    fill : string
+    lineWidth : number
+    opacity : number
+  }
+  type HistCcotCurvePoint = {
+    year : number!
+    value : number!
+  }
+  type HistCcotEra = {
+    id : string!
+    label : string!
+    startYear : number!
+    endYear : number!
+  }
+
+  entity HistCcotScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    cursorYear : number
+    turningTags : [string]
+    checked : boolean = false
+    score : number
+    verdict : string
+    shapes : [HistCcotShape]
+  }
+
+  trait HistCcotSim -> @rebindable HistCcotScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.cursorYear @config.minYear)
+        (set @entity.turningTags [])
+        (set @entity.checked false)
+        (set @entity.score 0)
+        (set @entity.verdict "")
+        (let (
+            (plotW (- @config.width (+ @config.axisMarginLeft @config.axisMarginRight)))
+            (plotH (- @config.height (+ @config.axisTop @config.axisBottom)))
+            (yearSpan (- @config.maxYear @config.minYear))
+            (eraShapes (array/flatten (array/map @config.eras (fn e (let (
+                (x1 (+ @config.axisMarginLeft (* (- @e.startYear @config.minYear) (/ @plotW @yearSpan))))
+                (x2 (+ @config.axisMarginLeft (* (- @e.endYear @config.minYear) (/ @plotW @yearSpan))))
+                (tagged (array/includes @entity.turningTags @e.id))
+                (canonical (array/includes @config.turningPoints @e.id))
+                (bandColor (if @entity.checked (if (== @tagged @canonical) "#15803d" "#b91c1c") "#b45309"))
+              )
+              [
+                { type: rect, id: (str/concat "era-" @e.id), x: @x1, y: @config.axisTop, width: (- @x2 @x1), height: @plotH, fill: @bandColor, color: @bandColor, opacity: 0.18, lineWidth: 0 },
+                { type: text, id: (str/concat "era-label-" @e.id), x: (/ (+ @x1 @x2) 2), y: (+ (+ @config.axisTop @plotH) 20), text: @e.label, fontSize: 11, align: "center", color: "#44403c" }
+              ]
+            )))))
+            (curveShapes (array/map (array/range (- (array/len @config.indicatorCurve) 1)) (fn i (let (
+                (p1 (array/nth @config.indicatorCurve @i))
+                (p2 (array/nth @config.indicatorCurve (+ @i 1)))
+              )
+              { type: line, id: (str/concat "curve-" @i), x1: (+ @config.axisMarginLeft (* (- @p1.year @config.minYear) (/ @plotW @yearSpan))), y1: (- (+ @config.axisTop @plotH) (* @p1.value (/ @plotH @config.curveMax))), x2: (+ @config.axisMarginLeft (* (- @p2.year @config.minYear) (/ @plotW @yearSpan))), y2: (- (+ @config.axisTop @plotH) (* @p2.value (/ @plotH @config.curveMax))), color: "#1d4ed8", lineWidth: 2.5, opacity: 1 }
+            ))))
+            (cursorX (+ @config.axisMarginLeft (* (- @entity.cursorYear @config.minYear) (/ @plotW @yearSpan))))
+            (allShapes (array/concat (array/concat @eraShapes @curveShapes) [
+              { type: line, id: "cursor", x1: @cursorX, y1: @config.axisTop, x2: @cursorX, y2: (+ @config.axisTop @plotH), color: "#dc2626", lineWidth: 2, opacity: 0.9 },
+              { type: text, id: "cursor-label", x: @cursorX, y: (- @config.axisTop 12), text: (str/concat "Year " @entity.cursorYear), fontSize: 12, align: "center", color: "#dc2626" }
+            ]))
+          )
+          (do
+            (set @entity.shapes @allShapes)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: "Move the cursor along the indicator curve and tag each era as continuity or a turning point, then check your reading." },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.eras (fn e { type: button, action: SET_CURSOR, actionPayload: { year: (/ (+ @e.startYear @e.endYear) 2) }, label: (str/concat "Cursor → " @e.label), variant: "secondary", size: sm })) },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.eras (fn e { type: button, action: TAG_ERA, actionPayload: { eraId: @e.id }, label: (if (array/includes @entity.turningTags @e.id) (str/concat @e.label " — turning point") (str/concat @e.label " — continuity")), variant: (if (array/includes @entity.turningTags @e.id) "primary" "ghost"), size: sm })) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: CHECK, label: "Check", variant: primary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: (if @entity.checked @entity.verdict "Tag eras, then press Check.") }
+              ] }
+          ]
+        })
+        (emit CCOT_UPDATED { cursorYear: @entity.cursorYear, turningTags: @entity.turningTags, checked: @entity.checked, score: @entity.score })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.cursorYear @config.minYear)
+        (set @entity.turningTags [])
+        (set @entity.checked false)
+        (set @entity.score 0)
+        (set @entity.verdict "")
+        (let (
+            (plotW (- @config.width (+ @config.axisMarginLeft @config.axisMarginRight)))
+            (plotH (- @config.height (+ @config.axisTop @config.axisBottom)))
+            (yearSpan (- @config.maxYear @config.minYear))
+            (eraShapes (array/flatten (array/map @config.eras (fn e (let (
+                (x1 (+ @config.axisMarginLeft (* (- @e.startYear @config.minYear) (/ @plotW @yearSpan))))
+                (x2 (+ @config.axisMarginLeft (* (- @e.endYear @config.minYear) (/ @plotW @yearSpan))))
+                (tagged (array/includes @entity.turningTags @e.id))
+                (canonical (array/includes @config.turningPoints @e.id))
+                (bandColor (if @entity.checked (if (== @tagged @canonical) "#15803d" "#b91c1c") "#b45309"))
+              )
+              [
+                { type: rect, id: (str/concat "era-" @e.id), x: @x1, y: @config.axisTop, width: (- @x2 @x1), height: @plotH, fill: @bandColor, color: @bandColor, opacity: 0.18, lineWidth: 0 },
+                { type: text, id: (str/concat "era-label-" @e.id), x: (/ (+ @x1 @x2) 2), y: (+ (+ @config.axisTop @plotH) 20), text: @e.label, fontSize: 11, align: "center", color: "#44403c" }
+              ]
+            )))))
+            (curveShapes (array/map (array/range (- (array/len @config.indicatorCurve) 1)) (fn i (let (
+                (p1 (array/nth @config.indicatorCurve @i))
+                (p2 (array/nth @config.indicatorCurve (+ @i 1)))
+              )
+              { type: line, id: (str/concat "curve-" @i), x1: (+ @config.axisMarginLeft (* (- @p1.year @config.minYear) (/ @plotW @yearSpan))), y1: (- (+ @config.axisTop @plotH) (* @p1.value (/ @plotH @config.curveMax))), x2: (+ @config.axisMarginLeft (* (- @p2.year @config.minYear) (/ @plotW @yearSpan))), y2: (- (+ @config.axisTop @plotH) (* @p2.value (/ @plotH @config.curveMax))), color: "#1d4ed8", lineWidth: 2.5, opacity: 1 }
+            ))))
+            (cursorX (+ @config.axisMarginLeft (* (- @entity.cursorYear @config.minYear) (/ @plotW @yearSpan))))
+            (allShapes (array/concat (array/concat @eraShapes @curveShapes) [
+              { type: line, id: "cursor", x1: @cursorX, y1: @config.axisTop, x2: @cursorX, y2: (+ @config.axisTop @plotH), color: "#dc2626", lineWidth: 2, opacity: 0.9 },
+              { type: text, id: "cursor-label", x: @cursorX, y: (- @config.axisTop 12), text: (str/concat "Year " @entity.cursorYear), fontSize: 12, align: "center", color: "#dc2626" }
+            ]))
+          )
+          (do
+            (set @entity.shapes @allShapes)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: "Move the cursor along the indicator curve and tag each era as continuity or a turning point, then check your reading." },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.eras (fn e { type: button, action: SET_CURSOR, actionPayload: { year: (/ (+ @e.startYear @e.endYear) 2) }, label: (str/concat "Cursor → " @e.label), variant: "secondary", size: sm })) },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.eras (fn e { type: button, action: TAG_ERA, actionPayload: { eraId: @e.id }, label: (if (array/includes @entity.turningTags @e.id) (str/concat @e.label " — turning point") (str/concat @e.label " — continuity")), variant: (if (array/includes @entity.turningTags @e.id) "primary" "ghost"), size: sm })) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: CHECK, label: "Check", variant: primary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: (if @entity.checked @entity.verdict "Tag eras, then press Check.") }
+              ] }
+          ]
+        })
+        (emit CCOT_UPDATED { cursorYear: @entity.cursorYear, turningTags: @entity.turningTags, checked: @entity.checked, score: @entity.score })
+
+      SET_CURSOR -> idle when (== @entity.active true)
+        (set @entity.cursorYear ?year)
+        (let (
+            (plotW (- @config.width (+ @config.axisMarginLeft @config.axisMarginRight)))
+            (plotH (- @config.height (+ @config.axisTop @config.axisBottom)))
+            (yearSpan (- @config.maxYear @config.minYear))
+            (eraShapes (array/flatten (array/map @config.eras (fn e (let (
+                (x1 (+ @config.axisMarginLeft (* (- @e.startYear @config.minYear) (/ @plotW @yearSpan))))
+                (x2 (+ @config.axisMarginLeft (* (- @e.endYear @config.minYear) (/ @plotW @yearSpan))))
+                (tagged (array/includes @entity.turningTags @e.id))
+                (canonical (array/includes @config.turningPoints @e.id))
+                (bandColor (if @entity.checked (if (== @tagged @canonical) "#15803d" "#b91c1c") "#b45309"))
+              )
+              [
+                { type: rect, id: (str/concat "era-" @e.id), x: @x1, y: @config.axisTop, width: (- @x2 @x1), height: @plotH, fill: @bandColor, color: @bandColor, opacity: 0.18, lineWidth: 0 },
+                { type: text, id: (str/concat "era-label-" @e.id), x: (/ (+ @x1 @x2) 2), y: (+ (+ @config.axisTop @plotH) 20), text: @e.label, fontSize: 11, align: "center", color: "#44403c" }
+              ]
+            )))))
+            (curveShapes (array/map (array/range (- (array/len @config.indicatorCurve) 1)) (fn i (let (
+                (p1 (array/nth @config.indicatorCurve @i))
+                (p2 (array/nth @config.indicatorCurve (+ @i 1)))
+              )
+              { type: line, id: (str/concat "curve-" @i), x1: (+ @config.axisMarginLeft (* (- @p1.year @config.minYear) (/ @plotW @yearSpan))), y1: (- (+ @config.axisTop @plotH) (* @p1.value (/ @plotH @config.curveMax))), x2: (+ @config.axisMarginLeft (* (- @p2.year @config.minYear) (/ @plotW @yearSpan))), y2: (- (+ @config.axisTop @plotH) (* @p2.value (/ @plotH @config.curveMax))), color: "#1d4ed8", lineWidth: 2.5, opacity: 1 }
+            ))))
+            (cursorX (+ @config.axisMarginLeft (* (- @entity.cursorYear @config.minYear) (/ @plotW @yearSpan))))
+            (allShapes (array/concat (array/concat @eraShapes @curveShapes) [
+              { type: line, id: "cursor", x1: @cursorX, y1: @config.axisTop, x2: @cursorX, y2: (+ @config.axisTop @plotH), color: "#dc2626", lineWidth: 2, opacity: 0.9 },
+              { type: text, id: "cursor-label", x: @cursorX, y: (- @config.axisTop 12), text: (str/concat "Year " @entity.cursorYear), fontSize: 12, align: "center", color: "#dc2626" }
+            ]))
+          )
+          (do
+            (set @entity.shapes @allShapes)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: "Move the cursor along the indicator curve and tag each era as continuity or a turning point, then check your reading." },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.eras (fn e { type: button, action: SET_CURSOR, actionPayload: { year: (/ (+ @e.startYear @e.endYear) 2) }, label: (str/concat "Cursor → " @e.label), variant: "secondary", size: sm })) },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.eras (fn e { type: button, action: TAG_ERA, actionPayload: { eraId: @e.id }, label: (if (array/includes @entity.turningTags @e.id) (str/concat @e.label " — turning point") (str/concat @e.label " — continuity")), variant: (if (array/includes @entity.turningTags @e.id) "primary" "ghost"), size: sm })) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: CHECK, label: "Check", variant: primary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: (if @entity.checked @entity.verdict "Tag eras, then press Check.") }
+              ] }
+          ]
+        })
+        (emit CCOT_UPDATED { cursorYear: @entity.cursorYear, turningTags: @entity.turningTags, checked: @entity.checked, score: @entity.score })
+
+      TAG_ERA -> idle when (== @entity.active true)
+        (set @entity.turningTags (if (array/includes @entity.turningTags ?eraId) (array/filter @entity.turningTags (fn tid (!= @tid ?eraId))) (array/concat @entity.turningTags [?eraId])))
+        (let (
+            (plotW (- @config.width (+ @config.axisMarginLeft @config.axisMarginRight)))
+            (plotH (- @config.height (+ @config.axisTop @config.axisBottom)))
+            (yearSpan (- @config.maxYear @config.minYear))
+            (eraShapes (array/flatten (array/map @config.eras (fn e (let (
+                (x1 (+ @config.axisMarginLeft (* (- @e.startYear @config.minYear) (/ @plotW @yearSpan))))
+                (x2 (+ @config.axisMarginLeft (* (- @e.endYear @config.minYear) (/ @plotW @yearSpan))))
+                (tagged (array/includes @entity.turningTags @e.id))
+                (canonical (array/includes @config.turningPoints @e.id))
+                (bandColor (if @entity.checked (if (== @tagged @canonical) "#15803d" "#b91c1c") "#b45309"))
+              )
+              [
+                { type: rect, id: (str/concat "era-" @e.id), x: @x1, y: @config.axisTop, width: (- @x2 @x1), height: @plotH, fill: @bandColor, color: @bandColor, opacity: 0.18, lineWidth: 0 },
+                { type: text, id: (str/concat "era-label-" @e.id), x: (/ (+ @x1 @x2) 2), y: (+ (+ @config.axisTop @plotH) 20), text: @e.label, fontSize: 11, align: "center", color: "#44403c" }
+              ]
+            )))))
+            (curveShapes (array/map (array/range (- (array/len @config.indicatorCurve) 1)) (fn i (let (
+                (p1 (array/nth @config.indicatorCurve @i))
+                (p2 (array/nth @config.indicatorCurve (+ @i 1)))
+              )
+              { type: line, id: (str/concat "curve-" @i), x1: (+ @config.axisMarginLeft (* (- @p1.year @config.minYear) (/ @plotW @yearSpan))), y1: (- (+ @config.axisTop @plotH) (* @p1.value (/ @plotH @config.curveMax))), x2: (+ @config.axisMarginLeft (* (- @p2.year @config.minYear) (/ @plotW @yearSpan))), y2: (- (+ @config.axisTop @plotH) (* @p2.value (/ @plotH @config.curveMax))), color: "#1d4ed8", lineWidth: 2.5, opacity: 1 }
+            ))))
+            (cursorX (+ @config.axisMarginLeft (* (- @entity.cursorYear @config.minYear) (/ @plotW @yearSpan))))
+            (allShapes (array/concat (array/concat @eraShapes @curveShapes) [
+              { type: line, id: "cursor", x1: @cursorX, y1: @config.axisTop, x2: @cursorX, y2: (+ @config.axisTop @plotH), color: "#dc2626", lineWidth: 2, opacity: 0.9 },
+              { type: text, id: "cursor-label", x: @cursorX, y: (- @config.axisTop 12), text: (str/concat "Year " @entity.cursorYear), fontSize: 12, align: "center", color: "#dc2626" }
+            ]))
+          )
+          (do
+            (set @entity.shapes @allShapes)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: "Move the cursor along the indicator curve and tag each era as continuity or a turning point, then check your reading." },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.eras (fn e { type: button, action: SET_CURSOR, actionPayload: { year: (/ (+ @e.startYear @e.endYear) 2) }, label: (str/concat "Cursor → " @e.label), variant: "secondary", size: sm })) },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.eras (fn e { type: button, action: TAG_ERA, actionPayload: { eraId: @e.id }, label: (if (array/includes @entity.turningTags @e.id) (str/concat @e.label " — turning point") (str/concat @e.label " — continuity")), variant: (if (array/includes @entity.turningTags @e.id) "primary" "ghost"), size: sm })) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: CHECK, label: "Check", variant: primary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: (if @entity.checked @entity.verdict "Tag eras, then press Check.") }
+              ] }
+          ]
+        })
+        (emit CCOT_UPDATED { cursorYear: @entity.cursorYear, turningTags: @entity.turningTags, checked: @entity.checked, score: @entity.score })
+
+      CHECK -> idle when (== @entity.active true)
+        (set @entity.checked true)
+        (set @entity.score (array/len (array/filter @config.eras (fn e (== (array/includes @entity.turningTags @e.id) (array/includes @config.turningPoints @e.id))))))
+        (set @entity.verdict (str/concat "You classified " @entity.score " of " (array/len @config.eras) " eras correctly against the canonical CCOT reading."))
+        (let (
+            (plotW (- @config.width (+ @config.axisMarginLeft @config.axisMarginRight)))
+            (plotH (- @config.height (+ @config.axisTop @config.axisBottom)))
+            (yearSpan (- @config.maxYear @config.minYear))
+            (eraShapes (array/flatten (array/map @config.eras (fn e (let (
+                (x1 (+ @config.axisMarginLeft (* (- @e.startYear @config.minYear) (/ @plotW @yearSpan))))
+                (x2 (+ @config.axisMarginLeft (* (- @e.endYear @config.minYear) (/ @plotW @yearSpan))))
+                (tagged (array/includes @entity.turningTags @e.id))
+                (canonical (array/includes @config.turningPoints @e.id))
+                (bandColor (if @entity.checked (if (== @tagged @canonical) "#15803d" "#b91c1c") "#b45309"))
+              )
+              [
+                { type: rect, id: (str/concat "era-" @e.id), x: @x1, y: @config.axisTop, width: (- @x2 @x1), height: @plotH, fill: @bandColor, color: @bandColor, opacity: 0.18, lineWidth: 0 },
+                { type: text, id: (str/concat "era-label-" @e.id), x: (/ (+ @x1 @x2) 2), y: (+ (+ @config.axisTop @plotH) 20), text: @e.label, fontSize: 11, align: "center", color: "#44403c" }
+              ]
+            )))))
+            (curveShapes (array/map (array/range (- (array/len @config.indicatorCurve) 1)) (fn i (let (
+                (p1 (array/nth @config.indicatorCurve @i))
+                (p2 (array/nth @config.indicatorCurve (+ @i 1)))
+              )
+              { type: line, id: (str/concat "curve-" @i), x1: (+ @config.axisMarginLeft (* (- @p1.year @config.minYear) (/ @plotW @yearSpan))), y1: (- (+ @config.axisTop @plotH) (* @p1.value (/ @plotH @config.curveMax))), x2: (+ @config.axisMarginLeft (* (- @p2.year @config.minYear) (/ @plotW @yearSpan))), y2: (- (+ @config.axisTop @plotH) (* @p2.value (/ @plotH @config.curveMax))), color: "#1d4ed8", lineWidth: 2.5, opacity: 1 }
+            ))))
+            (cursorX (+ @config.axisMarginLeft (* (- @entity.cursorYear @config.minYear) (/ @plotW @yearSpan))))
+            (allShapes (array/concat (array/concat @eraShapes @curveShapes) [
+              { type: line, id: "cursor", x1: @cursorX, y1: @config.axisTop, x2: @cursorX, y2: (+ @config.axisTop @plotH), color: "#dc2626", lineWidth: 2, opacity: 0.9 },
+              { type: text, id: "cursor-label", x: @cursorX, y: (- @config.axisTop 12), text: (str/concat "Year " @entity.cursorYear), fontSize: 12, align: "center", color: "#dc2626" }
+            ]))
+          )
+          (do
+            (set @entity.shapes @allShapes)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: "Move the cursor along the indicator curve and tag each era as continuity or a turning point, then check your reading." },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.eras (fn e { type: button, action: SET_CURSOR, actionPayload: { year: (/ (+ @e.startYear @e.endYear) 2) }, label: (str/concat "Cursor → " @e.label), variant: "secondary", size: sm })) },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.eras (fn e { type: button, action: TAG_ERA, actionPayload: { eraId: @e.id }, label: (if (array/includes @entity.turningTags @e.id) (str/concat @e.label " — turning point") (str/concat @e.label " — continuity")), variant: (if (array/includes @entity.turningTags @e.id) "primary" "ghost"), size: sm })) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: CHECK, label: "Check", variant: primary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: (if @entity.checked @entity.verdict "Tag eras, then press Check.") }
+              ] }
+          ]
+        })
+        (emit CCOT_UPDATED { cursorYear: @entity.cursorYear, turningTags: @entity.turningTags, checked: @entity.checked, score: @entity.score })
+
+      RESET -> idle when (== @entity.active true)
+        (set @entity.cursorYear @config.minYear)
+        (set @entity.turningTags [])
+        (set @entity.checked false)
+        (set @entity.score 0)
+        (set @entity.verdict "")
+        (let (
+            (plotW (- @config.width (+ @config.axisMarginLeft @config.axisMarginRight)))
+            (plotH (- @config.height (+ @config.axisTop @config.axisBottom)))
+            (yearSpan (- @config.maxYear @config.minYear))
+            (eraShapes (array/flatten (array/map @config.eras (fn e (let (
+                (x1 (+ @config.axisMarginLeft (* (- @e.startYear @config.minYear) (/ @plotW @yearSpan))))
+                (x2 (+ @config.axisMarginLeft (* (- @e.endYear @config.minYear) (/ @plotW @yearSpan))))
+                (tagged (array/includes @entity.turningTags @e.id))
+                (canonical (array/includes @config.turningPoints @e.id))
+                (bandColor (if @entity.checked (if (== @tagged @canonical) "#15803d" "#b91c1c") "#b45309"))
+              )
+              [
+                { type: rect, id: (str/concat "era-" @e.id), x: @x1, y: @config.axisTop, width: (- @x2 @x1), height: @plotH, fill: @bandColor, color: @bandColor, opacity: 0.18, lineWidth: 0 },
+                { type: text, id: (str/concat "era-label-" @e.id), x: (/ (+ @x1 @x2) 2), y: (+ (+ @config.axisTop @plotH) 20), text: @e.label, fontSize: 11, align: "center", color: "#44403c" }
+              ]
+            )))))
+            (curveShapes (array/map (array/range (- (array/len @config.indicatorCurve) 1)) (fn i (let (
+                (p1 (array/nth @config.indicatorCurve @i))
+                (p2 (array/nth @config.indicatorCurve (+ @i 1)))
+              )
+              { type: line, id: (str/concat "curve-" @i), x1: (+ @config.axisMarginLeft (* (- @p1.year @config.minYear) (/ @plotW @yearSpan))), y1: (- (+ @config.axisTop @plotH) (* @p1.value (/ @plotH @config.curveMax))), x2: (+ @config.axisMarginLeft (* (- @p2.year @config.minYear) (/ @plotW @yearSpan))), y2: (- (+ @config.axisTop @plotH) (* @p2.value (/ @plotH @config.curveMax))), color: "#1d4ed8", lineWidth: 2.5, opacity: 1 }
+            ))))
+            (cursorX (+ @config.axisMarginLeft (* (- @entity.cursorYear @config.minYear) (/ @plotW @yearSpan))))
+            (allShapes (array/concat (array/concat @eraShapes @curveShapes) [
+              { type: line, id: "cursor", x1: @cursorX, y1: @config.axisTop, x2: @cursorX, y2: (+ @config.axisTop @plotH), color: "#dc2626", lineWidth: 2, opacity: 0.9 },
+              { type: text, id: "cursor-label", x: @cursorX, y: (- @config.axisTop 12), text: (str/concat "Year " @entity.cursorYear), fontSize: 12, align: "center", color: "#dc2626" }
+            ]))
+          )
+          (do
+            (set @entity.shapes @allShapes)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: "Move the cursor along the indicator curve and tag each era as continuity or a turning point, then check your reading." },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.eras (fn e { type: button, action: SET_CURSOR, actionPayload: { year: (/ (+ @e.startYear @e.endYear) 2) }, label: (str/concat "Cursor → " @e.label), variant: "secondary", size: sm })) },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.eras (fn e { type: button, action: TAG_ERA, actionPayload: { eraId: @e.id }, label: (if (array/includes @entity.turningTags @e.id) (str/concat @e.label " — turning point") (str/concat @e.label " — continuity")), variant: (if (array/includes @entity.turningTags @e.id) "primary" "ghost"), size: sm })) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: CHECK, label: "Check", variant: primary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.width, yMin: 0, yMax: @config.height, showAxes: false, showGrid: false, gridStep: 1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: (if @entity.checked @entity.verdict "Tag eras, then press Check.") }
+              ] }
+          ]
+        })
+        (emit CCOT_UPDATED { cursorYear: @entity.cursorYear, turningTags: @entity.turningTags, checked: @entity.checked, score: @entity.score })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      SET_CURSOR {
+        year : number
+      }
+        @description "Learner moved the time cursor to a new year along the indicator curve."
+        @tier "domain"
+      TAG_ERA {
+        eraId : string
+      }
+        @description "Learner toggled an era between continuity and turning point."
+        @tier "domain"
+      CHECK {
+      }
+        @description "Learner asked for the verdict comparing their era tags against the canonical CCOT reading."
+        @tier "domain"
+      RESET {
+      }
+        @description "Learner cleared all era tags, the cursor, and the verdict."
+        @tier "domain"
+    }
+
+    emits {
+      CCOT_UPDATED -> external {
+        cursorYear : number
+        turningTags : [string]
+        checked : boolean
+        score : number
+      }
+        @description "The CCOT instrument state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "ccot update, continuity and change over time, era tags, turning point verdict, cursor year"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "CCOT"
+        @label "Title"
+        @description "Title shown above the lab."
+        @tier "presentation"
+      width : number = 640
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 420
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      interactive : boolean = false
+        @label "Interactive"
+        @description "Enable pointer interaction on the canvas."
+        @tier "presentation"
+      animate : boolean = false
+        @label "Animate"
+        @description "Enable continuous redraw loop."
+        @tier "presentation"
+      minYear : number = 1750
+        @label "Minimum Year"
+        @description "First year on the timeline axis."
+        @tier "domain"
+      maxYear : number = 2000
+        @label "Maximum Year"
+        @description "Last year on the timeline axis."
+        @tier "domain"
+      curveMax : number = 100
+        @label "Curve Maximum"
+        @description "Value on the indicator curve that maps to the top of the plot."
+        @tier "presentation"
+      axisMarginLeft : number = 60
+        @label "Axis Margin Left"
+        @tier "presentation"
+      axisMarginRight : number = 40
+        @label "Axis Margin Right"
+        @tier "presentation"
+      axisTop : number = 40
+        @label "Axis Top"
+        @tier "presentation"
+      axisBottom : number = 60
+        @label "Axis Bottom"
+        @tier "presentation"
+      indicatorCurve : [HistCcotCurvePoint] = [
+        { year: 1750, value: 5 },
+        { year: 1780, value: 7 },
+        { year: 1820, value: 12 },
+        { year: 1850, value: 25 },
+        { year: 1880, value: 40 },
+        { year: 1914, value: 55 },
+        { year: 1929, value: 60 },
+        { year: 1945, value: 70 },
+        { year: 1970, value: 90 },
+        { year: 2000, value: 100 }
+      ]
+        @label "Indicator Curve"
+        @description "Year/value points of the quantitative indicator (here an industrial output index) the cursor rides along; its slope is the visual evidence for continuity vs turning point."
+        @synonyms "indicator curve, quantitative indicator, time series, industrial output index, trend line"
+        @tier "domain"
+      eras : [HistCcotEra] = [
+        { id: "pre-industrial", label: "Pre-Industrial", startYear: 1750, endYear: 1820 },
+        { id: "industrialization", label: "Industrialization", startYear: 1820, endYear: 1870 },
+        { id: "mature-industrial", label: "Mature Industrial", startYear: 1870, endYear: 1914 },
+        { id: "world-wars", label: "World Wars", startYear: 1914, endYear: 1945 },
+        { id: "postwar-boom", label: "Postwar Boom", startYear: 1945, endYear: 2000 }
+      ]
+        @label "Eras"
+        @description "Era bands the learner tags as continuity or turning point."
+        @synonyms "era, period, epoch, age, era band"
+        @tier "domain"
+      turningPoints : [string] = ["industrialization", "world-wars"]
+        @label "Turning Points"
+        @description "Canonical roster of era ids that mark a genuine turning point in the indicator; every other era is canonical continuity. The CHECK verdict compares learner tags against this list."
+        @synonyms "turning point, inflection point, watershed, rupture, canonical turning points"
+        @tier "domain"
+    }
+  }
+
+  page "/hist-ccot" as HistCcotPage -> HistCcotSim
+}

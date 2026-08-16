@@ -17,6 +17,15 @@ orbital EconMarketOrbital {
     color : string
     radius : number
   }
+  type EconMarketLabelShape = {
+    type : "text"!
+    x : number!
+    y : number!
+    text : string!
+    color : string
+    fontSize : number
+    align : "left" | "center" | "right"
+  }
 
   entity EconMarketScene [runtime] {
     id : string!
@@ -35,6 +44,7 @@ orbital EconMarketOrbital {
     marketStatusMagnitude : number
     curves : [EconMarketCurve]
     points : [EconMarketMarker]
+    labelShapes : [EconMarketLabelShape]
   }
 
   trait EconMarketSim -> @rebindable EconMarketScene [interaction, instance] {
@@ -67,10 +77,25 @@ orbital EconMarketOrbital {
                 { label: "Your Price", color: @config.priceLineColor, samples: [ { x: 0, y: @entity.price }, { x: @config.maxQuantity, y: @entity.price } ] }
               ])
             (marketPoints [
-                { x: @eqQ, y: @eqP, label: "Equilibrium", color: @config.equilibriumColor, radius: 6 },
-                { x: @qd, y: @entity.price, label: "Qd", color: @config.demandColor, radius: 5 },
-                { x: @qs, y: @entity.price, label: "Qs", color: @config.supplyColor, radius: 5 }
+                { x: @eqQ, y: @eqP, color: @config.equilibriumColor, radius: 6 },
+                { x: @qd, y: @entity.price, color: @config.demandColor, radius: 5 },
+                { x: @qs, y: @entity.price, color: @config.supplyColor, radius: 5 }
               ])
+            (labelClampLo 45)
+            (labelClampHi (- @config.width 45))
+            (eqLabelX (math/clamp (+ 24 (* (/ @eqQ @config.maxQuantity) (- @config.width 48))) @labelClampLo @labelClampHi))
+            (eqLabelY (- (- @config.height (+ 24 (* (/ @eqP @config.maxPrice) (- @config.height 48)))) 14))
+            (qdLabelX (- (math/clamp (+ 24 (* (/ @qd @config.maxQuantity) (- @config.width 48))) @labelClampLo @labelClampHi) 8))
+            (qdLabelY (+ (- @config.height (+ 24 (* (/ @entity.price @config.maxPrice) (- @config.height 48)))) 16))
+            (qsLabelX (+ (math/clamp (+ 24 (* (/ @qs @config.maxQuantity) (- @config.width 48))) @labelClampLo @labelClampHi) 8))
+            (qsLabelY @qdLabelY)
+            (eqLabelVisible (and (and (>= @eqQ 0) (<= @eqQ @config.maxQuantity)) (and (>= @eqP 0) (<= @eqP @config.maxPrice))))
+            (qdLabelVisible (and (>= @qd 0) (<= @qd @config.maxQuantity)))
+            (qsLabelVisible (and (>= @qs 0) (<= @qs @config.maxQuantity)))
+            (labelShapes (array/concat (array/concat
+                (if @eqLabelVisible [ { type: text, x: @eqLabelX, y: @eqLabelY, text: "Equilibrium", color: @config.equilibriumColor, fontSize: 12, align: center } ] [])
+                (if @qdLabelVisible [ { type: text, x: @qdLabelX, y: @qdLabelY, text: "Qd", color: @config.demandColor, fontSize: 12, align: right } ] []))
+                (if @qsLabelVisible [ { type: text, x: @qsLabelX, y: @qsLabelY, text: "Qs", color: @config.supplyColor, fontSize: 12, align: left } ] [])))
           )
           (do
             (set @entity.equilibriumQuantity @eqQ)
@@ -81,6 +106,7 @@ orbital EconMarketOrbital {
             (set @entity.marketStatusMagnitude @statusMag)
             (set @entity.curves @marketCurves)
             (set @entity.points @marketPoints)
+            (set @entity.labelShapes @labelShapes)
           )
         )
         (render-ui main {
@@ -89,7 +115,7 @@ orbital EconMarketOrbital {
           children: [
             { type: stack, direction: vertical, gap: md, children: [
                 { type: typography, variant: h4, content: @entity.title },
-                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.maxQuantity, yMin: 0, yMax: @config.maxPrice, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.maxQuantity, yMin: 0, yMax: @config.maxPrice, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: @entity.labelShapes, interactive: @config.interactive, animate: @config.animate },
                 { type: stack, direction: horizontal, gap: sm, children: [
                     { type: button, action: SHIFT_DEMAND, actionPayload: { delta: @config.demandShiftStep }, label: (str/concat "Demand +" @config.demandShiftStep), variant: primary, size: sm },
                     { type: button, action: SHIFT_DEMAND, actionPayload: { delta: (- 0 @config.demandShiftStep) }, label: (str/concat "Demand −" @config.demandShiftStep), variant: secondary, size: sm },
@@ -134,10 +160,25 @@ orbital EconMarketOrbital {
                 { label: "Your Price", color: @config.priceLineColor, samples: [ { x: 0, y: @entity.price }, { x: @config.maxQuantity, y: @entity.price } ] }
               ])
             (marketPoints [
-                { x: @eqQ, y: @eqP, label: "Equilibrium", color: @config.equilibriumColor, radius: 6 },
-                { x: @qd, y: @entity.price, label: "Qd", color: @config.demandColor, radius: 5 },
-                { x: @qs, y: @entity.price, label: "Qs", color: @config.supplyColor, radius: 5 }
+                { x: @eqQ, y: @eqP, color: @config.equilibriumColor, radius: 6 },
+                { x: @qd, y: @entity.price, color: @config.demandColor, radius: 5 },
+                { x: @qs, y: @entity.price, color: @config.supplyColor, radius: 5 }
               ])
+            (labelClampLo 45)
+            (labelClampHi (- @config.width 45))
+            (eqLabelX (math/clamp (+ 24 (* (/ @eqQ @config.maxQuantity) (- @config.width 48))) @labelClampLo @labelClampHi))
+            (eqLabelY (- (- @config.height (+ 24 (* (/ @eqP @config.maxPrice) (- @config.height 48)))) 14))
+            (qdLabelX (- (math/clamp (+ 24 (* (/ @qd @config.maxQuantity) (- @config.width 48))) @labelClampLo @labelClampHi) 8))
+            (qdLabelY (+ (- @config.height (+ 24 (* (/ @entity.price @config.maxPrice) (- @config.height 48)))) 16))
+            (qsLabelX (+ (math/clamp (+ 24 (* (/ @qs @config.maxQuantity) (- @config.width 48))) @labelClampLo @labelClampHi) 8))
+            (qsLabelY @qdLabelY)
+            (eqLabelVisible (and (and (>= @eqQ 0) (<= @eqQ @config.maxQuantity)) (and (>= @eqP 0) (<= @eqP @config.maxPrice))))
+            (qdLabelVisible (and (>= @qd 0) (<= @qd @config.maxQuantity)))
+            (qsLabelVisible (and (>= @qs 0) (<= @qs @config.maxQuantity)))
+            (labelShapes (array/concat (array/concat
+                (if @eqLabelVisible [ { type: text, x: @eqLabelX, y: @eqLabelY, text: "Equilibrium", color: @config.equilibriumColor, fontSize: 12, align: center } ] [])
+                (if @qdLabelVisible [ { type: text, x: @qdLabelX, y: @qdLabelY, text: "Qd", color: @config.demandColor, fontSize: 12, align: right } ] []))
+                (if @qsLabelVisible [ { type: text, x: @qsLabelX, y: @qsLabelY, text: "Qs", color: @config.supplyColor, fontSize: 12, align: left } ] [])))
           )
           (do
             (set @entity.equilibriumQuantity @eqQ)
@@ -148,6 +189,7 @@ orbital EconMarketOrbital {
             (set @entity.marketStatusMagnitude @statusMag)
             (set @entity.curves @marketCurves)
             (set @entity.points @marketPoints)
+            (set @entity.labelShapes @labelShapes)
           )
         )
         (render-ui main {
@@ -156,7 +198,7 @@ orbital EconMarketOrbital {
             children: [
               { type: stack, direction: vertical, gap: md, children: [
                   { type: typography, variant: h4, content: @entity.title },
-                  { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.maxQuantity, yMin: 0, yMax: @config.maxPrice, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: [], interactive: @config.interactive, animate: @config.animate },
+                  { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.maxQuantity, yMin: 0, yMax: @config.maxPrice, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: @entity.labelShapes, interactive: @config.interactive, animate: @config.animate },
                   { type: stack, direction: horizontal, gap: sm, children: [
                       { type: button, action: SHIFT_DEMAND, actionPayload: { delta: @config.demandShiftStep }, label: (str/concat "Demand +" @config.demandShiftStep), variant: primary, size: sm },
                       { type: button, action: SHIFT_DEMAND, actionPayload: { delta: (- 0 @config.demandShiftStep) }, label: (str/concat "Demand −" @config.demandShiftStep), variant: secondary, size: sm },
@@ -195,10 +237,25 @@ orbital EconMarketOrbital {
                 { label: "Your Price", color: @config.priceLineColor, samples: [ { x: 0, y: @entity.price }, { x: @config.maxQuantity, y: @entity.price } ] }
               ])
             (newPoints [
-                { x: @eqQ, y: @eqP, label: "Equilibrium", color: @config.equilibriumColor, radius: 6 },
-                { x: @qd, y: @entity.price, label: "Qd", color: @config.demandColor, radius: 5 },
-                { x: @qs, y: @entity.price, label: "Qs", color: @config.supplyColor, radius: 5 }
+                { x: @eqQ, y: @eqP, color: @config.equilibriumColor, radius: 6 },
+                { x: @qd, y: @entity.price, color: @config.demandColor, radius: 5 },
+                { x: @qs, y: @entity.price, color: @config.supplyColor, radius: 5 }
               ])
+            (labelClampLo 45)
+            (labelClampHi (- @config.width 45))
+            (eqLabelX (math/clamp (+ 24 (* (/ @eqQ @config.maxQuantity) (- @config.width 48))) @labelClampLo @labelClampHi))
+            (eqLabelY (- (- @config.height (+ 24 (* (/ @eqP @config.maxPrice) (- @config.height 48)))) 14))
+            (qdLabelX (- (math/clamp (+ 24 (* (/ @qd @config.maxQuantity) (- @config.width 48))) @labelClampLo @labelClampHi) 8))
+            (qdLabelY (+ (- @config.height (+ 24 (* (/ @entity.price @config.maxPrice) (- @config.height 48)))) 16))
+            (qsLabelX (+ (math/clamp (+ 24 (* (/ @qs @config.maxQuantity) (- @config.width 48))) @labelClampLo @labelClampHi) 8))
+            (qsLabelY @qdLabelY)
+            (eqLabelVisible (and (and (>= @eqQ 0) (<= @eqQ @config.maxQuantity)) (and (>= @eqP 0) (<= @eqP @config.maxPrice))))
+            (qdLabelVisible (and (>= @qd 0) (<= @qd @config.maxQuantity)))
+            (qsLabelVisible (and (>= @qs 0) (<= @qs @config.maxQuantity)))
+            (labelShapes (array/concat (array/concat
+                (if @eqLabelVisible [ { type: text, x: @eqLabelX, y: @eqLabelY, text: "Equilibrium", color: @config.equilibriumColor, fontSize: 12, align: center } ] [])
+                (if @qdLabelVisible [ { type: text, x: @qdLabelX, y: @qdLabelY, text: "Qd", color: @config.demandColor, fontSize: 12, align: right } ] []))
+                (if @qsLabelVisible [ { type: text, x: @qsLabelX, y: @qsLabelY, text: "Qs", color: @config.supplyColor, fontSize: 12, align: left } ] [])))
           )
           (do
             (set @entity.demandIntercept @newDemandIntercept)
@@ -210,6 +267,7 @@ orbital EconMarketOrbital {
             (set @entity.marketStatusMagnitude @statusMag)
             (set @entity.curves @newCurves)
             (set @entity.points @newPoints)
+            (set @entity.labelShapes @labelShapes)
           )
         )
         (render-ui main {
@@ -218,7 +276,7 @@ orbital EconMarketOrbital {
           children: [
             { type: stack, direction: vertical, gap: md, children: [
                 { type: typography, variant: h4, content: @entity.title },
-                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.maxQuantity, yMin: 0, yMax: @config.maxPrice, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.maxQuantity, yMin: 0, yMax: @config.maxPrice, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: @entity.labelShapes, interactive: @config.interactive, animate: @config.animate },
                 { type: stack, direction: horizontal, gap: sm, children: [
                     { type: button, action: SHIFT_DEMAND, actionPayload: { delta: @config.demandShiftStep }, label: (str/concat "Demand +" @config.demandShiftStep), variant: primary, size: sm },
                     { type: button, action: SHIFT_DEMAND, actionPayload: { delta: (- 0 @config.demandShiftStep) }, label: (str/concat "Demand −" @config.demandShiftStep), variant: secondary, size: sm },
@@ -258,10 +316,25 @@ orbital EconMarketOrbital {
                 { label: "Your Price", color: @config.priceLineColor, samples: [ { x: 0, y: @entity.price }, { x: @config.maxQuantity, y: @entity.price } ] }
               ])
             (newPoints [
-                { x: @eqQ, y: @eqP, label: "Equilibrium", color: @config.equilibriumColor, radius: 6 },
-                { x: @qd, y: @entity.price, label: "Qd", color: @config.demandColor, radius: 5 },
-                { x: @qs, y: @entity.price, label: "Qs", color: @config.supplyColor, radius: 5 }
+                { x: @eqQ, y: @eqP, color: @config.equilibriumColor, radius: 6 },
+                { x: @qd, y: @entity.price, color: @config.demandColor, radius: 5 },
+                { x: @qs, y: @entity.price, color: @config.supplyColor, radius: 5 }
               ])
+            (labelClampLo 45)
+            (labelClampHi (- @config.width 45))
+            (eqLabelX (math/clamp (+ 24 (* (/ @eqQ @config.maxQuantity) (- @config.width 48))) @labelClampLo @labelClampHi))
+            (eqLabelY (- (- @config.height (+ 24 (* (/ @eqP @config.maxPrice) (- @config.height 48)))) 14))
+            (qdLabelX (- (math/clamp (+ 24 (* (/ @qd @config.maxQuantity) (- @config.width 48))) @labelClampLo @labelClampHi) 8))
+            (qdLabelY (+ (- @config.height (+ 24 (* (/ @entity.price @config.maxPrice) (- @config.height 48)))) 16))
+            (qsLabelX (+ (math/clamp (+ 24 (* (/ @qs @config.maxQuantity) (- @config.width 48))) @labelClampLo @labelClampHi) 8))
+            (qsLabelY @qdLabelY)
+            (eqLabelVisible (and (and (>= @eqQ 0) (<= @eqQ @config.maxQuantity)) (and (>= @eqP 0) (<= @eqP @config.maxPrice))))
+            (qdLabelVisible (and (>= @qd 0) (<= @qd @config.maxQuantity)))
+            (qsLabelVisible (and (>= @qs 0) (<= @qs @config.maxQuantity)))
+            (labelShapes (array/concat (array/concat
+                (if @eqLabelVisible [ { type: text, x: @eqLabelX, y: @eqLabelY, text: "Equilibrium", color: @config.equilibriumColor, fontSize: 12, align: center } ] [])
+                (if @qdLabelVisible [ { type: text, x: @qdLabelX, y: @qdLabelY, text: "Qd", color: @config.demandColor, fontSize: 12, align: right } ] []))
+                (if @qsLabelVisible [ { type: text, x: @qsLabelX, y: @qsLabelY, text: "Qs", color: @config.supplyColor, fontSize: 12, align: left } ] [])))
           )
           (do
             (set @entity.supplyIntercept @newSupplyIntercept)
@@ -273,6 +346,7 @@ orbital EconMarketOrbital {
             (set @entity.marketStatusMagnitude @statusMag)
             (set @entity.curves @newCurves)
             (set @entity.points @newPoints)
+            (set @entity.labelShapes @labelShapes)
           )
         )
         (render-ui main {
@@ -281,7 +355,7 @@ orbital EconMarketOrbital {
           children: [
             { type: stack, direction: vertical, gap: md, children: [
                 { type: typography, variant: h4, content: @entity.title },
-                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.maxQuantity, yMin: 0, yMax: @config.maxPrice, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.maxQuantity, yMin: 0, yMax: @config.maxPrice, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: @entity.labelShapes, interactive: @config.interactive, animate: @config.animate },
                 { type: stack, direction: horizontal, gap: sm, children: [
                     { type: button, action: SHIFT_DEMAND, actionPayload: { delta: @config.demandShiftStep }, label: (str/concat "Demand +" @config.demandShiftStep), variant: primary, size: sm },
                     { type: button, action: SHIFT_DEMAND, actionPayload: { delta: (- 0 @config.demandShiftStep) }, label: (str/concat "Demand −" @config.demandShiftStep), variant: secondary, size: sm },
@@ -314,7 +388,22 @@ orbital EconMarketOrbital {
             (priceLine { label: "Your Price", color: @config.priceLineColor, samples: [ { x: 0, y: @newPrice }, { x: @config.maxQuantity, y: @newPrice } ] })
             (eqPoint (array/nth @entity.points 0))
             (newCurves [ @demandCurve, @supplyCurve, @priceLine ])
-            (newPoints [ @eqPoint, { x: @qd, y: @newPrice, label: "Qd", color: @config.demandColor, radius: 5 }, { x: @qs, y: @newPrice, label: "Qs", color: @config.supplyColor, radius: 5 } ])
+            (newPoints [ @eqPoint, { x: @qd, y: @newPrice, color: @config.demandColor, radius: 5 }, { x: @qs, y: @newPrice, color: @config.supplyColor, radius: 5 } ])
+            (labelClampLo 45)
+            (labelClampHi (- @config.width 45))
+            (eqLabelX (math/clamp (+ 24 (* (/ @entity.equilibriumQuantity @config.maxQuantity) (- @config.width 48))) @labelClampLo @labelClampHi))
+            (eqLabelY (- (- @config.height (+ 24 (* (/ @entity.equilibriumPrice @config.maxPrice) (- @config.height 48)))) 14))
+            (qdLabelX (- (math/clamp (+ 24 (* (/ @qd @config.maxQuantity) (- @config.width 48))) @labelClampLo @labelClampHi) 8))
+            (qdLabelY (+ (- @config.height (+ 24 (* (/ @newPrice @config.maxPrice) (- @config.height 48)))) 16))
+            (qsLabelX (+ (math/clamp (+ 24 (* (/ @qs @config.maxQuantity) (- @config.width 48))) @labelClampLo @labelClampHi) 8))
+            (qsLabelY @qdLabelY)
+            (eqLabelVisible (and (and (>= @entity.equilibriumQuantity 0) (<= @entity.equilibriumQuantity @config.maxQuantity)) (and (>= @entity.equilibriumPrice 0) (<= @entity.equilibriumPrice @config.maxPrice))))
+            (qdLabelVisible (and (>= @qd 0) (<= @qd @config.maxQuantity)))
+            (qsLabelVisible (and (>= @qs 0) (<= @qs @config.maxQuantity)))
+            (labelShapes (array/concat (array/concat
+                (if @eqLabelVisible [ { type: text, x: @eqLabelX, y: @eqLabelY, text: "Equilibrium", color: @config.equilibriumColor, fontSize: 12, align: center } ] [])
+                (if @qdLabelVisible [ { type: text, x: @qdLabelX, y: @qdLabelY, text: "Qd", color: @config.demandColor, fontSize: 12, align: right } ] []))
+                (if @qsLabelVisible [ { type: text, x: @qsLabelX, y: @qsLabelY, text: "Qs", color: @config.supplyColor, fontSize: 12, align: left } ] [])))
           )
           (do
             (set @entity.price @newPrice)
@@ -324,6 +413,7 @@ orbital EconMarketOrbital {
             (set @entity.marketStatusMagnitude @statusMag)
             (set @entity.curves @newCurves)
             (set @entity.points @newPoints)
+            (set @entity.labelShapes @labelShapes)
           )
         )
         (render-ui main {
@@ -332,7 +422,7 @@ orbital EconMarketOrbital {
           children: [
             { type: stack, direction: vertical, gap: md, children: [
                 { type: typography, variant: h4, content: @entity.title },
-                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.maxQuantity, yMin: 0, yMax: @config.maxPrice, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: @config.maxQuantity, yMin: 0, yMax: @config.maxPrice, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: @entity.points, vectors: [], shapes: @entity.labelShapes, interactive: @config.interactive, animate: @config.animate },
                 { type: stack, direction: horizontal, gap: sm, children: [
                     { type: button, action: SHIFT_DEMAND, actionPayload: { delta: @config.demandShiftStep }, label: (str/concat "Demand +" @config.demandShiftStep), variant: primary, size: sm },
                     { type: button, action: SHIFT_DEMAND, actionPayload: { delta: (- 0 @config.demandShiftStep) }, label: (str/concat "Demand −" @config.demandShiftStep), variant: secondary, size: sm },

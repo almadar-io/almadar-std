@@ -145,7 +145,7 @@ export interface StdUiSpaceShmupBoardConfig {
   width?: number;
 }
 
-type _StdUiSpaceShmupBoardEntityName = 'SpaceShmupBoardItem';
+type _StdUiSpaceShmupBoardEntityName = 'SpaceShmupBoardItem' | 'AnimTickItem';
 type _StdUiSpaceShmupBoardListenTraitName = 'SpaceShmupBoardRender' | 'ThrusterClock';
 
 /**

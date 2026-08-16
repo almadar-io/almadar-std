@@ -50,7 +50,7 @@ export interface StdLearningBiologyLabConfig {
   mode?: 'cell' | 'food-web' | 'classification-network' | 'process-rate' | 'phase-cycle';
 }
 
-type _StdLearningBiologyLabEntityName = 'BiologyLabItem' | 'ProcessRateScene' | 'PhaseCycleScene' | 'CellNetworkScene' | 'FoodWebNetworkScene' | 'ClassificationNetworkScene';
+type _StdLearningBiologyLabEntityName = 'BiologyLabItem' | 'ProcessRateScene' | 'PhaseCycleScene' | 'CellNetworkScene' | 'FoodWebNetworkScene' | 'ClassificationNetworkScene' | 'BioProcessRateScene' | 'BioPhaseCycleScene' | 'BioCellState' | 'BioFoodwebState' | 'BioNetworkScene';
 type _StdLearningBiologyLabListenTraitName = 'BiologyLabRouter' | 'ProcessRateSim' | 'PhaseCycleSim' | 'CellNetworkSim' | 'FoodWebNetworkSim' | 'ClassificationNetworkSim';
 
 /**

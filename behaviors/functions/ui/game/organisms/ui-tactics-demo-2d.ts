@@ -45,7 +45,7 @@ export interface StdUiTacticsDemo2dConfig {
   units?: unknown;
 }
 
-type _StdUiTacticsDemo2dEntityName = 'GameState';
+type _StdUiTacticsDemo2dEntityName = 'GameState' | 'ScoreState';
 type _StdUiTacticsDemo2dListenTraitName = 'Authority' | 'FxDecay' | 'RoundLogic' | 'ScoreKeeper' | 'AnimClock' | 'Player';
 
 /**

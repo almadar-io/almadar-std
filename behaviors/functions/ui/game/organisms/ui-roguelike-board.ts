@@ -15267,6 +15267,7 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                           [
                             'array/reduce',
                             '@adjEnemies',
+                            0,
                             [
                               'fn',
                               [
@@ -15279,7 +15280,6 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                                 '@e.attack',
                               ],
                             ],
-                            0,
                           ],
                         ],
                       ],
