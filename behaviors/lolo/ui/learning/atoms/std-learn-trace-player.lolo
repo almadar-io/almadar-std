@@ -1,0 +1,297 @@
+app std-learn-trace-player "1.0.0"
+"Generic auto-playing frame-sequence instrument — the timed-autoplay sibling of std-learn-stepper: a config-declared ordered roster of frames (each frame a label, caption, and a numeric value snapshot with optional highlighted indices) advances on a fixed tick while Play is engaged, Pause freezes the cursor in place, and Restart rewinds to the first frame; reaching the last frame either loops back to the start (config loop) or stops and emits a completion signal. The current frame's values render as bars on an algorithm-canvas with highlighted indices picked out by color, alongside a frame k of n readout and a caption card narrating what changed, so the same mechanism serves any ordered numeric-trace domain (sorting steps, iterative approximations, simulation snapshots, and beyond). Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital LearnTracePlayerOrbital {
+  type TraceBar = {
+    value : number!
+    color : string
+    label : string
+  }
+  type TraceFrame = {
+    label : string!
+    caption : string!
+    values : [number]!
+    highlights : [number]!
+  }
+
+  entity TracePlayerScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    frameIndex : number = 0
+    running : boolean = false
+    bars : [TraceBar]
+    frameLabel : string
+    frameCaption : string
+    statusNote : string
+  }
+
+  trait TracePlayerSim -> @rebindable TracePlayerScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.frameIndex 0)
+        (set @entity.running false)
+        (set @entity.statusNote "Paused")
+        (set @entity.frameLabel (object/get (array/nth @config.frames @entity.frameIndex) label))
+        (set @entity.frameCaption (object/get (array/nth @config.frames @entity.frameIndex) caption))
+        (set @entity.bars (array/map (object/get (array/nth @config.frames @entity.frameIndex) values)
+          { value: @item, color: (if (array/includes (object/get (array/nth @config.frames @entity.frameIndex) highlights) @index) @config.highlightColor @config.baseColor), label: (str/concat "" @item) }))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: progress-bar, value: (+ @entity.frameIndex 1), max: (array/len @config.frames), showPercentage: false, label: (str/concat "Frame " (str/concat "" (+ @entity.frameIndex 1)) " of " (str/concat "" (array/len @config.frames))) },
+                { type: algorithm-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bars: @entity.bars },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: PLAY, label: "Play", variant: primary, disabled: (if @entity.running true false) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: RESTART, label: "Restart", variant: ghost }
+                  ] },
+                { type: card, variant: bordered, padding: md, title: @entity.frameLabel, children: [
+                    { type: typography, variant: body, content: @entity.frameCaption }
+                  ] },
+                { type: typography, variant: caption, content: (str/concat @entity.statusNote " · " (str/concat "" @config.tickMs) " ms/frame" (if @config.loop " · loops" "")) }
+              ] }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.frameIndex 0)
+        (set @entity.running false)
+        (set @entity.statusNote "Paused")
+        (set @entity.frameLabel (object/get (array/nth @config.frames @entity.frameIndex) label))
+        (set @entity.frameCaption (object/get (array/nth @config.frames @entity.frameIndex) caption))
+        (set @entity.bars (array/map (object/get (array/nth @config.frames @entity.frameIndex) values)
+          { value: @item, color: (if (array/includes (object/get (array/nth @config.frames @entity.frameIndex) highlights) @index) @config.highlightColor @config.baseColor), label: (str/concat "" @item) }))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: progress-bar, value: (+ @entity.frameIndex 1), max: (array/len @config.frames), showPercentage: false, label: (str/concat "Frame " (str/concat "" (+ @entity.frameIndex 1)) " of " (str/concat "" (array/len @config.frames))) },
+                { type: algorithm-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bars: @entity.bars },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: PLAY, label: "Play", variant: primary, disabled: (if @entity.running true false) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: RESTART, label: "Restart", variant: ghost }
+                  ] },
+                { type: card, variant: bordered, padding: md, title: @entity.frameLabel, children: [
+                    { type: typography, variant: body, content: @entity.frameCaption }
+                  ] },
+                { type: typography, variant: caption, content: (str/concat @entity.statusNote " · " (str/concat "" @config.tickMs) " ms/frame" (if @config.loop " · loops" "")) }
+              ] }
+          ]
+        })
+
+      PLAY -> idle when (== @entity.active true)
+        (set @entity.running true)
+        (set @entity.statusNote "Playing")
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: progress-bar, value: (+ @entity.frameIndex 1), max: (array/len @config.frames), showPercentage: false, label: (str/concat "Frame " (str/concat "" (+ @entity.frameIndex 1)) " of " (str/concat "" (array/len @config.frames))) },
+                { type: algorithm-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bars: @entity.bars },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: PLAY, label: "Play", variant: primary, disabled: (if @entity.running true false) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: RESTART, label: "Restart", variant: ghost }
+                  ] },
+                { type: card, variant: bordered, padding: md, title: @entity.frameLabel, children: [
+                    { type: typography, variant: body, content: @entity.frameCaption }
+                  ] },
+                { type: typography, variant: caption, content: (str/concat @entity.statusNote " · " (str/concat "" @config.tickMs) " ms/frame" (if @config.loop " · loops" "")) }
+              ] }
+          ]
+        })
+        (emit FRAME_ADVANCED { frameIndex: @entity.frameIndex, frameLabel: @entity.frameLabel })
+
+      PAUSE -> idle when (== @entity.active true)
+        (set @entity.running false)
+        (set @entity.statusNote "Paused")
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: progress-bar, value: (+ @entity.frameIndex 1), max: (array/len @config.frames), showPercentage: false, label: (str/concat "Frame " (str/concat "" (+ @entity.frameIndex 1)) " of " (str/concat "" (array/len @config.frames))) },
+                { type: algorithm-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bars: @entity.bars },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: PLAY, label: "Play", variant: primary, disabled: (if @entity.running true false) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: RESTART, label: "Restart", variant: ghost }
+                  ] },
+                { type: card, variant: bordered, padding: md, title: @entity.frameLabel, children: [
+                    { type: typography, variant: body, content: @entity.frameCaption }
+                  ] },
+                { type: typography, variant: caption, content: (str/concat @entity.statusNote " · " (str/concat "" @config.tickMs) " ms/frame" (if @config.loop " · loops" "")) }
+              ] }
+          ]
+        })
+        (emit FRAME_ADVANCED { frameIndex: @entity.frameIndex, frameLabel: @entity.frameLabel })
+
+      RESTART -> idle when (== @entity.active true)
+        (set @entity.frameIndex 0)
+        (set @entity.running false)
+        (set @entity.statusNote "Paused")
+        (set @entity.frameLabel (object/get (array/nth @config.frames @entity.frameIndex) label))
+        (set @entity.frameCaption (object/get (array/nth @config.frames @entity.frameIndex) caption))
+        (set @entity.bars (array/map (object/get (array/nth @config.frames @entity.frameIndex) values)
+          { value: @item, color: (if (array/includes (object/get (array/nth @config.frames @entity.frameIndex) highlights) @index) @config.highlightColor @config.baseColor), label: (str/concat "" @item) }))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: progress-bar, value: (+ @entity.frameIndex 1), max: (array/len @config.frames), showPercentage: false, label: (str/concat "Frame " (str/concat "" (+ @entity.frameIndex 1)) " of " (str/concat "" (array/len @config.frames))) },
+                { type: algorithm-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bars: @entity.bars },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: PLAY, label: "Play", variant: primary, disabled: (if @entity.running true false) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: RESTART, label: "Restart", variant: ghost }
+                  ] },
+                { type: card, variant: bordered, padding: md, title: @entity.frameLabel, children: [
+                    { type: typography, variant: body, content: @entity.frameCaption }
+                  ] },
+                { type: typography, variant: caption, content: (str/concat @entity.statusNote " · " (str/concat "" @config.tickMs) " ms/frame" (if @config.loop " · loops" "")) }
+              ] }
+          ]
+        })
+        (emit FRAME_ADVANCED { frameIndex: @entity.frameIndex, frameLabel: @entity.frameLabel })
+    }
+
+    ticks {
+      framePlayerTick every 500ms
+        when @entity.running
+        (set @entity.running (if (and (>= @entity.frameIndex (- (array/len @config.frames) 1)) (not @config.loop)) false @entity.running))
+        (set @entity.frameIndex (if (>= @entity.frameIndex (- (array/len @config.frames) 1)) (if @config.loop 0 @entity.frameIndex) (+ @entity.frameIndex 1)))
+        (set @entity.frameLabel (object/get (array/nth @config.frames @entity.frameIndex) label))
+        (set @entity.frameCaption (object/get (array/nth @config.frames @entity.frameIndex) caption))
+        (set @entity.bars (array/map (object/get (array/nth @config.frames @entity.frameIndex) values)
+          { value: @item, color: (if (array/includes (object/get (array/nth @config.frames @entity.frameIndex) highlights) @index) @config.highlightColor @config.baseColor), label: (str/concat "" @item) }))
+        (set @entity.statusNote (if @entity.running "Playing" (if (>= (+ @entity.frameIndex 1) (array/len @config.frames)) "Finished" "Paused")))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: progress-bar, value: (+ @entity.frameIndex 1), max: (array/len @config.frames), showPercentage: false, label: (str/concat "Frame " (str/concat "" (+ @entity.frameIndex 1)) " of " (str/concat "" (array/len @config.frames))) },
+                { type: algorithm-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bars: @entity.bars },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: PLAY, label: "Play", variant: primary, disabled: (if @entity.running true false) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: RESTART, label: "Restart", variant: ghost }
+                  ] },
+                { type: card, variant: bordered, padding: md, title: @entity.frameLabel, children: [
+                    { type: typography, variant: body, content: @entity.frameCaption }
+                  ] },
+                { type: typography, variant: caption, content: (str/concat @entity.statusNote " · " (str/concat "" @config.tickMs) " ms/frame" (if @config.loop " · loops" "")) }
+              ] }
+          ]
+        })
+        (emit FRAME_ADVANCED { frameIndex: @entity.frameIndex, frameLabel: @entity.frameLabel })
+        (if (and (not @config.loop) (not @entity.running) (>= (+ @entity.frameIndex 1) (array/len @config.frames))) (emit TRACE_DONE { totalFrames: (array/len @config.frames) }) null)
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      PLAY {
+      }
+        @description "Learner pressed Play — the frame cursor begins advancing on the tick until the last frame is reached or Pause is pressed."
+        @tier "domain"
+      PAUSE {
+      }
+        @description "Learner pressed Pause — the frame cursor freezes at its current position."
+        @tier "domain"
+      RESTART {
+      }
+        @description "Learner pressed Restart — the frame cursor rewinds to the first frame and playback stops."
+        @tier "domain"
+    }
+
+    emits {
+      FRAME_ADVANCED -> external {
+        frameIndex : number
+        frameLabel : string
+      }
+        @description "The current frame cursor after Play/Pause/Restart or a tick step — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "frame update, tick, step, trace advance"
+        @tier "domain"
+      TRACE_DONE -> external {
+        totalFrames : number
+      }
+        @description "The trace reached its last frame and loop is off, so autoplay stopped on its own — fires once per completed pass."
+        @synonyms "playback complete, sequence finished, trace end"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Trace Player"
+        @label "Title"
+        @description "Title shown above the instrument."
+        @tier "presentation"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      backgroundColor : string = "#f8fafc"
+        @label "Background Color"
+        @tier "presentation"
+      baseColor : string = "#3b82f6"
+        @label "Base Bar Color"
+        @description "Color of bars not highlighted in the current frame."
+        @tier "presentation"
+      highlightColor : string = "#f59e0b"
+        @label "Highlight Bar Color"
+        @description "Color of bars whose index appears in the current frame's highlights."
+        @tier "presentation"
+      tickMs : number = 500
+        @label "Tick Milliseconds"
+        @description "Milliseconds per frame shown in the readout; the autoplay cadence."
+        @tier "presentation"
+      loop : boolean = false
+        @label "Loop"
+        @description "When true, autoplay wraps from the last frame back to the first instead of stopping and emitting TRACE_DONE."
+        @tier "domain"
+      frames : [TraceFrame] = [
+        { label: "Start", caption: "Unsorted array.", values: [5, 3, 8, 1, 9, 2], highlights: [] },
+        { label: "Compare 5, 3", caption: "Compare the first two elements; 5 > 3 so swap them.", values: [3, 5, 8, 1, 9, 2], highlights: [0, 1] },
+        { label: "Compare 5, 8", caption: "Compare the next pair; already in order.", values: [3, 5, 8, 1, 9, 2], highlights: [1, 2] },
+        { label: "Compare 8, 1", caption: "8 > 1 so swap them.", values: [3, 5, 1, 8, 9, 2], highlights: [2, 3] },
+        { label: "Compare 8, 9", caption: "Already in order.", values: [3, 5, 1, 8, 9, 2], highlights: [3, 4] },
+        { label: "Compare 9, 2", caption: "9 > 2 so swap them; one pass complete.", values: [3, 5, 1, 8, 2, 9], highlights: [4, 5] }
+      ]
+        @label "Frames"
+        @description "Ordered roster of frames (label, caption, values, highlights) stepped through by Play/Pause/Restart. Each frame's values render as bars; highlighted indices pick out which bars changed."
+        @synonyms "trace, animation frames, snapshot roster, playback sequence, keyframes"
+        @tier "domain"
+    }
+  }
+
+  page "/learn-trace-player" as LearnTracePlayerPage -> TracePlayerSim
+}

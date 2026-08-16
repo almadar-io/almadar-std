@@ -1,0 +1,397 @@
+app std-learn-live-sim "1.0.0"
+"Generic continuous particle-dynamics instrument — the live-integration sibling of std-physics-projectile: config-declared initial bodies (position, velocity, radius, color) fall under gravity, lose speed to damping, and bounce off the world bounds every tick while Run is engaged; Pause freezes the simulation and Reset restores the initial bodies. Gravity and damping are each exposed as a range-slider so the learner can retune the dynamics live, with a readout of elapsed ticks and a sample body's current speed. So the same mechanism serves any bouncing-particle domain (gas molecules, falling objects, orbit sketches, and beyond) on a physics-canvas. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital LearnLiveSimOrbital {
+  type LiveSimBody = {
+    id : string
+    x : number!
+    y : number!
+    radius : number
+    color : string
+    vx : number
+    vy : number
+  }
+
+  entity LiveSimScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    bodies : [LiveSimBody]
+    running : boolean = false
+    gravity : number = 0
+    damping : number = 1
+    tickCount : number = 0
+    sampleSpeed : number = 0
+  }
+
+  trait LiveSimSim -> @rebindable LiveSimScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.bodies @config.bodies)
+        (set @entity.running @config.running)
+        (set @entity.gravity @config.gravity)
+        (set @entity.damping @config.damping)
+        (set @entity.tickCount 0)
+        (set @entity.sampleSpeed 0)
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if @entity.running true false) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat "Gravity: " (math/round @entity.gravity 2)) },
+                    { type: range-slider, min: -1, max: 1.5, step: 0.05, value: @entity.gravity, showTooltip: true, action: "SET_GRAVITY" }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat "Damping: " (math/round @entity.damping 3)) },
+                    { type: range-slider, min: 0.9, max: 1, step: 0.005, value: @entity.damping, showTooltip: true, action: "SET_DAMPING" }
+                  ] },
+                { type: physics-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bodies: @entity.bodies, showVelocity: @config.showVelocity, showForces: false, velocityScale: @config.velocityScale },
+                { type: typography, variant: body, content: (str/concat "Tick " (str/concat "" @entity.tickCount) " · sample speed " (math/round @entity.sampleSpeed 2)) }
+              ] }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.bodies @config.bodies)
+        (set @entity.running @config.running)
+        (set @entity.gravity @config.gravity)
+        (set @entity.damping @config.damping)
+        (set @entity.tickCount 0)
+        (set @entity.sampleSpeed 0)
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if @entity.running true false) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat "Gravity: " (math/round @entity.gravity 2)) },
+                    { type: range-slider, min: -1, max: 1.5, step: 0.05, value: @entity.gravity, showTooltip: true, action: "SET_GRAVITY" }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat "Damping: " (math/round @entity.damping 3)) },
+                    { type: range-slider, min: 0.9, max: 1, step: 0.005, value: @entity.damping, showTooltip: true, action: "SET_DAMPING" }
+                  ] },
+                { type: physics-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bodies: @entity.bodies, showVelocity: @config.showVelocity, showForces: false, velocityScale: @config.velocityScale },
+                { type: typography, variant: body, content: (str/concat "Tick " (str/concat "" @entity.tickCount) " · sample speed " (math/round @entity.sampleSpeed 2)) }
+              ] }
+          ]
+        })
+
+      RUN -> idle when (== @entity.active true)
+        (set @entity.running true)
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if @entity.running true false) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat "Gravity: " (math/round @entity.gravity 2)) },
+                    { type: range-slider, min: -1, max: 1.5, step: 0.05, value: @entity.gravity, showTooltip: true, action: "SET_GRAVITY" }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat "Damping: " (math/round @entity.damping 3)) },
+                    { type: range-slider, min: 0.9, max: 1, step: 0.005, value: @entity.damping, showTooltip: true, action: "SET_DAMPING" }
+                  ] },
+                { type: physics-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bodies: @entity.bodies, showVelocity: @config.showVelocity, showForces: false, velocityScale: @config.velocityScale },
+                { type: typography, variant: body, content: (str/concat "Tick " (str/concat "" @entity.tickCount) " · sample speed " (math/round @entity.sampleSpeed 2)) }
+              ] }
+          ]
+        })
+        (emit RUN_TOGGLED { running: @entity.running })
+
+      PAUSE -> idle when (== @entity.active true)
+        (set @entity.running false)
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if @entity.running true false) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat "Gravity: " (math/round @entity.gravity 2)) },
+                    { type: range-slider, min: -1, max: 1.5, step: 0.05, value: @entity.gravity, showTooltip: true, action: "SET_GRAVITY" }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat "Damping: " (math/round @entity.damping 3)) },
+                    { type: range-slider, min: 0.9, max: 1, step: 0.005, value: @entity.damping, showTooltip: true, action: "SET_DAMPING" }
+                  ] },
+                { type: physics-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bodies: @entity.bodies, showVelocity: @config.showVelocity, showForces: false, velocityScale: @config.velocityScale },
+                { type: typography, variant: body, content: (str/concat "Tick " (str/concat "" @entity.tickCount) " · sample speed " (math/round @entity.sampleSpeed 2)) }
+              ] }
+          ]
+        })
+        (emit RUN_TOGGLED { running: @entity.running })
+
+      RESET -> idle when (== @entity.active true)
+        (set @entity.bodies @config.bodies)
+        (set @entity.running false)
+        (set @entity.gravity @config.gravity)
+        (set @entity.damping @config.damping)
+        (set @entity.tickCount 0)
+        (set @entity.sampleSpeed 0)
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if @entity.running true false) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat "Gravity: " (math/round @entity.gravity 2)) },
+                    { type: range-slider, min: -1, max: 1.5, step: 0.05, value: @entity.gravity, showTooltip: true, action: "SET_GRAVITY" }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat "Damping: " (math/round @entity.damping 3)) },
+                    { type: range-slider, min: 0.9, max: 1, step: 0.005, value: @entity.damping, showTooltip: true, action: "SET_DAMPING" }
+                  ] },
+                { type: physics-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bodies: @entity.bodies, showVelocity: @config.showVelocity, showForces: false, velocityScale: @config.velocityScale },
+                { type: typography, variant: body, content: (str/concat "Tick " (str/concat "" @entity.tickCount) " · sample speed " (math/round @entity.sampleSpeed 2)) }
+              ] }
+          ]
+        })
+        (emit SIM_RESET { bodyCount: (array/len @entity.bodies) })
+
+      SET_GRAVITY -> idle when (== @entity.active true)
+        (set @entity.gravity (math/clamp ?value -1 1.5))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if @entity.running true false) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat "Gravity: " (math/round @entity.gravity 2)) },
+                    { type: range-slider, min: -1, max: 1.5, step: 0.05, value: @entity.gravity, showTooltip: true, action: "SET_GRAVITY" }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat "Damping: " (math/round @entity.damping 3)) },
+                    { type: range-slider, min: 0.9, max: 1, step: 0.005, value: @entity.damping, showTooltip: true, action: "SET_DAMPING" }
+                  ] },
+                { type: physics-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bodies: @entity.bodies, showVelocity: @config.showVelocity, showForces: false, velocityScale: @config.velocityScale },
+                { type: typography, variant: body, content: (str/concat "Tick " (str/concat "" @entity.tickCount) " · sample speed " (math/round @entity.sampleSpeed 2)) }
+              ] }
+          ]
+        })
+
+      SET_DAMPING -> idle when (== @entity.active true)
+        (set @entity.damping (math/clamp ?value 0.9 1))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if @entity.running true false) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat "Gravity: " (math/round @entity.gravity 2)) },
+                    { type: range-slider, min: -1, max: 1.5, step: 0.05, value: @entity.gravity, showTooltip: true, action: "SET_GRAVITY" }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat "Damping: " (math/round @entity.damping 3)) },
+                    { type: range-slider, min: 0.9, max: 1, step: 0.005, value: @entity.damping, showTooltip: true, action: "SET_DAMPING" }
+                  ] },
+                { type: physics-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bodies: @entity.bodies, showVelocity: @config.showVelocity, showForces: false, velocityScale: @config.velocityScale },
+                { type: typography, variant: body, content: (str/concat "Tick " (str/concat "" @entity.tickCount) " · sample speed " (math/round @entity.sampleSpeed 2)) }
+              ] }
+          ]
+        })
+    }
+
+    ticks {
+      liveSimTick every 32ms
+        when @entity.running
+        (set @entity.bodies (array/map @entity.bodies (fn b
+          (let (
+            (r (object/get @b radius))
+            (nvx (* (object/get @b vx) @entity.damping))
+            (nvy (* (+ (object/get @b vy) @entity.gravity) @entity.damping))
+          )
+          (let (
+            (nx (+ (object/get @b x) @nvx))
+            (ny (+ (object/get @b y) @nvy))
+          )
+          (let (
+            (hitx (or (< @nx @r) (> @nx (- @config.width @r))))
+            (hity (or (< @ny @r) (> @ny (- @config.height @r))))
+          )
+          (object/merge @b {
+            x: (math/clamp @nx @r (- @config.width @r)),
+            y: (math/clamp @ny @r (- @config.height @r)),
+            vx: (if @hitx (* @nvx (* -1 @config.restitution)) @nvx),
+            vy: (if @hity (* @nvy (* -1 @config.restitution)) @nvy)
+          })))))))
+        (set @entity.tickCount (+ @entity.tickCount 1))
+        (set @entity.sampleSpeed (let (
+            (s (array/first @entity.bodies))
+          )
+          (math/sqrt (+ (* (object/get @s vx) (object/get @s vx)) (* (object/get @s vy) (object/get @s vy))))))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if @entity.running true false) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat "Gravity: " (math/round @entity.gravity 2)) },
+                    { type: range-slider, min: -1, max: 1.5, step: 0.05, value: @entity.gravity, showTooltip: true, action: "SET_GRAVITY" }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat "Damping: " (math/round @entity.damping 3)) },
+                    { type: range-slider, min: 0.9, max: 1, step: 0.005, value: @entity.damping, showTooltip: true, action: "SET_DAMPING" }
+                  ] },
+                { type: physics-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, bodies: @entity.bodies, showVelocity: @config.showVelocity, showForces: false, velocityScale: @config.velocityScale },
+                { type: typography, variant: body, content: (str/concat "Tick " (str/concat "" @entity.tickCount) " · sample speed " (math/round @entity.sampleSpeed 2)) }
+              ] }
+          ]
+        })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      RUN {
+      }
+        @description "Learner pressed Run — the tick begins integrating gravity, damping, and wall bounce for every body."
+        @tier "domain"
+      PAUSE {
+      }
+        @description "Learner pressed Pause — the simulation freezes at its current positions and velocities."
+        @tier "domain"
+      RESET {
+      }
+        @description "Learner pressed Reset — bodies, gravity, and damping revert to their configured initial values and the tick counter clears."
+        @tier "domain"
+      SET_GRAVITY {
+        value : number
+      }
+        @description "Learner dragged the gravity slider — value is the new downward acceleration applied to every body each tick."
+        @tier "domain"
+      SET_DAMPING {
+        value : number
+      }
+        @description "Learner dragged the damping slider — value is the new fraction of velocity retained each tick (air resistance)."
+        @tier "domain"
+    }
+
+    emits {
+      RUN_TOGGLED -> external {
+        running : boolean
+      }
+        @description "The simulation was started or paused — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "run state, play pause, sim toggle"
+        @tier "domain"
+      SIM_RESET -> external {
+        bodyCount : number
+      }
+        @description "The learner reset the simulation back to its configured initial bodies and dynamics."
+        @synonyms "sim restart, clear run, revert bodies"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Live Sim"
+        @label "Title"
+        @description "Title shown above the instrument."
+        @tier "presentation"
+      running : boolean = false
+        @label "Running"
+        @description "Whether the simulation starts already running on INIT."
+        @tier "domain"
+      gravity : number = 0.4
+        @label "Gravity"
+        @description "Initial downward acceleration added to each body's vy every tick; adjustable live via the Gravity slider."
+        @tier "domain"
+      damping : number = 0.995
+        @label "Damping"
+        @description "Initial fraction of velocity retained each tick (air resistance); adjustable live via the Damping slider."
+        @tier "domain"
+      restitution : number = 0.78
+        @label "Restitution"
+        @description "Fraction of speed kept when a body bounces off a wall."
+        @tier "domain"
+      width : number = 600
+        @label "Width"
+        @description "Simulation width in pixels; bounds the bounce."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Simulation height in pixels; bounds the bounce."
+        @tier "presentation"
+      backgroundColor : string = "#f8fafc"
+        @label "Background Color"
+        @tier "presentation"
+      showVelocity : boolean = true
+        @label "Show Velocity"
+        @description "Draw each body's velocity vector as an arrow."
+        @tier "presentation"
+      velocityScale : number = 8
+        @label "Velocity Scale"
+        @description "Length multiplier for the velocity arrows."
+        @tier "presentation"
+      bodies : [LiveSimBody] = [
+        { id: "ball-a", x: 100, y: 60, radius: 14, color: "#2563eb", vx: 4, vy: 0 },
+        { id: "ball-b", x: 260, y: 90, radius: 18, color: "#16a34a", vx: -3, vy: 2 },
+        { id: "ball-c", x: 420, y: 40, radius: 11, color: "#f59e0b", vx: 2, vy: -1 }
+      ]
+        @label "Bodies"
+        @description "Initial bodies; each carries position (x,y), radius, color, and velocity (vx,vy). Restored on Reset."
+        @tier "presentation"
+    }
+  }
+
+  page "/learn-live-sim" as LearnLiveSimPage -> LiveSimSim
+}

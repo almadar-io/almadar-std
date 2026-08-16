@@ -17,262 +17,6 @@ import { mergeCallSiteConfigOverrides } from '@almadar/core/factory-runtime';
 import type { OrbitalParamsManifest, ParamFieldDescriptor } from '@almadar/core/factory-runtime';
 
 import {
-  stdLearningAlgorithmsAstargraphOrbital,
-  StdLearningAlgorithmsAstargraphOrbitalManifest,
-  isStdLearningAlgorithmsAstargraphOrbitalParams,
-  stdLearningAlgorithmsAstargridOrbital,
-  StdLearningAlgorithmsAstargridOrbitalManifest,
-  isStdLearningAlgorithmsAstargridOrbitalParams,
-  stdLearningAlgorithmsBfsOrbital,
-  StdLearningAlgorithmsBfsOrbitalManifest,
-  isStdLearningAlgorithmsBfsOrbitalParams,
-  stdLearningAlgorithmsBinarysearchOrbital,
-  StdLearningAlgorithmsBinarysearchOrbitalManifest,
-  isStdLearningAlgorithmsBinarysearchOrbitalParams,
-  stdLearningAlgorithmsBubblesortOrbital,
-  StdLearningAlgorithmsBubblesortOrbitalManifest,
-  isStdLearningAlgorithmsBubblesortOrbitalParams,
-  stdLearningAlgorithmsBstOrbital,
-  StdLearningAlgorithmsBstOrbitalManifest,
-  isStdLearningAlgorithmsBstOrbitalParams,
-  stdLearningAlgorithmsDfsOrbital,
-  StdLearningAlgorithmsDfsOrbitalManifest,
-  isStdLearningAlgorithmsDfsOrbitalParams,
-  stdLearningAlgorithmsDijkstraOrbital,
-  StdLearningAlgorithmsDijkstraOrbitalManifest,
-  isStdLearningAlgorithmsDijkstraOrbitalParams,
-  stdLearningAlgorithmsDpOrbital,
-  StdLearningAlgorithmsDpOrbitalManifest,
-  isStdLearningAlgorithmsDpOrbitalParams,
-  stdLearningAlgorithmsFloodfillOrbital,
-  StdLearningAlgorithmsFloodfillOrbitalManifest,
-  isStdLearningAlgorithmsFloodfillOrbitalParams,
-  stdLearningAlgorithmsGameoflifeOrbital,
-  StdLearningAlgorithmsGameoflifeOrbitalManifest,
-  isStdLearningAlgorithmsGameoflifeOrbitalParams,
-  stdLearningAlgorithmsGridbfsOrbital,
-  StdLearningAlgorithmsGridbfsOrbitalManifest,
-  isStdLearningAlgorithmsGridbfsOrbitalParams,
-  stdLearningAlgorithmsHashingOrbital,
-  StdLearningAlgorithmsHashingOrbitalManifest,
-  isStdLearningAlgorithmsHashingOrbitalParams,
-  stdLearningAlgorithmsHeapsortOrbital,
-  StdLearningAlgorithmsHeapsortOrbitalManifest,
-  isStdLearningAlgorithmsHeapsortOrbitalParams,
-  stdLearningAlgorithmsInsertionsortOrbital,
-  StdLearningAlgorithmsInsertionsortOrbitalManifest,
-  isStdLearningAlgorithmsInsertionsortOrbitalParams,
-  stdLearningAlgorithmsMazegenOrbital,
-  StdLearningAlgorithmsMazegenOrbitalManifest,
-  isStdLearningAlgorithmsMazegenOrbitalParams,
-  stdLearningAlgorithmsMergesortOrbital,
-  StdLearningAlgorithmsMergesortOrbitalManifest,
-  isStdLearningAlgorithmsMergesortOrbitalParams,
-  stdLearningAlgorithmsMstOrbital,
-  StdLearningAlgorithmsMstOrbitalManifest,
-  isStdLearningAlgorithmsMstOrbitalParams,
-  stdLearningAlgorithmsQuicksortOrbital,
-  StdLearningAlgorithmsQuicksortOrbitalManifest,
-  isStdLearningAlgorithmsQuicksortOrbitalParams,
-  stdLearningAlgorithmsRecursionOrbital,
-  StdLearningAlgorithmsRecursionOrbitalManifest,
-  isStdLearningAlgorithmsRecursionOrbitalParams,
-  stdLearningAlgorithmsSelectionsortOrbital,
-  StdLearningAlgorithmsSelectionsortOrbitalManifest,
-  isStdLearningAlgorithmsSelectionsortOrbitalParams,
-  stdLearningAlgorithmsSlidingwindowOrbital,
-  StdLearningAlgorithmsSlidingwindowOrbitalManifest,
-  isStdLearningAlgorithmsSlidingwindowOrbitalParams,
-  stdLearningAlgorithmsToposortOrbital,
-  StdLearningAlgorithmsToposortOrbitalManifest,
-  isStdLearningAlgorithmsToposortOrbitalParams,
-  stdLearningAlgorithmsTwopointerOrbital,
-  StdLearningAlgorithmsTwopointerOrbitalManifest,
-  isStdLearningAlgorithmsTwopointerOrbitalParams,
-} from './ui/learning/organisms/learning-algorithms.js';
-import {
-  stdLearningAstronomyLabAstronomyLabOrbital,
-  StdLearningAstronomyLabAstronomyLabOrbitalManifest,
-  isStdLearningAstronomyLabAstronomyLabOrbitalParams,
-} from './ui/learning/organisms/learning-astronomy-lab.js';
-import {
-  stdLearningBiologyPredatorPreyOrbital,
-  StdLearningBiologyPredatorPreyOrbitalManifest,
-  isStdLearningBiologyPredatorPreyOrbitalParams,
-  stdLearningBiologyFoodwebOrbital,
-  StdLearningBiologyFoodwebOrbitalManifest,
-  isStdLearningBiologyFoodwebOrbitalParams,
-  stdLearningBiologyMitosisOrbital,
-  StdLearningBiologyMitosisOrbitalManifest,
-  isStdLearningBiologyMitosisOrbitalParams,
-  stdLearningBiologyCellStructureOrbital,
-  StdLearningBiologyCellStructureOrbitalManifest,
-  isStdLearningBiologyCellStructureOrbitalParams,
-} from './ui/learning/organisms/learning-biology.js';
-import {
-  stdLearningBiologyLabBiologyLabOrbital,
-  StdLearningBiologyLabBiologyLabOrbitalManifest,
-  isStdLearningBiologyLabBiologyLabOrbitalParams,
-} from './ui/learning/organisms/learning-biology-lab.js';
-import {
-  stdLearningChartsChartsOrbital,
-  StdLearningChartsChartsOrbitalManifest,
-  isStdLearningChartsChartsOrbitalParams,
-} from './ui/learning/organisms/learning-charts.js';
-import {
-  stdLearningChemistryDiffusionOrbital,
-  StdLearningChemistryDiffusionOrbitalManifest,
-  isStdLearningChemistryDiffusionOrbitalParams,
-  stdLearningChemistryReactionOrbital,
-  StdLearningChemistryReactionOrbitalManifest,
-  isStdLearningChemistryReactionOrbitalParams,
-  stdLearningChemistryOsmosisOrbital,
-  StdLearningChemistryOsmosisOrbitalManifest,
-  isStdLearningChemistryOsmosisOrbitalParams,
-} from './ui/learning/organisms/learning-chemistry.js';
-import {
-  stdLearningChemistryLabChemistryLabOrbital,
-  StdLearningChemistryLabChemistryLabOrbitalManifest,
-  isStdLearningChemistryLabChemistryLabOrbitalParams,
-} from './ui/learning/organisms/learning-chemistry-lab.js';
-import {
-  stdLearningCivicsLabCivicsLabOrbital,
-  StdLearningCivicsLabCivicsLabOrbitalManifest,
-  isStdLearningCivicsLabCivicsLabOrbitalParams,
-} from './ui/learning/organisms/learning-civics-lab.js';
-import {
-  stdLearningDiagramDiagramOrbital,
-  StdLearningDiagramDiagramOrbitalManifest,
-  isStdLearningDiagramDiagramOrbitalParams,
-} from './ui/learning/organisms/learning-diagram.js';
-import {
-  stdLearningEarthLabEarthLabOrbital,
-  StdLearningEarthLabEarthLabOrbitalManifest,
-  isStdLearningEarthLabEarthLabOrbitalParams,
-} from './ui/learning/organisms/learning-earth-lab.js';
-import {
-  stdLearningEconomicsLabEconomicsLabOrbital,
-  StdLearningEconomicsLabEconomicsLabOrbitalManifest,
-  isStdLearningEconomicsLabEconomicsLabOrbitalParams,
-} from './ui/learning/organisms/learning-economics-lab.js';
-import {
-  stdLearningGeographyLabGeographyLabOrbital,
-  StdLearningGeographyLabGeographyLabOrbitalManifest,
-  isStdLearningGeographyLabGeographyLabOrbitalParams,
-} from './ui/learning/organisms/learning-geography-lab.js';
-import {
-  stdLearningHistoryLabHistoryLabOrbital,
-  StdLearningHistoryLabHistoryLabOrbitalManifest,
-  isStdLearningHistoryLabHistoryLabOrbitalParams,
-} from './ui/learning/organisms/learning-history-lab.js';
-import {
-  stdLearningLinguisticsLabLinguisticsLabOrbital,
-  StdLearningLinguisticsLabLinguisticsLabOrbitalManifest,
-  isStdLearningLinguisticsLabLinguisticsLabOrbitalParams,
-} from './ui/learning/organisms/learning-linguistics-lab.js';
-import {
-  stdLearningLogicLabLogicLabOrbital,
-  StdLearningLogicLabLogicLabOrbitalManifest,
-  isStdLearningLogicLabLogicLabOrbitalParams,
-} from './ui/learning/organisms/learning-logic-lab.js';
-import {
-  stdLearningMathVectorAdditionOrbital,
-  StdLearningMathVectorAdditionOrbitalManifest,
-  isStdLearningMathVectorAdditionOrbitalParams,
-  stdLearningMathLinearSystemsOrbital,
-  StdLearningMathLinearSystemsOrbitalManifest,
-  isStdLearningMathLinearSystemsOrbitalParams,
-  stdLearningMathNumberLineOrbital,
-  StdLearningMathNumberLineOrbitalManifest,
-  isStdLearningMathNumberLineOrbitalParams,
-  stdLearningMathArithmeticSequenceOrbital,
-  StdLearningMathArithmeticSequenceOrbitalManifest,
-  isStdLearningMathArithmeticSequenceOrbitalParams,
-  stdLearningMathUnitCircleOrbital,
-  StdLearningMathUnitCircleOrbitalManifest,
-  isStdLearningMathUnitCircleOrbitalParams,
-  stdLearningMathSineWaveOrbital,
-  StdLearningMathSineWaveOrbitalManifest,
-  isStdLearningMathSineWaveOrbitalParams,
-} from './ui/learning/organisms/learning-math.js';
-import {
-  stdLearningMathLabMathLabOrbital,
-  StdLearningMathLabMathLabOrbitalManifest,
-  isStdLearningMathLabMathLabOrbitalParams,
-} from './ui/learning/organisms/learning-math-lab.js';
-import {
-  stdLearningPhysicsProjectileMotionOrbital,
-  StdLearningPhysicsProjectileMotionOrbitalManifest,
-  isStdLearningPhysicsProjectileMotionOrbitalParams,
-  stdLearningPhysicsFreeFallMotionOrbital,
-  StdLearningPhysicsFreeFallMotionOrbitalManifest,
-  isStdLearningPhysicsFreeFallMotionOrbitalParams,
-  stdLearningPhysicsSpringMotionOrbital,
-  StdLearningPhysicsSpringMotionOrbitalManifest,
-  isStdLearningPhysicsSpringMotionOrbitalParams,
-  stdLearningPhysicsFrictionMotionOrbital,
-  StdLearningPhysicsFrictionMotionOrbitalManifest,
-  isStdLearningPhysicsFrictionMotionOrbitalParams,
-  stdLearningPhysicsCircularMotionOrbital,
-  StdLearningPhysicsCircularMotionOrbitalManifest,
-  isStdLearningPhysicsCircularMotionOrbitalParams,
-  stdLearningPhysicsPendulumMotionOrbital,
-  StdLearningPhysicsPendulumMotionOrbitalManifest,
-  isStdLearningPhysicsPendulumMotionOrbitalParams,
-  stdLearningPhysicsCollisionMotionOrbital,
-  StdLearningPhysicsCollisionMotionOrbitalManifest,
-  isStdLearningPhysicsCollisionMotionOrbitalParams,
-  stdLearningPhysicsInclineMotionOrbital,
-  StdLearningPhysicsInclineMotionOrbitalManifest,
-  isStdLearningPhysicsInclineMotionOrbitalParams,
-  stdLearningPhysicsOrbitMotionOrbital,
-  StdLearningPhysicsOrbitMotionOrbitalManifest,
-  isStdLearningPhysicsOrbitMotionOrbitalParams,
-  stdLearningPhysicsGasMotionOrbital,
-  StdLearningPhysicsGasMotionOrbitalManifest,
-  isStdLearningPhysicsGasMotionOrbitalParams,
-  stdLearningPhysicsMagneticMotionOrbital,
-  StdLearningPhysicsMagneticMotionOrbitalManifest,
-  isStdLearningPhysicsMagneticMotionOrbitalParams,
-  stdLearningPhysicsWaveMotionOrbital,
-  StdLearningPhysicsWaveMotionOrbitalManifest,
-  isStdLearningPhysicsWaveMotionOrbitalParams,
-  stdLearningPhysicsReflectionMotionOrbital,
-  StdLearningPhysicsReflectionMotionOrbitalManifest,
-  isStdLearningPhysicsReflectionMotionOrbitalParams,
-} from './ui/learning/organisms/learning-physics.js';
-import {
-  stdLearningPhysicsLabPhysicsLabOrbital,
-  StdLearningPhysicsLabPhysicsLabOrbitalManifest,
-  isStdLearningPhysicsLabPhysicsLabOrbitalParams,
-} from './ui/learning/organisms/learning-physics-lab.js';
-import {
-  stdLearningProbabilityGaltonBoardOrbital,
-  StdLearningProbabilityGaltonBoardOrbitalManifest,
-  isStdLearningProbabilityGaltonBoardOrbitalParams,
-  stdLearningProbabilityRandomWalkOrbital,
-  StdLearningProbabilityRandomWalkOrbitalManifest,
-  isStdLearningProbabilityRandomWalkOrbitalParams,
-  stdLearningProbabilityMonteCarloOrbital,
-  StdLearningProbabilityMonteCarloOrbitalManifest,
-  isStdLearningProbabilityMonteCarloOrbitalParams,
-} from './ui/learning/organisms/learning-probability.js';
-import {
-  stdLearningProbabilityLabProbabilityLabOrbital,
-  StdLearningProbabilityLabProbabilityLabOrbitalManifest,
-  isStdLearningProbabilityLabProbabilityLabOrbitalParams,
-} from './ui/learning/organisms/learning-probability-lab.js';
-import {
-  stdLearningPsychologyLabPsychologyLabOrbital,
-  StdLearningPsychologyLabPsychologyLabOrbitalManifest,
-  isStdLearningPsychologyLabPsychologyLabOrbitalParams,
-} from './ui/learning/organisms/learning-psychology-lab.js';
-import {
-  stdLearningSociologyLabSociologyLabOrbital,
-  StdLearningSociologyLabSociologyLabOrbitalManifest,
-  isStdLearningSociologyLabSociologyLabOrbitalParams,
-} from './ui/learning/organisms/learning-sociology-lab.js';
-import {
   stdAgentBuilderAgentBuilderOrbital,
   StdAgentBuilderAgentBuilderOrbitalManifest,
   isStdAgentBuilderAgentBuilderOrbitalParams,
@@ -291,7 +35,7 @@ import {
   stdAgentFixLoopAgentFixLoopOrbital,
   StdAgentFixLoopAgentFixLoopOrbitalManifest,
   isStdAgentFixLoopAgentFixLoopOrbitalParams,
-} from './agent/molecules/std-agent-fix-loop.js';
+} from './agent/atoms/std-agent-fix-loop.js';
 import {
   stdAgentMemoryAgentMemoryOrbital,
   StdAgentMemoryAgentMemoryOrbitalManifest,
@@ -301,7 +45,7 @@ import {
   stdAgentPlannerAgentPlannerOrbital,
   StdAgentPlannerAgentPlannerOrbitalManifest,
   isStdAgentPlannerAgentPlannerOrbitalParams,
-} from './agent/molecules/std-agent-planner.js';
+} from './agent/atoms/std-agent-planner.js';
 import {
   stdAgentRabitCoordinatorOrbital,
   StdAgentRabitCoordinatorOrbitalManifest,
@@ -324,7 +68,7 @@ import {
   stdAgentToolLoopAgentToolLoopOrbital,
   StdAgentToolLoopAgentToolLoopOrbitalManifest,
   isStdAgentToolLoopAgentToolLoopOrbitalParams,
-} from './agent/molecules/std-agent-tool-loop.js';
+} from './agent/atoms/std-agent-tool-loop.js';
 import {
   stdAgentTraceAgentTraceOrbital,
   StdAgentTraceAgentTraceOrbitalManifest,
@@ -351,6 +95,11 @@ import {
   isStdApprovalGateApprovalGateOrbitalParams,
 } from './infra/atoms/std-approval-gate.js';
 import {
+  stdArcadeBoard3dArcadeBoard3DFrameOrbital,
+  StdArcadeBoard3dArcadeBoard3DFrameOrbitalManifest,
+  isStdArcadeBoard3dArcadeBoard3DFrameOrbitalParams,
+} from './ui/game/organisms/std-arcade-board-3d.js';
+import {
   stdAuditCaptureAuditCaptureOrbital,
   StdAuditCaptureAuditCaptureOrbitalManifest,
   isStdAuditCaptureAuditCaptureOrbitalParams,
@@ -365,11 +114,6 @@ import {
   StdBoardBoardOrbitalManifest,
   isStdBoardBoardOrbitalParams,
 } from './ui/core/atoms/std-board.js';
-import {
-  stdBranchingLogicBranchingLogicOrbital,
-  StdBranchingLogicBranchingLogicOrbitalManifest,
-  isStdBranchingLogicBranchingLogicOrbitalParams,
-} from './ui/learning/atoms/std-branching-logic.js';
 import {
   stdBrowseBrowseItemOrbital,
   StdBrowseBrowseItemOrbitalManifest,
@@ -406,6 +150,11 @@ import {
   isStdCooldownCooldownOrbitalParams,
 } from './infra/atoms/std-cooldown.js';
 import {
+  stdCrewBoard2dCrewBoard2DOrbital,
+  StdCrewBoard2dCrewBoard2DOrbitalManifest,
+  isStdCrewBoard2dCrewBoard2DOrbitalParams,
+} from './ui/game/organisms/std-crew-board-2d.js';
+import {
   stdCrossReferenceCrossReferenceOrbital,
   StdCrossReferenceCrossReferenceOrbitalManifest,
   isStdCrossReferenceCrossReferenceOrbitalParams,
@@ -431,10 +180,15 @@ import {
   isStdDateRangeDateRangeOrbitalParams,
 } from './ui/core/atoms/std-date-range.js';
 import {
+  stdDungeonBoard2dDungeonBoard2DOrbital,
+  StdDungeonBoard2dDungeonBoard2DOrbitalManifest,
+  isStdDungeonBoard2dDungeonBoard2DOrbitalParams,
+} from './ui/game/organisms/std-dungeon-board-2d.js';
+import {
   stdEscalatingDecisionEscalatingDecisionOrbital,
   StdEscalatingDecisionEscalatingDecisionOrbitalManifest,
   isStdEscalatingDecisionEscalatingDecisionOrbitalParams,
-} from './ml/molecules/std-escalating-decision.js';
+} from './ml/organisms/std-escalating-decision.js';
 import {
   stdEsignFlowSignatureSessionOrbital,
   StdEsignFlowSignatureSessionOrbitalManifest,
@@ -504,7 +258,7 @@ import {
   stdKnowledgeTracingKnowledgeTracingOrbital,
   StdKnowledgeTracingKnowledgeTracingOrbitalManifest,
   isStdKnowledgeTracingKnowledgeTracingOrbitalParams,
-} from './ml/molecules/std-knowledge-tracing.js';
+} from './ml/organisms/std-knowledge-tracing.js';
 import {
   stdLifecycleLifecycleOrbital,
   StdLifecycleLifecycleOrbitalManifest,
@@ -515,6 +269,11 @@ import {
   StdListListItemOrbitalManifest,
   isStdListListItemOrbitalParams,
 } from './ui/core/atoms/std-list.js';
+import {
+  stdMarketBoard3dMarketBoard3DOrbital,
+  StdMarketBoard3dMarketBoard3DOrbitalManifest,
+  isStdMarketBoard3dMarketBoard3DOrbitalParams,
+} from './ui/game/organisms/std-market-board-3d.js';
 import {
   stdMigrationJobMigrationJobOrbital,
   StdMigrationJobMigrationJobOrbitalManifest,
@@ -575,6 +334,11 @@ import {
   StdNotifyOnEventNotifyOnEventOrbitalManifest,
   isStdNotifyOnEventNotifyOnEventOrbitalParams,
 } from './infra/atoms/std-notify-on-event.js';
+import {
+  stdObjectiveBoard3dObjectiveBoard3DOrbital,
+  StdObjectiveBoard3dObjectiveBoard3DOrbitalManifest,
+  isStdObjectiveBoard3dObjectiveBoard3DOrbitalParams,
+} from './ui/game/organisms/std-objective-board-3d.js';
 import {
   stdPaginationPagedItemOrbital,
   StdPaginationPagedItemOrbitalManifest,
@@ -654,17 +418,32 @@ import {
   stdStatusLifecycleControlStatusLifecycleControlOrbital,
   StdStatusLifecycleControlStatusLifecycleControlOrbitalManifest,
   isStdStatusLifecycleControlStatusLifecycleControlOrbitalParams,
-} from './infra/molecules/std-status-lifecycle-control.js';
+} from './infra/organisms/std-status-lifecycle-control.js';
 import {
   stdStepFlowStepFlowOrbital,
   StdStepFlowStepFlowOrbitalManifest,
   isStdStepFlowStepFlowOrbitalParams,
 } from './ui/core/atoms/std-step-flow.js';
 import {
+  stdSurvivalBoard3dSurvivalBoard3DOrbital,
+  StdSurvivalBoard3dSurvivalBoard3DOrbitalManifest,
+  isStdSurvivalBoard3dSurvivalBoard3DOrbitalParams,
+} from './ui/game/organisms/std-survival-board-3d.js';
+import {
   stdTabsTabsItemOrbital,
   StdTabsTabsItemOrbitalManifest,
   isStdTabsTabsItemOrbitalParams,
 } from './ui/core/atoms/std-tabs.js';
+import {
+  stdTacticsBoard2dTacticsBoard2DOrbital,
+  StdTacticsBoard2dTacticsBoard2DOrbitalManifest,
+  isStdTacticsBoard2dTacticsBoard2DOrbitalParams,
+} from './ui/game/organisms/std-tactics-board-2d.js';
+import {
+  stdTacticsBoard3dTacticsBoard3DOrbital,
+  StdTacticsBoard3dTacticsBoard3DOrbitalManifest,
+  isStdTacticsBoard3dTacticsBoard3DOrbitalParams,
+} from './ui/game/organisms/std-tactics-board-3d.js';
 import {
   stdTagTaxonomyTagTaxonomyOrbital,
   StdTagTaxonomyTagTaxonomyOrbitalManifest,
@@ -701,30 +480,10 @@ import {
   isStdWizardWizardOrbitalParams,
 } from './ui/core/atoms/std-wizard.js';
 import {
-  stdUiArcadeBoard3dArcadeBoard3DOrbital,
-  StdUiArcadeBoard3dArcadeBoard3DOrbitalManifest,
-  isStdUiArcadeBoard3dArcadeBoard3DOrbitalParams,
-} from './ui/game/organisms/ui-arcade-board-3d.js';
-import {
-  stdUiArenaBoardArenaBoardOrbital,
-  StdUiArenaBoardArenaBoardOrbitalManifest,
-  isStdUiArenaBoardArenaBoardOrbitalParams,
-} from './ui/game/organisms/ui-arena-board.js';
-import {
-  stdUiArenaBoard3dArenaBoard3DOrbital,
-  StdUiArenaBoard3dArenaBoard3DOrbitalManifest,
-  isStdUiArenaBoard3dArenaBoard3DOrbitalParams,
-} from './ui/game/organisms/ui-arena-board-3d.js';
-import {
-  stdUiBattleBoardBattleBoardOrbital,
-  StdUiBattleBoardBattleBoardOrbitalManifest,
-  isStdUiBattleBoardBattleBoardOrbitalParams,
-} from './ui/game/organisms/ui-battle-board.js';
-import {
-  stdUiBoardgameBoardBoardgameBoardOrbital,
-  StdUiBoardgameBoardBoardgameBoardOrbitalManifest,
-  isStdUiBoardgameBoardBoardgameBoardOrbitalParams,
-} from './ui/game/organisms/ui-boardgame-board.js';
+  stdWorldmapBoard2dWorldMapBoard2DOrbital,
+  StdWorldmapBoard2dWorldMapBoard2DOrbitalManifest,
+  isStdWorldmapBoard2dWorldMapBoard2DOrbitalParams,
+} from './ui/game/organisms/std-worldmap-board-2d.js';
 import {
   stdUiBookChapterViewBookChapterViewOrbital,
   StdUiBookChapterViewBookChapterViewOrbitalManifest,
@@ -751,35 +510,15 @@ import {
   isStdUiBookViewerBookViewerOrbitalParams,
 } from './ui/marketing/organisms/ui-book-viewer.js';
 import {
-  stdUiBrickSandboxBoard3dBrickSandboxBoard3DOrbital,
-  StdUiBrickSandboxBoard3dBrickSandboxBoard3DOrbitalManifest,
-  isStdUiBrickSandboxBoard3dBrickSandboxBoard3DOrbitalParams,
-} from './ui/game/organisms/ui-brick-sandbox-board-3d.js';
-import {
   stdUiCaseStudyOrganismCaseStudyOrganismOrbital,
   StdUiCaseStudyOrganismCaseStudyOrganismOrbitalManifest,
   isStdUiCaseStudyOrganismCaseStudyOrganismOrbitalParams,
 } from './ui/marketing/organisms/ui-case-study-organism.js';
 import {
-  stdUiCastleBoardCastleBoardOrbital,
-  StdUiCastleBoardCastleBoardOrbitalManifest,
-  isStdUiCastleBoardCastleBoardOrbitalParams,
-} from './ui/game/organisms/ui-castle-board.js';
-import {
   stdUiChatBarChatBarOrbital,
   StdUiChatBarChatBarOrbitalManifest,
   isStdUiChatBarChatBarOrbitalParams,
 } from './ui/core/organisms/ui-chat-bar.js';
-import {
-  stdUiCityBoard3dCityBoard3DOrbital,
-  StdUiCityBoard3dCityBoard3DOrbitalManifest,
-  isStdUiCityBoard3dCityBoard3DOrbitalParams,
-} from './ui/game/organisms/ui-city-board-3d.js';
-import {
-  stdUiCityBuilderBoardCityBuilderBoardOrbital,
-  StdUiCityBuilderBoardCityBuilderBoardOrbitalManifest,
-  isStdUiCityBuilderBoardCityBuilderBoardOrbitalParams,
-} from './ui/game/organisms/ui-city-builder-board.js';
 import {
   stdUiCodeRunnerPanelCodeRunnerPanelOrbital,
   StdUiCodeRunnerPanelCodeRunnerPanelOrbitalManifest,
@@ -816,20 +555,10 @@ import {
   isStdUiEntityTableEntityTableOrbitalParams,
 } from './ui/core/organisms/ui-entity-table.js';
 import {
-  stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital,
-  StdUiFantasyTownBoard3dFantasyTownBoard3DOrbitalManifest,
-  isStdUiFantasyTownBoard3dFantasyTownBoard3DOrbitalParams,
-} from './ui/game/organisms/ui-fantasy-town-board-3d.js';
-import {
   stdUiFeatureGridOrganismFeatureGridOrganismOrbital,
   StdUiFeatureGridOrganismFeatureGridOrganismOrbitalManifest,
   isStdUiFeatureGridOrganismFeatureGridOrganismOrbitalParams,
 } from './ui/marketing/organisms/ui-feature-grid-organism.js';
-import {
-  stdUiFishingBoardFishingBoardOrbital,
-  StdUiFishingBoardFishingBoardOrbitalManifest,
-  isStdUiFishingBoardFishingBoardOrbitalParams,
-} from './ui/game/organisms/ui-fishing-board.js';
 import {
   stdUiFormFormOrbital,
   StdUiFormFormOrbitalManifest,
@@ -841,45 +570,10 @@ import {
   isStdUiFormSectionFormSectionOrbitalParams,
 } from './ui/core/organisms/ui-form-section.js';
 import {
-  stdUiGraveyardBoard3dGraveyardBoard3DOrbital,
-  StdUiGraveyardBoard3dGraveyardBoard3DOrbitalManifest,
-  isStdUiGraveyardBoard3dGraveyardBoard3DOrbitalParams,
-} from './ui/game/organisms/ui-graveyard-board-3d.js';
-import {
-  stdUiGridTacticsDemoBoardGridTacticsDemoOrbital,
-  StdUiGridTacticsDemoBoardGridTacticsDemoOrbitalManifest,
-  isStdUiGridTacticsDemoBoardGridTacticsDemoOrbitalParams,
-} from './ui/game/organisms/ui-grid-tactics-demo-board.js';
-import {
   stdUiHeroOrganismHeroOrganismOrbital,
   StdUiHeroOrganismHeroOrganismOrbitalManifest,
   isStdUiHeroOrganismHeroOrganismOrbitalParams,
 } from './ui/marketing/organisms/ui-hero-organism.js';
-import {
-  stdUiHexStrategyBoardHexStrategyBoardOrbital,
-  StdUiHexStrategyBoardHexStrategyBoardOrbitalManifest,
-  isStdUiHexStrategyBoardHexStrategyBoardOrbitalParams,
-} from './ui/game/organisms/ui-hex-strategy-board.js';
-import {
-  stdUiHexStrategyBoard3dHexStrategyBoard3DOrbital,
-  StdUiHexStrategyBoard3dHexStrategyBoard3DOrbitalManifest,
-  isStdUiHexStrategyBoard3dHexStrategyBoard3DOrbitalParams,
-} from './ui/game/organisms/ui-hex-strategy-board-3d.js';
-import {
-  stdUiHolidayBoard3dHolidayBoard3DOrbital,
-  StdUiHolidayBoard3dHolidayBoard3DOrbitalManifest,
-  isStdUiHolidayBoard3dHolidayBoard3DOrbitalParams,
-} from './ui/game/organisms/ui-holiday-board-3d.js';
-import {
-  stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital,
-  StdUiHolidayRunnerBoardHolidayRunnerBoardOrbitalManifest,
-  isStdUiHolidayRunnerBoardHolidayRunnerBoardOrbitalParams,
-} from './ui/game/organisms/ui-holiday-runner-board.js';
-import {
-  stdUiMarketBoard3dMarketBoard3DOrbital,
-  StdUiMarketBoard3dMarketBoard3DOrbitalManifest,
-  isStdUiMarketBoard3dMarketBoard3DOrbitalParams,
-} from './ui/game/organisms/ui-market-board-3d.js';
 import {
   stdUiMasterDetailMasterDetailOrbital,
   StdUiMasterDetailMasterDetailOrbitalManifest,
@@ -891,85 +585,20 @@ import {
   isStdUiMasterDetailLayoutMasterDetailLayoutOrbitalParams,
 } from './ui/core/organisms/ui-master-detail-layout.js';
 import {
-  stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital,
-  StdUiMatchPuzzleBoardMatchPuzzleBoardOrbitalManifest,
-  isStdUiMatchPuzzleBoardMatchPuzzleBoardOrbitalParams,
-} from './ui/game/organisms/ui-match-puzzle-board.js';
-import {
   stdUiMediaGalleryMediaGalleryOrbital,
   StdUiMediaGalleryMediaGalleryOrbitalManifest,
   isStdUiMediaGalleryMediaGalleryOrbitalParams,
 } from './ui/core/organisms/ui-media-gallery.js';
-import {
-  stdUiMinigolfBoardMinigolfBoardOrbital,
-  StdUiMinigolfBoardMinigolfBoardOrbitalManifest,
-  isStdUiMinigolfBoardMinigolfBoardOrbitalParams,
-} from './ui/game/organisms/ui-minigolf-board.js';
-import {
-  stdUiMinigolfBoard3dMinigolfBoard3DOrbital,
-  StdUiMinigolfBoard3dMinigolfBoard3DOrbitalManifest,
-  isStdUiMinigolfBoard3dMinigolfBoard3DOrbitalParams,
-} from './ui/game/organisms/ui-minigolf-board-3d.js';
 import {
   stdUiModalSlotModalSlotOrbital,
   StdUiModalSlotModalSlotOrbitalManifest,
   isStdUiModalSlotModalSlotOrbitalParams,
 } from './ui/core/organisms/ui-modal-slot.js';
 import {
-  stdUiNatureSurvivalBoard3dNatureSurvivalBoard3DOrbital,
-  StdUiNatureSurvivalBoard3dNatureSurvivalBoard3DOrbitalManifest,
-  isStdUiNatureSurvivalBoard3dNatureSurvivalBoard3DOrbitalParams,
-} from './ui/game/organisms/ui-nature-survival-board-3d.js';
-import {
-  stdUiPhysicsSandboxBoardPhysicsSandboxBoardOrbital,
-  StdUiPhysicsSandboxBoardPhysicsSandboxBoardOrbitalManifest,
-  isStdUiPhysicsSandboxBoardPhysicsSandboxBoardOrbitalParams,
-} from './ui/game/organisms/ui-physics-sandbox-board.js';
-import {
-  stdUiPinballBoardPinballBoardOrbital,
-  StdUiPinballBoardPinballBoardOrbitalManifest,
-  isStdUiPinballBoardPinballBoardOrbitalParams,
-} from './ui/game/organisms/ui-pinball-board.js';
-import {
-  stdUiPirateBoardPirateBoardOrbital,
-  StdUiPirateBoardPirateBoardOrbitalManifest,
-  isStdUiPirateBoardPirateBoardOrbitalParams,
-} from './ui/game/organisms/ui-pirate-board.js';
-import {
-  stdUiPirateBoard3dPirateBoard3DOrbital,
-  StdUiPirateBoard3dPirateBoard3DOrbitalManifest,
-  isStdUiPirateBoard3dPirateBoard3DOrbitalParams,
-} from './ui/game/organisms/ui-pirate-board-3d.js';
-import {
-  stdUiPlatformerBoardPlatformerBoardOrbital,
-  StdUiPlatformerBoardPlatformerBoardOrbitalManifest,
-  isStdUiPlatformerBoardPlatformerBoardOrbitalParams,
-} from './ui/game/organisms/ui-platformer-board.js';
-import {
-  stdUiPlatformerBoard3dPlatformerBoard3DOrbital,
-  StdUiPlatformerBoard3dPlatformerBoard3DOrbitalManifest,
-  isStdUiPlatformerBoard3dPlatformerBoard3DOrbitalParams,
-} from './ui/game/organisms/ui-platformer-board-3d.js';
-import {
   stdUiPricingOrganismPricingOrganismOrbital,
   StdUiPricingOrganismPricingOrganismOrbitalManifest,
   isStdUiPricingOrganismPricingOrganismOrbitalParams,
 } from './ui/marketing/organisms/ui-pricing-organism.js';
-import {
-  stdUiRacingBoardRacingBoardOrbital,
-  StdUiRacingBoardRacingBoardOrbitalManifest,
-  isStdUiRacingBoardRacingBoardOrbitalParams,
-} from './ui/game/organisms/ui-racing-board.js';
-import {
-  stdUiRacingBoard3dRacingBoard3DOrbital,
-  StdUiRacingBoard3dRacingBoard3DOrbitalManifest,
-  isStdUiRacingBoard3dRacingBoard3DOrbitalParams,
-} from './ui/game/organisms/ui-racing-board-3d.js';
-import {
-  stdUiRoguelikeBoardRoguelikeBoardOrbital,
-  StdUiRoguelikeBoardRoguelikeBoardOrbitalManifest,
-  isStdUiRoguelikeBoardRoguelikeBoardOrbitalParams,
-} from './ui/game/organisms/ui-roguelike-board.js';
 import {
   stdUiRuntimeDebuggerRuntimeDebuggerOrbital,
   StdUiRuntimeDebuggerRuntimeDebuggerOrbitalManifest,
@@ -986,40 +615,10 @@ import {
   isStdUiShowcaseOrganismShowcaseOrganismOrbitalParams,
 } from './ui/marketing/organisms/ui-showcase-organism.js';
 import {
-  stdUiSkateparkBoard3dSkateparkBoard3DOrbital,
-  StdUiSkateparkBoard3dSkateparkBoard3DOrbitalManifest,
-  isStdUiSkateparkBoard3dSkateparkBoard3DOrbitalParams,
-} from './ui/game/organisms/ui-skatepark-board-3d.js';
-import {
-  stdUiSokobanBoardSokobanBoardOrbital,
-  StdUiSokobanBoardSokobanBoardOrbitalManifest,
-  isStdUiSokobanBoardSokobanBoardOrbitalParams,
-} from './ui/game/organisms/ui-sokoban-board.js';
-import {
-  stdUiSpaceBoard3dSpaceBoard3DOrbital,
-  StdUiSpaceBoard3dSpaceBoard3DOrbitalManifest,
-  isStdUiSpaceBoard3dSpaceBoard3DOrbitalParams,
-} from './ui/game/organisms/ui-space-board-3d.js';
-import {
-  stdUiSpaceShmupBoardSpaceShmupBoardOrbital,
-  StdUiSpaceShmupBoardSpaceShmupBoardOrbitalManifest,
-  isStdUiSpaceShmupBoardSpaceShmupBoardOrbitalParams,
-} from './ui/game/organisms/ui-space-shmup-board.js';
-import {
-  stdUiSpaceStationBoardSpaceStationBoardOrbital,
-  StdUiSpaceStationBoardSpaceStationBoardOrbitalManifest,
-  isStdUiSpaceStationBoardSpaceStationBoardOrbitalParams,
-} from './ui/game/organisms/ui-space-station-board.js';
-import {
   stdUiSplitPaneSplitPaneOrbital,
   StdUiSplitPaneSplitPaneOrbitalManifest,
   isStdUiSplitPaneSplitPaneOrbitalParams,
 } from './ui/core/organisms/ui-split-pane.js';
-import {
-  stdUiSportsBoardSportsBoardOrbital,
-  StdUiSportsBoardSportsBoardOrbitalManifest,
-  isStdUiSportsBoardSportsBoardOrbitalParams,
-} from './ui/game/organisms/ui-sports-board.js';
 import {
   stdUiStatCardStatCardOrbital,
   StdUiStatCardStatCardOrbitalManifest,
@@ -1051,21 +650,6 @@ import {
   isStdUiTabbedContainerTabbedContainerOrbitalParams,
 } from './ui/core/organisms/ui-tabbed-container.js';
 import {
-  stdUiTacticsDemo2dTacticsDemo2DOrbital,
-  StdUiTacticsDemo2dTacticsDemo2DOrbitalManifest,
-  isStdUiTacticsDemo2dTacticsDemo2DOrbitalParams,
-} from './ui/game/organisms/ui-tactics-demo-2d.js';
-import {
-  stdUiTacticsDemo3dTacticsDemo3DOrbital,
-  StdUiTacticsDemo3dTacticsDemo3DOrbitalManifest,
-  isStdUiTacticsDemo3dTacticsDemo3DOrbitalParams,
-} from './ui/game/organisms/ui-tactics-demo-3d.js';
-import {
-  stdUiTanksBoardTanksBoardOrbital,
-  StdUiTanksBoardTanksBoardOrbitalManifest,
-  isStdUiTanksBoardTanksBoardOrbitalParams,
-} from './ui/game/organisms/ui-tanks-board.js';
-import {
   stdUiTeamOrganismTeamOrganismOrbital,
   StdUiTeamOrganismTeamOrganismOrbitalManifest,
   isStdUiTeamOrganismTeamOrganismOrbitalParams,
@@ -1086,60 +670,10 @@ import {
   isStdUiToastSlotToastSlotOrbitalParams,
 } from './ui/core/organisms/ui-toast-slot.js';
 import {
-  stdUiTopDownShooterBoardTopDownShooterBoardOrbital,
-  StdUiTopDownShooterBoardTopDownShooterBoardOrbitalManifest,
-  isStdUiTopDownShooterBoardTopDownShooterBoardOrbitalParams,
-} from './ui/game/organisms/ui-top-down-shooter-board.js';
-import {
-  stdUiTopdownDungeonBoardTopdownDungeonBoardOrbital,
-  StdUiTopdownDungeonBoardTopdownDungeonBoardOrbitalManifest,
-  isStdUiTopdownDungeonBoardTopdownDungeonBoardOrbitalParams,
-} from './ui/game/organisms/ui-topdown-dungeon-board.js';
-import {
-  stdUiTopdownRtsBoardTopdownRtsBoardOrbital,
-  StdUiTopdownRtsBoardTopdownRtsBoardOrbitalManifest,
-  isStdUiTopdownRtsBoardTopdownRtsBoardOrbitalParams,
-} from './ui/game/organisms/ui-topdown-rts-board.js';
-import {
-  stdUiTowerDefenseBoardTowerDefenseBoardOrbital,
-  StdUiTowerDefenseBoardTowerDefenseBoardOrbitalManifest,
-  isStdUiTowerDefenseBoardTowerDefenseBoardOrbitalParams,
-} from './ui/game/organisms/ui-tower-defense-board.js';
-import {
-  stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital,
-  StdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbitalManifest,
-  isStdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbitalParams,
-} from './ui/game/organisms/ui-tower-defense-board-3d.js';
-import {
-  stdUiToyTrackBoard3dToyTrackBoard3DOrbital,
-  StdUiToyTrackBoard3dToyTrackBoard3DOrbitalManifest,
-  isStdUiToyTrackBoard3dToyTrackBoard3DOrbitalParams,
-} from './ui/game/organisms/ui-toy-track-board-3d.js';
-import {
   stdUiUiSlotRendererUiSlotRendererOrbital,
   StdUiUiSlotRendererUiSlotRendererOrbitalManifest,
   isStdUiUiSlotRendererUiSlotRendererOrbitalParams,
 } from './ui/core/organisms/ui-ui-slot-renderer.js';
-import {
-  stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital,
-  StdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbitalManifest,
-  isStdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbitalParams,
-} from './ui/game/organisms/ui-uncontrolled-battle-board.js';
-import {
-  stdUiVisualNovelBoardVisualNovelBoardOrbital,
-  StdUiVisualNovelBoardVisualNovelBoardOrbitalManifest,
-  isStdUiVisualNovelBoardVisualNovelBoardOrbitalParams,
-} from './ui/game/organisms/ui-visual-novel-board.js';
-import {
-  stdUiWinterSkiBoardWinterSkiBoardOrbital,
-  StdUiWinterSkiBoardWinterSkiBoardOrbitalManifest,
-  isStdUiWinterSkiBoardWinterSkiBoardOrbitalParams,
-} from './ui/game/organisms/ui-winter-ski-board.js';
-import {
-  stdUiWorldMapBoardWorldMapBoardOrbital,
-  StdUiWorldMapBoardWorldMapBoardOrbitalManifest,
-  isStdUiWorldMapBoardWorldMapBoardOrbitalParams,
-} from './ui/game/organisms/ui-world-map-board.js';
 
 export type { OrbitalParamsManifest, ParamFieldDescriptor };
 
@@ -1149,636 +683,6 @@ interface DispatchEntry {
 }
 
 const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEntry>([
-  ['learning-algorithms::AstargraphOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningAlgorithmsAstargraphOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-algorithms::AstargraphOrbital');
-      }
-      return stdLearningAlgorithmsAstargraphOrbital(p);
-    },
-    manifest: StdLearningAlgorithmsAstargraphOrbitalManifest,
-  }],
-  ['learning-algorithms::AstargridOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningAlgorithmsAstargridOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-algorithms::AstargridOrbital');
-      }
-      return stdLearningAlgorithmsAstargridOrbital(p);
-    },
-    manifest: StdLearningAlgorithmsAstargridOrbitalManifest,
-  }],
-  ['learning-algorithms::BfsOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningAlgorithmsBfsOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-algorithms::BfsOrbital');
-      }
-      return stdLearningAlgorithmsBfsOrbital(p);
-    },
-    manifest: StdLearningAlgorithmsBfsOrbitalManifest,
-  }],
-  ['learning-algorithms::BinarysearchOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningAlgorithmsBinarysearchOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-algorithms::BinarysearchOrbital');
-      }
-      return stdLearningAlgorithmsBinarysearchOrbital(p);
-    },
-    manifest: StdLearningAlgorithmsBinarysearchOrbitalManifest,
-  }],
-  ['learning-algorithms::BubblesortOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningAlgorithmsBubblesortOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-algorithms::BubblesortOrbital');
-      }
-      return stdLearningAlgorithmsBubblesortOrbital(p);
-    },
-    manifest: StdLearningAlgorithmsBubblesortOrbitalManifest,
-  }],
-  ['learning-algorithms::BstOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningAlgorithmsBstOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-algorithms::BstOrbital');
-      }
-      return stdLearningAlgorithmsBstOrbital(p);
-    },
-    manifest: StdLearningAlgorithmsBstOrbitalManifest,
-  }],
-  ['learning-algorithms::DfsOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningAlgorithmsDfsOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-algorithms::DfsOrbital');
-      }
-      return stdLearningAlgorithmsDfsOrbital(p);
-    },
-    manifest: StdLearningAlgorithmsDfsOrbitalManifest,
-  }],
-  ['learning-algorithms::DijkstraOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningAlgorithmsDijkstraOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-algorithms::DijkstraOrbital');
-      }
-      return stdLearningAlgorithmsDijkstraOrbital(p);
-    },
-    manifest: StdLearningAlgorithmsDijkstraOrbitalManifest,
-  }],
-  ['learning-algorithms::DpOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningAlgorithmsDpOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-algorithms::DpOrbital');
-      }
-      return stdLearningAlgorithmsDpOrbital(p);
-    },
-    manifest: StdLearningAlgorithmsDpOrbitalManifest,
-  }],
-  ['learning-algorithms::FloodfillOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningAlgorithmsFloodfillOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-algorithms::FloodfillOrbital');
-      }
-      return stdLearningAlgorithmsFloodfillOrbital(p);
-    },
-    manifest: StdLearningAlgorithmsFloodfillOrbitalManifest,
-  }],
-  ['learning-algorithms::GameoflifeOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningAlgorithmsGameoflifeOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-algorithms::GameoflifeOrbital');
-      }
-      return stdLearningAlgorithmsGameoflifeOrbital(p);
-    },
-    manifest: StdLearningAlgorithmsGameoflifeOrbitalManifest,
-  }],
-  ['learning-algorithms::GridbfsOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningAlgorithmsGridbfsOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-algorithms::GridbfsOrbital');
-      }
-      return stdLearningAlgorithmsGridbfsOrbital(p);
-    },
-    manifest: StdLearningAlgorithmsGridbfsOrbitalManifest,
-  }],
-  ['learning-algorithms::HashingOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningAlgorithmsHashingOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-algorithms::HashingOrbital');
-      }
-      return stdLearningAlgorithmsHashingOrbital(p);
-    },
-    manifest: StdLearningAlgorithmsHashingOrbitalManifest,
-  }],
-  ['learning-algorithms::HeapsortOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningAlgorithmsHeapsortOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-algorithms::HeapsortOrbital');
-      }
-      return stdLearningAlgorithmsHeapsortOrbital(p);
-    },
-    manifest: StdLearningAlgorithmsHeapsortOrbitalManifest,
-  }],
-  ['learning-algorithms::InsertionsortOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningAlgorithmsInsertionsortOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-algorithms::InsertionsortOrbital');
-      }
-      return stdLearningAlgorithmsInsertionsortOrbital(p);
-    },
-    manifest: StdLearningAlgorithmsInsertionsortOrbitalManifest,
-  }],
-  ['learning-algorithms::MazegenOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningAlgorithmsMazegenOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-algorithms::MazegenOrbital');
-      }
-      return stdLearningAlgorithmsMazegenOrbital(p);
-    },
-    manifest: StdLearningAlgorithmsMazegenOrbitalManifest,
-  }],
-  ['learning-algorithms::MergesortOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningAlgorithmsMergesortOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-algorithms::MergesortOrbital');
-      }
-      return stdLearningAlgorithmsMergesortOrbital(p);
-    },
-    manifest: StdLearningAlgorithmsMergesortOrbitalManifest,
-  }],
-  ['learning-algorithms::MstOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningAlgorithmsMstOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-algorithms::MstOrbital');
-      }
-      return stdLearningAlgorithmsMstOrbital(p);
-    },
-    manifest: StdLearningAlgorithmsMstOrbitalManifest,
-  }],
-  ['learning-algorithms::QuicksortOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningAlgorithmsQuicksortOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-algorithms::QuicksortOrbital');
-      }
-      return stdLearningAlgorithmsQuicksortOrbital(p);
-    },
-    manifest: StdLearningAlgorithmsQuicksortOrbitalManifest,
-  }],
-  ['learning-algorithms::RecursionOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningAlgorithmsRecursionOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-algorithms::RecursionOrbital');
-      }
-      return stdLearningAlgorithmsRecursionOrbital(p);
-    },
-    manifest: StdLearningAlgorithmsRecursionOrbitalManifest,
-  }],
-  ['learning-algorithms::SelectionsortOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningAlgorithmsSelectionsortOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-algorithms::SelectionsortOrbital');
-      }
-      return stdLearningAlgorithmsSelectionsortOrbital(p);
-    },
-    manifest: StdLearningAlgorithmsSelectionsortOrbitalManifest,
-  }],
-  ['learning-algorithms::SlidingwindowOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningAlgorithmsSlidingwindowOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-algorithms::SlidingwindowOrbital');
-      }
-      return stdLearningAlgorithmsSlidingwindowOrbital(p);
-    },
-    manifest: StdLearningAlgorithmsSlidingwindowOrbitalManifest,
-  }],
-  ['learning-algorithms::ToposortOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningAlgorithmsToposortOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-algorithms::ToposortOrbital');
-      }
-      return stdLearningAlgorithmsToposortOrbital(p);
-    },
-    manifest: StdLearningAlgorithmsToposortOrbitalManifest,
-  }],
-  ['learning-algorithms::TwopointerOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningAlgorithmsTwopointerOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-algorithms::TwopointerOrbital');
-      }
-      return stdLearningAlgorithmsTwopointerOrbital(p);
-    },
-    manifest: StdLearningAlgorithmsTwopointerOrbitalManifest,
-  }],
-  ['learning-astronomy-lab::AstronomyLabOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningAstronomyLabAstronomyLabOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-astronomy-lab::AstronomyLabOrbital');
-      }
-      return stdLearningAstronomyLabAstronomyLabOrbital(p);
-    },
-    manifest: StdLearningAstronomyLabAstronomyLabOrbitalManifest,
-  }],
-  ['learning-biology::PredatorPreyOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningBiologyPredatorPreyOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-biology::PredatorPreyOrbital');
-      }
-      return stdLearningBiologyPredatorPreyOrbital(p);
-    },
-    manifest: StdLearningBiologyPredatorPreyOrbitalManifest,
-  }],
-  ['learning-biology::FoodwebOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningBiologyFoodwebOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-biology::FoodwebOrbital');
-      }
-      return stdLearningBiologyFoodwebOrbital(p);
-    },
-    manifest: StdLearningBiologyFoodwebOrbitalManifest,
-  }],
-  ['learning-biology::MitosisOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningBiologyMitosisOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-biology::MitosisOrbital');
-      }
-      return stdLearningBiologyMitosisOrbital(p);
-    },
-    manifest: StdLearningBiologyMitosisOrbitalManifest,
-  }],
-  ['learning-biology::CellStructureOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningBiologyCellStructureOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-biology::CellStructureOrbital');
-      }
-      return stdLearningBiologyCellStructureOrbital(p);
-    },
-    manifest: StdLearningBiologyCellStructureOrbitalManifest,
-  }],
-  ['learning-biology-lab::BiologyLabOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningBiologyLabBiologyLabOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-biology-lab::BiologyLabOrbital');
-      }
-      return stdLearningBiologyLabBiologyLabOrbital(p);
-    },
-    manifest: StdLearningBiologyLabBiologyLabOrbitalManifest,
-  }],
-  ['learning-charts::ChartsOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningChartsChartsOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-charts::ChartsOrbital');
-      }
-      return stdLearningChartsChartsOrbital(p);
-    },
-    manifest: StdLearningChartsChartsOrbitalManifest,
-  }],
-  ['learning-chemistry::DiffusionOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningChemistryDiffusionOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-chemistry::DiffusionOrbital');
-      }
-      return stdLearningChemistryDiffusionOrbital(p);
-    },
-    manifest: StdLearningChemistryDiffusionOrbitalManifest,
-  }],
-  ['learning-chemistry::ReactionOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningChemistryReactionOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-chemistry::ReactionOrbital');
-      }
-      return stdLearningChemistryReactionOrbital(p);
-    },
-    manifest: StdLearningChemistryReactionOrbitalManifest,
-  }],
-  ['learning-chemistry::OsmosisOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningChemistryOsmosisOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-chemistry::OsmosisOrbital');
-      }
-      return stdLearningChemistryOsmosisOrbital(p);
-    },
-    manifest: StdLearningChemistryOsmosisOrbitalManifest,
-  }],
-  ['learning-chemistry-lab::ChemistryLabOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningChemistryLabChemistryLabOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-chemistry-lab::ChemistryLabOrbital');
-      }
-      return stdLearningChemistryLabChemistryLabOrbital(p);
-    },
-    manifest: StdLearningChemistryLabChemistryLabOrbitalManifest,
-  }],
-  ['learning-civics-lab::CivicsLabOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningCivicsLabCivicsLabOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-civics-lab::CivicsLabOrbital');
-      }
-      return stdLearningCivicsLabCivicsLabOrbital(p);
-    },
-    manifest: StdLearningCivicsLabCivicsLabOrbitalManifest,
-  }],
-  ['learning-diagram::DiagramOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningDiagramDiagramOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-diagram::DiagramOrbital');
-      }
-      return stdLearningDiagramDiagramOrbital(p);
-    },
-    manifest: StdLearningDiagramDiagramOrbitalManifest,
-  }],
-  ['learning-earth-lab::EarthLabOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningEarthLabEarthLabOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-earth-lab::EarthLabOrbital');
-      }
-      return stdLearningEarthLabEarthLabOrbital(p);
-    },
-    manifest: StdLearningEarthLabEarthLabOrbitalManifest,
-  }],
-  ['learning-economics-lab::EconomicsLabOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningEconomicsLabEconomicsLabOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-economics-lab::EconomicsLabOrbital');
-      }
-      return stdLearningEconomicsLabEconomicsLabOrbital(p);
-    },
-    manifest: StdLearningEconomicsLabEconomicsLabOrbitalManifest,
-  }],
-  ['learning-geography-lab::GeographyLabOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningGeographyLabGeographyLabOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-geography-lab::GeographyLabOrbital');
-      }
-      return stdLearningGeographyLabGeographyLabOrbital(p);
-    },
-    manifest: StdLearningGeographyLabGeographyLabOrbitalManifest,
-  }],
-  ['learning-history-lab::HistoryLabOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningHistoryLabHistoryLabOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-history-lab::HistoryLabOrbital');
-      }
-      return stdLearningHistoryLabHistoryLabOrbital(p);
-    },
-    manifest: StdLearningHistoryLabHistoryLabOrbitalManifest,
-  }],
-  ['learning-linguistics-lab::LinguisticsLabOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningLinguisticsLabLinguisticsLabOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-linguistics-lab::LinguisticsLabOrbital');
-      }
-      return stdLearningLinguisticsLabLinguisticsLabOrbital(p);
-    },
-    manifest: StdLearningLinguisticsLabLinguisticsLabOrbitalManifest,
-  }],
-  ['learning-logic-lab::LogicLabOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningLogicLabLogicLabOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-logic-lab::LogicLabOrbital');
-      }
-      return stdLearningLogicLabLogicLabOrbital(p);
-    },
-    manifest: StdLearningLogicLabLogicLabOrbitalManifest,
-  }],
-  ['learning-math::VectorAdditionOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningMathVectorAdditionOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-math::VectorAdditionOrbital');
-      }
-      return stdLearningMathVectorAdditionOrbital(p);
-    },
-    manifest: StdLearningMathVectorAdditionOrbitalManifest,
-  }],
-  ['learning-math::LinearSystemsOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningMathLinearSystemsOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-math::LinearSystemsOrbital');
-      }
-      return stdLearningMathLinearSystemsOrbital(p);
-    },
-    manifest: StdLearningMathLinearSystemsOrbitalManifest,
-  }],
-  ['learning-math::NumberLineOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningMathNumberLineOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-math::NumberLineOrbital');
-      }
-      return stdLearningMathNumberLineOrbital(p);
-    },
-    manifest: StdLearningMathNumberLineOrbitalManifest,
-  }],
-  ['learning-math::ArithmeticSequenceOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningMathArithmeticSequenceOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-math::ArithmeticSequenceOrbital');
-      }
-      return stdLearningMathArithmeticSequenceOrbital(p);
-    },
-    manifest: StdLearningMathArithmeticSequenceOrbitalManifest,
-  }],
-  ['learning-math::UnitCircleOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningMathUnitCircleOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-math::UnitCircleOrbital');
-      }
-      return stdLearningMathUnitCircleOrbital(p);
-    },
-    manifest: StdLearningMathUnitCircleOrbitalManifest,
-  }],
-  ['learning-math::SineWaveOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningMathSineWaveOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-math::SineWaveOrbital');
-      }
-      return stdLearningMathSineWaveOrbital(p);
-    },
-    manifest: StdLearningMathSineWaveOrbitalManifest,
-  }],
-  ['learning-math-lab::MathLabOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningMathLabMathLabOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-math-lab::MathLabOrbital');
-      }
-      return stdLearningMathLabMathLabOrbital(p);
-    },
-    manifest: StdLearningMathLabMathLabOrbitalManifest,
-  }],
-  ['learning-physics::ProjectileMotionOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningPhysicsProjectileMotionOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-physics::ProjectileMotionOrbital');
-      }
-      return stdLearningPhysicsProjectileMotionOrbital(p);
-    },
-    manifest: StdLearningPhysicsProjectileMotionOrbitalManifest,
-  }],
-  ['learning-physics::FreeFallMotionOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningPhysicsFreeFallMotionOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-physics::FreeFallMotionOrbital');
-      }
-      return stdLearningPhysicsFreeFallMotionOrbital(p);
-    },
-    manifest: StdLearningPhysicsFreeFallMotionOrbitalManifest,
-  }],
-  ['learning-physics::SpringMotionOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningPhysicsSpringMotionOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-physics::SpringMotionOrbital');
-      }
-      return stdLearningPhysicsSpringMotionOrbital(p);
-    },
-    manifest: StdLearningPhysicsSpringMotionOrbitalManifest,
-  }],
-  ['learning-physics::FrictionMotionOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningPhysicsFrictionMotionOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-physics::FrictionMotionOrbital');
-      }
-      return stdLearningPhysicsFrictionMotionOrbital(p);
-    },
-    manifest: StdLearningPhysicsFrictionMotionOrbitalManifest,
-  }],
-  ['learning-physics::CircularMotionOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningPhysicsCircularMotionOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-physics::CircularMotionOrbital');
-      }
-      return stdLearningPhysicsCircularMotionOrbital(p);
-    },
-    manifest: StdLearningPhysicsCircularMotionOrbitalManifest,
-  }],
-  ['learning-physics::PendulumMotionOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningPhysicsPendulumMotionOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-physics::PendulumMotionOrbital');
-      }
-      return stdLearningPhysicsPendulumMotionOrbital(p);
-    },
-    manifest: StdLearningPhysicsPendulumMotionOrbitalManifest,
-  }],
-  ['learning-physics::CollisionMotionOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningPhysicsCollisionMotionOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-physics::CollisionMotionOrbital');
-      }
-      return stdLearningPhysicsCollisionMotionOrbital(p);
-    },
-    manifest: StdLearningPhysicsCollisionMotionOrbitalManifest,
-  }],
-  ['learning-physics::InclineMotionOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningPhysicsInclineMotionOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-physics::InclineMotionOrbital');
-      }
-      return stdLearningPhysicsInclineMotionOrbital(p);
-    },
-    manifest: StdLearningPhysicsInclineMotionOrbitalManifest,
-  }],
-  ['learning-physics::OrbitMotionOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningPhysicsOrbitMotionOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-physics::OrbitMotionOrbital');
-      }
-      return stdLearningPhysicsOrbitMotionOrbital(p);
-    },
-    manifest: StdLearningPhysicsOrbitMotionOrbitalManifest,
-  }],
-  ['learning-physics::GasMotionOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningPhysicsGasMotionOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-physics::GasMotionOrbital');
-      }
-      return stdLearningPhysicsGasMotionOrbital(p);
-    },
-    manifest: StdLearningPhysicsGasMotionOrbitalManifest,
-  }],
-  ['learning-physics::MagneticMotionOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningPhysicsMagneticMotionOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-physics::MagneticMotionOrbital');
-      }
-      return stdLearningPhysicsMagneticMotionOrbital(p);
-    },
-    manifest: StdLearningPhysicsMagneticMotionOrbitalManifest,
-  }],
-  ['learning-physics::WaveMotionOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningPhysicsWaveMotionOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-physics::WaveMotionOrbital');
-      }
-      return stdLearningPhysicsWaveMotionOrbital(p);
-    },
-    manifest: StdLearningPhysicsWaveMotionOrbitalManifest,
-  }],
-  ['learning-physics::ReflectionMotionOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningPhysicsReflectionMotionOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-physics::ReflectionMotionOrbital');
-      }
-      return stdLearningPhysicsReflectionMotionOrbital(p);
-    },
-    manifest: StdLearningPhysicsReflectionMotionOrbitalManifest,
-  }],
-  ['learning-physics-lab::PhysicsLabOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningPhysicsLabPhysicsLabOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-physics-lab::PhysicsLabOrbital');
-      }
-      return stdLearningPhysicsLabPhysicsLabOrbital(p);
-    },
-    manifest: StdLearningPhysicsLabPhysicsLabOrbitalManifest,
-  }],
-  ['learning-probability::GaltonBoardOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningProbabilityGaltonBoardOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-probability::GaltonBoardOrbital');
-      }
-      return stdLearningProbabilityGaltonBoardOrbital(p);
-    },
-    manifest: StdLearningProbabilityGaltonBoardOrbitalManifest,
-  }],
-  ['learning-probability::RandomWalkOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningProbabilityRandomWalkOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-probability::RandomWalkOrbital');
-      }
-      return stdLearningProbabilityRandomWalkOrbital(p);
-    },
-    manifest: StdLearningProbabilityRandomWalkOrbitalManifest,
-  }],
-  ['learning-probability::MonteCarloOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningProbabilityMonteCarloOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-probability::MonteCarloOrbital');
-      }
-      return stdLearningProbabilityMonteCarloOrbital(p);
-    },
-    manifest: StdLearningProbabilityMonteCarloOrbitalManifest,
-  }],
-  ['learning-probability-lab::ProbabilityLabOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningProbabilityLabProbabilityLabOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-probability-lab::ProbabilityLabOrbital');
-      }
-      return stdLearningProbabilityLabProbabilityLabOrbital(p);
-    },
-    manifest: StdLearningProbabilityLabProbabilityLabOrbitalManifest,
-  }],
-  ['learning-psychology-lab::PsychologyLabOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningPsychologyLabPsychologyLabOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-psychology-lab::PsychologyLabOrbital');
-      }
-      return stdLearningPsychologyLabPsychologyLabOrbital(p);
-    },
-    manifest: StdLearningPsychologyLabPsychologyLabOrbitalManifest,
-  }],
-  ['learning-sociology-lab::SociologyLabOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningSociologyLabSociologyLabOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-sociology-lab::SociologyLabOrbital');
-      }
-      return stdLearningSociologyLabSociologyLabOrbital(p);
-    },
-    manifest: StdLearningSociologyLabSociologyLabOrbitalManifest,
-  }],
   ['std-agent-builder::AgentBuilderOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdAgentBuilderAgentBuilderOrbitalParams(p)) {
@@ -1923,6 +827,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdApprovalGateApprovalGateOrbitalManifest,
   }],
+  ['std-arcade-board-3d::ArcadeBoard3DFrameOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdArcadeBoard3dArcadeBoard3DFrameOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-arcade-board-3d::ArcadeBoard3DFrameOrbital');
+      }
+      return stdArcadeBoard3dArcadeBoard3DFrameOrbital(p);
+    },
+    manifest: StdArcadeBoard3dArcadeBoard3DFrameOrbitalManifest,
+  }],
   ['std-audit-capture::AuditCaptureOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdAuditCaptureAuditCaptureOrbitalParams(p)) {
@@ -1949,15 +862,6 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdBoardBoardOrbital(p);
     },
     manifest: StdBoardBoardOrbitalManifest,
-  }],
-  ['std-branching-logic::BranchingLogicOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdBranchingLogicBranchingLogicOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-branching-logic::BranchingLogicOrbital');
-      }
-      return stdBranchingLogicBranchingLogicOrbital(p);
-    },
-    manifest: StdBranchingLogicBranchingLogicOrbitalManifest,
   }],
   ['std-browse::BrowseItemOrbital', {
     factory: (p: object): OrbitalDefinition => {
@@ -2022,6 +926,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdCooldownCooldownOrbitalManifest,
   }],
+  ['std-crew-board-2d::CrewBoard2DOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdCrewBoard2dCrewBoard2DOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-crew-board-2d::CrewBoard2DOrbital');
+      }
+      return stdCrewBoard2dCrewBoard2DOrbital(p);
+    },
+    manifest: StdCrewBoard2dCrewBoard2DOrbitalManifest,
+  }],
   ['std-cross-reference::CrossReferenceOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdCrossReferenceCrossReferenceOrbitalParams(p)) {
@@ -2066,6 +979,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdDateRangeDateRangeOrbital(p);
     },
     manifest: StdDateRangeDateRangeOrbitalManifest,
+  }],
+  ['std-dungeon-board-2d::DungeonBoard2DOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdDungeonBoard2dDungeonBoard2DOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-dungeon-board-2d::DungeonBoard2DOrbital');
+      }
+      return stdDungeonBoard2dDungeonBoard2DOrbital(p);
+    },
+    manifest: StdDungeonBoard2dDungeonBoard2DOrbitalManifest,
   }],
   ['std-escalating-decision::EscalatingDecisionOrbital', {
     factory: (p: object): OrbitalDefinition => {
@@ -2220,6 +1142,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdListListItemOrbitalManifest,
   }],
+  ['std-market-board-3d::MarketBoard3DOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdMarketBoard3dMarketBoard3DOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-market-board-3d::MarketBoard3DOrbital');
+      }
+      return stdMarketBoard3dMarketBoard3DOrbital(p);
+    },
+    manifest: StdMarketBoard3dMarketBoard3DOrbitalManifest,
+  }],
   ['std-migration-job::MigrationJobOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdMigrationJobMigrationJobOrbitalParams(p)) {
@@ -2327,6 +1258,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdNotifyOnEventNotifyOnEventOrbital(p);
     },
     manifest: StdNotifyOnEventNotifyOnEventOrbitalManifest,
+  }],
+  ['std-objective-board-3d::ObjectiveBoard3DOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdObjectiveBoard3dObjectiveBoard3DOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-objective-board-3d::ObjectiveBoard3DOrbital');
+      }
+      return stdObjectiveBoard3dObjectiveBoard3DOrbital(p);
+    },
+    manifest: StdObjectiveBoard3dObjectiveBoard3DOrbitalManifest,
   }],
   ['std-pagination::PagedItemOrbital', {
     factory: (p: object): OrbitalDefinition => {
@@ -2481,6 +1421,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdStepFlowStepFlowOrbitalManifest,
   }],
+  ['std-survival-board-3d::SurvivalBoard3DOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdSurvivalBoard3dSurvivalBoard3DOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-survival-board-3d::SurvivalBoard3DOrbital');
+      }
+      return stdSurvivalBoard3dSurvivalBoard3DOrbital(p);
+    },
+    manifest: StdSurvivalBoard3dSurvivalBoard3DOrbitalManifest,
+  }],
   ['std-tabs::TabsItemOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdTabsTabsItemOrbitalParams(p)) {
@@ -2489,6 +1438,24 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdTabsTabsItemOrbital(p);
     },
     manifest: StdTabsTabsItemOrbitalManifest,
+  }],
+  ['std-tactics-board-2d::TacticsBoard2DOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdTacticsBoard2dTacticsBoard2DOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-tactics-board-2d::TacticsBoard2DOrbital');
+      }
+      return stdTacticsBoard2dTacticsBoard2DOrbital(p);
+    },
+    manifest: StdTacticsBoard2dTacticsBoard2DOrbitalManifest,
+  }],
+  ['std-tactics-board-3d::TacticsBoard3DOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdTacticsBoard3dTacticsBoard3DOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-tactics-board-3d::TacticsBoard3DOrbital');
+      }
+      return stdTacticsBoard3dTacticsBoard3DOrbital(p);
+    },
+    manifest: StdTacticsBoard3dTacticsBoard3DOrbitalManifest,
   }],
   ['std-tag-taxonomy::TagTaxonomyOrbital', {
     factory: (p: object): OrbitalDefinition => {
@@ -2553,50 +1520,14 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdWizardWizardOrbitalManifest,
   }],
-  ['ui-arcade-board-3d::ArcadeBoard3DOrbital', {
+  ['std-worldmap-board-2d::WorldMapBoard2DOrbital', {
     factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiArcadeBoard3dArcadeBoard3DOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-arcade-board-3d::ArcadeBoard3DOrbital');
+      if (!isStdWorldmapBoard2dWorldMapBoard2DOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-worldmap-board-2d::WorldMapBoard2DOrbital');
       }
-      return stdUiArcadeBoard3dArcadeBoard3DOrbital(p);
+      return stdWorldmapBoard2dWorldMapBoard2DOrbital(p);
     },
-    manifest: StdUiArcadeBoard3dArcadeBoard3DOrbitalManifest,
-  }],
-  ['ui-arena-board::ArenaBoardOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiArenaBoardArenaBoardOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-arena-board::ArenaBoardOrbital');
-      }
-      return stdUiArenaBoardArenaBoardOrbital(p);
-    },
-    manifest: StdUiArenaBoardArenaBoardOrbitalManifest,
-  }],
-  ['ui-arena-board-3d::ArenaBoard3DOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiArenaBoard3dArenaBoard3DOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-arena-board-3d::ArenaBoard3DOrbital');
-      }
-      return stdUiArenaBoard3dArenaBoard3DOrbital(p);
-    },
-    manifest: StdUiArenaBoard3dArenaBoard3DOrbitalManifest,
-  }],
-  ['ui-battle-board::BattleBoardOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiBattleBoardBattleBoardOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-battle-board::BattleBoardOrbital');
-      }
-      return stdUiBattleBoardBattleBoardOrbital(p);
-    },
-    manifest: StdUiBattleBoardBattleBoardOrbitalManifest,
-  }],
-  ['ui-boardgame-board::BoardgameBoardOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiBoardgameBoardBoardgameBoardOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-boardgame-board::BoardgameBoardOrbital');
-      }
-      return stdUiBoardgameBoardBoardgameBoardOrbital(p);
-    },
-    manifest: StdUiBoardgameBoardBoardgameBoardOrbitalManifest,
+    manifest: StdWorldmapBoard2dWorldMapBoard2DOrbitalManifest,
   }],
   ['ui-book-chapter-view::BookChapterViewOrbital', {
     factory: (p: object): OrbitalDefinition => {
@@ -2643,15 +1574,6 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdUiBookViewerBookViewerOrbitalManifest,
   }],
-  ['ui-brick-sandbox-board-3d::BrickSandboxBoard3DOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiBrickSandboxBoard3dBrickSandboxBoard3DOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-brick-sandbox-board-3d::BrickSandboxBoard3DOrbital');
-      }
-      return stdUiBrickSandboxBoard3dBrickSandboxBoard3DOrbital(p);
-    },
-    manifest: StdUiBrickSandboxBoard3dBrickSandboxBoard3DOrbitalManifest,
-  }],
   ['ui-case-study-organism::CaseStudyOrganismOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdUiCaseStudyOrganismCaseStudyOrganismOrbitalParams(p)) {
@@ -2661,15 +1583,6 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdUiCaseStudyOrganismCaseStudyOrganismOrbitalManifest,
   }],
-  ['ui-castle-board::CastleBoardOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiCastleBoardCastleBoardOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-castle-board::CastleBoardOrbital');
-      }
-      return stdUiCastleBoardCastleBoardOrbital(p);
-    },
-    manifest: StdUiCastleBoardCastleBoardOrbitalManifest,
-  }],
   ['ui-chat-bar::ChatBarOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdUiChatBarChatBarOrbitalParams(p)) {
@@ -2678,24 +1591,6 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdUiChatBarChatBarOrbital(p);
     },
     manifest: StdUiChatBarChatBarOrbitalManifest,
-  }],
-  ['ui-city-board-3d::CityBoard3DOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiCityBoard3dCityBoard3DOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-city-board-3d::CityBoard3DOrbital');
-      }
-      return stdUiCityBoard3dCityBoard3DOrbital(p);
-    },
-    manifest: StdUiCityBoard3dCityBoard3DOrbitalManifest,
-  }],
-  ['ui-city-builder-board::CityBuilderBoardOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiCityBuilderBoardCityBuilderBoardOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-city-builder-board::CityBuilderBoardOrbital');
-      }
-      return stdUiCityBuilderBoardCityBuilderBoardOrbital(p);
-    },
-    manifest: StdUiCityBuilderBoardCityBuilderBoardOrbitalManifest,
   }],
   ['ui-code-runner-panel::CodeRunnerPanelOrbital', {
     factory: (p: object): OrbitalDefinition => {
@@ -2760,15 +1655,6 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdUiEntityTableEntityTableOrbitalManifest,
   }],
-  ['ui-fantasy-town-board-3d::FantasyTownBoard3DOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiFantasyTownBoard3dFantasyTownBoard3DOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-fantasy-town-board-3d::FantasyTownBoard3DOrbital');
-      }
-      return stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(p);
-    },
-    manifest: StdUiFantasyTownBoard3dFantasyTownBoard3DOrbitalManifest,
-  }],
   ['ui-feature-grid-organism::FeatureGridOrganismOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdUiFeatureGridOrganismFeatureGridOrganismOrbitalParams(p)) {
@@ -2777,15 +1663,6 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdUiFeatureGridOrganismFeatureGridOrganismOrbital(p);
     },
     manifest: StdUiFeatureGridOrganismFeatureGridOrganismOrbitalManifest,
-  }],
-  ['ui-fishing-board::FishingBoardOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiFishingBoardFishingBoardOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-fishing-board::FishingBoardOrbital');
-      }
-      return stdUiFishingBoardFishingBoardOrbital(p);
-    },
-    manifest: StdUiFishingBoardFishingBoardOrbitalManifest,
   }],
   ['ui-form::FormOrbital', {
     factory: (p: object): OrbitalDefinition => {
@@ -2805,24 +1682,6 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdUiFormSectionFormSectionOrbitalManifest,
   }],
-  ['ui-graveyard-board-3d::GraveyardBoard3DOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiGraveyardBoard3dGraveyardBoard3DOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-graveyard-board-3d::GraveyardBoard3DOrbital');
-      }
-      return stdUiGraveyardBoard3dGraveyardBoard3DOrbital(p);
-    },
-    manifest: StdUiGraveyardBoard3dGraveyardBoard3DOrbitalManifest,
-  }],
-  ['ui-grid-tactics-demo-board::GridTacticsDemoOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiGridTacticsDemoBoardGridTacticsDemoOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-grid-tactics-demo-board::GridTacticsDemoOrbital');
-      }
-      return stdUiGridTacticsDemoBoardGridTacticsDemoOrbital(p);
-    },
-    manifest: StdUiGridTacticsDemoBoardGridTacticsDemoOrbitalManifest,
-  }],
   ['ui-hero-organism::HeroOrganismOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdUiHeroOrganismHeroOrganismOrbitalParams(p)) {
@@ -2831,51 +1690,6 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdUiHeroOrganismHeroOrganismOrbital(p);
     },
     manifest: StdUiHeroOrganismHeroOrganismOrbitalManifest,
-  }],
-  ['ui-hex-strategy-board::HexStrategyBoardOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiHexStrategyBoardHexStrategyBoardOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-hex-strategy-board::HexStrategyBoardOrbital');
-      }
-      return stdUiHexStrategyBoardHexStrategyBoardOrbital(p);
-    },
-    manifest: StdUiHexStrategyBoardHexStrategyBoardOrbitalManifest,
-  }],
-  ['ui-hex-strategy-board-3d::HexStrategyBoard3DOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiHexStrategyBoard3dHexStrategyBoard3DOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-hex-strategy-board-3d::HexStrategyBoard3DOrbital');
-      }
-      return stdUiHexStrategyBoard3dHexStrategyBoard3DOrbital(p);
-    },
-    manifest: StdUiHexStrategyBoard3dHexStrategyBoard3DOrbitalManifest,
-  }],
-  ['ui-holiday-board-3d::HolidayBoard3DOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiHolidayBoard3dHolidayBoard3DOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-holiday-board-3d::HolidayBoard3DOrbital');
-      }
-      return stdUiHolidayBoard3dHolidayBoard3DOrbital(p);
-    },
-    manifest: StdUiHolidayBoard3dHolidayBoard3DOrbitalManifest,
-  }],
-  ['ui-holiday-runner-board::HolidayRunnerBoardOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiHolidayRunnerBoardHolidayRunnerBoardOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-holiday-runner-board::HolidayRunnerBoardOrbital');
-      }
-      return stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(p);
-    },
-    manifest: StdUiHolidayRunnerBoardHolidayRunnerBoardOrbitalManifest,
-  }],
-  ['ui-market-board-3d::MarketBoard3DOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiMarketBoard3dMarketBoard3DOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-market-board-3d::MarketBoard3DOrbital');
-      }
-      return stdUiMarketBoard3dMarketBoard3DOrbital(p);
-    },
-    manifest: StdUiMarketBoard3dMarketBoard3DOrbitalManifest,
   }],
   ['ui-master-detail::MasterDetailOrbital', {
     factory: (p: object): OrbitalDefinition => {
@@ -2895,15 +1709,6 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdUiMasterDetailLayoutMasterDetailLayoutOrbitalManifest,
   }],
-  ['ui-match-puzzle-board::MatchPuzzleBoardOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiMatchPuzzleBoardMatchPuzzleBoardOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-match-puzzle-board::MatchPuzzleBoardOrbital');
-      }
-      return stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(p);
-    },
-    manifest: StdUiMatchPuzzleBoardMatchPuzzleBoardOrbitalManifest,
-  }],
   ['ui-media-gallery::MediaGalleryOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdUiMediaGalleryMediaGalleryOrbitalParams(p)) {
@@ -2912,24 +1717,6 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdUiMediaGalleryMediaGalleryOrbital(p);
     },
     manifest: StdUiMediaGalleryMediaGalleryOrbitalManifest,
-  }],
-  ['ui-minigolf-board::MinigolfBoardOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiMinigolfBoardMinigolfBoardOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-minigolf-board::MinigolfBoardOrbital');
-      }
-      return stdUiMinigolfBoardMinigolfBoardOrbital(p);
-    },
-    manifest: StdUiMinigolfBoardMinigolfBoardOrbitalManifest,
-  }],
-  ['ui-minigolf-board-3d::MinigolfBoard3DOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiMinigolfBoard3dMinigolfBoard3DOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-minigolf-board-3d::MinigolfBoard3DOrbital');
-      }
-      return stdUiMinigolfBoard3dMinigolfBoard3DOrbital(p);
-    },
-    manifest: StdUiMinigolfBoard3dMinigolfBoard3DOrbitalManifest,
   }],
   ['ui-modal-slot::ModalSlotOrbital', {
     factory: (p: object): OrbitalDefinition => {
@@ -2940,69 +1727,6 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdUiModalSlotModalSlotOrbitalManifest,
   }],
-  ['ui-nature-survival-board-3d::NatureSurvivalBoard3DOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiNatureSurvivalBoard3dNatureSurvivalBoard3DOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-nature-survival-board-3d::NatureSurvivalBoard3DOrbital');
-      }
-      return stdUiNatureSurvivalBoard3dNatureSurvivalBoard3DOrbital(p);
-    },
-    manifest: StdUiNatureSurvivalBoard3dNatureSurvivalBoard3DOrbitalManifest,
-  }],
-  ['ui-physics-sandbox-board::PhysicsSandboxBoardOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiPhysicsSandboxBoardPhysicsSandboxBoardOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-physics-sandbox-board::PhysicsSandboxBoardOrbital');
-      }
-      return stdUiPhysicsSandboxBoardPhysicsSandboxBoardOrbital(p);
-    },
-    manifest: StdUiPhysicsSandboxBoardPhysicsSandboxBoardOrbitalManifest,
-  }],
-  ['ui-pinball-board::PinballBoardOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiPinballBoardPinballBoardOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-pinball-board::PinballBoardOrbital');
-      }
-      return stdUiPinballBoardPinballBoardOrbital(p);
-    },
-    manifest: StdUiPinballBoardPinballBoardOrbitalManifest,
-  }],
-  ['ui-pirate-board::PirateBoardOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiPirateBoardPirateBoardOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-pirate-board::PirateBoardOrbital');
-      }
-      return stdUiPirateBoardPirateBoardOrbital(p);
-    },
-    manifest: StdUiPirateBoardPirateBoardOrbitalManifest,
-  }],
-  ['ui-pirate-board-3d::PirateBoard3DOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiPirateBoard3dPirateBoard3DOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-pirate-board-3d::PirateBoard3DOrbital');
-      }
-      return stdUiPirateBoard3dPirateBoard3DOrbital(p);
-    },
-    manifest: StdUiPirateBoard3dPirateBoard3DOrbitalManifest,
-  }],
-  ['ui-platformer-board::PlatformerBoardOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiPlatformerBoardPlatformerBoardOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-platformer-board::PlatformerBoardOrbital');
-      }
-      return stdUiPlatformerBoardPlatformerBoardOrbital(p);
-    },
-    manifest: StdUiPlatformerBoardPlatformerBoardOrbitalManifest,
-  }],
-  ['ui-platformer-board-3d::PlatformerBoard3DOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiPlatformerBoard3dPlatformerBoard3DOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-platformer-board-3d::PlatformerBoard3DOrbital');
-      }
-      return stdUiPlatformerBoard3dPlatformerBoard3DOrbital(p);
-    },
-    manifest: StdUiPlatformerBoard3dPlatformerBoard3DOrbitalManifest,
-  }],
   ['ui-pricing-organism::PricingOrganismOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdUiPricingOrganismPricingOrganismOrbitalParams(p)) {
@@ -3011,33 +1735,6 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdUiPricingOrganismPricingOrganismOrbital(p);
     },
     manifest: StdUiPricingOrganismPricingOrganismOrbitalManifest,
-  }],
-  ['ui-racing-board::RacingBoardOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiRacingBoardRacingBoardOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-racing-board::RacingBoardOrbital');
-      }
-      return stdUiRacingBoardRacingBoardOrbital(p);
-    },
-    manifest: StdUiRacingBoardRacingBoardOrbitalManifest,
-  }],
-  ['ui-racing-board-3d::RacingBoard3DOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiRacingBoard3dRacingBoard3DOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-racing-board-3d::RacingBoard3DOrbital');
-      }
-      return stdUiRacingBoard3dRacingBoard3DOrbital(p);
-    },
-    manifest: StdUiRacingBoard3dRacingBoard3DOrbitalManifest,
-  }],
-  ['ui-roguelike-board::RoguelikeBoardOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiRoguelikeBoardRoguelikeBoardOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-roguelike-board::RoguelikeBoardOrbital');
-      }
-      return stdUiRoguelikeBoardRoguelikeBoardOrbital(p);
-    },
-    manifest: StdUiRoguelikeBoardRoguelikeBoardOrbitalManifest,
   }],
   ['ui-runtime-debugger::RuntimeDebuggerOrbital', {
     factory: (p: object): OrbitalDefinition => {
@@ -3066,51 +1763,6 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdUiShowcaseOrganismShowcaseOrganismOrbitalManifest,
   }],
-  ['ui-skatepark-board-3d::SkateparkBoard3DOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiSkateparkBoard3dSkateparkBoard3DOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-skatepark-board-3d::SkateparkBoard3DOrbital');
-      }
-      return stdUiSkateparkBoard3dSkateparkBoard3DOrbital(p);
-    },
-    manifest: StdUiSkateparkBoard3dSkateparkBoard3DOrbitalManifest,
-  }],
-  ['ui-sokoban-board::SokobanBoardOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiSokobanBoardSokobanBoardOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-sokoban-board::SokobanBoardOrbital');
-      }
-      return stdUiSokobanBoardSokobanBoardOrbital(p);
-    },
-    manifest: StdUiSokobanBoardSokobanBoardOrbitalManifest,
-  }],
-  ['ui-space-board-3d::SpaceBoard3DOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiSpaceBoard3dSpaceBoard3DOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-space-board-3d::SpaceBoard3DOrbital');
-      }
-      return stdUiSpaceBoard3dSpaceBoard3DOrbital(p);
-    },
-    manifest: StdUiSpaceBoard3dSpaceBoard3DOrbitalManifest,
-  }],
-  ['ui-space-shmup-board::SpaceShmupBoardOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiSpaceShmupBoardSpaceShmupBoardOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-space-shmup-board::SpaceShmupBoardOrbital');
-      }
-      return stdUiSpaceShmupBoardSpaceShmupBoardOrbital(p);
-    },
-    manifest: StdUiSpaceShmupBoardSpaceShmupBoardOrbitalManifest,
-  }],
-  ['ui-space-station-board::SpaceStationBoardOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiSpaceStationBoardSpaceStationBoardOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-space-station-board::SpaceStationBoardOrbital');
-      }
-      return stdUiSpaceStationBoardSpaceStationBoardOrbital(p);
-    },
-    manifest: StdUiSpaceStationBoardSpaceStationBoardOrbitalManifest,
-  }],
   ['ui-split-pane::SplitPaneOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdUiSplitPaneSplitPaneOrbitalParams(p)) {
@@ -3119,15 +1771,6 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdUiSplitPaneSplitPaneOrbital(p);
     },
     manifest: StdUiSplitPaneSplitPaneOrbitalManifest,
-  }],
-  ['ui-sports-board::SportsBoardOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiSportsBoardSportsBoardOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-sports-board::SportsBoardOrbital');
-      }
-      return stdUiSportsBoardSportsBoardOrbital(p);
-    },
-    manifest: StdUiSportsBoardSportsBoardOrbitalManifest,
   }],
   ['ui-stat-card::StatCardOrbital', {
     factory: (p: object): OrbitalDefinition => {
@@ -3183,33 +1826,6 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdUiTabbedContainerTabbedContainerOrbitalManifest,
   }],
-  ['ui-tactics-demo-2d::TacticsDemo2DOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiTacticsDemo2dTacticsDemo2DOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-tactics-demo-2d::TacticsDemo2DOrbital');
-      }
-      return stdUiTacticsDemo2dTacticsDemo2DOrbital(p);
-    },
-    manifest: StdUiTacticsDemo2dTacticsDemo2DOrbitalManifest,
-  }],
-  ['ui-tactics-demo-3d::TacticsDemo3DOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiTacticsDemo3dTacticsDemo3DOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-tactics-demo-3d::TacticsDemo3DOrbital');
-      }
-      return stdUiTacticsDemo3dTacticsDemo3DOrbital(p);
-    },
-    manifest: StdUiTacticsDemo3dTacticsDemo3DOrbitalManifest,
-  }],
-  ['ui-tanks-board::TanksBoardOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiTanksBoardTanksBoardOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-tanks-board::TanksBoardOrbital');
-      }
-      return stdUiTanksBoardTanksBoardOrbital(p);
-    },
-    manifest: StdUiTanksBoardTanksBoardOrbitalManifest,
-  }],
   ['ui-team-organism::TeamOrganismOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdUiTeamOrganismTeamOrganismOrbitalParams(p)) {
@@ -3246,60 +1862,6 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdUiToastSlotToastSlotOrbitalManifest,
   }],
-  ['ui-top-down-shooter-board::TopDownShooterBoardOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiTopDownShooterBoardTopDownShooterBoardOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-top-down-shooter-board::TopDownShooterBoardOrbital');
-      }
-      return stdUiTopDownShooterBoardTopDownShooterBoardOrbital(p);
-    },
-    manifest: StdUiTopDownShooterBoardTopDownShooterBoardOrbitalManifest,
-  }],
-  ['ui-topdown-dungeon-board::TopdownDungeonBoardOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiTopdownDungeonBoardTopdownDungeonBoardOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-topdown-dungeon-board::TopdownDungeonBoardOrbital');
-      }
-      return stdUiTopdownDungeonBoardTopdownDungeonBoardOrbital(p);
-    },
-    manifest: StdUiTopdownDungeonBoardTopdownDungeonBoardOrbitalManifest,
-  }],
-  ['ui-topdown-rts-board::TopdownRtsBoardOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiTopdownRtsBoardTopdownRtsBoardOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-topdown-rts-board::TopdownRtsBoardOrbital');
-      }
-      return stdUiTopdownRtsBoardTopdownRtsBoardOrbital(p);
-    },
-    manifest: StdUiTopdownRtsBoardTopdownRtsBoardOrbitalManifest,
-  }],
-  ['ui-tower-defense-board::TowerDefenseBoardOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiTowerDefenseBoardTowerDefenseBoardOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-tower-defense-board::TowerDefenseBoardOrbital');
-      }
-      return stdUiTowerDefenseBoardTowerDefenseBoardOrbital(p);
-    },
-    manifest: StdUiTowerDefenseBoardTowerDefenseBoardOrbitalManifest,
-  }],
-  ['ui-tower-defense-board-3d::TowerDefenseBoard3DOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-tower-defense-board-3d::TowerDefenseBoard3DOrbital');
-      }
-      return stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(p);
-    },
-    manifest: StdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbitalManifest,
-  }],
-  ['ui-toy-track-board-3d::ToyTrackBoard3DOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiToyTrackBoard3dToyTrackBoard3DOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-toy-track-board-3d::ToyTrackBoard3DOrbital');
-      }
-      return stdUiToyTrackBoard3dToyTrackBoard3DOrbital(p);
-    },
-    manifest: StdUiToyTrackBoard3dToyTrackBoard3DOrbitalManifest,
-  }],
   ['ui-ui-slot-renderer::UiSlotRendererOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdUiUiSlotRendererUiSlotRendererOrbitalParams(p)) {
@@ -3308,42 +1870,6 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdUiUiSlotRendererUiSlotRendererOrbital(p);
     },
     manifest: StdUiUiSlotRendererUiSlotRendererOrbitalManifest,
-  }],
-  ['ui-uncontrolled-battle-board::UncontrolledBattleBoardOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-uncontrolled-battle-board::UncontrolledBattleBoardOrbital');
-      }
-      return stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(p);
-    },
-    manifest: StdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbitalManifest,
-  }],
-  ['ui-visual-novel-board::VisualNovelBoardOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiVisualNovelBoardVisualNovelBoardOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-visual-novel-board::VisualNovelBoardOrbital');
-      }
-      return stdUiVisualNovelBoardVisualNovelBoardOrbital(p);
-    },
-    manifest: StdUiVisualNovelBoardVisualNovelBoardOrbitalManifest,
-  }],
-  ['ui-winter-ski-board::WinterSkiBoardOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiWinterSkiBoardWinterSkiBoardOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-winter-ski-board::WinterSkiBoardOrbital');
-      }
-      return stdUiWinterSkiBoardWinterSkiBoardOrbital(p);
-    },
-    manifest: StdUiWinterSkiBoardWinterSkiBoardOrbitalManifest,
-  }],
-  ['ui-world-map-board::WorldMapBoardOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiWorldMapBoardWorldMapBoardOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-world-map-board::WorldMapBoardOrbital');
-      }
-      return stdUiWorldMapBoardWorldMapBoardOrbital(p);
-    },
-    manifest: StdUiWorldMapBoardWorldMapBoardOrbitalManifest,
   }],
 ]);
 

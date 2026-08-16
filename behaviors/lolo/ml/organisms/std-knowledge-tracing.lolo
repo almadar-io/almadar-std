@@ -1,0 +1,116 @@
+app std-knowledge-tracing "1.0.0"
+"std-knowledge-tracing — turns one true/false observation ('did the learner get this right?') into a tracked belief about mastery, and captures the same observation as a labeled training example in the same motion. Composes std-ml-posterior (the R2 statistical rung — a Beta-Bernoulli belief over an unknown success rate) with std-ml-label-capture: every posterior verdict — MASTERY_REACHED, REMEDIATION_NEEDED, or the abstain EVIDENCE_INSUFFICIENT — becomes a persisted labeled example (the input skill, the posterior's own verdict, and the ground-truth outcome that produced it), so a cheaper rung can later be trained to reproduce the same call without running the statistics. Domain-agnostic: it knows about skills and observations, not students, quizzes, or courses. One instance tracks one belief (e.g. one learner × one skill); the host composes as many instances as it has beliefs to hold."
+;; @exposure both
+orbital KnowledgeTracingOrbital {
+  uses Posterior from "std/behaviors/std-ml-posterior"
+  uses LabelCap from "std/behaviors/std-ml-label-capture"
+
+  entity KnowledgeState [runtime, shared] {
+    skillId : string = ""
+    lastOutcome : boolean = false
+    alpha : float = 1
+    beta : float = 1
+    mean : float = 0
+    intervalLow : float = 0
+    intervalHigh : float = 0
+    observations : int = 0
+    status : "idle" | "insufficient" | "mastered" | "remediate" = idle
+    input : json = null
+    verdict : json = null
+    source : string = ""
+    outcome : json = null
+    sink : string = ""
+    recordedAt : number = 0
+  }
+
+  trait ObservationRelay -> KnowledgeState [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.skillId "")
+        (set @entity.lastOutcome false)
+      OBSERVE_SKILL -> idle
+        (set @entity.skillId ?skillId)
+        (set @entity.lastOutcome ?outcome)
+        (emit OBSERVATION_MADE { outcome: ?outcome })
+      VERDICT_REACHED -> idle
+        (emit CAPTURE_LABEL {
+          input: { skillId: @entity.skillId },
+          verdict: { status: ?status, mean: ?mean, intervalLow: ?intervalLow, intervalHigh: ?intervalHigh },
+          source: "posterior",
+          outcome: @entity.lastOutcome
+        })
+    }
+
+    emits {
+      OBSERVATION_MADE {
+        outcome : boolean!
+      }
+        @description "Forwards the raw outcome to PosteriorTracker once skillId is recorded on the shared entity."
+        @tier "secondary"
+
+      CAPTURE_LABEL {
+        input : any!
+        verdict : any!
+        source : string!
+        outcome : any
+      }
+        @description "The posterior's verdict reshaped into a labeled example for LabelCaptureListener."
+        @tier "secondary"
+    }
+
+    listens {
+      OBSERVE_SKILL {
+        skillId : string!
+        outcome : boolean!
+      }
+        @description "Public entry point — one true/false observation of a learner against one skill."
+        @tier "primary"
+
+      PosteriorTracker.MASTERY_REACHED -> VERDICT_REACHED
+        with { status: "mastered", mean: ?mean, intervalLow: ?intervalLow, intervalHigh: ?intervalHigh }
+      PosteriorTracker.REMEDIATION_NEEDED -> VERDICT_REACHED
+        with { status: "remediate", mean: ?mean, intervalLow: ?intervalLow, intervalHigh: ?intervalHigh }
+      PosteriorTracker.EVIDENCE_INSUFFICIENT -> VERDICT_REACHED
+        with { status: "insufficient", mean: ?mean, intervalLow: ?intervalLow, intervalHigh: ?intervalHigh }
+
+      VERDICT_REACHED {
+        status : string!
+        mean : float!
+        intervalLow : float!
+        intervalHigh : float!
+      }
+        @description "Any posterior verdict, tagged with which one it was."
+        @tier "secondary"
+    }
+  }
+
+  trait PosteriorTracker = Posterior.traits.PosteriorBelief -> KnowledgeState {
+    config {
+      priorAlpha: 1
+      priorBeta: 1
+      masteryFloor: 0.85
+      remediationCeiling: 0.35
+      intervalWidthMax: 0.25
+      sampleCount: 200
+    }
+
+    listens {
+      ObservationRelay.OBSERVATION_MADE -> OBSERVE
+    }
+  }
+
+  trait Labels = LabelCap.traits.LabelCaptureListener -> KnowledgeState {
+    config {
+      sink: "knowledge-tracing"
+      sampleRate: 1
+    }
+
+    listens {
+      ObservationRelay.CAPTURE_LABEL -> CAPTURE
+    }
+  }
+
+  page "/knowledge-tracing" as KnowledgeTracingPage -> ObservationRelay, PosteriorTracker, Labels
+}

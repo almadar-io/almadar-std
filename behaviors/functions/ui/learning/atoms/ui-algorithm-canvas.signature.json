@@ -1,0 +1,434 @@
+[
+  {
+    "organism": "ui-algorithm-canvas",
+    "orbital": "AlgorithmCanvasOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/ui-algorithm-canvas.ts",
+    "entities": [
+      {
+        "name": "AlgorithmCanvasItem",
+        "fields": [],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "AlgorithmCanvasRender",
+        "emittedEvents": [
+          "SHAPE_CLICK"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "SHAPE_CLICK",
+            "direction": "emit",
+            "description": "onShapeClick prop",
+            "tier": "essential"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "UPDATE",
+            "direction": "listen",
+            "description": "Live scene update; payload carries the current drawable state.",
+            "synonyms": "tick, redraw, animate, frame",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "animate",
+            "type": "boolean",
+            "default": false,
+            "label": "Animate",
+            "description": "animate prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "backgroundColor",
+            "type": "string",
+            "label": "Background Color",
+            "description": "backgroundColor prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "bars",
+            "type": "[AlgorithmCanvasBarsItem]",
+            "default": [],
+            "label": "Bars",
+            "description": "Sorting/histogram bars; laid out left-to-right, height proportional to value.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "value": {
+                  "name": "value",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "cells",
+            "type": "[AlgorithmCanvasCellsItem]",
+            "default": [],
+            "label": "Cells",
+            "description": "Grid/array/DP cells; laid out on a row/col lattice sized to the extent.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "col": {
+                  "name": "col",
+                  "required": true,
+                  "type": "number"
+                },
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "row": {
+                  "name": "row",
+                  "required": true,
+                  "type": "number"
+                },
+                "value": {
+                  "name": "value",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "className",
+            "type": "string",
+            "label": "Class Name",
+            "description": "className prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "error",
+            "type": "AlgorithmCanvasError",
+            "label": "Error",
+            "description": "error prop",
+            "tier": "presentation",
+            "properties": {
+              "code": {
+                "name": "code",
+                "required": false,
+                "type": "string"
+              },
+              "message": {
+                "name": "message",
+                "required": true,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "stack": {
+                "name": "stack",
+                "required": false,
+                "type": "string"
+              }
+            }
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 400,
+            "label": "Height",
+            "description": "height prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "interactive",
+            "type": "boolean",
+            "default": false,
+            "label": "Interactive",
+            "description": "interactive prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "isLoading",
+            "type": "boolean",
+            "label": "Is Loading",
+            "description": "isLoading prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "onShapeClick",
+            "type": "string",
+            "default": "SHAPE_CLICK",
+            "label": "On Shape Click",
+            "description": "onShapeClick prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "pointers",
+            "type": "[AlgorithmCanvasPointersItem]",
+            "default": [],
+            "label": "Pointers",
+            "description": "Index cursors (i/j/lo/hi/mid); drawn as markers beneath the referenced bar/cell column.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "index": {
+                  "name": "index",
+                  "required": true,
+                  "type": "number"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "shapes",
+            "type": "[AlgorithmCanvasShapesItem]",
+            "default": [],
+            "label": "Shapes",
+            "description": "Extra declarative shapes in canvas pixel coordinates.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "align": {
+                  "name": "align",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "left",
+                    "center",
+                    "right"
+                  ]
+                },
+                "axis": {
+                  "name": "axis",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "x",
+                    "y"
+                  ]
+                },
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "fill": {
+                  "name": "fill",
+                  "required": false,
+                  "type": "string"
+                },
+                "fontSize": {
+                  "name": "fontSize",
+                  "required": false,
+                  "type": "number"
+                },
+                "height": {
+                  "name": "height",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "lineWidth": {
+                  "name": "lineWidth",
+                  "required": false,
+                  "type": "number"
+                },
+                "max": {
+                  "name": "max",
+                  "required": false,
+                  "type": "number"
+                },
+                "min": {
+                  "name": "min",
+                  "required": false,
+                  "type": "number"
+                },
+                "opacity": {
+                  "name": "opacity",
+                  "required": false,
+                  "type": "number"
+                },
+                "path": {
+                  "name": "path",
+                  "required": false,
+                  "type": "string"
+                },
+                "points": {
+                  "name": "points",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "x": {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "y": {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "step": {
+                  "name": "step",
+                  "required": false,
+                  "type": "number"
+                },
+                "text": {
+                  "name": "text",
+                  "required": false,
+                  "type": "string"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string",
+                  "values": [
+                    "line",
+                    "arrow",
+                    "circle",
+                    "rect",
+                    "polygon",
+                    "path",
+                    "text",
+                    "axis",
+                    "grid"
+                  ]
+                },
+                "width": {
+                  "name": "width",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": false,
+                  "type": "number"
+                },
+                "x1": {
+                  "name": "x1",
+                  "required": false,
+                  "type": "number"
+                },
+                "x2": {
+                  "name": "x2",
+                  "required": false,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "y1": {
+                  "name": "y1",
+                  "required": false,
+                  "type": "number"
+                },
+                "y2": {
+                  "name": "y2",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "label": "Title",
+            "description": "title prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "description": "width prop",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "AlgorithmCanvasItem",
+        "transitionEvents": [
+          "INIT",
+          "UPDATE"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "AlgorithmCanvasPage",
+        "defaultPath": "/algorithm-canvas",
+        "primaryEntity": "AlgorithmCanvasItem"
+      }
+    ],
+    "emittedEvents": [
+      "SHAPE_CLICK"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

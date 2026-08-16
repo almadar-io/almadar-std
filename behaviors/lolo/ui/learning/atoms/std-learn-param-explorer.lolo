@@ -1,0 +1,375 @@
+app std-learn-param-explorer "1.0.0"
+"Generic parameter-explorer engine — two sliders drive a config-selected curve family (power y = A·xᴮ, linear y = A + B·x, or sine y = A·sin(B·x)) sampled onto a math-canvas, with a live readout of both parameters and the curve's value at the midpoint x. Subject atoms narrow the curve family and parameter labels through config; this atom owns only the sample-and-recompute mechanics. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital ParamExplorerOrbital {
+  type ParamExplorerCurve = {
+    label : string
+    color : string
+    samples : [ParamExplorerCurveSample]!
+  }
+  type ParamExplorerCurveSample = {
+    x : number!
+    y : number!
+  }
+
+  entity ParamExplorerScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    curveKind : string
+    paramA : number
+    paramB : number
+    paramALabel : string
+    paramBLabel : string
+    xMid : number
+    yMid : number
+    yMin : number
+    yMax : number
+    curves : [ParamExplorerCurve]
+  }
+
+  trait ParamExplorerSim -> @rebindable ParamExplorerScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (let (
+            (A @config.paramADefault)
+            (B @config.paramBDefault)
+            (kind @config.curveKind)
+            (span (- @config.xMax @config.xMin))
+            (samples (array/map (array/range 0 81) (fn (i)
+              (let (
+                  (x (+ @config.xMin (* @i (/ @span 80))))
+                  (yVal (if (== @kind "power")
+                          (* @A (math/pow @x @B))
+                          (if (== @kind "linear")
+                            (+ @A (* @B @x))
+                            (* @A (math/sin (* @B @x))))))
+                )
+                { x: @x, y: @yVal }))))
+            (yMinRaw (array/reduce @samples (object/get (array/nth @samples 0) y) (fn (acc s) (math/min @acc (object/get @s y)))))
+            (yMaxRaw (array/reduce @samples (object/get (array/nth @samples 0) y) (fn (acc s) (math/max @acc (object/get @s y)))))
+            (yPad (* 0.1 (math/max 0.001 (- @yMaxRaw @yMinRaw))))
+            (xMidV (/ (+ @config.xMin @config.xMax) 2))
+            (yMidV (if (== @kind "power")
+                     (* @A (math/pow @xMidV @B))
+                     (if (== @kind "linear")
+                       (+ @A (* @B @xMidV))
+                       (* @A (math/sin (* @B @xMidV))))))
+          )
+          (do
+            (set @entity.active true)
+            (set @entity.title @config.title)
+            (set @entity.curveKind @kind)
+            (set @entity.paramA @A)
+            (set @entity.paramB @B)
+            (set @entity.paramALabel @config.paramALabel)
+            (set @entity.paramBLabel @config.paramBLabel)
+            (set @entity.xMid @xMidV)
+            (set @entity.yMid @yMidV)
+            (set @entity.yMin (- @yMinRaw @yPad))
+            (set @entity.yMax (+ @yMaxRaw @yPad))
+            (set @entity.curves [{ label: "y(x)", color: @config.color, samples: @samples }])))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @entity.paramALabel ": " (math/round @entity.paramA 2)) },
+                    { type: range-slider, min: @config.paramAMin, max: @config.paramAMax, step: @config.paramAStep, value: @entity.paramA, showTooltip: true, action: "SET_PARAM_A" }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @entity.paramBLabel ": " (math/round @entity.paramB 2)) },
+                    { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.paramB, showTooltip: true, action: "SET_PARAM_B" }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: (str/concat @entity.paramALabel "=" (math/round @entity.paramA 2) ", " @entity.paramBLabel "=" (math/round @entity.paramB 2) " — at x=" (math/round @entity.xMid 2) ", y=" (math/round @entity.yMid 3)) }
+              ] }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (let (
+            (A @config.paramADefault)
+            (B @config.paramBDefault)
+            (kind @config.curveKind)
+            (span (- @config.xMax @config.xMin))
+            (samples (array/map (array/range 0 81) (fn (i)
+              (let (
+                  (x (+ @config.xMin (* @i (/ @span 80))))
+                  (yVal (if (== @kind "power")
+                          (* @A (math/pow @x @B))
+                          (if (== @kind "linear")
+                            (+ @A (* @B @x))
+                            (* @A (math/sin (* @B @x))))))
+                )
+                { x: @x, y: @yVal }))))
+            (yMinRaw (array/reduce @samples (object/get (array/nth @samples 0) y) (fn (acc s) (math/min @acc (object/get @s y)))))
+            (yMaxRaw (array/reduce @samples (object/get (array/nth @samples 0) y) (fn (acc s) (math/max @acc (object/get @s y)))))
+            (yPad (* 0.1 (math/max 0.001 (- @yMaxRaw @yMinRaw))))
+            (xMidV (/ (+ @config.xMin @config.xMax) 2))
+            (yMidV (if (== @kind "power")
+                     (* @A (math/pow @xMidV @B))
+                     (if (== @kind "linear")
+                       (+ @A (* @B @xMidV))
+                       (* @A (math/sin (* @B @xMidV))))))
+          )
+          (do
+            (set @entity.active true)
+            (set @entity.title @config.title)
+            (set @entity.curveKind @kind)
+            (set @entity.paramA @A)
+            (set @entity.paramB @B)
+            (set @entity.paramALabel @config.paramALabel)
+            (set @entity.paramBLabel @config.paramBLabel)
+            (set @entity.xMid @xMidV)
+            (set @entity.yMid @yMidV)
+            (set @entity.yMin (- @yMinRaw @yPad))
+            (set @entity.yMax (+ @yMaxRaw @yPad))
+            (set @entity.curves [{ label: "y(x)", color: @config.color, samples: @samples }])))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @entity.paramALabel ": " (math/round @entity.paramA 2)) },
+                    { type: range-slider, min: @config.paramAMin, max: @config.paramAMax, step: @config.paramAStep, value: @entity.paramA, showTooltip: true, action: "SET_PARAM_A" }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @entity.paramBLabel ": " (math/round @entity.paramB 2)) },
+                    { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.paramB, showTooltip: true, action: "SET_PARAM_B" }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: (str/concat @entity.paramALabel "=" (math/round @entity.paramA 2) ", " @entity.paramBLabel "=" (math/round @entity.paramB 2) " — at x=" (math/round @entity.xMid 2) ", y=" (math/round @entity.yMid 3)) }
+              ] }
+          ]
+        })
+
+      SET_PARAM_A -> idle when (== @entity.active true)
+        (let (
+            (A (math/clamp ?value @config.paramAMin @config.paramAMax))
+            (B @entity.paramB)
+            (kind @entity.curveKind)
+            (span (- @config.xMax @config.xMin))
+            (samples (array/map (array/range 0 81) (fn (i)
+              (let (
+                  (x (+ @config.xMin (* @i (/ @span 80))))
+                  (yVal (if (== @kind "power")
+                          (* @A (math/pow @x @B))
+                          (if (== @kind "linear")
+                            (+ @A (* @B @x))
+                            (* @A (math/sin (* @B @x))))))
+                )
+                { x: @x, y: @yVal }))))
+            (yMinRaw (array/reduce @samples (object/get (array/nth @samples 0) y) (fn (acc s) (math/min @acc (object/get @s y)))))
+            (yMaxRaw (array/reduce @samples (object/get (array/nth @samples 0) y) (fn (acc s) (math/max @acc (object/get @s y)))))
+            (yPad (* 0.1 (math/max 0.001 (- @yMaxRaw @yMinRaw))))
+            (yMidV (if (== @kind "power")
+                     (* @A (math/pow @entity.xMid @B))
+                     (if (== @kind "linear")
+                       (+ @A (* @B @entity.xMid))
+                       (* @A (math/sin (* @B @entity.xMid))))))
+          )
+          (do
+            (set @entity.paramA @A)
+            (set @entity.yMid @yMidV)
+            (set @entity.yMin (- @yMinRaw @yPad))
+            (set @entity.yMax (+ @yMaxRaw @yPad))
+            (set @entity.curves [{ label: "y(x)", color: @config.color, samples: @samples }])))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @entity.paramALabel ": " (math/round @entity.paramA 2)) },
+                    { type: range-slider, min: @config.paramAMin, max: @config.paramAMax, step: @config.paramAStep, value: @entity.paramA, showTooltip: true, action: "SET_PARAM_A" }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @entity.paramBLabel ": " (math/round @entity.paramB 2)) },
+                    { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.paramB, showTooltip: true, action: "SET_PARAM_B" }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: (str/concat @entity.paramALabel "=" (math/round @entity.paramA 2) ", " @entity.paramBLabel "=" (math/round @entity.paramB 2) " — at x=" (math/round @entity.xMid 2) ", y=" (math/round @entity.yMid 3)) }
+              ] }
+          ]
+        })
+        (emit PARAMS_CHANGED { paramA: @entity.paramA, paramB: @entity.paramB })
+
+      SET_PARAM_B -> idle when (== @entity.active true)
+        (let (
+            (A @entity.paramA)
+            (B (math/clamp ?value @config.paramBMin @config.paramBMax))
+            (kind @entity.curveKind)
+            (span (- @config.xMax @config.xMin))
+            (samples (array/map (array/range 0 81) (fn (i)
+              (let (
+                  (x (+ @config.xMin (* @i (/ @span 80))))
+                  (yVal (if (== @kind "power")
+                          (* @A (math/pow @x @B))
+                          (if (== @kind "linear")
+                            (+ @A (* @B @x))
+                            (* @A (math/sin (* @B @x))))))
+                )
+                { x: @x, y: @yVal }))))
+            (yMinRaw (array/reduce @samples (object/get (array/nth @samples 0) y) (fn (acc s) (math/min @acc (object/get @s y)))))
+            (yMaxRaw (array/reduce @samples (object/get (array/nth @samples 0) y) (fn (acc s) (math/max @acc (object/get @s y)))))
+            (yPad (* 0.1 (math/max 0.001 (- @yMaxRaw @yMinRaw))))
+            (yMidV (if (== @kind "power")
+                     (* @A (math/pow @entity.xMid @B))
+                     (if (== @kind "linear")
+                       (+ @A (* @B @entity.xMid))
+                       (* @A (math/sin (* @B @entity.xMid))))))
+          )
+          (do
+            (set @entity.paramB @B)
+            (set @entity.yMid @yMidV)
+            (set @entity.yMin (- @yMinRaw @yPad))
+            (set @entity.yMax (+ @yMaxRaw @yPad))
+            (set @entity.curves [{ label: "y(x)", color: @config.color, samples: @samples }])))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @entity.paramALabel ": " (math/round @entity.paramA 2)) },
+                    { type: range-slider, min: @config.paramAMin, max: @config.paramAMax, step: @config.paramAStep, value: @entity.paramA, showTooltip: true, action: "SET_PARAM_A" }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @entity.paramBLabel ": " (math/round @entity.paramB 2)) },
+                    { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.paramB, showTooltip: true, action: "SET_PARAM_B" }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: (str/concat @entity.paramALabel "=" (math/round @entity.paramA 2) ", " @entity.paramBLabel "=" (math/round @entity.paramB 2) " — at x=" (math/round @entity.xMid 2) ", y=" (math/round @entity.yMid 3)) }
+              ] }
+          ]
+        })
+        (emit PARAMS_CHANGED { paramA: @entity.paramA, paramB: @entity.paramB })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      SET_PARAM_A {
+        value : number
+      }
+        @description "Learner dragged the first parameter's slider — value is the new A; the curve recomputes immediately."
+        @tier "domain"
+      SET_PARAM_B {
+        value : number
+      }
+        @description "Learner dragged the second parameter's slider — value is the new B; the curve recomputes immediately."
+        @tier "domain"
+    }
+
+    emits {
+      PARAMS_CHANGED -> external {
+        paramA : number
+        paramB : number
+      }
+        @description "The two parameter values after a slider change — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "parameter explorer, curve family, power law, linear function, sine wave"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Parameter Explorer"
+        @label "Title"
+        @description "Title shown above the canvas."
+        @tier "presentation"
+      curveKind : string = "power"
+        @label "Curve Kind"
+        @description "Curve family the two parameters drive: power (y = A·xᴮ), linear (y = A + B·x), or sine (y = A·sin(B·x))."
+        @synonyms "curve family, power law, linear function, sine wave, function type"
+        @tier "domain"
+      paramALabel : string = "A"
+        @label "Parameter A Label"
+        @description "Display label for the first parameter, shown in the caption and readout."
+        @tier "presentation"
+      paramAMin : number = -5
+        @label "Parameter A Min"
+        @description "Lower bound of the first parameter's slider."
+        @tier "domain"
+      paramAMax : number = 5
+        @label "Parameter A Max"
+        @description "Upper bound of the first parameter's slider."
+        @tier "domain"
+      paramAStep : number = 0.1
+        @label "Parameter A Step"
+        @description "Slider increment for the first parameter."
+        @tier "presentation"
+      paramADefault : number = 1
+        @label "Parameter A Default"
+        @description "Starting value of the first parameter."
+        @tier "domain"
+      paramBLabel : string = "B"
+        @label "Parameter B Label"
+        @description "Display label for the second parameter, shown in the caption and readout."
+        @tier "presentation"
+      paramBMin : number = -5
+        @label "Parameter B Min"
+        @description "Lower bound of the second parameter's slider."
+        @tier "domain"
+      paramBMax : number = 5
+        @label "Parameter B Max"
+        @description "Upper bound of the second parameter's slider."
+        @tier "domain"
+      paramBStep : number = 0.1
+        @label "Parameter B Step"
+        @description "Slider increment for the second parameter."
+        @tier "presentation"
+      paramBDefault : number = 2
+        @label "Parameter B Default"
+        @description "Starting value of the second parameter."
+        @tier "domain"
+      xMin : number = 0
+        @label "X Min"
+        @description "Left edge of the sampled x range."
+        @tier "presentation"
+      xMax : number = 10
+        @label "X Max"
+        @description "Right edge of the sampled x range."
+        @tier "presentation"
+      color : string = "#3b82f6"
+        @label "Curve Color"
+        @tier "presentation"
+      width : number = 600
+        @label "Width"
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @tier "presentation"
+      showAxes : boolean = true
+        @label "Show Axes"
+        @tier "presentation"
+      showGrid : boolean = true
+        @label "Show Grid"
+        @tier "presentation"
+      gridStep : number = 1
+        @label "Grid Step"
+        @tier "presentation"
+      interactive : boolean = false
+        @label "Interactive"
+        @tier "presentation"
+      animate : boolean = false
+        @label "Animate"
+        @tier "presentation"
+    }
+  }
+
+  page "/learn-param-explorer" as ParamExplorerPage -> ParamExplorerSim
+}

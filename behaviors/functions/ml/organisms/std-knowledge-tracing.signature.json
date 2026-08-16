@@ -1,0 +1,228 @@
+[
+  {
+    "organism": "std-knowledge-tracing",
+    "orbital": "KnowledgeTracingOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/ml/organisms/std-knowledge-tracing.ts",
+    "entities": [
+      {
+        "name": "KnowledgeState",
+        "fields": [
+          {
+            "name": "skillId",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "lastOutcome",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "alpha",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "beta",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "mean",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "intervalLow",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "intervalHigh",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "observations",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "input",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "verdict",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "source",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "outcome",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "sink",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "recordedAt",
+            "type": "number",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "ObservationRelay",
+        "emittedEvents": [
+          "OBSERVATION_MADE",
+          "CAPTURE_LABEL"
+        ],
+        "listenedEvents": [
+          "MASTERY_REACHED",
+          "REMEDIATION_NEEDED",
+          "EVIDENCE_INSUFFICIENT"
+        ],
+        "events": [
+          {
+            "name": "OBSERVATION_MADE",
+            "direction": "emit",
+            "description": "Forwards the raw outcome to PosteriorTracker once skillId is recorded on the shared entity.",
+            "tier": "secondary"
+          },
+          {
+            "name": "CAPTURE_LABEL",
+            "direction": "emit",
+            "description": "The posterior's verdict reshaped into a labeled example for LabelCaptureListener.",
+            "tier": "secondary"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "OBSERVE_SKILL",
+            "direction": "listen",
+            "description": "Public entry point — one true/false observation of a learner against one skill.",
+            "tier": "primary"
+          },
+          {
+            "name": "VERDICT_REACHED",
+            "direction": "listen",
+            "description": "Any posterior verdict, tagged with which one it was.",
+            "tier": "secondary"
+          }
+        ],
+        "overridableConfigKeys": [],
+        "capabilities": [],
+        "linkedEntity": "KnowledgeState",
+        "transitionEvents": [
+          "INIT",
+          "OBSERVE_SKILL",
+          "VERDICT_REACHED"
+        ]
+      },
+      {
+        "name": "PosteriorTracker",
+        "emittedEvents": [],
+        "listenedEvents": [
+          "OBSERVATION_MADE"
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "intervalWidthMax",
+            "type": "unknown",
+            "default": 0.25
+          },
+          {
+            "key": "masteryFloor",
+            "type": "unknown",
+            "default": 0.85
+          },
+          {
+            "key": "priorAlpha",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "priorBeta",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "remediationCeiling",
+            "type": "unknown",
+            "default": 0.35
+          },
+          {
+            "key": "sampleCount",
+            "type": "unknown",
+            "default": 200
+          }
+        ],
+        "capabilities": [],
+        "ref": "Posterior.traits.PosteriorBelief",
+        "linkedEntity": "KnowledgeState"
+      },
+      {
+        "name": "Labels",
+        "emittedEvents": [],
+        "listenedEvents": [
+          "CAPTURE_LABEL"
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "sampleRate",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "sink",
+            "type": "unknown",
+            "default": "knowledge-tracing"
+          }
+        ],
+        "capabilities": [],
+        "ref": "LabelCap.traits.LabelCaptureListener",
+        "linkedEntity": "KnowledgeState"
+      }
+    ],
+    "pages": [
+      {
+        "name": "KnowledgeTracingPage",
+        "defaultPath": "/knowledge-tracing",
+        "primaryEntity": "KnowledgeState"
+      }
+    ],
+    "emittedEvents": [
+      "CAPTURE_LABEL",
+      "OBSERVATION_MADE"
+    ],
+    "listenedEvents": [
+      "CAPTURE_LABEL",
+      "EVIDENCE_INSUFFICIENT",
+      "MASTERY_REACHED",
+      "OBSERVATION_MADE",
+      "REMEDIATION_NEEDED"
+    ],
+    "exposure": "both",
+    "provenance": "authored",
+    "sourceValid": true
+  }
+]

@@ -1,0 +1,335 @@
+[
+  {
+    "organism": "std-learn-param-explorer",
+    "orbital": "ParamExplorerOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-learn-param-explorer.ts",
+    "entities": [
+      {
+        "name": "ParamExplorerScene",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "curveKind",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "paramA",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "paramB",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "paramALabel",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "paramBLabel",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "xMid",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "yMid",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "yMin",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "yMax",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "curves",
+            "type": "array",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "ParamExplorerSim",
+        "emittedEvents": [
+          "PARAMS_CHANGED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "PARAMS_CHANGED",
+            "direction": "emit",
+            "description": "The two parameter values after a slider change — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "parameter explorer, curve family, power law, linear function, sine wave",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "SET_PARAM_A",
+            "direction": "listen",
+            "description": "Learner dragged the first parameter's slider — value is the new A; the curve recomputes immediately.",
+            "tier": "domain"
+          },
+          {
+            "name": "SET_PARAM_B",
+            "direction": "listen",
+            "description": "Learner dragged the second parameter's slider — value is the new B; the curve recomputes immediately.",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "animate",
+            "type": "boolean",
+            "default": false,
+            "label": "Animate",
+            "tier": "presentation"
+          },
+          {
+            "key": "color",
+            "type": "string",
+            "default": "#3b82f6",
+            "label": "Curve Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "curveKind",
+            "type": "string",
+            "default": "power",
+            "label": "Curve Kind",
+            "description": "Curve family the two parameters drive: power (y = A·xᴮ), linear (y = A + B·x), or sine (y = A·sin(B·x)).",
+            "synonyms": "curve family, power law, linear function, sine wave, function type",
+            "tier": "domain"
+          },
+          {
+            "key": "gridStep",
+            "type": "number",
+            "default": 1,
+            "label": "Grid Step",
+            "tier": "presentation"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 400,
+            "label": "Height",
+            "tier": "presentation"
+          },
+          {
+            "key": "interactive",
+            "type": "boolean",
+            "default": false,
+            "label": "Interactive",
+            "tier": "presentation"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "paramADefault",
+            "type": "number",
+            "default": 1,
+            "label": "Parameter A Default",
+            "description": "Starting value of the first parameter.",
+            "tier": "domain"
+          },
+          {
+            "key": "paramALabel",
+            "type": "string",
+            "default": "A",
+            "label": "Parameter A Label",
+            "description": "Display label for the first parameter, shown in the caption and readout.",
+            "tier": "presentation"
+          },
+          {
+            "key": "paramAMax",
+            "type": "number",
+            "default": 5,
+            "label": "Parameter A Max",
+            "description": "Upper bound of the first parameter's slider.",
+            "tier": "domain"
+          },
+          {
+            "key": "paramAMin",
+            "type": "number",
+            "default": -5,
+            "label": "Parameter A Min",
+            "description": "Lower bound of the first parameter's slider.",
+            "tier": "domain"
+          },
+          {
+            "key": "paramAStep",
+            "type": "number",
+            "default": 0.1,
+            "label": "Parameter A Step",
+            "description": "Slider increment for the first parameter.",
+            "tier": "presentation"
+          },
+          {
+            "key": "paramBDefault",
+            "type": "number",
+            "default": 2,
+            "label": "Parameter B Default",
+            "description": "Starting value of the second parameter.",
+            "tier": "domain"
+          },
+          {
+            "key": "paramBLabel",
+            "type": "string",
+            "default": "B",
+            "label": "Parameter B Label",
+            "description": "Display label for the second parameter, shown in the caption and readout.",
+            "tier": "presentation"
+          },
+          {
+            "key": "paramBMax",
+            "type": "number",
+            "default": 5,
+            "label": "Parameter B Max",
+            "description": "Upper bound of the second parameter's slider.",
+            "tier": "domain"
+          },
+          {
+            "key": "paramBMin",
+            "type": "number",
+            "default": -5,
+            "label": "Parameter B Min",
+            "description": "Lower bound of the second parameter's slider.",
+            "tier": "domain"
+          },
+          {
+            "key": "paramBStep",
+            "type": "number",
+            "default": 0.1,
+            "label": "Parameter B Step",
+            "description": "Slider increment for the second parameter.",
+            "tier": "presentation"
+          },
+          {
+            "key": "showAxes",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Axes",
+            "tier": "presentation"
+          },
+          {
+            "key": "showGrid",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Grid",
+            "tier": "presentation"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Parameter Explorer",
+            "label": "Title",
+            "description": "Title shown above the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "tier": "presentation"
+          },
+          {
+            "key": "xMax",
+            "type": "number",
+            "default": 10,
+            "label": "X Max",
+            "description": "Right edge of the sampled x range.",
+            "tier": "presentation"
+          },
+          {
+            "key": "xMin",
+            "type": "number",
+            "default": 0,
+            "label": "X Min",
+            "description": "Left edge of the sampled x range.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "ParamExplorerScene",
+        "transitionEvents": [
+          "INIT",
+          "MODE_SELECTED",
+          "SET_PARAM_A",
+          "SET_PARAM_B"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "curveKind",
+            "curves",
+            "paramA",
+            "paramALabel",
+            "paramB",
+            "paramBLabel",
+            "title",
+            "xMid",
+            "yMax",
+            "yMid",
+            "yMin"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "ParamExplorerPage",
+        "defaultPath": "/learn-param-explorer",
+        "primaryEntity": "ParamExplorerScene"
+      }
+    ],
+    "emittedEvents": [
+      "PARAMS_CHANGED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

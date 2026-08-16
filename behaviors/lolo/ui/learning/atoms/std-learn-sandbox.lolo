@@ -1,0 +1,317 @@
+app std-learn-sandbox "1.0.0"
+"Generic toggle-a-system→consequence instrument — a config-declared roster of elements (each with a weight and a default enabled state) sits on a biology-canvas connected by config-declared links; each element has a toggle button, and toggling recomputes a derived total (the summed weight of enabled elements) against a config-declared threshold, with a readout stating whether the system currently holds. Links to or from a disabled element render dimmed. Reset restores every element to its config-declared default. Element and link vocabulary is entirely config-declared, so the same mechanism serves any threshold-system exploration (coalition building, load balancing, ecosystem tipping points, circuit continuity) standalone. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital LearnSandboxOrbital {
+  type LearnSandboxElement = {
+    id : string!
+    label : string!
+    weight : number!
+    enabled : boolean
+    x : number
+    y : number
+  }
+  type LearnSandboxLink = {
+    from : string!
+    to : string!
+  }
+  type LearnSandboxNode = {
+    id : string!
+    x : number!
+    y : number!
+    radius : number
+    color : string
+    label : string
+  }
+  type LearnSandboxEdge = {
+    from : string!
+    to : string!
+    color : string
+  }
+
+  entity LearnSandboxScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    enabledIds : [string]
+    total : number = 0
+    holds : boolean = false
+    readout : string
+    nodes : [LearnSandboxNode]
+    edges : [LearnSandboxEdge]
+  }
+
+  trait LearnSandboxSim -> @rebindable LearnSandboxScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.enabledIds (array/map (array/filter @config.elements (fn e (== (object/get @e enabled true) true))) (fn e (object/get @e id))))
+        (let (
+            (activeElements (array/filter @config.elements (fn e (array/includes @entity.enabledIds (object/get @e id)))))
+            (total (array/sum (array/map @activeElements (fn e (object/get @e weight)))))
+            (holds (>= @total @config.threshold))
+            (readout (str/concat @config.outcomeLabel ": total " @total " of " @config.threshold " needed. " (if @holds "Holds." "Does not hold.")))
+            (nodes (array/map @config.elements (fn e { id: (object/get @e id), x: (object/get @e x), y: (object/get @e y), radius: @config.nodeRadius, color: (if (array/includes @entity.enabledIds (object/get @e id)) @config.enabledColor @config.disabledColor), label: (object/get @e label) })))
+            (edges (array/map @config.links (fn l { from: (object/get @l from), to: (object/get @l to), color: (if (and (array/includes @entity.enabledIds (object/get @l from)) (array/includes @entity.enabledIds (object/get @l to))) @config.enabledEdgeColor @config.disabledEdgeColor) })))
+          )
+          (do
+            (set @entity.total @total)
+            (set @entity.holds @holds)
+            (set @entity.readout @readout)
+            (set @entity.nodes @nodes)
+            (set @entity.edges @edges)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: "Toggle elements to see how the system's total responds." },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: @entity.nodes, edges: @entity.edges, shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.elements (fn e { type: button, action: TOGGLE, actionPayload: { elementId: (object/get @e id) }, label: (if (array/includes @entity.enabledIds (object/get @e id)) (object/get @e label) (str/concat (object/get @e label) " — off")), variant: (if (array/includes @entity.enabledIds (object/get @e id)) "primary" "ghost"), size: sm })) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+                  ] },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: badge, variant: (if @entity.holds "success" "danger"), label: (if @entity.holds "Holds" "Does Not Hold") },
+                    { type: typography, variant: body, content: @entity.readout }
+                  ] }
+              ] }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.enabledIds (array/map (array/filter @config.elements (fn e (== (object/get @e enabled true) true))) (fn e (object/get @e id))))
+        (let (
+            (activeElements (array/filter @config.elements (fn e (array/includes @entity.enabledIds (object/get @e id)))))
+            (total (array/sum (array/map @activeElements (fn e (object/get @e weight)))))
+            (holds (>= @total @config.threshold))
+            (readout (str/concat @config.outcomeLabel ": total " @total " of " @config.threshold " needed. " (if @holds "Holds." "Does not hold.")))
+            (nodes (array/map @config.elements (fn e { id: (object/get @e id), x: (object/get @e x), y: (object/get @e y), radius: @config.nodeRadius, color: (if (array/includes @entity.enabledIds (object/get @e id)) @config.enabledColor @config.disabledColor), label: (object/get @e label) })))
+            (edges (array/map @config.links (fn l { from: (object/get @l from), to: (object/get @l to), color: (if (and (array/includes @entity.enabledIds (object/get @l from)) (array/includes @entity.enabledIds (object/get @l to))) @config.enabledEdgeColor @config.disabledEdgeColor) })))
+          )
+          (do
+            (set @entity.total @total)
+            (set @entity.holds @holds)
+            (set @entity.readout @readout)
+            (set @entity.nodes @nodes)
+            (set @entity.edges @edges)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: "Toggle elements to see how the system's total responds." },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: @entity.nodes, edges: @entity.edges, shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.elements (fn e { type: button, action: TOGGLE, actionPayload: { elementId: (object/get @e id) }, label: (if (array/includes @entity.enabledIds (object/get @e id)) (object/get @e label) (str/concat (object/get @e label) " — off")), variant: (if (array/includes @entity.enabledIds (object/get @e id)) "primary" "ghost"), size: sm })) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+                  ] },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: badge, variant: (if @entity.holds "success" "danger"), label: (if @entity.holds "Holds" "Does Not Hold") },
+                    { type: typography, variant: body, content: @entity.readout }
+                  ] }
+              ] }
+          ]
+        })
+
+      TOGGLE -> idle when (== @entity.active true)
+        (set @entity.enabledIds (if (array/includes @entity.enabledIds ?elementId) (array/filter @entity.enabledIds (fn eid (!= @eid ?elementId))) (array/concat @entity.enabledIds [?elementId])))
+        (let (
+            (activeElements (array/filter @config.elements (fn e (array/includes @entity.enabledIds (object/get @e id)))))
+            (total (array/sum (array/map @activeElements (fn e (object/get @e weight)))))
+            (holds (>= @total @config.threshold))
+            (readout (str/concat @config.outcomeLabel ": total " @total " of " @config.threshold " needed. " (if @holds "Holds." "Does not hold.")))
+            (nodes (array/map @config.elements (fn e { id: (object/get @e id), x: (object/get @e x), y: (object/get @e y), radius: @config.nodeRadius, color: (if (array/includes @entity.enabledIds (object/get @e id)) @config.enabledColor @config.disabledColor), label: (object/get @e label) })))
+            (edges (array/map @config.links (fn l { from: (object/get @l from), to: (object/get @l to), color: (if (and (array/includes @entity.enabledIds (object/get @l from)) (array/includes @entity.enabledIds (object/get @l to))) @config.enabledEdgeColor @config.disabledEdgeColor) })))
+          )
+          (do
+            (set @entity.total @total)
+            (set @entity.holds @holds)
+            (set @entity.readout @readout)
+            (set @entity.nodes @nodes)
+            (set @entity.edges @edges)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: "Toggle elements to see how the system's total responds." },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: @entity.nodes, edges: @entity.edges, shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.elements (fn e { type: button, action: TOGGLE, actionPayload: { elementId: (object/get @e id) }, label: (if (array/includes @entity.enabledIds (object/get @e id)) (object/get @e label) (str/concat (object/get @e label) " — off")), variant: (if (array/includes @entity.enabledIds (object/get @e id)) "primary" "ghost"), size: sm })) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+                  ] },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: badge, variant: (if @entity.holds "success" "danger"), label: (if @entity.holds "Holds" "Does Not Hold") },
+                    { type: typography, variant: body, content: @entity.readout }
+                  ] }
+              ] }
+          ]
+        })
+        (emit SYSTEM_CHANGED { total: @entity.total, holds: @entity.holds })
+
+      RESET -> idle when (== @entity.active true)
+        (set @entity.enabledIds (array/map (array/filter @config.elements (fn e (== (object/get @e enabled true) true))) (fn e (object/get @e id))))
+        (let (
+            (activeElements (array/filter @config.elements (fn e (array/includes @entity.enabledIds (object/get @e id)))))
+            (total (array/sum (array/map @activeElements (fn e (object/get @e weight)))))
+            (holds (>= @total @config.threshold))
+            (readout (str/concat @config.outcomeLabel ": total " @total " of " @config.threshold " needed. " (if @holds "Holds." "Does not hold.")))
+            (nodes (array/map @config.elements (fn e { id: (object/get @e id), x: (object/get @e x), y: (object/get @e y), radius: @config.nodeRadius, color: (if (array/includes @entity.enabledIds (object/get @e id)) @config.enabledColor @config.disabledColor), label: (object/get @e label) })))
+            (edges (array/map @config.links (fn l { from: (object/get @l from), to: (object/get @l to), color: (if (and (array/includes @entity.enabledIds (object/get @l from)) (array/includes @entity.enabledIds (object/get @l to))) @config.enabledEdgeColor @config.disabledEdgeColor) })))
+          )
+          (do
+            (set @entity.total @total)
+            (set @entity.holds @holds)
+            (set @entity.readout @readout)
+            (set @entity.nodes @nodes)
+            (set @entity.edges @edges)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: "Toggle elements to see how the system's total responds." },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: @entity.nodes, edges: @entity.edges, shapes: [], interactive: @config.interactive, animate: @config.animate },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map @config.elements (fn e { type: button, action: TOGGLE, actionPayload: { elementId: (object/get @e id) }, label: (if (array/includes @entity.enabledIds (object/get @e id)) (object/get @e label) (str/concat (object/get @e label) " — off")), variant: (if (array/includes @entity.enabledIds (object/get @e id)) "primary" "ghost"), size: sm })) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+                  ] },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: badge, variant: (if @entity.holds "success" "danger"), label: (if @entity.holds "Holds" "Does Not Hold") },
+                    { type: typography, variant: body, content: @entity.readout }
+                  ] }
+              ] }
+          ]
+        })
+        (emit SANDBOX_RESET { })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      TOGGLE {
+        elementId : string
+      }
+        @description "Learner toggled one element on or off, recomputing the derived total against the threshold."
+        @tier "domain"
+      RESET {
+      }
+        @description "Learner restored every element to its config-declared default enabled state."
+        @tier "domain"
+    }
+
+    emits {
+      SYSTEM_CHANGED -> external {
+        total : number
+        holds : boolean
+      }
+        @description "The system's derived total and hold status after each toggle — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "system update, total changed, threshold check, holds, tipping point"
+        @tier "domain"
+      SANDBOX_RESET -> external {
+      }
+        @description "Signals every element was restored to its config-declared default by Reset — a composed listener can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "sandbox reset, restore defaults, restart"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "System Sandbox"
+        @label "Title"
+        @description "Title shown above the instrument."
+        @tier "presentation"
+      width : number = 640
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 320
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      backgroundColor : string = "#f8fafc"
+        @label "Background Color"
+        @tier "presentation"
+      interactive : boolean = false
+        @label "Interactive"
+        @description "Enable pointer interaction on the canvas."
+        @tier "presentation"
+      animate : boolean = false
+        @label "Animate"
+        @description "Enable continuous redraw loop."
+        @tier "presentation"
+      elements : [LearnSandboxElement] = [
+        { id: "a", label: "Module A", weight: 15, enabled: true, x: 100, y: 80 },
+        { id: "b", label: "Module B", weight: 20, enabled: true, x: 300, y: 60 },
+        { id: "c", label: "Module C", weight: 10, enabled: false, x: 500, y: 80 },
+        { id: "d", label: "Module D", weight: 25, enabled: true, x: 200, y: 220 },
+        { id: "e", label: "Module E", weight: 18, enabled: true, x: 420, y: 220 }
+      ]
+        @label "Elements"
+        @description "Roster of toggleable elements; each carries its label, its weight toward the derived total, its default enabled state, and its canvas position."
+        @synonyms "element, node, component, module, factor, contributor"
+        @tier "domain"
+      links : [LearnSandboxLink] = [
+        { from: "a", to: "b" },
+        { from: "b", to: "c" },
+        { from: "a", to: "d" },
+        { from: "d", to: "e" }
+      ]
+        @label "Links"
+        @description "Declared relationships drawn between elements; a link dims when either endpoint is disabled."
+        @synonyms "link, edge, connection, dependency, relationship"
+        @tier "domain"
+      threshold : number = 60
+        @label "Threshold"
+        @description "The summed weight of enabled elements must reach this value for the system to hold."
+        @synonyms "threshold, tipping point, sufficient total"
+        @tier "domain"
+      outcomeLabel : string = "System Status"
+        @label "Outcome Label"
+        @description "Label prefix used in the readout describing the derived total and hold status."
+        @tier "presentation"
+      nodeRadius : number = 34
+        @label "Node Radius"
+        @tier "presentation"
+      enabledColor : string = "#2563eb"
+        @label "Enabled Node Color"
+        @tier "presentation"
+      disabledColor : string = "#cbd5e1"
+        @label "Disabled Node Color"
+        @tier "presentation"
+      enabledEdgeColor : string = "#1e3a8a"
+        @label "Enabled Edge Color"
+        @tier "presentation"
+      disabledEdgeColor : string = "#e2e8f0"
+        @label "Disabled Edge Color"
+        @tier "presentation"
+      resetLabel : string = "Reset"
+        @label "Reset Button Label"
+        @tier "presentation"
+    }
+  }
+
+  page "/learn-sandbox" as LearnSandboxPage -> LearnSandboxSim
+}

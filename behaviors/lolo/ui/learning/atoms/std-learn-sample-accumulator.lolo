@@ -1,0 +1,276 @@
+app std-learn-sample-accumulator "1.0.0"
+"Generic sample-accumulator engine — a Draw button adds a batch of pseudo-random samples from a config-selected source (uniform 0..1, or a coin flip weighted by bias) into a fixed-bin histogram on a math-canvas, with running sample count, running mean, and (for the coin source) observed proportion vs bias. Subject atoms narrow the source kind and labels through config; this atom owns only the draw-and-accumulate mechanics. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital SampleAccumulatorOrbital {
+  type SampleAccShape = {
+    type : "line" | "arrow" | "circle" | "rect" | "polygon" | "path" | "text" | "axis" | "grid"!
+    id : string
+    x : number
+    y : number
+    x1 : number
+    y1 : number
+    x2 : number
+    y2 : number
+    radius : number
+    width : number
+    height : number
+    points : [SampleAccShapePoint]
+    path : string
+    text : string
+    label : string
+    fontSize : number
+    align : "left" | "center" | "right"
+    axis : "x" | "y"
+    min : number
+    max : number
+    step : number
+    color : string
+    fill : string
+    lineWidth : number
+    opacity : number
+  }
+  type SampleAccShapePoint = {
+    x : number!
+    y : number!
+  }
+
+  entity SampleAccumulatorScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    sourceKind : string
+    batchSize : number
+    samples : [number]
+    sampleCount : number
+    mean : number
+    proportion : number
+    shapes : [SampleAccShape]
+  }
+
+  trait SampleAccumulatorSim -> @rebindable SampleAccumulatorScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.sourceKind @config.sourceKind)
+        (set @entity.batchSize @config.batchSize)
+        (set @entity.samples [])
+        (set @entity.sampleCount 0)
+        (set @entity.mean 0)
+        (set @entity.proportion 0)
+        (set @entity.shapes [])
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: DRAW, label: "Draw", variant: primary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: typography, variant: caption, content: (str/concat "Batch size: " @entity.batchSize) },
+                { type: range-slider, min: 1, max: 200, step: 1, value: @entity.batchSize, showTooltip: true, action: "SET_BATCH_SIZE" },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: 1, yMin: 0, yMax: 1, showAxes: false, showGrid: false, gridStep: 0.1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: false, animate: false },
+                { type: typography, variant: body, content: (if (== @entity.sourceKind "coin") (str/concat @entity.sampleCount " sample(s) drawn — running mean " (math/round @entity.mean 3) ", observed proportion " (math/round @entity.proportion 3) " (bias " @config.bias ")") (str/concat @entity.sampleCount " sample(s) drawn — running mean " (math/round @entity.mean 3))) }
+              ] }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.sourceKind @config.sourceKind)
+        (set @entity.batchSize @config.batchSize)
+        (set @entity.samples [])
+        (set @entity.sampleCount 0)
+        (set @entity.mean 0)
+        (set @entity.proportion 0)
+        (set @entity.shapes [])
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: DRAW, label: "Draw", variant: primary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: typography, variant: caption, content: (str/concat "Batch size: " @entity.batchSize) },
+                { type: range-slider, min: 1, max: 200, step: 1, value: @entity.batchSize, showTooltip: true, action: "SET_BATCH_SIZE" },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: 1, yMin: 0, yMax: 1, showAxes: false, showGrid: false, gridStep: 0.1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: false, animate: false },
+                { type: typography, variant: body, content: (if (== @entity.sourceKind "coin") (str/concat @entity.sampleCount " sample(s) drawn — running mean " (math/round @entity.mean 3) ", observed proportion " (math/round @entity.proportion 3) " (bias " @config.bias ")") (str/concat @entity.sampleCount " sample(s) drawn — running mean " (math/round @entity.mean 3))) }
+              ] }
+          ]
+        })
+
+      DRAW -> idle when (== @entity.active true)
+        (let (
+            (kind @entity.sourceKind)
+            (bias @config.bias)
+            (n @entity.batchSize)
+            (newSamples (array/map (array/range @n) (fn (i)
+              (if (== @kind "coin")
+                (if (< (math/random) @bias) 1 0)
+                (math/random)))))
+            (allSamples (array/concat @entity.samples @newSamples))
+            (countV (array/len @allSamples))
+            (meanV (/ (array/reduce @allSamples 0 (fn (acc x) (+ @acc @x))) @countV))
+            (proportionV (if (== @kind "coin") @meanV 0))
+            (binCountV @config.binCount)
+            (binW (/ 1 @binCountV))
+            (counts (array/map (array/range @binCountV) (fn b (array/len (array/filter @allSamples (fn v (if (== @b (- @binCountV 1)) (and (>= @v (* @b @binW)) (<= @v (* (+ @b 1) @binW))) (and (>= @v (* @b @binW)) (< @v (* (+ @b 1) @binW))))))))))
+            (maxCount (math/max 1 (array/reduce @counts 0 (fn (acc c) (math/max @acc @c)))))
+            (plotW (- @config.width 48))
+            (plotH (- @config.height 48))
+            (histShapes (array/map (array/range @binCountV) (fn b
+              (let (
+                  (barH (* (/ (array/nth @counts @b) @maxCount) @plotH))
+                )
+                { type: "rect", x: (+ 24 (* @b (/ @plotW @binCountV))), y: (- (+ 24 @plotH) @barH), width: (* (/ @plotW @binCountV) 0.9), height: @barH, fill: @config.color, lineWidth: 0 }))))
+          )
+          (do
+            (set @entity.samples @allSamples)
+            (set @entity.sampleCount @countV)
+            (set @entity.mean @meanV)
+            (set @entity.proportion @proportionV)
+            (set @entity.shapes @histShapes)
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: DRAW, label: "Draw", variant: primary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: typography, variant: caption, content: (str/concat "Batch size: " @entity.batchSize) },
+                { type: range-slider, min: 1, max: 200, step: 1, value: @entity.batchSize, showTooltip: true, action: "SET_BATCH_SIZE" },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: 1, yMin: 0, yMax: 1, showAxes: false, showGrid: false, gridStep: 0.1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: false, animate: false },
+                { type: typography, variant: body, content: (if (== @entity.sourceKind "coin") (str/concat @entity.sampleCount " sample(s) drawn — running mean " (math/round @entity.mean 3) ", observed proportion " (math/round @entity.proportion 3) " (bias " @config.bias ")") (str/concat @entity.sampleCount " sample(s) drawn — running mean " (math/round @entity.mean 3))) }
+              ] }
+          ]
+        })
+        (emit SAMPLES_DRAWN { count: @entity.sampleCount, mean: @entity.mean })
+
+      SET_BATCH_SIZE -> idle when (== @entity.active true)
+        (set @entity.batchSize (math/round ?value))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: DRAW, label: "Draw", variant: primary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: typography, variant: caption, content: (str/concat "Batch size: " @entity.batchSize) },
+                { type: range-slider, min: 1, max: 200, step: 1, value: @entity.batchSize, showTooltip: true, action: "SET_BATCH_SIZE" },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: 1, yMin: 0, yMax: 1, showAxes: false, showGrid: false, gridStep: 0.1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: false, animate: false },
+                { type: typography, variant: body, content: (if (== @entity.sourceKind "coin") (str/concat @entity.sampleCount " sample(s) drawn — running mean " (math/round @entity.mean 3) ", observed proportion " (math/round @entity.proportion 3) " (bias " @config.bias ")") (str/concat @entity.sampleCount " sample(s) drawn — running mean " (math/round @entity.mean 3))) }
+              ] }
+          ]
+        })
+
+      RESET -> idle when (== @entity.active true)
+        (set @entity.samples [])
+        (set @entity.sampleCount 0)
+        (set @entity.mean 0)
+        (set @entity.proportion 0)
+        (set @entity.shapes [])
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: DRAW, label: "Draw", variant: primary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: typography, variant: caption, content: (str/concat "Batch size: " @entity.batchSize) },
+                { type: range-slider, min: 1, max: 200, step: 1, value: @entity.batchSize, showTooltip: true, action: "SET_BATCH_SIZE" },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: 0, xMax: 1, yMin: 0, yMax: 1, showAxes: false, showGrid: false, gridStep: 0.1, curves: [], points: [], vectors: [], shapes: @entity.shapes, interactive: false, animate: false },
+                { type: typography, variant: body, content: (if (== @entity.sourceKind "coin") (str/concat @entity.sampleCount " sample(s) drawn — running mean " (math/round @entity.mean 3) ", observed proportion " (math/round @entity.proportion 3) " (bias " @config.bias ")") (str/concat @entity.sampleCount " sample(s) drawn — running mean " (math/round @entity.mean 3))) }
+              ] }
+          ]
+        })
+        (emit ACCUMULATOR_RESET {})
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      SET_BATCH_SIZE {
+        value : number
+      }
+        @description "Learner dragged the batch-size slider — value is the new number of samples each Draw adds."
+        @tier "domain"
+    }
+
+    emits {
+      SAMPLES_DRAWN -> external {
+        count : number
+        mean : number
+      }
+        @description "The accumulated sample count and running mean after each draw — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "sample drawn, running mean, law of large numbers, convergence, histogram"
+        @tier "domain"
+      ACCUMULATOR_RESET -> external {
+        _unit : string
+      }
+        @description "The accumulator was cleared back to zero samples — a composed listener can subscribe; a harmless no-op when the atom runs standalone."
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Sample Accumulator"
+        @label "Title"
+        @description "Title shown above the canvas."
+        @tier "presentation"
+      sourceKind : string = "uniform"
+        @label "Source Kind"
+        @description "Distribution each draw samples from: uniform (0..1) or coin (Bernoulli 0/1 weighted by bias)."
+        @synonyms "uniform distribution, coin flip, bernoulli trial, random sampling, source distribution"
+        @tier "domain"
+      batchSize : number = 25
+        @label "Batch Size"
+        @description "Number of samples the Draw button adds per click."
+        @synonyms "batch size, draws per click, sample batch"
+        @tier "domain"
+      bias : number = 0.5
+        @label "Bias"
+        @description "Probability the coin source draws 1, used only when sourceKind is coin."
+        @synonyms "probability, bernoulli parameter, coin bias, p"
+        @tier "domain"
+      binCount : number = 10
+        @label "Bin Count"
+        @description "Number of histogram buckets across the 0..1 value range."
+        @tier "presentation"
+      color : string = "#2563eb"
+        @label "Bar Color"
+        @tier "presentation"
+      width : number = 600
+        @label "Width"
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @tier "presentation"
+    }
+  }
+
+  page "/learn-sample-accumulator" as SampleAccumulatorPage -> SampleAccumulatorSim
+}

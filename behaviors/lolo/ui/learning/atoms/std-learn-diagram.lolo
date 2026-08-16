@@ -1,0 +1,270 @@
+app std-learn-diagram "1.0.0"
+"Generic annotated-diagram instrument. Contract: a config-declared roster of labeled parts (id, label, description, x, y, radius, color) plus optional connector links (from, to, color, label); the whole diagram renders as circles connected by lines with always-visible part labels on a biology-canvas; the learner selects a part via its choice-button and the selected part is visually emphasized with a highlight ring and enlarged radius while its description renders in a caption card alongside a \"part k of n selected\" readout; a Clear button returns to the no-selection overview state where the caption card shows a config-declared overview text. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital LearnDiagramOrbital {
+  type LearnDiagramPart = {
+    id : string!
+    label : string!
+    description : string
+    x : number!
+    y : number!
+    radius : number
+    color : string
+  }
+
+  type LearnDiagramLink = {
+    from : string!
+    to : string!
+    color : string
+    label : string
+  }
+
+  entity LearnDiagramScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    parts : [LearnDiagramPart]
+    links : [LearnDiagramLink]
+    selectedId : string = ""
+    selectedIndex : number = -1
+    captionText : string
+    readoutText : string
+    captionChildren : [json]
+    partButtons : [json]
+  }
+
+  trait LearnDiagramSim -> @rebindable LearnDiagramScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.parts @config.parts)
+        (set @entity.links @config.links)
+        (set @entity.selectedId "")
+        (set @entity.selectedIndex -1)
+        (set @entity.captionText @config.overviewText)
+        (set @entity.readoutText "")
+        (let (
+            (buttons (array/map @entity.parts (fn p { type: button, action: SELECT_PART, actionPayload: { partId: (object/get @p id) }, label: (object/get @p label), variant: (if (== @entity.selectedId (object/get @p id)) "primary" "secondary"), size: sm })))
+            (clearButton { type: button, action: CLEAR_PART, label: @config.clearLabel, variant: ghost, size: sm })
+          )
+          (do
+            (set @entity.partButtons (array/append @buttons @clearButton))
+            (set @entity.captionChildren (if (!= @entity.readoutText "") [ { type: typography, variant: caption, color: muted, content: @entity.readoutText }, { type: typography, variant: body, content: @entity.captionText } ] [ { type: typography, variant: body, content: @entity.captionText } ]))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
+                  nodes: (array/map @entity.parts (fn p { id: (object/get @p id), x: (object/get @p x), y: (object/get @p y), radius: (if (== (object/get @p id) @entity.selectedId) (* (object/get @p radius) 1.4) (object/get @p radius)), color: (object/get @p color), label: (object/get @p label) })),
+                  edges: @entity.links,
+                  shapes: (if (== @entity.selectedId "") [] [ { type: circle, x: (object/get (array/nth @entity.parts @entity.selectedIndex) x), y: (object/get (array/nth @entity.parts @entity.selectedIndex) y), radius: (+ (object/get (array/nth @entity.parts @entity.selectedIndex) radius) 10), color: @config.highlightColor, lineWidth: 4 } ])
+                },
+                { type: card, variant: bordered, padding: md, children: @entity.captionChildren },
+                { type: stack, direction: horizontal, gap: xs, children: @entity.partButtons }
+              ] }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.parts @config.parts)
+        (set @entity.links @config.links)
+        (set @entity.selectedId "")
+        (set @entity.selectedIndex -1)
+        (set @entity.captionText @config.overviewText)
+        (set @entity.readoutText "")
+        (let (
+            (buttons (array/map @entity.parts (fn p { type: button, action: SELECT_PART, actionPayload: { partId: (object/get @p id) }, label: (object/get @p label), variant: (if (== @entity.selectedId (object/get @p id)) "primary" "secondary"), size: sm })))
+            (clearButton { type: button, action: CLEAR_PART, label: @config.clearLabel, variant: ghost, size: sm })
+          )
+          (do
+            (set @entity.partButtons (array/append @buttons @clearButton))
+            (set @entity.captionChildren (if (!= @entity.readoutText "") [ { type: typography, variant: caption, color: muted, content: @entity.readoutText }, { type: typography, variant: body, content: @entity.captionText } ] [ { type: typography, variant: body, content: @entity.captionText } ]))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
+                  nodes: (array/map @entity.parts (fn p { id: (object/get @p id), x: (object/get @p x), y: (object/get @p y), radius: (if (== (object/get @p id) @entity.selectedId) (* (object/get @p radius) 1.4) (object/get @p radius)), color: (object/get @p color), label: (object/get @p label) })),
+                  edges: @entity.links,
+                  shapes: (if (== @entity.selectedId "") [] [ { type: circle, x: (object/get (array/nth @entity.parts @entity.selectedIndex) x), y: (object/get (array/nth @entity.parts @entity.selectedIndex) y), radius: (+ (object/get (array/nth @entity.parts @entity.selectedIndex) radius) 10), color: @config.highlightColor, lineWidth: 4 } ])
+                },
+                { type: card, variant: bordered, padding: md, children: @entity.captionChildren },
+                { type: stack, direction: horizontal, gap: xs, children: @entity.partButtons }
+              ] }
+          ]
+        })
+
+      SELECT_PART -> idle when (== @entity.active true)
+        (let (
+            (idx (array/first (array/filter (array/range (array/len @entity.parts)) (fn i (== (object/get (array/nth @entity.parts @i) id) ?partId)))))
+            (part (array/nth @entity.parts @idx))
+          )
+          (do
+            (set @entity.selectedId ?partId)
+            (set @entity.selectedIndex @idx)
+            (set @entity.captionText (object/get @part description))
+            (set @entity.readoutText (str/concat "Part " (str/concat "" (+ @idx 1)) " of " (str/concat "" (array/len @entity.parts)) " selected: " (object/get @part label)))
+          )
+        )
+        (let (
+            (buttons (array/map @entity.parts (fn p { type: button, action: SELECT_PART, actionPayload: { partId: (object/get @p id) }, label: (object/get @p label), variant: (if (== @entity.selectedId (object/get @p id)) "primary" "secondary"), size: sm })))
+            (clearButton { type: button, action: CLEAR_PART, label: @config.clearLabel, variant: ghost, size: sm })
+          )
+          (do
+            (set @entity.partButtons (array/append @buttons @clearButton))
+            (set @entity.captionChildren (if (!= @entity.readoutText "") [ { type: typography, variant: caption, color: muted, content: @entity.readoutText }, { type: typography, variant: body, content: @entity.captionText } ] [ { type: typography, variant: body, content: @entity.captionText } ]))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
+                  nodes: (array/map @entity.parts (fn p { id: (object/get @p id), x: (object/get @p x), y: (object/get @p y), radius: (if (== (object/get @p id) @entity.selectedId) (* (object/get @p radius) 1.4) (object/get @p radius)), color: (object/get @p color), label: (object/get @p label) })),
+                  edges: @entity.links,
+                  shapes: (if (== @entity.selectedId "") [] [ { type: circle, x: (object/get (array/nth @entity.parts @entity.selectedIndex) x), y: (object/get (array/nth @entity.parts @entity.selectedIndex) y), radius: (+ (object/get (array/nth @entity.parts @entity.selectedIndex) radius) 10), color: @config.highlightColor, lineWidth: 4 } ])
+                },
+                { type: card, variant: bordered, padding: md, children: @entity.captionChildren },
+                { type: stack, direction: horizontal, gap: xs, children: @entity.partButtons }
+              ] }
+          ]
+        })
+        (emit PART_SELECTED { partId: @entity.selectedId })
+
+      CLEAR_PART -> idle when (== @entity.active true)
+        (set @entity.selectedId "")
+        (set @entity.selectedIndex -1)
+        (set @entity.captionText @config.overviewText)
+        (set @entity.readoutText "")
+        (let (
+            (buttons (array/map @entity.parts (fn p { type: button, action: SELECT_PART, actionPayload: { partId: (object/get @p id) }, label: (object/get @p label), variant: (if (== @entity.selectedId (object/get @p id)) "primary" "secondary"), size: sm })))
+            (clearButton { type: button, action: CLEAR_PART, label: @config.clearLabel, variant: ghost, size: sm })
+          )
+          (do
+            (set @entity.partButtons (array/append @buttons @clearButton))
+            (set @entity.captionChildren (if (!= @entity.readoutText "") [ { type: typography, variant: caption, color: muted, content: @entity.readoutText }, { type: typography, variant: body, content: @entity.captionText } ] [ { type: typography, variant: body, content: @entity.captionText } ]))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
+                  nodes: (array/map @entity.parts (fn p { id: (object/get @p id), x: (object/get @p x), y: (object/get @p y), radius: (if (== (object/get @p id) @entity.selectedId) (* (object/get @p radius) 1.4) (object/get @p radius)), color: (object/get @p color), label: (object/get @p label) })),
+                  edges: @entity.links,
+                  shapes: (if (== @entity.selectedId "") [] [ { type: circle, x: (object/get (array/nth @entity.parts @entity.selectedIndex) x), y: (object/get (array/nth @entity.parts @entity.selectedIndex) y), radius: (+ (object/get (array/nth @entity.parts @entity.selectedIndex) radius) 10), color: @config.highlightColor, lineWidth: 4 } ])
+                },
+                { type: card, variant: bordered, padding: md, children: @entity.captionChildren },
+                { type: stack, direction: horizontal, gap: xs, children: @entity.partButtons }
+              ] }
+          ]
+        })
+        (emit SELECTION_CLEARED {})
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      SELECT_PART {
+        partId : string
+      }
+        @description "Learner picked a part's choice-button; the matching part is highlighted on the diagram and its description surfaces in the caption card."
+        @tier "domain"
+      CLEAR_PART {
+      }
+        @description "Learner cleared the current selection, returning the diagram to its no-selection overview state."
+        @tier "domain"
+    }
+
+    emits {
+      PART_SELECTED -> external {
+        partId : string
+      }
+        @description "Fires when the learner selects a part, carrying the selected part's id — a composed listener (readout, quiz) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "select, choose, part, highlight, diagram, label"
+        @tier "domain"
+      SELECTION_CLEARED -> external {
+      }
+        @description "Fires when the learner clears the current selection and the diagram returns to its overview state; a harmless no-op when the atom runs standalone."
+        @synonyms "clear, deselect, reset, overview"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "System Diagram"
+        @label "Title"
+        @description "Title shown above the diagram."
+        @tier "presentation"
+      parts : [LearnDiagramPart] = [
+        { id: "input", label: "Input", description: "Receives raw data or requests from the outside world and hands them to the processor.", x: 120, y: 200, radius: 34, color: "#2563eb" },
+        { id: "processor", label: "Processor", description: "The central component that transforms incoming data according to the system's rules.", x: 300, y: 200, radius: 46, color: "#7c3aed" },
+        { id: "storage", label: "Storage", description: "Persists data so it can be retrieved later, even after the system restarts.", x: 300, y: 320, radius: 34, color: "#0891b2" },
+        { id: "output", label: "Output", description: "Delivers the processor's results back out to users or other systems.", x: 480, y: 200, radius: 34, color: "#16a34a" },
+        { id: "controller", label: "Controller", description: "Coordinates timing and configuration for the processor without touching the data itself.", x: 300, y: 80, radius: 26, color: "#dc2626" }
+      ]
+        @label "Parts"
+        @description "Roster of labeled parts (id, label, description, x, y, radius, color) the diagram renders as circles; the learner selects one to see its description."
+        @synonyms "part, node, component, label, annotation"
+        @tier "domain"
+      links : [LearnDiagramLink] = [
+        { from: "input", to: "processor", color: "#cbd5e1", label: "" },
+        { from: "processor", to: "storage", color: "#cbd5e1", label: "" },
+        { from: "processor", to: "output", color: "#cbd5e1", label: "" },
+        { from: "controller", to: "processor", color: "#cbd5e1", label: "" }
+      ]
+        @label "Links"
+        @description "Connector lines drawn between parts, by id."
+        @synonyms "link, edge, connector, arrow"
+        @tier "domain"
+      overviewText : string = "Select a part below to learn what it does."
+        @label "Overview Text"
+        @description "Caption card text shown when no part is selected."
+        @tier "presentation"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      backgroundColor : string = "#f8fafc"
+        @label "Background Color"
+        @description "Canvas background color."
+        @tier "presentation"
+      highlightColor : string = "#f59e0b"
+        @label "Highlight Color"
+        @description "Ring color drawn around the selected part."
+        @tier "presentation"
+      clearLabel : string = "Clear"
+        @label "Clear Button Label"
+        @description "Label text for the button that clears the current selection."
+        @tier "presentation"
+    }
+  }
+
+  page "/learn-diagram" as LearnDiagramPage -> LearnDiagramSim
+}

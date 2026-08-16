@@ -1,0 +1,86 @@
+app std-status-lifecycle-control "1.0.0"
+"Status lifecycle control — infra molecule pairing std-status-lifecycle's StatusMachine, which deliberately surfaces no UI of its own. Pure presentational: shows the current status and one button per legal next move (config.transitions filtered on config.currentStatus), emitting ChangeStatusRequested with the picked move's id/from/to on click. Driven entirely by config (currentStatus/recordId/transitions) rather than a bound entity, so a host embeds it inline at the record it's viewing (currentStatus={@entity.status} recordId={@entity.id} transitions matching the paired StatusMachine's own config.transitions) and points that StatusMachine's `listens` at this trait's emit (`<Composer>.ChangeStatusRequested -> ChangeStatusRequested`) instead of at a dead declared-only event."
+;; @exposure both
+orbital StatusLifecycleControlOrbital {
+  uses Badge from "std/behaviors/ui-badge"
+
+    type TransitionSpec = { from : string!, to : string!, event : string, label : string }
+
+    type ChangeStatusRequested = Event { id : string, from : string, to : string } "The viewer picked a legal next status. Point the paired StatusMachine's listens at this trait (e.g. `<Composer>.ChangeStatusRequested -> ChangeStatusRequested`) — same payload shape the atom's own ChangeStatusRequested listen already expects."
+
+  entity StatusControlItem [runtime] {
+    id : string!
+  }
+
+  trait StatusLifecycleControl -> @rebindable StatusControlItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          align: center
+          children: [<Badge.traits.BadgeRender linkedEntity={StatusControlItem} label={@config.currentStatus} variant={neutral} />, {
+            children: (array/map (array/filter @config.transitions (fn t (== (object/get @t from) @config.currentStatus))) (fn t {
+              action: TRANSITION_REQUESTED
+              actionPayload: { to: (object/get @t to) }
+              label: (object/get @t label)
+              type: button
+              variant: secondary
+            }))
+            direction: horizontal
+            gap: sm
+            type: stack
+          }]
+          direction: horizontal
+          gap: md
+          type: stack
+        })
+      TRANSITION_REQUESTED -> idle
+        (emit ChangeStatusRequested { id: @config.recordId, from: @config.currentStatus, to: ?to })
+    }
+
+    emits {
+      ChangeStatusRequested -> external {
+        id : string
+        from : string
+        to : string
+      }
+        @description "Fired when the viewer picks a legal next status from the control."
+        @synonyms "status change, workflow transition, stage change"
+        @tier "primary"
+      TRANSITION_REQUESTED {
+        to : string
+      }
+        @description "A legal-transition button was clicked."
+        @synonyms "transition clicked, move selected"
+        @tier "internal"
+    }
+
+    listens {
+      TRANSITION_REQUESTED {
+        to : string
+      }
+        @description "A legal-transition button was clicked."
+        @synonyms "transition clicked, move selected"
+        @tier "internal"
+    }
+
+    config {
+      recordId : string = ""
+        @label "Record id"
+        @description "id of the record whose status this control changes. Forward the host entity's id at the embed site (e.g. recordId={@entity.id})."
+        @tier "internal"
+      currentStatus : string = ""
+        @label "Current status"
+        @description "The record's current status, shown as a badge and used to compute which transitions are legal. Forward the host entity's status field at the embed site (e.g. currentStatus={@entity.status})."
+        @tier "internal"
+      transitions : [TransitionSpec] = []
+        @label "Which status moves are allowed?"
+        @description "Legal transitions as { from, to, event, label } — pass the SAME table given to the paired StatusMachine trait's config.transitions so the rendered buttons never offer a move the atom would reject."
+        @synonyms "edges, allowed moves, status flow, workflow transitions"
+        @tier "domain"
+    }
+  }
+
+  page "/status-lifecycle-control" as StatusLifecycleControlPage -> StatusLifecycleControl
+}

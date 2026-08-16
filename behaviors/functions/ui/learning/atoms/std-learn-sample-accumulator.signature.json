@@ -1,0 +1,223 @@
+[
+  {
+    "organism": "std-learn-sample-accumulator",
+    "orbital": "SampleAccumulatorOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-learn-sample-accumulator.ts",
+    "entities": [
+      {
+        "name": "SampleAccumulatorScene",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "sourceKind",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "batchSize",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "samples",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "sampleCount",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "mean",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "proportion",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "shapes",
+            "type": "array",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "SampleAccumulatorSim",
+        "emittedEvents": [
+          "SAMPLES_DRAWN",
+          "ACCUMULATOR_RESET"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "SAMPLES_DRAWN",
+            "direction": "emit",
+            "description": "The accumulated sample count and running mean after each draw — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "sample drawn, running mean, law of large numbers, convergence, histogram",
+            "tier": "domain"
+          },
+          {
+            "name": "ACCUMULATOR_RESET",
+            "direction": "emit",
+            "description": "The accumulator was cleared back to zero samples — a composed listener can subscribe; a harmless no-op when the atom runs standalone.",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "DRAW",
+            "direction": "listen"
+          },
+          {
+            "name": "SET_BATCH_SIZE",
+            "direction": "listen",
+            "description": "Learner dragged the batch-size slider — value is the new number of samples each Draw adds.",
+            "tier": "domain"
+          },
+          {
+            "name": "RESET",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "batchSize",
+            "type": "number",
+            "default": 25,
+            "label": "Batch Size",
+            "description": "Number of samples the Draw button adds per click.",
+            "synonyms": "batch size, draws per click, sample batch",
+            "tier": "domain"
+          },
+          {
+            "key": "bias",
+            "type": "number",
+            "default": 0.5,
+            "label": "Bias",
+            "description": "Probability the coin source draws 1, used only when sourceKind is coin.",
+            "synonyms": "probability, bernoulli parameter, coin bias, p",
+            "tier": "domain"
+          },
+          {
+            "key": "binCount",
+            "type": "number",
+            "default": 10,
+            "label": "Bin Count",
+            "description": "Number of histogram buckets across the 0..1 value range.",
+            "tier": "presentation"
+          },
+          {
+            "key": "color",
+            "type": "string",
+            "default": "#2563eb",
+            "label": "Bar Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 400,
+            "label": "Height",
+            "tier": "presentation"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "sourceKind",
+            "type": "string",
+            "default": "uniform",
+            "label": "Source Kind",
+            "description": "Distribution each draw samples from: uniform (0..1) or coin (Bernoulli 0/1 weighted by bias).",
+            "synonyms": "uniform distribution, coin flip, bernoulli trial, random sampling, source distribution",
+            "tier": "domain"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Sample Accumulator",
+            "label": "Title",
+            "description": "Title shown above the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "SampleAccumulatorScene",
+        "transitionEvents": [
+          "DRAW",
+          "INIT",
+          "MODE_SELECTED",
+          "RESET",
+          "SET_BATCH_SIZE"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "batchSize",
+            "mean",
+            "proportion",
+            "sampleCount",
+            "samples",
+            "shapes",
+            "sourceKind",
+            "title"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "SampleAccumulatorPage",
+        "defaultPath": "/learn-sample-accumulator",
+        "primaryEntity": "SampleAccumulatorScene"
+      }
+    ],
+    "emittedEvents": [
+      "ACCUMULATOR_RESET",
+      "SAMPLES_DRAWN"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

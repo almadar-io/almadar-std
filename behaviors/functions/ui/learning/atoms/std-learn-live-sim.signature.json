@@ -1,0 +1,327 @@
+[
+  {
+    "organism": "std-learn-live-sim",
+    "orbital": "LearnLiveSimOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-learn-live-sim.ts",
+    "entities": [
+      {
+        "name": "LiveSimScene",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "bodies",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "running",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "gravity",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "damping",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "tickCount",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "sampleSpeed",
+            "type": "number",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "LiveSimSim",
+        "emittedEvents": [
+          "RUN_TOGGLED",
+          "SIM_RESET"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "RUN_TOGGLED",
+            "direction": "emit",
+            "description": "The simulation was started or paused — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "run state, play pause, sim toggle",
+            "tier": "domain"
+          },
+          {
+            "name": "SIM_RESET",
+            "direction": "emit",
+            "description": "The learner reset the simulation back to its configured initial bodies and dynamics.",
+            "synonyms": "sim restart, clear run, revert bodies",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "RUN",
+            "direction": "listen",
+            "description": "Learner pressed Run — the tick begins integrating gravity, damping, and wall bounce for every body.",
+            "tier": "domain"
+          },
+          {
+            "name": "PAUSE",
+            "direction": "listen",
+            "description": "Learner pressed Pause — the simulation freezes at its current positions and velocities.",
+            "tier": "domain"
+          },
+          {
+            "name": "RESET",
+            "direction": "listen",
+            "description": "Learner pressed Reset — bodies, gravity, and damping revert to their configured initial values and the tick counter clears.",
+            "tier": "domain"
+          },
+          {
+            "name": "SET_GRAVITY",
+            "direction": "listen",
+            "description": "Learner dragged the gravity slider — value is the new downward acceleration applied to every body each tick.",
+            "tier": "domain"
+          },
+          {
+            "name": "SET_DAMPING",
+            "direction": "listen",
+            "description": "Learner dragged the damping slider — value is the new fraction of velocity retained each tick (air resistance).",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "backgroundColor",
+            "type": "string",
+            "default": "#f8fafc",
+            "label": "Background Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "bodies",
+            "type": "[LiveSimBody]",
+            "default": [
+              {
+                "color": "#2563eb",
+                "id": "ball-a",
+                "radius": 14,
+                "vx": 4,
+                "vy": 0,
+                "x": 100,
+                "y": 60
+              },
+              {
+                "color": "#16a34a",
+                "id": "ball-b",
+                "radius": 18,
+                "vx": -3,
+                "vy": 2,
+                "x": 260,
+                "y": 90
+              },
+              {
+                "color": "#f59e0b",
+                "id": "ball-c",
+                "radius": 11,
+                "vx": 2,
+                "vy": -1,
+                "x": 420,
+                "y": 40
+              }
+            ],
+            "label": "Bodies",
+            "description": "Initial bodies; each carries position (x,y), radius, color, and velocity (vx,vy). Restored on Reset.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "vx": {
+                  "name": "vx",
+                  "required": false,
+                  "type": "number"
+                },
+                "vy": {
+                  "name": "vy",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "damping",
+            "type": "number",
+            "default": 0.995,
+            "label": "Damping",
+            "description": "Initial fraction of velocity retained each tick (air resistance); adjustable live via the Damping slider.",
+            "tier": "domain"
+          },
+          {
+            "key": "gravity",
+            "type": "number",
+            "default": 0.4,
+            "label": "Gravity",
+            "description": "Initial downward acceleration added to each body's vy every tick; adjustable live via the Gravity slider.",
+            "tier": "domain"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 400,
+            "label": "Height",
+            "description": "Simulation height in pixels; bounds the bounce.",
+            "tier": "presentation"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "restitution",
+            "type": "number",
+            "default": 0.78,
+            "label": "Restitution",
+            "description": "Fraction of speed kept when a body bounces off a wall.",
+            "tier": "domain"
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": false,
+            "label": "Running",
+            "description": "Whether the simulation starts already running on INIT.",
+            "tier": "domain"
+          },
+          {
+            "key": "showVelocity",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Velocity",
+            "description": "Draw each body's velocity vector as an arrow.",
+            "tier": "presentation"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Live Sim",
+            "label": "Title",
+            "description": "Title shown above the instrument.",
+            "tier": "presentation"
+          },
+          {
+            "key": "velocityScale",
+            "type": "number",
+            "default": 8,
+            "label": "Velocity Scale",
+            "description": "Length multiplier for the velocity arrows.",
+            "tier": "presentation"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "description": "Simulation width in pixels; bounds the bounce.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "LiveSimScene",
+        "transitionEvents": [
+          "INIT",
+          "MODE_SELECTED",
+          "PAUSE",
+          "RESET",
+          "RUN",
+          "SET_DAMPING",
+          "SET_GRAVITY"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "bodies",
+            "damping",
+            "gravity",
+            "running",
+            "sampleSpeed",
+            "tickCount",
+            "title"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "LearnLiveSimPage",
+        "defaultPath": "/learn-live-sim",
+        "primaryEntity": "LiveSimScene"
+      }
+    ],
+    "emittedEvents": [
+      "RUN_TOGGLED",
+      "SIM_RESET"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]
