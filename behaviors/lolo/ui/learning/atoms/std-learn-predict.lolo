@@ -1,0 +1,408 @@
+app std-learn-predict "1.0.0"
+"Generic predict-then-reveal instrument — each config-declared scenario states a setup and a question, the learner commits to one of the predicted outcomes, and only then does the outcome play out: a timed reveal draws the scenario's declared value frames one by one as a growing curve with per-frame captions, ending in a verdict against the committed prediction and the scenario's explanation, with a running score across scenarios. All vocabulary is config-declared, so the same mechanism serves any commit-before-you-see teaching beat: what happens to the population, which way does the price move, does the reaction speed up, where does the phase go next. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital PredictOrbital {
+  type PredictFrame = {
+    caption : string!
+    value : number!
+  }
+  type PredictScenario = {
+    setup : string!
+    question : string!
+    options : [string]!
+    correctIndex : number!
+    explanation : string
+    frames : [PredictFrame]!
+  }
+  type PredictSample = {
+    x : number!
+    y : number!
+  }
+  type PredictCurve = {
+    label : string
+    color : string
+    samples : [PredictSample]!
+  }
+
+  entity PredictScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    scenarioIndex : number = 0
+    totalScenarios : number = 0
+    phase : string
+    chosenIndex : number = 0
+    frames : [PredictFrame]
+    frameIndex : number = 0
+    frameCaption : string
+    frameValue : number = 0
+    revealSamples : [PredictSample]
+    revealCurves : [PredictCurve]
+    score : number = 0
+    done : boolean = false
+    setupText : string
+    question : string
+    options : [string]
+    correctIndex : number = 0
+    explanation : string
+    feedback : string
+    view : [node]
+  }
+
+  trait PredictSim -> @rebindable PredictScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (let (
+            (first (array/nth @config.scenarios 0))
+          )
+          (do
+            (set @entity.active true)
+            (set @entity.title @config.title)
+            (set @entity.scenarioIndex 0)
+            (set @entity.totalScenarios (array/len @config.scenarios))
+            (set @entity.phase "commit")
+            (set @entity.chosenIndex 0)
+            (set @entity.frames (object/get @first frames))
+            (set @entity.frameIndex 0)
+            (set @entity.frameCaption "")
+            (set @entity.frameValue 0)
+            (set @entity.revealSamples [])
+            (set @entity.revealCurves [])
+            (set @entity.score 0)
+            (set @entity.done false)
+            (set @entity.setupText (object/get @first setup))
+            (set @entity.question (object/get @first question))
+            (set @entity.options (object/get @first options))
+            (set @entity.correctIndex (object/get @first correctIndex))
+            (set @entity.explanation (object/get @first explanation ""))
+            (set @entity.feedback "")
+            (set @entity.view [
+              { type: card, variant: bordered, padding: md, children: [
+                  { type: typography, variant: body, content: @entity.setupText },
+                  { type: typography, variant: h4, content: @entity.question }
+                ] }
+            ])))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: progress-bar, value: (+ @entity.scenarioIndex 1), max: @entity.totalScenarios, showPercentage: false, label: (str/concat "Scenario " (str/concat "" (+ @entity.scenarioIndex 1)) " of " (str/concat "" @entity.totalScenarios)) },
+                { type: stack, direction: vertical, gap: md, children: @entity.view },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map (array/range 0 (array/len @entity.options)) (fn (i)
+                    { type: button, action: PREDICT, actionPayload: { index: @i }, label: (array/nth @entity.options @i), variant: (if (and (!= @entity.phase "commit") (== @entity.chosenIndex @i)) "primary" "secondary"), size: sm, disabled: (if (== @entity.phase "commit") false true) })) },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: (math/max 1 (- (array/len @entity.frames) 1)), yMin: @config.valueMin, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.revealCurves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: typography, variant: body, content: @entity.frameCaption },
+                { type: typography, variant: caption, content: @entity.feedback },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: NEXT, label: @config.nextLabel, variant: primary, disabled: (if (and (== @entity.phase "judged") (== @entity.done false)) false true) },
+                    { type: button, action: RETRY, label: @config.retryLabel, variant: ghost, disabled: (if @entity.done false true) }
+                  ] },
+                { type: stat-display, label: "Correct predictions", value: @entity.score, max: @entity.totalScenarios }
+              ] }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (let (
+            (first (array/nth @config.scenarios 0))
+          )
+          (do
+            (set @entity.active true)
+            (set @entity.title @config.title)
+            (set @entity.scenarioIndex 0)
+            (set @entity.totalScenarios (array/len @config.scenarios))
+            (set @entity.phase "commit")
+            (set @entity.chosenIndex 0)
+            (set @entity.frames (object/get @first frames))
+            (set @entity.frameIndex 0)
+            (set @entity.frameCaption "")
+            (set @entity.frameValue 0)
+            (set @entity.revealSamples [])
+            (set @entity.revealCurves [])
+            (set @entity.score 0)
+            (set @entity.done false)
+            (set @entity.setupText (object/get @first setup))
+            (set @entity.question (object/get @first question))
+            (set @entity.options (object/get @first options))
+            (set @entity.correctIndex (object/get @first correctIndex))
+            (set @entity.explanation (object/get @first explanation ""))
+            (set @entity.feedback "")
+            (set @entity.view [
+              { type: card, variant: bordered, padding: md, children: [
+                  { type: typography, variant: body, content: @entity.setupText },
+                  { type: typography, variant: h4, content: @entity.question }
+                ] }
+            ])))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: progress-bar, value: (+ @entity.scenarioIndex 1), max: @entity.totalScenarios, showPercentage: false, label: (str/concat "Scenario " (str/concat "" (+ @entity.scenarioIndex 1)) " of " (str/concat "" @entity.totalScenarios)) },
+                { type: stack, direction: vertical, gap: md, children: @entity.view },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map (array/range 0 (array/len @entity.options)) (fn (i)
+                    { type: button, action: PREDICT, actionPayload: { index: @i }, label: (array/nth @entity.options @i), variant: (if (and (!= @entity.phase "commit") (== @entity.chosenIndex @i)) "primary" "secondary"), size: sm, disabled: (if (== @entity.phase "commit") false true) })) },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: (math/max 1 (- (array/len @entity.frames) 1)), yMin: @config.valueMin, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.revealCurves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: typography, variant: body, content: @entity.frameCaption },
+                { type: typography, variant: caption, content: @entity.feedback },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: NEXT, label: @config.nextLabel, variant: primary, disabled: (if (and (== @entity.phase "judged") (== @entity.done false)) false true) },
+                    { type: button, action: RETRY, label: @config.retryLabel, variant: ghost, disabled: (if @entity.done false true) }
+                  ] },
+                { type: stat-display, label: "Correct predictions", value: @entity.score, max: @entity.totalScenarios }
+              ] }
+          ]
+        })
+
+      PREDICT -> idle when (and (== @entity.active true) (and (== @entity.phase "commit") (== @entity.done false)))
+        (let (
+            (frame0 (array/nth @entity.frames 0))
+          )
+          (do
+            (set @entity.chosenIndex ?index)
+            (set @entity.phase "reveal")
+            (set @entity.frameIndex 0)
+            (set @entity.frameCaption (object/get @frame0 caption))
+            (set @entity.frameValue (object/get @frame0 value))
+            (set @entity.revealSamples [ { x: 0, y: (object/get @frame0 value) } ])
+            (set @entity.revealCurves [ { label: @config.revealLabel, color: @config.revealColor, samples: @entity.revealSamples } ])
+            (set @entity.feedback (str/concat "Prediction locked: " (array/nth @entity.options ?index) " — watch what happens."))))
+        (emit PREDICTION_COMMITTED { scenarioIndex: @entity.scenarioIndex, chosenIndex: @entity.chosenIndex })
+
+      NEXT -> idle when (and (== @entity.active true) (and (== @entity.phase "judged") (== @entity.done false)))
+        (let (
+            (nextIndex (+ @entity.scenarioIndex 1))
+            (finished (>= @nextIndex (array/len @config.scenarios)))
+            (next (array/nth @config.scenarios (math/min @nextIndex (- (array/len @config.scenarios) 1))))
+          )
+          (do
+            (set @entity.scenarioIndex (if @finished @entity.scenarioIndex @nextIndex))
+            (set @entity.done (if @finished true false))
+            (set @entity.phase (if @finished "judged" "commit"))
+            (set @entity.chosenIndex 0)
+            (set @entity.frames (if @finished @entity.frames (object/get @next frames)))
+            (set @entity.frameIndex 0)
+            (set @entity.frameCaption "")
+            (set @entity.frameValue 0)
+            (set @entity.revealSamples [])
+            (set @entity.revealCurves [])
+            (set @entity.setupText (if @finished @entity.setupText (object/get @next setup)))
+            (set @entity.question (if @finished @entity.question (object/get @next question)))
+            (set @entity.options (if @finished [] (object/get @next options)))
+            (set @entity.correctIndex (if @finished @entity.correctIndex (object/get @next correctIndex)))
+            (set @entity.explanation (if @finished @entity.explanation (object/get @next explanation "")))
+            (set @entity.feedback (if @finished (str/concat "Round complete — " (str/concat "" @entity.score) " of " (str/concat "" @entity.totalScenarios) " predictions correct.") ""))
+            (set @entity.view (if @finished
+              [
+                { type: typography, variant: h4, content: "Round Complete" },
+                { type: stat-display, label: "Correct predictions", value: @entity.score, max: @entity.totalScenarios }
+              ]
+              [
+                { type: card, variant: bordered, padding: md, children: [
+                    { type: typography, variant: body, content: @entity.setupText },
+                    { type: typography, variant: h4, content: @entity.question }
+                  ] }
+              ])))
+          )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: progress-bar, value: (+ @entity.scenarioIndex 1), max: @entity.totalScenarios, showPercentage: false, label: (str/concat "Scenario " (str/concat "" (+ @entity.scenarioIndex 1)) " of " (str/concat "" @entity.totalScenarios)) },
+                { type: stack, direction: vertical, gap: md, children: @entity.view },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map (array/range 0 (array/len @entity.options)) (fn (i)
+                    { type: button, action: PREDICT, actionPayload: { index: @i }, label: (array/nth @entity.options @i), variant: (if (and (!= @entity.phase "commit") (== @entity.chosenIndex @i)) "primary" "secondary"), size: sm, disabled: (if (== @entity.phase "commit") false true) })) },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: (math/max 1 (- (array/len @entity.frames) 1)), yMin: @config.valueMin, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.revealCurves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: typography, variant: body, content: @entity.frameCaption },
+                { type: typography, variant: caption, content: @entity.feedback },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: NEXT, label: @config.nextLabel, variant: primary, disabled: (if (and (== @entity.phase "judged") (== @entity.done false)) false true) },
+                    { type: button, action: RETRY, label: @config.retryLabel, variant: ghost, disabled: (if @entity.done false true) }
+                  ] },
+                { type: stat-display, label: "Correct predictions", value: @entity.score, max: @entity.totalScenarios }
+              ] }
+          ]
+        })
+        (emit SCENARIO_ADVANCED { scenarioIndex: @entity.scenarioIndex, done: @entity.done, score: @entity.score })
+
+      RETRY -> idle when (and (== @entity.active true) (== @entity.done true))
+        (let (
+            (first (array/nth @config.scenarios 0))
+          )
+          (do
+            (set @entity.scenarioIndex 0)
+            (set @entity.phase "commit")
+            (set @entity.chosenIndex 0)
+            (set @entity.frames (object/get @first frames))
+            (set @entity.frameIndex 0)
+            (set @entity.frameCaption "")
+            (set @entity.frameValue 0)
+            (set @entity.revealSamples [])
+            (set @entity.revealCurves [])
+            (set @entity.score 0)
+            (set @entity.done false)
+            (set @entity.setupText (object/get @first setup))
+            (set @entity.question (object/get @first question))
+            (set @entity.options (object/get @first options))
+            (set @entity.correctIndex (object/get @first correctIndex))
+            (set @entity.explanation (object/get @first explanation ""))
+            (set @entity.feedback "")
+            (set @entity.view [
+              { type: card, variant: bordered, padding: md, children: [
+                  { type: typography, variant: body, content: @entity.setupText },
+                  { type: typography, variant: h4, content: @entity.question }
+                ] }
+            ])))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: progress-bar, value: (+ @entity.scenarioIndex 1), max: @entity.totalScenarios, showPercentage: false, label: (str/concat "Scenario " (str/concat "" (+ @entity.scenarioIndex 1)) " of " (str/concat "" @entity.totalScenarios)) },
+                { type: stack, direction: vertical, gap: md, children: @entity.view },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map (array/range 0 (array/len @entity.options)) (fn (i)
+                    { type: button, action: PREDICT, actionPayload: { index: @i }, label: (array/nth @entity.options @i), variant: (if (and (!= @entity.phase "commit") (== @entity.chosenIndex @i)) "primary" "secondary"), size: sm, disabled: (if (== @entity.phase "commit") false true) })) },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: (math/max 1 (- (array/len @entity.frames) 1)), yMin: @config.valueMin, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.revealCurves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: typography, variant: body, content: @entity.frameCaption },
+                { type: typography, variant: caption, content: @entity.feedback },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: NEXT, label: @config.nextLabel, variant: primary, disabled: (if (and (== @entity.phase "judged") (== @entity.done false)) false true) },
+                    { type: button, action: RETRY, label: @config.retryLabel, variant: ghost, disabled: (if @entity.done false true) }
+                  ] },
+                { type: stat-display, label: "Correct predictions", value: @entity.score, max: @entity.totalScenarios }
+              ] }
+          ]
+        })
+        (emit ROUND_RESTARTED { totalScenarios: @entity.totalScenarios })
+    }
+
+    ticks {
+      revealTick every 600ms
+        when (and (== @entity.active true) (== @entity.phase "reveal"))
+        (set @entity.frameIndex (math/min (+ @entity.frameIndex 1) (- (array/len @entity.frames) 1)))
+        (set @entity.frameCaption (object/get (array/nth @entity.frames @entity.frameIndex) caption))
+        (set @entity.frameValue (object/get (array/nth @entity.frames @entity.frameIndex) value))
+        (set @entity.revealSamples (array/append @entity.revealSamples { x: @entity.frameIndex, y: @entity.frameValue }))
+        (set @entity.revealCurves [ { label: @config.revealLabel, color: @config.revealColor, samples: @entity.revealSamples } ])
+        (set @entity.phase (if (>= @entity.frameIndex (- (array/len @entity.frames) 1)) "judged" @entity.phase))
+        (set @entity.score (if (and (== @entity.phase "judged") (== @entity.chosenIndex @entity.correctIndex)) (+ @entity.score 1) @entity.score))
+        (set @entity.feedback (if (== @entity.phase "judged")
+          (if (== @entity.chosenIndex @entity.correctIndex)
+            (str/concat "Your prediction was right. " @entity.explanation)
+            (str/concat "Not this time — the outcome was: " (array/nth @entity.options @entity.correctIndex) ". " @entity.explanation))
+          @entity.feedback))
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      PREDICT {
+        index : number
+      }
+        @description "Learner committed to one of the predicted outcomes before seeing the reveal — index is the chosen option; the reveal then plays out."
+        @tier "domain"
+      NEXT {
+      }
+        @description "Learner advanced to the next scenario after the reveal was judged; past the last scenario this completes the round."
+        @tier "domain"
+      RETRY {
+      }
+        @description "Learner restarted the round from the first scenario with a cleared score."
+        @tier "domain"
+    }
+
+    emits {
+      PREDICTION_COMMITTED -> external {
+        scenarioIndex : number
+        chosenIndex : number
+      }
+        @description "The learner locked in a prediction and the reveal started — a composed listener (coach, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "predict then reveal, commit prediction, hypothesis first, what happens next"
+        @tier "domain"
+      SCENARIO_ADVANCED -> external {
+        scenarioIndex : number
+        done : boolean
+        score : number
+      }
+        @description "The learner moved to the next scenario (or completed the round) with the running score."
+        @tier "domain"
+      ROUND_RESTARTED -> external {
+        totalScenarios : number
+      }
+        @description "The learner restarted the round from scratch."
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Predict, Then Watch"
+        @label "Title"
+        @description "Title shown above the instrument."
+        @tier "presentation"
+      scenarios : [PredictScenario] = [
+        { setup: "A small island hosts 40 rabbits with unlimited grass and no predators.", question: "What happens to the population over the next six seasons?", options: ["It levels off", "It keeps accelerating", "It collapses"], correctIndex: 1, explanation: "With no limiting factor yet, growth compounds each season.", frames: [
+            { caption: "Season 1: 40 rabbits", value: 40 },
+            { caption: "Season 2: 52 rabbits", value: 52 },
+            { caption: "Season 3: 68 rabbits", value: 68 },
+            { caption: "Season 4: 88 rabbits", value: 88 },
+            { caption: "Season 5: 114 rabbits", value: 114 },
+            { caption: "Season 6: 148 rabbits — still accelerating", value: 148 }
+          ] },
+        { setup: "The same island now has foxes, and grass is running short.", question: "What happens to the rabbit population now?", options: ["It keeps accelerating", "It levels off near a ceiling", "It grows linearly"], correctIndex: 1, explanation: "Predation and food limits impose a carrying capacity.", frames: [
+            { caption: "Season 1: 148 rabbits", value: 148 },
+            { caption: "Season 2: 160 rabbits", value: 160 },
+            { caption: "Season 3: 166 rabbits", value: 166 },
+            { caption: "Season 4: 169 rabbits", value: 169 },
+            { caption: "Season 5: 170 rabbits — the curve flattens", value: 170 }
+          ] }
+      ]
+        @label "Scenarios"
+        @description "The scenario roster; each carries a setup, the question, the offered predictions with the correct index, an explanation, and the reveal frames (caption + value) that play out after the learner commits. Realizations declare their own subject's scenarios here."
+        @tier "domain"
+      valueMin : number = 0
+        @label "Value Min"
+        @description "Lower bound of the reveal chart's y axis."
+        @tier "presentation"
+      valueMax : number = 200
+        @label "Value Max"
+        @description "Upper bound of the reveal chart's y axis."
+        @tier "presentation"
+      gridStep : number = 25
+        @label "Grid Step"
+        @tier "presentation"
+      revealLabel : string = "Outcome"
+        @label "Reveal Label"
+        @tier "presentation"
+      revealColor : string = "#3b82f6"
+        @label "Reveal Color"
+        @tier "presentation"
+      nextLabel : string = "Next"
+        @label "Next Label"
+        @tier "presentation"
+      retryLabel : string = "Try Again"
+        @label "Retry Label"
+        @tier "presentation"
+      width : number = 600
+        @label "Width"
+        @tier "presentation"
+      height : number = 320
+        @label "Height"
+        @tier "presentation"
+    }
+  }
+
+  page "/learn-predict" as PredictPage -> PredictSim
+}

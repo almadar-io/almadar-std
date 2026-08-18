@@ -100,7 +100,7 @@
           "config": {
             "animate": {
               "default": false,
-              "description": "animate prop",
+              "description": "2D only: continuous redraw loop. 3D motion is entity-state driven.",
               "label": "Animate",
               "tier": "presentation",
               "type": "boolean"
@@ -131,6 +131,11 @@
                     "required": false,
                     "type": "number"
                   },
+                  "fz": {
+                    "name": "fz",
+                    "required": false,
+                    "type": "number"
+                  },
                   "id": {
                     "name": "id",
                     "required": false,
@@ -156,6 +161,11 @@
                     "required": false,
                     "type": "number"
                   },
+                  "vz": {
+                    "name": "vz",
+                    "required": false,
+                    "type": "number"
+                  },
                   "x": {
                     "name": "x",
                     "required": true,
@@ -165,6 +175,11 @@
                     "name": "y",
                     "required": true,
                     "type": "number"
+                  },
+                  "z": {
+                    "name": "z",
+                    "required": false,
+                    "type": "number"
                   }
                 },
                 "type": "object"
@@ -172,6 +187,13 @@
               "label": "Bodies",
               "tier": "presentation",
               "type": "[PhysicsCanvasBodiesItem]"
+            },
+            "camera": {
+              "default": {},
+              "description": "3D only: neutral camera pose ({ mode, zoom, fov, azimuth, target }).",
+              "label": "Camera",
+              "tier": "presentation",
+              "type": "json"
             },
             "className": {
               "description": "className prop",
@@ -249,8 +271,7 @@
               "type": "number"
             },
             "interactive": {
-              "default": false,
-              "description": "interactive prop",
+              "description": "2D: pointer interaction (click/hover). 3D: orbit camera controls.",
               "label": "Interactive",
               "tier": "presentation",
               "type": "boolean"
@@ -261,6 +282,24 @@
               "tier": "presentation",
               "type": "boolean"
             },
+            "lighting": {
+              "default": {},
+              "description": "3D only: scene light rig as data.",
+              "label": "Lighting",
+              "tier": "presentation",
+              "type": "json"
+            },
+            "mode": {
+              "default": "2d",
+              "description": "Painter: 2D raster (default) or 3D mesh scene via the lazy three.js host.",
+              "label": "Mode",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "2d",
+                "3d"
+              ]
+            },
             "onShapeClick": {
               "default": "SHAPE_CLICK",
               "description": "onShapeClick prop",
@@ -268,9 +307,22 @@
               "tier": "presentation",
               "type": "string"
             },
+            "post": {
+              "default": {},
+              "description": "3D only: post-processing stack (bloom/vignette).",
+              "label": "Post",
+              "tier": "presentation",
+              "type": "json"
+            },
+            "shadows": {
+              "description": "3D only: enable shadows. Omitted → the host default.",
+              "label": "Shadows",
+              "tier": "presentation",
+              "type": "boolean"
+            },
             "shapes": {
               "default": [],
-              "description": "Extra declarative shapes in canvas pixel coordinates.",
+              "description": "Extra declarative shapes in canvas pixel coordinates (2D mode only — ignored in 3D).",
               "items": {
                 "properties": {
                   "align": {
@@ -447,6 +499,12 @@
               "tier": "presentation",
               "type": "boolean"
             },
+            "showGrid": {
+              "description": "3D only: show the ground grid (default off).",
+              "label": "Show Grid",
+              "tier": "presentation",
+              "type": "boolean"
+            },
             "showVelocity": {
               "default": true,
               "description": "showVelocity prop",
@@ -533,15 +591,202 @@
                 "payloadSchema": [
                   {
                     "name": "bodies",
-                    "type": "[PhysicsCanvasBodiesItem]"
+                    "properties": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "z",
+                        "type": "number"
+                      },
+                      {
+                        "name": "radius",
+                        "type": "number"
+                      },
+                      {
+                        "name": "color",
+                        "type": "string"
+                      },
+                      {
+                        "name": "label",
+                        "type": "string"
+                      },
+                      {
+                        "name": "vx",
+                        "type": "number"
+                      },
+                      {
+                        "name": "vy",
+                        "type": "number"
+                      },
+                      {
+                        "name": "vz",
+                        "type": "number"
+                      },
+                      {
+                        "name": "fx",
+                        "type": "number"
+                      },
+                      {
+                        "name": "fy",
+                        "type": "number"
+                      },
+                      {
+                        "name": "fz",
+                        "type": "number"
+                      }
+                    ],
+                    "type": "[object]"
                   },
                   {
                     "name": "constraints",
-                    "type": "[PhysicsCanvasConstraintsItem]"
+                    "properties": [
+                      {
+                        "name": "from",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "to",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "color",
+                        "type": "string"
+                      }
+                    ],
+                    "type": "[object]"
                   },
                   {
                     "name": "shapes",
-                    "type": "[PhysicsCanvasShapesItem]"
+                    "properties": [
+                      {
+                        "name": "type",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "x",
+                        "type": "number"
+                      },
+                      {
+                        "name": "y",
+                        "type": "number"
+                      },
+                      {
+                        "name": "x1",
+                        "type": "number"
+                      },
+                      {
+                        "name": "y1",
+                        "type": "number"
+                      },
+                      {
+                        "name": "x2",
+                        "type": "number"
+                      },
+                      {
+                        "name": "y2",
+                        "type": "number"
+                      },
+                      {
+                        "name": "radius",
+                        "type": "number"
+                      },
+                      {
+                        "name": "width",
+                        "type": "number"
+                      },
+                      {
+                        "name": "height",
+                        "type": "number"
+                      },
+                      {
+                        "name": "points",
+                        "properties": [
+                          {
+                            "name": "x",
+                            "required": true,
+                            "type": "number"
+                          },
+                          {
+                            "name": "y",
+                            "required": true,
+                            "type": "number"
+                          }
+                        ],
+                        "type": "[object]"
+                      },
+                      {
+                        "name": "path",
+                        "type": "string"
+                      },
+                      {
+                        "name": "text",
+                        "type": "string"
+                      },
+                      {
+                        "name": "label",
+                        "type": "string"
+                      },
+                      {
+                        "name": "fontSize",
+                        "type": "number"
+                      },
+                      {
+                        "name": "align",
+                        "type": "string"
+                      },
+                      {
+                        "name": "axis",
+                        "type": "string"
+                      },
+                      {
+                        "name": "min",
+                        "type": "number"
+                      },
+                      {
+                        "name": "max",
+                        "type": "number"
+                      },
+                      {
+                        "name": "step",
+                        "type": "number"
+                      },
+                      {
+                        "name": "color",
+                        "type": "string"
+                      },
+                      {
+                        "name": "fill",
+                        "type": "string"
+                      },
+                      {
+                        "name": "lineWidth",
+                        "type": "number"
+                      },
+                      {
+                        "name": "opacity",
+                        "type": "number"
+                      }
+                    ],
+                    "type": "[object]"
                   }
                 ],
                 "synonyms": "tick, redraw, animate, frame",
@@ -592,6 +837,7 @@
                       "animate": "@config.animate",
                       "backgroundColor": "@config.backgroundColor",
                       "bodies": "@config.bodies",
+                      "camera": "@config.camera",
                       "className": "@config.className",
                       "constraints": "@config.constraints",
                       "error": "@config.error",
@@ -599,9 +845,14 @@
                       "height": "@config.height",
                       "interactive": "@config.interactive",
                       "isLoading": "@config.isLoading",
+                      "lighting": "@config.lighting",
+                      "mode": "@config.mode",
                       "onShapeClick": "@config.onShapeClick",
+                      "post": "@config.post",
+                      "shadows": "@config.shadows",
                       "shapes": "@config.shapes",
                       "showForces": "@config.showForces",
+                      "showGrid": "@config.showGrid",
                       "showVelocity": "@config.showVelocity",
                       "title": "@config.title",
                       "type": "physics-canvas",
@@ -624,6 +875,7 @@
                       "animate": "@config.animate",
                       "backgroundColor": "@config.backgroundColor",
                       "bodies": "@payload.bodies",
+                      "camera": "@config.camera",
                       "className": "@config.className",
                       "constraints": "@payload.constraints",
                       "error": "@config.error",
@@ -631,9 +883,14 @@
                       "height": "@config.height",
                       "interactive": "@config.interactive",
                       "isLoading": "@config.isLoading",
+                      "lighting": "@config.lighting",
+                      "mode": "@config.mode",
                       "onShapeClick": "@config.onShapeClick",
+                      "post": "@config.post",
+                      "shadows": "@config.shadows",
                       "shapes": "@payload.shapes",
                       "showForces": "@config.showForces",
+                      "showGrid": "@config.showGrid",
                       "showVelocity": "@config.showVelocity",
                       "title": "@config.title",
                       "type": "physics-canvas",

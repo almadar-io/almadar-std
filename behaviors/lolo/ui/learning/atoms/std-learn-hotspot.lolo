@@ -1,0 +1,398 @@
+app std-learn-hotspot "1.0.0"
+"Generic spatial tap-to-identify instrument — a config-declared roster of labeled hotspots (id, label, x, y, radius, color) renders on a learning-canvas, and a config-declared prompt roster asks the learner to tap the right part directly on the canvas: a first-try hit scores, a miss names what was actually tapped and invites another try, and a hit reveals the part's explanation with a highlight ring before advancing. All vocabulary is config-declared, so the same mechanism serves any labeled scene: organs on a cell, countries on a sketch map, components on a circuit, bones on a skeleton. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital HotspotOrbital {
+  type HotspotCanvasShape = {
+    type : "circle" | "text"!
+    id : string!
+    x : number!
+    y : number!
+    radius : number
+    color : string!
+    fill : string
+    text : string
+    fontSize : number
+    align : "left" | "center" | "right"
+    lineWidth : number
+  }
+  type HotspotShape = {
+    id : string!
+    label : string!
+    x : number!
+    y : number!
+    radius : number
+    color : string
+  }
+  type HotspotPrompt = {
+    prompt : string!
+    targetId : string!
+    explanation : string
+  }
+
+  entity HotspotScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    promptIndex : number = 0
+    totalPrompts : number = 0
+    score : number = 0
+    tries : number = 0
+    found : boolean = false
+    done : boolean = false
+    promptText : string
+    targetId : string
+    explanation : string
+    feedback : string
+    canvasShapes : [HotspotCanvasShape]
+    view : [node]
+  }
+
+  trait HotspotSim -> @rebindable HotspotScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (let (
+            (first (array/nth @config.prompts 0))
+            (circles (array/map @config.shapes (fn s { type: circle, id: (object/get @s id), x: (object/get @s x), y: (object/get @s y), radius: (object/get @s radius 22), color: (object/get @s color "#3b82f6"), fill: (object/get @s color "#3b82f6") })))
+            (labels (array/map @config.shapes (fn s { type: text, id: (str/concat "label-" (object/get @s id)), x: (object/get @s x), y: (+ (object/get @s y) (object/get @s radius 22) 14), text: (object/get @s label), fontSize: 12, align: "center", color: "#0f172a" })))
+          )
+          (do
+            (set @entity.active true)
+            (set @entity.title @config.title)
+            (set @entity.promptIndex 0)
+            (set @entity.totalPrompts (array/len @config.prompts))
+            (set @entity.score 0)
+            (set @entity.tries 0)
+            (set @entity.found false)
+            (set @entity.done false)
+            (set @entity.promptText (object/get @first prompt))
+            (set @entity.targetId (object/get @first targetId))
+            (set @entity.explanation (object/get @first explanation ""))
+            (set @entity.feedback "")
+            (set @entity.canvasShapes (array/concat @circles @labels))
+            (set @entity.view [
+              { type: card, variant: bordered, padding: md, children: [
+                  { type: typography, variant: body, content: @entity.promptText }
+                ] },
+              { type: learning-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.canvasShapes, interactive: true, animate: false, onShapeClick: "TAP_SHAPE" },
+              { type: stack, direction: horizontal, gap: xs, children: [
+                  { type: typography, variant: caption, content: @entity.feedback }
+                ] },
+              { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: button, action: NEXT, label: @config.nextLabel, variant: primary, disabled: (if @entity.found false true) }
+                ] },
+              { type: stat-display, label: "First-try score", value: @entity.score, max: @entity.totalPrompts }
+            ])))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: progress-bar, value: (+ @entity.promptIndex 1), max: @entity.totalPrompts, showPercentage: false, label: (str/concat "Prompt " (str/concat "" (+ @entity.promptIndex 1)) " of " (str/concat "" @entity.totalPrompts)) },
+                { type: stack, direction: vertical, gap: md, children: @entity.view }
+              ] }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (let (
+            (first (array/nth @config.prompts 0))
+            (circles (array/map @config.shapes (fn s { type: circle, id: (object/get @s id), x: (object/get @s x), y: (object/get @s y), radius: (object/get @s radius 22), color: (object/get @s color "#3b82f6"), fill: (object/get @s color "#3b82f6") })))
+            (labels (array/map @config.shapes (fn s { type: text, id: (str/concat "label-" (object/get @s id)), x: (object/get @s x), y: (+ (object/get @s y) (object/get @s radius 22) 14), text: (object/get @s label), fontSize: 12, align: "center", color: "#0f172a" })))
+          )
+          (do
+            (set @entity.active true)
+            (set @entity.title @config.title)
+            (set @entity.promptIndex 0)
+            (set @entity.totalPrompts (array/len @config.prompts))
+            (set @entity.score 0)
+            (set @entity.tries 0)
+            (set @entity.found false)
+            (set @entity.done false)
+            (set @entity.promptText (object/get @first prompt))
+            (set @entity.targetId (object/get @first targetId))
+            (set @entity.explanation (object/get @first explanation ""))
+            (set @entity.feedback "")
+            (set @entity.canvasShapes (array/concat @circles @labels))
+            (set @entity.view [
+              { type: card, variant: bordered, padding: md, children: [
+                  { type: typography, variant: body, content: @entity.promptText }
+                ] },
+              { type: learning-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.canvasShapes, interactive: true, animate: false, onShapeClick: "TAP_SHAPE" },
+              { type: stack, direction: horizontal, gap: xs, children: [
+                  { type: typography, variant: caption, content: @entity.feedback }
+                ] },
+              { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: button, action: NEXT, label: @config.nextLabel, variant: primary, disabled: (if @entity.found false true) }
+                ] },
+              { type: stat-display, label: "First-try score", value: @entity.score, max: @entity.totalPrompts }
+            ])))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: progress-bar, value: (+ @entity.promptIndex 1), max: @entity.totalPrompts, showPercentage: false, label: (str/concat "Prompt " (str/concat "" (+ @entity.promptIndex 1)) " of " (str/concat "" @entity.totalPrompts)) },
+                { type: stack, direction: vertical, gap: md, children: @entity.view }
+              ] }
+          ]
+        })
+
+      TAP_SHAPE -> idle when (and (== @entity.active true) (and (== @entity.found false) (== @entity.done false)))
+        (let (
+            (tappedId (str/replace (object/get ?payload id "") "label-" ""))
+            (hit (== @tappedId @entity.targetId))
+            (tapped (array/find @config.shapes (fn s (== (object/get @s id) @tappedId))))
+            (tappedLabel (object/get @tapped label ""))
+            (target (array/find @config.shapes (fn s (== (object/get @s id) @entity.targetId))))
+            (circles (array/map @config.shapes (fn s { type: circle, id: (object/get @s id), x: (object/get @s x), y: (object/get @s y), radius: (object/get @s radius 22), color: (object/get @s color "#3b82f6"), fill: (object/get @s color "#3b82f6") })))
+            (labels (array/map @config.shapes (fn s { type: text, id: (str/concat "label-" (object/get @s id)), x: (object/get @s x), y: (+ (object/get @s y) (object/get @s radius 22) 14), text: (object/get @s label), fontSize: 12, align: "center", color: "#0f172a" })))
+            (ring (if @hit
+              [ { type: circle, id: "hit-ring", x: (object/get @target x), y: (object/get @target y), radius: (+ (object/get @target radius 22) 6), color: @config.hitColor, fill: "transparent", lineWidth: 4 } ]
+              []))
+            (newFound (if @hit true false))
+            (newScore (if (and @hit (== @entity.tries 0)) (+ @entity.score 1) @entity.score))
+            (newFeedback (if @hit
+              (if (!= @entity.explanation "") (str/concat "Correct! " @entity.explanation) "Correct!")
+              (if (!= @tappedLabel "") (str/concat "That's " @tappedLabel " — try again.") "Not a labeled part — try again.")))
+            (newCanvasShapes (array/concat (array/concat @circles @labels) @ring))
+            (foundView [
+              { type: card, variant: bordered, padding: md, children: [
+                  { type: typography, variant: body, content: @entity.promptText }
+                ] },
+              { type: learning-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @newCanvasShapes, interactive: true, animate: false, onShapeClick: "TAP_SHAPE" },
+              { type: stack, direction: horizontal, gap: xs, children: [
+                  { type: badge, variant: success, label: "Found" },
+                  { type: typography, variant: caption, content: @newFeedback }
+                ] },
+              { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: button, action: NEXT, label: @config.nextLabel, variant: primary, disabled: false }
+                ] },
+              { type: stat-display, label: "First-try score", value: @newScore, max: @entity.totalPrompts }
+            ])
+            (notFoundView [
+              { type: card, variant: bordered, padding: md, children: [
+                  { type: typography, variant: body, content: @entity.promptText }
+                ] },
+              { type: learning-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @newCanvasShapes, interactive: true, animate: false, onShapeClick: "TAP_SHAPE" },
+              { type: stack, direction: horizontal, gap: xs, children: [
+                  { type: typography, variant: caption, content: @newFeedback }
+                ] },
+              { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: button, action: NEXT, label: @config.nextLabel, variant: primary, disabled: true }
+                ] },
+              { type: stat-display, label: "First-try score", value: @newScore, max: @entity.totalPrompts }
+            ])
+          )
+          (do
+            (set @entity.tries (if @hit @entity.tries (+ @entity.tries 1)))
+            (set @entity.score @newScore)
+            (set @entity.found @newFound)
+            (set @entity.feedback @newFeedback)
+            (set @entity.canvasShapes @newCanvasShapes)
+            (set @entity.view (if @newFound @foundView @notFoundView))))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: progress-bar, value: (+ @entity.promptIndex 1), max: @entity.totalPrompts, showPercentage: false, label: (str/concat "Prompt " (str/concat "" (+ @entity.promptIndex 1)) " of " (str/concat "" @entity.totalPrompts)) },
+                { type: stack, direction: vertical, gap: md, children: @entity.view }
+              ] }
+          ]
+        })
+        (emit TAP_JUDGED { correct: @entity.found, promptIndex: @entity.promptIndex, tries: @entity.tries })
+
+      NEXT -> idle when (and (== @entity.active true) (and (== @entity.found true) (== @entity.done false)))
+        (let (
+            (nextIndex (+ @entity.promptIndex 1))
+            (finished (>= @nextIndex (array/len @config.prompts)))
+            (next (array/nth @config.prompts (math/min @nextIndex (- (array/len @config.prompts) 1))))
+            (circles (array/map @config.shapes (fn s { type: circle, id: (object/get @s id), x: (object/get @s x), y: (object/get @s y), radius: (object/get @s radius 22), color: (object/get @s color "#3b82f6"), fill: (object/get @s color "#3b82f6") })))
+            (labels (array/map @config.shapes (fn s { type: text, id: (str/concat "label-" (object/get @s id)), x: (object/get @s x), y: (+ (object/get @s y) (object/get @s radius 22) 14), text: (object/get @s label), fontSize: 12, align: "center", color: "#0f172a" })))
+          )
+          (do
+            (set @entity.promptIndex (if @finished @entity.promptIndex @nextIndex))
+            (set @entity.done (if @finished true false))
+            (set @entity.tries 0)
+            (set @entity.found false)
+            (set @entity.promptText (if @finished @entity.promptText (object/get @next prompt)))
+            (set @entity.targetId (if @finished @entity.targetId (object/get @next targetId)))
+            (set @entity.explanation (if @finished @entity.explanation (object/get @next explanation "")))
+            (set @entity.feedback "")
+            (set @entity.canvasShapes (array/concat @circles @labels))
+            (set @entity.view (if @finished
+              [
+                { type: typography, variant: h4, content: "Round Complete" },
+                { type: stat-display, label: "First-try score", value: @entity.score, max: @entity.totalPrompts },
+                { type: button, action: RETRY, label: @config.retryLabel, variant: primary }
+              ]
+              [
+                { type: card, variant: bordered, padding: md, children: [
+                    { type: typography, variant: body, content: @entity.promptText }
+                  ] },
+                { type: learning-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.canvasShapes, interactive: true, animate: false, onShapeClick: "TAP_SHAPE" },
+                { type: stack, direction: horizontal, gap: xs, children: [
+                    { type: typography, variant: caption, content: @entity.feedback }
+                  ] },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: NEXT, label: @config.nextLabel, variant: primary, disabled: (if @entity.found false true) }
+                  ] },
+                { type: stat-display, label: "First-try score", value: @entity.score, max: @entity.totalPrompts }
+              ])))
+          )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: progress-bar, value: (+ @entity.promptIndex 1), max: @entity.totalPrompts, showPercentage: false, label: (str/concat "Prompt " (str/concat "" (+ @entity.promptIndex 1)) " of " (str/concat "" @entity.totalPrompts)) },
+                { type: stack, direction: vertical, gap: md, children: @entity.view }
+              ] }
+          ]
+        })
+        (emit PROMPT_ADVANCED { promptIndex: @entity.promptIndex, done: @entity.done, score: @entity.score })
+
+      RETRY -> idle when (and (== @entity.active true) (== @entity.done true))
+        (let (
+            (first (array/nth @config.prompts 0))
+            (circles (array/map @config.shapes (fn s { type: circle, id: (object/get @s id), x: (object/get @s x), y: (object/get @s y), radius: (object/get @s radius 22), color: (object/get @s color "#3b82f6"), fill: (object/get @s color "#3b82f6") })))
+            (labels (array/map @config.shapes (fn s { type: text, id: (str/concat "label-" (object/get @s id)), x: (object/get @s x), y: (+ (object/get @s y) (object/get @s radius 22) 14), text: (object/get @s label), fontSize: 12, align: "center", color: "#0f172a" })))
+          )
+          (do
+            (set @entity.promptIndex 0)
+            (set @entity.score 0)
+            (set @entity.tries 0)
+            (set @entity.found false)
+            (set @entity.done false)
+            (set @entity.promptText (object/get @first prompt))
+            (set @entity.targetId (object/get @first targetId))
+            (set @entity.explanation (object/get @first explanation ""))
+            (set @entity.feedback "")
+            (set @entity.canvasShapes (array/concat @circles @labels))
+            (set @entity.view [
+              { type: card, variant: bordered, padding: md, children: [
+                  { type: typography, variant: body, content: @entity.promptText }
+                ] },
+              { type: learning-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.canvasShapes, interactive: true, animate: false, onShapeClick: "TAP_SHAPE" },
+              { type: stack, direction: horizontal, gap: xs, children: [
+                  { type: typography, variant: caption, content: @entity.feedback }
+                ] },
+              { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: button, action: NEXT, label: @config.nextLabel, variant: primary, disabled: (if @entity.found false true) }
+                ] },
+              { type: stat-display, label: "First-try score", value: @entity.score, max: @entity.totalPrompts }
+            ])))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: progress-bar, value: (+ @entity.promptIndex 1), max: @entity.totalPrompts, showPercentage: false, label: (str/concat "Prompt " (str/concat "" (+ @entity.promptIndex 1)) " of " (str/concat "" @entity.totalPrompts)) },
+                { type: stack, direction: vertical, gap: md, children: @entity.view }
+              ] }
+          ]
+        })
+        (emit ROUND_RESTARTED { totalPrompts: @entity.totalPrompts })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      TAP_SHAPE {
+        payload : { id : string  type : string  index : number! }
+      }
+        @description "Learner tapped a shape on the canvas — the canvas callback wraps its click info as payload { id, type, index }; the id names the hotspot (or its label) and the tap is judged against the current prompt's target."
+        @tier "domain"
+      NEXT {
+      }
+        @description "Learner advanced to the next prompt after finding the current target; past the last prompt this completes the round."
+        @tier "domain"
+      RETRY {
+      }
+        @description "Learner restarted the round from the first prompt with a cleared score."
+        @tier "domain"
+    }
+
+    emits {
+      TAP_JUDGED -> external {
+        correct : boolean
+        promptIndex : number
+        tries : number
+      }
+        @description "The verdict of a canvas tap: whether the right part was hit, which prompt it was, and how many misses preceded it — a composed listener (coach, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "hotspot, tap the part, spatial identification, point at, label the diagram"
+        @tier "domain"
+      PROMPT_ADVANCED -> external {
+        promptIndex : number
+        done : boolean
+        score : number
+      }
+        @description "The learner moved to the next prompt (or completed the round) with the running first-try score."
+        @tier "domain"
+      ROUND_RESTARTED -> external {
+        totalPrompts : number
+      }
+        @description "The learner restarted the round from scratch."
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Tap the Part"
+        @label "Title"
+        @description "Title shown above the canvas."
+        @tier "presentation"
+      shapes : [HotspotShape] = [
+        { id: "nucleus", label: "Nucleus", x: 300, y: 170, radius: 34, color: "#8b5cf6" },
+        { id: "membrane", label: "Membrane", x: 130, y: 120, radius: 26, color: "#3b82f6" },
+        { id: "mitochondrion", label: "Mitochondrion", x: 460, y: 120, radius: 24, color: "#f59e0b" },
+        { id: "ribosome", label: "Ribosome", x: 200, y: 280, radius: 18, color: "#16a34a" },
+        { id: "vacuole", label: "Vacuole", x: 420, y: 280, radius: 28, color: "#06b6d4" }
+      ]
+        @label "Hotspots"
+        @description "The labeled parts of the scene; each carries an id, display label, canvas position, radius, and color. Realizations declare their own subject's parts here."
+        @tier "domain"
+      prompts : [HotspotPrompt] = [
+        { prompt: "Tap the part that stores the cell's genetic material.", targetId: "nucleus", explanation: "The nucleus holds the DNA." },
+        { prompt: "Tap the part that produces the cell's energy.", targetId: "mitochondrion", explanation: "Mitochondria run cellular respiration." },
+        { prompt: "Tap the part that builds proteins.", targetId: "ribosome", explanation: "Ribosomes translate mRNA into protein." }
+      ]
+        @label "Prompts"
+        @description "The question roster; each prompt names a target hotspot id and an explanation revealed on a hit."
+        @tier "domain"
+      hitColor : string = "#16a34a"
+        @label "Hit Ring Color"
+        @description "Color of the highlight ring drawn around the target once found."
+        @tier "presentation"
+      nextLabel : string = "Next"
+        @label "Next Label"
+        @tier "presentation"
+      retryLabel : string = "Try Again"
+        @label "Retry Label"
+        @tier "presentation"
+      width : number = 600
+        @label "Width"
+        @tier "presentation"
+      height : number = 380
+        @label "Height"
+        @tier "presentation"
+      backgroundColor : string = "#f8fafc"
+        @label "Background Color"
+        @tier "presentation"
+    }
+  }
+
+  page "/learn-hotspot" as HotspotPage -> HotspotSim
+}

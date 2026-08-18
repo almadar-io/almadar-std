@@ -1,0 +1,184 @@
+[
+  {
+    "organism": "std-learn-sim-3d",
+    "orbital": "LearnSim3DOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-learn-sim-3d.ts",
+    "entities": [
+      {
+        "name": "Learn3DSimScene",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "running",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "speedMultiplier",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "steps",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "simTime",
+            "type": "number",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "Learn3DSimTransport",
+        "emittedEvents": [
+          "SIM_3D_TICK",
+          "SIM_3D_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "SIM_3D_TICK",
+            "direction": "emit",
+            "description": "Fires every 32ms tick while running with the effective timestep (config dt x speed multiplier) and accumulated sim time — the clock a composed physics trait subscribes to; a harmless no-op when the atom runs standalone.",
+            "synonyms": "tick, frame, step, clock, sim update, telemetry",
+            "tier": "domain"
+          },
+          {
+            "name": "SIM_3D_UPDATED",
+            "direction": "emit",
+            "description": "Fires on INIT/MODE_SELECTED/Run/Pause/Reset/speed change with the transport state — running flag, speed multiplier, step counter, and sim time — a composed listener (readout, graph) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "run, pause, reset, speed, transport, sim state",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "RUN",
+            "direction": "listen"
+          },
+          {
+            "name": "PAUSE",
+            "direction": "listen"
+          },
+          {
+            "name": "RESET",
+            "direction": "listen"
+          },
+          {
+            "name": "SPEED_HALF",
+            "direction": "listen"
+          },
+          {
+            "name": "SPEED_NORMAL",
+            "direction": "listen"
+          },
+          {
+            "name": "SPEED_DOUBLE",
+            "direction": "listen"
+          },
+          {
+            "name": "SPEED_QUAD",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "dt",
+            "type": "number",
+            "default": 0.02,
+            "label": "Timestep",
+            "description": "Simulated seconds per tick before the speed multiplier; the effective step emitted on SIM_3D_TICK is dt x speedMultiplier.",
+            "tier": "domain"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true the clock starts ticking on INIT; the Reset arm restores this value.",
+            "tier": "domain"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "3D Simulation",
+            "label": "Title",
+            "description": "Title shown above the transport controls.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "Learn3DSimScene",
+        "transitionEvents": [
+          "INIT",
+          "MODE_SELECTED",
+          "PAUSE",
+          "RESET",
+          "RUN",
+          "SPEED_DOUBLE",
+          "SPEED_HALF",
+          "SPEED_NORMAL",
+          "SPEED_QUAD"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "running",
+            "simTime",
+            "speedMultiplier",
+            "steps",
+            "title"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "Learn3DSimPage",
+        "defaultPath": "/learn-sim-3d",
+        "primaryEntity": "Learn3DSimScene"
+      }
+    ],
+    "emittedEvents": [
+      "SIM_3D_TICK",
+      "SIM_3D_UPDATED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

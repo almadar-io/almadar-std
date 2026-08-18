@@ -1,0 +1,448 @@
+[
+  {
+    "organism": "std-learn-predict",
+    "orbital": "PredictOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-learn-predict.ts",
+    "entities": [
+      {
+        "name": "PredictScene",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "scenarioIndex",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "totalScenarios",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "phase",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "chosenIndex",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "frames",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "frameIndex",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "frameCaption",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "frameValue",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "revealSamples",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "revealCurves",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "score",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "done",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "setupText",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "question",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "options",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "correctIndex",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "explanation",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "feedback",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "view",
+            "type": "array",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "PredictSim",
+        "emittedEvents": [
+          "PREDICTION_COMMITTED",
+          "SCENARIO_ADVANCED",
+          "ROUND_RESTARTED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "PREDICTION_COMMITTED",
+            "direction": "emit",
+            "description": "The learner locked in a prediction and the reveal started — a composed listener (coach, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "predict then reveal, commit prediction, hypothesis first, what happens next",
+            "tier": "domain"
+          },
+          {
+            "name": "SCENARIO_ADVANCED",
+            "direction": "emit",
+            "description": "The learner moved to the next scenario (or completed the round) with the running score.",
+            "tier": "domain"
+          },
+          {
+            "name": "ROUND_RESTARTED",
+            "direction": "emit",
+            "description": "The learner restarted the round from scratch.",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "PREDICT",
+            "direction": "listen",
+            "description": "Learner committed to one of the predicted outcomes before seeing the reveal — index is the chosen option; the reveal then plays out.",
+            "tier": "domain"
+          },
+          {
+            "name": "NEXT",
+            "direction": "listen",
+            "description": "Learner advanced to the next scenario after the reveal was judged; past the last scenario this completes the round.",
+            "tier": "domain"
+          },
+          {
+            "name": "RETRY",
+            "direction": "listen",
+            "description": "Learner restarted the round from the first scenario with a cleared score.",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "gridStep",
+            "type": "number",
+            "default": 25,
+            "label": "Grid Step",
+            "tier": "presentation"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 320,
+            "label": "Height",
+            "tier": "presentation"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "nextLabel",
+            "type": "string",
+            "default": "Next",
+            "label": "Next Label",
+            "tier": "presentation"
+          },
+          {
+            "key": "retryLabel",
+            "type": "string",
+            "default": "Try Again",
+            "label": "Retry Label",
+            "tier": "presentation"
+          },
+          {
+            "key": "revealColor",
+            "type": "string",
+            "default": "#3b82f6",
+            "label": "Reveal Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "revealLabel",
+            "type": "string",
+            "default": "Outcome",
+            "label": "Reveal Label",
+            "tier": "presentation"
+          },
+          {
+            "key": "scenarios",
+            "type": "[PredictScenario]",
+            "default": [
+              {
+                "correctIndex": 1,
+                "explanation": "With no limiting factor yet, growth compounds each season.",
+                "frames": [
+                  {
+                    "caption": "Season 1: 40 rabbits",
+                    "value": 40
+                  },
+                  {
+                    "caption": "Season 2: 52 rabbits",
+                    "value": 52
+                  },
+                  {
+                    "caption": "Season 3: 68 rabbits",
+                    "value": 68
+                  },
+                  {
+                    "caption": "Season 4: 88 rabbits",
+                    "value": 88
+                  },
+                  {
+                    "caption": "Season 5: 114 rabbits",
+                    "value": 114
+                  },
+                  {
+                    "caption": "Season 6: 148 rabbits — still accelerating",
+                    "value": 148
+                  }
+                ],
+                "options": [
+                  "It levels off",
+                  "It keeps accelerating",
+                  "It collapses"
+                ],
+                "question": "What happens to the population over the next six seasons?",
+                "setup": "A small island hosts 40 rabbits with unlimited grass and no predators."
+              },
+              {
+                "correctIndex": 1,
+                "explanation": "Predation and food limits impose a carrying capacity.",
+                "frames": [
+                  {
+                    "caption": "Season 1: 148 rabbits",
+                    "value": 148
+                  },
+                  {
+                    "caption": "Season 2: 160 rabbits",
+                    "value": 160
+                  },
+                  {
+                    "caption": "Season 3: 166 rabbits",
+                    "value": 166
+                  },
+                  {
+                    "caption": "Season 4: 169 rabbits",
+                    "value": 169
+                  },
+                  {
+                    "caption": "Season 5: 170 rabbits — the curve flattens",
+                    "value": 170
+                  }
+                ],
+                "options": [
+                  "It keeps accelerating",
+                  "It levels off near a ceiling",
+                  "It grows linearly"
+                ],
+                "question": "What happens to the rabbit population now?",
+                "setup": "The same island now has foxes, and grass is running short."
+              }
+            ],
+            "label": "Scenarios",
+            "description": "The scenario roster; each carries a setup, the question, the offered predictions with the correct index, an explanation, and the reveal frames (caption + value) that play out after the learner commits. Realizations declare their own subject's scenarios here.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "correctIndex": {
+                  "name": "correctIndex",
+                  "required": true,
+                  "type": "number"
+                },
+                "explanation": {
+                  "name": "explanation",
+                  "required": false,
+                  "type": "string"
+                },
+                "frames": {
+                  "name": "frames",
+                  "required": true,
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "caption": {
+                        "name": "caption",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "value": {
+                        "name": "value",
+                        "required": true,
+                        "type": "number"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "options": {
+                  "name": "options",
+                  "required": true,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "question": {
+                  "name": "question",
+                  "required": true,
+                  "type": "string"
+                },
+                "setup": {
+                  "name": "setup",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Predict, Then Watch",
+            "label": "Title",
+            "description": "Title shown above the instrument.",
+            "tier": "presentation"
+          },
+          {
+            "key": "valueMax",
+            "type": "number",
+            "default": 200,
+            "label": "Value Max",
+            "description": "Upper bound of the reveal chart's y axis.",
+            "tier": "presentation"
+          },
+          {
+            "key": "valueMin",
+            "type": "number",
+            "default": 0,
+            "label": "Value Min",
+            "description": "Lower bound of the reveal chart's y axis.",
+            "tier": "presentation"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "PredictScene",
+        "transitionEvents": [
+          "INIT",
+          "MODE_SELECTED",
+          "NEXT",
+          "PREDICT",
+          "RETRY"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "chosenIndex",
+            "correctIndex",
+            "done",
+            "explanation",
+            "feedback",
+            "frameCaption",
+            "frameIndex",
+            "frameValue",
+            "frames",
+            "options",
+            "phase",
+            "question",
+            "revealCurves",
+            "revealSamples",
+            "scenarioIndex",
+            "score",
+            "setupText",
+            "title",
+            "totalScenarios",
+            "view"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "PredictPage",
+        "defaultPath": "/learn-predict",
+        "primaryEntity": "PredictScene"
+      }
+    ],
+    "emittedEvents": [
+      "PREDICTION_COMMITTED",
+      "ROUND_RESTARTED",
+      "SCENARIO_ADVANCED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

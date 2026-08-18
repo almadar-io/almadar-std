@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page, PatternValue } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -51,6 +51,8 @@ export interface StdUiPhysicsCanvasConfig {
   backgroundColor?: string;
   /** Default: `[]` */
   bodies?: EntityRow[];
+  /** Default: `{}` */
+  camera?: unknown;
   className?: string;
   /** Default: `[]` */
   constraints?: EntityRow[];
@@ -59,15 +61,22 @@ export interface StdUiPhysicsCanvasConfig {
   forceScale?: number;
   /** Default: `400` */
   height?: number;
-  /** Default: `false` */
   interactive?: boolean;
   isLoading?: boolean;
+  /** Default: `{}` */
+  lighting?: unknown;
+  /** Default: `"2d"` */
+  mode?: '2d' | '3d';
   /** Default: `"SHAPE_CLICK"` */
   onShapeClick?: string;
+  /** Default: `{}` */
+  post?: unknown;
+  shadows?: boolean;
   /** Default: `[]` */
   shapes?: EntityRow[];
   /** Default: `false` */
   showForces?: boolean;
+  showGrid?: boolean;
   /** Default: `true` */
   showVelocity?: boolean;
   title?: string;

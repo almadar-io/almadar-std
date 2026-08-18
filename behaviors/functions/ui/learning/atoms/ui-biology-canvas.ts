@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page, PatternValue } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -49,21 +49,30 @@ export interface StdUiBiologyCanvasConfig {
   /** Default: `false` */
   animate?: boolean;
   backgroundColor?: string;
+  /** Default: `{}` */
+  camera?: unknown;
   className?: string;
   /** Default: `[]` */
   edges?: EntityRow[];
   error?: EntityRow;
   /** Default: `400` */
   height?: number;
-  /** Default: `false` */
   interactive?: boolean;
   isLoading?: boolean;
+  /** Default: `{}` */
+  lighting?: unknown;
+  /** Default: `"2d"` */
+  mode?: '2d' | '3d';
   /** Default: `[]` */
   nodes?: EntityRow[];
   /** Default: `"SHAPE_CLICK"` */
   onShapeClick?: string;
+  /** Default: `{}` */
+  post?: unknown;
+  shadows?: boolean;
   /** Default: `[]` */
   shapes?: EntityRow[];
+  showGrid?: boolean;
   title?: string;
   /** Default: `600` */
   width?: number;

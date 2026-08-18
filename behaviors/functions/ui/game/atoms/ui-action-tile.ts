@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page, PatternValue } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -42,7 +42,7 @@ export interface StdUiActionTileConfig {
   /** Default: `{"category":"Category","description":"Description","iconEmoji":"Icon Emoji","iconUrl":{"animations":["static"],"aspect":"1:1","category":"iconUrl","dimension":"2d","name":"iconUrl","role":"ui","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/ui/star.png"},"id":"Id","name":"Name"}` */
   action?: EntityRow;
   /** Default: `{}` */
-  activeFilters?: unknown;
+  activeFilters?: Record<string, TraitConfig>;
   /** Default: `{}` */
   categoryColors?: Record<string, TraitConfig>;
   className?: string;

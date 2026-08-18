@@ -1,0 +1,359 @@
+[
+  {
+    "organism": "std-learn-compare",
+    "orbital": "CompareOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-learn-compare.ts",
+    "entities": [
+      {
+        "name": "CompareScene",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "curveKind",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "leftA",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "leftB",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "rightA",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "rightB",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "curves",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "xMid",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "leftMid",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "rightMid",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "delta",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "yMin",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "yMax",
+            "type": "number",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "CompareSim",
+        "emittedEvents": [
+          "COMPARISON_CHANGED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "COMPARISON_CHANGED",
+            "direction": "emit",
+            "description": "Both parameter pairs and the midpoint delta after a slider change — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "dual view, side by side, comparator, contrast two settings, A/B comparison",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "SET_PARAM",
+            "direction": "listen",
+            "description": "Learner dragged one of the four sliders — side names the compared instance (left or right), which names the parameter (A or B), value is the new setting; both curves and the delta recompute immediately.",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "compareText",
+            "type": "string",
+            "default": "Tune each side's parameters and watch how the two curves diverge.",
+            "label": "Compare Text",
+            "description": "One-sentence statement of what is being contrasted.",
+            "tier": "domain"
+          },
+          {
+            "key": "curveKind",
+            "type": "string",
+            "default": "power",
+            "label": "Curve Kind",
+            "description": "Curve family both sides are drawn from: power (y = A·xᴮ), linear (y = A + B·x), or sine (y = A·sin(B·x)).",
+            "synonyms": "curve family, power law, linear function, sine wave, function type",
+            "tier": "domain"
+          },
+          {
+            "key": "gridStep",
+            "type": "number",
+            "default": 1,
+            "label": "Grid Step",
+            "tier": "presentation"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 400,
+            "label": "Height",
+            "tier": "presentation"
+          },
+          {
+            "key": "leftADefault",
+            "type": "number",
+            "default": 1,
+            "label": "Left A Default",
+            "tier": "domain"
+          },
+          {
+            "key": "leftBDefault",
+            "type": "number",
+            "default": 2,
+            "label": "Left B Default",
+            "tier": "domain"
+          },
+          {
+            "key": "leftColor",
+            "type": "string",
+            "default": "#3b82f6",
+            "label": "Left Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "leftLabel",
+            "type": "string",
+            "default": "Left",
+            "label": "Left Label",
+            "description": "Display name of the first compared instance.",
+            "tier": "domain"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "paramALabel",
+            "type": "string",
+            "default": "A",
+            "label": "Parameter A Label",
+            "tier": "presentation"
+          },
+          {
+            "key": "paramAMax",
+            "type": "number",
+            "default": 5,
+            "label": "Parameter A Max",
+            "tier": "domain"
+          },
+          {
+            "key": "paramAMin",
+            "type": "number",
+            "default": -5,
+            "label": "Parameter A Min",
+            "tier": "domain"
+          },
+          {
+            "key": "paramAStep",
+            "type": "number",
+            "default": 0.1,
+            "label": "Parameter A Step",
+            "tier": "presentation"
+          },
+          {
+            "key": "paramBLabel",
+            "type": "string",
+            "default": "B",
+            "label": "Parameter B Label",
+            "tier": "presentation"
+          },
+          {
+            "key": "paramBMax",
+            "type": "number",
+            "default": 5,
+            "label": "Parameter B Max",
+            "tier": "domain"
+          },
+          {
+            "key": "paramBMin",
+            "type": "number",
+            "default": -5,
+            "label": "Parameter B Min",
+            "tier": "domain"
+          },
+          {
+            "key": "paramBStep",
+            "type": "number",
+            "default": 0.1,
+            "label": "Parameter B Step",
+            "tier": "presentation"
+          },
+          {
+            "key": "rightADefault",
+            "type": "number",
+            "default": 2,
+            "label": "Right A Default",
+            "tier": "domain"
+          },
+          {
+            "key": "rightBDefault",
+            "type": "number",
+            "default": 1.5,
+            "label": "Right B Default",
+            "tier": "domain"
+          },
+          {
+            "key": "rightColor",
+            "type": "string",
+            "default": "#f59e0b",
+            "label": "Right Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "rightLabel",
+            "type": "string",
+            "default": "Right",
+            "label": "Right Label",
+            "description": "Display name of the second compared instance.",
+            "tier": "domain"
+          },
+          {
+            "key": "showAxes",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Axes",
+            "tier": "presentation"
+          },
+          {
+            "key": "showGrid",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Grid",
+            "tier": "presentation"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Compare Two Settings",
+            "label": "Title",
+            "description": "Title shown above the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "tier": "presentation"
+          },
+          {
+            "key": "xMax",
+            "type": "number",
+            "default": 10,
+            "label": "X Max",
+            "tier": "presentation"
+          },
+          {
+            "key": "xMin",
+            "type": "number",
+            "default": 0,
+            "label": "X Min",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "CompareScene",
+        "transitionEvents": [
+          "INIT",
+          "MODE_SELECTED",
+          "SET_PARAM"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "curveKind",
+            "curves",
+            "delta",
+            "leftA",
+            "leftB",
+            "leftMid",
+            "rightA",
+            "rightB",
+            "rightMid",
+            "title",
+            "xMid",
+            "yMax",
+            "yMin"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "ComparePage",
+        "defaultPath": "/learn-compare",
+        "primaryEntity": "CompareScene"
+      }
+    ],
+    "emittedEvents": [
+      "COMPARISON_CHANGED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

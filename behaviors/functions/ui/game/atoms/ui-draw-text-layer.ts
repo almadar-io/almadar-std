@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page, PatternValue } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -39,7 +39,7 @@ export type StdUiDrawTextLayerEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDrawTextLayerConfig {
-  /** Default: `[{"color":"Color","font":"Font","offsetX":1,"offsetY":1,"opacity":1,"position":{"x":1,"y":1,"z":1},"text":"Text","type":"Type"},{"color":"Color 2","font":"Font 2","offsetX":2,"offsetY":2,"opacity":2,"position":{"x":2,"y":2,"z":2},"text":"Text 2","type":"Type 2"}]` */
+  /** Default: `[{"align":"center","baseline":"alphabetic","color":"Color","font":"Font","offsetX":1,"offsetY":1,"opacity":1,"position":{"x":1,"y":1,"z":1},"text":"Text","type":"Type"},{"align":"end","baseline":"bottom","color":"Color 2","font":"Font 2","offsetX":2,"offsetY":2,"opacity":2,"position":{"x":2,"y":2,"z":2},"text":"Text 2","type":"Type 2"}]` */
   items?: EntityRow[];
 }
 

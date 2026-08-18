@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page, PatternValue } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../factory-runtime/apply-params-to-orb.js';
@@ -1242,8 +1242,30 @@ export function stdAgentRabitOrbitalProcessOrbital(params: StdAgentRabitOrbitalP
                 },
                 {
                   'name': 'spec',
+                  'properties': [
+                    {
+                      'name': 'orbitalName',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'organism',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'method',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'deltaPrompt',
+                      'required': true,
+                      'type': 'string',
+                    },
+                  ],
                   'required': true,
-                  'type': 'OrbitalSpec',
+                  'type': 'object',
                 },
               ],
             },

@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page, PatternValue } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -70,14 +70,14 @@ export interface StdUiFormConfig {
   /** Default: `"CANCEL"` */
   cancelEvent?: string;
   cancelLabel?: string;
-  children?: unknown;
+  children?: PatternValue;
   className?: string;
   /** Default: `{}` */
   conditionalFields?: Record<string, TraitConfig>;
   configPath?: string;
   error?: EntityRow;
   evaluationContext?: EntityRow;
-  /** Default: `[{"disabled":false,"field":"Field","inputType":"Input Type","label":"Label","max":1,"min":1,"name":"Name","options":[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}],"pattern":"Pattern","placeholder":"Placeholder","readonly":false,"relation":{"cardinality":"one","displayField":"Display Field","entity":"Entity"},"required":false,"type":"Type","values":["Item","Item 2"]},{"disabled":true,"field":"Field 2","inputType":"Input Type 2","label":"Label 2","max":2,"min":2,"name":"Name 2","options":[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}],"pattern":"Pattern 2","placeholder":"Placeholder 2","readonly":true,"relation":{"cardinality":"many","displayField":"Display Field 2","entity":"Entity 2"},"required":true,"type":"Type 2","values":["Item","Item 2"]}]` */
+  /** Default: `[{"disabled":false,"field":"Field","inputType":"Input Type","label":"Label","max":1,"min":1,"name":"Name","options":[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}],"pattern":"Pattern","placeholder":"Placeholder","readonly":false,"relation":{"cardinality":"one","displayField":"Display Field","entity":"Entity"},"required":false,"type":"Type","validation":{"enum":["Item","Item 2"]},"values":["Item","Item 2"]},{"disabled":true,"field":"Field 2","inputType":"Input Type 2","label":"Label 2","max":2,"min":2,"name":"Name 2","options":[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}],"pattern":"Pattern 2","placeholder":"Placeholder 2","readonly":true,"relation":{"cardinality":"many","displayField":"Display Field 2","entity":"Entity 2"},"required":true,"type":"Type 2","validation":{"enum":["Item","Item 2"]},"values":["Item","Item 2"]}]` */
   fields?: EntityRow[];
   /** Default: `"md"` */
   gap?: 'sm' | 'md' | 'lg';
@@ -315,6 +315,12 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
                 },
                 'required': false,
                 'type': 'Type',
+                'validation': {
+                  'enum': [
+                    'Item',
+                    'Item 2',
+                  ],
+                },
                 'values': [
                   'Item',
                   'Item 2',
@@ -348,6 +354,12 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
                 },
                 'required': true,
                 'type': 'Type 2',
+                'validation': {
+                  'enum': [
+                    'Item',
+                    'Item 2',
+                  ],
+                },
                 'values': [
                   'Item',
                   'Item 2',
@@ -470,8 +482,18 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
                 },
                 'validation': {
                   'name': 'validation',
+                  'properties': {
+                    'enum': {
+                      'items': {
+                        'type': 'string',
+                      },
+                      'name': 'enum',
+                      'required': false,
+                      'type': 'array',
+                    },
+                  },
                   'required': false,
-                  'type': 'string',
+                  'type': 'object',
                 },
                 'values': {
                   'items': {
@@ -761,8 +783,18 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
                       },
                       'validation': {
                         'name': 'validation',
+                        'properties': {
+                          'enum': {
+                            'items': {
+                              'type': 'string',
+                            },
+                            'name': 'enum',
+                            'required': false,
+                            'type': 'array',
+                          },
+                        },
                         'required': false,
-                        'type': 'string',
+                        'type': 'object',
                       },
                       'values': {
                         'items': {

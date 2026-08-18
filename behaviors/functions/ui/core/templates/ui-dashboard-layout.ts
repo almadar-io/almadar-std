@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page, PatternValue } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -69,12 +69,12 @@ export interface StdUiDashboardLayoutSignOutPayload {
 export interface StdUiDashboardLayoutConfig {
   /** Default: `"{{APP_TITLE}}"` */
   appName?: string;
-  children?: unknown;
+  children?: PatternValue;
   currentPath?: string;
-  headerActions?: unknown;
+  headerActions?: PatternValue;
   /** Default: `"sidebar"` */
   layoutMode?: 'sidebar' | 'topnav' | 'bottomnav' | 'minimal';
-  logo?: unknown;
+  logo?: PatternValue;
   /** Default: `[]` */
   navItems?: EntityRow[];
   /** Default: `"NOTIFICATION_CLICK"` */
@@ -93,7 +93,7 @@ export interface StdUiDashboardLayoutConfig {
   showSearch?: boolean;
   /** Default: `true` */
   showThemeToggle?: boolean;
-  sidebarFooter?: unknown;
+  sidebarFooter?: PatternValue;
   /** Default: `[]` */
   topBarActions?: EntityRow[];
   user?: EntityRow;

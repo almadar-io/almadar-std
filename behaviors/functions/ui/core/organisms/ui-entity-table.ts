@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page, PatternValue } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -54,7 +54,7 @@ export interface StdUiEntityTableEntityTableLoadedPayload {
  */
 export interface StdUiEntityTableConfig {
   /** Default: `{}` */
-  activeFilters?: unknown;
+  activeFilters?: Record<string, TraitConfig>;
   /** Default: `[]` */
   bulkActions?: EntityRow[];
   className?: string;
@@ -67,7 +67,7 @@ export interface StdUiEntityTableConfig {
   error?: EntityRow;
   /** Default: `[{"header":"Header","key":"Key","label":"Label","name":"Name","sortable":false,"width":"Width"},{"header":"Header 2","key":"Key 2","label":"Label 2","name":"Name 2","sortable":true,"width":"Width 2"}]` */
   fields?: EntityRow[];
-  headerActions?: unknown;
+  headerActions?: PatternValue;
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `[{"event":"VIEW","label":"View","variant":"ghost"}]` */
@@ -168,9 +168,12 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
           'activeFilters': {
             'default': {},
             'description': 'Active filters',
+            'items': {
+              'type': 'string',
+            },
             'label': 'Active Filters',
             'tier': 'presentation',
-            'type': 'json',
+            'type': 'Map<string,string>',
           },
           'bulkActions': {
             'default': [],

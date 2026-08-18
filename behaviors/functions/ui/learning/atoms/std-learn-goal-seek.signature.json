@@ -1,0 +1,435 @@
+[
+  {
+    "organism": "std-learn-goal-seek",
+    "orbital": "GoalSeekOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-learn-goal-seek.ts",
+    "entities": [
+      {
+        "name": "GoalSeekScene",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "curveKind",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "paramA",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "paramB",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "paramALabel",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "paramBLabel",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "targetSamples",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "curves",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "distance",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "attempts",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "solved",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "feedback",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "resultRow",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "yMin",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "yMax",
+            "type": "number",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "GoalSeekSim",
+        "emittedEvents": [
+          "PARAMS_CHANGED",
+          "GOAL_CHECKED",
+          "GOAL_RESET"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "PARAMS_CHANGED",
+            "direction": "emit",
+            "description": "The learner's parameter values and current distance after a slider change — a composed listener (readout, coach) can subscribe; a harmless no-op when the atom runs standalone.",
+            "tier": "domain"
+          },
+          {
+            "name": "GOAL_CHECKED",
+            "direction": "emit",
+            "description": "The verdict of a Check press: whether the learner's curve is within tolerance of the target, the RMS distance, and how many attempts it took.",
+            "synonyms": "goal seek, inverse problem, curve fitting, match the target, tune to fit",
+            "tier": "domain"
+          },
+          {
+            "name": "GOAL_RESET",
+            "direction": "emit",
+            "description": "The learner reset the instrument back to the default parameters.",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "SET_PARAM_A",
+            "direction": "listen",
+            "description": "Learner dragged the first parameter's slider — value is the new A; the learner curve and its distance to the target recompute immediately.",
+            "tier": "domain"
+          },
+          {
+            "name": "SET_PARAM_B",
+            "direction": "listen",
+            "description": "Learner dragged the second parameter's slider — value is the new B; the learner curve and its distance to the target recompute immediately.",
+            "tier": "domain"
+          },
+          {
+            "name": "CHECK",
+            "direction": "listen",
+            "description": "Learner asked to be graded — the current RMS distance is compared against the tolerance and the attempt is counted.",
+            "tier": "domain"
+          },
+          {
+            "name": "RESET",
+            "direction": "listen",
+            "description": "Learner reset the parameters to their defaults and cleared the attempt count; the target stays the same.",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "checkLabel",
+            "type": "string",
+            "default": "Check",
+            "label": "Check Label",
+            "tier": "presentation"
+          },
+          {
+            "key": "curveKind",
+            "type": "string",
+            "default": "sine",
+            "label": "Curve Kind",
+            "description": "Curve family both curves are drawn from: power (y = A·xᴮ), linear (y = A + B·x), or sine (y = A·sin(B·x)).",
+            "synonyms": "curve family, power law, linear function, sine wave, function type",
+            "tier": "domain"
+          },
+          {
+            "key": "goalText",
+            "type": "string",
+            "default": "Tune the two sliders until your curve matches the target curve, then press Check.",
+            "label": "Goal Text",
+            "description": "One-sentence statement of the inverse problem the learner must solve.",
+            "tier": "domain"
+          },
+          {
+            "key": "gridStep",
+            "type": "number",
+            "default": 1,
+            "label": "Grid Step",
+            "tier": "presentation"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 400,
+            "label": "Height",
+            "tier": "presentation"
+          },
+          {
+            "key": "learnerColor",
+            "type": "string",
+            "default": "#3b82f6",
+            "label": "Learner Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "learnerLabel",
+            "type": "string",
+            "default": "Yours",
+            "label": "Learner Label",
+            "tier": "presentation"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "paramADefault",
+            "type": "number",
+            "default": 1,
+            "label": "Parameter A Default",
+            "description": "Starting value of the learner's first parameter.",
+            "tier": "domain"
+          },
+          {
+            "key": "paramALabel",
+            "type": "string",
+            "default": "A",
+            "label": "Parameter A Label",
+            "description": "Display label for the first parameter.",
+            "tier": "presentation"
+          },
+          {
+            "key": "paramAMax",
+            "type": "number",
+            "default": 5,
+            "label": "Parameter A Max",
+            "tier": "domain"
+          },
+          {
+            "key": "paramAMin",
+            "type": "number",
+            "default": -5,
+            "label": "Parameter A Min",
+            "tier": "domain"
+          },
+          {
+            "key": "paramAStep",
+            "type": "number",
+            "default": 0.1,
+            "label": "Parameter A Step",
+            "tier": "presentation"
+          },
+          {
+            "key": "paramBDefault",
+            "type": "number",
+            "default": 1,
+            "label": "Parameter B Default",
+            "description": "Starting value of the learner's second parameter.",
+            "tier": "domain"
+          },
+          {
+            "key": "paramBLabel",
+            "type": "string",
+            "default": "B",
+            "label": "Parameter B Label",
+            "description": "Display label for the second parameter.",
+            "tier": "presentation"
+          },
+          {
+            "key": "paramBMax",
+            "type": "number",
+            "default": 5,
+            "label": "Parameter B Max",
+            "tier": "domain"
+          },
+          {
+            "key": "paramBMin",
+            "type": "number",
+            "default": -5,
+            "label": "Parameter B Min",
+            "tier": "domain"
+          },
+          {
+            "key": "paramBStep",
+            "type": "number",
+            "default": 0.1,
+            "label": "Parameter B Step",
+            "tier": "presentation"
+          },
+          {
+            "key": "showAxes",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Axes",
+            "tier": "presentation"
+          },
+          {
+            "key": "showGrid",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Grid",
+            "tier": "presentation"
+          },
+          {
+            "key": "showLiveDistance",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Live Distance",
+            "description": "When true the RMS distance updates live as the learner tunes (warmer/colder); when false only attempts are shown, for a harder variant.",
+            "tier": "domain"
+          },
+          {
+            "key": "targetA",
+            "type": "number",
+            "default": 2.5,
+            "label": "Target A",
+            "description": "Hidden first parameter of the target curve the learner must recover.",
+            "tier": "domain"
+          },
+          {
+            "key": "targetB",
+            "type": "number",
+            "default": 1.5,
+            "label": "Target B",
+            "description": "Hidden second parameter of the target curve the learner must recover.",
+            "tier": "domain"
+          },
+          {
+            "key": "targetColor",
+            "type": "string",
+            "default": "#94a3b8",
+            "label": "Target Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "targetLabel",
+            "type": "string",
+            "default": "Target",
+            "label": "Target Label",
+            "tier": "presentation"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Goal Seek",
+            "label": "Title",
+            "description": "Title shown above the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "tolerance",
+            "type": "number",
+            "default": 0.35,
+            "label": "Tolerance",
+            "description": "Maximum RMS distance between learner and target curves that still counts as a match.",
+            "tier": "domain"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "tier": "presentation"
+          },
+          {
+            "key": "xMax",
+            "type": "number",
+            "default": 10,
+            "label": "X Max",
+            "tier": "presentation"
+          },
+          {
+            "key": "xMin",
+            "type": "number",
+            "default": 0,
+            "label": "X Min",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "GoalSeekScene",
+        "transitionEvents": [
+          "CHECK",
+          "INIT",
+          "MODE_SELECTED",
+          "RESET",
+          "SET_PARAM_A",
+          "SET_PARAM_B"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "attempts",
+            "curveKind",
+            "curves",
+            "distance",
+            "feedback",
+            "paramA",
+            "paramALabel",
+            "paramB",
+            "paramBLabel",
+            "resultRow",
+            "solved",
+            "targetSamples",
+            "title",
+            "yMax",
+            "yMin"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "GoalSeekPage",
+        "defaultPath": "/learn-goal-seek",
+        "primaryEntity": "GoalSeekScene"
+      }
+    ],
+    "emittedEvents": [
+      "GOAL_CHECKED",
+      "GOAL_RESET",
+      "PARAMS_CHANGED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

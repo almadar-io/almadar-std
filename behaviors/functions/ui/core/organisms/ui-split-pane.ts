@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page, PatternValue } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -43,7 +43,7 @@ export interface StdUiSplitPaneConfig {
   /** Default: `"horizontal"` */
   direction?: 'horizontal' | 'vertical';
   /** Default: `[]` */
-  left?: unknown;
+  left?: PatternValue;
   leftClassName?: string;
   /** Default: `100` */
   minSize?: number;
@@ -51,7 +51,7 @@ export interface StdUiSplitPaneConfig {
   /** Default: `true` */
   resizable?: boolean;
   /** Default: `[]` */
-  right?: unknown;
+  right?: PatternValue;
   rightClassName?: string;
 }
 

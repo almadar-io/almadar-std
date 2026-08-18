@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page, PatternValue } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -43,8 +43,7 @@ export interface StdUiSegmentRendererConfig {
   containerClassName?: string;
   /** Default: `[]` */
   segments?: EntityRow[];
-  /** Default: `{}` */
-  userProgress?: unknown;
+  userProgress?: EntityRow;
 }
 
 type _StdUiSegmentRendererEntityName = 'SegmentRendererItem';
@@ -141,11 +140,33 @@ export function stdUiSegmentRendererSegmentRendererOrbital(params: StdUiSegmentR
             'type': '[json]',
           },
           'userProgress': {
-            'default': {},
             'description': 'User progress for restoring activation/reflection state',
             'label': 'User Progress',
+            'properties': {
+              'activationResponse': {
+                'name': 'activationResponse',
+                'required': false,
+                'type': 'string',
+              },
+              'bloomAnswered': {
+                'items': {
+                  'type': 'boolean',
+                },
+                'name': 'bloomAnswered',
+                'required': false,
+                'type': 'object',
+              },
+              'reflectionNotes': {
+                'items': {
+                  'type': 'string',
+                },
+                'name': 'reflectionNotes',
+                'required': false,
+                'type': 'array',
+              },
+            },
             'tier': 'presentation',
-            'type': 'json',
+            'type': 'SegmentRendererUserProgress',
           },
         },
         'entityContract': {

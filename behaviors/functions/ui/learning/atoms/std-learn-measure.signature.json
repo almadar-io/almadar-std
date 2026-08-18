@@ -1,0 +1,299 @@
+[
+  {
+    "organism": "std-learn-measure",
+    "orbital": "MeasureOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-learn-measure.ts",
+    "entities": [
+      {
+        "name": "MeasureScene",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "t",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "value",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "running",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "traceSamples",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "traceCurves",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "points",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "sampleCount",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "meanValue",
+            "type": "number",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "MeasureSim",
+        "emittedEvents": [
+          "RUN_TOGGLED",
+          "PROBE_RECORDED",
+          "MEASURE_RESET"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "RUN_TOGGLED",
+            "direction": "emit",
+            "description": "The experiment was started or paused — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+            "tier": "domain"
+          },
+          {
+            "name": "PROBE_RECORDED",
+            "direction": "emit",
+            "description": "A measurement was taken: the probed time and value plus the running sample count and mean.",
+            "synonyms": "measurement lab, probe, sample the signal, record data points, running mean",
+            "tier": "domain"
+          },
+          {
+            "name": "MEASURE_RESET",
+            "direction": "emit",
+            "description": "The learner reset the experiment to a clean slate.",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "RUN",
+            "direction": "listen",
+            "description": "Learner started (or resumed) the signal's evolution; the trace draws live until Pause or the configured duration.",
+            "tier": "domain"
+          },
+          {
+            "name": "PAUSE",
+            "direction": "listen",
+            "description": "Learner froze the signal mid-run; Probe still works on the frozen value.",
+            "tier": "domain"
+          },
+          {
+            "name": "PROBE",
+            "direction": "listen",
+            "description": "Learner recorded the signal's instantaneous value as a data point; the sample count and running mean update.",
+            "tier": "domain"
+          },
+          {
+            "name": "RESET",
+            "direction": "listen",
+            "description": "Learner cleared the experiment — time, trace, and all recorded samples return to zero.",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "amplitude",
+            "type": "number",
+            "default": 5,
+            "label": "Amplitude",
+            "description": "The A parameter: the signal's scale.",
+            "tier": "domain"
+          },
+          {
+            "key": "duration",
+            "type": "number",
+            "default": 12,
+            "label": "Duration",
+            "description": "Seconds the signal runs before stopping automatically.",
+            "tier": "domain"
+          },
+          {
+            "key": "gridStep",
+            "type": "number",
+            "default": 1,
+            "label": "Grid Step",
+            "tier": "presentation"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 360,
+            "label": "Height",
+            "tier": "presentation"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "probeColor",
+            "type": "string",
+            "default": "#dc2626",
+            "label": "Probe Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "probeLabel",
+            "type": "string",
+            "default": "Probe",
+            "label": "Probe Label",
+            "tier": "presentation"
+          },
+          {
+            "key": "rate",
+            "type": "number",
+            "default": 1.2,
+            "label": "Rate",
+            "description": "The B parameter: angular rate for sine, growth rate for growth, half-life in seconds for decay.",
+            "tier": "domain"
+          },
+          {
+            "key": "signalColor",
+            "type": "string",
+            "default": "#94a3b8",
+            "label": "Signal Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "signalKind",
+            "type": "string",
+            "default": "sine",
+            "label": "Signal Kind",
+            "description": "How the measured quantity evolves: sine (A·sin(B·t)), growth (A·(1+B)ᵗ), or decay (half-life A·(1/2)^(t/B)).",
+            "synonyms": "signal family, oscillation, exponential growth, half-life decay",
+            "tier": "domain"
+          },
+          {
+            "key": "taskText",
+            "type": "string",
+            "default": "Run the signal, then press Probe to record measurements. Watch the running mean settle.",
+            "label": "Task Text",
+            "description": "One-sentence statement of the measuring task.",
+            "tier": "domain"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Measurement Lab",
+            "label": "Title",
+            "description": "Title shown above the experiment.",
+            "tier": "presentation"
+          },
+          {
+            "key": "valueLabel",
+            "type": "string",
+            "default": "value",
+            "label": "Value Label",
+            "description": "Display name of the measured quantity.",
+            "tier": "presentation"
+          },
+          {
+            "key": "valueMax",
+            "type": "number",
+            "default": 6,
+            "label": "Value Max",
+            "description": "Upper bound of the chart's y axis.",
+            "tier": "presentation"
+          },
+          {
+            "key": "valueMin",
+            "type": "number",
+            "default": -6,
+            "label": "Value Min",
+            "description": "Lower bound of the chart's y axis.",
+            "tier": "presentation"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "MeasureScene",
+        "transitionEvents": [
+          "INIT",
+          "MODE_SELECTED",
+          "PAUSE",
+          "PROBE",
+          "RESET",
+          "RUN"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "meanValue",
+            "points",
+            "running",
+            "sampleCount",
+            "t",
+            "title",
+            "traceCurves",
+            "traceSamples",
+            "value"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "MeasurePage",
+        "defaultPath": "/learn-measure",
+        "primaryEntity": "MeasureScene"
+      }
+    ],
+    "emittedEvents": [
+      "MEASURE_RESET",
+      "PROBE_RECORDED",
+      "RUN_TOGGLED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

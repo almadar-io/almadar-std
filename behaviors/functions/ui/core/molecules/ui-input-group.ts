@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page, PatternValue } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -70,7 +70,7 @@ export interface StdUiInputGroupConfig {
   /** Default: `"text"` */
   inputType?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'search' | 'date' | 'datetime-local' | 'time' | 'checkbox' | 'select' | 'textarea';
   label?: string;
-  leftAddon?: unknown;
+  leftAddon?: PatternValue;
   leftIcon?: unknown;
   /** Default: `"CHANGE"` */
   onChange?: string;
@@ -79,7 +79,7 @@ export interface StdUiInputGroupConfig {
   /** Default: `[]` */
   options?: EntityRow[];
   placeholder?: string;
-  rightAddon?: unknown;
+  rightAddon?: PatternValue;
   rightIcon?: unknown;
   rows?: number;
   value?: string;

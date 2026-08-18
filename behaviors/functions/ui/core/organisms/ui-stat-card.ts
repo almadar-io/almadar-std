@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page, PatternValue } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -48,7 +48,7 @@ export interface StdUiStatCardStatCardLoadedPayload {
 export interface StdUiStatCardConfig {
   action?: EntityRow;
   /** Default: `{}` */
-  activeFilters?: unknown;
+  activeFilters?: Record<string, TraitConfig>;
   className?: string;
   compact?: boolean;
   currentValue?: number;
@@ -182,9 +182,12 @@ export function stdUiStatCardStatCardOrbital(params: StdUiStatCardStatCardOrbita
           'activeFilters': {
             'default': {},
             'description': 'Active filters',
+            'items': {
+              'type': 'string',
+            },
             'label': 'Active Filters',
             'tier': 'presentation',
-            'type': 'json',
+            'type': 'Map<string,string>',
           },
           'className': {
             'description': 'Additional CSS classes',

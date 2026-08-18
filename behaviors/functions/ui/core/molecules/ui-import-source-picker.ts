@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page, PatternValue } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -47,7 +47,7 @@ export interface StdUiImportSourcePickerSelectPayload {
  */
 export interface StdUiImportSourcePickerConfig {
   className?: string;
-  moreSources?: unknown;
+  moreSources?: PatternValue;
   /** Default: `"SELECT"` */
   onSelect?: string;
   /** Default: `[{"accept":"Accept","description":"Description","disabled":false,"icon":"circle","id":"Id","kind":"action","label":"Label","multiple":false},{"accept":"Accept 2","description":"Description 2","disabled":true,"icon":"circle","id":"Id 2","kind":"file","label":"Label 2","multiple":true}]` */

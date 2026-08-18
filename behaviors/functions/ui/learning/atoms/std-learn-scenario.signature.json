@@ -1,0 +1,366 @@
+[
+  {
+    "organism": "std-learn-scenario",
+    "orbital": "ScenarioOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-learn-scenario.ts",
+    "entities": [
+      {
+        "name": "ScenarioScene",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "currentId",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "situation",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "choices",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "metricA",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "metricB",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "stepCount",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "path",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "done",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "feedback",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "view",
+            "type": "array",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "ScenarioSim",
+        "emittedEvents": [
+          "CHOICE_MADE",
+          "SCENARIO_RESTARTED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "CHOICE_MADE",
+            "direction": "emit",
+            "description": "A decision was taken: the node reached, both metric values after the deltas, and whether the run just ended — a composed listener (coach, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "branching scenario, choose your path, decision tree, consequences, trade-offs, what-if",
+            "tier": "domain"
+          },
+          {
+            "name": "SCENARIO_RESTARTED",
+            "direction": "emit",
+            "description": "The learner restarted the scenario from scratch.",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "CHOOSE",
+            "direction": "listen",
+            "description": "Learner picked one of the current node's choices — index selects it; its metric deltas apply, the decision log grows, and the story moves to the declared next node.",
+            "tier": "domain"
+          },
+          {
+            "name": "RESTART",
+            "direction": "listen",
+            "description": "Learner restarted the scenario from the start node with fresh metrics and an empty decision log.",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "metricALabel",
+            "type": "string",
+            "default": "Budget",
+            "label": "Metric A Label",
+            "description": "Display name of the first tracked consequence metric.",
+            "tier": "domain"
+          },
+          {
+            "key": "metricAStart",
+            "type": "number",
+            "default": 100,
+            "label": "Metric A Start",
+            "tier": "domain"
+          },
+          {
+            "key": "metricBLabel",
+            "type": "string",
+            "default": "Support",
+            "label": "Metric B Label",
+            "description": "Display name of the second tracked consequence metric.",
+            "tier": "domain"
+          },
+          {
+            "key": "metricBStart",
+            "type": "number",
+            "default": 50,
+            "label": "Metric B Start",
+            "tier": "domain"
+          },
+          {
+            "key": "nodes",
+            "type": "[ScenarioNode]",
+            "default": [
+              {
+                "choices": [
+                  {
+                    "deltaA": -60,
+                    "deltaB": 10,
+                    "label": "Build a levee now",
+                    "next": "levee",
+                    "note": "Fast protection, most of the budget gone."
+                  },
+                  {
+                    "deltaA": -25,
+                    "deltaB": -5,
+                    "label": "Restore the upstream wetlands",
+                    "next": "wetlands",
+                    "note": "Cheaper and greener, but slower to work."
+                  }
+                ],
+                "id": "start",
+                "situation": "Your town's river floods every spring. The council asks you to lead the response."
+              },
+              {
+                "choices": [
+                  {
+                    "deltaA": -30,
+                    "deltaB": -10,
+                    "label": "Raise the levee again",
+                    "next": "end-lock-in",
+                    "note": "Costs keep compounding."
+                  },
+                  {
+                    "deltaA": -20,
+                    "deltaB": 15,
+                    "label": "Add wetlands as a second line",
+                    "next": "end-hybrid",
+                    "note": "Late, but it eases the pressure."
+                  }
+                ],
+                "id": "levee",
+                "situation": "The levee holds the first spring, but silt builds up and the river rises higher each year."
+              },
+              {
+                "choices": [
+                  {
+                    "deltaA": -15,
+                    "deltaB": 25,
+                    "label": "Expand the wetland corridor",
+                    "next": "end-green",
+                    "note": "The town rallies behind the project."
+                  },
+                  {
+                    "deltaA": 10,
+                    "deltaB": 5,
+                    "label": "Bank the savings",
+                    "next": "end-thrifty",
+                    "note": "Prudent, though the corridor stays small."
+                  }
+                ],
+                "id": "wetlands",
+                "situation": "Two springs pass; the wetlands now absorb most floods, and wildlife is returning."
+              },
+              {
+                "choices": [],
+                "id": "end-lock-in",
+                "situation": "You are locked into an arms race with the river: protected, but at ever-growing cost."
+              },
+              {
+                "choices": [],
+                "id": "end-hybrid",
+                "situation": "The hybrid defense works: the levee buys time and the wetlands cut the peak floods."
+              },
+              {
+                "choices": [],
+                "id": "end-green",
+                "situation": "The restored river corridor protects the town and becomes its most loved public space."
+              },
+              {
+                "choices": [],
+                "id": "end-thrifty",
+                "situation": "The town stays safe in normal years, with savings in reserve for a bigger flood."
+              }
+            ],
+            "label": "Nodes",
+            "description": "The decision graph; each node carries a situation and its choices, each choice naming the next node, metric deltas, and a consequence note. A node with no choices ends the run. Realizations declare their own subject's decision tree here.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "choices": {
+                  "name": "choices",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "deltaA": {
+                        "name": "deltaA",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "deltaB": {
+                        "name": "deltaB",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "label": {
+                        "name": "label",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "next": {
+                        "name": "next",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "note": {
+                        "name": "note",
+                        "required": false,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "situation": {
+                  "name": "situation",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "restartLabel",
+            "type": "string",
+            "default": "Play Again",
+            "label": "Restart Label",
+            "tier": "presentation"
+          },
+          {
+            "key": "startId",
+            "type": "string",
+            "default": "start",
+            "label": "Start Node",
+            "description": "Id of the node the scenario opens on.",
+            "tier": "domain"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Decision Scenario",
+            "label": "Title",
+            "description": "Title shown above the scenario.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "ScenarioScene",
+        "transitionEvents": [
+          "CHOOSE",
+          "INIT",
+          "MODE_SELECTED",
+          "RESTART"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "choices",
+            "currentId",
+            "done",
+            "feedback",
+            "metricA",
+            "metricB",
+            "path",
+            "situation",
+            "stepCount",
+            "title",
+            "view"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "ScenarioPage",
+        "defaultPath": "/learn-scenario",
+        "primaryEntity": "ScenarioScene"
+      }
+    ],
+    "emittedEvents": [
+      "CHOICE_MADE",
+      "SCENARIO_RESTARTED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

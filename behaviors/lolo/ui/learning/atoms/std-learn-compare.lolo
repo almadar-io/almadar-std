@@ -1,0 +1,397 @@
+app std-learn-compare "1.0.0"
+"Generic dual-view comparator — two instances of the same config-declared curve family (power y = A·xᴮ, linear y = A + B·x, or sine y = A·sin(B·x)) render overlaid on one canvas, each side driven by its own parameter pair of sliders, with a live delta readout of the two values at the midpoint x. Changing either side recomputes immediately, so the learner sees exactly how the two settings diverge. All labels and defaults are config-declared, so the same mechanism serves any side-by-side contrast: two interest rates compounding, two spring constants, two demand elasticities, two wave frequencies. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital CompareOrbital {
+  type CompareCurve = {
+    label : string
+    color : string
+    samples : [CompareCurveSample]!
+  }
+  type CompareCurveSample = {
+    x : number!
+    y : number!
+  }
+
+  entity CompareScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    curveKind : string
+    leftA : number = 0
+    leftB : number = 0
+    rightA : number = 0
+    rightB : number = 0
+    curves : [CompareCurve]
+    xMid : number = 0
+    leftMid : number = 0
+    rightMid : number = 0
+    delta : number = 0
+    yMin : number
+    yMax : number
+  }
+
+  trait CompareSim -> @rebindable CompareScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (let (
+            (kind @config.curveKind)
+            (span (- @config.xMax @config.xMin))
+            (lA @config.leftADefault)
+            (lB @config.leftBDefault)
+            (rA @config.rightADefault)
+            (rB @config.rightBDefault)
+            (leftSamples (array/map (array/range 0 81) (fn (i)
+              (let (
+                  (x (+ @config.xMin (* @i (/ @span 80))))
+                  (yVal (if (== @kind "power")
+                          (* @lA (math/pow @x @lB))
+                          (if (== @kind "linear")
+                            (+ @lA (* @lB @x))
+                            (* @lA (math/sin (* @lB @x))))))
+                )
+                { x: @x, y: @yVal }))))
+            (rightSamples (array/map (array/range 0 81) (fn (i)
+              (let (
+                  (x (+ @config.xMin (* @i (/ @span 80))))
+                  (yVal (if (== @kind "power")
+                          (* @rA (math/pow @x @rB))
+                          (if (== @kind "linear")
+                            (+ @rA (* @rB @x))
+                            (* @rA (math/sin (* @rB @x))))))
+                )
+                { x: @x, y: @yVal }))))
+            (allSamples (array/concat @leftSamples @rightSamples))
+            (yMinRaw (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/min @acc (object/get @s y)))))
+            (yMaxRaw (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/max @acc (object/get @s y)))))
+            (yPad (* 0.1 (math/max 0.001 (- @yMaxRaw @yMinRaw))))
+            (xMidV (/ (+ @config.xMin @config.xMax) 2))
+            (lMid (if (== @kind "power") (* @lA (math/pow @xMidV @lB)) (if (== @kind "linear") (+ @lA (* @lB @xMidV)) (* @lA (math/sin (* @lB @xMidV))))))
+            (rMid (if (== @kind "power") (* @rA (math/pow @xMidV @rB)) (if (== @kind "linear") (+ @rA (* @rB @xMidV)) (* @rA (math/sin (* @rB @xMidV))))))
+          )
+          (do
+            (set @entity.active true)
+            (set @entity.title @config.title)
+            (set @entity.curveKind @kind)
+            (set @entity.leftA @lA)
+            (set @entity.leftB @lB)
+            (set @entity.rightA @rA)
+            (set @entity.rightB @rB)
+            (set @entity.xMid @xMidV)
+            (set @entity.leftMid @lMid)
+            (set @entity.rightMid @rMid)
+            (set @entity.delta (- @rMid @lMid))
+            (set @entity.yMin (- @yMinRaw @yPad))
+            (set @entity.yMax (+ @yMaxRaw @yPad))
+            (set @entity.curves [
+              { label: @config.leftLabel, color: @config.leftColor, samples: @leftSamples },
+              { label: @config.rightLabel, color: @config.rightColor, samples: @rightSamples }
+            ])))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @config.compareText },
+                { type: stack, direction: horizontal, gap: lg, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat @config.leftLabel " — " @config.paramALabel ": " (math/round @entity.leftA 2)) },
+                        { type: range-slider, min: @config.paramAMin, max: @config.paramAMax, step: @config.paramAStep, value: @entity.leftA, showTooltip: true, action: "SET_PARAM", actionPayload: { side: "left", which: "A" } },
+                        { type: typography, variant: caption, content: (str/concat @config.leftLabel " — " @config.paramBLabel ": " (math/round @entity.leftB 2)) },
+                        { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.leftB, showTooltip: true, action: "SET_PARAM", actionPayload: { side: "left", which: "B" } }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat @config.rightLabel " — " @config.paramALabel ": " (math/round @entity.rightA 2)) },
+                        { type: range-slider, min: @config.paramAMin, max: @config.paramAMax, step: @config.paramAStep, value: @entity.rightA, showTooltip: true, action: "SET_PARAM", actionPayload: { side: "right", which: "A" } },
+                        { type: typography, variant: caption, content: (str/concat @config.rightLabel " — " @config.paramBLabel ": " (math/round @entity.rightB 2)) },
+                        { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.rightB, showTooltip: true, action: "SET_PARAM", actionPayload: { side: "right", which: "B" } }
+                      ] }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: typography, variant: body, content: (str/concat "At x=" (math/round @entity.xMid 2) ": " @config.leftLabel " = " (math/round @entity.leftMid 3) ", " @config.rightLabel " = " (math/round @entity.rightMid 3) ", Δ = " (math/round @entity.delta 3)) }
+              ] }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (let (
+            (kind @config.curveKind)
+            (span (- @config.xMax @config.xMin))
+            (lA @config.leftADefault)
+            (lB @config.leftBDefault)
+            (rA @config.rightADefault)
+            (rB @config.rightBDefault)
+            (leftSamples (array/map (array/range 0 81) (fn (i)
+              (let (
+                  (x (+ @config.xMin (* @i (/ @span 80))))
+                  (yVal (if (== @kind "power")
+                          (* @lA (math/pow @x @lB))
+                          (if (== @kind "linear")
+                            (+ @lA (* @lB @x))
+                            (* @lA (math/sin (* @lB @x))))))
+                )
+                { x: @x, y: @yVal }))))
+            (rightSamples (array/map (array/range 0 81) (fn (i)
+              (let (
+                  (x (+ @config.xMin (* @i (/ @span 80))))
+                  (yVal (if (== @kind "power")
+                          (* @rA (math/pow @x @rB))
+                          (if (== @kind "linear")
+                            (+ @rA (* @rB @x))
+                            (* @rA (math/sin (* @rB @x))))))
+                )
+                { x: @x, y: @yVal }))))
+            (allSamples (array/concat @leftSamples @rightSamples))
+            (yMinRaw (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/min @acc (object/get @s y)))))
+            (yMaxRaw (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/max @acc (object/get @s y)))))
+            (yPad (* 0.1 (math/max 0.001 (- @yMaxRaw @yMinRaw))))
+            (xMidV (/ (+ @config.xMin @config.xMax) 2))
+            (lMid (if (== @kind "power") (* @lA (math/pow @xMidV @lB)) (if (== @kind "linear") (+ @lA (* @lB @xMidV)) (* @lA (math/sin (* @lB @xMidV))))))
+            (rMid (if (== @kind "power") (* @rA (math/pow @xMidV @rB)) (if (== @kind "linear") (+ @rA (* @rB @xMidV)) (* @rA (math/sin (* @rB @xMidV))))))
+          )
+          (do
+            (set @entity.active true)
+            (set @entity.title @config.title)
+            (set @entity.curveKind @kind)
+            (set @entity.leftA @lA)
+            (set @entity.leftB @lB)
+            (set @entity.rightA @rA)
+            (set @entity.rightB @rB)
+            (set @entity.xMid @xMidV)
+            (set @entity.leftMid @lMid)
+            (set @entity.rightMid @rMid)
+            (set @entity.delta (- @rMid @lMid))
+            (set @entity.yMin (- @yMinRaw @yPad))
+            (set @entity.yMax (+ @yMaxRaw @yPad))
+            (set @entity.curves [
+              { label: @config.leftLabel, color: @config.leftColor, samples: @leftSamples },
+              { label: @config.rightLabel, color: @config.rightColor, samples: @rightSamples }
+            ])))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @config.compareText },
+                { type: stack, direction: horizontal, gap: lg, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat @config.leftLabel " — " @config.paramALabel ": " (math/round @entity.leftA 2)) },
+                        { type: range-slider, min: @config.paramAMin, max: @config.paramAMax, step: @config.paramAStep, value: @entity.leftA, showTooltip: true, action: "SET_PARAM", actionPayload: { side: "left", which: "A" } },
+                        { type: typography, variant: caption, content: (str/concat @config.leftLabel " — " @config.paramBLabel ": " (math/round @entity.leftB 2)) },
+                        { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.leftB, showTooltip: true, action: "SET_PARAM", actionPayload: { side: "left", which: "B" } }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat @config.rightLabel " — " @config.paramALabel ": " (math/round @entity.rightA 2)) },
+                        { type: range-slider, min: @config.paramAMin, max: @config.paramAMax, step: @config.paramAStep, value: @entity.rightA, showTooltip: true, action: "SET_PARAM", actionPayload: { side: "right", which: "A" } },
+                        { type: typography, variant: caption, content: (str/concat @config.rightLabel " — " @config.paramBLabel ": " (math/round @entity.rightB 2)) },
+                        { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.rightB, showTooltip: true, action: "SET_PARAM", actionPayload: { side: "right", which: "B" } }
+                      ] }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: typography, variant: body, content: (str/concat "At x=" (math/round @entity.xMid 2) ": " @config.leftLabel " = " (math/round @entity.leftMid 3) ", " @config.rightLabel " = " (math/round @entity.rightMid 3) ", Δ = " (math/round @entity.delta 3)) }
+              ] }
+          ]
+        })
+
+      SET_PARAM -> idle when (== @entity.active true)
+        (let (
+            (kind @entity.curveKind)
+            (span (- @config.xMax @config.xMin))
+            (lA (if (and (== ?side "left") (== ?which "A")) (math/clamp ?value @config.paramAMin @config.paramAMax) @entity.leftA))
+            (lB (if (and (== ?side "left") (== ?which "B")) (math/clamp ?value @config.paramBMin @config.paramBMax) @entity.leftB))
+            (rA (if (and (== ?side "right") (== ?which "A")) (math/clamp ?value @config.paramAMin @config.paramAMax) @entity.rightA))
+            (rB (if (and (== ?side "right") (== ?which "B")) (math/clamp ?value @config.paramBMin @config.paramBMax) @entity.rightB))
+            (leftSamples (array/map (array/range 0 81) (fn (i)
+              (let (
+                  (x (+ @config.xMin (* @i (/ @span 80))))
+                  (yVal (if (== @kind "power")
+                          (* @lA (math/pow @x @lB))
+                          (if (== @kind "linear")
+                            (+ @lA (* @lB @x))
+                            (* @lA (math/sin (* @lB @x))))))
+                )
+                { x: @x, y: @yVal }))))
+            (rightSamples (array/map (array/range 0 81) (fn (i)
+              (let (
+                  (x (+ @config.xMin (* @i (/ @span 80))))
+                  (yVal (if (== @kind "power")
+                          (* @rA (math/pow @x @rB))
+                          (if (== @kind "linear")
+                            (+ @rA (* @rB @x))
+                            (* @rA (math/sin (* @rB @x))))))
+                )
+                { x: @x, y: @yVal }))))
+            (allSamples (array/concat @leftSamples @rightSamples))
+            (yMinRaw (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/min @acc (object/get @s y)))))
+            (yMaxRaw (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/max @acc (object/get @s y)))))
+            (yPad (* 0.1 (math/max 0.001 (- @yMaxRaw @yMinRaw))))
+            (lMid (if (== @kind "power") (* @lA (math/pow @entity.xMid @lB)) (if (== @kind "linear") (+ @lA (* @lB @entity.xMid)) (* @lA (math/sin (* @lB @entity.xMid))))))
+            (rMid (if (== @kind "power") (* @rA (math/pow @entity.xMid @rB)) (if (== @kind "linear") (+ @rA (* @rB @entity.xMid)) (* @rA (math/sin (* @rB @entity.xMid))))))
+          )
+          (do
+            (set @entity.leftA @lA)
+            (set @entity.leftB @lB)
+            (set @entity.rightA @rA)
+            (set @entity.rightB @rB)
+            (set @entity.leftMid @lMid)
+            (set @entity.rightMid @rMid)
+            (set @entity.delta (- @rMid @lMid))
+            (set @entity.yMin (- @yMinRaw @yPad))
+            (set @entity.yMax (+ @yMaxRaw @yPad))
+            (set @entity.curves [
+              { label: @config.leftLabel, color: @config.leftColor, samples: @leftSamples },
+              { label: @config.rightLabel, color: @config.rightColor, samples: @rightSamples }
+            ])))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @config.compareText },
+                { type: stack, direction: horizontal, gap: lg, children: [
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat @config.leftLabel " — " @config.paramALabel ": " (math/round @entity.leftA 2)) },
+                        { type: range-slider, min: @config.paramAMin, max: @config.paramAMax, step: @config.paramAStep, value: @entity.leftA, showTooltip: true, action: "SET_PARAM", actionPayload: { side: "left", which: "A" } },
+                        { type: typography, variant: caption, content: (str/concat @config.leftLabel " — " @config.paramBLabel ": " (math/round @entity.leftB 2)) },
+                        { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.leftB, showTooltip: true, action: "SET_PARAM", actionPayload: { side: "left", which: "B" } }
+                      ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                        { type: typography, variant: caption, content: (str/concat @config.rightLabel " — " @config.paramALabel ": " (math/round @entity.rightA 2)) },
+                        { type: range-slider, min: @config.paramAMin, max: @config.paramAMax, step: @config.paramAStep, value: @entity.rightA, showTooltip: true, action: "SET_PARAM", actionPayload: { side: "right", which: "A" } },
+                        { type: typography, variant: caption, content: (str/concat @config.rightLabel " — " @config.paramBLabel ": " (math/round @entity.rightB 2)) },
+                        { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.rightB, showTooltip: true, action: "SET_PARAM", actionPayload: { side: "right", which: "B" } }
+                      ] }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: typography, variant: body, content: (str/concat "At x=" (math/round @entity.xMid 2) ": " @config.leftLabel " = " (math/round @entity.leftMid 3) ", " @config.rightLabel " = " (math/round @entity.rightMid 3) ", Δ = " (math/round @entity.delta 3)) }
+              ] }
+          ]
+        })
+        (emit COMPARISON_CHANGED { leftA: @entity.leftA, leftB: @entity.leftB, rightA: @entity.rightA, rightB: @entity.rightB, delta: @entity.delta })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      SET_PARAM {
+        side : string
+        which : string
+        value : number
+      }
+        @description "Learner dragged one of the four sliders — side names the compared instance (left or right), which names the parameter (A or B), value is the new setting; both curves and the delta recompute immediately."
+        @tier "domain"
+    }
+
+    emits {
+      COMPARISON_CHANGED -> external {
+        leftA : number
+        leftB : number
+        rightA : number
+        rightB : number
+        delta : number
+      }
+        @description "Both parameter pairs and the midpoint delta after a slider change — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "dual view, side by side, comparator, contrast two settings, A/B comparison"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Compare Two Settings"
+        @label "Title"
+        @description "Title shown above the canvas."
+        @tier "presentation"
+      compareText : string = "Tune each side's parameters and watch how the two curves diverge."
+        @label "Compare Text"
+        @description "One-sentence statement of what is being contrasted."
+        @tier "domain"
+      curveKind : string = "power"
+        @label "Curve Kind"
+        @description "Curve family both sides are drawn from: power (y = A·xᴮ), linear (y = A + B·x), or sine (y = A·sin(B·x))."
+        @synonyms "curve family, power law, linear function, sine wave, function type"
+        @tier "domain"
+      leftLabel : string = "Left"
+        @label "Left Label"
+        @description "Display name of the first compared instance."
+        @tier "domain"
+      rightLabel : string = "Right"
+        @label "Right Label"
+        @description "Display name of the second compared instance."
+        @tier "domain"
+      paramALabel : string = "A"
+        @label "Parameter A Label"
+        @tier "presentation"
+      paramBLabel : string = "B"
+        @label "Parameter B Label"
+        @tier "presentation"
+      paramAMin : number = -5
+        @label "Parameter A Min"
+        @tier "domain"
+      paramAMax : number = 5
+        @label "Parameter A Max"
+        @tier "domain"
+      paramAStep : number = 0.1
+        @label "Parameter A Step"
+        @tier "presentation"
+      paramBMin : number = -5
+        @label "Parameter B Min"
+        @tier "domain"
+      paramBMax : number = 5
+        @label "Parameter B Max"
+        @tier "domain"
+      paramBStep : number = 0.1
+        @label "Parameter B Step"
+        @tier "presentation"
+      leftADefault : number = 1
+        @label "Left A Default"
+        @tier "domain"
+      leftBDefault : number = 2
+        @label "Left B Default"
+        @tier "domain"
+      rightADefault : number = 2
+        @label "Right A Default"
+        @tier "domain"
+      rightBDefault : number = 1.5
+        @label "Right B Default"
+        @tier "domain"
+      leftColor : string = "#3b82f6"
+        @label "Left Color"
+        @tier "presentation"
+      rightColor : string = "#f59e0b"
+        @label "Right Color"
+        @tier "presentation"
+      xMin : number = 0
+        @label "X Min"
+        @tier "presentation"
+      xMax : number = 10
+        @label "X Max"
+        @tier "presentation"
+      width : number = 600
+        @label "Width"
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @tier "presentation"
+      showAxes : boolean = true
+        @label "Show Axes"
+        @tier "presentation"
+      showGrid : boolean = true
+        @label "Show Grid"
+        @tier "presentation"
+      gridStep : number = 1
+        @label "Grid Step"
+        @tier "presentation"
+    }
+  }
+
+  page "/learn-compare" as ComparePage -> CompareSim
+}

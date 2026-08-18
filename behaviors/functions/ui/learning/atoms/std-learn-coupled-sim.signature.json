@@ -1,0 +1,444 @@
+[
+  {
+    "organism": "std-learn-coupled-sim",
+    "orbital": "CoupledSimOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-learn-coupled-sim.ts",
+    "entities": [
+      {
+        "name": "CoupledSimScene",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "t",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "p",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "q",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "coefA",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "coefB",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "running",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "pSamples",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "qSamples",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "curves",
+            "type": "array",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "CoupledSimSim",
+        "emittedEvents": [
+          "RUN_TOGGLED",
+          "SIM_RESET",
+          "COEFS_CHANGED",
+          "SHOCK_APPLIED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "RUN_TOGGLED",
+            "direction": "emit",
+            "description": "The simulation was started or paused — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+            "tier": "domain"
+          },
+          {
+            "name": "SIM_RESET",
+            "direction": "emit",
+            "description": "The learner reset the system to its configured starting state.",
+            "tier": "domain"
+          },
+          {
+            "name": "COEFS_CHANGED",
+            "direction": "emit",
+            "description": "The governing rates after a slider change.",
+            "tier": "domain"
+          },
+          {
+            "name": "SHOCK_APPLIED",
+            "direction": "emit",
+            "description": "A disturbance was injected: the burst size and both quantities right after it.",
+            "synonyms": "coupled dynamics, predator prey, epidemic, reaction kinetics, feedback loop, disturbance",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "RUN",
+            "direction": "listen",
+            "description": "Learner started (or resumed) the coupled evolution; the two curves draw live until Pause or the configured duration.",
+            "tier": "domain"
+          },
+          {
+            "name": "PAUSE",
+            "direction": "listen",
+            "description": "Learner froze the simulation mid-run; sliders and shocks still apply to the frozen state.",
+            "tier": "domain"
+          },
+          {
+            "name": "RESET",
+            "direction": "listen",
+            "description": "Learner restored both quantities, both rates, and the clock to their configured starting values.",
+            "tier": "domain"
+          },
+          {
+            "name": "SET_A",
+            "direction": "listen",
+            "description": "Learner retuned the first governing rate mid-run — value is the new coefficient; the dynamics change from the next tick.",
+            "tier": "domain"
+          },
+          {
+            "name": "SET_B",
+            "direction": "listen",
+            "description": "Learner retuned the second governing rate mid-run — value is the new coefficient; the dynamics change from the next tick.",
+            "tier": "domain"
+          },
+          {
+            "name": "SHOCK",
+            "direction": "listen",
+            "description": "Learner injected (positive) or removed (negative) a burst of the first quantity to disturb the system and watch it respond.",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "autoRun",
+            "type": "boolean",
+            "default": true,
+            "label": "Auto Run",
+            "description": "Whether the simulation starts running immediately on load.",
+            "tier": "domain"
+          },
+          {
+            "key": "coefADefault",
+            "type": "number",
+            "default": 0.6,
+            "label": "Coefficient A Default",
+            "tier": "domain"
+          },
+          {
+            "key": "coefALabel",
+            "type": "string",
+            "default": "Prey growth rate",
+            "label": "Coefficient A Label",
+            "description": "Display label of the first governing rate slider.",
+            "tier": "domain"
+          },
+          {
+            "key": "coefAMax",
+            "type": "number",
+            "default": 2,
+            "label": "Coefficient A Max",
+            "tier": "domain"
+          },
+          {
+            "key": "coefAMin",
+            "type": "number",
+            "default": 0,
+            "label": "Coefficient A Min",
+            "tier": "domain"
+          },
+          {
+            "key": "coefAStep",
+            "type": "number",
+            "default": 0.01,
+            "label": "Coefficient A Step",
+            "tier": "presentation"
+          },
+          {
+            "key": "coefBDefault",
+            "type": "number",
+            "default": 0.9,
+            "label": "Coefficient B Default",
+            "tier": "domain"
+          },
+          {
+            "key": "coefBLabel",
+            "type": "string",
+            "default": "Predation rate",
+            "label": "Coefficient B Label",
+            "description": "Display label of the second governing rate slider.",
+            "tier": "domain"
+          },
+          {
+            "key": "coefBMax",
+            "type": "number",
+            "default": 2,
+            "label": "Coefficient B Max",
+            "tier": "domain"
+          },
+          {
+            "key": "coefBMin",
+            "type": "number",
+            "default": 0,
+            "label": "Coefficient B Min",
+            "tier": "domain"
+          },
+          {
+            "key": "coefBStep",
+            "type": "number",
+            "default": 0.01,
+            "label": "Coefficient B Step",
+            "tier": "presentation"
+          },
+          {
+            "key": "coefC",
+            "type": "number",
+            "default": 0.5,
+            "label": "Coefficient C",
+            "description": "Predator-prey only: conversion efficiency of predation into predator growth.",
+            "tier": "domain"
+          },
+          {
+            "key": "coefD",
+            "type": "number",
+            "default": 0.4,
+            "label": "Coefficient D",
+            "description": "Predator-prey only: predator death rate.",
+            "tier": "domain"
+          },
+          {
+            "key": "duration",
+            "type": "number",
+            "default": 30,
+            "label": "Duration",
+            "description": "Simulated seconds before the run stops automatically.",
+            "tier": "domain"
+          },
+          {
+            "key": "gridStep",
+            "type": "number",
+            "default": 50,
+            "label": "Grid Step",
+            "tier": "presentation"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 360,
+            "label": "Height",
+            "tier": "presentation"
+          },
+          {
+            "key": "kind",
+            "type": "string",
+            "default": "predator-prey",
+            "label": "Interaction Family",
+            "description": "Which coupled dynamics govern the two quantities: predator-prey (oscillating cycles), epidemic (S and I with transmission and recovery), or kinetics (A decaying into B).",
+            "synonyms": "predator prey, Lotka-Volterra, SIR, epidemic, reaction kinetics, coupled ODE",
+            "tier": "domain"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "pColor",
+            "type": "string",
+            "default": "#16a34a",
+            "label": "P Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "pLabel",
+            "type": "string",
+            "default": "Prey",
+            "label": "P Label",
+            "description": "Display name of the first quantity.",
+            "tier": "domain"
+          },
+          {
+            "key": "pStart",
+            "type": "number",
+            "default": 120,
+            "label": "P Start",
+            "tier": "domain"
+          },
+          {
+            "key": "qColor",
+            "type": "string",
+            "default": "#dc2626",
+            "label": "Q Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "qLabel",
+            "type": "string",
+            "default": "Predators",
+            "label": "Q Label",
+            "description": "Display name of the second quantity.",
+            "tier": "domain"
+          },
+          {
+            "key": "qStart",
+            "type": "number",
+            "default": 40,
+            "label": "Q Start",
+            "tier": "domain"
+          },
+          {
+            "key": "shockDownLabel",
+            "type": "string",
+            "default": "− Prey cull",
+            "label": "Shock Down Label",
+            "tier": "presentation"
+          },
+          {
+            "key": "shockSize",
+            "type": "number",
+            "default": 40,
+            "label": "Shock Size",
+            "description": "How much of the first quantity a shock button injects or removes.",
+            "tier": "domain"
+          },
+          {
+            "key": "shockUpLabel",
+            "type": "string",
+            "default": "+ Prey burst",
+            "label": "Shock Up Label",
+            "tier": "presentation"
+          },
+          {
+            "key": "taskText",
+            "type": "string",
+            "default": "Run the system, retune the rates, and shock it — watch how the two quantities push and pull each other.",
+            "label": "Task Text",
+            "description": "One-sentence statement of what to explore.",
+            "tier": "domain"
+          },
+          {
+            "key": "timeScale",
+            "type": "number",
+            "default": 1,
+            "label": "Time Scale",
+            "description": "Multiplier on the integration step; raise it to fast-forward the dynamics.",
+            "tier": "domain"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Coupled System",
+            "label": "Title",
+            "description": "Title shown above the simulation.",
+            "tier": "presentation"
+          },
+          {
+            "key": "valueMax",
+            "type": "number",
+            "default": 300,
+            "label": "Value Max",
+            "description": "Upper bound of the chart's y axis.",
+            "tier": "presentation"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "CoupledSimScene",
+        "transitionEvents": [
+          "INIT",
+          "MODE_SELECTED",
+          "PAUSE",
+          "RESET",
+          "RUN",
+          "SET_A",
+          "SET_B",
+          "SHOCK"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "coefA",
+            "coefB",
+            "curves",
+            "p",
+            "pSamples",
+            "q",
+            "qSamples",
+            "running",
+            "t",
+            "title"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "CoupledSimPage",
+        "defaultPath": "/learn-coupled-sim",
+        "primaryEntity": "CoupledSimScene"
+      }
+    ],
+    "emittedEvents": [
+      "COEFS_CHANGED",
+      "RUN_TOGGLED",
+      "SHOCK_APPLIED",
+      "SIM_RESET"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

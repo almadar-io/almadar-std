@@ -1,0 +1,336 @@
+app std-learn-speed-drill "1.0.0"
+"Generic speeded-response drill — a config-declared item roster of prompt + options runs against a live countdown: answering while the clock runs scores the base points plus a speed bonus proportional to the time left, letting the clock hit zero counts as a miss and reveals the answer, and a streak counter rewards consecutive hits with an end-of-round summary of score and best streak. All vocabulary and timing is config-declared, so the same mechanism serves any fluency drill: times tables, sight vocabulary, chemical symbols, flag recognition, interval identification — anywhere fast retrieval is the skill. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital SpeedDrillOrbital {
+  type SpeedDrillItem = {
+    prompt : string!
+    options : [string]!
+    correctIndex : number!
+  }
+
+  entity SpeedDrillScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    itemIndex : number = 0
+    totalItems : number = 0
+    remaining : number = 0
+    running : boolean = false
+    verdict : string
+    score : number = 0
+    streak : number = 0
+    bestStreak : number = 0
+    done : boolean = false
+    promptText : string
+    options : [string]
+    correctIndex : number = 0
+    feedback : string
+    view : [node]
+  }
+
+  trait SpeedDrillSim -> @rebindable SpeedDrillScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (let (
+            (first (array/nth @config.items 0))
+          )
+          (do
+            (set @entity.active true)
+            (set @entity.title @config.title)
+            (set @entity.itemIndex 0)
+            (set @entity.totalItems (array/len @config.items))
+            (set @entity.remaining (* @config.timeLimit 10))
+            (set @entity.running true)
+            (set @entity.verdict "")
+            (set @entity.score 0)
+            (set @entity.streak 0)
+            (set @entity.bestStreak 0)
+            (set @entity.done false)
+            (set @entity.promptText (object/get @first prompt))
+            (set @entity.options (object/get @first options))
+            (set @entity.correctIndex (object/get @first correctIndex))
+            (set @entity.feedback "")
+            (set @entity.view [
+              { type: card, variant: bordered, padding: md, children: [
+                  { type: typography, variant: h4, content: @entity.promptText }
+                ] }
+            ])))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: progress-bar, value: (+ @entity.itemIndex 1), max: @entity.totalItems, showPercentage: false, label: (str/concat "Item " (str/concat "" (+ @entity.itemIndex 1)) " of " (str/concat "" @entity.totalItems)) },
+                { type: progress-bar, value: @entity.remaining, max: (* @config.timeLimit 10), showPercentage: false, label: (str/concat "Time left: " (math/round (/ @entity.remaining 10) 1) "s") },
+                { type: stack, direction: vertical, gap: md, children: @entity.view },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map (array/range 0 (array/len @entity.options)) (fn (i)
+                    { type: button, action: ANSWER, actionPayload: { index: @i }, label: (array/nth @entity.options @i), variant: secondary, size: sm, disabled: (if @entity.running false true) })) },
+                { type: typography, variant: caption, content: @entity.feedback },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: NEXT, label: @config.nextLabel, variant: primary, disabled: (if (and (== @entity.running false) (and (!= @entity.verdict "") (== @entity.done false))) false true) },
+                    { type: button, action: RETRY, label: @config.retryLabel, variant: ghost, disabled: (if @entity.done false true) }
+                  ] },
+                { type: stat-display, label: "Score", value: @entity.score, max: 0 },
+                { type: typography, variant: caption, content: (str/concat "Streak: " (str/concat "" @entity.streak) " · best: " (str/concat "" @entity.bestStreak)) }
+              ] }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (let (
+            (first (array/nth @config.items 0))
+          )
+          (do
+            (set @entity.active true)
+            (set @entity.title @config.title)
+            (set @entity.itemIndex 0)
+            (set @entity.totalItems (array/len @config.items))
+            (set @entity.remaining (* @config.timeLimit 10))
+            (set @entity.running true)
+            (set @entity.verdict "")
+            (set @entity.score 0)
+            (set @entity.streak 0)
+            (set @entity.bestStreak 0)
+            (set @entity.done false)
+            (set @entity.promptText (object/get @first prompt))
+            (set @entity.options (object/get @first options))
+            (set @entity.correctIndex (object/get @first correctIndex))
+            (set @entity.feedback "")
+            (set @entity.view [
+              { type: card, variant: bordered, padding: md, children: [
+                  { type: typography, variant: h4, content: @entity.promptText }
+                ] }
+            ])))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: progress-bar, value: (+ @entity.itemIndex 1), max: @entity.totalItems, showPercentage: false, label: (str/concat "Item " (str/concat "" (+ @entity.itemIndex 1)) " of " (str/concat "" @entity.totalItems)) },
+                { type: progress-bar, value: @entity.remaining, max: (* @config.timeLimit 10), showPercentage: false, label: (str/concat "Time left: " (math/round (/ @entity.remaining 10) 1) "s") },
+                { type: stack, direction: vertical, gap: md, children: @entity.view },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map (array/range 0 (array/len @entity.options)) (fn (i)
+                    { type: button, action: ANSWER, actionPayload: { index: @i }, label: (array/nth @entity.options @i), variant: secondary, size: sm, disabled: (if @entity.running false true) })) },
+                { type: typography, variant: caption, content: @entity.feedback },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: NEXT, label: @config.nextLabel, variant: primary, disabled: (if (and (== @entity.running false) (and (!= @entity.verdict "") (== @entity.done false))) false true) },
+                    { type: button, action: RETRY, label: @config.retryLabel, variant: ghost, disabled: (if @entity.done false true) }
+                  ] },
+                { type: stat-display, label: "Score", value: @entity.score, max: 0 },
+                { type: typography, variant: caption, content: (str/concat "Streak: " (str/concat "" @entity.streak) " · best: " (str/concat "" @entity.bestStreak)) }
+              ] }
+          ]
+        })
+
+      ANSWER -> idle when (and (== @entity.active true) (and (== @entity.running true) (== @entity.done false)))
+        (let (
+            (correct (== ?index @entity.correctIndex))
+            (bonus (math/round (/ @entity.remaining 10) 1))
+            (points (if @correct (+ @config.basePoints (math/round (* @config.speedBonus (/ @entity.remaining (* @config.timeLimit 10))) 0)) 0))
+            (newStreak (if @correct (+ @entity.streak 1) 0))
+          )
+          (do
+            (set @entity.running false)
+            (set @entity.verdict (if @correct "correct" "wrong"))
+            (set @entity.score (+ @entity.score @points))
+            (set @entity.streak @newStreak)
+            (set @entity.bestStreak (math/max @entity.bestStreak @newStreak))
+            (set @entity.feedback (if @correct
+              (str/concat "Correct with " @bonus "s to spare — +" (str/concat "" @points) " points.")
+              (str/concat "Not quite — the answer was: " (array/nth @entity.options @entity.correctIndex))))))
+        (emit ANSWER_JUDGED { correct: (== @entity.verdict "correct"), timeLeftTenths: @entity.remaining, score: @entity.score, streak: @entity.streak })
+
+      NEXT -> idle when (and (== @entity.active true) (and (== @entity.running false) (and (!= @entity.verdict "") (== @entity.done false))))
+        (let (
+            (nextIndex (+ @entity.itemIndex 1))
+            (finished (>= @nextIndex (array/len @config.items)))
+            (next (array/nth @config.items (math/min @nextIndex (- (array/len @config.items) 1))))
+          )
+          (do
+            (set @entity.itemIndex (if @finished @entity.itemIndex @nextIndex))
+            (set @entity.done (if @finished true false))
+            (set @entity.remaining (if @finished 0 (* @config.timeLimit 10)))
+            (set @entity.running (if @finished false true))
+            (set @entity.verdict "")
+            (set @entity.promptText (if @finished @entity.promptText (object/get @next prompt)))
+            (set @entity.options (if @finished [] (object/get @next options)))
+            (set @entity.correctIndex (if @finished @entity.correctIndex (object/get @next correctIndex)))
+            (set @entity.feedback (if @finished (str/concat "Round complete — final score " (str/concat "" @entity.score) ", best streak " (str/concat "" @entity.bestStreak) ".") ""))
+            (set @entity.view (if @finished
+              [
+                { type: typography, variant: h4, content: "Round Complete" },
+                { type: stat-display, label: "Final score", value: @entity.score, max: 0 }
+              ]
+              [
+                { type: card, variant: bordered, padding: md, children: [
+                    { type: typography, variant: h4, content: @entity.promptText }
+                  ] }
+              ])))
+          )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: progress-bar, value: (+ @entity.itemIndex 1), max: @entity.totalItems, showPercentage: false, label: (str/concat "Item " (str/concat "" (+ @entity.itemIndex 1)) " of " (str/concat "" @entity.totalItems)) },
+                { type: progress-bar, value: @entity.remaining, max: (* @config.timeLimit 10), showPercentage: false, label: (str/concat "Time left: " (math/round (/ @entity.remaining 10) 1) "s") },
+                { type: stack, direction: vertical, gap: md, children: @entity.view },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map (array/range 0 (array/len @entity.options)) (fn (i)
+                    { type: button, action: ANSWER, actionPayload: { index: @i }, label: (array/nth @entity.options @i), variant: secondary, size: sm, disabled: (if @entity.running false true) })) },
+                { type: typography, variant: caption, content: @entity.feedback },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: NEXT, label: @config.nextLabel, variant: primary, disabled: (if (and (== @entity.running false) (and (!= @entity.verdict "") (== @entity.done false))) false true) },
+                    { type: button, action: RETRY, label: @config.retryLabel, variant: ghost, disabled: (if @entity.done false true) }
+                  ] },
+                { type: stat-display, label: "Score", value: @entity.score, max: 0 },
+                { type: typography, variant: caption, content: (str/concat "Streak: " (str/concat "" @entity.streak) " · best: " (str/concat "" @entity.bestStreak)) }
+              ] }
+          ]
+        })
+        (emit PROMPT_ADVANCED { itemIndex: @entity.itemIndex, done: @entity.done, score: @entity.score })
+
+      RETRY -> idle when (and (== @entity.active true) (== @entity.done true))
+        (let (
+            (first (array/nth @config.items 0))
+          )
+          (do
+            (set @entity.itemIndex 0)
+            (set @entity.remaining (* @config.timeLimit 10))
+            (set @entity.running true)
+            (set @entity.verdict "")
+            (set @entity.score 0)
+            (set @entity.streak 0)
+            (set @entity.bestStreak 0)
+            (set @entity.done false)
+            (set @entity.promptText (object/get @first prompt))
+            (set @entity.options (object/get @first options))
+            (set @entity.correctIndex (object/get @first correctIndex))
+            (set @entity.feedback "")
+            (set @entity.view [
+              { type: card, variant: bordered, padding: md, children: [
+                  { type: typography, variant: h4, content: @entity.promptText }
+                ] }
+            ])))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: progress-bar, value: (+ @entity.itemIndex 1), max: @entity.totalItems, showPercentage: false, label: (str/concat "Item " (str/concat "" (+ @entity.itemIndex 1)) " of " (str/concat "" @entity.totalItems)) },
+                { type: progress-bar, value: @entity.remaining, max: (* @config.timeLimit 10), showPercentage: false, label: (str/concat "Time left: " (math/round (/ @entity.remaining 10) 1) "s") },
+                { type: stack, direction: vertical, gap: md, children: @entity.view },
+                { type: stack, direction: horizontal, gap: xs, children: (array/map (array/range 0 (array/len @entity.options)) (fn (i)
+                    { type: button, action: ANSWER, actionPayload: { index: @i }, label: (array/nth @entity.options @i), variant: secondary, size: sm, disabled: (if @entity.running false true) })) },
+                { type: typography, variant: caption, content: @entity.feedback },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: NEXT, label: @config.nextLabel, variant: primary, disabled: (if (and (== @entity.running false) (and (!= @entity.verdict "") (== @entity.done false))) false true) },
+                    { type: button, action: RETRY, label: @config.retryLabel, variant: ghost, disabled: (if @entity.done false true) }
+                  ] },
+                { type: stat-display, label: "Score", value: @entity.score, max: 0 },
+                { type: typography, variant: caption, content: (str/concat "Streak: " (str/concat "" @entity.streak) " · best: " (str/concat "" @entity.bestStreak)) }
+              ] }
+          ]
+        })
+        (emit ROUND_RESTARTED { totalItems: @entity.totalItems })
+    }
+
+    ticks {
+      speedTick every 100ms
+        when (and (== @entity.active true) (== @entity.running true))
+        (set @entity.remaining (math/max 0 (- @entity.remaining 1)))
+        (set @entity.verdict (if (== @entity.remaining 0) "timeout" @entity.verdict))
+        (set @entity.feedback (if (== @entity.remaining 0) (str/concat "Time's up — the answer was: " (array/nth @entity.options @entity.correctIndex)) @entity.feedback))
+        (set @entity.streak (if (== @entity.remaining 0) 0 @entity.streak))
+        (set @entity.running (if (== @entity.remaining 0) false true))
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      ANSWER {
+        index : number
+      }
+        @description "Learner picked an option while the clock was running — index is the chosen option; it is judged immediately and scored with a speed bonus."
+        @tier "domain"
+      NEXT {
+      }
+        @description "Learner advanced to the next item after a verdict (answered or timed out); past the last item this completes the round."
+        @tier "domain"
+      RETRY {
+      }
+        @description "Learner restarted the round from the first item with a cleared score and streak."
+        @tier "domain"
+    }
+
+    emits {
+      ANSWER_JUDGED -> external {
+        correct : boolean
+        timeLeftTenths : number
+        score : number
+        streak : number
+      }
+        @description "The verdict of a speeded answer: correctness, tenths of a second left on the clock, and the running score and streak — a composed listener (coach, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "speed drill, reaction time, fluency, timed quiz, countdown, rapid recall"
+        @tier "domain"
+      PROMPT_ADVANCED -> external {
+        itemIndex : number
+        done : boolean
+        score : number
+      }
+        @description "The learner moved to the next item (or completed the round) with the running score."
+        @tier "domain"
+      ROUND_RESTARTED -> external {
+        totalItems : number
+      }
+        @description "The learner restarted the round from scratch."
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Speed Drill"
+        @label "Title"
+        @description "Title shown above the drill."
+        @tier "presentation"
+      items : [SpeedDrillItem] = [
+        { prompt: "7 × 8", options: ["54", "56", "63", "48"], correctIndex: 1 },
+        { prompt: "9 × 6", options: ["54", "56", "45", "63"], correctIndex: 0 },
+        { prompt: "12 × 12", options: ["124", "132", "144", "148"], correctIndex: 2 }
+      ]
+        @label "Items"
+        @description "The drill roster; each item carries a prompt, its options, and the index of the correct option. Realizations declare their own subject's items here."
+        @tier "domain"
+      timeLimit : number = 6
+        @label "Time Limit"
+        @description "Seconds the learner has to answer each item before it counts as a miss."
+        @tier "domain"
+      basePoints : number = 10
+        @label "Base Points"
+        @description "Points for a correct answer regardless of speed."
+        @tier "domain"
+      speedBonus : number = 10
+        @label "Speed Bonus"
+        @description "Maximum extra points awarded in proportion to the time left on the clock."
+        @tier "domain"
+      nextLabel : string = "Next"
+        @label "Next Label"
+        @tier "presentation"
+      retryLabel : string = "Try Again"
+        @label "Retry Label"
+        @tier "presentation"
+    }
+  }
+
+  page "/learn-speed-drill" as SpeedDrillPage -> SpeedDrillSim
+}

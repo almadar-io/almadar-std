@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page, PatternValue } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -649,10 +649,35 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
               },
             ],
             'description': 'Action buttons on the master-detail record pane (detail-panel `actions` descriptors: label/event/icon/variant). Consumers add their own record actions (Edit/Delete/…) alongside or instead of Close.',
+            'items': {
+              'properties': {
+                'event': {
+                  'name': 'event',
+                  'required': true,
+                  'type': 'string',
+                },
+                'icon': {
+                  'name': 'icon',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': true,
+                  'type': 'string',
+                },
+                'variant': {
+                  'name': 'variant',
+                  'required': false,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
             'label': 'Master-detail record pane actions',
             'synonyms': 'record actions, detail actions, pane actions',
             'tier': 'presentation',
-            'type': 'json',
+            'type': '[BrowseDetailAction]',
           },
           'detailFields': {
             'default': [

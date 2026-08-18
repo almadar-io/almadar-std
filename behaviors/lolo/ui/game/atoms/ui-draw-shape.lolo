@@ -6,14 +6,30 @@ orbital DrawShapeOrbital {
     y : number!
     z : number
   }
+  type DrawShapePointsItem = {
+    x : number!
+    y : number!
+  }
   type DrawShapeGradient = {
     kind : "linear" | "radial" | "conic"!
-    from : json
-    to : json
-    center : json
+    from : DrawShapeGradientFrom
+    to : DrawShapeGradientTo
+    center : DrawShapeGradientCenter
     radius : number
     angle : number
     stops : [json]!
+  }
+  type DrawShapeGradientFrom = {
+    x : number!
+    y : number!
+  }
+  type DrawShapeGradientTo = {
+    x : number!
+    y : number!
+  }
+  type DrawShapeGradientCenter = {
+    x : number!
+    y : number!
   }
   type DrawShapeFillPattern = {
     kind : "noise" | "image"!
@@ -24,12 +40,28 @@ orbital DrawShapeOrbital {
   }
   type DrawShapeStrokeGradient = {
     kind : "linear" | "radial" | "conic"!
-    from : json
-    to : json
-    center : json
+    from : DrawShapeStrokeGradientFrom
+    to : DrawShapeStrokeGradientTo
+    center : DrawShapeStrokeGradientCenter
     radius : number
     angle : number
     stops : [json]!
+  }
+  type DrawShapeStrokeGradientFrom = {
+    x : number!
+    y : number!
+  }
+  type DrawShapeStrokeGradientTo = {
+    x : number!
+    y : number!
+  }
+  type DrawShapeStrokeGradientCenter = {
+    x : number!
+    y : number!
+  }
+  type DrawShapePivot = {
+    x : number!
+    y : number!
   }
   type DrawShapeShadow = {
     color : string!
@@ -139,7 +171,7 @@ orbital DrawShapeOrbital {
         @label "Offset Y"
         @description "offsetY prop"
         @tier "presentation"
-      points : [json] = []
+      points : [DrawShapePointsItem] = []
         @label "Points"
         @description "Poly vertices as world-unit offsets relative to the cell's projected top-left."
         @tier "presentation"
@@ -191,7 +223,7 @@ orbital DrawShapeOrbital {
         @label "Rotate"
         @description "Rotation in radians (painter units, same as `draw-group`), about `pivot`."
         @tier "presentation"
-      pivot : json = {}
+      pivot : DrawShapePivot
         @label "Pivot"
         @description "Rotation pivot in world units relative to the cell's projected top-left; default `{x:0.5, y:0.5}` (cell center)."
         @tier "presentation"

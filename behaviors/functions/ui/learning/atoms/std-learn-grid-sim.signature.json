@@ -1,0 +1,327 @@
+[
+  {
+    "organism": "std-learn-grid-sim",
+    "orbital": "GridSimOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-learn-grid-sim.ts",
+    "entities": [
+      {
+        "name": "GridSimScene",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "cells",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "generation",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "aliveCount",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "running",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "cellShapes",
+            "type": "array",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "GridSimSim",
+        "emittedEvents": [
+          "RUN_TOGGLED",
+          "GRID_STEPPED",
+          "CELL_TOGGLED",
+          "GRID_RESET"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "RUN_TOGGLED",
+            "direction": "emit",
+            "description": "The evolution was started or paused — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+            "tier": "domain"
+          },
+          {
+            "name": "GRID_STEPPED",
+            "direction": "emit",
+            "description": "A single-step advanced the world by one generation, with the new active-cell census.",
+            "synonyms": "cellular automaton, game of life, grid world, emergence, local rules, spread, diffusion",
+            "tier": "domain"
+          },
+          {
+            "name": "CELL_TOGGLED",
+            "direction": "emit",
+            "description": "The learner toggled a cell by tapping it, with the new active-cell census.",
+            "tier": "domain"
+          },
+          {
+            "name": "GRID_RESET",
+            "direction": "emit",
+            "description": "The learner restored the world to its configured seeds.",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "RUN",
+            "direction": "listen",
+            "description": "Learner started the evolution; the grid advances one generation per tick until Pause.",
+            "tier": "domain"
+          },
+          {
+            "name": "PAUSE",
+            "direction": "listen",
+            "description": "Learner froze the evolution; tapping and single-stepping still work.",
+            "tier": "domain"
+          },
+          {
+            "name": "STEP",
+            "direction": "listen",
+            "description": "Learner advanced exactly one generation while paused — the microscope view of the rule.",
+            "tier": "domain"
+          },
+          {
+            "name": "TAP_CELL",
+            "direction": "listen",
+            "description": "Learner tapped a cell on the canvas — the canvas callback wraps its click info as payload { id, type, index }, where index is the flat cell index; the cell toggles between empty and active, seeding or editing the world.",
+            "tier": "domain"
+          },
+          {
+            "name": "RESET",
+            "direction": "listen",
+            "description": "Learner restored the configured seed pattern and zeroed the generation counter.",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "autoRun",
+            "type": "boolean",
+            "default": false,
+            "label": "Auto Run",
+            "description": "Whether the evolution starts running immediately on load.",
+            "tier": "domain"
+          },
+          {
+            "key": "backgroundColor",
+            "type": "string",
+            "default": "#f8fafc",
+            "label": "Background Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "cellSize",
+            "type": "number",
+            "default": 26,
+            "label": "Cell Size",
+            "tier": "presentation"
+          },
+          {
+            "key": "cols",
+            "type": "number",
+            "default": 16,
+            "label": "Columns",
+            "tier": "domain"
+          },
+          {
+            "key": "decay",
+            "type": "number",
+            "default": 0.995,
+            "label": "Decay",
+            "description": "Diffusion rule only: fraction of a cell's value retained each generation.",
+            "tier": "domain"
+          },
+          {
+            "key": "diffuseRate",
+            "type": "number",
+            "default": 0.5,
+            "label": "Diffuse Rate",
+            "description": "Diffusion rule only: how strongly a cell moves toward its neighbourhood average each generation.",
+            "tier": "domain"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 332,
+            "label": "Height",
+            "tier": "presentation"
+          },
+          {
+            "key": "lowColor",
+            "type": "string",
+            "default": "#bfdbfe",
+            "label": "Low Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "midColor",
+            "type": "string",
+            "default": "#60a5fa",
+            "label": "Mid Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "offColor",
+            "type": "string",
+            "default": "#e2e8f0",
+            "label": "Off Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "onColor",
+            "type": "string",
+            "default": "#1d4ed8",
+            "label": "On Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "rows",
+            "type": "number",
+            "default": 12,
+            "label": "Rows",
+            "tier": "domain"
+          },
+          {
+            "key": "rule",
+            "type": "string",
+            "default": "life",
+            "label": "Rule",
+            "description": "The local update rule: life (Conway birth-3 survive-2-3), spread (an active 4-neighbour activates a cell), or diffusion (cells relax toward the neighbourhood average with decay).",
+            "synonyms": "game of life, contagion, wavefront, heat diffusion, cellular automaton rule",
+            "tier": "domain"
+          },
+          {
+            "key": "seeds",
+            "type": "[number]",
+            "default": [
+              1,
+              18,
+              32,
+              33,
+              34,
+              88,
+              89,
+              90
+            ],
+            "label": "Seeds",
+            "description": "Flat cell indexes (row·cols + col) active at the start — the default plants a glider and a blinker. Realizations declare their own starting pattern here.",
+            "tier": "domain",
+            "items": {
+              "type": "number"
+            }
+          },
+          {
+            "key": "stepLabel",
+            "type": "string",
+            "default": "Step",
+            "label": "Step Label",
+            "tier": "presentation"
+          },
+          {
+            "key": "taskText",
+            "type": "string",
+            "default": "Tap cells to seed the world, then Run — or Step one generation at a time to see the rule at work.",
+            "label": "Task Text",
+            "description": "One-sentence statement of what to explore.",
+            "tier": "domain"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Grid World",
+            "label": "Title",
+            "description": "Title shown above the grid.",
+            "tier": "presentation"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 436,
+            "label": "Width",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "GridSimScene",
+        "transitionEvents": [
+          "INIT",
+          "MODE_SELECTED",
+          "PAUSE",
+          "RESET",
+          "RUN",
+          "STEP",
+          "TAP_CELL"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "aliveCount",
+            "cellShapes",
+            "cells",
+            "generation",
+            "running",
+            "title"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "GridSimPage",
+        "defaultPath": "/learn-grid-sim",
+        "primaryEntity": "GridSimScene"
+      }
+    ],
+    "emittedEvents": [
+      "CELL_TOGGLED",
+      "GRID_RESET",
+      "GRID_STEPPED",
+      "RUN_TOGGLED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

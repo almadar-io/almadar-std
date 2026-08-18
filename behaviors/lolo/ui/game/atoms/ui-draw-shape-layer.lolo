@@ -12,7 +12,7 @@ orbital DrawShapeLayerOrbital {
     radiusY : number
     offsetX : number
     offsetY : number
-    points : [json]
+    points : [DrawShapeLayerItemsItemPointsItem]
     d : string
     fill : string
     gradient : DrawShapeLayerItemsItemGradient
@@ -25,7 +25,7 @@ orbital DrawShapeLayerOrbital {
     blendMode : "source-over" | "lighter" | "multiply" | "screen" | "overlay" | "darken" | "lighten" | "color-dodge" | "color-burn" | "hard-light" | "soft-light" | "difference" | "exclusion" | "hue" | "saturation" | "color" | "luminosity" | "source-atop" | "destination-over" | "destination-out" | "xor"
     blur : number
     rotate : number
-    pivot : json
+    pivot : DrawShapeLayerItemsItemPivot
     shadow : DrawShapeLayerItemsItemShadow
     animation : DrawShapeLayerItemsItemAnimation
     opacity : number
@@ -35,14 +35,30 @@ orbital DrawShapeLayerOrbital {
     y : number!
     z : number
   }
+  type DrawShapeLayerItemsItemPointsItem = {
+    x : number!
+    y : number!
+  }
   type DrawShapeLayerItemsItemGradient = {
     kind : "linear" | "radial" | "conic"!
-    from : json
-    to : json
-    center : json
+    from : DrawShapeLayerItemsItemGradientFrom
+    to : DrawShapeLayerItemsItemGradientTo
+    center : DrawShapeLayerItemsItemGradientCenter
     radius : number
     angle : number
     stops : [json]!
+  }
+  type DrawShapeLayerItemsItemGradientFrom = {
+    x : number!
+    y : number!
+  }
+  type DrawShapeLayerItemsItemGradientTo = {
+    x : number!
+    y : number!
+  }
+  type DrawShapeLayerItemsItemGradientCenter = {
+    x : number!
+    y : number!
   }
   type DrawShapeLayerItemsItemFillPattern = {
     kind : "noise" | "image"!
@@ -53,12 +69,28 @@ orbital DrawShapeLayerOrbital {
   }
   type DrawShapeLayerItemsItemStrokeGradient = {
     kind : "linear" | "radial" | "conic"!
-    from : json
-    to : json
-    center : json
+    from : DrawShapeLayerItemsItemStrokeGradientFrom
+    to : DrawShapeLayerItemsItemStrokeGradientTo
+    center : DrawShapeLayerItemsItemStrokeGradientCenter
     radius : number
     angle : number
     stops : [json]!
+  }
+  type DrawShapeLayerItemsItemStrokeGradientFrom = {
+    x : number!
+    y : number!
+  }
+  type DrawShapeLayerItemsItemStrokeGradientTo = {
+    x : number!
+    y : number!
+  }
+  type DrawShapeLayerItemsItemStrokeGradientCenter = {
+    x : number!
+    y : number!
+  }
+  type DrawShapeLayerItemsItemPivot = {
+    x : number!
+    y : number!
   }
   type DrawShapeLayerItemsItemShadow = {
     color : string!
@@ -107,7 +139,7 @@ orbital DrawShapeLayerOrbital {
     }
 
     config {
-      items : [DrawShapeLayerItemsItem] = [{ type: "Type", shape: cell, position: { x: 1, y: 1, z: 1 }, width: 1, height: 1, radiusX: 1, radiusY: 1, offsetX: 1, offsetY: 1, points: [], d: "D", fill: "Fill", gradient: { kind: linear, radius: 1, angle: 1, stops: [] }, fillPattern: { kind: noise, url: "Url", scale: 1, alpha: 1, color: "Color" }, stroke: "Stroke", strokeWidth: 1, strokeGradient: { kind: linear, radius: 1, angle: 1, stops: [] }, strokeDash: [1, 2], strokeDashOffset: 1, blendMode: "source-over", blur: 1, rotate: 1, shadow: { color: "Color", blur: 1 }, animation: { durationMs: 1, loop: false, keyframes: [{ at: 1, offsetX: 1, offsetY: 1, rotate: 1, opacity: 1, radiusX: 1, radiusY: 1, width: 1, height: 1, strokeWidth: 1, strokeDashOffset: 1, blur: 1, fill: "Fill", stroke: "Stroke", shadow: { color: "Color", blur: 1 } }, { at: 2, offsetX: 2, offsetY: 2, rotate: 2, opacity: 2, radiusX: 2, radiusY: 2, width: 2, height: 2, strokeWidth: 2, strokeDashOffset: 2, blur: 2, fill: "Fill 2", stroke: "Stroke 2", shadow: { color: "Color 2", blur: 2 } }] }, opacity: 1 }, { type: "Type 2", shape: rect, position: { x: 2, y: 2, z: 2 }, width: 2, height: 2, radiusX: 2, radiusY: 2, offsetX: 2, offsetY: 2, points: [], d: "D 2", fill: "Fill 2", gradient: { kind: radial, radius: 2, angle: 2, stops: [] }, fillPattern: { kind: image, url: "Url 2", scale: 2, alpha: 2, color: "Color 2" }, stroke: "Stroke 2", strokeWidth: 2, strokeGradient: { kind: radial, radius: 2, angle: 2, stops: [] }, strokeDash: [1, 2], strokeDashOffset: 2, blendMode: lighter, blur: 2, rotate: 2, shadow: { color: "Color 2", blur: 2 }, animation: { durationMs: 2, loop: true, keyframes: [{ at: 1, offsetX: 1, offsetY: 1, rotate: 1, opacity: 1, radiusX: 1, radiusY: 1, width: 1, height: 1, strokeWidth: 1, strokeDashOffset: 1, blur: 1, fill: "Fill", stroke: "Stroke", shadow: { color: "Color", blur: 1 } }, { at: 2, offsetX: 2, offsetY: 2, rotate: 2, opacity: 2, radiusX: 2, radiusY: 2, width: 2, height: 2, strokeWidth: 2, strokeDashOffset: 2, blur: 2, fill: "Fill 2", stroke: "Stroke 2", shadow: { color: "Color 2", blur: 2 } }] }, opacity: 2 }]
+      items : [DrawShapeLayerItemsItem] = [{ type: "Type", shape: cell, position: { x: 1, y: 1, z: 1 }, width: 1, height: 1, radiusX: 1, radiusY: 1, offsetX: 1, offsetY: 1, points: [{ x: 1, y: 1 }, { x: 2, y: 2 }], d: "D", fill: "Fill", gradient: { kind: linear, from: { x: 1, y: 1 }, to: { x: 1, y: 1 }, center: { x: 1, y: 1 }, radius: 1, angle: 1, stops: [] }, fillPattern: { kind: noise, url: "Url", scale: 1, alpha: 1, color: "Color" }, stroke: "Stroke", strokeWidth: 1, strokeGradient: { kind: linear, from: { x: 1, y: 1 }, to: { x: 1, y: 1 }, center: { x: 1, y: 1 }, radius: 1, angle: 1, stops: [] }, strokeDash: [1, 2], strokeDashOffset: 1, blendMode: "source-over", blur: 1, rotate: 1, pivot: { x: 1, y: 1 }, shadow: { color: "Color", blur: 1 }, animation: { durationMs: 1, loop: false, keyframes: [{ at: 1, offsetX: 1, offsetY: 1, rotate: 1, opacity: 1, radiusX: 1, radiusY: 1, width: 1, height: 1, strokeWidth: 1, strokeDashOffset: 1, blur: 1, fill: "Fill", stroke: "Stroke", shadow: { color: "Color", blur: 1 } }, { at: 2, offsetX: 2, offsetY: 2, rotate: 2, opacity: 2, radiusX: 2, radiusY: 2, width: 2, height: 2, strokeWidth: 2, strokeDashOffset: 2, blur: 2, fill: "Fill 2", stroke: "Stroke 2", shadow: { color: "Color 2", blur: 2 } }] }, opacity: 1 }, { type: "Type 2", shape: rect, position: { x: 2, y: 2, z: 2 }, width: 2, height: 2, radiusX: 2, radiusY: 2, offsetX: 2, offsetY: 2, points: [{ x: 1, y: 1 }, { x: 2, y: 2 }], d: "D 2", fill: "Fill 2", gradient: { kind: radial, from: { x: 2, y: 2 }, to: { x: 2, y: 2 }, center: { x: 2, y: 2 }, radius: 2, angle: 2, stops: [] }, fillPattern: { kind: image, url: "Url 2", scale: 2, alpha: 2, color: "Color 2" }, stroke: "Stroke 2", strokeWidth: 2, strokeGradient: { kind: radial, from: { x: 2, y: 2 }, to: { x: 2, y: 2 }, center: { x: 2, y: 2 }, radius: 2, angle: 2, stops: [] }, strokeDash: [1, 2], strokeDashOffset: 2, blendMode: lighter, blur: 2, rotate: 2, pivot: { x: 2, y: 2 }, shadow: { color: "Color 2", blur: 2 }, animation: { durationMs: 2, loop: true, keyframes: [{ at: 1, offsetX: 1, offsetY: 1, rotate: 1, opacity: 1, radiusX: 1, radiusY: 1, width: 1, height: 1, strokeWidth: 1, strokeDashOffset: 1, blur: 1, fill: "Fill", stroke: "Stroke", shadow: { color: "Color", blur: 1 } }, { at: 2, offsetX: 2, offsetY: 2, rotate: 2, opacity: 2, radiusX: 2, radiusY: 2, width: 2, height: 2, strokeWidth: 2, strokeDashOffset: 2, blur: 2, fill: "Fill 2", stroke: "Stroke 2", shadow: { color: "Color 2", blur: 2 } }] }, opacity: 2 }]
         @label "Items"
         @description "items prop"
         @tier "presentation"

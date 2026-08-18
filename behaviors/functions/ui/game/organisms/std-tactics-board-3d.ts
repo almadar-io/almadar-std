@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page, PatternValue } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -1287,8 +1287,138 @@ export function stdTacticsBoard3dTacticsBoard3DOrbital(params: StdTacticsBoard3d
             'default': {},
             'description': '3D scene light rig as data — ambient/directional/hemisphere/points + environment (\'room\' | \'none\') for PBR reflections. Empty → the standard fixed rig.',
             'label': 'Lighting',
+            'properties': {
+              'ambient': {
+                'name': 'ambient',
+                'properties': {
+                  'color': {
+                    'name': 'color',
+                    'required': false,
+                    'type': 'string',
+                  },
+                  'intensity': {
+                    'name': 'intensity',
+                    'required': false,
+                    'type': 'number',
+                  },
+                  'position': {
+                    'items': {
+                      'type': 'number',
+                    },
+                    'name': 'position',
+                    'required': false,
+                    'type': 'array',
+                  },
+                },
+                'required': false,
+                'type': 'object',
+              },
+              'directional': {
+                'name': 'directional',
+                'properties': {
+                  'color': {
+                    'name': 'color',
+                    'required': false,
+                    'type': 'string',
+                  },
+                  'intensity': {
+                    'name': 'intensity',
+                    'required': false,
+                    'type': 'number',
+                  },
+                  'position': {
+                    'items': {
+                      'type': 'number',
+                    },
+                    'name': 'position',
+                    'required': false,
+                    'type': 'array',
+                  },
+                },
+                'required': false,
+                'type': 'object',
+              },
+              'environment': {
+                'name': 'environment',
+                'required': false,
+                'type': 'string',
+                'values': [
+                  'room',
+                  'none',
+                ],
+              },
+              'hemisphere': {
+                'name': 'hemisphere',
+                'properties': {
+                  'color': {
+                    'name': 'color',
+                    'required': false,
+                    'type': 'string',
+                  },
+                  'groundColor': {
+                    'name': 'groundColor',
+                    'required': false,
+                    'type': 'string',
+                  },
+                  'intensity': {
+                    'name': 'intensity',
+                    'required': false,
+                    'type': 'number',
+                  },
+                },
+                'required': false,
+                'type': 'object',
+              },
+              'points': {
+                'items': {
+                  'properties': {
+                    'color': {
+                      'name': 'color',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'decay': {
+                      'name': 'decay',
+                      'required': false,
+                      'type': 'number',
+                    },
+                    'distance': {
+                      'name': 'distance',
+                      'required': false,
+                      'type': 'number',
+                    },
+                    'intensity': {
+                      'name': 'intensity',
+                      'required': false,
+                      'type': 'number',
+                    },
+                    'position': {
+                      'items': {
+                        'type': 'number',
+                      },
+                      'name': 'position',
+                      'required': true,
+                      'type': 'array',
+                    },
+                  },
+                  'type': 'object',
+                },
+                'name': 'points',
+                'required': false,
+                'type': 'array',
+              },
+              'toneMapping': {
+                'name': 'toneMapping',
+                'required': false,
+                'type': 'string',
+                'values': [
+                  'aces',
+                  'none',
+                ],
+              },
+            },
             'tier': 'presentation',
-            'type': 'json',
+            'type': 'Lighting3D',
           },
           'meshUnitScale': {
             'default': 1,
@@ -1308,8 +1438,49 @@ export function stdTacticsBoard3dTacticsBoard3DOrbital(params: StdTacticsBoard3d
             'default': {},
             'description': '3D post-processing stack — bloom and vignette. Empty → no post pass.',
             'label': 'Post Effects',
+            'properties': {
+              'bloom': {
+                'name': 'bloom',
+                'properties': {
+                  'intensity': {
+                    'name': 'intensity',
+                    'required': false,
+                    'type': 'number',
+                  },
+                  'smoothing': {
+                    'name': 'smoothing',
+                    'required': false,
+                    'type': 'number',
+                  },
+                  'threshold': {
+                    'name': 'threshold',
+                    'required': false,
+                    'type': 'number',
+                  },
+                },
+                'required': false,
+                'type': 'object',
+              },
+              'vignette': {
+                'name': 'vignette',
+                'properties': {
+                  'darkness': {
+                    'name': 'darkness',
+                    'required': false,
+                    'type': 'number',
+                  },
+                  'offset': {
+                    'name': 'offset',
+                    'required': false,
+                    'type': 'number',
+                  },
+                },
+                'required': false,
+                'type': 'object',
+              },
+            },
             'tier': 'presentation',
-            'type': 'json',
+            'type': 'Post3D',
           },
           'scale': {
             'default': 0.45,

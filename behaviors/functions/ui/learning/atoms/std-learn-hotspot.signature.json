@@ -1,0 +1,380 @@
+[
+  {
+    "organism": "std-learn-hotspot",
+    "orbital": "HotspotOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-learn-hotspot.ts",
+    "entities": [
+      {
+        "name": "HotspotScene",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "promptIndex",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "totalPrompts",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "score",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "tries",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "found",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "done",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "promptText",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "targetId",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "explanation",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "feedback",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "canvasShapes",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "view",
+            "type": "array",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "HotspotSim",
+        "emittedEvents": [
+          "TAP_JUDGED",
+          "PROMPT_ADVANCED",
+          "ROUND_RESTARTED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "TAP_JUDGED",
+            "direction": "emit",
+            "description": "The verdict of a canvas tap: whether the right part was hit, which prompt it was, and how many misses preceded it — a composed listener (coach, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "hotspot, tap the part, spatial identification, point at, label the diagram",
+            "tier": "domain"
+          },
+          {
+            "name": "PROMPT_ADVANCED",
+            "direction": "emit",
+            "description": "The learner moved to the next prompt (or completed the round) with the running first-try score.",
+            "tier": "domain"
+          },
+          {
+            "name": "ROUND_RESTARTED",
+            "direction": "emit",
+            "description": "The learner restarted the round from scratch.",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "TAP_SHAPE",
+            "direction": "listen",
+            "description": "Learner tapped a shape on the canvas — the canvas callback wraps its click info as payload { id, type, index }; the id names the hotspot (or its label) and the tap is judged against the current prompt's target.",
+            "tier": "domain"
+          },
+          {
+            "name": "NEXT",
+            "direction": "listen",
+            "description": "Learner advanced to the next prompt after finding the current target; past the last prompt this completes the round.",
+            "tier": "domain"
+          },
+          {
+            "name": "RETRY",
+            "direction": "listen",
+            "description": "Learner restarted the round from the first prompt with a cleared score.",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "backgroundColor",
+            "type": "string",
+            "default": "#f8fafc",
+            "label": "Background Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 380,
+            "label": "Height",
+            "tier": "presentation"
+          },
+          {
+            "key": "hitColor",
+            "type": "string",
+            "default": "#16a34a",
+            "label": "Hit Ring Color",
+            "description": "Color of the highlight ring drawn around the target once found.",
+            "tier": "presentation"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "nextLabel",
+            "type": "string",
+            "default": "Next",
+            "label": "Next Label",
+            "tier": "presentation"
+          },
+          {
+            "key": "prompts",
+            "type": "[HotspotPrompt]",
+            "default": [
+              {
+                "explanation": "The nucleus holds the DNA.",
+                "prompt": "Tap the part that stores the cell's genetic material.",
+                "targetId": "nucleus"
+              },
+              {
+                "explanation": "Mitochondria run cellular respiration.",
+                "prompt": "Tap the part that produces the cell's energy.",
+                "targetId": "mitochondrion"
+              },
+              {
+                "explanation": "Ribosomes translate mRNA into protein.",
+                "prompt": "Tap the part that builds proteins.",
+                "targetId": "ribosome"
+              }
+            ],
+            "label": "Prompts",
+            "description": "The question roster; each prompt names a target hotspot id and an explanation revealed on a hit.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "explanation": {
+                  "name": "explanation",
+                  "required": false,
+                  "type": "string"
+                },
+                "prompt": {
+                  "name": "prompt",
+                  "required": true,
+                  "type": "string"
+                },
+                "targetId": {
+                  "name": "targetId",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "retryLabel",
+            "type": "string",
+            "default": "Try Again",
+            "label": "Retry Label",
+            "tier": "presentation"
+          },
+          {
+            "key": "shapes",
+            "type": "[HotspotShape]",
+            "default": [
+              {
+                "color": "#8b5cf6",
+                "id": "nucleus",
+                "label": "Nucleus",
+                "radius": 34,
+                "x": 300,
+                "y": 170
+              },
+              {
+                "color": "#3b82f6",
+                "id": "membrane",
+                "label": "Membrane",
+                "radius": 26,
+                "x": 130,
+                "y": 120
+              },
+              {
+                "color": "#f59e0b",
+                "id": "mitochondrion",
+                "label": "Mitochondrion",
+                "radius": 24,
+                "x": 460,
+                "y": 120
+              },
+              {
+                "color": "#16a34a",
+                "id": "ribosome",
+                "label": "Ribosome",
+                "radius": 18,
+                "x": 200,
+                "y": 280
+              },
+              {
+                "color": "#06b6d4",
+                "id": "vacuole",
+                "label": "Vacuole",
+                "radius": 28,
+                "x": 420,
+                "y": 280
+              }
+            ],
+            "label": "Hotspots",
+            "description": "The labeled parts of the scene; each carries an id, display label, canvas position, radius, and color. Realizations declare their own subject's parts here.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Tap the Part",
+            "label": "Title",
+            "description": "Title shown above the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "HotspotScene",
+        "transitionEvents": [
+          "INIT",
+          "MODE_SELECTED",
+          "NEXT",
+          "RETRY",
+          "TAP_SHAPE"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "canvasShapes",
+            "done",
+            "explanation",
+            "feedback",
+            "found",
+            "promptIndex",
+            "promptText",
+            "score",
+            "targetId",
+            "title",
+            "totalPrompts",
+            "tries",
+            "view"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "HotspotPage",
+        "defaultPath": "/learn-hotspot",
+        "primaryEntity": "HotspotScene"
+      }
+    ],
+    "emittedEvents": [
+      "PROMPT_ADVANCED",
+      "ROUND_RESTARTED",
+      "TAP_JUDGED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

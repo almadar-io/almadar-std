@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page, PatternValue } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -53,7 +53,7 @@ export interface StdUiDrawerOpenPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDrawerConfig {
-  children?: unknown;
+  children?: PatternValue;
   className?: string;
   /** Default: `"CLOSE"` */
   closeEvent?: string;
@@ -61,7 +61,7 @@ export interface StdUiDrawerConfig {
   closeOnEscape?: boolean;
   /** Default: `true` */
   closeOnOverlayClick?: boolean;
-  footer?: unknown;
+  footer?: PatternValue;
   /** Default: `true` */
   isOpen?: boolean;
   /** Default: `"CLOSE"` */
@@ -70,7 +70,7 @@ export interface StdUiDrawerConfig {
   position?: 'left' | 'right';
   /** Default: `true` */
   showCloseButton?: boolean;
-  title?: unknown;
+  title?: PatternValue;
   /** Default: `"md"` */
   width?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
 }

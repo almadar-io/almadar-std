@@ -1,0 +1,591 @@
+app std-learn-goal-seek "1.0.0"
+"Generic goal-seek (inverse-problem) instrument — a config-declared target curve is drawn from a hidden parameter pair, and the learner tunes their own two parameters with sliders until their curve matches it, then presses Check to be graded against an RMS-distance tolerance. The curve family (power y = A·xᴮ, linear y = A + B·x, or sine y = A·sin(B·x)), the hidden target parameters, the tolerance, and every label are config-declared, so the same mechanism serves any inverse problem: fit a demand curve, match a projectile arc, tune a growth rate, recover a wave's amplitude and frequency. A live distance readout (optionally hidden for a harder variant) plays warmer/colder. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital GoalSeekOrbital {
+  type GoalSeekCurve = {
+    label : string
+    color : string
+    samples : [GoalSeekCurveSample]!
+  }
+  type GoalSeekCurveSample = {
+    x : number!
+    y : number!
+  }
+
+  entity GoalSeekScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    curveKind : string
+    paramA : number
+    paramB : number
+    paramALabel : string
+    paramBLabel : string
+    targetSamples : [GoalSeekCurveSample]
+    curves : [GoalSeekCurve]
+    distance : number = 0
+    attempts : number = 0
+    solved : boolean = false
+    feedback : string
+    resultRow : [node]
+    yMin : number
+    yMax : number
+  }
+
+  trait GoalSeekSim -> @rebindable GoalSeekScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (let (
+            (kind @config.curveKind)
+            (span (- @config.xMax @config.xMin))
+            (tA @config.targetA)
+            (tB @config.targetB)
+            (A @config.paramADefault)
+            (B @config.paramBDefault)
+            (targetSamples (array/map (array/range 0 81) (fn (i)
+              (let (
+                  (x (+ @config.xMin (* @i (/ @span 80))))
+                  (yVal (if (== @kind "power")
+                          (* @tA (math/pow @x @tB))
+                          (if (== @kind "linear")
+                            (+ @tA (* @tB @x))
+                            (* @tA (math/sin (* @tB @x))))))
+                )
+                { x: @x, y: @yVal }))))
+            (samples (array/map (array/range 0 81) (fn (i)
+              (let (
+                  (x (+ @config.xMin (* @i (/ @span 80))))
+                  (yVal (if (== @kind "power")
+                          (* @A (math/pow @x @B))
+                          (if (== @kind "linear")
+                            (+ @A (* @B @x))
+                            (* @A (math/sin (* @B @x))))))
+                )
+                { x: @x, y: @yVal }))))
+            (dist (math/sqrt (/ (array/sum (array/map (array/range 0 81) (fn (i)
+              (let (
+                  (dY (- (object/get (array/nth @samples @i) y) (object/get (array/nth @targetSamples @i) y)))
+                )
+                (* @dY @dY))))) 81)))
+            (allSamples (array/concat @samples @targetSamples))
+            (yMinRaw (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/min @acc (object/get @s y)))))
+            (yMaxRaw (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/max @acc (object/get @s y)))))
+            (yPad (* 0.1 (math/max 0.001 (- @yMaxRaw @yMinRaw))))
+          )
+          (do
+            (set @entity.active true)
+            (set @entity.title @config.title)
+            (set @entity.curveKind @kind)
+            (set @entity.paramA @A)
+            (set @entity.paramB @B)
+            (set @entity.paramALabel @config.paramALabel)
+            (set @entity.paramBLabel @config.paramBLabel)
+            (set @entity.targetSamples @targetSamples)
+            (set @entity.distance @dist)
+            (set @entity.attempts 0)
+            (set @entity.solved false)
+            (set @entity.feedback "")
+            (set @entity.yMin (- @yMinRaw @yPad))
+            (set @entity.yMax (+ @yMaxRaw @yPad))
+            (set @entity.curves [
+              { label: @config.targetLabel, color: @config.targetColor, samples: @targetSamples },
+              { label: @config.learnerLabel, color: @config.learnerColor, samples: @samples }
+            ])))
+        (set @entity.resultRow (array/concat (if @entity.solved [ { type: badge, variant: success, label: "Solved" } ] []) [ { type: typography, variant: caption, content: @entity.feedback } ]))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @config.goalText },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @entity.paramALabel ": " (math/round @entity.paramA 2)) },
+                    { type: range-slider, min: @config.paramAMin, max: @config.paramAMax, step: @config.paramAStep, value: @entity.paramA, showTooltip: true, action: "SET_PARAM_A" }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @entity.paramBLabel ": " (math/round @entity.paramB 2)) },
+                    { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.paramB, showTooltip: true, action: "SET_PARAM_B" }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: typography, variant: body, content: (if @config.showLiveDistance (str/concat "Distance from target: " (math/round @entity.distance 3) " · attempts: " (str/concat "" @entity.attempts)) (str/concat "Attempts: " (str/concat "" @entity.attempts))) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: CHECK, label: @config.checkLabel, variant: primary, disabled: (if @entity.solved true false) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: stack, direction: horizontal, gap: xs, children: @entity.resultRow }
+              ] }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (let (
+            (kind @config.curveKind)
+            (span (- @config.xMax @config.xMin))
+            (tA @config.targetA)
+            (tB @config.targetB)
+            (A @config.paramADefault)
+            (B @config.paramBDefault)
+            (targetSamples (array/map (array/range 0 81) (fn (i)
+              (let (
+                  (x (+ @config.xMin (* @i (/ @span 80))))
+                  (yVal (if (== @kind "power")
+                          (* @tA (math/pow @x @tB))
+                          (if (== @kind "linear")
+                            (+ @tA (* @tB @x))
+                            (* @tA (math/sin (* @tB @x))))))
+                )
+                { x: @x, y: @yVal }))))
+            (samples (array/map (array/range 0 81) (fn (i)
+              (let (
+                  (x (+ @config.xMin (* @i (/ @span 80))))
+                  (yVal (if (== @kind "power")
+                          (* @A (math/pow @x @B))
+                          (if (== @kind "linear")
+                            (+ @A (* @B @x))
+                            (* @A (math/sin (* @B @x))))))
+                )
+                { x: @x, y: @yVal }))))
+            (dist (math/sqrt (/ (array/sum (array/map (array/range 0 81) (fn (i)
+              (let (
+                  (dY (- (object/get (array/nth @samples @i) y) (object/get (array/nth @targetSamples @i) y)))
+                )
+                (* @dY @dY))))) 81)))
+            (allSamples (array/concat @samples @targetSamples))
+            (yMinRaw (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/min @acc (object/get @s y)))))
+            (yMaxRaw (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/max @acc (object/get @s y)))))
+            (yPad (* 0.1 (math/max 0.001 (- @yMaxRaw @yMinRaw))))
+          )
+          (do
+            (set @entity.active true)
+            (set @entity.title @config.title)
+            (set @entity.curveKind @kind)
+            (set @entity.paramA @A)
+            (set @entity.paramB @B)
+            (set @entity.paramALabel @config.paramALabel)
+            (set @entity.paramBLabel @config.paramBLabel)
+            (set @entity.targetSamples @targetSamples)
+            (set @entity.distance @dist)
+            (set @entity.attempts 0)
+            (set @entity.solved false)
+            (set @entity.feedback "")
+            (set @entity.yMin (- @yMinRaw @yPad))
+            (set @entity.yMax (+ @yMaxRaw @yPad))
+            (set @entity.curves [
+              { label: @config.targetLabel, color: @config.targetColor, samples: @targetSamples },
+              { label: @config.learnerLabel, color: @config.learnerColor, samples: @samples }
+            ])))
+        (set @entity.resultRow (array/concat (if @entity.solved [ { type: badge, variant: success, label: "Solved" } ] []) [ { type: typography, variant: caption, content: @entity.feedback } ]))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @config.goalText },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @entity.paramALabel ": " (math/round @entity.paramA 2)) },
+                    { type: range-slider, min: @config.paramAMin, max: @config.paramAMax, step: @config.paramAStep, value: @entity.paramA, showTooltip: true, action: "SET_PARAM_A" }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @entity.paramBLabel ": " (math/round @entity.paramB 2)) },
+                    { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.paramB, showTooltip: true, action: "SET_PARAM_B" }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: typography, variant: body, content: (if @config.showLiveDistance (str/concat "Distance from target: " (math/round @entity.distance 3) " · attempts: " (str/concat "" @entity.attempts)) (str/concat "Attempts: " (str/concat "" @entity.attempts))) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: CHECK, label: @config.checkLabel, variant: primary, disabled: (if @entity.solved true false) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: stack, direction: horizontal, gap: xs, children: @entity.resultRow }
+              ] }
+          ]
+        })
+
+      SET_PARAM_A -> idle when (and (== @entity.active true) (== @entity.solved false))
+        (let (
+            (A (math/clamp ?value @config.paramAMin @config.paramAMax))
+            (B @entity.paramB)
+            (kind @entity.curveKind)
+            (span (- @config.xMax @config.xMin))
+            (samples (array/map (array/range 0 81) (fn (i)
+              (let (
+                  (x (+ @config.xMin (* @i (/ @span 80))))
+                  (yVal (if (== @kind "power")
+                          (* @A (math/pow @x @B))
+                          (if (== @kind "linear")
+                            (+ @A (* @B @x))
+                            (* @A (math/sin (* @B @x))))))
+                )
+                { x: @x, y: @yVal }))))
+            (dist (math/sqrt (/ (array/sum (array/map (array/range 0 81) (fn (i)
+              (let (
+                  (dY (- (object/get (array/nth @samples @i) y) (object/get (array/nth @entity.targetSamples @i) y)))
+                )
+                (* @dY @dY))))) 81)))
+            (allSamples (array/concat @samples @entity.targetSamples))
+            (yMinRaw (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/min @acc (object/get @s y)))))
+            (yMaxRaw (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/max @acc (object/get @s y)))))
+            (yPad (* 0.1 (math/max 0.001 (- @yMaxRaw @yMinRaw))))
+          )
+          (do
+            (set @entity.paramA @A)
+            (set @entity.distance @dist)
+            (set @entity.yMin (- @yMinRaw @yPad))
+            (set @entity.yMax (+ @yMaxRaw @yPad))
+            (set @entity.curves [
+              { label: @config.targetLabel, color: @config.targetColor, samples: @entity.targetSamples },
+              { label: @config.learnerLabel, color: @config.learnerColor, samples: @samples }
+            ])))
+        (set @entity.resultRow (array/concat (if @entity.solved [ { type: badge, variant: success, label: "Solved" } ] []) [ { type: typography, variant: caption, content: @entity.feedback } ]))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @config.goalText },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @entity.paramALabel ": " (math/round @entity.paramA 2)) },
+                    { type: range-slider, min: @config.paramAMin, max: @config.paramAMax, step: @config.paramAStep, value: @entity.paramA, showTooltip: true, action: "SET_PARAM_A" }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @entity.paramBLabel ": " (math/round @entity.paramB 2)) },
+                    { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.paramB, showTooltip: true, action: "SET_PARAM_B" }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: typography, variant: body, content: (if @config.showLiveDistance (str/concat "Distance from target: " (math/round @entity.distance 3) " · attempts: " (str/concat "" @entity.attempts)) (str/concat "Attempts: " (str/concat "" @entity.attempts))) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: CHECK, label: @config.checkLabel, variant: primary, disabled: (if @entity.solved true false) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: stack, direction: horizontal, gap: xs, children: @entity.resultRow }
+              ] }
+          ]
+        })
+        (emit PARAMS_CHANGED { paramA: @entity.paramA, paramB: @entity.paramB, distance: @entity.distance })
+
+      SET_PARAM_B -> idle when (and (== @entity.active true) (== @entity.solved false))
+        (let (
+            (A @entity.paramA)
+            (B (math/clamp ?value @config.paramBMin @config.paramBMax))
+            (kind @entity.curveKind)
+            (span (- @config.xMax @config.xMin))
+            (samples (array/map (array/range 0 81) (fn (i)
+              (let (
+                  (x (+ @config.xMin (* @i (/ @span 80))))
+                  (yVal (if (== @kind "power")
+                          (* @A (math/pow @x @B))
+                          (if (== @kind "linear")
+                            (+ @A (* @B @x))
+                            (* @A (math/sin (* @B @x))))))
+                )
+                { x: @x, y: @yVal }))))
+            (dist (math/sqrt (/ (array/sum (array/map (array/range 0 81) (fn (i)
+              (let (
+                  (dY (- (object/get (array/nth @samples @i) y) (object/get (array/nth @entity.targetSamples @i) y)))
+                )
+                (* @dY @dY))))) 81)))
+            (allSamples (array/concat @samples @entity.targetSamples))
+            (yMinRaw (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/min @acc (object/get @s y)))))
+            (yMaxRaw (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/max @acc (object/get @s y)))))
+            (yPad (* 0.1 (math/max 0.001 (- @yMaxRaw @yMinRaw))))
+          )
+          (do
+            (set @entity.paramB @B)
+            (set @entity.distance @dist)
+            (set @entity.yMin (- @yMinRaw @yPad))
+            (set @entity.yMax (+ @yMaxRaw @yPad))
+            (set @entity.curves [
+              { label: @config.targetLabel, color: @config.targetColor, samples: @entity.targetSamples },
+              { label: @config.learnerLabel, color: @config.learnerColor, samples: @samples }
+            ])))
+        (set @entity.resultRow (array/concat (if @entity.solved [ { type: badge, variant: success, label: "Solved" } ] []) [ { type: typography, variant: caption, content: @entity.feedback } ]))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @config.goalText },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @entity.paramALabel ": " (math/round @entity.paramA 2)) },
+                    { type: range-slider, min: @config.paramAMin, max: @config.paramAMax, step: @config.paramAStep, value: @entity.paramA, showTooltip: true, action: "SET_PARAM_A" }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @entity.paramBLabel ": " (math/round @entity.paramB 2)) },
+                    { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.paramB, showTooltip: true, action: "SET_PARAM_B" }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: typography, variant: body, content: (if @config.showLiveDistance (str/concat "Distance from target: " (math/round @entity.distance 3) " · attempts: " (str/concat "" @entity.attempts)) (str/concat "Attempts: " (str/concat "" @entity.attempts))) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: CHECK, label: @config.checkLabel, variant: primary, disabled: (if @entity.solved true false) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: stack, direction: horizontal, gap: xs, children: @entity.resultRow }
+              ] }
+          ]
+        })
+        (emit PARAMS_CHANGED { paramA: @entity.paramA, paramB: @entity.paramB, distance: @entity.distance })
+
+      CHECK -> idle when (and (== @entity.active true) (== @entity.solved false))
+        (set @entity.attempts (+ @entity.attempts 1))
+        (set @entity.solved (if (<= @entity.distance @config.tolerance) true false))
+        (set @entity.feedback (if (<= @entity.distance @config.tolerance)
+          (str/concat "Matched! Distance " (math/round @entity.distance 3) " is within tolerance " (math/round @config.tolerance 3) ".")
+          (str/concat "Not yet — distance " (math/round @entity.distance 3) " is above tolerance " (math/round @config.tolerance 3) ". Keep tuning.")))
+        (set @entity.resultRow (array/concat (if @entity.solved [ { type: badge, variant: success, label: "Solved" } ] []) [ { type: typography, variant: caption, content: @entity.feedback } ]))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @config.goalText },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @entity.paramALabel ": " (math/round @entity.paramA 2)) },
+                    { type: range-slider, min: @config.paramAMin, max: @config.paramAMax, step: @config.paramAStep, value: @entity.paramA, showTooltip: true, action: "SET_PARAM_A" }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @entity.paramBLabel ": " (math/round @entity.paramB 2)) },
+                    { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.paramB, showTooltip: true, action: "SET_PARAM_B" }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: typography, variant: body, content: (if @config.showLiveDistance (str/concat "Distance from target: " (math/round @entity.distance 3) " · attempts: " (str/concat "" @entity.attempts)) (str/concat "Attempts: " (str/concat "" @entity.attempts))) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: CHECK, label: @config.checkLabel, variant: primary, disabled: (if @entity.solved true false) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: stack, direction: horizontal, gap: xs, children: @entity.resultRow }
+              ] }
+          ]
+        })
+        (emit GOAL_CHECKED { matched: @entity.solved, distance: @entity.distance, attempts: @entity.attempts })
+
+      RESET -> idle when (== @entity.active true)
+        (let (
+            (A @config.paramADefault)
+            (B @config.paramBDefault)
+            (kind @entity.curveKind)
+            (span (- @config.xMax @config.xMin))
+            (samples (array/map (array/range 0 81) (fn (i)
+              (let (
+                  (x (+ @config.xMin (* @i (/ @span 80))))
+                  (yVal (if (== @kind "power")
+                          (* @A (math/pow @x @B))
+                          (if (== @kind "linear")
+                            (+ @A (* @B @x))
+                            (* @A (math/sin (* @B @x))))))
+                )
+                { x: @x, y: @yVal }))))
+            (dist (math/sqrt (/ (array/sum (array/map (array/range 0 81) (fn (i)
+              (let (
+                  (dY (- (object/get (array/nth @samples @i) y) (object/get (array/nth @entity.targetSamples @i) y)))
+                )
+                (* @dY @dY))))) 81)))
+            (allSamples (array/concat @samples @entity.targetSamples))
+            (yMinRaw (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/min @acc (object/get @s y)))))
+            (yMaxRaw (array/reduce @allSamples (object/get (array/nth @allSamples 0) y) (fn (acc s) (math/max @acc (object/get @s y)))))
+            (yPad (* 0.1 (math/max 0.001 (- @yMaxRaw @yMinRaw))))
+          )
+          (do
+            (set @entity.paramA @A)
+            (set @entity.paramB @B)
+            (set @entity.distance @dist)
+            (set @entity.attempts 0)
+            (set @entity.solved false)
+            (set @entity.feedback "")
+            (set @entity.yMin (- @yMinRaw @yPad))
+            (set @entity.yMax (+ @yMaxRaw @yPad))
+            (set @entity.curves [
+              { label: @config.targetLabel, color: @config.targetColor, samples: @entity.targetSamples },
+              { label: @config.learnerLabel, color: @config.learnerColor, samples: @samples }
+            ])))
+        (set @entity.resultRow (array/concat (if @entity.solved [ { type: badge, variant: success, label: "Solved" } ] []) [ { type: typography, variant: caption, content: @entity.feedback } ]))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @config.goalText },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @entity.paramALabel ": " (math/round @entity.paramA 2)) },
+                    { type: range-slider, min: @config.paramAMin, max: @config.paramAMax, step: @config.paramAStep, value: @entity.paramA, showTooltip: true, action: "SET_PARAM_A" }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @entity.paramBLabel ": " (math/round @entity.paramB 2)) },
+                    { type: range-slider, min: @config.paramBMin, max: @config.paramBMax, step: @config.paramBStep, value: @entity.paramB, showTooltip: true, action: "SET_PARAM_B" }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: @config.xMin, xMax: @config.xMax, yMin: @entity.yMin, yMax: @entity.yMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: typography, variant: body, content: (if @config.showLiveDistance (str/concat "Distance from target: " (math/round @entity.distance 3) " · attempts: " (str/concat "" @entity.attempts)) (str/concat "Attempts: " (str/concat "" @entity.attempts))) },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: CHECK, label: @config.checkLabel, variant: primary, disabled: (if @entity.solved true false) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: stack, direction: horizontal, gap: xs, children: @entity.resultRow }
+              ] }
+          ]
+        })
+        (emit GOAL_RESET { attempts: 0 })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      SET_PARAM_A {
+        value : number
+      }
+        @description "Learner dragged the first parameter's slider — value is the new A; the learner curve and its distance to the target recompute immediately."
+        @tier "domain"
+      SET_PARAM_B {
+        value : number
+      }
+        @description "Learner dragged the second parameter's slider — value is the new B; the learner curve and its distance to the target recompute immediately."
+        @tier "domain"
+      CHECK {
+      }
+        @description "Learner asked to be graded — the current RMS distance is compared against the tolerance and the attempt is counted."
+        @tier "domain"
+      RESET {
+      }
+        @description "Learner reset the parameters to their defaults and cleared the attempt count; the target stays the same."
+        @tier "domain"
+    }
+
+    emits {
+      PARAMS_CHANGED -> external {
+        paramA : number
+        paramB : number
+        distance : number
+      }
+        @description "The learner's parameter values and current distance after a slider change — a composed listener (readout, coach) can subscribe; a harmless no-op when the atom runs standalone."
+        @tier "domain"
+      GOAL_CHECKED -> external {
+        matched : boolean
+        distance : number
+        attempts : number
+      }
+        @description "The verdict of a Check press: whether the learner's curve is within tolerance of the target, the RMS distance, and how many attempts it took."
+        @synonyms "goal seek, inverse problem, curve fitting, match the target, tune to fit"
+        @tier "domain"
+      GOAL_RESET -> external {
+        attempts : number
+      }
+        @description "The learner reset the instrument back to the default parameters."
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Goal Seek"
+        @label "Title"
+        @description "Title shown above the canvas."
+        @tier "presentation"
+      goalText : string = "Tune the two sliders until your curve matches the target curve, then press Check."
+        @label "Goal Text"
+        @description "One-sentence statement of the inverse problem the learner must solve."
+        @tier "domain"
+      curveKind : string = "sine"
+        @label "Curve Kind"
+        @description "Curve family both curves are drawn from: power (y = A·xᴮ), linear (y = A + B·x), or sine (y = A·sin(B·x))."
+        @synonyms "curve family, power law, linear function, sine wave, function type"
+        @tier "domain"
+      targetA : number = 2.5
+        @label "Target A"
+        @description "Hidden first parameter of the target curve the learner must recover."
+        @tier "domain"
+      targetB : number = 1.5
+        @label "Target B"
+        @description "Hidden second parameter of the target curve the learner must recover."
+        @tier "domain"
+      tolerance : number = 0.35
+        @label "Tolerance"
+        @description "Maximum RMS distance between learner and target curves that still counts as a match."
+        @tier "domain"
+      showLiveDistance : boolean = true
+        @label "Show Live Distance"
+        @description "When true the RMS distance updates live as the learner tunes (warmer/colder); when false only attempts are shown, for a harder variant."
+        @tier "domain"
+      paramALabel : string = "A"
+        @label "Parameter A Label"
+        @description "Display label for the first parameter."
+        @tier "presentation"
+      paramAMin : number = -5
+        @label "Parameter A Min"
+        @tier "domain"
+      paramAMax : number = 5
+        @label "Parameter A Max"
+        @tier "domain"
+      paramAStep : number = 0.1
+        @label "Parameter A Step"
+        @tier "presentation"
+      paramADefault : number = 1
+        @label "Parameter A Default"
+        @description "Starting value of the learner's first parameter."
+        @tier "domain"
+      paramBLabel : string = "B"
+        @label "Parameter B Label"
+        @description "Display label for the second parameter."
+        @tier "presentation"
+      paramBMin : number = -5
+        @label "Parameter B Min"
+        @tier "domain"
+      paramBMax : number = 5
+        @label "Parameter B Max"
+        @tier "domain"
+      paramBStep : number = 0.1
+        @label "Parameter B Step"
+        @tier "presentation"
+      paramBDefault : number = 1
+        @label "Parameter B Default"
+        @description "Starting value of the learner's second parameter."
+        @tier "domain"
+      targetLabel : string = "Target"
+        @label "Target Label"
+        @tier "presentation"
+      learnerLabel : string = "Yours"
+        @label "Learner Label"
+        @tier "presentation"
+      targetColor : string = "#94a3b8"
+        @label "Target Color"
+        @tier "presentation"
+      learnerColor : string = "#3b82f6"
+        @label "Learner Color"
+        @tier "presentation"
+      checkLabel : string = "Check"
+        @label "Check Label"
+        @tier "presentation"
+      xMin : number = 0
+        @label "X Min"
+        @tier "presentation"
+      xMax : number = 10
+        @label "X Max"
+        @tier "presentation"
+      width : number = 600
+        @label "Width"
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @tier "presentation"
+      showAxes : boolean = true
+        @label "Show Axes"
+        @tier "presentation"
+      showGrid : boolean = true
+        @label "Show Grid"
+        @tier "presentation"
+      gridStep : number = 1
+        @label "Grid Step"
+        @tier "presentation"
+    }
+  }
+
+  page "/learn-goal-seek" as GoalSeekPage -> GoalSeekSim
+}

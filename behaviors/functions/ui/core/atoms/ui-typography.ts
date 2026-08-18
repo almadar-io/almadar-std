@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page, PatternValue } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -41,11 +41,11 @@ export type StdUiTypographyEventKey = 'INIT';
 export interface StdUiTypographyConfig {
   /** Default: `"left"` */
   align?: 'left' | 'center' | 'right';
-  children?: unknown;
+  children?: PatternValue;
   className?: string;
   /** Default: `"primary"` */
   color?: 'primary' | 'secondary' | 'muted' | 'error' | 'success' | 'warning' | 'inherit';
-  content?: unknown;
+  content?: PatternValue;
   /** Default: `"none"` */
   format?: 'none' | 'date' | 'time' | 'datetime' | 'number' | 'currency' | 'percent';
   level?: number;
@@ -54,7 +54,7 @@ export interface StdUiTypographyConfig {
   /** Default: `"none"` */
   size?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
   /** Default: `{}` */
-  style?: unknown;
+  style?: Record<string, TraitConfig>;
   /** Default: `false` */
   truncate?: boolean;
   /** Default: `"h1"` */

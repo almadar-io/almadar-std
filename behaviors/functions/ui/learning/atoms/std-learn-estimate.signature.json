@@ -1,0 +1,356 @@
+[
+  {
+    "organism": "std-learn-estimate",
+    "orbital": "EstimateOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-learn-estimate.ts",
+    "entities": [
+      {
+        "name": "EstimateScene",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "promptIndex",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "totalPrompts",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "estimate",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "locked",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "band",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "score",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "done",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "promptText",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "promptHint",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "answer",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "unit",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "feedback",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "view",
+            "type": "array",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "EstimateSim",
+        "emittedEvents": [
+          "ESTIMATE_JUDGED",
+          "PROMPT_ADVANCED",
+          "ROUND_RESTARTED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "ESTIMATE_JUDGED",
+            "direction": "emit",
+            "description": "The verdict of a lock-in: which error band the estimate landed in (exact, close, off), the guess, the truth, and the running score — a composed listener (coach, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "estimation, order of magnitude, guess the number, error band, quantitative intuition",
+            "tier": "domain"
+          },
+          {
+            "name": "PROMPT_ADVANCED",
+            "direction": "emit",
+            "description": "The learner moved to the next prompt (or completed the round) with the running score.",
+            "tier": "domain"
+          },
+          {
+            "name": "ROUND_RESTARTED",
+            "direction": "emit",
+            "description": "The learner restarted the round from scratch.",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "SET_ESTIMATE",
+            "direction": "listen",
+            "description": "Learner moved the estimate slider — value is the current guess, not yet graded.",
+            "tier": "domain"
+          },
+          {
+            "name": "LOCK_IN",
+            "direction": "listen",
+            "description": "Learner committed the current estimate; it is graded against the true answer by relative-error band.",
+            "tier": "domain"
+          },
+          {
+            "name": "NEXT",
+            "direction": "listen",
+            "description": "Learner advanced to the next prompt after a lock-in; past the last prompt this completes the round.",
+            "tier": "domain"
+          },
+          {
+            "name": "RETRY",
+            "direction": "listen",
+            "description": "Learner restarted the round from the first prompt with a cleared score.",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "closePct",
+            "type": "number",
+            "default": 0.25,
+            "label": "Close Band",
+            "description": "Relative error at or below this fraction (but above the exact band) counts as close (partial points).",
+            "tier": "domain"
+          },
+          {
+            "key": "closePoints",
+            "type": "number",
+            "default": 1,
+            "label": "Close Points",
+            "tier": "domain"
+          },
+          {
+            "key": "exactPct",
+            "type": "number",
+            "default": 0.05,
+            "label": "Exact Band",
+            "description": "Relative error at or below this fraction counts as exact (full points).",
+            "tier": "domain"
+          },
+          {
+            "key": "exactPoints",
+            "type": "number",
+            "default": 2,
+            "label": "Exact Points",
+            "tier": "domain"
+          },
+          {
+            "key": "lockLabel",
+            "type": "string",
+            "default": "Lock In",
+            "label": "Lock Label",
+            "tier": "presentation"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "nextLabel",
+            "type": "string",
+            "default": "Next",
+            "label": "Next Label",
+            "tier": "presentation"
+          },
+          {
+            "key": "prompts",
+            "type": "[EstimatePrompt]",
+            "default": [
+              {
+                "answer": 300,
+                "hint": "Light covers 300,000 km every second.",
+                "prompt": "How many meters does light travel in one microsecond?",
+                "unit": "m"
+              },
+              {
+                "answer": 212,
+                "hint": "It is 100 °C.",
+                "prompt": "What is the boiling point of water at sea level, in Fahrenheit?",
+                "unit": "°F"
+              },
+              {
+                "answer": 11.6,
+                "hint": "A day is 86,400 seconds.",
+                "prompt": "Roughly how many days is one million seconds?",
+                "unit": "days"
+              }
+            ],
+            "label": "Prompts",
+            "description": "The question roster; each prompt carries the true numeric answer, an optional unit, and an optional hint. Realizations declare their own subject's quantities here.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "answer": {
+                  "name": "answer",
+                  "required": true,
+                  "type": "number"
+                },
+                "hint": {
+                  "name": "hint",
+                  "required": false,
+                  "type": "string"
+                },
+                "prompt": {
+                  "name": "prompt",
+                  "required": true,
+                  "type": "string"
+                },
+                "unit": {
+                  "name": "unit",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "retryLabel",
+            "type": "string",
+            "default": "Try Again",
+            "label": "Retry Label",
+            "tier": "presentation"
+          },
+          {
+            "key": "sliderDefault",
+            "type": "number",
+            "default": 100,
+            "label": "Slider Default",
+            "description": "Starting position of the estimate slider for each prompt.",
+            "tier": "domain"
+          },
+          {
+            "key": "sliderMax",
+            "type": "number",
+            "default": 500,
+            "label": "Slider Max",
+            "description": "Upper bound of the estimate slider.",
+            "tier": "domain"
+          },
+          {
+            "key": "sliderMin",
+            "type": "number",
+            "default": 0,
+            "label": "Slider Min",
+            "description": "Lower bound of the estimate slider.",
+            "tier": "domain"
+          },
+          {
+            "key": "sliderStep",
+            "type": "number",
+            "default": 0.1,
+            "label": "Slider Step",
+            "tier": "presentation"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Estimate It",
+            "label": "Title",
+            "description": "Title shown above the drill.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "EstimateScene",
+        "transitionEvents": [
+          "INIT",
+          "LOCK_IN",
+          "MODE_SELECTED",
+          "NEXT",
+          "RETRY",
+          "SET_ESTIMATE"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "answer",
+            "band",
+            "done",
+            "estimate",
+            "feedback",
+            "locked",
+            "promptHint",
+            "promptIndex",
+            "promptText",
+            "score",
+            "title",
+            "totalPrompts",
+            "unit",
+            "view"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "EstimatePage",
+        "defaultPath": "/learn-estimate",
+        "primaryEntity": "EstimateScene"
+      }
+    ],
+    "emittedEvents": [
+      "ESTIMATE_JUDGED",
+      "PROMPT_ADVANCED",
+      "ROUND_RESTARTED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

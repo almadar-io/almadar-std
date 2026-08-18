@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page, PatternValue } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -65,7 +65,7 @@ export interface StdWizardWizardLoadFailedPayload {
  * Payload shape for the `WizardSaved` event.
  */
 export interface StdWizardWizardSavedPayload {
-  row?: EntityRow;
+  row?: unknown;
 }
 
 /**
@@ -577,7 +577,7 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
             'payloadSchema': [
               {
                 'name': 'row',
-                'type': 'object',
+                'type': '@entity',
               },
             ],
             'synonyms': 'saved, submitted, confirmed',
@@ -636,7 +636,21 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
               'payloadSchema': [
                 {
                   'name': 'data',
-                  'type': '[ObjectSpec]',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'label',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'value',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': '[object]',
                 },
               ],
               'synonyms': 'ready, initialized, available',
@@ -666,7 +680,7 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
               'payloadSchema': [
                 {
                   'name': 'row',
-                  'type': 'object',
+                  'type': '@entity',
                 },
               ],
               'synonyms': 'saved, submitted, confirmed',

@@ -1,6 +1,36 @@
 app std-tactics-board-3d "1.0.0"
 "3D player-controlled grid-tactics board FRAME: composes grid-tactics (units authority) + fx-particles + round-flow + a player-intent/render trait onto one shared GameState. Games consume this molecule and supply only theme/assets/units via config."
 orbital TacticsBoard3DOrbital {
+  type SceneLight = {
+    intensity : number
+    color : string
+    position : [number]
+  }
+  type SceneHemiLight = {
+    intensity : number
+    color : string
+    groundColor : string
+  }
+  type ScenePointLight = {
+    intensity : number
+    color : string
+    position : [number]!
+    distance : number
+    decay : number
+  }
+  type Lighting3D = {
+    ambient : SceneLight
+    directional : SceneLight
+    hemisphere : SceneHemiLight
+    points : [ScenePointLight]
+    environment : "room" | "none"
+    toneMapping : "aces" | "none"
+  }
+  type Post3D = {
+    bloom : { intensity : number  threshold : number  smoothing : number }
+    vignette : { offset : number  darkness : number }
+  }
+
   uses Tactics from "std/behaviors/std-grid-tactics"
   uses Particles from "std/behaviors/std-fx-particles"
   uses Round from "std/behaviors/std-round-flow"
@@ -305,11 +335,11 @@ orbital TacticsBoard3DOrbital {
         @label "Mesh Unit Scale"
         @description "Uniform scale applied to volumetric (meshAssetArt draw-group) units."
         @tier "presentation"
-      lighting : json = {}
+      lighting : Lighting3D = {}
         @label "Lighting"
         @description "3D scene light rig as data — ambient/directional/hemisphere/points + environment ('room' | 'none') for PBR reflections. Empty → the standard fixed rig."
         @tier "presentation"
-      post : json = {}
+      post : Post3D = {}
         @label "Post Effects"
         @description "3D post-processing stack — bloom and vignette. Empty → no post pass."
         @tier "presentation"

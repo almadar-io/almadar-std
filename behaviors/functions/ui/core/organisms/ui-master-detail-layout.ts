@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page, PatternValue } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -40,12 +40,12 @@ export type StdUiMasterDetailLayoutEventKey = 'INIT';
  */
 export interface StdUiMasterDetailLayoutConfig {
   className?: string;
-  detail?: unknown;
+  detail?: PatternValue;
   detailClassName?: string;
-  emptyDetail?: unknown;
+  emptyDetail?: PatternValue;
   /** Default: `false` */
   hasSelection?: boolean;
-  master?: unknown;
+  master?: PatternValue;
   masterClassName?: string;
   /** Default: `"350px"` */
   masterWidth?: string;

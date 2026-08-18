@@ -1,0 +1,451 @@
+[
+  {
+    "organism": "std-learn-tour-3d",
+    "orbital": "LearnTour3DOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-learn-tour-3d.ts",
+    "entities": [
+      {
+        "name": "Learn3DTourScene",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "stations",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "backdrop",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "edges",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "selectedIndex",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "selectedId",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "visitedIds",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "tourComplete",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "narration",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "Learn3DTourSim",
+        "emittedEvents": [
+          "TOUR_3D_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "TOUR_3D_UPDATED",
+            "direction": "emit",
+            "description": "Fires on INIT/MODE_SELECTED/Tour/click/Reset with the currently selected station's id, name, and caption, plus visited/total progress and whether every station has now been visited — a composed listener (readout, quiz) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "select, choose, station, explore, tour, flythrough, pick",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "TOUR",
+            "direction": "listen"
+          },
+          {
+            "name": "SELECT_STATION",
+            "direction": "listen",
+            "description": "Canvas shape-click from the 3D scene (biology-canvas onShapeClick) carrying the clicked station's id, type, and roster index.",
+            "tier": "domain"
+          },
+          {
+            "name": "RESET",
+            "direction": "listen"
+          },
+          {
+            "name": "SYNC_STATIONS",
+            "direction": "listen",
+            "description": "Roster hot-swap from a composed preset coordinator — the tour adopts the new stations/edges/backdrop and restarts progress at the first new station; the single-writer entry point for dynamic rosters.",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "azimuth",
+            "type": "number",
+            "default": 0.6,
+            "label": "Azimuth",
+            "description": "Camera orbit azimuth in radians; the learner can orbit freely on top of this.",
+            "tier": "presentation"
+          },
+          {
+            "key": "backdrop",
+            "type": "[Learn3DStation]",
+            "default": [],
+            "label": "Backdrop Nodes",
+            "description": "Non-station scene geometry rendered under the tour stations (painted first, stations on top) — painted but never tour stops and never highlight-selected; SYNC_STATIONS swaps it together with the roster, so a composed preset coordinator can re-skin the whole scene per preset.",
+            "synonyms": "backdrop, scenery, geometry, context nodes, 3d",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "caption": {
+                  "name": "caption",
+                  "required": false,
+                  "type": "string"
+                },
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
+                "opacity": {
+                  "name": "opacity",
+                  "required": false,
+                  "type": "number"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "shape": {
+                  "name": "shape",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "backgroundColor",
+            "type": "string",
+            "default": "#0f172a",
+            "label": "Background Color",
+            "description": "Canvas background color — a dark stage makes translucent shells and station colors read in 3D.",
+            "tier": "presentation"
+          },
+          {
+            "key": "edges",
+            "type": "[Learn3DEdge]",
+            "default": [],
+            "label": "Edges",
+            "description": "Optional connector lines drawn between stations, by id.",
+            "synonyms": "edge, link, connector, tether",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "from": {
+                  "name": "from",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "to": {
+                  "name": "to",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "fov",
+            "type": "number",
+            "default": 50,
+            "label": "Field of View",
+            "description": "Perspective camera field of view in degrees.",
+            "tier": "presentation"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 400,
+            "label": "Height",
+            "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "lighting",
+            "type": "json",
+            "default": {},
+            "label": "Lighting",
+            "description": "3D scene light rig as data; empty object uses the standard rig.",
+            "tier": "presentation"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "post",
+            "type": "json",
+            "default": {},
+            "label": "Post Processing",
+            "description": "3D post-processing stack (bloom/vignette) as data; empty object disables it.",
+            "tier": "presentation"
+          },
+          {
+            "key": "resetLabel",
+            "type": "string",
+            "default": "Reset",
+            "label": "Reset Button Label",
+            "description": "Label text for the button that returns the tour to the first station.",
+            "tier": "presentation"
+          },
+          {
+            "key": "stations",
+            "type": "[Learn3DStation]",
+            "default": [
+              {
+                "caption": "The first stop on the tour — the camera retargets here and the narration reads its caption.",
+                "color": "#2563eb",
+                "id": "alpha",
+                "name": "Station Alpha",
+                "opacity": 1,
+                "radius": 1,
+                "shape": "sphere",
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              {
+                "caption": "The second stop — press Tour again or click a shape to advance the selection.",
+                "color": "#7c3aed",
+                "id": "beta",
+                "name": "Station Beta",
+                "opacity": 1,
+                "radius": 0.8,
+                "shape": "sphere",
+                "x": 3,
+                "y": 1,
+                "z": -1
+              },
+              {
+                "caption": "The final stop — once every station has been visited the tour marks itself complete.",
+                "color": "#0891b2",
+                "id": "gamma",
+                "name": "Station Gamma",
+                "opacity": 1,
+                "radius": 0.8,
+                "shape": "sphere",
+                "x": -3,
+                "y": -1,
+                "z": 1
+              }
+            ],
+            "label": "Stations",
+            "description": "The station roster in didactic tour order — each with scene position, mesh shape, and a caption. Tour and clicks enlarge the selected station, retarget the camera onto its x/y/z, and narrate its caption.",
+            "synonyms": "station, stop, waypoint, tour, landmark, 3d",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "caption": {
+                  "name": "caption",
+                  "required": false,
+                  "type": "string"
+                },
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
+                "opacity": {
+                  "name": "opacity",
+                  "required": false,
+                  "type": "number"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "shape": {
+                  "name": "shape",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "3D Guided Tour",
+            "label": "Title",
+            "description": "Title shown above the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "tourLabel",
+            "type": "string",
+            "default": "Tour",
+            "label": "Tour Button Label",
+            "description": "Label text for the button that advances the tour to the next station.",
+            "tier": "presentation"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "description": "Canvas width in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "zoom",
+            "type": "number",
+            "default": 1,
+            "label": "Zoom",
+            "description": "Camera zoom factor for the 3D scene.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "Learn3DTourScene",
+        "transitionEvents": [
+          "INIT",
+          "MODE_SELECTED",
+          "RESET",
+          "SELECT_STATION",
+          "SYNC_STATIONS",
+          "TOUR"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "backdrop",
+            "edges",
+            "narration",
+            "selectedId",
+            "selectedIndex",
+            "stations",
+            "title",
+            "tourComplete",
+            "visitedIds"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "Learn3DTourPage",
+        "defaultPath": "/learn-tour-3d",
+        "primaryEntity": "Learn3DTourScene"
+      }
+    ],
+    "emittedEvents": [
+      "TOUR_3D_UPDATED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

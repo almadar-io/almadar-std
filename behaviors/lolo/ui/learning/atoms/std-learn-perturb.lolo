@@ -1,0 +1,494 @@
+app std-learn-perturb "1.0.0"
+"Generic equilibrium-and-shock simulation — a single named quantity relaxes each tick toward an adjustable setpoint at an adjustable recovery rate (dV = k·(E − V)), drawn live against the setpoint line. Shock buttons knock the quantity up or down mid-run and the learner watches it recover; moving the setpoint slider mid-run makes the system chase a new equilibrium, and the recovery-rate slider shows sluggish versus snappy regulation. All names and scales are config-declared, so one mechanism serves every negative-feedback lesson: body temperature homeostasis, a thermostat, market price around equilibrium, blood glucose, reservoir level, ecological resilience. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital PerturbOrbital {
+  type PerturbSample = {
+    x : number!
+    y : number!
+  }
+  type PerturbCurve = {
+    label : string
+    color : string
+    samples : [PerturbSample]!
+  }
+
+  entity PerturbScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    t : number = 0
+    value : number = 0
+    setpoint : number = 0
+    rate : number = 0
+    running : boolean = false
+    traceSamples : [PerturbSample]
+    curves : [PerturbCurve]
+  }
+
+  trait PerturbSim -> @rebindable PerturbScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.t 0)
+        (set @entity.value @config.valueStart)
+        (set @entity.setpoint @config.setpointDefault)
+        (set @entity.rate @config.rateDefault)
+        (set @entity.running @config.autoRun)
+        (set @entity.traceSamples [ { x: 0, y: @config.valueStart } ])
+        (set @entity.curves [
+          { label: @config.setpointLabel, color: @config.setpointColor, samples: [ { x: 0, y: @entity.setpoint }, { x: @config.duration, y: @entity.setpoint } ] },
+          { label: @config.valueLabel, color: @config.valueColor, samples: @entity.traceSamples }
+        ])
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @config.taskText },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if (and (== @entity.running false) (< @entity.t @config.duration)) false true) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost },
+                    { type: button, action: SHOCK, actionPayload: { delta: @config.shockSize }, label: @config.shockUpLabel, variant: secondary, size: sm },
+                    { type: button, action: SHOCK, actionPayload: { delta: (- 0 @config.shockSize) }, label: @config.shockDownLabel, variant: secondary, size: sm }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.setpointLabel ": " (math/round @entity.setpoint 1)) },
+                    { type: range-slider, min: @config.setpointMin, max: @config.setpointMax, step: @config.setpointStep, value: @entity.setpoint, showTooltip: true, action: "SET_POINT" }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.rateLabel ": " (math/round @entity.rate 2)) },
+                    { type: range-slider, min: @config.rateMin, max: @config.rateMax, step: @config.rateStep, value: @entity.rate, showTooltip: true, action: "SET_RATE" }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: @config.valueMin, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: typography, variant: body, content: (str/concat "t = " (math/round @entity.t 1) " · " @config.valueLabel " = " (math/round @entity.value 2) " · deviation: " (math/round (- @entity.value @entity.setpoint) 2)) }
+              ] }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.t 0)
+        (set @entity.value @config.valueStart)
+        (set @entity.setpoint @config.setpointDefault)
+        (set @entity.rate @config.rateDefault)
+        (set @entity.running @config.autoRun)
+        (set @entity.traceSamples [ { x: 0, y: @config.valueStart } ])
+        (set @entity.curves [
+          { label: @config.setpointLabel, color: @config.setpointColor, samples: [ { x: 0, y: @entity.setpoint }, { x: @config.duration, y: @entity.setpoint } ] },
+          { label: @config.valueLabel, color: @config.valueColor, samples: @entity.traceSamples }
+        ])
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @config.taskText },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if (and (== @entity.running false) (< @entity.t @config.duration)) false true) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost },
+                    { type: button, action: SHOCK, actionPayload: { delta: @config.shockSize }, label: @config.shockUpLabel, variant: secondary, size: sm },
+                    { type: button, action: SHOCK, actionPayload: { delta: (- 0 @config.shockSize) }, label: @config.shockDownLabel, variant: secondary, size: sm }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.setpointLabel ": " (math/round @entity.setpoint 1)) },
+                    { type: range-slider, min: @config.setpointMin, max: @config.setpointMax, step: @config.setpointStep, value: @entity.setpoint, showTooltip: true, action: "SET_POINT" }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.rateLabel ": " (math/round @entity.rate 2)) },
+                    { type: range-slider, min: @config.rateMin, max: @config.rateMax, step: @config.rateStep, value: @entity.rate, showTooltip: true, action: "SET_RATE" }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: @config.valueMin, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: typography, variant: body, content: (str/concat "t = " (math/round @entity.t 1) " · " @config.valueLabel " = " (math/round @entity.value 2) " · deviation: " (math/round (- @entity.value @entity.setpoint) 2)) }
+              ] }
+          ]
+        })
+
+      RUN -> idle when (and (== @entity.active true) (and (== @entity.running false) (< @entity.t @config.duration)))
+        (set @entity.running true)
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @config.taskText },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if (and (== @entity.running false) (< @entity.t @config.duration)) false true) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost },
+                    { type: button, action: SHOCK, actionPayload: { delta: @config.shockSize }, label: @config.shockUpLabel, variant: secondary, size: sm },
+                    { type: button, action: SHOCK, actionPayload: { delta: (- 0 @config.shockSize) }, label: @config.shockDownLabel, variant: secondary, size: sm }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.setpointLabel ": " (math/round @entity.setpoint 1)) },
+                    { type: range-slider, min: @config.setpointMin, max: @config.setpointMax, step: @config.setpointStep, value: @entity.setpoint, showTooltip: true, action: "SET_POINT" }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.rateLabel ": " (math/round @entity.rate 2)) },
+                    { type: range-slider, min: @config.rateMin, max: @config.rateMax, step: @config.rateStep, value: @entity.rate, showTooltip: true, action: "SET_RATE" }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: @config.valueMin, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: typography, variant: body, content: (str/concat "t = " (math/round @entity.t 1) " · " @config.valueLabel " = " (math/round @entity.value 2) " · deviation: " (math/round (- @entity.value @entity.setpoint) 2)) }
+              ] }
+          ]
+        })
+        (emit RUN_TOGGLED { running: @entity.running })
+
+      PAUSE -> idle when (and (== @entity.active true) (== @entity.running true))
+        (set @entity.running false)
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @config.taskText },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if (and (== @entity.running false) (< @entity.t @config.duration)) false true) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost },
+                    { type: button, action: SHOCK, actionPayload: { delta: @config.shockSize }, label: @config.shockUpLabel, variant: secondary, size: sm },
+                    { type: button, action: SHOCK, actionPayload: { delta: (- 0 @config.shockSize) }, label: @config.shockDownLabel, variant: secondary, size: sm }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.setpointLabel ": " (math/round @entity.setpoint 1)) },
+                    { type: range-slider, min: @config.setpointMin, max: @config.setpointMax, step: @config.setpointStep, value: @entity.setpoint, showTooltip: true, action: "SET_POINT" }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.rateLabel ": " (math/round @entity.rate 2)) },
+                    { type: range-slider, min: @config.rateMin, max: @config.rateMax, step: @config.rateStep, value: @entity.rate, showTooltip: true, action: "SET_RATE" }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: @config.valueMin, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: typography, variant: body, content: (str/concat "t = " (math/round @entity.t 1) " · " @config.valueLabel " = " (math/round @entity.value 2) " · deviation: " (math/round (- @entity.value @entity.setpoint) 2)) }
+              ] }
+          ]
+        })
+        (emit RUN_TOGGLED { running: @entity.running })
+
+      RESET -> idle when (== @entity.active true)
+        (set @entity.t 0)
+        (set @entity.value @config.valueStart)
+        (set @entity.setpoint @config.setpointDefault)
+        (set @entity.rate @config.rateDefault)
+        (set @entity.running false)
+        (set @entity.traceSamples [ { x: 0, y: @config.valueStart } ])
+        (set @entity.curves [
+          { label: @config.setpointLabel, color: @config.setpointColor, samples: [ { x: 0, y: @entity.setpoint }, { x: @config.duration, y: @entity.setpoint } ] },
+          { label: @config.valueLabel, color: @config.valueColor, samples: @entity.traceSamples }
+        ])
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @config.taskText },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if (and (== @entity.running false) (< @entity.t @config.duration)) false true) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost },
+                    { type: button, action: SHOCK, actionPayload: { delta: @config.shockSize }, label: @config.shockUpLabel, variant: secondary, size: sm },
+                    { type: button, action: SHOCK, actionPayload: { delta: (- 0 @config.shockSize) }, label: @config.shockDownLabel, variant: secondary, size: sm }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.setpointLabel ": " (math/round @entity.setpoint 1)) },
+                    { type: range-slider, min: @config.setpointMin, max: @config.setpointMax, step: @config.setpointStep, value: @entity.setpoint, showTooltip: true, action: "SET_POINT" }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.rateLabel ": " (math/round @entity.rate 2)) },
+                    { type: range-slider, min: @config.rateMin, max: @config.rateMax, step: @config.rateStep, value: @entity.rate, showTooltip: true, action: "SET_RATE" }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: @config.valueMin, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: typography, variant: body, content: (str/concat "t = " (math/round @entity.t 1) " · " @config.valueLabel " = " (math/round @entity.value 2) " · deviation: " (math/round (- @entity.value @entity.setpoint) 2)) }
+              ] }
+          ]
+        })
+        (emit SIM_RESET { valueStart: @config.valueStart })
+
+      SET_POINT -> idle when (== @entity.active true)
+        (set @entity.setpoint (math/clamp ?value @config.setpointMin @config.setpointMax))
+        (set @entity.curves [
+          { label: @config.setpointLabel, color: @config.setpointColor, samples: [ { x: 0, y: @entity.setpoint }, { x: @config.duration, y: @entity.setpoint } ] },
+          { label: @config.valueLabel, color: @config.valueColor, samples: @entity.traceSamples }
+        ])
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @config.taskText },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if (and (== @entity.running false) (< @entity.t @config.duration)) false true) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost },
+                    { type: button, action: SHOCK, actionPayload: { delta: @config.shockSize }, label: @config.shockUpLabel, variant: secondary, size: sm },
+                    { type: button, action: SHOCK, actionPayload: { delta: (- 0 @config.shockSize) }, label: @config.shockDownLabel, variant: secondary, size: sm }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.setpointLabel ": " (math/round @entity.setpoint 1)) },
+                    { type: range-slider, min: @config.setpointMin, max: @config.setpointMax, step: @config.setpointStep, value: @entity.setpoint, showTooltip: true, action: "SET_POINT" }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.rateLabel ": " (math/round @entity.rate 2)) },
+                    { type: range-slider, min: @config.rateMin, max: @config.rateMax, step: @config.rateStep, value: @entity.rate, showTooltip: true, action: "SET_RATE" }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: @config.valueMin, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: typography, variant: body, content: (str/concat "t = " (math/round @entity.t 1) " · " @config.valueLabel " = " (math/round @entity.value 2) " · deviation: " (math/round (- @entity.value @entity.setpoint) 2)) }
+              ] }
+          ]
+        })
+        (emit SETPOINT_CHANGED { setpoint: @entity.setpoint })
+
+      SET_RATE -> idle when (== @entity.active true)
+        (set @entity.rate (math/clamp ?value @config.rateMin @config.rateMax))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @config.taskText },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if (and (== @entity.running false) (< @entity.t @config.duration)) false true) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost },
+                    { type: button, action: SHOCK, actionPayload: { delta: @config.shockSize }, label: @config.shockUpLabel, variant: secondary, size: sm },
+                    { type: button, action: SHOCK, actionPayload: { delta: (- 0 @config.shockSize) }, label: @config.shockDownLabel, variant: secondary, size: sm }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.setpointLabel ": " (math/round @entity.setpoint 1)) },
+                    { type: range-slider, min: @config.setpointMin, max: @config.setpointMax, step: @config.setpointStep, value: @entity.setpoint, showTooltip: true, action: "SET_POINT" }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.rateLabel ": " (math/round @entity.rate 2)) },
+                    { type: range-slider, min: @config.rateMin, max: @config.rateMax, step: @config.rateStep, value: @entity.rate, showTooltip: true, action: "SET_RATE" }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: @config.valueMin, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: typography, variant: body, content: (str/concat "t = " (math/round @entity.t 1) " · " @config.valueLabel " = " (math/round @entity.value 2) " · deviation: " (math/round (- @entity.value @entity.setpoint) 2)) }
+              ] }
+          ]
+        })
+        (emit RATE_CHANGED { rate: @entity.rate })
+
+      SHOCK -> idle when (== @entity.active true)
+        (set @entity.value (+ @entity.value ?delta))
+        (set @entity.traceSamples (array/append @entity.traceSamples { x: @entity.t, y: @entity.value }))
+        (set @entity.curves [
+          { label: @config.setpointLabel, color: @config.setpointColor, samples: [ { x: 0, y: @entity.setpoint }, { x: @config.duration, y: @entity.setpoint } ] },
+          { label: @config.valueLabel, color: @config.valueColor, samples: @entity.traceSamples }
+        ])
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @config.taskText },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if (and (== @entity.running false) (< @entity.t @config.duration)) false true) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost },
+                    { type: button, action: SHOCK, actionPayload: { delta: @config.shockSize }, label: @config.shockUpLabel, variant: secondary, size: sm },
+                    { type: button, action: SHOCK, actionPayload: { delta: (- 0 @config.shockSize) }, label: @config.shockDownLabel, variant: secondary, size: sm }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.setpointLabel ": " (math/round @entity.setpoint 1)) },
+                    { type: range-slider, min: @config.setpointMin, max: @config.setpointMax, step: @config.setpointStep, value: @entity.setpoint, showTooltip: true, action: "SET_POINT" }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.rateLabel ": " (math/round @entity.rate 2)) },
+                    { type: range-slider, min: @config.rateMin, max: @config.rateMax, step: @config.rateStep, value: @entity.rate, showTooltip: true, action: "SET_RATE" }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: @config.valueMin, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: typography, variant: body, content: (str/concat "t = " (math/round @entity.t 1) " · " @config.valueLabel " = " (math/round @entity.value 2) " · deviation: " (math/round (- @entity.value @entity.setpoint) 2)) }
+              ] }
+          ]
+        })
+        (emit SHOCK_APPLIED { delta: ?delta, value: @entity.value, deviation: (- @entity.value @entity.setpoint) })
+    }
+
+    ticks {
+      perturbTick every 100ms
+        when (and (== @entity.active true) (and (== @entity.running true) (< @entity.t @config.duration)))
+        (set @entity.t (math/min @config.duration (+ @entity.t 0.1)))
+        (set @entity.value (+ @entity.value (* @entity.rate (- @entity.setpoint @entity.value) 0.1)))
+        (set @entity.traceSamples (array/append @entity.traceSamples { x: @entity.t, y: @entity.value }))
+        (set @entity.curves [
+          { label: @config.setpointLabel, color: @config.setpointColor, samples: [ { x: 0, y: @entity.setpoint }, { x: @config.duration, y: @entity.setpoint } ] },
+          { label: @config.valueLabel, color: @config.valueColor, samples: @entity.traceSamples }
+        ])
+        (set @entity.running (if (>= @entity.t @config.duration) false true))
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      RUN {
+      }
+        @description "Learner started (or resumed) the regulation loop; the trace draws live until Pause or the configured duration."
+        @tier "domain"
+      PAUSE {
+      }
+        @description "Learner froze the simulation mid-run; shocks and slider changes still apply to the frozen state."
+        @tier "domain"
+      RESET {
+      }
+        @description "Learner restored the quantity, setpoint, rate, and clock to their configured starting values."
+        @tier "domain"
+      SET_POINT {
+        value : number
+      }
+        @description "Learner moved the equilibrium setpoint — mid-run the system visibly chases the new target."
+        @tier "domain"
+      SET_RATE {
+        value : number
+      }
+        @description "Learner retuned the recovery rate — higher snaps back fast, lower drifts sluggishly."
+        @tier "domain"
+      SHOCK {
+        delta : number
+      }
+        @description "Learner knocked the quantity up (positive) or down (negative) to disturb the equilibrium and watch the recovery."
+        @tier "domain"
+    }
+
+    emits {
+      RUN_TOGGLED -> external {
+        running : boolean
+      }
+        @description "The simulation was started or paused — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @tier "domain"
+      SIM_RESET -> external {
+        valueStart : number
+      }
+        @description "The learner reset the system to its configured starting state."
+        @tier "domain"
+      SETPOINT_CHANGED -> external {
+        setpoint : number
+      }
+        @description "The equilibrium target after a slider change."
+        @tier "domain"
+      RATE_CHANGED -> external {
+        rate : number
+      }
+        @description "The recovery rate after a slider change."
+        @tier "domain"
+      SHOCK_APPLIED -> external {
+        delta : number
+        value : number
+        deviation : number
+      }
+        @description "A disturbance was injected: the shock size, the quantity right after it, and its deviation from the setpoint."
+        @synonyms "homeostasis, negative feedback, equilibrium, shock and recovery, thermostat, resilience"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Equilibrium & Shock"
+        @label "Title"
+        @description "Title shown above the simulation."
+        @tier "presentation"
+      taskText : string = "Run the system, shock it off its setpoint, and watch it recover — then move the setpoint mid-run."
+        @label "Task Text"
+        @description "One-sentence statement of what to explore."
+        @tier "domain"
+      valueLabel : string = "Temperature"
+        @label "Value Label"
+        @description "Display name of the regulated quantity."
+        @tier "domain"
+      setpointLabel : string = "Setpoint"
+        @label "Setpoint Label"
+        @description "Display name of the equilibrium target."
+        @tier "domain"
+      rateLabel : string = "Recovery rate"
+        @label "Rate Label"
+        @description "Display name of the relaxation-rate slider."
+        @tier "domain"
+      valueStart : number = 37
+        @label "Value Start"
+        @tier "domain"
+      setpointDefault : number = 37
+        @label "Setpoint Default"
+        @tier "domain"
+      setpointMin : number = 30
+        @label "Setpoint Min"
+        @tier "domain"
+      setpointMax : number = 44
+        @label "Setpoint Max"
+        @tier "domain"
+      setpointStep : number = 0.5
+        @label "Setpoint Step"
+        @tier "presentation"
+      rateDefault : number = 0.8
+        @label "Rate Default"
+        @tier "domain"
+      rateMin : number = 0.05
+        @label "Rate Min"
+        @tier "domain"
+      rateMax : number = 3
+        @label "Rate Max"
+        @tier "domain"
+      rateStep : number = 0.05
+        @label "Rate Step"
+        @tier "presentation"
+      shockSize : number = 4
+        @label "Shock Size"
+        @description "How far a shock button knocks the quantity from its current value."
+        @tier "domain"
+      shockUpLabel : string = "+ Shock up"
+        @label "Shock Up Label"
+        @tier "presentation"
+      shockDownLabel : string = "− Shock down"
+        @label "Shock Down Label"
+        @tier "presentation"
+      duration : number = 20
+        @label "Duration"
+        @description "Simulated seconds before the run stops automatically."
+        @tier "domain"
+      valueMin : number = 28
+        @label "Value Min"
+        @description "Lower bound of the chart's y axis."
+        @tier "presentation"
+      valueMax : number = 46
+        @label "Value Max"
+        @description "Upper bound of the chart's y axis."
+        @tier "presentation"
+      gridStep : number = 2
+        @label "Grid Step"
+        @tier "presentation"
+      valueColor : string = "#dc2626"
+        @label "Value Color"
+        @tier "presentation"
+      setpointColor : string = "#94a3b8"
+        @label "Setpoint Color"
+        @tier "presentation"
+      autoRun : boolean = true
+        @label "Auto Run"
+        @description "Whether the simulation starts running immediately on load."
+        @tier "domain"
+      width : number = 600
+        @label "Width"
+        @tier "presentation"
+      height : number = 360
+        @label "Height"
+        @tier "presentation"
+    }
+  }
+
+  page "/learn-perturb" as PerturbPage -> PerturbSim
+}

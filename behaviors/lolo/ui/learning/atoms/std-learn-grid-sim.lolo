@@ -1,0 +1,425 @@
+app std-learn-grid-sim "1.0.0"
+"Generic grid-world simulation — a tappable cellular grid evolves under a config-selected local rule: life (Conway's birth-3, survive-2-or-3), spread (anything with an active 4-neighbour activates — wavefronts, fire, contagion), or diffusion (each cell relaxes toward its neighbourhood average with decay — heat, concentration). The learner seeds the world by tapping cells directly on the canvas, then Runs, Pauses, or single-Steps the evolution, with a generation counter and live active-cell census. Rule, grid dimensions, seeds, and palette are all config-declared, so one mechanism serves emergence, percolation, epidemic fronts, heat flow, and any local-rules-global-behaviour lesson. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital GridSimOrbital {
+  type GridCellShape = {
+    type : "rect"!
+    id : string!
+    x : number!
+    y : number!
+    width : number!
+    height : number!
+    color : string!
+    fill : string!
+  }
+
+  entity GridSimScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    cells : [number]
+    generation : number = 0
+    aliveCount : number = 0
+    running : boolean = false
+    cellShapes : [GridCellShape]
+  }
+
+  trait GridSimSim -> @rebindable GridSimScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.generation 0)
+        (set @entity.running @config.autoRun)
+        (set @entity.cells (array/map (array/range 0 (* @config.rows @config.cols)) (fn (i) (if (array/includes @config.seeds @i) 1 0))))
+        (set @entity.aliveCount (array/len (array/filter @entity.cells (fn v (> @v 0.05)))))
+        (set @entity.cellShapes (array/map (array/range 0 (* @config.rows @config.cols)) (fn (i)
+          (let (
+              (r (math/floor (/ @i @config.cols)))
+              (c (math/mod @i @config.cols))
+              (v (array/nth @entity.cells @i))
+              (cellColor (if (> @v 0.66) @config.onColor (if (> @v 0.33) @config.midColor (if (> @v 0.05) @config.lowColor @config.offColor))))
+            )
+            { type: rect, id: (str/concat "cell-" @i), x: (+ 10 (* @c @config.cellSize)), y: (+ 10 (* @r @config.cellSize)), width: (- @config.cellSize 2), height: (- @config.cellSize 2), color: @cellColor, fill: @cellColor }))))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @config.taskText },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if @entity.running true false) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: STEP, label: @config.stepLabel, variant: secondary, disabled: (if @entity.running true false) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: learning-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.cellShapes, interactive: true, animate: false, onShapeClick: "TAP_CELL" },
+                { type: typography, variant: body, content: (str/concat "Generation " (str/concat "" @entity.generation) " · active cells: " (str/concat "" @entity.aliveCount)) }
+              ] }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.generation 0)
+        (set @entity.running @config.autoRun)
+        (set @entity.cells (array/map (array/range 0 (* @config.rows @config.cols)) (fn (i) (if (array/includes @config.seeds @i) 1 0))))
+        (set @entity.aliveCount (array/len (array/filter @entity.cells (fn v (> @v 0.05)))))
+        (set @entity.cellShapes (array/map (array/range 0 (* @config.rows @config.cols)) (fn (i)
+          (let (
+              (r (math/floor (/ @i @config.cols)))
+              (c (math/mod @i @config.cols))
+              (v (array/nth @entity.cells @i))
+              (cellColor (if (> @v 0.66) @config.onColor (if (> @v 0.33) @config.midColor (if (> @v 0.05) @config.lowColor @config.offColor))))
+            )
+            { type: rect, id: (str/concat "cell-" @i), x: (+ 10 (* @c @config.cellSize)), y: (+ 10 (* @r @config.cellSize)), width: (- @config.cellSize 2), height: (- @config.cellSize 2), color: @cellColor, fill: @cellColor }))))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @config.taskText },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if @entity.running true false) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: STEP, label: @config.stepLabel, variant: secondary, disabled: (if @entity.running true false) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: learning-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.cellShapes, interactive: true, animate: false, onShapeClick: "TAP_CELL" },
+                { type: typography, variant: body, content: (str/concat "Generation " (str/concat "" @entity.generation) " · active cells: " (str/concat "" @entity.aliveCount)) }
+              ] }
+          ]
+        })
+
+      RUN -> idle when (and (== @entity.active true) (== @entity.running false))
+        (set @entity.running true)
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @config.taskText },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if @entity.running true false) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: STEP, label: @config.stepLabel, variant: secondary, disabled: (if @entity.running true false) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: learning-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.cellShapes, interactive: true, animate: false, onShapeClick: "TAP_CELL" },
+                { type: typography, variant: body, content: (str/concat "Generation " (str/concat "" @entity.generation) " · active cells: " (str/concat "" @entity.aliveCount)) }
+              ] }
+          ]
+        })
+        (emit RUN_TOGGLED { running: @entity.running })
+
+      PAUSE -> idle when (and (== @entity.active true) (== @entity.running true))
+        (set @entity.running false)
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @config.taskText },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if @entity.running true false) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: STEP, label: @config.stepLabel, variant: secondary, disabled: (if @entity.running true false) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: learning-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.cellShapes, interactive: true, animate: false, onShapeClick: "TAP_CELL" },
+                { type: typography, variant: body, content: (str/concat "Generation " (str/concat "" @entity.generation) " · active cells: " (str/concat "" @entity.aliveCount)) }
+              ] }
+          ]
+        })
+        (emit RUN_TOGGLED { running: @entity.running })
+
+      STEP -> idle when (and (== @entity.active true) (== @entity.running false))
+        (set @entity.cells (array/map (array/range 0 (* @config.rows @config.cols)) (fn (i)
+              (let (
+                  (r (math/floor (/ @i @config.cols)))
+                  (c (math/mod @i @config.cols))
+                  (v (array/nth @entity.cells @i))
+                  (up (if (> @r 0) (array/nth @entity.cells (- @i @config.cols)) 0))
+                  (down (if (< @r (- @config.rows 1)) (array/nth @entity.cells (+ @i @config.cols)) 0))
+                  (left (if (> @c 0) (array/nth @entity.cells (- @i 1)) 0))
+                  (right (if (< @c (- @config.cols 1)) (array/nth @entity.cells (+ @i 1)) 0))
+                  (ul (if (and (> @r 0) (> @c 0)) (array/nth @entity.cells (- (- @i @config.cols) 1)) 0))
+                  (ur (if (and (> @r 0) (< @c (- @config.cols 1))) (array/nth @entity.cells (+ (- @i @config.cols) 1)) 0))
+                  (dl (if (and (< @r (- @config.rows 1)) (> @c 0)) (array/nth @entity.cells (- (+ @i @config.cols) 1)) 0))
+                  (dr (if (and (< @r (- @config.rows 1)) (< @c (- @config.cols 1))) (array/nth @entity.cells (+ @i @config.cols 1)) 0))
+                  (n4 (+ @up @down @left @right))
+                  (n8 (+ @n4 @ul @ur @dl @dr))
+                )
+                (if (== @config.rule "life")
+                  (if (if (> @v 0.5)
+                        (if (== (math/round @n8 0) 2) true (== (math/round @n8 0) 3))
+                        (== (math/round @n8 0) 3)) 1 0)
+                  (if (== @config.rule "spread")
+                    (if (if (> @v 0.5) true (> @n4 0.5)) 1 0)
+                    (math/max 0 (* @config.decay (+ @v (* @config.diffuseRate (- (/ @n4 4) @v)))))))))))
+        (set @entity.generation (+ @entity.generation 1))
+        (set @entity.aliveCount (array/len (array/filter @entity.cells (fn v (> @v 0.05)))))
+        (set @entity.cellShapes (array/map (array/range 0 (* @config.rows @config.cols)) (fn (i)
+          (let (
+              (r (math/floor (/ @i @config.cols)))
+              (c (math/mod @i @config.cols))
+              (v (array/nth @entity.cells @i))
+              (cellColor (if (> @v 0.66) @config.onColor (if (> @v 0.33) @config.midColor (if (> @v 0.05) @config.lowColor @config.offColor))))
+            )
+            { type: rect, id: (str/concat "cell-" @i), x: (+ 10 (* @c @config.cellSize)), y: (+ 10 (* @r @config.cellSize)), width: (- @config.cellSize 2), height: (- @config.cellSize 2), color: @cellColor, fill: @cellColor }))))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @config.taskText },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if @entity.running true false) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: STEP, label: @config.stepLabel, variant: secondary, disabled: (if @entity.running true false) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: learning-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.cellShapes, interactive: true, animate: false, onShapeClick: "TAP_CELL" },
+                { type: typography, variant: body, content: (str/concat "Generation " (str/concat "" @entity.generation) " · active cells: " (str/concat "" @entity.aliveCount)) }
+              ] }
+          ]
+        })
+        (emit GRID_STEPPED { generation: @entity.generation, aliveCount: @entity.aliveCount })
+
+      TAP_CELL -> idle when (== @entity.active true)
+        (set @entity.cells (array/map (array/range 0 (* @config.rows @config.cols)) (fn (j) (if (== @j (object/get ?payload index)) (if (> (array/nth @entity.cells @j) 0.5) 0 1) (array/nth @entity.cells @j)))))
+        (set @entity.aliveCount (array/len (array/filter @entity.cells (fn v (> @v 0.05)))))
+        (set @entity.cellShapes (array/map (array/range 0 (* @config.rows @config.cols)) (fn (i)
+          (let (
+              (r (math/floor (/ @i @config.cols)))
+              (c (math/mod @i @config.cols))
+              (v (array/nth @entity.cells @i))
+              (cellColor (if (> @v 0.66) @config.onColor (if (> @v 0.33) @config.midColor (if (> @v 0.05) @config.lowColor @config.offColor))))
+            )
+            { type: rect, id: (str/concat "cell-" @i), x: (+ 10 (* @c @config.cellSize)), y: (+ 10 (* @r @config.cellSize)), width: (- @config.cellSize 2), height: (- @config.cellSize 2), color: @cellColor, fill: @cellColor }))))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @config.taskText },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if @entity.running true false) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: STEP, label: @config.stepLabel, variant: secondary, disabled: (if @entity.running true false) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: learning-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.cellShapes, interactive: true, animate: false, onShapeClick: "TAP_CELL" },
+                { type: typography, variant: body, content: (str/concat "Generation " (str/concat "" @entity.generation) " · active cells: " (str/concat "" @entity.aliveCount)) }
+              ] }
+          ]
+        })
+        (emit CELL_TOGGLED { index: (object/get ?payload index), aliveCount: @entity.aliveCount })
+
+      RESET -> idle when (== @entity.active true)
+        (set @entity.generation 0)
+        (set @entity.running false)
+        (set @entity.cells (array/map (array/range 0 (* @config.rows @config.cols)) (fn (i) (if (array/includes @config.seeds @i) 1 0))))
+        (set @entity.aliveCount (array/len (array/filter @entity.cells (fn v (> @v 0.05)))))
+        (set @entity.cellShapes (array/map (array/range 0 (* @config.rows @config.cols)) (fn (i)
+          (let (
+              (r (math/floor (/ @i @config.cols)))
+              (c (math/mod @i @config.cols))
+              (v (array/nth @entity.cells @i))
+              (cellColor (if (> @v 0.66) @config.onColor (if (> @v 0.33) @config.midColor (if (> @v 0.05) @config.lowColor @config.offColor))))
+            )
+            { type: rect, id: (str/concat "cell-" @i), x: (+ 10 (* @c @config.cellSize)), y: (+ 10 (* @r @config.cellSize)), width: (- @config.cellSize 2), height: (- @config.cellSize 2), color: @cellColor, fill: @cellColor }))))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @config.taskText },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if @entity.running true false) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: STEP, label: @config.stepLabel, variant: secondary, disabled: (if @entity.running true false) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: learning-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, shapes: @entity.cellShapes, interactive: true, animate: false, onShapeClick: "TAP_CELL" },
+                { type: typography, variant: body, content: (str/concat "Generation " (str/concat "" @entity.generation) " · active cells: " (str/concat "" @entity.aliveCount)) }
+              ] }
+          ]
+        })
+        (emit GRID_RESET { seedCount: (array/len @config.seeds) })
+    }
+
+    ticks {
+      gridTick every 300ms
+        when (and (== @entity.active true) (== @entity.running true))
+        (set @entity.cells (array/map (array/range 0 (* @config.rows @config.cols)) (fn (i)
+              (let (
+                  (r (math/floor (/ @i @config.cols)))
+                  (c (math/mod @i @config.cols))
+                  (v (array/nth @entity.cells @i))
+                  (up (if (> @r 0) (array/nth @entity.cells (- @i @config.cols)) 0))
+                  (down (if (< @r (- @config.rows 1)) (array/nth @entity.cells (+ @i @config.cols)) 0))
+                  (left (if (> @c 0) (array/nth @entity.cells (- @i 1)) 0))
+                  (right (if (< @c (- @config.cols 1)) (array/nth @entity.cells (+ @i 1)) 0))
+                  (ul (if (and (> @r 0) (> @c 0)) (array/nth @entity.cells (- (- @i @config.cols) 1)) 0))
+                  (ur (if (and (> @r 0) (< @c (- @config.cols 1))) (array/nth @entity.cells (+ (- @i @config.cols) 1)) 0))
+                  (dl (if (and (< @r (- @config.rows 1)) (> @c 0)) (array/nth @entity.cells (- (+ @i @config.cols) 1)) 0))
+                  (dr (if (and (< @r (- @config.rows 1)) (< @c (- @config.cols 1))) (array/nth @entity.cells (+ @i @config.cols 1)) 0))
+                  (n4 (+ @up @down @left @right))
+                  (n8 (+ @n4 @ul @ur @dl @dr))
+                )
+                (if (== @config.rule "life")
+                  (if (if (> @v 0.5)
+                        (if (== (math/round @n8 0) 2) true (== (math/round @n8 0) 3))
+                        (== (math/round @n8 0) 3)) 1 0)
+                  (if (== @config.rule "spread")
+                    (if (if (> @v 0.5) true (> @n4 0.5)) 1 0)
+                    (math/max 0 (* @config.decay (+ @v (* @config.diffuseRate (- (/ @n4 4) @v)))))))))))
+        (set @entity.generation (+ @entity.generation 1))
+        (set @entity.aliveCount (array/len (array/filter @entity.cells (fn v (> @v 0.05)))))
+        (set @entity.cellShapes (array/map (array/range 0 (* @config.rows @config.cols)) (fn (i)
+          (let (
+              (r (math/floor (/ @i @config.cols)))
+              (c (math/mod @i @config.cols))
+              (v (array/nth @entity.cells @i))
+              (cellColor (if (> @v 0.66) @config.onColor (if (> @v 0.33) @config.midColor (if (> @v 0.05) @config.lowColor @config.offColor))))
+            )
+            { type: rect, id: (str/concat "cell-" @i), x: (+ 10 (* @c @config.cellSize)), y: (+ 10 (* @r @config.cellSize)), width: (- @config.cellSize 2), height: (- @config.cellSize 2), color: @cellColor, fill: @cellColor }))))
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      RUN {
+      }
+        @description "Learner started the evolution; the grid advances one generation per tick until Pause."
+        @tier "domain"
+      PAUSE {
+      }
+        @description "Learner froze the evolution; tapping and single-stepping still work."
+        @tier "domain"
+      STEP {
+      }
+        @description "Learner advanced exactly one generation while paused — the microscope view of the rule."
+        @tier "domain"
+      TAP_CELL {
+        payload : { id : string  type : string  index : number! }
+      }
+        @description "Learner tapped a cell on the canvas — the canvas callback wraps its click info as payload { id, type, index }, where index is the flat cell index; the cell toggles between empty and active, seeding or editing the world."
+        @tier "domain"
+      RESET {
+      }
+        @description "Learner restored the configured seed pattern and zeroed the generation counter."
+        @tier "domain"
+    }
+
+    emits {
+      RUN_TOGGLED -> external {
+        running : boolean
+      }
+        @description "The evolution was started or paused — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @tier "domain"
+      GRID_STEPPED -> external {
+        generation : number
+        aliveCount : number
+      }
+        @description "A single-step advanced the world by one generation, with the new active-cell census."
+        @synonyms "cellular automaton, game of life, grid world, emergence, local rules, spread, diffusion"
+        @tier "domain"
+      CELL_TOGGLED -> external {
+        index : number
+        aliveCount : number
+      }
+        @description "The learner toggled a cell by tapping it, with the new active-cell census."
+        @tier "domain"
+      GRID_RESET -> external {
+        seedCount : number
+      }
+        @description "The learner restored the world to its configured seeds."
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Grid World"
+        @label "Title"
+        @description "Title shown above the grid."
+        @tier "presentation"
+      taskText : string = "Tap cells to seed the world, then Run — or Step one generation at a time to see the rule at work."
+        @label "Task Text"
+        @description "One-sentence statement of what to explore."
+        @tier "domain"
+      rule : string = "life"
+        @label "Rule"
+        @description "The local update rule: life (Conway birth-3 survive-2-3), spread (an active 4-neighbour activates a cell), or diffusion (cells relax toward the neighbourhood average with decay)."
+        @synonyms "game of life, contagion, wavefront, heat diffusion, cellular automaton rule"
+        @tier "domain"
+      rows : number = 12
+        @label "Rows"
+        @tier "domain"
+      cols : number = 16
+        @label "Columns"
+        @tier "domain"
+      seeds : [number] = [ 1, 18, 32, 33, 34, 88, 89, 90 ]
+        @label "Seeds"
+        @description "Flat cell indexes (row·cols + col) active at the start — the default plants a glider and a blinker. Realizations declare their own starting pattern here."
+        @tier "domain"
+      diffuseRate : number = 0.5
+        @label "Diffuse Rate"
+        @description "Diffusion rule only: how strongly a cell moves toward its neighbourhood average each generation."
+        @tier "domain"
+      decay : number = 0.995
+        @label "Decay"
+        @description "Diffusion rule only: fraction of a cell's value retained each generation."
+        @tier "domain"
+      cellSize : number = 26
+        @label "Cell Size"
+        @tier "presentation"
+      onColor : string = "#1d4ed8"
+        @label "On Color"
+        @tier "presentation"
+      midColor : string = "#60a5fa"
+        @label "Mid Color"
+        @tier "presentation"
+      lowColor : string = "#bfdbfe"
+        @label "Low Color"
+        @tier "presentation"
+      offColor : string = "#e2e8f0"
+        @label "Off Color"
+        @tier "presentation"
+      backgroundColor : string = "#f8fafc"
+        @label "Background Color"
+        @tier "presentation"
+      stepLabel : string = "Step"
+        @label "Step Label"
+        @tier "presentation"
+      autoRun : boolean = false
+        @label "Auto Run"
+        @description "Whether the evolution starts running immediately on load."
+        @tier "domain"
+      width : number = 436
+        @label "Width"
+        @tier "presentation"
+      height : number = 332
+        @label "Height"
+        @tier "presentation"
+    }
+  }
+
+  page "/learn-grid-sim" as GridSimPage -> GridSimSim
+}

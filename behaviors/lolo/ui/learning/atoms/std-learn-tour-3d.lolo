@@ -1,0 +1,380 @@
+app std-learn-tour-3d "1.0.0"
+"Generic guided-tour-over-3D-stations instrument. Contract: a config-declared roster of stations (id, name, caption, x, y, z, radius, color, shape, opacity) plus optional connector edges (from, to, color, label), rendered as an orbit-rotatable volumetric scene on a biology-canvas in 3D mode; pressing Tour advances the selection to the next station (mod the roster length) and clicking a shape selects its station — either way the camera retargets onto the selected station's x/y/z, the station enlarges, a name — caption narration renders, and a progress readout tracks visited stations until every station has been toured. A `backdrop` knob renders non-station scene geometry under the stations (painted, never toured). SYNC_STATIONS hot-swaps the roster mid-flight (a composed preset coordinator emits it with new stations/edges/backdrop; the tour adopts them and restarts progress at the first new station) — the single-writer entry point for dynamic rosters. Composed of a biology-canvas in 3D mode plus a tour state machine. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital LearnTour3DOrbital {
+  type Learn3DStation = {
+    id : string!
+    name : string!
+    caption : string
+    x : number!
+    y : number!
+    z : number!
+    radius : number
+    color : string
+    shape : string
+    opacity : number
+  }
+
+  type Learn3DEdge = {
+    from : string!
+    to : string!
+    color : string
+    label : string
+  }
+
+  type Learn3DClick = {
+    id : string
+    type : string
+    index : number!
+  }
+
+  entity Learn3DTourScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    stations : [Learn3DStation]
+    backdrop : [Learn3DStation] = []
+    edges : [Learn3DEdge]
+    selectedIndex : number = 0
+    selectedId : string = ""
+    visitedIds : [string] = []
+    tourComplete : boolean = false
+    narration : string = ""
+  }
+
+  trait Learn3DTourSim -> @rebindable Learn3DTourScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.stations @config.stations)
+        (set @entity.backdrop @config.backdrop)
+        (set @entity.edges @config.edges)
+        (set @entity.selectedIndex 0)
+        (set @entity.selectedId (object/get (array/nth @entity.stations 0) id))
+        (set @entity.visitedIds [(object/get (array/nth @entity.stations 0) id)])
+        (set @entity.tourComplete false)
+        (set @entity.narration (str/concat (object/get (array/nth @entity.stations 0) name) " — " (object/get (array/nth @entity.stations 0) caption)))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: TOUR, label: @config.tourLabel, variant: primary },
+                    { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+                  ] },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
+                  mode: "3d",
+                  camera: { mode: "perspective", zoom: @config.zoom, fov: @config.fov, azimuth: @config.azimuth,
+                    target: { x: (object/get (array/nth @entity.stations @entity.selectedIndex) x), y: (object/get (array/nth @entity.stations @entity.selectedIndex) y), z: (object/get (array/nth @entity.stations @entity.selectedIndex) z) } },
+                  lighting: @config.lighting,
+                  post: @config.post,
+                  nodes: (array/map (array/concat @entity.backdrop @entity.stations) (fn n { id: (object/get @n id), x: (object/get @n x), y: (object/get @n y), z: (object/get @n z), radius: (if (== (object/get @n id) @entity.selectedId) (* (object/get @n radius) 1.4) (object/get @n radius)), color: (object/get @n color), label: (object/get @n name), shape: (object/get @n shape), opacity: (object/get @n opacity) })),
+                  edges: @entity.edges,
+                  interactive: true,
+                  onShapeClick: "SELECT_STATION"
+                },
+                { type: typography, variant: body, content: @entity.narration },
+                { type: typography, variant: caption, content: (str/concat "Explored " (str/concat "" (array/len @entity.visitedIds)) " of " (str/concat "" (array/len @entity.stations)) (if @entity.tourComplete " — tour complete!" "")) }
+              ] }
+          ]
+        })
+        (emit TOUR_3D_UPDATED { id: @entity.selectedId, name: (object/get (array/nth @entity.stations 0) name), caption: (object/get (array/nth @entity.stations 0) caption), visited: (array/len @entity.visitedIds), total: (array/len @entity.stations), tourComplete: false })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.stations @config.stations)
+        (set @entity.backdrop @config.backdrop)
+        (set @entity.edges @config.edges)
+        (set @entity.selectedIndex 0)
+        (set @entity.selectedId (object/get (array/nth @entity.stations 0) id))
+        (set @entity.visitedIds [(object/get (array/nth @entity.stations 0) id)])
+        (set @entity.tourComplete false)
+        (set @entity.narration (str/concat (object/get (array/nth @entity.stations 0) name) " — " (object/get (array/nth @entity.stations 0) caption)))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: TOUR, label: @config.tourLabel, variant: primary },
+                    { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+                  ] },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
+                  mode: "3d",
+                  camera: { mode: "perspective", zoom: @config.zoom, fov: @config.fov, azimuth: @config.azimuth,
+                    target: { x: (object/get (array/nth @entity.stations @entity.selectedIndex) x), y: (object/get (array/nth @entity.stations @entity.selectedIndex) y), z: (object/get (array/nth @entity.stations @entity.selectedIndex) z) } },
+                  lighting: @config.lighting,
+                  post: @config.post,
+                  nodes: (array/map (array/concat @entity.backdrop @entity.stations) (fn n { id: (object/get @n id), x: (object/get @n x), y: (object/get @n y), z: (object/get @n z), radius: (if (== (object/get @n id) @entity.selectedId) (* (object/get @n radius) 1.4) (object/get @n radius)), color: (object/get @n color), label: (object/get @n name), shape: (object/get @n shape), opacity: (object/get @n opacity) })),
+                  edges: @entity.edges,
+                  interactive: true,
+                  onShapeClick: "SELECT_STATION"
+                },
+                { type: typography, variant: body, content: @entity.narration },
+                { type: typography, variant: caption, content: (str/concat "Explored " (str/concat "" (array/len @entity.visitedIds)) " of " (str/concat "" (array/len @entity.stations)) (if @entity.tourComplete " — tour complete!" "")) }
+              ] }
+          ]
+        })
+        (emit TOUR_3D_UPDATED { id: @entity.selectedId, name: (object/get (array/nth @entity.stations 0) name), caption: (object/get (array/nth @entity.stations 0) caption), visited: (array/len @entity.visitedIds), total: (array/len @entity.stations), tourComplete: false })
+
+      TOUR -> idle when (== @entity.active true)
+        (set @entity.selectedIndex (math/mod (+ @entity.selectedIndex 1) (array/len @entity.stations)))
+        (set @entity.selectedId (object/get (array/nth @entity.stations @entity.selectedIndex) id))
+        (set @entity.visitedIds (if (array/includes @entity.visitedIds @entity.selectedId) @entity.visitedIds (array/append @entity.visitedIds @entity.selectedId)))
+        (set @entity.tourComplete (== (array/len @entity.visitedIds) (array/len @entity.stations)))
+        (set @entity.narration (str/concat (object/get (array/nth @entity.stations @entity.selectedIndex) name) " — " (object/get (array/nth @entity.stations @entity.selectedIndex) caption)))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: TOUR, label: @config.tourLabel, variant: primary },
+                    { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+                  ] },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
+                  mode: "3d",
+                  camera: { mode: "perspective", zoom: @config.zoom, fov: @config.fov, azimuth: @config.azimuth,
+                    target: { x: (object/get (array/nth @entity.stations @entity.selectedIndex) x), y: (object/get (array/nth @entity.stations @entity.selectedIndex) y), z: (object/get (array/nth @entity.stations @entity.selectedIndex) z) } },
+                  lighting: @config.lighting,
+                  post: @config.post,
+                  nodes: (array/map (array/concat @entity.backdrop @entity.stations) (fn n { id: (object/get @n id), x: (object/get @n x), y: (object/get @n y), z: (object/get @n z), radius: (if (== (object/get @n id) @entity.selectedId) (* (object/get @n radius) 1.4) (object/get @n radius)), color: (object/get @n color), label: (object/get @n name), shape: (object/get @n shape), opacity: (object/get @n opacity) })),
+                  edges: @entity.edges,
+                  interactive: true,
+                  onShapeClick: "SELECT_STATION"
+                },
+                { type: typography, variant: body, content: @entity.narration },
+                { type: typography, variant: caption, content: (str/concat "Explored " (str/concat "" (array/len @entity.visitedIds)) " of " (str/concat "" (array/len @entity.stations)) (if @entity.tourComplete " — tour complete!" "")) }
+              ] }
+          ]
+        })
+        (emit TOUR_3D_UPDATED { id: @entity.selectedId, name: (object/get (array/nth @entity.stations @entity.selectedIndex) name), caption: (object/get (array/nth @entity.stations @entity.selectedIndex) caption), visited: (array/len @entity.visitedIds), total: (array/len @entity.stations), tourComplete: @entity.tourComplete })
+
+      SELECT_STATION -> idle when (== @entity.active true)
+        (let (
+            (clickedId (object/get ?payload id))
+            (found (array/findIndex @entity.stations (fn n (== (object/get @n id) @clickedId))))
+            (idx (if (>= @found 0) @found @entity.selectedIndex))
+          )
+          (do
+            (set @entity.selectedIndex @idx)
+            (set @entity.selectedId (object/get (array/nth @entity.stations @idx) id))
+            (set @entity.visitedIds (if (array/includes @entity.visitedIds @entity.selectedId) @entity.visitedIds (array/append @entity.visitedIds @entity.selectedId)))
+            (set @entity.tourComplete (== (array/len @entity.visitedIds) (array/len @entity.stations)))
+            (set @entity.narration (str/concat (object/get (array/nth @entity.stations @idx) name) " — " (object/get (array/nth @entity.stations @idx) caption)))
+            (render-ui main {
+              type: box
+              padding: md
+              children: [
+                { type: stack, direction: vertical, gap: md, children: [
+                    { type: typography, variant: h4, content: @entity.title },
+                    { type: stack, direction: horizontal, gap: sm, children: [
+                        { type: button, action: TOUR, label: @config.tourLabel, variant: primary },
+                        { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+                      ] },
+                    { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
+                      mode: "3d",
+                      camera: { mode: "perspective", zoom: @config.zoom, fov: @config.fov, azimuth: @config.azimuth,
+                        target: { x: (object/get (array/nth @entity.stations @entity.selectedIndex) x), y: (object/get (array/nth @entity.stations @entity.selectedIndex) y), z: (object/get (array/nth @entity.stations @entity.selectedIndex) z) } },
+                      lighting: @config.lighting,
+                      post: @config.post,
+                      nodes: (array/map (array/concat @entity.backdrop @entity.stations) (fn n { id: (object/get @n id), x: (object/get @n x), y: (object/get @n y), z: (object/get @n z), radius: (if (== (object/get @n id) @entity.selectedId) (* (object/get @n radius) 1.4) (object/get @n radius)), color: (object/get @n color), label: (object/get @n name), shape: (object/get @n shape), opacity: (object/get @n opacity) })),
+                      edges: @entity.edges,
+                      interactive: true,
+                      onShapeClick: "SELECT_STATION"
+                    },
+                    { type: typography, variant: body, content: @entity.narration },
+                    { type: typography, variant: caption, content: (str/concat "Explored " (str/concat "" (array/len @entity.visitedIds)) " of " (str/concat "" (array/len @entity.stations)) (if @entity.tourComplete " — tour complete!" "")) }
+                  ] }
+              ]
+            })
+            (emit TOUR_3D_UPDATED { id: @entity.selectedId, name: (object/get (array/nth @entity.stations @idx) name), caption: (object/get (array/nth @entity.stations @idx) caption), visited: (array/len @entity.visitedIds), total: (array/len @entity.stations), tourComplete: @entity.tourComplete })
+          )
+        )
+
+      RESET -> idle when (== @entity.active true)
+        (set @entity.selectedIndex 0)
+        (set @entity.selectedId (object/get (array/nth @entity.stations 0) id))
+        (set @entity.visitedIds [(object/get (array/nth @entity.stations 0) id)])
+        (set @entity.tourComplete false)
+        (set @entity.narration (str/concat (object/get (array/nth @entity.stations 0) name) " — " (object/get (array/nth @entity.stations 0) caption)))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: TOUR, label: @config.tourLabel, variant: primary },
+                    { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+                  ] },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
+                  mode: "3d",
+                  camera: { mode: "perspective", zoom: @config.zoom, fov: @config.fov, azimuth: @config.azimuth,
+                    target: { x: (object/get (array/nth @entity.stations @entity.selectedIndex) x), y: (object/get (array/nth @entity.stations @entity.selectedIndex) y), z: (object/get (array/nth @entity.stations @entity.selectedIndex) z) } },
+                  lighting: @config.lighting,
+                  post: @config.post,
+                  nodes: (array/map (array/concat @entity.backdrop @entity.stations) (fn n { id: (object/get @n id), x: (object/get @n x), y: (object/get @n y), z: (object/get @n z), radius: (if (== (object/get @n id) @entity.selectedId) (* (object/get @n radius) 1.4) (object/get @n radius)), color: (object/get @n color), label: (object/get @n name), shape: (object/get @n shape), opacity: (object/get @n opacity) })),
+                  edges: @entity.edges,
+                  interactive: true,
+                  onShapeClick: "SELECT_STATION"
+                },
+                { type: typography, variant: body, content: @entity.narration },
+                { type: typography, variant: caption, content: (str/concat "Explored " (str/concat "" (array/len @entity.visitedIds)) " of " (str/concat "" (array/len @entity.stations)) (if @entity.tourComplete " — tour complete!" "")) }
+              ] }
+          ]
+        })
+        (emit TOUR_3D_UPDATED { id: @entity.selectedId, name: (object/get (array/nth @entity.stations 0) name), caption: (object/get (array/nth @entity.stations 0) caption), visited: (array/len @entity.visitedIds), total: (array/len @entity.stations), tourComplete: false })
+
+      SYNC_STATIONS -> idle when (== @entity.active true)
+        (set @entity.stations ?stations)
+        (set @entity.backdrop ?backdrop)
+        (set @entity.edges ?edges)
+        (set @entity.selectedIndex 0)
+        (set @entity.selectedId (object/get (array/nth @entity.stations 0) id))
+        (set @entity.visitedIds [(object/get (array/nth @entity.stations 0) id)])
+        (set @entity.tourComplete false)
+        (set @entity.narration (str/concat (object/get (array/nth @entity.stations 0) name) " — " (object/get (array/nth @entity.stations 0) caption)))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: TOUR, label: @config.tourLabel, variant: primary },
+                    { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+                  ] },
+                { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor,
+                  mode: "3d",
+                  camera: { mode: "perspective", zoom: @config.zoom, fov: @config.fov, azimuth: @config.azimuth,
+                    target: { x: (object/get (array/nth @entity.stations @entity.selectedIndex) x), y: (object/get (array/nth @entity.stations @entity.selectedIndex) y), z: (object/get (array/nth @entity.stations @entity.selectedIndex) z) } },
+                  lighting: @config.lighting,
+                  post: @config.post,
+                  nodes: (array/map (array/concat @entity.backdrop @entity.stations) (fn n { id: (object/get @n id), x: (object/get @n x), y: (object/get @n y), z: (object/get @n z), radius: (if (== (object/get @n id) @entity.selectedId) (* (object/get @n radius) 1.4) (object/get @n radius)), color: (object/get @n color), label: (object/get @n name), shape: (object/get @n shape), opacity: (object/get @n opacity) })),
+                  edges: @entity.edges,
+                  interactive: true,
+                  onShapeClick: "SELECT_STATION"
+                },
+                { type: typography, variant: body, content: @entity.narration },
+                { type: typography, variant: caption, content: (str/concat "Explored " (str/concat "" (array/len @entity.visitedIds)) " of " (str/concat "" (array/len @entity.stations)) (if @entity.tourComplete " — tour complete!" "")) }
+              ] }
+          ]
+        })
+        (emit TOUR_3D_UPDATED { id: @entity.selectedId, name: (object/get (array/nth @entity.stations 0) name), caption: (object/get (array/nth @entity.stations 0) caption), visited: (array/len @entity.visitedIds), total: (array/len @entity.stations), tourComplete: false })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      SELECT_STATION {
+        payload : Learn3DClick
+      }
+        @description "Canvas shape-click from the 3D scene (biology-canvas onShapeClick) carrying the clicked station's id, type, and roster index."
+        @tier "domain"
+      SYNC_STATIONS {
+        stations : [Learn3DStation]
+        edges : [Learn3DEdge]
+        backdrop : [Learn3DStation]
+      }
+        @description "Roster hot-swap from a composed preset coordinator — the tour adopts the new stations/edges/backdrop and restarts progress at the first new station; the single-writer entry point for dynamic rosters."
+        @tier "domain"
+    }
+
+    emits {
+      TOUR_3D_UPDATED -> external {
+        id : string
+        name : string
+        caption : string
+        visited : number
+        total : number
+        tourComplete : boolean
+      }
+        @description "Fires on INIT/MODE_SELECTED/Tour/click/Reset with the currently selected station's id, name, and caption, plus visited/total progress and whether every station has now been visited — a composed listener (readout, quiz) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "select, choose, station, explore, tour, flythrough, pick"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "3D Guided Tour"
+        @label "Title"
+        @description "Title shown above the canvas."
+        @tier "presentation"
+      stations : [Learn3DStation] = [
+        { id: "alpha", name: "Station Alpha", caption: "The first stop on the tour — the camera retargets here and the narration reads its caption.", x: 0, y: 0, z: 0, radius: 1, color: "#2563eb", shape: sphere, opacity: 1 },
+        { id: "beta", name: "Station Beta", caption: "The second stop — press Tour again or click a shape to advance the selection.", x: 3, y: 1, z: -1, radius: 0.8, color: "#7c3aed", shape: sphere, opacity: 1 },
+        { id: "gamma", name: "Station Gamma", caption: "The final stop — once every station has been visited the tour marks itself complete.", x: -3, y: -1, z: 1, radius: 0.8, color: "#0891b2", shape: sphere, opacity: 1 }
+      ]
+        @label "Stations"
+        @description "The station roster in didactic tour order — each with scene position, mesh shape, and a caption. Tour and clicks enlarge the selected station, retarget the camera onto its x/y/z, and narrate its caption."
+        @synonyms "station, stop, waypoint, tour, landmark, 3d"
+        @tier "domain"
+      edges : [Learn3DEdge] = []
+        @label "Edges"
+        @description "Optional connector lines drawn between stations, by id."
+        @synonyms "edge, link, connector, tether"
+        @tier "domain"
+      backdrop : [Learn3DStation] = []
+        @label "Backdrop Nodes"
+        @description "Non-station scene geometry rendered under the tour stations (painted first, stations on top) — painted but never tour stops and never highlight-selected; SYNC_STATIONS swaps it together with the roster, so a composed preset coordinator can re-skin the whole scene per preset."
+        @synonyms "backdrop, scenery, geometry, context nodes, 3d"
+        @tier "domain"
+      tourLabel : string = "Tour"
+        @label "Tour Button Label"
+        @description "Label text for the button that advances the tour to the next station."
+        @tier "presentation"
+      resetLabel : string = "Reset"
+        @label "Reset Button Label"
+        @description "Label text for the button that returns the tour to the first station."
+        @tier "presentation"
+      zoom : number = 1
+        @label "Zoom"
+        @description "Camera zoom factor for the 3D scene."
+        @tier "presentation"
+      fov : number = 50
+        @label "Field of View"
+        @description "Perspective camera field of view in degrees."
+        @tier "presentation"
+      azimuth : number = 0.6
+        @label "Azimuth"
+        @description "Camera orbit azimuth in radians; the learner can orbit freely on top of this."
+        @tier "presentation"
+      lighting : json = {}
+        @label "Lighting"
+        @description "3D scene light rig as data; empty object uses the standard rig."
+        @tier "presentation"
+      post : json = {}
+        @label "Post Processing"
+        @description "3D post-processing stack (bloom/vignette) as data; empty object disables it."
+        @tier "presentation"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      backgroundColor : string = "#0f172a"
+        @label "Background Color"
+        @description "Canvas background color — a dark stage makes translucent shells and station colors read in 3D."
+        @tier "presentation"
+    }
+  }
+
+  page "/learn-tour-3d" as Learn3DTourPage -> Learn3DTourSim
+}

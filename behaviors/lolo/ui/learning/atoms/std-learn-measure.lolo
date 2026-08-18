@@ -1,0 +1,325 @@
+app std-learn-measure "1.0.0"
+"Generic measurement lab — a config-declared signal (sine A·sin(B·t), growth A·(1+B)ᵗ, or half-life decay A·(1/2)^(t/B)) evolves live while Run is engaged, drawing its trace across the chart, and the learner presses Probe to record the instantaneous value as a data point: recorded points accumulate on the chart with a running sample count and mean, teaching the discipline of sampling a changing quantity rather than reading a printed table. Pause freezes time mid-run and Reset clears the experiment. All vocabulary and dynamics are config-declared, so the same mechanism serves any measure-the-system exercise: temperature during a reaction, voltage on a discharging capacitor, population through a season, a pendulum's displacement. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital MeasureOrbital {
+  type MeasureSample = {
+    x : number!
+    y : number!
+  }
+  type MeasureCurve = {
+    label : string
+    color : string
+    samples : [MeasureSample]!
+  }
+  type MeasurePoint = {
+    x : number!
+    y : number!
+    color : string
+  }
+
+  entity MeasureScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    t : number = 0
+    value : number = 0
+    running : boolean = false
+    traceSamples : [MeasureSample]
+    traceCurves : [MeasureCurve]
+    points : [MeasurePoint]
+    sampleCount : number = 0
+    meanValue : number = 0
+  }
+
+  trait MeasureSim -> @rebindable MeasureScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.t 0)
+        (set @entity.value (if (== @config.signalKind "sine") 0 @config.amplitude))
+        (set @entity.running false)
+        (set @entity.traceSamples [])
+        (set @entity.traceCurves [])
+        (set @entity.points [])
+        (set @entity.sampleCount 0)
+        (set @entity.meanValue 0)
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @config.taskText },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if (and (== @entity.running false) (< @entity.t @config.duration)) false true) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: PROBE, label: @config.probeLabel, variant: primary, disabled: (if (> @entity.t 0) false true) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: @config.valueMin, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.traceCurves, points: @entity.points, vectors: [], shapes: [], interactive: false, animate: false },
+                { type: typography, variant: body, content: (str/concat "t = " (math/round @entity.t 1) "s · " @config.valueLabel " = " (math/round @entity.value 3)) },
+                { type: typography, variant: caption, content: (str/concat "Samples recorded: " (str/concat "" @entity.sampleCount) " · mean " @config.valueLabel ": " (math/round @entity.meanValue 3)) }
+              ] }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.t 0)
+        (set @entity.value (if (== @config.signalKind "sine") 0 @config.amplitude))
+        (set @entity.running false)
+        (set @entity.traceSamples [])
+        (set @entity.traceCurves [])
+        (set @entity.points [])
+        (set @entity.sampleCount 0)
+        (set @entity.meanValue 0)
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @config.taskText },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if (and (== @entity.running false) (< @entity.t @config.duration)) false true) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: PROBE, label: @config.probeLabel, variant: primary, disabled: (if (> @entity.t 0) false true) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: @config.valueMin, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.traceCurves, points: @entity.points, vectors: [], shapes: [], interactive: false, animate: false },
+                { type: typography, variant: body, content: (str/concat "t = " (math/round @entity.t 1) "s · " @config.valueLabel " = " (math/round @entity.value 3)) },
+                { type: typography, variant: caption, content: (str/concat "Samples recorded: " (str/concat "" @entity.sampleCount) " · mean " @config.valueLabel ": " (math/round @entity.meanValue 3)) }
+              ] }
+          ]
+        })
+
+      RUN -> idle when (and (== @entity.active true) (and (== @entity.running false) (< @entity.t @config.duration)))
+        (set @entity.running true)
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @config.taskText },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if (and (== @entity.running false) (< @entity.t @config.duration)) false true) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: PROBE, label: @config.probeLabel, variant: primary, disabled: (if (> @entity.t 0) false true) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: @config.valueMin, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.traceCurves, points: @entity.points, vectors: [], shapes: [], interactive: false, animate: false },
+                { type: typography, variant: body, content: (str/concat "t = " (math/round @entity.t 1) "s · " @config.valueLabel " = " (math/round @entity.value 3)) },
+                { type: typography, variant: caption, content: (str/concat "Samples recorded: " (str/concat "" @entity.sampleCount) " · mean " @config.valueLabel ": " (math/round @entity.meanValue 3)) }
+              ] }
+          ]
+        })
+        (emit RUN_TOGGLED { running: @entity.running })
+
+      PAUSE -> idle when (and (== @entity.active true) (== @entity.running true))
+        (set @entity.running false)
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @config.taskText },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if (and (== @entity.running false) (< @entity.t @config.duration)) false true) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: PROBE, label: @config.probeLabel, variant: primary, disabled: (if (> @entity.t 0) false true) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: @config.valueMin, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.traceCurves, points: @entity.points, vectors: [], shapes: [], interactive: false, animate: false },
+                { type: typography, variant: body, content: (str/concat "t = " (math/round @entity.t 1) "s · " @config.valueLabel " = " (math/round @entity.value 3)) },
+                { type: typography, variant: caption, content: (str/concat "Samples recorded: " (str/concat "" @entity.sampleCount) " · mean " @config.valueLabel ": " (math/round @entity.meanValue 3)) }
+              ] }
+          ]
+        })
+        (emit RUN_TOGGLED { running: @entity.running })
+
+      PROBE -> idle when (and (== @entity.active true) (> @entity.t 0))
+        (set @entity.points (array/append @entity.points { x: @entity.t, y: @entity.value, color: @config.probeColor }))
+        (set @entity.sampleCount (array/len @entity.points))
+        (set @entity.meanValue (array/avg (array/map @entity.points (fn p (object/get @p y)))))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @config.taskText },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if (and (== @entity.running false) (< @entity.t @config.duration)) false true) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: PROBE, label: @config.probeLabel, variant: primary, disabled: (if (> @entity.t 0) false true) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: @config.valueMin, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.traceCurves, points: @entity.points, vectors: [], shapes: [], interactive: false, animate: false },
+                { type: typography, variant: body, content: (str/concat "t = " (math/round @entity.t 1) "s · " @config.valueLabel " = " (math/round @entity.value 3)) },
+                { type: typography, variant: caption, content: (str/concat "Samples recorded: " (str/concat "" @entity.sampleCount) " · mean " @config.valueLabel ": " (math/round @entity.meanValue 3)) }
+              ] }
+          ]
+        })
+        (emit PROBE_RECORDED { t: @entity.t, value: @entity.value, count: @entity.sampleCount, mean: @entity.meanValue })
+
+      RESET -> idle when (== @entity.active true)
+        (set @entity.t 0)
+        (set @entity.value (if (== @config.signalKind "sine") 0 @config.amplitude))
+        (set @entity.running false)
+        (set @entity.traceSamples [])
+        (set @entity.traceCurves [])
+        (set @entity.points [])
+        (set @entity.sampleCount 0)
+        (set @entity.meanValue 0)
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @config.taskText },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if (and (== @entity.running false) (< @entity.t @config.duration)) false true) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: PROBE, label: @config.probeLabel, variant: primary, disabled: (if (> @entity.t 0) false true) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: @config.valueMin, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.traceCurves, points: @entity.points, vectors: [], shapes: [], interactive: false, animate: false },
+                { type: typography, variant: body, content: (str/concat "t = " (math/round @entity.t 1) "s · " @config.valueLabel " = " (math/round @entity.value 3)) },
+                { type: typography, variant: caption, content: (str/concat "Samples recorded: " (str/concat "" @entity.sampleCount) " · mean " @config.valueLabel ": " (math/round @entity.meanValue 3)) }
+              ] }
+          ]
+        })
+        (emit MEASURE_RESET { duration: @config.duration })
+    }
+
+    ticks {
+      measureTick every 100ms
+        when (and (== @entity.active true) (== @entity.running true))
+        (set @entity.t (math/min @config.duration (+ @entity.t 0.1)))
+        (set @entity.value (if (== @config.signalKind "sine")
+          (* @config.amplitude (math/sin (* @config.rate @entity.t)))
+          (if (== @config.signalKind "growth")
+            (* @config.amplitude (math/pow (+ 1 @config.rate) @entity.t))
+            (* @config.amplitude (math/pow 0.5 (/ @entity.t @config.rate))))))
+        (set @entity.traceSamples (array/append @entity.traceSamples { x: @entity.t, y: @entity.value }))
+        (set @entity.traceCurves [ { label: @config.valueLabel, color: @config.signalColor, samples: @entity.traceSamples } ])
+        (set @entity.running (if (>= @entity.t @config.duration) false true))
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      RUN {
+      }
+        @description "Learner started (or resumed) the signal's evolution; the trace draws live until Pause or the configured duration."
+        @tier "domain"
+      PAUSE {
+      }
+        @description "Learner froze the signal mid-run; Probe still works on the frozen value."
+        @tier "domain"
+      PROBE {
+      }
+        @description "Learner recorded the signal's instantaneous value as a data point; the sample count and running mean update."
+        @tier "domain"
+      RESET {
+      }
+        @description "Learner cleared the experiment — time, trace, and all recorded samples return to zero."
+        @tier "domain"
+    }
+
+    emits {
+      RUN_TOGGLED -> external {
+        running : boolean
+      }
+        @description "The experiment was started or paused — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @tier "domain"
+      PROBE_RECORDED -> external {
+        t : number
+        value : number
+        count : number
+        mean : number
+      }
+        @description "A measurement was taken: the probed time and value plus the running sample count and mean."
+        @synonyms "measurement lab, probe, sample the signal, record data points, running mean"
+        @tier "domain"
+      MEASURE_RESET -> external {
+        duration : number
+      }
+        @description "The learner reset the experiment to a clean slate."
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Measurement Lab"
+        @label "Title"
+        @description "Title shown above the experiment."
+        @tier "presentation"
+      taskText : string = "Run the signal, then press Probe to record measurements. Watch the running mean settle."
+        @label "Task Text"
+        @description "One-sentence statement of the measuring task."
+        @tier "domain"
+      signalKind : string = "sine"
+        @label "Signal Kind"
+        @description "How the measured quantity evolves: sine (A·sin(B·t)), growth (A·(1+B)ᵗ), or decay (half-life A·(1/2)^(t/B))."
+        @synonyms "signal family, oscillation, exponential growth, half-life decay"
+        @tier "domain"
+      amplitude : number = 5
+        @label "Amplitude"
+        @description "The A parameter: the signal's scale."
+        @tier "domain"
+      rate : number = 1.2
+        @label "Rate"
+        @description "The B parameter: angular rate for sine, growth rate for growth, half-life in seconds for decay."
+        @tier "domain"
+      duration : number = 12
+        @label "Duration"
+        @description "Seconds the signal runs before stopping automatically."
+        @tier "domain"
+      valueLabel : string = "value"
+        @label "Value Label"
+        @description "Display name of the measured quantity."
+        @tier "presentation"
+      valueMin : number = -6
+        @label "Value Min"
+        @description "Lower bound of the chart's y axis."
+        @tier "presentation"
+      valueMax : number = 6
+        @label "Value Max"
+        @description "Upper bound of the chart's y axis."
+        @tier "presentation"
+      gridStep : number = 1
+        @label "Grid Step"
+        @tier "presentation"
+      probeLabel : string = "Probe"
+        @label "Probe Label"
+        @tier "presentation"
+      signalColor : string = "#94a3b8"
+        @label "Signal Color"
+        @tier "presentation"
+      probeColor : string = "#dc2626"
+        @label "Probe Color"
+        @tier "presentation"
+      width : number = 600
+        @label "Width"
+        @tier "presentation"
+      height : number = 360
+        @label "Height"
+        @tier "presentation"
+    }
+  }
+
+  page "/learn-measure" as MeasurePage -> MeasureSim
+}

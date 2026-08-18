@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page, PatternValue } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -40,13 +40,13 @@ export type StdUiMenuEventKey = 'INIT';
  */
 export interface StdUiMenuConfig {
   className?: string;
-  footer?: unknown;
-  header?: unknown;
+  footer?: PatternValue;
+  header?: PatternValue;
   /** Default: `[{"badge":"Badge","disabled":false,"icon":"circle","id":"Id","label":"Label","subMenu":[],"url":"Url","variant":"default"},{"badge":"Badge 2","disabled":true,"icon":"circle","id":"Id 2","label":"Label 2","subMenu":[],"url":"Url 2","variant":"danger"}]` */
   items?: EntityRow[];
   /** Default: `"bottom-left"` */
   position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'top-start' | 'top-end' | 'bottom-start' | 'bottom-end';
-  trigger?: unknown;
+  trigger?: PatternValue;
 }
 
 /**

@@ -1,0 +1,321 @@
+[
+  {
+    "organism": "std-learn-speed-drill",
+    "orbital": "SpeedDrillOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-learn-speed-drill.ts",
+    "entities": [
+      {
+        "name": "SpeedDrillScene",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "itemIndex",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "totalItems",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "remaining",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "running",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "verdict",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "score",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "streak",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "bestStreak",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "done",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "promptText",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "options",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "correctIndex",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "feedback",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "view",
+            "type": "array",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "SpeedDrillSim",
+        "emittedEvents": [
+          "ANSWER_JUDGED",
+          "PROMPT_ADVANCED",
+          "ROUND_RESTARTED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "ANSWER_JUDGED",
+            "direction": "emit",
+            "description": "The verdict of a speeded answer: correctness, tenths of a second left on the clock, and the running score and streak — a composed listener (coach, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "speed drill, reaction time, fluency, timed quiz, countdown, rapid recall",
+            "tier": "domain"
+          },
+          {
+            "name": "PROMPT_ADVANCED",
+            "direction": "emit",
+            "description": "The learner moved to the next item (or completed the round) with the running score.",
+            "tier": "domain"
+          },
+          {
+            "name": "ROUND_RESTARTED",
+            "direction": "emit",
+            "description": "The learner restarted the round from scratch.",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "ANSWER",
+            "direction": "listen",
+            "description": "Learner picked an option while the clock was running — index is the chosen option; it is judged immediately and scored with a speed bonus.",
+            "tier": "domain"
+          },
+          {
+            "name": "NEXT",
+            "direction": "listen",
+            "description": "Learner advanced to the next item after a verdict (answered or timed out); past the last item this completes the round.",
+            "tier": "domain"
+          },
+          {
+            "name": "RETRY",
+            "direction": "listen",
+            "description": "Learner restarted the round from the first item with a cleared score and streak.",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "basePoints",
+            "type": "number",
+            "default": 10,
+            "label": "Base Points",
+            "description": "Points for a correct answer regardless of speed.",
+            "tier": "domain"
+          },
+          {
+            "key": "items",
+            "type": "[SpeedDrillItem]",
+            "default": [
+              {
+                "correctIndex": 1,
+                "options": [
+                  "54",
+                  "56",
+                  "63",
+                  "48"
+                ],
+                "prompt": "7 × 8"
+              },
+              {
+                "correctIndex": 0,
+                "options": [
+                  "54",
+                  "56",
+                  "45",
+                  "63"
+                ],
+                "prompt": "9 × 6"
+              },
+              {
+                "correctIndex": 2,
+                "options": [
+                  "124",
+                  "132",
+                  "144",
+                  "148"
+                ],
+                "prompt": "12 × 12"
+              }
+            ],
+            "label": "Items",
+            "description": "The drill roster; each item carries a prompt, its options, and the index of the correct option. Realizations declare their own subject's items here.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "correctIndex": {
+                  "name": "correctIndex",
+                  "required": true,
+                  "type": "number"
+                },
+                "options": {
+                  "name": "options",
+                  "required": true,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "prompt": {
+                  "name": "prompt",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "nextLabel",
+            "type": "string",
+            "default": "Next",
+            "label": "Next Label",
+            "tier": "presentation"
+          },
+          {
+            "key": "retryLabel",
+            "type": "string",
+            "default": "Try Again",
+            "label": "Retry Label",
+            "tier": "presentation"
+          },
+          {
+            "key": "speedBonus",
+            "type": "number",
+            "default": 10,
+            "label": "Speed Bonus",
+            "description": "Maximum extra points awarded in proportion to the time left on the clock.",
+            "tier": "domain"
+          },
+          {
+            "key": "timeLimit",
+            "type": "number",
+            "default": 6,
+            "label": "Time Limit",
+            "description": "Seconds the learner has to answer each item before it counts as a miss.",
+            "tier": "domain"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Speed Drill",
+            "label": "Title",
+            "description": "Title shown above the drill.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "SpeedDrillScene",
+        "transitionEvents": [
+          "ANSWER",
+          "INIT",
+          "MODE_SELECTED",
+          "NEXT",
+          "RETRY"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "bestStreak",
+            "correctIndex",
+            "done",
+            "feedback",
+            "itemIndex",
+            "options",
+            "promptText",
+            "remaining",
+            "running",
+            "score",
+            "streak",
+            "title",
+            "totalItems",
+            "verdict",
+            "view"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "SpeedDrillPage",
+        "defaultPath": "/learn-speed-drill",
+        "primaryEntity": "SpeedDrillScene"
+      }
+    ],
+    "emittedEvents": [
+      "ANSWER_JUDGED",
+      "PROMPT_ADVANCED",
+      "ROUND_RESTARTED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

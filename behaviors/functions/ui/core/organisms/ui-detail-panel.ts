@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page, PatternValue } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -49,8 +49,8 @@ export interface StdUiDetailPanelConfig {
   /** Default: `[]` */
   actions?: EntityRow[];
   /** Default: `{}` */
-  activeFilters?: unknown;
-  avatar?: unknown;
+  activeFilters?: Record<string, TraitConfig>;
+  avatar?: PatternValue;
   className?: string;
   /** Default: `[]` */
   displayFields?: string[];
@@ -59,7 +59,7 @@ export interface StdUiDetailPanelConfig {
   fieldNames?: string[];
   /** Default: `[{"header":"Header","key":"Key"},{"header":"Header 2","key":"Key 2"}]` */
   fields?: EntityRow[];
-  footer?: unknown;
+  footer?: PatternValue;
   /** Default: `false` */
   isLoading?: boolean;
   mode?: string;
@@ -202,9 +202,12 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
           'activeFilters': {
             'default': {},
             'description': 'Active filters',
+            'items': {
+              'type': 'string',
+            },
             'label': 'Active Filters',
             'tier': 'presentation',
-            'type': 'json',
+            'type': 'Map<string,string>',
           },
           'avatar': {
             'description': 'avatar prop',
@@ -372,7 +375,7 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                       'value': {
                         'name': 'value',
                         'required': true,
-                        'type': 'string',
+                        'type': 'node',
                       },
                     },
                     'type': 'object',

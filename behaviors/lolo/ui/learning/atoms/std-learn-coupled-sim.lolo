@@ -1,0 +1,537 @@
+app std-learn-coupled-sim "1.0.0"
+"Generic coupled-dynamics simulation — two named quantities evolve each tick under a config-selected interaction family (predator-prey: dP = aP − bPQ, dQ = cbPQ − dQ; epidemic: dS = −aSI, dI = aSI − bI; kinetics: dP = −aP, dQ = aP − bQ), drawn live as two time-series curves while Run is engaged. The two governing rates are exposed as sliders the learner can retune mid-run, and shock buttons inject or remove a burst of the first quantity so the learner feels how the coupled system absorbs disturbance. All names, coefficients, and scales are config-declared, so one mechanism serves rabbits and foxes, infection and recovery, reactant and product, adopters and churn. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital CoupledSimOrbital {
+  type CoupledSample = {
+    x : number!
+    y : number!
+  }
+  type CoupledCurve = {
+    label : string
+    color : string
+    samples : [CoupledSample]!
+  }
+
+  entity CoupledSimScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    t : number = 0
+    p : number = 0
+    q : number = 0
+    coefA : number = 0
+    coefB : number = 0
+    running : boolean = false
+    pSamples : [CoupledSample]
+    qSamples : [CoupledSample]
+    curves : [CoupledCurve]
+  }
+
+  trait CoupledSimSim -> @rebindable CoupledSimScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.t 0)
+        (set @entity.p @config.pStart)
+        (set @entity.q @config.qStart)
+        (set @entity.coefA @config.coefADefault)
+        (set @entity.coefB @config.coefBDefault)
+        (set @entity.running @config.autoRun)
+        (set @entity.pSamples [ { x: 0, y: @config.pStart } ])
+        (set @entity.qSamples [ { x: 0, y: @config.qStart } ])
+        (set @entity.curves [
+          { label: @config.pLabel, color: @config.pColor, samples: @entity.pSamples },
+          { label: @config.qLabel, color: @config.qColor, samples: @entity.qSamples }
+        ])
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @config.taskText },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if (and (== @entity.running false) (< @entity.t @config.duration)) false true) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost },
+                    { type: button, action: SHOCK, actionPayload: { delta: @config.shockSize }, label: @config.shockUpLabel, variant: secondary, size: sm },
+                    { type: button, action: SHOCK, actionPayload: { delta: (- 0 @config.shockSize) }, label: @config.shockDownLabel, variant: secondary, size: sm }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.coefALabel ": " (math/round @entity.coefA 3)) },
+                    { type: range-slider, min: @config.coefAMin, max: @config.coefAMax, step: @config.coefAStep, value: @entity.coefA, showTooltip: true, action: "SET_A" }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.coefBLabel ": " (math/round @entity.coefB 3)) },
+                    { type: range-slider, min: @config.coefBMin, max: @config.coefBMax, step: @config.coefBStep, value: @entity.coefB, showTooltip: true, action: "SET_B" }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: 0, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: typography, variant: body, content: (str/concat "t = " (math/round @entity.t 1) " · " @config.pLabel " = " (math/round @entity.p 1) " · " @config.qLabel " = " (math/round @entity.q 1)) }
+              ] }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.t 0)
+        (set @entity.p @config.pStart)
+        (set @entity.q @config.qStart)
+        (set @entity.coefA @config.coefADefault)
+        (set @entity.coefB @config.coefBDefault)
+        (set @entity.running @config.autoRun)
+        (set @entity.pSamples [ { x: 0, y: @config.pStart } ])
+        (set @entity.qSamples [ { x: 0, y: @config.qStart } ])
+        (set @entity.curves [
+          { label: @config.pLabel, color: @config.pColor, samples: @entity.pSamples },
+          { label: @config.qLabel, color: @config.qColor, samples: @entity.qSamples }
+        ])
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @config.taskText },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if (and (== @entity.running false) (< @entity.t @config.duration)) false true) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost },
+                    { type: button, action: SHOCK, actionPayload: { delta: @config.shockSize }, label: @config.shockUpLabel, variant: secondary, size: sm },
+                    { type: button, action: SHOCK, actionPayload: { delta: (- 0 @config.shockSize) }, label: @config.shockDownLabel, variant: secondary, size: sm }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.coefALabel ": " (math/round @entity.coefA 3)) },
+                    { type: range-slider, min: @config.coefAMin, max: @config.coefAMax, step: @config.coefAStep, value: @entity.coefA, showTooltip: true, action: "SET_A" }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.coefBLabel ": " (math/round @entity.coefB 3)) },
+                    { type: range-slider, min: @config.coefBMin, max: @config.coefBMax, step: @config.coefBStep, value: @entity.coefB, showTooltip: true, action: "SET_B" }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: 0, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: typography, variant: body, content: (str/concat "t = " (math/round @entity.t 1) " · " @config.pLabel " = " (math/round @entity.p 1) " · " @config.qLabel " = " (math/round @entity.q 1)) }
+              ] }
+          ]
+        })
+
+      RUN -> idle when (and (== @entity.active true) (and (== @entity.running false) (< @entity.t @config.duration)))
+        (set @entity.running true)
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @config.taskText },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if (and (== @entity.running false) (< @entity.t @config.duration)) false true) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost },
+                    { type: button, action: SHOCK, actionPayload: { delta: @config.shockSize }, label: @config.shockUpLabel, variant: secondary, size: sm },
+                    { type: button, action: SHOCK, actionPayload: { delta: (- 0 @config.shockSize) }, label: @config.shockDownLabel, variant: secondary, size: sm }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.coefALabel ": " (math/round @entity.coefA 3)) },
+                    { type: range-slider, min: @config.coefAMin, max: @config.coefAMax, step: @config.coefAStep, value: @entity.coefA, showTooltip: true, action: "SET_A" }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.coefBLabel ": " (math/round @entity.coefB 3)) },
+                    { type: range-slider, min: @config.coefBMin, max: @config.coefBMax, step: @config.coefBStep, value: @entity.coefB, showTooltip: true, action: "SET_B" }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: 0, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: typography, variant: body, content: (str/concat "t = " (math/round @entity.t 1) " · " @config.pLabel " = " (math/round @entity.p 1) " · " @config.qLabel " = " (math/round @entity.q 1)) }
+              ] }
+          ]
+        })
+        (emit RUN_TOGGLED { running: @entity.running })
+
+      PAUSE -> idle when (and (== @entity.active true) (== @entity.running true))
+        (set @entity.running false)
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @config.taskText },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if (and (== @entity.running false) (< @entity.t @config.duration)) false true) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost },
+                    { type: button, action: SHOCK, actionPayload: { delta: @config.shockSize }, label: @config.shockUpLabel, variant: secondary, size: sm },
+                    { type: button, action: SHOCK, actionPayload: { delta: (- 0 @config.shockSize) }, label: @config.shockDownLabel, variant: secondary, size: sm }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.coefALabel ": " (math/round @entity.coefA 3)) },
+                    { type: range-slider, min: @config.coefAMin, max: @config.coefAMax, step: @config.coefAStep, value: @entity.coefA, showTooltip: true, action: "SET_A" }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.coefBLabel ": " (math/round @entity.coefB 3)) },
+                    { type: range-slider, min: @config.coefBMin, max: @config.coefBMax, step: @config.coefBStep, value: @entity.coefB, showTooltip: true, action: "SET_B" }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: 0, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: typography, variant: body, content: (str/concat "t = " (math/round @entity.t 1) " · " @config.pLabel " = " (math/round @entity.p 1) " · " @config.qLabel " = " (math/round @entity.q 1)) }
+              ] }
+          ]
+        })
+        (emit RUN_TOGGLED { running: @entity.running })
+
+      RESET -> idle when (== @entity.active true)
+        (set @entity.t 0)
+        (set @entity.p @config.pStart)
+        (set @entity.q @config.qStart)
+        (set @entity.coefA @config.coefADefault)
+        (set @entity.coefB @config.coefBDefault)
+        (set @entity.running false)
+        (set @entity.pSamples [ { x: 0, y: @config.pStart } ])
+        (set @entity.qSamples [ { x: 0, y: @config.qStart } ])
+        (set @entity.curves [
+          { label: @config.pLabel, color: @config.pColor, samples: @entity.pSamples },
+          { label: @config.qLabel, color: @config.qColor, samples: @entity.qSamples }
+        ])
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @config.taskText },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if (and (== @entity.running false) (< @entity.t @config.duration)) false true) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost },
+                    { type: button, action: SHOCK, actionPayload: { delta: @config.shockSize }, label: @config.shockUpLabel, variant: secondary, size: sm },
+                    { type: button, action: SHOCK, actionPayload: { delta: (- 0 @config.shockSize) }, label: @config.shockDownLabel, variant: secondary, size: sm }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.coefALabel ": " (math/round @entity.coefA 3)) },
+                    { type: range-slider, min: @config.coefAMin, max: @config.coefAMax, step: @config.coefAStep, value: @entity.coefA, showTooltip: true, action: "SET_A" }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.coefBLabel ": " (math/round @entity.coefB 3)) },
+                    { type: range-slider, min: @config.coefBMin, max: @config.coefBMax, step: @config.coefBStep, value: @entity.coefB, showTooltip: true, action: "SET_B" }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: 0, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: typography, variant: body, content: (str/concat "t = " (math/round @entity.t 1) " · " @config.pLabel " = " (math/round @entity.p 1) " · " @config.qLabel " = " (math/round @entity.q 1)) }
+              ] }
+          ]
+        })
+        (emit SIM_RESET { pStart: @config.pStart, qStart: @config.qStart })
+
+      SET_A -> idle when (== @entity.active true)
+        (set @entity.coefA (math/clamp ?value @config.coefAMin @config.coefAMax))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @config.taskText },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if (and (== @entity.running false) (< @entity.t @config.duration)) false true) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost },
+                    { type: button, action: SHOCK, actionPayload: { delta: @config.shockSize }, label: @config.shockUpLabel, variant: secondary, size: sm },
+                    { type: button, action: SHOCK, actionPayload: { delta: (- 0 @config.shockSize) }, label: @config.shockDownLabel, variant: secondary, size: sm }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.coefALabel ": " (math/round @entity.coefA 3)) },
+                    { type: range-slider, min: @config.coefAMin, max: @config.coefAMax, step: @config.coefAStep, value: @entity.coefA, showTooltip: true, action: "SET_A" }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.coefBLabel ": " (math/round @entity.coefB 3)) },
+                    { type: range-slider, min: @config.coefBMin, max: @config.coefBMax, step: @config.coefBStep, value: @entity.coefB, showTooltip: true, action: "SET_B" }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: 0, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: typography, variant: body, content: (str/concat "t = " (math/round @entity.t 1) " · " @config.pLabel " = " (math/round @entity.p 1) " · " @config.qLabel " = " (math/round @entity.q 1)) }
+              ] }
+          ]
+        })
+        (emit COEFS_CHANGED { coefA: @entity.coefA, coefB: @entity.coefB })
+
+      SET_B -> idle when (== @entity.active true)
+        (set @entity.coefB (math/clamp ?value @config.coefBMin @config.coefBMax))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @config.taskText },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if (and (== @entity.running false) (< @entity.t @config.duration)) false true) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost },
+                    { type: button, action: SHOCK, actionPayload: { delta: @config.shockSize }, label: @config.shockUpLabel, variant: secondary, size: sm },
+                    { type: button, action: SHOCK, actionPayload: { delta: (- 0 @config.shockSize) }, label: @config.shockDownLabel, variant: secondary, size: sm }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.coefALabel ": " (math/round @entity.coefA 3)) },
+                    { type: range-slider, min: @config.coefAMin, max: @config.coefAMax, step: @config.coefAStep, value: @entity.coefA, showTooltip: true, action: "SET_A" }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.coefBLabel ": " (math/round @entity.coefB 3)) },
+                    { type: range-slider, min: @config.coefBMin, max: @config.coefBMax, step: @config.coefBStep, value: @entity.coefB, showTooltip: true, action: "SET_B" }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: 0, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: typography, variant: body, content: (str/concat "t = " (math/round @entity.t 1) " · " @config.pLabel " = " (math/round @entity.p 1) " · " @config.qLabel " = " (math/round @entity.q 1)) }
+              ] }
+          ]
+        })
+        (emit COEFS_CHANGED { coefA: @entity.coefA, coefB: @entity.coefB })
+
+      SHOCK -> idle when (== @entity.active true)
+        (set @entity.p (math/max 0 (+ @entity.p ?delta)))
+        (set @entity.pSamples (array/append @entity.pSamples { x: @entity.t, y: @entity.p }))
+        (set @entity.curves [
+          { label: @config.pLabel, color: @config.pColor, samples: @entity.pSamples },
+          { label: @config.qLabel, color: @config.qColor, samples: @entity.qSamples }
+        ])
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: typography, variant: body, content: @config.taskText },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: RUN, label: "Run", variant: primary, disabled: (if (and (== @entity.running false) (< @entity.t @config.duration)) false true) },
+                    { type: button, action: PAUSE, label: "Pause", variant: secondary, disabled: (if @entity.running false true) },
+                    { type: button, action: RESET, label: "Reset", variant: ghost },
+                    { type: button, action: SHOCK, actionPayload: { delta: @config.shockSize }, label: @config.shockUpLabel, variant: secondary, size: sm },
+                    { type: button, action: SHOCK, actionPayload: { delta: (- 0 @config.shockSize) }, label: @config.shockDownLabel, variant: secondary, size: sm }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.coefALabel ": " (math/round @entity.coefA 3)) },
+                    { type: range-slider, min: @config.coefAMin, max: @config.coefAMax, step: @config.coefAStep, value: @entity.coefA, showTooltip: true, action: "SET_A" }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat @config.coefBLabel ": " (math/round @entity.coefB 3)) },
+                    { type: range-slider, min: @config.coefBMin, max: @config.coefBMax, step: @config.coefBStep, value: @entity.coefB, showTooltip: true, action: "SET_B" }
+                  ] },
+                { type: math-canvas, width: @config.width, height: @config.height, title: "", xMin: 0, xMax: @config.duration, yMin: 0, yMax: @config.valueMax, showAxes: true, showGrid: true, gridStep: @config.gridStep, curves: @entity.curves, points: [], vectors: [], shapes: [], interactive: false, animate: false },
+                { type: typography, variant: body, content: (str/concat "t = " (math/round @entity.t 1) " · " @config.pLabel " = " (math/round @entity.p 1) " · " @config.qLabel " = " (math/round @entity.q 1)) }
+              ] }
+          ]
+        })
+        (emit SHOCK_APPLIED { delta: ?delta, p: @entity.p, q: @entity.q })
+    }
+
+    ticks {
+      coupledTick every 100ms
+        when (and (== @entity.active true) (and (== @entity.running true) (< @entity.t @config.duration)))
+        (let (
+            (dt (* 0.1 @config.timeScale))
+            (a @entity.coefA)
+            (b @entity.coefB)
+            (P @entity.p)
+            (Q @entity.q)
+            (dP (if (== @config.kind "predator-prey")
+                  (- (* @a @P) (* @b @P @Q 0.01))
+                  (if (== @config.kind "epidemic")
+                    (- 0 (* @a @P @Q 0.01))
+                    (- 0 (* @a @P)))))
+            (dQ (if (== @config.kind "predator-prey")
+                  (- (* @config.coefC @b @P @Q 0.01) (* @config.coefD @Q))
+                  (if (== @config.kind "epidemic")
+                    (- (* @a @P @Q 0.01) (* @b @Q))
+                    (- (* @a @P) (* @b @Q)))))
+            (newP (math/max 0 (+ @P (* @dP @dt))))
+            (newQ (math/max 0 (+ @Q (* @dQ @dt))))
+          )
+          (do
+            (set @entity.t (math/min @config.duration (+ @entity.t 0.1)))
+            (set @entity.p @newP)
+            (set @entity.q @newQ)
+            (set @entity.pSamples (array/append @entity.pSamples { x: @entity.t, y: @newP }))
+            (set @entity.qSamples (array/append @entity.qSamples { x: @entity.t, y: @newQ }))
+            (set @entity.curves [
+              { label: @config.pLabel, color: @config.pColor, samples: @entity.pSamples },
+              { label: @config.qLabel, color: @config.qColor, samples: @entity.qSamples }
+            ])
+            (set @entity.running (if (>= @entity.t @config.duration) false true))))
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      RUN {
+      }
+        @description "Learner started (or resumed) the coupled evolution; the two curves draw live until Pause or the configured duration."
+        @tier "domain"
+      PAUSE {
+      }
+        @description "Learner froze the simulation mid-run; sliders and shocks still apply to the frozen state."
+        @tier "domain"
+      RESET {
+      }
+        @description "Learner restored both quantities, both rates, and the clock to their configured starting values."
+        @tier "domain"
+      SET_A {
+        value : number
+      }
+        @description "Learner retuned the first governing rate mid-run — value is the new coefficient; the dynamics change from the next tick."
+        @tier "domain"
+      SET_B {
+        value : number
+      }
+        @description "Learner retuned the second governing rate mid-run — value is the new coefficient; the dynamics change from the next tick."
+        @tier "domain"
+      SHOCK {
+        delta : number
+      }
+        @description "Learner injected (positive) or removed (negative) a burst of the first quantity to disturb the system and watch it respond."
+        @tier "domain"
+    }
+
+    emits {
+      RUN_TOGGLED -> external {
+        running : boolean
+      }
+        @description "The simulation was started or paused — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @tier "domain"
+      SIM_RESET -> external {
+        pStart : number
+        qStart : number
+      }
+        @description "The learner reset the system to its configured starting state."
+        @tier "domain"
+      COEFS_CHANGED -> external {
+        coefA : number
+        coefB : number
+      }
+        @description "The governing rates after a slider change."
+        @tier "domain"
+      SHOCK_APPLIED -> external {
+        delta : number
+        p : number
+        q : number
+      }
+        @description "A disturbance was injected: the burst size and both quantities right after it."
+        @synonyms "coupled dynamics, predator prey, epidemic, reaction kinetics, feedback loop, disturbance"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Coupled System"
+        @label "Title"
+        @description "Title shown above the simulation."
+        @tier "presentation"
+      taskText : string = "Run the system, retune the rates, and shock it — watch how the two quantities push and pull each other."
+        @label "Task Text"
+        @description "One-sentence statement of what to explore."
+        @tier "domain"
+      kind : string = "predator-prey"
+        @label "Interaction Family"
+        @description "Which coupled dynamics govern the two quantities: predator-prey (oscillating cycles), epidemic (S and I with transmission and recovery), or kinetics (A decaying into B)."
+        @synonyms "predator prey, Lotka-Volterra, SIR, epidemic, reaction kinetics, coupled ODE"
+        @tier "domain"
+      pLabel : string = "Prey"
+        @label "P Label"
+        @description "Display name of the first quantity."
+        @tier "domain"
+      qLabel : string = "Predators"
+        @label "Q Label"
+        @description "Display name of the second quantity."
+        @tier "domain"
+      pStart : number = 120
+        @label "P Start"
+        @tier "domain"
+      qStart : number = 40
+        @label "Q Start"
+        @tier "domain"
+      coefALabel : string = "Prey growth rate"
+        @label "Coefficient A Label"
+        @description "Display label of the first governing rate slider."
+        @tier "domain"
+      coefBLabel : string = "Predation rate"
+        @label "Coefficient B Label"
+        @description "Display label of the second governing rate slider."
+        @tier "domain"
+      coefADefault : number = 0.6
+        @label "Coefficient A Default"
+        @tier "domain"
+      coefBDefault : number = 0.9
+        @label "Coefficient B Default"
+        @tier "domain"
+      coefAMin : number = 0
+        @label "Coefficient A Min"
+        @tier "domain"
+      coefAMax : number = 2
+        @label "Coefficient A Max"
+        @tier "domain"
+      coefAStep : number = 0.01
+        @label "Coefficient A Step"
+        @tier "presentation"
+      coefBMin : number = 0
+        @label "Coefficient B Min"
+        @tier "domain"
+      coefBMax : number = 2
+        @label "Coefficient B Max"
+        @tier "domain"
+      coefBStep : number = 0.01
+        @label "Coefficient B Step"
+        @tier "presentation"
+      coefC : number = 0.5
+        @label "Coefficient C"
+        @description "Predator-prey only: conversion efficiency of predation into predator growth."
+        @tier "domain"
+      coefD : number = 0.4
+        @label "Coefficient D"
+        @description "Predator-prey only: predator death rate."
+        @tier "domain"
+      timeScale : number = 1
+        @label "Time Scale"
+        @description "Multiplier on the integration step; raise it to fast-forward the dynamics."
+        @tier "domain"
+      duration : number = 30
+        @label "Duration"
+        @description "Simulated seconds before the run stops automatically."
+        @tier "domain"
+      shockSize : number = 40
+        @label "Shock Size"
+        @description "How much of the first quantity a shock button injects or removes."
+        @tier "domain"
+      shockUpLabel : string = "+ Prey burst"
+        @label "Shock Up Label"
+        @tier "presentation"
+      shockDownLabel : string = "− Prey cull"
+        @label "Shock Down Label"
+        @tier "presentation"
+      valueMax : number = 300
+        @label "Value Max"
+        @description "Upper bound of the chart's y axis."
+        @tier "presentation"
+      gridStep : number = 50
+        @label "Grid Step"
+        @tier "presentation"
+      pColor : string = "#16a34a"
+        @label "P Color"
+        @tier "presentation"
+      qColor : string = "#dc2626"
+        @label "Q Color"
+        @tier "presentation"
+      autoRun : boolean = true
+        @label "Auto Run"
+        @description "Whether the simulation starts running immediately on load."
+        @tier "domain"
+      width : number = 600
+        @label "Width"
+        @tier "presentation"
+      height : number = 360
+        @label "Height"
+        @tier "presentation"
+    }
+  }
+
+  page "/learn-coupled-sim" as CoupledSimPage -> CoupledSimSim
+}

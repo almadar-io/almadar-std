@@ -5,13 +5,16 @@ orbital PhysicsCanvasOrbital {
     id : string
     x : number!
     y : number!
+    z : number
     radius : number
     color : string
     label : string
     vx : number
     vy : number
+    vz : number
     fx : number
     fy : number
+    fz : number
   }
   type PhysicsCanvasConstraintsItem = {
     from : string!
@@ -76,6 +79,10 @@ orbital PhysicsCanvasOrbital {
           height: @config.height
           title: @config.title
           backgroundColor: @config.backgroundColor
+          mode: @config.mode
+          camera: @config.camera
+          lighting: @config.lighting
+          post: @config.post
           bodies: @config.bodies
           constraints: @config.constraints
           showVelocity: @config.showVelocity
@@ -83,6 +90,8 @@ orbital PhysicsCanvasOrbital {
           velocityScale: @config.velocityScale
           forceScale: @config.forceScale
           shapes: @config.shapes
+          showGrid: @config.showGrid
+          shadows: @config.shadows
           interactive: @config.interactive
           animate: @config.animate
           onShapeClick: @config.onShapeClick
@@ -97,6 +106,10 @@ orbital PhysicsCanvasOrbital {
           height: @config.height
           title: @config.title
           backgroundColor: @config.backgroundColor
+          mode: @config.mode
+          camera: @config.camera
+          lighting: @config.lighting
+          post: @config.post
           bodies: @payload.bodies
           constraints: @payload.constraints
           showVelocity: @config.showVelocity
@@ -104,6 +117,8 @@ orbital PhysicsCanvasOrbital {
           velocityScale: @config.velocityScale
           forceScale: @config.forceScale
           shapes: @payload.shapes
+          showGrid: @config.showGrid
+          shadows: @config.shadows
           interactive: @config.interactive
           animate: @config.animate
           onShapeClick: @config.onShapeClick
@@ -153,6 +168,22 @@ orbital PhysicsCanvasOrbital {
         @label "Background Color"
         @description "backgroundColor prop"
         @tier "presentation"
+      mode : "2d" | "3d" = "2d"
+        @label "Mode"
+        @description "Painter: 2D raster (default) or 3D mesh scene via the lazy three.js host."
+        @tier "presentation"
+      camera : json = {}
+        @label "Camera"
+        @description "3D only: neutral camera pose ({ mode, zoom, fov, azimuth, target })."
+        @tier "presentation"
+      lighting : json = {}
+        @label "Lighting"
+        @description "3D only: scene light rig as data."
+        @tier "presentation"
+      post : json = {}
+        @label "Post"
+        @description "3D only: post-processing stack (bloom/vignette)."
+        @tier "presentation"
       bodies : [PhysicsCanvasBodiesItem] = []
         @label "Bodies"
         @description "bodies prop"
@@ -179,15 +210,23 @@ orbital PhysicsCanvasOrbital {
         @tier "presentation"
       shapes : [PhysicsCanvasShapesItem] = []
         @label "Shapes"
-        @description "Extra declarative shapes in canvas pixel coordinates."
+        @description "Extra declarative shapes in canvas pixel coordinates (2D mode only — ignored in 3D)."
         @tier "presentation"
-      interactive : boolean = false
+      showGrid : boolean
+        @label "Show Grid"
+        @description "3D only: show the ground grid (default off)."
+        @tier "presentation"
+      shadows : boolean
+        @label "Shadows"
+        @description "3D only: enable shadows. Omitted → the host default."
+        @tier "presentation"
+      interactive : boolean
         @label "Interactive"
-        @description "interactive prop"
+        @description "2D: pointer interaction (click/hover). 3D: orbit camera controls."
         @tier "presentation"
       animate : boolean = false
         @label "Animate"
-        @description "animate prop"
+        @description "2D only: continuous redraw loop. 3D motion is entity-state driven."
         @tier "presentation"
       onShapeClick : string = "SHAPE_CLICK"
         @label "On Shape Click"

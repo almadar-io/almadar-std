@@ -1,0 +1,400 @@
+[
+  {
+    "organism": "std-learn-perturb",
+    "orbital": "PerturbOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-learn-perturb.ts",
+    "entities": [
+      {
+        "name": "PerturbScene",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "t",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "value",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "setpoint",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "rate",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "running",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "traceSamples",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "curves",
+            "type": "array",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "PerturbSim",
+        "emittedEvents": [
+          "RUN_TOGGLED",
+          "SIM_RESET",
+          "SETPOINT_CHANGED",
+          "RATE_CHANGED",
+          "SHOCK_APPLIED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "RUN_TOGGLED",
+            "direction": "emit",
+            "description": "The simulation was started or paused — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+            "tier": "domain"
+          },
+          {
+            "name": "SIM_RESET",
+            "direction": "emit",
+            "description": "The learner reset the system to its configured starting state.",
+            "tier": "domain"
+          },
+          {
+            "name": "SETPOINT_CHANGED",
+            "direction": "emit",
+            "description": "The equilibrium target after a slider change.",
+            "tier": "domain"
+          },
+          {
+            "name": "RATE_CHANGED",
+            "direction": "emit",
+            "description": "The recovery rate after a slider change.",
+            "tier": "domain"
+          },
+          {
+            "name": "SHOCK_APPLIED",
+            "direction": "emit",
+            "description": "A disturbance was injected: the shock size, the quantity right after it, and its deviation from the setpoint.",
+            "synonyms": "homeostasis, negative feedback, equilibrium, shock and recovery, thermostat, resilience",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "RUN",
+            "direction": "listen",
+            "description": "Learner started (or resumed) the regulation loop; the trace draws live until Pause or the configured duration.",
+            "tier": "domain"
+          },
+          {
+            "name": "PAUSE",
+            "direction": "listen",
+            "description": "Learner froze the simulation mid-run; shocks and slider changes still apply to the frozen state.",
+            "tier": "domain"
+          },
+          {
+            "name": "RESET",
+            "direction": "listen",
+            "description": "Learner restored the quantity, setpoint, rate, and clock to their configured starting values.",
+            "tier": "domain"
+          },
+          {
+            "name": "SET_POINT",
+            "direction": "listen",
+            "description": "Learner moved the equilibrium setpoint — mid-run the system visibly chases the new target.",
+            "tier": "domain"
+          },
+          {
+            "name": "SET_RATE",
+            "direction": "listen",
+            "description": "Learner retuned the recovery rate — higher snaps back fast, lower drifts sluggishly.",
+            "tier": "domain"
+          },
+          {
+            "name": "SHOCK",
+            "direction": "listen",
+            "description": "Learner knocked the quantity up (positive) or down (negative) to disturb the equilibrium and watch the recovery.",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "autoRun",
+            "type": "boolean",
+            "default": true,
+            "label": "Auto Run",
+            "description": "Whether the simulation starts running immediately on load.",
+            "tier": "domain"
+          },
+          {
+            "key": "duration",
+            "type": "number",
+            "default": 20,
+            "label": "Duration",
+            "description": "Simulated seconds before the run stops automatically.",
+            "tier": "domain"
+          },
+          {
+            "key": "gridStep",
+            "type": "number",
+            "default": 2,
+            "label": "Grid Step",
+            "tier": "presentation"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 360,
+            "label": "Height",
+            "tier": "presentation"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "rateDefault",
+            "type": "number",
+            "default": 0.8,
+            "label": "Rate Default",
+            "tier": "domain"
+          },
+          {
+            "key": "rateLabel",
+            "type": "string",
+            "default": "Recovery rate",
+            "label": "Rate Label",
+            "description": "Display name of the relaxation-rate slider.",
+            "tier": "domain"
+          },
+          {
+            "key": "rateMax",
+            "type": "number",
+            "default": 3,
+            "label": "Rate Max",
+            "tier": "domain"
+          },
+          {
+            "key": "rateMin",
+            "type": "number",
+            "default": 0.05,
+            "label": "Rate Min",
+            "tier": "domain"
+          },
+          {
+            "key": "rateStep",
+            "type": "number",
+            "default": 0.05,
+            "label": "Rate Step",
+            "tier": "presentation"
+          },
+          {
+            "key": "setpointColor",
+            "type": "string",
+            "default": "#94a3b8",
+            "label": "Setpoint Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "setpointDefault",
+            "type": "number",
+            "default": 37,
+            "label": "Setpoint Default",
+            "tier": "domain"
+          },
+          {
+            "key": "setpointLabel",
+            "type": "string",
+            "default": "Setpoint",
+            "label": "Setpoint Label",
+            "description": "Display name of the equilibrium target.",
+            "tier": "domain"
+          },
+          {
+            "key": "setpointMax",
+            "type": "number",
+            "default": 44,
+            "label": "Setpoint Max",
+            "tier": "domain"
+          },
+          {
+            "key": "setpointMin",
+            "type": "number",
+            "default": 30,
+            "label": "Setpoint Min",
+            "tier": "domain"
+          },
+          {
+            "key": "setpointStep",
+            "type": "number",
+            "default": 0.5,
+            "label": "Setpoint Step",
+            "tier": "presentation"
+          },
+          {
+            "key": "shockDownLabel",
+            "type": "string",
+            "default": "− Shock down",
+            "label": "Shock Down Label",
+            "tier": "presentation"
+          },
+          {
+            "key": "shockSize",
+            "type": "number",
+            "default": 4,
+            "label": "Shock Size",
+            "description": "How far a shock button knocks the quantity from its current value.",
+            "tier": "domain"
+          },
+          {
+            "key": "shockUpLabel",
+            "type": "string",
+            "default": "+ Shock up",
+            "label": "Shock Up Label",
+            "tier": "presentation"
+          },
+          {
+            "key": "taskText",
+            "type": "string",
+            "default": "Run the system, shock it off its setpoint, and watch it recover — then move the setpoint mid-run.",
+            "label": "Task Text",
+            "description": "One-sentence statement of what to explore.",
+            "tier": "domain"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Equilibrium & Shock",
+            "label": "Title",
+            "description": "Title shown above the simulation.",
+            "tier": "presentation"
+          },
+          {
+            "key": "valueColor",
+            "type": "string",
+            "default": "#dc2626",
+            "label": "Value Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "valueLabel",
+            "type": "string",
+            "default": "Temperature",
+            "label": "Value Label",
+            "description": "Display name of the regulated quantity.",
+            "tier": "domain"
+          },
+          {
+            "key": "valueMax",
+            "type": "number",
+            "default": 46,
+            "label": "Value Max",
+            "description": "Upper bound of the chart's y axis.",
+            "tier": "presentation"
+          },
+          {
+            "key": "valueMin",
+            "type": "number",
+            "default": 28,
+            "label": "Value Min",
+            "description": "Lower bound of the chart's y axis.",
+            "tier": "presentation"
+          },
+          {
+            "key": "valueStart",
+            "type": "number",
+            "default": 37,
+            "label": "Value Start",
+            "tier": "domain"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "PerturbScene",
+        "transitionEvents": [
+          "INIT",
+          "MODE_SELECTED",
+          "PAUSE",
+          "RESET",
+          "RUN",
+          "SET_POINT",
+          "SET_RATE",
+          "SHOCK"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "curves",
+            "rate",
+            "running",
+            "setpoint",
+            "t",
+            "title",
+            "traceSamples",
+            "value"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "PerturbPage",
+        "defaultPath": "/learn-perturb",
+        "primaryEntity": "PerturbScene"
+      }
+    ],
+    "emittedEvents": [
+      "RATE_CHANGED",
+      "RUN_TOGGLED",
+      "SETPOINT_CHANGED",
+      "SHOCK_APPLIED",
+      "SIM_RESET"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

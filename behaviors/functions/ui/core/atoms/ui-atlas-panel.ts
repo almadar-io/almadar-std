@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page, PatternValue } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -44,12 +44,12 @@ export interface StdUiAtlasPanelConfig {
   borderSlice?: number;
   /** Default: `16` */
   borderWidth?: number;
-  children?: unknown;
+  children?: PatternValue;
   className?: string;
   /** Default: `"nineSlice"` */
   mode?: 'nineSlice' | 'repeat';
   /** Default: `{}` */
-  style?: unknown;
+  style?: Record<string, TraitConfig>;
 }
 
 /**

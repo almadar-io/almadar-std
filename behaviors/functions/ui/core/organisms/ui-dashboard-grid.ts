@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page, PatternValue } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -40,7 +40,7 @@ export type StdUiDashboardGridEventKey = 'INIT';
  */
 export interface StdUiDashboardGridConfig {
   /** Default: `{}` */
-  activeFilters?: unknown;
+  activeFilters?: Record<string, TraitConfig>;
   /** Default: `[{"colSpan":1,"content":"Content","id":"Id","rowSpan":1},{"colSpan":2,"content":"Content 2","id":"Id 2","rowSpan":2}]` */
   cells?: EntityRow[];
   className?: string;
@@ -135,9 +135,12 @@ export function stdUiDashboardGridDashboardGridOrbital(params: StdUiDashboardGri
           'activeFilters': {
             'default': {},
             'description': 'Active filters',
+            'items': {
+              'type': 'string',
+            },
             'label': 'Active Filters',
             'tier': 'presentation',
-            'type': 'json',
+            'type': 'Map<string,string>',
           },
           'cells': {
             'default': [
@@ -165,7 +168,7 @@ export function stdUiDashboardGridDashboardGridOrbital(params: StdUiDashboardGri
                 'content': {
                   'name': 'content',
                   'required': false,
-                  'type': 'string',
+                  'type': 'node',
                 },
                 'id': {
                   'name': 'id',

@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page, PatternValue } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -60,7 +60,7 @@ export interface StdThreadEditReplyPayload {
  * Payload shape for the `SUBMIT_REPLY` event.
  */
 export interface StdThreadSubmitReplyPayload {
-  data: EntityRow;
+  data: unknown;
 }
 
 /**
@@ -607,7 +607,7 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
               {
                 'name': 'data',
                 'required': true,
-                'type': 'object',
+                'type': '@entity',
               },
             ],
             'synonyms': 'post, send, add, publish',
@@ -866,7 +866,7 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                 {
                   'name': 'data',
                   'required': true,
-                  'type': 'object',
+                  'type': '@entity',
                 },
               ],
               'synonyms': 'post, send, add, publish',

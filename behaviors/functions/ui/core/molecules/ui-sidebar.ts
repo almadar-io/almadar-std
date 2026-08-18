@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page, PatternValue } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -71,20 +71,20 @@ export interface StdUiSidebarConfig {
   /** Default: `false` */
   defaultCollapsed?: boolean;
   error?: EntityRow;
-  footerContent?: unknown;
+  footerContent?: PatternValue;
   /** Default: `false` */
   hideCollapseButton?: boolean;
   isLoading?: boolean;
   /** Default: `[{"active":false,"badge":"Badge","href":"Href","icon":"circle","id":"Id","isActive":false,"label":"Label","subItems":[]},{"active":true,"badge":"Badge 2","href":"Href 2","icon":"circle","id":"Id 2","isActive":true,"label":"Label 2","subItems":[]}]` */
   items?: EntityRow[];
-  logo?: unknown;
+  logo?: PatternValue;
   /** Default: `"LOGO_CLICK"` */
   logoClickEvent?: string;
   /** Default: `"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"` */
   logoSrc?: unknown;
   /** Default: `false` */
   showCloseButton?: boolean;
-  userSection?: unknown;
+  userSection?: PatternValue;
 }
 
 /**

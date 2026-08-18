@@ -100,7 +100,7 @@
           "config": {
             "animate": {
               "default": false,
-              "description": "animate prop",
+              "description": "2D only: continuous redraw loop. 3D motion is entity-state driven.",
               "label": "Animate",
               "tier": "presentation",
               "type": "boolean"
@@ -110,6 +110,13 @@
               "label": "Background Color",
               "tier": "presentation",
               "type": "string"
+            },
+            "camera": {
+              "default": {},
+              "description": "3D only: neutral camera pose ({ mode, zoom, fov, azimuth, target }).",
+              "label": "Camera",
+              "tier": "presentation",
+              "type": "json"
             },
             "className": {
               "description": "className prop",
@@ -185,8 +192,7 @@
               "type": "number"
             },
             "interactive": {
-              "default": false,
-              "description": "interactive prop",
+              "description": "2D: pointer interaction (click/hover). 3D: orbit camera controls.",
               "label": "Interactive",
               "tier": "presentation",
               "type": "boolean"
@@ -196,6 +202,24 @@
               "label": "Is Loading",
               "tier": "presentation",
               "type": "boolean"
+            },
+            "lighting": {
+              "default": {},
+              "description": "3D only: scene light rig as data.",
+              "label": "Lighting",
+              "tier": "presentation",
+              "type": "json"
+            },
+            "mode": {
+              "default": "2d",
+              "description": "Painter: 2D raster (default) or 3D mesh scene via the lazy three.js host.",
+              "label": "Mode",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "2d",
+                "3d"
+              ]
             },
             "nodes": {
               "default": [],
@@ -228,10 +252,31 @@
                     "required": false,
                     "type": "string"
                   },
+                  "opacity": {
+                    "name": "opacity",
+                    "required": false,
+                    "type": "number"
+                  },
                   "radius": {
                     "name": "radius",
                     "required": false,
                     "type": "number"
+                  },
+                  "shape": {
+                    "name": "shape",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "box",
+                      "sphere",
+                      "capsule",
+                      "cylinder",
+                      "cone",
+                      "torus",
+                      "plane",
+                      "circle",
+                      "polyhedron"
+                    ]
                   },
                   "x": {
                     "name": "x",
@@ -241,6 +286,11 @@
                   "y": {
                     "name": "y",
                     "required": true,
+                    "type": "number"
+                  },
+                  "z": {
+                    "name": "z",
+                    "required": false,
                     "type": "number"
                   }
                 },
@@ -257,9 +307,22 @@
               "tier": "presentation",
               "type": "string"
             },
+            "post": {
+              "default": {},
+              "description": "3D only: post-processing stack (bloom/vignette).",
+              "label": "Post",
+              "tier": "presentation",
+              "type": "json"
+            },
+            "shadows": {
+              "description": "3D only: enable shadows. Omitted → the host default.",
+              "label": "Shadows",
+              "tier": "presentation",
+              "type": "boolean"
+            },
             "shapes": {
               "default": [],
-              "description": "Extra declarative shapes in canvas pixel coordinates.",
+              "description": "Extra declarative shapes in canvas pixel coordinates (2D mode only — ignored in 3D).",
               "items": {
                 "properties": {
                   "align": {
@@ -429,6 +492,12 @@
               "tier": "presentation",
               "type": "[BiologyCanvasShapesItem]"
             },
+            "showGrid": {
+              "description": "3D only: show the ground grid (default off).",
+              "label": "Show Grid",
+              "tier": "presentation",
+              "type": "boolean"
+            },
             "title": {
               "description": "title prop",
               "label": "Title",
@@ -501,15 +570,194 @@
                 "payloadSchema": [
                   {
                     "name": "nodes",
-                    "type": "[BiologyCanvasNodesItem]"
+                    "properties": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "z",
+                        "type": "number"
+                      },
+                      {
+                        "name": "radius",
+                        "type": "number"
+                      },
+                      {
+                        "name": "color",
+                        "type": "string"
+                      },
+                      {
+                        "name": "label",
+                        "type": "string"
+                      },
+                      {
+                        "name": "kind",
+                        "type": "string"
+                      },
+                      {
+                        "name": "shape",
+                        "type": "string"
+                      },
+                      {
+                        "name": "opacity",
+                        "type": "number"
+                      }
+                    ],
+                    "type": "[object]"
                   },
                   {
                     "name": "edges",
-                    "type": "[BiologyCanvasEdgesItem]"
+                    "properties": [
+                      {
+                        "name": "from",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "to",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "color",
+                        "type": "string"
+                      },
+                      {
+                        "name": "label",
+                        "type": "string"
+                      }
+                    ],
+                    "type": "[object]"
                   },
                   {
                     "name": "shapes",
-                    "type": "[BiologyCanvasShapesItem]"
+                    "properties": [
+                      {
+                        "name": "type",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "x",
+                        "type": "number"
+                      },
+                      {
+                        "name": "y",
+                        "type": "number"
+                      },
+                      {
+                        "name": "x1",
+                        "type": "number"
+                      },
+                      {
+                        "name": "y1",
+                        "type": "number"
+                      },
+                      {
+                        "name": "x2",
+                        "type": "number"
+                      },
+                      {
+                        "name": "y2",
+                        "type": "number"
+                      },
+                      {
+                        "name": "radius",
+                        "type": "number"
+                      },
+                      {
+                        "name": "width",
+                        "type": "number"
+                      },
+                      {
+                        "name": "height",
+                        "type": "number"
+                      },
+                      {
+                        "name": "points",
+                        "properties": [
+                          {
+                            "name": "x",
+                            "required": true,
+                            "type": "number"
+                          },
+                          {
+                            "name": "y",
+                            "required": true,
+                            "type": "number"
+                          }
+                        ],
+                        "type": "[object]"
+                      },
+                      {
+                        "name": "path",
+                        "type": "string"
+                      },
+                      {
+                        "name": "text",
+                        "type": "string"
+                      },
+                      {
+                        "name": "label",
+                        "type": "string"
+                      },
+                      {
+                        "name": "fontSize",
+                        "type": "number"
+                      },
+                      {
+                        "name": "align",
+                        "type": "string"
+                      },
+                      {
+                        "name": "axis",
+                        "type": "string"
+                      },
+                      {
+                        "name": "min",
+                        "type": "number"
+                      },
+                      {
+                        "name": "max",
+                        "type": "number"
+                      },
+                      {
+                        "name": "step",
+                        "type": "number"
+                      },
+                      {
+                        "name": "color",
+                        "type": "string"
+                      },
+                      {
+                        "name": "fill",
+                        "type": "string"
+                      },
+                      {
+                        "name": "lineWidth",
+                        "type": "number"
+                      },
+                      {
+                        "name": "opacity",
+                        "type": "number"
+                      }
+                    ],
+                    "type": "[object]"
                   }
                 ],
                 "synonyms": "tick, redraw, animate, frame",
@@ -559,15 +807,21 @@
                     {
                       "animate": "@config.animate",
                       "backgroundColor": "@config.backgroundColor",
+                      "camera": "@config.camera",
                       "className": "@config.className",
                       "edges": "@config.edges",
                       "error": "@config.error",
                       "height": "@config.height",
                       "interactive": "@config.interactive",
                       "isLoading": "@config.isLoading",
+                      "lighting": "@config.lighting",
+                      "mode": "@config.mode",
                       "nodes": "@config.nodes",
                       "onShapeClick": "@config.onShapeClick",
+                      "post": "@config.post",
+                      "shadows": "@config.shadows",
                       "shapes": "@config.shapes",
+                      "showGrid": "@config.showGrid",
                       "title": "@config.title",
                       "type": "biology-canvas",
                       "width": "@config.width"
@@ -587,15 +841,21 @@
                     {
                       "animate": "@config.animate",
                       "backgroundColor": "@config.backgroundColor",
+                      "camera": "@config.camera",
                       "className": "@config.className",
                       "edges": "@payload.edges",
                       "error": "@config.error",
                       "height": "@config.height",
                       "interactive": "@config.interactive",
                       "isLoading": "@config.isLoading",
+                      "lighting": "@config.lighting",
+                      "mode": "@config.mode",
                       "nodes": "@payload.nodes",
                       "onShapeClick": "@config.onShapeClick",
+                      "post": "@config.post",
+                      "shadows": "@config.shadows",
                       "shapes": "@payload.shapes",
+                      "showGrid": "@config.showGrid",
                       "title": "@config.title",
                       "type": "biology-canvas",
                       "width": "@config.width"

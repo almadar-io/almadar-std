@@ -5,6 +5,7 @@ orbital ChemistryCanvasOrbital {
     id : string
     x : number!
     y : number!
+    z : number
     element : string
     radius : number
     color : string
@@ -81,10 +82,16 @@ orbital ChemistryCanvasOrbital {
           height: @config.height
           title: @config.title
           backgroundColor: @config.backgroundColor
+          mode: @config.mode
+          camera: @config.camera
+          lighting: @config.lighting
+          post: @config.post
           atoms: @config.atoms
           bonds: @config.bonds
           arrows: @config.arrows
           shapes: @config.shapes
+          showGrid: @config.showGrid
+          shadows: @config.shadows
           interactive: @config.interactive
           animate: @config.animate
           onShapeClick: @config.onShapeClick
@@ -99,10 +106,16 @@ orbital ChemistryCanvasOrbital {
           height: @config.height
           title: @config.title
           backgroundColor: @config.backgroundColor
+          mode: @config.mode
+          camera: @config.camera
+          lighting: @config.lighting
+          post: @config.post
           atoms: @payload.atoms
           bonds: @payload.bonds
           arrows: @payload.arrows
           shapes: @payload.shapes
+          showGrid: @config.showGrid
+          shadows: @config.shadows
           interactive: @config.interactive
           animate: @config.animate
           onShapeClick: @config.onShapeClick
@@ -153,6 +166,22 @@ orbital ChemistryCanvasOrbital {
         @label "Background Color"
         @description "backgroundColor prop"
         @tier "presentation"
+      mode : "2d" | "3d" = "2d"
+        @label "Mode"
+        @description "Painter: 2D raster (default) or 3D mesh scene via the lazy three.js host."
+        @tier "presentation"
+      camera : json = {}
+        @label "Camera"
+        @description "3D only: neutral camera pose ({ mode, zoom, fov, azimuth, target })."
+        @tier "presentation"
+      lighting : json = {}
+        @label "Lighting"
+        @description "3D only: scene light rig as data."
+        @tier "presentation"
+      post : json = {}
+        @label "Post"
+        @description "3D only: post-processing stack (bloom/vignette)."
+        @tier "presentation"
       atoms : [ChemistryCanvasAtomsItem] = []
         @label "Atoms"
         @description "atoms prop"
@@ -167,15 +196,23 @@ orbital ChemistryCanvasOrbital {
         @tier "presentation"
       shapes : [ChemistryCanvasShapesItem] = []
         @label "Shapes"
-        @description "Extra declarative shapes in canvas pixel coordinates."
+        @description "Extra declarative shapes in canvas pixel coordinates (2D mode only — ignored in 3D)."
         @tier "presentation"
-      interactive : boolean = false
+      showGrid : boolean
+        @label "Show Grid"
+        @description "3D only: show the ground grid (default off)."
+        @tier "presentation"
+      shadows : boolean
+        @label "Shadows"
+        @description "3D only: enable shadows. Omitted → the host default."
+        @tier "presentation"
+      interactive : boolean
         @label "Interactive"
-        @description "interactive prop"
+        @description "2D: pointer interaction (click/hover). 3D: orbit camera controls."
         @tier "presentation"
       animate : boolean = false
         @label "Animate"
-        @description "animate prop"
+        @description "2D only: continuous redraw loop. 3D motion is entity-state driven."
         @tier "presentation"
       onShapeClick : string = "SHAPE_CLICK"
         @label "On Shape Click"

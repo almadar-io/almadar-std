@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page, PatternValue } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -39,19 +39,19 @@ export type StdUiGameShellEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiGameShellConfig {
-  addons?: unknown;
+  addons?: PatternValue;
   /** Default: `"Game"` */
   appName?: string;
   backgroundAsset?: EntityRow;
   /** Default: `[{"type":"canvas-2d"}]` */
-  children?: unknown;
+  children?: PatternValue;
   className?: string;
-  controls?: unknown;
+  controls?: PatternValue;
   /** Default: `"future"` */
   fontFamily?: string;
-  hud?: unknown;
+  hud?: PatternValue;
   hudBackgroundAsset?: EntityRow;
-  overlay?: unknown;
+  overlay?: PatternValue;
   /** Default: `true` */
   showTopBar?: boolean;
   /** Default: `""` */

@@ -43,7 +43,7 @@
             "type": "boolean",
             "default": false,
             "label": "Animate",
-            "description": "animate prop",
+            "description": "2D only: continuous redraw loop. 3D motion is entity-state driven.",
             "tier": "presentation"
           },
           {
@@ -51,6 +51,14 @@
             "type": "string",
             "label": "Background Color",
             "description": "backgroundColor prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "camera",
+            "type": "json",
+            "default": {},
+            "label": "Camera",
+            "description": "3D only: neutral camera pose ({ mode, zoom, fov, azimuth, target }).",
             "tier": "presentation"
           },
           {
@@ -133,9 +141,8 @@
           {
             "key": "interactive",
             "type": "boolean",
-            "default": false,
             "label": "Interactive",
-            "description": "interactive prop",
+            "description": "2D: pointer interaction (click/hover). 3D: orbit camera controls.",
             "tier": "presentation"
           },
           {
@@ -144,6 +151,26 @@
             "label": "Is Loading",
             "description": "isLoading prop",
             "tier": "presentation"
+          },
+          {
+            "key": "lighting",
+            "type": "json",
+            "default": {},
+            "label": "Lighting",
+            "description": "3D only: scene light rig as data.",
+            "tier": "presentation"
+          },
+          {
+            "key": "mode",
+            "type": "string",
+            "default": "2d",
+            "label": "Mode",
+            "description": "Painter: 2D raster (default) or 3D mesh scene via the lazy three.js host.",
+            "tier": "presentation",
+            "enumValues": [
+              "2d",
+              "3d"
+            ]
           },
           {
             "key": "nodes",
@@ -180,10 +207,31 @@
                   "required": false,
                   "type": "string"
                 },
+                "opacity": {
+                  "name": "opacity",
+                  "required": false,
+                  "type": "number"
+                },
                 "radius": {
                   "name": "radius",
                   "required": false,
                   "type": "number"
+                },
+                "shape": {
+                  "name": "shape",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "box",
+                    "sphere",
+                    "capsule",
+                    "cylinder",
+                    "cone",
+                    "torus",
+                    "plane",
+                    "circle",
+                    "polyhedron"
+                  ]
                 },
                 "x": {
                   "name": "x",
@@ -193,6 +241,11 @@
                 "y": {
                   "name": "y",
                   "required": true,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
                   "type": "number"
                 }
               },
@@ -208,11 +261,26 @@
             "tier": "presentation"
           },
           {
+            "key": "post",
+            "type": "json",
+            "default": {},
+            "label": "Post",
+            "description": "3D only: post-processing stack (bloom/vignette).",
+            "tier": "presentation"
+          },
+          {
+            "key": "shadows",
+            "type": "boolean",
+            "label": "Shadows",
+            "description": "3D only: enable shadows. Omitted → the host default.",
+            "tier": "presentation"
+          },
+          {
             "key": "shapes",
             "type": "[BiologyCanvasShapesItem]",
             "default": [],
             "label": "Shapes",
-            "description": "Extra declarative shapes in canvas pixel coordinates.",
+            "description": "Extra declarative shapes in canvas pixel coordinates (2D mode only — ignored in 3D).",
             "tier": "presentation",
             "items": {
               "properties": {
@@ -379,6 +447,13 @@
               },
               "type": "object"
             }
+          },
+          {
+            "key": "showGrid",
+            "type": "boolean",
+            "label": "Show Grid",
+            "description": "3D only: show the ground grid (default off).",
+            "tier": "presentation"
           },
           {
             "key": "title",

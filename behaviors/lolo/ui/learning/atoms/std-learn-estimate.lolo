@@ -1,0 +1,419 @@
+app std-learn-estimate "1.0.0"
+"Generic estimation drill — a config-declared prompt roster asks for a quantity, the learner commits an estimate on a slider and locks it in, and the guess is graded by relative-error band: within the exact band scores full points, within the close band partial, outside none, with the true answer and the learner's percentage error revealed after each lock-in and a running score across the round. All vocabulary and bands are config-declared, so the same mechanism serves any quantitative intuition: orders of magnitude, unit conversions, historical dates, population sizes, physical constants, probabilities. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital EstimateOrbital {
+  type EstimatePrompt = {
+    prompt : string!
+    answer : number!
+    unit : string
+    hint : string
+  }
+
+  entity EstimateScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    promptIndex : number = 0
+    totalPrompts : number = 0
+    estimate : number = 0
+    locked : boolean = false
+    band : string
+    score : number = 0
+    done : boolean = false
+    promptText : string
+    promptHint : string
+    answer : number = 0
+    unit : string
+    feedback : string
+    view : [node]
+  }
+
+  trait EstimateSim -> @rebindable EstimateScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (let (
+            (first (array/nth @config.prompts 0))
+          )
+          (do
+            (set @entity.active true)
+            (set @entity.title @config.title)
+            (set @entity.promptIndex 0)
+            (set @entity.totalPrompts (array/len @config.prompts))
+            (set @entity.estimate @config.sliderDefault)
+            (set @entity.locked false)
+            (set @entity.band "")
+            (set @entity.score 0)
+            (set @entity.done false)
+            (set @entity.promptText (object/get @first prompt))
+            (set @entity.promptHint (object/get @first hint ""))
+            (set @entity.answer (object/get @first answer))
+            (set @entity.unit (object/get @first unit ""))
+            (set @entity.feedback "")
+            (set @entity.view [
+              { type: card, variant: bordered, padding: md, children: [
+                  { type: typography, variant: body, content: @entity.promptText },
+                  { type: typography, variant: caption, color: muted, content: @entity.promptHint }
+                ] },
+              { type: stack, direction: vertical, gap: xs, children: [
+                  { type: typography, variant: caption, content: (str/concat "Your estimate: " (math/round @entity.estimate 2) " " @entity.unit) },
+                  { type: range-slider, min: @config.sliderMin, max: @config.sliderMax, step: @config.sliderStep, value: @entity.estimate, showTooltip: true, action: "SET_ESTIMATE" }
+                ] },
+              { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: button, action: LOCK_IN, label: @config.lockLabel, variant: primary, disabled: (if @entity.locked true false) },
+                  { type: button, action: NEXT, label: @config.nextLabel, variant: secondary, disabled: (if @entity.locked false true) }
+                ] },
+              { type: stack, direction: horizontal, gap: xs, children: [
+                  { type: typography, variant: caption, content: @entity.feedback }
+                ] },
+              { type: stat-display, label: "Score", value: @entity.score, max: (* @entity.totalPrompts @config.exactPoints) }
+            ])))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: progress-bar, value: (+ @entity.promptIndex 1), max: @entity.totalPrompts, showPercentage: false, label: (str/concat "Prompt " (str/concat "" (+ @entity.promptIndex 1)) " of " (str/concat "" @entity.totalPrompts)) },
+                { type: stack, direction: vertical, gap: md, children: @entity.view }
+              ] }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (let (
+            (first (array/nth @config.prompts 0))
+          )
+          (do
+            (set @entity.active true)
+            (set @entity.title @config.title)
+            (set @entity.promptIndex 0)
+            (set @entity.totalPrompts (array/len @config.prompts))
+            (set @entity.estimate @config.sliderDefault)
+            (set @entity.locked false)
+            (set @entity.band "")
+            (set @entity.score 0)
+            (set @entity.done false)
+            (set @entity.promptText (object/get @first prompt))
+            (set @entity.promptHint (object/get @first hint ""))
+            (set @entity.answer (object/get @first answer))
+            (set @entity.unit (object/get @first unit ""))
+            (set @entity.feedback "")
+            (set @entity.view [
+              { type: card, variant: bordered, padding: md, children: [
+                  { type: typography, variant: body, content: @entity.promptText },
+                  { type: typography, variant: caption, color: muted, content: @entity.promptHint }
+                ] },
+              { type: stack, direction: vertical, gap: xs, children: [
+                  { type: typography, variant: caption, content: (str/concat "Your estimate: " (math/round @entity.estimate 2) " " @entity.unit) },
+                  { type: range-slider, min: @config.sliderMin, max: @config.sliderMax, step: @config.sliderStep, value: @entity.estimate, showTooltip: true, action: "SET_ESTIMATE" }
+                ] },
+              { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: button, action: LOCK_IN, label: @config.lockLabel, variant: primary, disabled: (if @entity.locked true false) },
+                  { type: button, action: NEXT, label: @config.nextLabel, variant: secondary, disabled: (if @entity.locked false true) }
+                ] },
+              { type: stack, direction: horizontal, gap: xs, children: [
+                  { type: typography, variant: caption, content: @entity.feedback }
+                ] },
+              { type: stat-display, label: "Score", value: @entity.score, max: (* @entity.totalPrompts @config.exactPoints) }
+            ])))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: progress-bar, value: (+ @entity.promptIndex 1), max: @entity.totalPrompts, showPercentage: false, label: (str/concat "Prompt " (str/concat "" (+ @entity.promptIndex 1)) " of " (str/concat "" @entity.totalPrompts)) },
+                { type: stack, direction: vertical, gap: md, children: @entity.view }
+              ] }
+          ]
+        })
+
+      SET_ESTIMATE -> idle when (and (== @entity.active true) (and (== @entity.locked false) (== @entity.done false)))
+        (set @entity.estimate (math/clamp ?value @config.sliderMin @config.sliderMax))
+        (set @entity.view [
+          { type: card, variant: bordered, padding: md, children: [
+              { type: typography, variant: body, content: @entity.promptText },
+              { type: typography, variant: caption, color: muted, content: @entity.promptHint }
+            ] },
+          { type: stack, direction: vertical, gap: xs, children: [
+              { type: typography, variant: caption, content: (str/concat "Your estimate: " (math/round @entity.estimate 2) " " @entity.unit) },
+              { type: range-slider, min: @config.sliderMin, max: @config.sliderMax, step: @config.sliderStep, value: @entity.estimate, showTooltip: true, action: "SET_ESTIMATE" }
+            ] },
+          { type: stack, direction: horizontal, gap: sm, children: [
+              { type: button, action: LOCK_IN, label: @config.lockLabel, variant: primary, disabled: (if @entity.locked true false) },
+              { type: button, action: NEXT, label: @config.nextLabel, variant: secondary, disabled: (if @entity.locked false true) }
+            ] },
+          { type: stack, direction: horizontal, gap: xs, children: [
+              { type: typography, variant: caption, content: @entity.feedback }
+            ] },
+          { type: stat-display, label: "Score", value: @entity.score, max: (* @entity.totalPrompts @config.exactPoints) }
+        ])
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: progress-bar, value: (+ @entity.promptIndex 1), max: @entity.totalPrompts, showPercentage: false, label: (str/concat "Prompt " (str/concat "" (+ @entity.promptIndex 1)) " of " (str/concat "" @entity.totalPrompts)) },
+                { type: stack, direction: vertical, gap: md, children: @entity.view }
+              ] }
+          ]
+        })
+
+      LOCK_IN -> idle when (and (== @entity.active true) (and (== @entity.locked false) (== @entity.done false)))
+        (let (
+            (err (math/abs (- @entity.estimate @entity.answer)))
+            (rel (/ @err (math/max (math/abs @entity.answer) 0.0001)))
+            (band (if (<= @rel @config.exactPct) "exact" (if (<= @rel @config.closePct) "close" "off")))
+            (points (if (== @band "exact") @config.exactPoints (if (== @band "close") @config.closePoints 0)))
+          )
+          (do
+            (set @entity.locked true)
+            (set @entity.band @band)
+            (set @entity.score (+ @entity.score @points))
+            (set @entity.feedback (str/concat "Answer: " (math/round @entity.answer 2) " " @entity.unit " — you were off by " (math/round @err 2) " (" (math/round (* @rel 100) 1) "%). +" (str/concat "" @points) " points."))
+            (set @entity.view [
+              { type: card, variant: bordered, padding: md, children: [
+                  { type: typography, variant: body, content: @entity.promptText },
+                  { type: typography, variant: caption, color: muted, content: @entity.promptHint }
+                ] },
+              { type: stack, direction: vertical, gap: xs, children: [
+                  { type: typography, variant: caption, content: (str/concat "Your estimate: " (math/round @entity.estimate 2) " " @entity.unit) },
+                  { type: range-slider, min: @config.sliderMin, max: @config.sliderMax, step: @config.sliderStep, value: @entity.estimate, showTooltip: true, action: "SET_ESTIMATE" }
+                ] },
+              { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: button, action: LOCK_IN, label: @config.lockLabel, variant: primary, disabled: (if @entity.locked true false) },
+                  { type: button, action: NEXT, label: @config.nextLabel, variant: secondary, disabled: (if @entity.locked false true) }
+                ] },
+              { type: stack, direction: horizontal, gap: xs, children: [
+                  { type: badge, variant: (if (== @entity.band "exact") "success" (if (== @entity.band "close") "warning" "danger")), label: (if (== @entity.band "exact") "Spot on" (if (== @entity.band "close") "Close" "Off")) },
+                  { type: typography, variant: caption, content: @entity.feedback }
+                ] },
+              { type: stat-display, label: "Score", value: @entity.score, max: (* @entity.totalPrompts @config.exactPoints) }
+            ])))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: progress-bar, value: (+ @entity.promptIndex 1), max: @entity.totalPrompts, showPercentage: false, label: (str/concat "Prompt " (str/concat "" (+ @entity.promptIndex 1)) " of " (str/concat "" @entity.totalPrompts)) },
+                { type: stack, direction: vertical, gap: md, children: @entity.view }
+              ] }
+          ]
+        })
+        (emit ESTIMATE_JUDGED { band: @entity.band, estimate: @entity.estimate, answer: @entity.answer, score: @entity.score })
+
+      NEXT -> idle when (and (== @entity.active true) (and (== @entity.locked true) (== @entity.done false)))
+        (let (
+            (nextIndex (+ @entity.promptIndex 1))
+            (finished (>= @nextIndex (array/len @config.prompts)))
+            (next (array/nth @config.prompts (math/min @nextIndex (- (array/len @config.prompts) 1))))
+          )
+          (do
+            (set @entity.promptIndex (if @finished @entity.promptIndex @nextIndex))
+            (set @entity.done (if @finished true false))
+            (set @entity.locked false)
+            (set @entity.band "")
+            (set @entity.estimate @config.sliderDefault)
+            (set @entity.promptText (if @finished @entity.promptText (object/get @next prompt)))
+            (set @entity.promptHint (if @finished @entity.promptHint (object/get @next hint "")))
+            (set @entity.answer (if @finished @entity.answer (object/get @next answer)))
+            (set @entity.unit (if @finished @entity.unit (object/get @next unit "")))
+            (set @entity.feedback "")
+            (set @entity.view (if @finished
+              [
+                { type: typography, variant: h4, content: "Round Complete" },
+                { type: stat-display, label: "Final score", value: @entity.score, max: (* @entity.totalPrompts @config.exactPoints) },
+                { type: button, action: RETRY, label: @config.retryLabel, variant: primary }
+              ]
+              [
+                { type: card, variant: bordered, padding: md, children: [
+                    { type: typography, variant: body, content: @entity.promptText },
+                    { type: typography, variant: caption, color: muted, content: @entity.promptHint }
+                  ] },
+                { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: caption, content: (str/concat "Your estimate: " (math/round @entity.estimate 2) " " @entity.unit) },
+                    { type: range-slider, min: @config.sliderMin, max: @config.sliderMax, step: @config.sliderStep, value: @entity.estimate, showTooltip: true, action: "SET_ESTIMATE" }
+                  ] },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: LOCK_IN, label: @config.lockLabel, variant: primary, disabled: (if @entity.locked true false) },
+                    { type: button, action: NEXT, label: @config.nextLabel, variant: secondary, disabled: (if @entity.locked false true) }
+                  ] },
+                { type: stack, direction: horizontal, gap: xs, children: [
+                    { type: typography, variant: caption, content: @entity.feedback }
+                  ] },
+                { type: stat-display, label: "Score", value: @entity.score, max: (* @entity.totalPrompts @config.exactPoints) }
+              ])))
+          )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: progress-bar, value: (+ @entity.promptIndex 1), max: @entity.totalPrompts, showPercentage: false, label: (str/concat "Prompt " (str/concat "" (+ @entity.promptIndex 1)) " of " (str/concat "" @entity.totalPrompts)) },
+                { type: stack, direction: vertical, gap: md, children: @entity.view }
+              ] }
+          ]
+        })
+        (emit PROMPT_ADVANCED { promptIndex: @entity.promptIndex, done: @entity.done, score: @entity.score })
+
+      RETRY -> idle when (and (== @entity.active true) (== @entity.done true))
+        (let (
+            (first (array/nth @config.prompts 0))
+          )
+          (do
+            (set @entity.promptIndex 0)
+            (set @entity.estimate @config.sliderDefault)
+            (set @entity.locked false)
+            (set @entity.band "")
+            (set @entity.score 0)
+            (set @entity.done false)
+            (set @entity.promptText (object/get @first prompt))
+            (set @entity.promptHint (object/get @first hint ""))
+            (set @entity.answer (object/get @first answer))
+            (set @entity.unit (object/get @first unit ""))
+            (set @entity.feedback "")
+            (set @entity.view [
+              { type: card, variant: bordered, padding: md, children: [
+                  { type: typography, variant: body, content: @entity.promptText },
+                  { type: typography, variant: caption, color: muted, content: @entity.promptHint }
+                ] },
+              { type: stack, direction: vertical, gap: xs, children: [
+                  { type: typography, variant: caption, content: (str/concat "Your estimate: " (math/round @entity.estimate 2) " " @entity.unit) },
+                  { type: range-slider, min: @config.sliderMin, max: @config.sliderMax, step: @config.sliderStep, value: @entity.estimate, showTooltip: true, action: "SET_ESTIMATE" }
+                ] },
+              { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: button, action: LOCK_IN, label: @config.lockLabel, variant: primary, disabled: (if @entity.locked true false) },
+                  { type: button, action: NEXT, label: @config.nextLabel, variant: secondary, disabled: (if @entity.locked false true) }
+                ] },
+              { type: stack, direction: horizontal, gap: xs, children: [
+                  { type: typography, variant: caption, content: @entity.feedback }
+                ] },
+              { type: stat-display, label: "Score", value: @entity.score, max: (* @entity.totalPrompts @config.exactPoints) }
+            ])))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: progress-bar, value: (+ @entity.promptIndex 1), max: @entity.totalPrompts, showPercentage: false, label: (str/concat "Prompt " (str/concat "" (+ @entity.promptIndex 1)) " of " (str/concat "" @entity.totalPrompts)) },
+                { type: stack, direction: vertical, gap: md, children: @entity.view }
+              ] }
+          ]
+        })
+        (emit ROUND_RESTARTED { totalPrompts: @entity.totalPrompts })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      SET_ESTIMATE {
+        value : number
+      }
+        @description "Learner moved the estimate slider — value is the current guess, not yet graded."
+        @tier "domain"
+      LOCK_IN {
+      }
+        @description "Learner committed the current estimate; it is graded against the true answer by relative-error band."
+        @tier "domain"
+      NEXT {
+      }
+        @description "Learner advanced to the next prompt after a lock-in; past the last prompt this completes the round."
+        @tier "domain"
+      RETRY {
+      }
+        @description "Learner restarted the round from the first prompt with a cleared score."
+        @tier "domain"
+    }
+
+    emits {
+      ESTIMATE_JUDGED -> external {
+        band : string
+        estimate : number
+        answer : number
+        score : number
+      }
+        @description "The verdict of a lock-in: which error band the estimate landed in (exact, close, off), the guess, the truth, and the running score — a composed listener (coach, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "estimation, order of magnitude, guess the number, error band, quantitative intuition"
+        @tier "domain"
+      PROMPT_ADVANCED -> external {
+        promptIndex : number
+        done : boolean
+        score : number
+      }
+        @description "The learner moved to the next prompt (or completed the round) with the running score."
+        @tier "domain"
+      ROUND_RESTARTED -> external {
+        totalPrompts : number
+      }
+        @description "The learner restarted the round from scratch."
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Estimate It"
+        @label "Title"
+        @description "Title shown above the drill."
+        @tier "presentation"
+      prompts : [EstimatePrompt] = [
+        { prompt: "How many meters does light travel in one microsecond?", answer: 300, unit: "m", hint: "Light covers 300,000 km every second." },
+        { prompt: "What is the boiling point of water at sea level, in Fahrenheit?", answer: 212, unit: "°F", hint: "It is 100 °C." },
+        { prompt: "Roughly how many days is one million seconds?", answer: 11.6, unit: "days", hint: "A day is 86,400 seconds." }
+      ]
+        @label "Prompts"
+        @description "The question roster; each prompt carries the true numeric answer, an optional unit, and an optional hint. Realizations declare their own subject's quantities here."
+        @tier "domain"
+      sliderMin : number = 0
+        @label "Slider Min"
+        @description "Lower bound of the estimate slider."
+        @tier "domain"
+      sliderMax : number = 500
+        @label "Slider Max"
+        @description "Upper bound of the estimate slider."
+        @tier "domain"
+      sliderStep : number = 0.1
+        @label "Slider Step"
+        @tier "presentation"
+      sliderDefault : number = 100
+        @label "Slider Default"
+        @description "Starting position of the estimate slider for each prompt."
+        @tier "domain"
+      exactPct : number = 0.05
+        @label "Exact Band"
+        @description "Relative error at or below this fraction counts as exact (full points)."
+        @tier "domain"
+      closePct : number = 0.25
+        @label "Close Band"
+        @description "Relative error at or below this fraction (but above the exact band) counts as close (partial points)."
+        @tier "domain"
+      exactPoints : number = 2
+        @label "Exact Points"
+        @tier "domain"
+      closePoints : number = 1
+        @label "Close Points"
+        @tier "domain"
+      lockLabel : string = "Lock In"
+        @label "Lock Label"
+        @tier "presentation"
+      nextLabel : string = "Next"
+        @label "Next Label"
+        @tier "presentation"
+      retryLabel : string = "Try Again"
+        @label "Retry Label"
+        @tier "presentation"
+    }
+  }
+
+  page "/learn-estimate" as EstimatePage -> EstimateSim
+}

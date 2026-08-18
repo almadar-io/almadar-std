@@ -5,10 +5,13 @@ orbital BiologyCanvasOrbital {
     id : string
     x : number!
     y : number!
+    z : number
     radius : number
     color : string
     label : string
     kind : "cell" | "organelle" | "molecule" | "organism"
+    shape : "box" | "sphere" | "capsule" | "cylinder" | "cone" | "torus" | "plane" | "circle" | "polyhedron"
+    opacity : number
   }
   type BiologyCanvasEdgesItem = {
     from : string!
@@ -74,9 +77,15 @@ orbital BiologyCanvasOrbital {
           height: @config.height
           title: @config.title
           backgroundColor: @config.backgroundColor
+          mode: @config.mode
+          camera: @config.camera
+          lighting: @config.lighting
+          post: @config.post
           nodes: @config.nodes
           edges: @config.edges
           shapes: @config.shapes
+          showGrid: @config.showGrid
+          shadows: @config.shadows
           interactive: @config.interactive
           animate: @config.animate
           onShapeClick: @config.onShapeClick
@@ -91,9 +100,15 @@ orbital BiologyCanvasOrbital {
           height: @config.height
           title: @config.title
           backgroundColor: @config.backgroundColor
+          mode: @config.mode
+          camera: @config.camera
+          lighting: @config.lighting
+          post: @config.post
           nodes: @payload.nodes
           edges: @payload.edges
           shapes: @payload.shapes
+          showGrid: @config.showGrid
+          shadows: @config.shadows
           interactive: @config.interactive
           animate: @config.animate
           onShapeClick: @config.onShapeClick
@@ -143,6 +158,22 @@ orbital BiologyCanvasOrbital {
         @label "Background Color"
         @description "backgroundColor prop"
         @tier "presentation"
+      mode : "2d" | "3d" = "2d"
+        @label "Mode"
+        @description "Painter: 2D raster (default) or 3D mesh scene via the lazy three.js host."
+        @tier "presentation"
+      camera : json = {}
+        @label "Camera"
+        @description "3D only: neutral camera pose ({ mode, zoom, fov, azimuth, target })."
+        @tier "presentation"
+      lighting : json = {}
+        @label "Lighting"
+        @description "3D only: scene light rig as data."
+        @tier "presentation"
+      post : json = {}
+        @label "Post"
+        @description "3D only: post-processing stack (bloom/vignette)."
+        @tier "presentation"
       nodes : [BiologyCanvasNodesItem] = []
         @label "Nodes"
         @description "nodes prop"
@@ -153,15 +184,23 @@ orbital BiologyCanvasOrbital {
         @tier "presentation"
       shapes : [BiologyCanvasShapesItem] = []
         @label "Shapes"
-        @description "Extra declarative shapes in canvas pixel coordinates."
+        @description "Extra declarative shapes in canvas pixel coordinates (2D mode only — ignored in 3D)."
         @tier "presentation"
-      interactive : boolean = false
+      showGrid : boolean
+        @label "Show Grid"
+        @description "3D only: show the ground grid (default off)."
+        @tier "presentation"
+      shadows : boolean
+        @label "Shadows"
+        @description "3D only: enable shadows. Omitted → the host default."
+        @tier "presentation"
+      interactive : boolean
         @label "Interactive"
-        @description "interactive prop"
+        @description "2D: pointer interaction (click/hover). 3D: orbit camera controls."
         @tier "presentation"
       animate : boolean = false
         @label "Animate"
-        @description "animate prop"
+        @description "2D only: continuous redraw loop. 3D motion is entity-state driven."
         @tier "presentation"
       onShapeClick : string = "SHAPE_CLICK"
         @label "On Shape Click"

@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityRef, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine, Page, PatternValue } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 import { mergeCallSiteConfigOverrides } from '../../../../../factory-runtime/apply-params-to-orb.js';
@@ -52,7 +52,7 @@ export interface StdUiVstackConfig {
   actionPayload?: unknown;
   /** Default: `"stretch"` */
   align?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
-  children?: unknown;
+  children?: PatternValue;
   className?: string;
   /** Default: `false` */
   flex?: boolean;
@@ -66,7 +66,7 @@ export interface StdUiVstackConfig {
   reverse?: boolean;
   role?: string;
   /** Default: `{}` */
-  style?: unknown;
+  style?: Record<string, TraitConfig>;
   tabIndex?: number;
   /** Default: `false` */
   wrap?: boolean;
