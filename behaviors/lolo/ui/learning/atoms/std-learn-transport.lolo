@@ -1,0 +1,186 @@
+app std-learn-transport "1.0.0"
+"Generic 2D step-transport (clock) instrument — the substrate twin of std-learn-sim-3d for discrete-step instruments. Contract: the atom owns the Step/Run-Pause/Reset transport and the clock but NOT the subject computation — STEP advances one step manually, TOGGLE_RUN engages a 32ms tick that accumulates elapsed time and fires one step every stepIntervalMs, RESET zeroes the counters and restores autoRun. Every step (button or clock) broadcasts LEARN_STEP; a composed sibling trait transitions directly on the LEARN_STEP / LEARN_RESET / LEARN_UPDATED broadcasts (the same bare-event cascade the lab routers use), applies the domain computation, halts the clock by setting the shared entity's done flag (the sibling is done's ONLY writer — it must also clear it on LEARN_RESET), and owns the scene render — this atom renders only its control strip and step caption. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital LearnTransportOrbital {
+  entity LearnTransportScene [runtime, shared] {
+    id : string!
+    active : boolean = false
+    title : string
+    running : boolean = false
+    steps : int = 0
+    elapsedMs : number = 0
+    done : boolean = false
+  }
+
+  trait LearnTransportSim -> @rebindable LearnTransportScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.running @config.autoRun)
+        (set @entity.steps 0)
+        (set @entity.elapsedMs 0)
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: sm, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: STEP, label: "Step", variant: primary },
+                    { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Run"), variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: typography, variant: caption, content: (str/concat "Steps: " @entity.steps (if @entity.done " — done" (if @entity.running " — auto-stepping" " — paused"))) }
+              ] }
+          ]
+        })
+        (emit LEARN_UPDATED { running: @entity.running, steps: @entity.steps })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.running @config.autoRun)
+        (set @entity.steps 0)
+        (set @entity.elapsedMs 0)
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: sm, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: STEP, label: "Step", variant: primary },
+                    { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Run"), variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: typography, variant: caption, content: (str/concat "Steps: " @entity.steps (if @entity.done " — done" (if @entity.running " — auto-stepping" " — paused"))) }
+              ] }
+          ]
+        })
+        (emit LEARN_UPDATED { running: @entity.running, steps: @entity.steps })
+
+      STEP -> idle when (and (== @entity.active true) (not (== @entity.done true)))
+        (set @entity.steps (+ @entity.steps 1))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: sm, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: STEP, label: "Step", variant: primary },
+                    { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Run"), variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: typography, variant: caption, content: (str/concat "Steps: " @entity.steps (if @entity.done " — done" (if @entity.running " — auto-stepping" " — paused"))) }
+              ] }
+          ]
+        })
+        (emit LEARN_STEP { steps: @entity.steps })
+
+      TOGGLE_RUN -> idle when (== @entity.active true)
+        (set @entity.running (not @entity.running))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: sm, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: STEP, label: "Step", variant: primary },
+                    { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Run"), variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: typography, variant: caption, content: (str/concat "Steps: " @entity.steps (if @entity.done " — done" (if @entity.running " — auto-stepping" " — paused"))) }
+              ] }
+          ]
+        })
+        (emit LEARN_UPDATED { running: @entity.running, steps: @entity.steps })
+
+      RESET -> idle when (== @entity.active true)
+        (set @entity.running @config.autoRun)
+        (set @entity.steps 0)
+        (set @entity.elapsedMs 0)
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: sm, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: STEP, label: "Step", variant: primary },
+                    { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Run"), variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: typography, variant: caption, content: (str/concat "Steps: " @entity.steps (if @entity.done " — done" (if @entity.running " — auto-stepping" " — paused"))) }
+              ] }
+          ]
+        })
+        (emit LEARN_RESET { })
+    }
+
+    ticks {
+      transportTick every 32ms
+        when (and (== @entity.active true) (and (== @entity.running true) (not (== @entity.done true))))
+        (set @entity.elapsedMs (+ @entity.elapsedMs 32))
+        (when (>= @entity.elapsedMs @config.stepIntervalMs)
+          (do
+            (set @entity.elapsedMs 0)
+            (set @entity.steps (+ @entity.steps 1))
+            (emit LEARN_STEP { steps: @entity.steps })
+          ))
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+    }
+
+    emits {
+      LEARN_STEP -> external {
+        steps : int
+      }
+        @description "Fires once per domain step — from the Step button or every stepIntervalMs of running clock — with the step counter; the composed subject trait transitions on it and applies one step of the domain computation. A harmless no-op when the atom runs standalone."
+        @synonyms "step, advance, tick, iterate, next"
+        @tier "domain"
+      LEARN_RESET -> external {
+      }
+        @description "Fires on Reset after the transport counters re-zero; the composed subject trait reseeds its domain state from config on it. A harmless no-op when the atom runs standalone."
+        @synonyms "reset, reseed, restart, clear"
+        @tier "domain"
+      LEARN_UPDATED -> external {
+        running : boolean
+        steps : int
+      }
+        @description "Fires on INIT/MODE_SELECTED/Run-Pause toggle with the transport state — running flag and step counter — so the composed subject trait can repaint its shell (Run/Pause label, step readout). A harmless no-op when the atom runs standalone."
+        @synonyms "run, pause, transport, running state"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Learning Instrument"
+        @label "Title"
+        @description "Title shown above the transport controls."
+        @tier "presentation"
+      autoRun : boolean = false
+        @label "Auto Run"
+        @description "When true the clock starts stepping on INIT; the Reset arm restores this value."
+        @tier "domain"
+      stepIntervalMs : number = 500
+        @label "Step Interval (ms)"
+        @description "Milliseconds of running clock per domain step — the 32ms base tick accumulates elapsed time and fires LEARN_STEP each time this interval elapses. 300-900 suits narrated steppers; 32 fires every frame for continuous sims."
+        @tier "domain"
+    }
+  }
+
+  page "/learn-transport" as LearnTransportPage -> LearnTransportSim
+}

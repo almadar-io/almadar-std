@@ -53,16 +53,23 @@ export interface StdUiChemistryCanvasConfig {
   /** Default: `[]` */
   atoms?: EntityRow[];
   backgroundColor?: string;
+  /** Default: `"thick"` */
+  bondStyle?: 'thick' | 'parallel';
   /** Default: `[]` */
   bonds?: EntityRow[];
   /** Default: `{}` */
   camera?: unknown;
   className?: string;
+  /** Default: `[]` */
+  containers?: EntityRow[];
+  equation?: string;
+  equationColor?: string;
   error?: EntityRow;
   /** Default: `400` */
   height?: number;
   interactive?: boolean;
   isLoading?: boolean;
+  lattice3d?: EntityRow;
   /** Default: `{}` */
   lighting?: unknown;
   /** Default: `"2d"` */
@@ -71,11 +78,15 @@ export interface StdUiChemistryCanvasConfig {
   onShapeClick?: string;
   /** Default: `{}` */
   post?: unknown;
+  /** Default: `[]` */
+  readouts?: EntityRow[];
   shadows?: boolean;
   /** Default: `[]` */
   shapes?: EntityRow[];
   showGrid?: boolean;
   title?: string;
+  /** Default: `[]` */
+  traces?: EntityRow[];
   /** Default: `600` */
   width?: number;
 }

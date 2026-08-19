@@ -1,0 +1,522 @@
+app std-learn-tree "1.0.0"
+"Generic ordered-tree builder instrument — inserts values one by one from a config-declared sequence, each value descends left/right by comparison against the current node and attaches as a leaf; the tree renders on algo-graph-canvas (layout: tree, auto-positioned from the parent/child edges), settled nodes green, the descent cursor red, the comparison trail amber. Traverse sweeps the tree to the chosen order (inorder/preorder/levelorder) one node per press or on auto-run, narrating the visit order so far. Vocabulary, sample values, colors, and labels are entirely config-declared, so the same mechanism serves any ordered-tree domain. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital LearnTreeOrbital {
+  type LearnTreeNode = {
+    id : string!
+    label : string
+    state : "unvisited" | "frontier" | "current" | "visited" | "goal" | "path"
+  }
+  type LearnTreeEdge = {
+    from : string!
+    to : string!
+    directed : boolean
+    label : string
+    state : "default" | "tree" | "relaxed" | "candidate" | "path"
+  }
+  type LearnTreeEntry = {
+    id : string!
+    value : number!
+    rank : number!
+    path : string
+    levelKey : number
+  }
+
+  entity LearnTreeScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    nodes : [LearnTreeNode]
+    edges : [LearnTreeEdge]
+    entries : [LearnTreeEntry]
+    cursor : number = 0
+    pending : number = 0
+    descending : boolean = false
+    trail : [string]
+    curId : string = ""
+    curVal : number = 0
+    curRank : number = 0
+    curRankOffset : number = 0
+    depth : number = 0
+    maxDepth : number = 0
+    count : number = 0
+    traversing : boolean = false
+    traversalOrder : [string]
+    sweptIds : [string]
+    done : boolean = false
+    running : boolean = false
+    narration : string
+  }
+
+  trait LearnTreeSim -> @rebindable LearnTreeScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.nodes [])
+        (set @entity.edges [])
+        (set @entity.entries [])
+        (set @entity.cursor 0)
+        (set @entity.descending false)
+        (set @entity.trail [])
+        (set @entity.depth 0)
+        (set @entity.maxDepth 0)
+        (set @entity.count 0)
+        (set @entity.traversing false)
+        (set @entity.traversalOrder [])
+        (set @entity.sweptIds [])
+        (set @entity.done false)
+        (set @entity.running @config.autoRun)
+        (set @entity.narration "Press Insert to add the next value; keep pressing to watch it descend.")
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: INSERT_VALUE, label: "Insert", variant: primary },
+                    { type: button, action: DELETE_VALUE, label: "Delete", variant: secondary },
+                    { type: button, action: RUN_TRAVERSAL, label: "Traverse", variant: secondary },
+                    { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Run"), variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: algo-graph-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, layout: tree, root: "n0", nodes: @entity.nodes, edges: @entity.edges },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit TREE_UPDATED { nodes: @entity.nodes, edges: @entity.edges, count: @entity.count, narration: @entity.narration })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.nodes [])
+        (set @entity.edges [])
+        (set @entity.entries [])
+        (set @entity.cursor 0)
+        (set @entity.descending false)
+        (set @entity.trail [])
+        (set @entity.depth 0)
+        (set @entity.maxDepth 0)
+        (set @entity.count 0)
+        (set @entity.traversing false)
+        (set @entity.traversalOrder [])
+        (set @entity.sweptIds [])
+        (set @entity.done false)
+        (set @entity.running @config.autoRun)
+        (set @entity.narration "Press Insert to add the next value; keep pressing to watch it descend.")
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: INSERT_VALUE, label: "Insert", variant: primary },
+                    { type: button, action: DELETE_VALUE, label: "Delete", variant: secondary },
+                    { type: button, action: RUN_TRAVERSAL, label: "Traverse", variant: secondary },
+                    { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Run"), variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: algo-graph-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, layout: tree, root: "n0", nodes: @entity.nodes, edges: @entity.edges },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit TREE_UPDATED { nodes: @entity.nodes, edges: @entity.edges, count: @entity.count, narration: @entity.narration })
+
+      INSERT_VALUE -> idle when (and (== @entity.active true) (or @entity.descending (< @entity.cursor (array/len @config.values))))
+        (set @entity.traversing false)
+        (set @entity.traversalOrder [])
+        (set @entity.sweptIds [])
+        (set @entity.done false)
+        (if (not @entity.descending)
+          (let (
+              (v (array/nth @config.values @entity.cursor))
+            )
+            (if (== @entity.count 0)
+              (do
+                (set @entity.pending @v)
+                (set @entity.nodes (array/append @entity.nodes { id: "n0", label: (str/concat "" @v), state: "visited" }))
+                (set @entity.entries (array/append @entity.entries { id: "n0", value: @v, rank: 300, path: "", levelKey: 300 }))
+                (set @entity.count 1)
+                (set @entity.cursor 1)
+                (set @entity.narration (str/concat "insert " (str/concat "" @v) " — tree empty, becomes root" (if @config.balanced " · height 1 for 1 node" ""))))
+              (do
+                (set @entity.pending @v)
+                (set @entity.descending true)
+                (set @entity.trail [])
+                (set @entity.curId (object/get (array/first @entity.entries) id))
+                (set @entity.curVal (object/get (array/first @entity.entries) value))
+                (set @entity.curRank (object/get (array/first @entity.entries) rank))
+                (set @entity.curRankOffset 150)
+                (set @entity.depth 0)
+                (set @entity.cursor (+ @entity.cursor 1))
+                (set @entity.narration (str/concat "insert " (str/concat "" @v) (if @config.showComparisons " — compare at the root" ""))))))
+          (let (
+              (side (if (< @entity.pending @entity.curVal) "L" "R"))
+              (child (array/find @entity.edges (fn e (and (== (object/get @e from) @entity.curId) (== (object/get @e label) @side)))))
+              (newRank (if (== @side "L") (- @entity.curRank @entity.curRankOffset) (+ @entity.curRank @entity.curRankOffset)))
+              (newId (str/concat "n" (str/concat "" @entity.count)))
+              (newDepth (+ @entity.depth 1))
+              (newCount (+ @entity.count 1))
+              (newMax (math/max @entity.maxDepth @newDepth))
+              (cmpText (str/concat (str/concat "" @entity.pending) (if (== @side "L") " < " " >= ") (str/concat "" @entity.curVal)))
+            )
+            (if (== @child null)
+              (do
+                (set @entity.narration (str/concat (if @config.showComparisons (str/concat @cmpText " — ") "") "attach " (str/concat "" @entity.pending) " as a leaf" (if @config.balanced (str/concat " · height " (str/concat "" (+ @newMax 1)) " for " (str/concat "" @newCount) " nodes") "")))
+                (set @entity.nodes (array/append @entity.nodes { id: @newId, label: (str/concat "" @entity.pending), state: "visited" }))
+                (set @entity.edges (array/append @entity.edges { from: @entity.curId, to: @newId, directed: true, label: @side, state: "tree" }))
+                (set @entity.entries (array/append @entity.entries { id: @newId, value: @entity.pending, rank: @newRank, path: (str/concat (object/get (array/find @entity.entries (fn t (== (object/get @t id) @entity.curId))) path) @side), levelKey: (+ (* @newDepth 10000) @newRank) }))
+                (set @entity.count @newCount)
+                (set @entity.maxDepth @newMax)
+                (set @entity.descending false)
+                (set @entity.trail []))
+              (do
+                (set @entity.narration (str/concat (if @config.showComparisons (str/concat @cmpText " — ") "") "descend " (if (== @side "L") "left" "right")))
+                (set @entity.trail (array/append @entity.trail @entity.curId))
+                (set @entity.curId (object/get @child to))
+                (set @entity.curVal (object/get (array/find @entity.entries (fn t (== (object/get @t id) (object/get @child to)))) value))
+                (set @entity.curRank (object/get (array/find @entity.entries (fn t (== (object/get @t id) (object/get @child to)))) rank))
+                (set @entity.curRankOffset (/ @entity.curRankOffset 2))
+                (set @entity.depth @newDepth)))))
+        (set @entity.nodes (array/map @entity.nodes (fn n
+          (object/merge @n {
+            state: (if (and (== @entity.descending true) (== (object/get @n id) @entity.curId)) "current"
+                     (if (and (== @entity.descending true) (array/includes @entity.trail (object/get @n id))) "frontier"
+                       "visited"))
+          }))))
+        (set @entity.edges (array/map @entity.edges (fn e
+          (object/merge @e {
+            state: (if (and (== @entity.descending true) (== (object/get @e from) @entity.curId)) "candidate" "tree")
+          }))))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: INSERT_VALUE, label: "Insert", variant: primary },
+                    { type: button, action: DELETE_VALUE, label: "Delete", variant: secondary },
+                    { type: button, action: RUN_TRAVERSAL, label: "Traverse", variant: secondary },
+                    { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Run"), variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: algo-graph-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, layout: tree, root: "n0", nodes: @entity.nodes, edges: @entity.edges },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit TREE_UPDATED { nodes: @entity.nodes, edges: @entity.edges, count: @entity.count, narration: @entity.narration })
+
+      DELETE_VALUE -> idle when (and (== @entity.active true) (> @entity.count 0))
+        (let (
+            (lastId (object/get (array/last @entity.entries) id))
+            (lastVal (object/get (array/last @entity.entries) value))
+          )
+          (do
+            (set @entity.nodes (array/filter @entity.nodes (fn n (!= (object/get @n id) @lastId))))
+            (set @entity.edges (array/filter @entity.edges (fn e (and (!= (object/get @e to) @lastId) (!= (object/get @e from) @lastId)))))
+            (set @entity.entries (array/filter @entity.entries (fn t (!= (object/get @t id) @lastId))))
+            (set @entity.count (- @entity.count 1))
+            (set @entity.cursor (math/max (- @entity.cursor 1) 0))
+            (set @entity.descending false)
+            (set @entity.trail [])
+            (set @entity.traversing false)
+            (set @entity.traversalOrder [])
+            (set @entity.sweptIds [])
+            (set @entity.done false)
+            (set @entity.narration (str/concat "remove " (str/concat "" @lastVal) " — the most recently inserted value (undo); press Insert to re-insert"))))
+        (set @entity.nodes (array/map @entity.nodes (fn n (object/merge @n { state: "visited" }))))
+        (set @entity.edges (array/map @entity.edges (fn e (object/merge @e { state: "tree" }))))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: INSERT_VALUE, label: "Insert", variant: primary },
+                    { type: button, action: DELETE_VALUE, label: "Delete", variant: secondary },
+                    { type: button, action: RUN_TRAVERSAL, label: "Traverse", variant: secondary },
+                    { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Run"), variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: algo-graph-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, layout: tree, root: "n0", nodes: @entity.nodes, edges: @entity.edges },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit TREE_UPDATED { nodes: @entity.nodes, edges: @entity.edges, count: @entity.count, narration: @entity.narration })
+
+      RUN_TRAVERSAL -> idle when (and (== @entity.active true) (> @entity.count 0))
+        (if (or (== @entity.traversing false) (== @entity.done true))
+          (let (
+              (order (if (== @config.traversalKind "preorder")
+                        (array/map (array/sort @entity.entries "path" "asc") (fn t (object/get @t id)))
+                        (if (== @config.traversalKind "levelorder")
+                          (array/map (array/sort @entity.entries "levelKey" "asc") (fn t (object/get @t id)))
+                          (array/map (array/sort @entity.entries "value" "asc") (fn t (object/get @t id))))))
+              (firstId (array/first @order))
+            )
+            (let (
+                (firstVal (object/get (array/find @entity.entries (fn t (== (object/get @t id) @firstId))) value))
+              )
+              (do
+                (set @entity.traversalOrder @order)
+                (set @entity.sweptIds [@firstId])
+                (set @entity.traversing true)
+                (set @entity.done (== (array/len @order) 1))
+                (set @entity.narration (str/concat @config.traversalKind " traversal — visiting order so far: " (str/concat "" @firstVal))))))
+          (let (
+              (nextId (array/nth @entity.traversalOrder (array/len @entity.sweptIds)))
+            )
+            (let (
+                (newSwept (array/append @entity.sweptIds @nextId))
+              )
+              (do
+                (set @entity.sweptIds @newSwept)
+                (set @entity.done (>= (array/len @newSwept) (array/len @entity.traversalOrder)))
+                (set @entity.narration (str/concat @config.traversalKind " traversal — visiting order so far: " (str/join (array/map @newSwept (fn sid (str/concat "" (object/get (array/find @entity.entries (fn t (== (object/get @t id) @sid))) value)))) ", ")))))))
+        (set @entity.nodes (array/map @entity.nodes (fn n
+          (object/merge @n {
+            state: (if (and (== @entity.traversing true) (array/includes @entity.sweptIds (object/get @n id))) "path" "visited")
+          }))))
+        (set @entity.edges (array/map @entity.edges (fn e (object/merge @e { state: "tree" }))))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: INSERT_VALUE, label: "Insert", variant: primary },
+                    { type: button, action: DELETE_VALUE, label: "Delete", variant: secondary },
+                    { type: button, action: RUN_TRAVERSAL, label: "Traverse", variant: secondary },
+                    { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Run"), variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: algo-graph-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, layout: tree, root: "n0", nodes: @entity.nodes, edges: @entity.edges },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit TREE_UPDATED { nodes: @entity.nodes, edges: @entity.edges, count: @entity.count, narration: @entity.narration })
+
+      TOGGLE_RUN -> idle when (== @entity.active true)
+        (set @entity.running (not @entity.running))
+        (set @entity.narration (if @entity.running "Auto-stepping the traversal — tick sweeps one node at a time." "Paused — step the traversal manually with Traverse."))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: INSERT_VALUE, label: "Insert", variant: primary },
+                    { type: button, action: DELETE_VALUE, label: "Delete", variant: secondary },
+                    { type: button, action: RUN_TRAVERSAL, label: "Traverse", variant: secondary },
+                    { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Run"), variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: algo-graph-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, layout: tree, root: "n0", nodes: @entity.nodes, edges: @entity.edges },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit TREE_UPDATED { nodes: @entity.nodes, edges: @entity.edges, count: @entity.count, narration: @entity.narration })
+
+      RESET -> idle when (== @entity.active true)
+        (set @entity.nodes [])
+        (set @entity.edges [])
+        (set @entity.entries [])
+        (set @entity.cursor 0)
+        (set @entity.descending false)
+        (set @entity.trail [])
+        (set @entity.depth 0)
+        (set @entity.maxDepth 0)
+        (set @entity.count 0)
+        (set @entity.traversing false)
+        (set @entity.traversalOrder [])
+        (set @entity.sweptIds [])
+        (set @entity.done false)
+        (set @entity.running @config.autoRun)
+        (set @entity.narration "Press Insert to add the next value; keep pressing to watch it descend.")
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: INSERT_VALUE, label: "Insert", variant: primary },
+                    { type: button, action: DELETE_VALUE, label: "Delete", variant: secondary },
+                    { type: button, action: RUN_TRAVERSAL, label: "Traverse", variant: secondary },
+                    { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Run"), variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: algo-graph-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, layout: tree, root: "n0", nodes: @entity.nodes, edges: @entity.edges },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit TREE_UPDATED { nodes: @entity.nodes, edges: @entity.edges, count: @entity.count, narration: @entity.narration })
+    }
+
+    ticks {
+      treeTick every 500ms
+        when (and (== @entity.active true) (and (== @entity.running true) (not (== @entity.done true))))
+        (if (or (== @entity.traversing false) (== @entity.done true))
+          (let (
+              (order (if (== @config.traversalKind "preorder")
+                        (array/map (array/sort @entity.entries "path" "asc") (fn t (object/get @t id)))
+                        (if (== @config.traversalKind "levelorder")
+                          (array/map (array/sort @entity.entries "levelKey" "asc") (fn t (object/get @t id)))
+                          (array/map (array/sort @entity.entries "value" "asc") (fn t (object/get @t id))))))
+              (firstId (array/first @order))
+            )
+            (let (
+                (firstVal (object/get (array/find @entity.entries (fn t (== (object/get @t id) @firstId))) value))
+              )
+              (do
+                (set @entity.traversalOrder @order)
+                (set @entity.sweptIds [@firstId])
+                (set @entity.traversing true)
+                (set @entity.done (== (array/len @order) 1))
+                (set @entity.narration (str/concat @config.traversalKind " traversal — visiting order so far: " (str/concat "" @firstVal))))))
+          (let (
+              (nextId (array/nth @entity.traversalOrder (array/len @entity.sweptIds)))
+            )
+            (let (
+                (newSwept (array/append @entity.sweptIds @nextId))
+              )
+              (do
+                (set @entity.sweptIds @newSwept)
+                (set @entity.done (>= (array/len @newSwept) (array/len @entity.traversalOrder)))
+                (set @entity.narration (str/concat @config.traversalKind " traversal — visiting order so far: " (str/join (array/map @newSwept (fn sid (str/concat "" (object/get (array/find @entity.entries (fn t (== (object/get @t id) @sid))) value)))) ", ")))))))
+        (set @entity.nodes (array/map @entity.nodes (fn n
+          (object/merge @n {
+            state: (if (and (== @entity.traversing true) (array/includes @entity.sweptIds (object/get @n id))) "path" "visited")
+          }))))
+        (set @entity.edges (array/map @entity.edges (fn e (object/merge @e { state: "tree" }))))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: INSERT_VALUE, label: "Insert", variant: primary },
+                    { type: button, action: DELETE_VALUE, label: "Delete", variant: secondary },
+                    { type: button, action: RUN_TRAVERSAL, label: "Traverse", variant: secondary },
+                    { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Run"), variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                { type: algo-graph-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, layout: tree, root: "n0", nodes: @entity.nodes, edges: @entity.edges },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit TREE_UPDATED { nodes: @entity.nodes, edges: @entity.edges, count: @entity.count, narration: @entity.narration })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      INSERT_VALUE {
+      }
+        @description "Insert the next config-declared value: descends one comparison step per press from the root, coloring the descent cursor and comparison trail, until it attaches as a leaf. Pressing again while a descent is in flight continues that same descent."
+        @synonyms "insert, add, next value, descend, attach"
+        @tier "domain"
+      DELETE_VALUE {
+      }
+        @description "Undo the most recently inserted value — removes its node/edge/entry and rewinds the insert cursor by one so the same value can be re-inserted."
+        @synonyms "delete, remove, undo, rewind"
+        @tier "domain"
+      RUN_TRAVERSAL {
+      }
+        @description "Advance the traversal sweep one node at a time in the configured order (inorder/preorder/levelorder); pressing after the sweep completes starts a fresh sweep."
+        @synonyms "traverse, sweep, visit, walk, in-order, pre-order, level-order"
+        @tier "domain"
+      TOGGLE_RUN {
+      }
+        @description "Toggle auto-stepping: while running, the tick sweeps the traversal one node forward every step. Has no effect on Insert/Delete, which stay manual."
+        @synonyms "run, pause, auto, auto-step"
+        @tier "domain"
+      RESET {
+      }
+        @description "Clear the tree back to empty and restore the insert cursor and running flag from config, ready to insert from the first value again."
+        @synonyms "reset, clear, restart, start over"
+        @tier "domain"
+    }
+
+    emits {
+      TREE_UPDATED -> external {
+        nodes : [LearnTreeNode]
+        edges : [LearnTreeEdge]
+        count : number
+        narration : string
+      }
+        @description "The tree after each insert/delete/traversal step — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "tree update, insert result, traversal result, node count"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      autoRun : boolean = false
+        @label "Auto Run"
+        @description "When true, the tick auto-steps the traversal sweep started by Traverse; toggle live with the Run/Pause button. Has no effect on Insert/Delete, which stay manual."
+        @synonyms "auto run, auto step, auto play"
+        @tier "domain"
+      values : [number] = [50, 30, 70, 20, 40, 60, 80]
+        @label "Values"
+        @description "The values Insert feeds into the tree, one per descent, in order."
+        @synonyms "keys, values to insert, dataset, sequence"
+        @tier "domain"
+      traversalKind : string = "inorder"
+        @label "Traversal Kind"
+        @description "Which sweep Traverse replays — inorder (sorted order, left to right), preorder (root before children), or levelorder (breadth first, top to bottom)."
+        @synonyms "traversal, in-order, pre-order, level-order, sweep"
+        @tier "domain"
+      showComparisons : boolean = true
+        @label "Show Comparisons"
+        @description "Include each left/right comparison in the narration while a value descends; turn off for a terse attach-only narration."
+        @synonyms "comparisons, narration detail"
+        @tier "presentation"
+      balanced : boolean = false
+        @label "Balance Readout"
+        @description "When true, each insert's narration reports the tree's current height against its node count so the learner can judge balance; no auto-rotation is performed."
+        @synonyms "balance, height, balance readout"
+        @tier "domain"
+      title : string = "Ordered Tree"
+        @label "Title"
+        @description "Title shown above the canvas."
+        @tier "presentation"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      backgroundColor : string = "#f8fafc"
+        @label "Background Color"
+        @description "Canvas background color."
+        @tier "presentation"
+    }
+  }
+
+  page "/learn-tree" as LearnTreePage -> LearnTreeSim
+}

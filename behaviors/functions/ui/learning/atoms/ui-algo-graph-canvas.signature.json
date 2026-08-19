@@ -1,0 +1,517 @@
+[
+  {
+    "organism": "ui-algo-graph-canvas",
+    "orbital": "AlgoGraphCanvasOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/ui-algo-graph-canvas.ts",
+    "entities": [
+      {
+        "name": "AlgoGraphCanvasItem",
+        "fields": [],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "AlgoGraphCanvasRender",
+        "emittedEvents": [
+          "SHAPE_CLICK",
+          "NODE_CLICK"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "SHAPE_CLICK",
+            "direction": "emit",
+            "description": "onShapeClick prop",
+            "tier": "essential"
+          },
+          {
+            "name": "NODE_CLICK",
+            "direction": "emit",
+            "description": "Fires when a node circle is clicked, alongside `onShapeClick`.",
+            "tier": "essential"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "animate",
+            "type": "boolean",
+            "default": false,
+            "label": "Animate",
+            "description": "animate prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "backgroundColor",
+            "type": "string",
+            "label": "Background Color",
+            "description": "backgroundColor prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "className",
+            "type": "string",
+            "label": "Class Name",
+            "description": "className prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "edges",
+            "type": "[AlgoGraphCanvasEdgesItem]",
+            "default": [],
+            "label": "Edges",
+            "description": "edges prop",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "directed": {
+                  "name": "directed",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "from": {
+                  "name": "from",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "state": {
+                  "name": "state",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "default",
+                    "tree",
+                    "relaxed",
+                    "candidate",
+                    "path"
+                  ]
+                },
+                "to": {
+                  "name": "to",
+                  "required": true,
+                  "type": "string"
+                },
+                "weight": {
+                  "name": "weight",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "error",
+            "type": "AlgoGraphCanvasError",
+            "label": "Error",
+            "description": "error prop",
+            "tier": "presentation",
+            "properties": {
+              "code": {
+                "name": "code",
+                "required": false,
+                "type": "string"
+              },
+              "message": {
+                "name": "message",
+                "required": true,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "stack": {
+                "name": "stack",
+                "required": false,
+                "type": "string"
+              }
+            }
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 400,
+            "label": "Height",
+            "description": "height prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "interactive",
+            "type": "boolean",
+            "default": false,
+            "label": "Interactive",
+            "description": "interactive prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "isLoading",
+            "type": "boolean",
+            "label": "Is Loading",
+            "description": "isLoading prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "layout",
+            "type": "string",
+            "default": "manual",
+            "label": "Layout",
+            "description": "Deterministic layout to compute node positions; `manual` passes through `x`/`y`.",
+            "tier": "presentation",
+            "enumValues": [
+              "manual",
+              "tree",
+              "layered",
+              "circle"
+            ]
+          },
+          {
+            "key": "nodes",
+            "type": "[AlgoGraphCanvasNodesItem]",
+            "default": [],
+            "label": "Nodes",
+            "description": "nodes prop",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "badge": {
+                  "name": "badge",
+                  "required": false,
+                  "properties": {
+                    "color": {
+                      "name": "color",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "text": {
+                      "name": "text",
+                      "required": true,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "state": {
+                  "name": "state",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "unvisited",
+                    "frontier",
+                    "current",
+                    "visited",
+                    "goal",
+                    "path"
+                  ]
+                },
+                "x": {
+                  "name": "x",
+                  "required": false,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "onNodeClick",
+            "type": "string",
+            "default": "NODE_CLICK",
+            "label": "On Node Click",
+            "description": "Fires when a node circle is clicked, alongside `onShapeClick`.",
+            "tier": "presentation"
+          },
+          {
+            "key": "onShapeClick",
+            "type": "string",
+            "default": "SHAPE_CLICK",
+            "label": "On Shape Click",
+            "description": "onShapeClick prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "root",
+            "type": "string",
+            "label": "Root",
+            "description": "`tree` layout only: preferred root id. Falls back to the first indegree-0 node.",
+            "tier": "presentation"
+          },
+          {
+            "key": "shapes",
+            "type": "[AlgoGraphCanvasShapesItem]",
+            "default": [],
+            "label": "Shapes",
+            "description": "Extra declarative shapes in canvas pixel coordinates.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "align": {
+                  "name": "align",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "left",
+                    "center",
+                    "right"
+                  ]
+                },
+                "axis": {
+                  "name": "axis",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "x",
+                    "y"
+                  ]
+                },
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "dash": {
+                  "name": "dash",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "dashed",
+                    "dotted"
+                  ]
+                },
+                "endAngle": {
+                  "name": "endAngle",
+                  "required": false,
+                  "type": "number"
+                },
+                "fill": {
+                  "name": "fill",
+                  "required": false,
+                  "type": "string"
+                },
+                "fontSize": {
+                  "name": "fontSize",
+                  "required": false,
+                  "type": "number"
+                },
+                "height": {
+                  "name": "height",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "lineWidth": {
+                  "name": "lineWidth",
+                  "required": false,
+                  "type": "number"
+                },
+                "max": {
+                  "name": "max",
+                  "required": false,
+                  "type": "number"
+                },
+                "min": {
+                  "name": "min",
+                  "required": false,
+                  "type": "number"
+                },
+                "opacity": {
+                  "name": "opacity",
+                  "required": false,
+                  "type": "number"
+                },
+                "path": {
+                  "name": "path",
+                  "required": false,
+                  "type": "string"
+                },
+                "points": {
+                  "name": "points",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "x": {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "y": {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "startAngle": {
+                  "name": "startAngle",
+                  "required": false,
+                  "type": "number"
+                },
+                "step": {
+                  "name": "step",
+                  "required": false,
+                  "type": "number"
+                },
+                "text": {
+                  "name": "text",
+                  "required": false,
+                  "type": "string"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string",
+                  "values": [
+                    "line",
+                    "arrow",
+                    "circle",
+                    "ellipse",
+                    "rect",
+                    "polygon",
+                    "path",
+                    "text",
+                    "axis",
+                    "grid"
+                  ]
+                },
+                "width": {
+                  "name": "width",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": false,
+                  "type": "number"
+                },
+                "x1": {
+                  "name": "x1",
+                  "required": false,
+                  "type": "number"
+                },
+                "x2": {
+                  "name": "x2",
+                  "required": false,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "y1": {
+                  "name": "y1",
+                  "required": false,
+                  "type": "number"
+                },
+                "y2": {
+                  "name": "y2",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "label": "Title",
+            "description": "title prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "description": "width prop",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "AlgoGraphCanvasItem",
+        "transitionEvents": [
+          "INIT"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "AlgoGraphCanvasPage",
+        "defaultPath": "/algo-graph-canvas",
+        "primaryEntity": "AlgoGraphCanvasItem"
+      }
+    ],
+    "emittedEvents": [
+      "NODE_CLICK",
+      "SHAPE_CLICK"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

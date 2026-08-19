@@ -20,9 +20,102 @@ orbital PhysicsCanvasOrbital {
     from : string!
     to : string!
     color : string
+    kind : "rod" | "spring" | "string"
+  }
+  type PhysicsCanvasSceneObjectsItem = {
+    kind : "ground" | "wall" | "ramp" | "box" | "pivot"!
+    x : number
+    y : number
+    x1 : number
+    y1 : number
+    x2 : number
+    y2 : number
+    width : number
+    height : number
+    color : string
+    fill : string
+    label : string
+  }
+  type PhysicsCanvasTrailsItem = {
+    id : string
+    points : [PhysicsCanvasTrailsItemPointsItem]!
+    color : string
+    width : number
+    opacity : number
+    fade : boolean
+  }
+  type PhysicsCanvasTrailsItemPointsItem = {
+    x : number!
+    y : number!
+    z : number
+  }
+  type PhysicsCanvasVectorsItem = {
+    x : number
+    y : number
+    body : string
+    dx : number!
+    dy : number!
+    scale : number
+    color : string
+    label : string
+    dash : "dashed" | "dotted"
+  }
+  type PhysicsCanvasSurface3d = {
+    nx : number!
+    ny : number!
+    heights : [number]!
+    spacing : number
+    x : number
+    y : number
+    bands : [PhysicsCanvasSurface3dBandsItem]
+    color : string
+    opacity : number
+    flatShading : boolean
+  }
+  type PhysicsCanvasSurface3dBandsItem = {
+    min : number
+    color : string!
+  }
+  type PhysicsCanvasVectors3dItem = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    dx : number!
+    dy : number!
+    dz : number
+    color : string
+    label : string
+    width : number
+  }
+  type PhysicsCanvasAnglesItem = {
+    x : number!
+    y : number!
+    from : number!
+    to : number!
+    radius : number
+    color : string
+    label : string
+  }
+  type PhysicsCanvasField = {
+    kind : "arrows" | "into" | "out"!
+    spacing : number
+    angle : number
+    size : number
+    color : string
+    x : number
+    y : number
+    width : number
+    height : number
+  }
+  type PhysicsCanvasMetersItem = {
+    label : string!
+    value : number!
+    max : number
+    color : string
   }
   type PhysicsCanvasShapesItem = {
-    type : "line" | "arrow" | "circle" | "rect" | "polygon" | "path" | "text" | "axis" | "grid"!
+    type : "line" | "arrow" | "circle" | "ellipse" | "rect" | "polygon" | "path" | "text" | "axis" | "grid" | "venn-region"!
     id : string
     x : number
     y : number
@@ -47,8 +140,39 @@ orbital PhysicsCanvasOrbital {
     fill : string
     lineWidth : number
     opacity : number
+    startAngle : number
+    endAngle : number
+    dash : "dashed" | "dotted"
+    inside : [string]
+    outside : [string]
   }
   type PhysicsCanvasShapesItemPointsItem = {
+    x : number!
+    y : number!
+  }
+  type PhysicsCanvasReadoutsItem = {
+    label : string!
+    value : string!
+    color : string
+  }
+  type PhysicsCanvasTracesItem = {
+    x : number
+    y : number
+    width : number
+    height : number
+    series : [PhysicsCanvasTracesItemSeriesItem]!
+    xLabel : string
+    yLabel : string
+    frameColor : string
+    backgroundColor : string
+    backgroundOpacity : number
+  }
+  type PhysicsCanvasTracesItemSeriesItem = {
+    samples : [PhysicsCanvasTracesItemSeriesItemSamplesItem]!
+    color : string
+    label : string
+  }
+  type PhysicsCanvasTracesItemSeriesItemSamplesItem = {
     x : number!
     y : number!
   }
@@ -89,7 +213,18 @@ orbital PhysicsCanvasOrbital {
           showForces: @config.showForces
           velocityScale: @config.velocityScale
           forceScale: @config.forceScale
+          sceneObjects: @config.sceneObjects
+          trails: @config.trails
+          vectors: @config.vectors
+          surface3d: @config.surface3d
+          vectors3d: @config.vectors3d
+          vectorScale: @config.vectorScale
+          angles: @config.angles
+          field: @config.field
+          meters: @config.meters
           shapes: @config.shapes
+          readouts: @config.readouts
+          traces: @config.traces
           showGrid: @config.showGrid
           shadows: @config.shadows
           interactive: @config.interactive
@@ -116,7 +251,18 @@ orbital PhysicsCanvasOrbital {
           showForces: @config.showForces
           velocityScale: @config.velocityScale
           forceScale: @config.forceScale
+          sceneObjects: @payload.sceneObjects
+          trails: @payload.trails
+          vectors: @payload.vectors
+          surface3d: @config.surface3d
+          vectors3d: @payload.vectors3d
+          vectorScale: @config.vectorScale
+          angles: @payload.angles
+          field: @config.field
+          meters: @payload.meters
           shapes: @payload.shapes
+          readouts: @payload.readouts
+          traces: @payload.traces
           showGrid: @config.showGrid
           shadows: @config.shadows
           interactive: @config.interactive
@@ -140,7 +286,15 @@ orbital PhysicsCanvasOrbital {
       UPDATE {
         bodies : [PhysicsCanvasBodiesItem]
         constraints : [PhysicsCanvasConstraintsItem]
+        sceneObjects : [PhysicsCanvasSceneObjectsItem]
+        trails : [PhysicsCanvasTrailsItem]
+        vectors : [PhysicsCanvasVectorsItem]
+        vectors3d : [PhysicsCanvasVectors3dItem]
+        angles : [PhysicsCanvasAnglesItem]
+        meters : [PhysicsCanvasMetersItem]
         shapes : [PhysicsCanvasShapesItem]
+        readouts : [PhysicsCanvasReadoutsItem]
+        traces : [PhysicsCanvasTracesItem]
       }
         @description "Live scene update; payload carries the current drawable state."
         @synonyms "tick, redraw, animate, frame"
@@ -208,9 +362,53 @@ orbital PhysicsCanvasOrbital {
         @label "Force Scale"
         @description "forceScale prop"
         @tier "presentation"
+      sceneObjects : [PhysicsCanvasSceneObjectsItem] = []
+        @label "Scene Objects"
+        @description "Ground/wall/ramp/box/pivot scene fixtures. 2D only."
+        @tier "presentation"
+      trails : [PhysicsCanvasTrailsItem] = []
+        @label "Trails"
+        @description "Fading trajectory polylines (2D) / trajectory tubes (3D)."
+        @tier "presentation"
+      vectors : [PhysicsCanvasVectorsItem] = []
+        @label "Vectors"
+        @description "Named force/velocity/free-body arrows, anchored by point or by body id. 2D only."
+        @tier "presentation"
+      surface3d : PhysicsCanvasSurface3d
+        @label "Surface3d"
+        @description "A 3D height-field surface mesh (wave, terrain, potential well). 3D only."
+        @tier "presentation"
+      vectors3d : [PhysicsCanvasVectors3dItem] = []
+        @label "Vectors3d"
+        @description "Labeled 3D arrows (field arrows, axis triads). 3D only."
+        @tier "presentation"
+      vectorScale : number = 1
+        @label "Vector Scale"
+        @description "Multiplies every `vectors3d` entry's `dx`/`dy`/`dz` (default 1). 3D only."
+        @tier "presentation"
+      angles : [PhysicsCanvasAnglesItem] = []
+        @label "Angles"
+        @description "Angle arcs between two bearings. 2D only."
+        @tier "presentation"
+      field : PhysicsCanvasField
+        @label "Field"
+        @description "A single uniform vector/into/out field lattice. 2D only."
+        @tier "presentation"
+      meters : [PhysicsCanvasMetersItem] = []
+        @label "Meters"
+        @description "Bottom-left labeled bar gauges. 2D only."
+        @tier "presentation"
       shapes : [PhysicsCanvasShapesItem] = []
         @label "Shapes"
         @description "Extra declarative shapes in canvas pixel coordinates (2D mode only — ignored in 3D)."
+        @tier "presentation"
+      readouts : [PhysicsCanvasReadoutsItem] = []
+        @label "Readouts"
+        @description "Top-right status chip row, forwarded to LearningCanvas verbatim."
+        @tier "presentation"
+      traces : [PhysicsCanvasTracesItem] = []
+        @label "Traces"
+        @description "Inset sparkline panels, forwarded to LearningCanvas verbatim."
         @tier "presentation"
       showGrid : boolean
         @label "Show Grid"

@@ -49,14 +49,20 @@ export interface StdUiBiologyCanvasConfig {
   /** Default: `false` */
   animate?: boolean;
   backgroundColor?: string;
+  /** Default: `[]` */
+  bands?: EntityRow[];
   /** Default: `{}` */
   camera?: unknown;
   className?: string;
+  /** Default: `[]` */
+  compartments?: EntityRow[];
   /** Default: `[]` */
   edges?: EntityRow[];
   error?: EntityRow;
   /** Default: `400` */
   height?: number;
+  helix?: EntityRow;
+  helix3d?: EntityRow;
   interactive?: boolean;
   isLoading?: boolean;
   /** Default: `{}` */
@@ -69,11 +75,19 @@ export interface StdUiBiologyCanvasConfig {
   onShapeClick?: string;
   /** Default: `{}` */
   post?: unknown;
+  /** Default: `[]` */
+  readouts?: EntityRow[];
   shadows?: boolean;
   /** Default: `[]` */
   shapes?: EntityRow[];
   showGrid?: boolean;
+  /** Default: `"timeline"` */
+  stageStyle?: 'timeline' | 'ring';
+  /** Default: `[]` */
+  stages?: EntityRow[];
   title?: string;
+  /** Default: `[]` */
+  traces?: EntityRow[];
   /** Default: `600` */
   width?: number;
 }

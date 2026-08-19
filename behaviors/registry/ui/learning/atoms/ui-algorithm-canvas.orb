@@ -105,6 +105,33 @@
               "tier": "presentation",
               "type": "boolean"
             },
+            "auxBars": {
+              "default": [],
+              "description": "Secondary bar strip inside the bars panel (e.g. a running total beside the primary values).",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "value": {
+                    "name": "value",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Aux Bars",
+              "tier": "presentation",
+              "type": "[AlgorithmCanvasAuxBarsItem]"
+            },
             "backgroundColor": {
               "description": "backgroundColor prop",
               "label": "Background Color",
@@ -138,6 +165,53 @@
               "tier": "presentation",
               "type": "[AlgorithmCanvasBarsItem]"
             },
+            "buckets": {
+              "default": [],
+              "description": "Hash-table buckets; each row is an index chip plus its chained entries.",
+              "items": {
+                "properties": {
+                  "entries": {
+                    "items": {
+                      "properties": {
+                        "color": {
+                          "name": "color",
+                          "required": false,
+                          "type": "string"
+                        },
+                        "label": {
+                          "name": "label",
+                          "required": true,
+                          "type": "string"
+                        },
+                        "state": {
+                          "name": "state",
+                          "required": false,
+                          "type": "string",
+                          "values": [
+                            "default",
+                            "highlight",
+                            "probing"
+                          ]
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "name": "entries",
+                    "required": true,
+                    "type": "array"
+                  },
+                  "index": {
+                    "name": "index",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Buckets",
+              "tier": "presentation",
+              "type": "[AlgorithmCanvasBucketsItem]"
+            },
             "cells": {
               "default": [],
               "description": "Grid/array/DP cells; laid out on a row/col lattice sized to the extent.",
@@ -152,6 +226,33 @@
                     "name": "color",
                     "required": false,
                     "type": "string"
+                  },
+                  "corner": {
+                    "name": "corner",
+                    "properties": {
+                      "bl": {
+                        "name": "bl",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "br": {
+                        "name": "br",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "tl": {
+                        "name": "tl",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "tr": {
+                        "name": "tr",
+                        "required": false,
+                        "type": "string"
+                      }
+                    },
+                    "required": false,
+                    "type": "object"
                   },
                   "label": {
                     "name": "label",
@@ -181,6 +282,33 @@
               "tier": "presentation",
               "type": "string"
             },
+            "colLabels": {
+              "default": [],
+              "description": "Column-header labels drawn above the cells grid.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "index": {
+                    "name": "index",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "text": {
+                    "name": "text",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Col Labels",
+              "tier": "presentation",
+              "type": "[AlgorithmCanvasColLabelsItem]"
+            },
             "error": {
               "description": "error prop",
               "label": "Error",
@@ -208,6 +336,43 @@
               },
               "tier": "presentation",
               "type": "AlgorithmCanvasError"
+            },
+            "frames": {
+              "default": [],
+              "description": "Recursion/call-stack frames; laid out bottom-up like a real call stack.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "detail": {
+                    "name": "detail",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "state": {
+                    "name": "state",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "active",
+                      "returning",
+                      "done"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Frames",
+              "tier": "presentation",
+              "type": "[AlgorithmCanvasFramesItem]"
             },
             "height": {
               "default": 400.0,
@@ -238,7 +403,7 @@
             },
             "pointers": {
               "default": [],
-              "description": "Index cursors (i/j/lo/hi/mid); drawn as markers beneath the referenced bar/cell column.",
+              "description": "Index cursors (i/j/lo/hi/mid); drawn as markers beneath the referenced bar/slot column.",
               "items": {
                 "properties": {
                   "color": {
@@ -262,6 +427,74 @@
               "label": "Pointers",
               "tier": "presentation",
               "type": "[AlgorithmCanvasPointersItem]"
+            },
+            "ranges": {
+              "default": [],
+              "description": "Highlighted index ranges over the bars panel (translucent fill bands or labeled brackets).",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "from": {
+                    "name": "from",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "kind": {
+                    "name": "kind",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "fill",
+                      "bracket"
+                    ]
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "to": {
+                    "name": "to",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Ranges",
+              "tier": "presentation",
+              "type": "[AlgorithmCanvasRangesItem]"
+            },
+            "rowLabels": {
+              "default": [],
+              "description": "Row-header labels drawn to the left of the cells grid.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "index": {
+                    "name": "index",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "text": {
+                    "name": "text",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Row Labels",
+              "tier": "presentation",
+              "type": "[AlgorithmCanvasRowLabelsItem]"
             },
             "shapes": {
               "default": [],
@@ -291,6 +524,20 @@
                     "name": "color",
                     "required": false,
                     "type": "string"
+                  },
+                  "dash": {
+                    "name": "dash",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "dashed",
+                      "dotted"
+                    ]
+                  },
+                  "endAngle": {
+                    "name": "endAngle",
+                    "required": false,
+                    "type": "number"
                   },
                   "fill": {
                     "name": "fill",
@@ -367,6 +614,11 @@
                     "required": false,
                     "type": "number"
                   },
+                  "startAngle": {
+                    "name": "startAngle",
+                    "required": false,
+                    "type": "number"
+                  },
                   "step": {
                     "name": "step",
                     "required": false,
@@ -385,6 +637,7 @@
                       "line",
                       "arrow",
                       "circle",
+                      "ellipse",
                       "rect",
                       "polygon",
                       "path",
@@ -434,6 +687,49 @@
               "label": "Shapes",
               "tier": "presentation",
               "type": "[AlgorithmCanvasShapesItem]"
+            },
+            "slotOrientation": {
+              "default": "horizontal",
+              "description": "Slot stack direction; horizontal lays slots left-to-right, vertical stacks bottom-up.",
+              "label": "Slot Orientation",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "horizontal",
+                "vertical"
+              ]
+            },
+            "slots": {
+              "default": [],
+              "description": "Discrete value slots (registers/variables); laid out in a row or a vertical stack.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "state": {
+                    "name": "state",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "empty",
+                      "filled",
+                      "highlight"
+                    ]
+                  },
+                  "value": {
+                    "name": "value",
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Slots",
+              "tier": "presentation",
+              "type": "[AlgorithmCanvasSlotsItem]"
             },
             "title": {
               "description": "title prop",
@@ -548,6 +844,28 @@
                       {
                         "name": "label",
                         "type": "string"
+                      },
+                      {
+                        "name": "corner",
+                        "properties": [
+                          {
+                            "name": "tl",
+                            "type": "string"
+                          },
+                          {
+                            "name": "tr",
+                            "type": "string"
+                          },
+                          {
+                            "name": "bl",
+                            "type": "string"
+                          },
+                          {
+                            "name": "br",
+                            "type": "string"
+                          }
+                        ],
+                        "type": "object"
                       }
                     ],
                     "type": "[object]"
@@ -562,6 +880,165 @@
                       },
                       {
                         "name": "label",
+                        "type": "string"
+                      },
+                      {
+                        "name": "color",
+                        "type": "string"
+                      }
+                    ],
+                    "type": "[object]"
+                  },
+                  {
+                    "name": "ranges",
+                    "properties": [
+                      {
+                        "name": "from",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "to",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "color",
+                        "type": "string"
+                      },
+                      {
+                        "name": "label",
+                        "type": "string"
+                      },
+                      {
+                        "name": "kind",
+                        "type": "string"
+                      }
+                    ],
+                    "type": "[object]"
+                  },
+                  {
+                    "name": "slots",
+                    "properties": [
+                      {
+                        "name": "value",
+                        "type": "string"
+                      },
+                      {
+                        "name": "state",
+                        "type": "string"
+                      },
+                      {
+                        "name": "color",
+                        "type": "string"
+                      }
+                    ],
+                    "type": "[object]"
+                  },
+                  {
+                    "name": "frames",
+                    "properties": [
+                      {
+                        "name": "label",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "detail",
+                        "type": "string"
+                      },
+                      {
+                        "name": "state",
+                        "type": "string"
+                      },
+                      {
+                        "name": "color",
+                        "type": "string"
+                      }
+                    ],
+                    "type": "[object]"
+                  },
+                  {
+                    "name": "buckets",
+                    "properties": [
+                      {
+                        "name": "index",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "entries",
+                        "properties": [
+                          {
+                            "name": "label",
+                            "required": true,
+                            "type": "string"
+                          },
+                          {
+                            "name": "state",
+                            "type": "string"
+                          },
+                          {
+                            "name": "color",
+                            "type": "string"
+                          }
+                        ],
+                        "required": true,
+                        "type": "[object]"
+                      }
+                    ],
+                    "type": "[object]"
+                  },
+                  {
+                    "name": "auxBars",
+                    "properties": [
+                      {
+                        "name": "value",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "color",
+                        "type": "string"
+                      },
+                      {
+                        "name": "label",
+                        "type": "string"
+                      }
+                    ],
+                    "type": "[object]"
+                  },
+                  {
+                    "name": "rowLabels",
+                    "properties": [
+                      {
+                        "name": "index",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "text",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "color",
+                        "type": "string"
+                      }
+                    ],
+                    "type": "[object]"
+                  },
+                  {
+                    "name": "colLabels",
+                    "properties": [
+                      {
+                        "name": "index",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "text",
+                        "required": true,
                         "type": "string"
                       },
                       {
@@ -686,6 +1163,18 @@
                       {
                         "name": "opacity",
                         "type": "number"
+                      },
+                      {
+                        "name": "startAngle",
+                        "type": "number"
+                      },
+                      {
+                        "name": "endAngle",
+                        "type": "number"
+                      },
+                      {
+                        "name": "dash",
+                        "type": "string"
                       }
                     ],
                     "type": "[object]"
@@ -737,17 +1226,25 @@
                     "main",
                     {
                       "animate": "@config.animate",
+                      "auxBars": "@config.auxBars",
                       "backgroundColor": "@config.backgroundColor",
                       "bars": "@config.bars",
+                      "buckets": "@config.buckets",
                       "cells": "@config.cells",
                       "className": "@config.className",
+                      "colLabels": "@config.colLabels",
                       "error": "@config.error",
+                      "frames": "@config.frames",
                       "height": "@config.height",
                       "interactive": "@config.interactive",
                       "isLoading": "@config.isLoading",
                       "onShapeClick": "@config.onShapeClick",
                       "pointers": "@config.pointers",
+                      "ranges": "@config.ranges",
+                      "rowLabels": "@config.rowLabels",
                       "shapes": "@config.shapes",
+                      "slotOrientation": "@config.slotOrientation",
+                      "slots": "@config.slots",
                       "title": "@config.title",
                       "type": "algorithm-canvas",
                       "width": "@config.width"
@@ -766,17 +1263,25 @@
                     "main",
                     {
                       "animate": "@config.animate",
+                      "auxBars": "@payload.auxBars",
                       "backgroundColor": "@config.backgroundColor",
                       "bars": "@payload.bars",
+                      "buckets": "@payload.buckets",
                       "cells": "@payload.cells",
                       "className": "@config.className",
+                      "colLabels": "@payload.colLabels",
                       "error": "@config.error",
+                      "frames": "@payload.frames",
                       "height": "@config.height",
                       "interactive": "@config.interactive",
                       "isLoading": "@config.isLoading",
                       "onShapeClick": "@config.onShapeClick",
                       "pointers": "@payload.pointers",
+                      "ranges": "@payload.ranges",
+                      "rowLabels": "@payload.rowLabels",
                       "shapes": "@payload.shapes",
+                      "slotOrientation": "@config.slotOrientation",
+                      "slots": "@payload.slots",
                       "title": "@config.title",
                       "type": "algorithm-canvas",
                       "width": "@config.width"

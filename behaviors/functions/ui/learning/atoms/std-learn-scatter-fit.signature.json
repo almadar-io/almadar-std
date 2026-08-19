@@ -1,0 +1,665 @@
+[
+  {
+    "organism": "std-learn-scatter-fit",
+    "orbital": "LearnScatterFitOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-learn-scatter-fit.ts",
+    "entities": [
+      {
+        "name": "LearnScatterFitScene",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "points",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "slope",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "intercept",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "r",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "rSquared",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "guessSlope",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "guessIntercept",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "guessScore",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "revealed",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "running",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "done",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "curves",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "narration",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "LearnScatterFitSim",
+        "emittedEvents": [
+          "LEARN_SCATTER_FIT_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "LEARN_SCATTER_FIT_UPDATED",
+            "direction": "emit",
+            "description": "The least-squares fit and narration after each learner action, auto-add tick, or reset — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "fit update, line of best fit, slope, intercept, correlation, r squared",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "ADD_POINT",
+            "direction": "listen"
+          },
+          {
+            "name": "DRAG_POINT",
+            "direction": "listen",
+            "description": "A scatter point was dragged — id names the point, x/y its new coordinates (clamped to the axis ranges); the fit recomputes live.",
+            "tier": "domain"
+          },
+          {
+            "name": "GUESS_LINE",
+            "direction": "listen",
+            "description": "Learner dragged a guess-the-line slider — param is slope or intercept; the guess is scored against the least-squares fit.",
+            "tier": "domain"
+          },
+          {
+            "name": "REVEAL_FIT",
+            "direction": "listen"
+          },
+          {
+            "name": "TOGGLE_RUN",
+            "direction": "listen"
+          },
+          {
+            "name": "RESET",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "addPointLabel",
+            "type": "string",
+            "default": "Add Point",
+            "label": "Add Point Button Label",
+            "tier": "presentation"
+          },
+          {
+            "key": "animate",
+            "type": "boolean",
+            "default": false,
+            "label": "Animate",
+            "description": "Enable continuous redraw loop.",
+            "tier": "presentation"
+          },
+          {
+            "key": "autoRun",
+            "type": "boolean",
+            "default": false,
+            "label": "Auto Run",
+            "description": "When true, INIT/MODE_SELECTED start the tick auto-adding points up to Max Points; toggle live with the Run/Pause button.",
+            "tier": "domain"
+          },
+          {
+            "key": "axisXMax",
+            "type": "number",
+            "default": 100,
+            "label": "X Axis Max",
+            "description": "Upper bound of the canvas x axis, in data coordinates; also the x endpoint the fit/guess lines are drawn to.",
+            "tier": "domain"
+          },
+          {
+            "key": "axisXMin",
+            "type": "number",
+            "default": 0,
+            "label": "X Axis Min",
+            "description": "Lower bound of the canvas x axis, in data coordinates.",
+            "tier": "domain"
+          },
+          {
+            "key": "axisYMax",
+            "type": "number",
+            "default": 100,
+            "label": "Y Axis Max",
+            "description": "Upper bound of the canvas y axis; also the ceiling curve samples clamp to and the high end of the guess-intercept slider default range.",
+            "tier": "domain"
+          },
+          {
+            "key": "axisYMin",
+            "type": "number",
+            "default": 0,
+            "label": "Y Axis Min",
+            "description": "Lower bound of the canvas y axis; also the floor curve samples clamp to and the low end of the guess-intercept slider default range.",
+            "tier": "domain"
+          },
+          {
+            "key": "fitColor",
+            "type": "string",
+            "default": "#2563eb",
+            "label": "Fit Curve Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "fitLabel",
+            "type": "string",
+            "default": "fit",
+            "label": "Fit Curve Label",
+            "description": "Legend label for the computed least-squares fit line.",
+            "tier": "presentation"
+          },
+          {
+            "key": "gridStep",
+            "type": "number",
+            "default": 20,
+            "label": "Grid Step",
+            "description": "Spacing between canvas gridlines, in data coordinates.",
+            "tier": "presentation"
+          },
+          {
+            "key": "guessColor",
+            "type": "string",
+            "default": "#dc2626",
+            "label": "Guess Curve Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "guessInterceptCaption",
+            "type": "string",
+            "default": "Guess intercept: ",
+            "label": "Guess Intercept Caption",
+            "description": "Text prefixed to the current guess-intercept value above its slider.",
+            "tier": "presentation"
+          },
+          {
+            "key": "guessInterceptMax",
+            "type": "number",
+            "default": 100,
+            "label": "Guess Intercept Max",
+            "description": "Upper bound of the guess-intercept slider; typically set to axisYMax.",
+            "tier": "domain"
+          },
+          {
+            "key": "guessInterceptMin",
+            "type": "number",
+            "default": 0,
+            "label": "Guess Intercept Min",
+            "description": "Lower bound of the guess-intercept slider; typically set to axisYMin.",
+            "tier": "domain"
+          },
+          {
+            "key": "guessInterceptStep",
+            "type": "number",
+            "default": 1,
+            "label": "Guess Intercept Step",
+            "tier": "domain"
+          },
+          {
+            "key": "guessLabel",
+            "type": "string",
+            "default": "your guess",
+            "label": "Guess Curve Label",
+            "description": "Legend label for the learner's proposed line, shown while guessMode is on and the fit isn't yet revealed.",
+            "tier": "presentation"
+          },
+          {
+            "key": "guessMode",
+            "type": "boolean",
+            "default": true,
+            "label": "Guess Mode",
+            "description": "When true the learner's guessed line is shown instead of the fit until Reveal Fit, and the guess is scored against least squares.",
+            "synonyms": "guess the line, prediction, estimate the fit",
+            "tier": "domain"
+          },
+          {
+            "key": "guessSlopeCaption",
+            "type": "string",
+            "default": "Guess slope: ",
+            "label": "Guess Slope Caption",
+            "description": "Text prefixed to the current guess-slope value above its slider.",
+            "tier": "presentation"
+          },
+          {
+            "key": "guessSlopeMax",
+            "type": "number",
+            "default": 3,
+            "label": "Guess Slope Max",
+            "description": "Upper bound of the guess-slope slider.",
+            "tier": "domain"
+          },
+          {
+            "key": "guessSlopeMin",
+            "type": "number",
+            "default": -3,
+            "label": "Guess Slope Min",
+            "description": "Lower bound of the guess-slope slider.",
+            "tier": "domain"
+          },
+          {
+            "key": "guessSlopeStep",
+            "type": "number",
+            "default": 0.05,
+            "label": "Guess Slope Step",
+            "tier": "domain"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 400,
+            "label": "Height",
+            "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "initialPoints",
+            "type": "[LearnScatterFitPoint]",
+            "default": [
+              {
+                "color": "#334155",
+                "id": "p0",
+                "label": "",
+                "radius": 5,
+                "x": 15,
+                "y": 25
+              },
+              {
+                "color": "#334155",
+                "id": "p1",
+                "label": "",
+                "radius": 5,
+                "x": 32,
+                "y": 40
+              },
+              {
+                "color": "#334155",
+                "id": "p2",
+                "label": "",
+                "radius": 5,
+                "x": 48,
+                "y": 44
+              },
+              {
+                "color": "#334155",
+                "id": "p3",
+                "label": "",
+                "radius": 5,
+                "x": 63,
+                "y": 62
+              },
+              {
+                "color": "#334155",
+                "id": "p4",
+                "label": "",
+                "radius": 5,
+                "x": 80,
+                "y": 70
+              }
+            ],
+            "label": "Initial Points",
+            "description": "Scatter points the canvas starts with, in axis data coordinates; Reset reseeds from this roster.",
+            "synonyms": "seed points, dataset, scatter data, sample",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "interactive",
+            "type": "boolean",
+            "default": true,
+            "label": "Interactive",
+            "description": "Enable pointer interaction on the canvas — required for dragging points.",
+            "tier": "presentation"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "maxPoints",
+            "type": "number",
+            "default": 20,
+            "label": "Max Points",
+            "description": "Cap on accumulated scatter points; Add Point and the auto-run tick stop once reached, until Reset.",
+            "tier": "domain"
+          },
+          {
+            "key": "narrationAddedTemplate",
+            "type": "string",
+            "default": "point added",
+            "label": "Added Narration Template",
+            "description": "Narration phrase after a point is added (button or tick), assembled as \"<template> <n> — r = .., R² = ..\".",
+            "tier": "domain"
+          },
+          {
+            "key": "narrationAutoAddingTemplate",
+            "type": "string",
+            "default": "Auto-adding — tick adds a new point.",
+            "label": "Auto-Adding Narration",
+            "description": "Narration shown after Run is pressed.",
+            "tier": "domain"
+          },
+          {
+            "key": "narrationFitRevealedTemplate",
+            "type": "string",
+            "default": "fit revealed",
+            "label": "Fit Revealed Narration Template",
+            "description": "Narration phrase after Reveal Fit, assembled as \"<template> — r = .., R² = .. — guess score <score>%\".",
+            "tier": "domain"
+          },
+          {
+            "key": "narrationGuessUpdatedTemplate",
+            "type": "string",
+            "default": "guess updated — score",
+            "label": "Guess Updated Narration Template",
+            "description": "Narration phrase after a guess slider moves, assembled as \"<template> <score>%\".",
+            "tier": "domain"
+          },
+          {
+            "key": "narrationLoadedTemplate",
+            "type": "string",
+            "default": "point(s) loaded",
+            "label": "Loaded Narration Template",
+            "description": "Narration phrase after INIT/MODE_SELECTED/Reset load the seed points, assembled as \"<n> <template> — r = .., R² = ..\".",
+            "tier": "domain"
+          },
+          {
+            "key": "narrationMaxReachedSuffix",
+            "type": "string",
+            "default": " — max points reached",
+            "label": "Max Reached Narration Suffix",
+            "description": "Suffix appended to the added-point narration once maxPoints is hit.",
+            "tier": "domain"
+          },
+          {
+            "key": "narrationMovedTemplate",
+            "type": "string",
+            "default": "point moved",
+            "label": "Moved Narration Template",
+            "description": "Narration phrase after a point is dragged, assembled as \"<template> — r = .., R² = ..\".",
+            "tier": "domain"
+          },
+          {
+            "key": "narrationPausedTemplate",
+            "type": "string",
+            "default": "Paused — add manually with Add Point.",
+            "label": "Paused Narration",
+            "description": "Narration shown after Pause is pressed.",
+            "tier": "domain"
+          },
+          {
+            "key": "newPointColor",
+            "type": "string",
+            "default": "#334155",
+            "label": "New Point Color",
+            "description": "Fill color assigned to points created by Add Point or the auto-add tick.",
+            "tier": "presentation"
+          },
+          {
+            "key": "newPointRadius",
+            "type": "number",
+            "default": 5,
+            "label": "New Point Radius",
+            "tier": "presentation"
+          },
+          {
+            "key": "pauseLabel",
+            "type": "string",
+            "default": "Pause",
+            "label": "Pause Button Label",
+            "tier": "presentation"
+          },
+          {
+            "key": "pointMarginPct",
+            "type": "number",
+            "default": 0.05,
+            "label": "Point Margin Percent",
+            "description": "Fraction of each axis span kept clear at both ends when Add Point/the tick place a new random point, so new points never land flush against the axis edge.",
+            "tier": "domain"
+          },
+          {
+            "key": "resetLabel",
+            "type": "string",
+            "default": "Reset",
+            "label": "Reset Button Label",
+            "tier": "presentation"
+          },
+          {
+            "key": "residualColor",
+            "type": "string",
+            "default": "#f59e0b",
+            "label": "Residual Color",
+            "tier": "presentation"
+          },
+          {
+            "key": "residualDash",
+            "type": "string",
+            "default": "dashed",
+            "label": "Residual Dash Style",
+            "tier": "presentation",
+            "enumValues": [
+              "dashed",
+              "dotted"
+            ]
+          },
+          {
+            "key": "revealLabel",
+            "type": "string",
+            "default": "Reveal Fit",
+            "label": "Reveal Fit Button Label",
+            "tier": "presentation"
+          },
+          {
+            "key": "runLabel",
+            "type": "string",
+            "default": "Run",
+            "label": "Run Button Label",
+            "tier": "presentation"
+          },
+          {
+            "key": "showAxes",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Axes",
+            "tier": "presentation"
+          },
+          {
+            "key": "showGrid",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Grid",
+            "tier": "presentation"
+          },
+          {
+            "key": "showR",
+            "type": "boolean",
+            "default": true,
+            "label": "Show r and R²",
+            "description": "Show the correlation coefficient r and coefficient of determination R² under the canvas.",
+            "synonyms": "correlation coefficient, r squared, goodness of fit",
+            "tier": "domain"
+          },
+          {
+            "key": "showResiduals",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Residuals",
+            "description": "Draw a dashed segment from each point to the fit line — the errors least squares minimizes.",
+            "synonyms": "residuals, errors, deviations",
+            "tier": "domain"
+          },
+          {
+            "key": "showTickLabels",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Tick Labels",
+            "tier": "presentation"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Scatter Fit",
+            "label": "Title",
+            "description": "Title shown above the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "description": "Canvas width in pixels.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "LearnScatterFitScene",
+        "transitionEvents": [
+          "ADD_POINT",
+          "DRAG_POINT",
+          "GUESS_LINE",
+          "INIT",
+          "MODE_SELECTED",
+          "RESET",
+          "REVEAL_FIT",
+          "TOGGLE_RUN"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "curves",
+            "done",
+            "guessIntercept",
+            "guessScore",
+            "guessSlope",
+            "intercept",
+            "narration",
+            "points",
+            "r",
+            "rSquared",
+            "revealed",
+            "running",
+            "slope",
+            "title"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "LearnScatterFitPage",
+        "defaultPath": "/learn-scatter-fit",
+        "primaryEntity": "LearnScatterFitScene"
+      }
+    ],
+    "emittedEvents": [
+      "LEARN_SCATTER_FIT_UPDATED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

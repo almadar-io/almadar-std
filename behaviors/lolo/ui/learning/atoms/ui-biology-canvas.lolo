@@ -12,15 +12,76 @@ orbital BiologyCanvasOrbital {
     kind : "cell" | "organelle" | "molecule" | "organism"
     shape : "box" | "sphere" | "capsule" | "cylinder" | "cone" | "torus" | "plane" | "circle" | "polyhedron"
     opacity : number
+    state : "default" | "highlight" | "muted"
   }
   type BiologyCanvasEdgesItem = {
     from : string!
     to : string!
     color : string
     label : string
+    directed : boolean
+  }
+  type BiologyCanvasCompartmentsItem = {
+    x : number!
+    y : number!
+    width : number!
+    height : number!
+    label : string
+    color : string
+    fill : string
+    dash : "dashed" | "dotted"
+    lineWidth : number
+  }
+  type BiologyCanvasBandsItem = {
+    label : string
+    color : string
+  }
+  type BiologyCanvasStagesItem = {
+    label : string!
+    state : "pending" | "active" | "done"
+    color : string
+  }
+  type BiologyCanvasHelix = {
+    x : number
+    y : number
+    width : number
+    height : number
+    rungs : [BiologyCanvasHelixRungsItem]!
+    fork : number
+    colorA : string
+    colorB : string
+    rungColor : string
+  }
+  type BiologyCanvasHelixRungsItem = {
+    a : string
+    b : string
+    state : "paired" | "open" | "new"
+    color : string
+  }
+  type BiologyCanvasHelix3d = {
+    count : number
+    rungs : [BiologyCanvasHelix3dRungsItem]
+    radius : number
+    rise : number
+    twistDeg : number
+    strandAColor : string
+    strandBColor : string
+    backboneRadius : number
+    rungRadius : number
+    x : number
+    y : number
+    z : number
+    unwoundCount : number
+    unwindSpread : number
+  }
+  type BiologyCanvasHelix3dRungsItem = {
+    id : string
+    color : string
+    radius : number
+    label : string
   }
   type BiologyCanvasShapesItem = {
-    type : "line" | "arrow" | "circle" | "rect" | "polygon" | "path" | "text" | "axis" | "grid"!
+    type : "line" | "arrow" | "circle" | "ellipse" | "rect" | "polygon" | "path" | "text" | "axis" | "grid" | "venn-region"!
     id : string
     x : number
     y : number
@@ -45,8 +106,39 @@ orbital BiologyCanvasOrbital {
     fill : string
     lineWidth : number
     opacity : number
+    startAngle : number
+    endAngle : number
+    dash : "dashed" | "dotted"
+    inside : [string]
+    outside : [string]
   }
   type BiologyCanvasShapesItemPointsItem = {
+    x : number!
+    y : number!
+  }
+  type BiologyCanvasReadoutsItem = {
+    label : string!
+    value : string!
+    color : string
+  }
+  type BiologyCanvasTracesItem = {
+    x : number
+    y : number
+    width : number
+    height : number
+    series : [BiologyCanvasTracesItemSeriesItem]!
+    xLabel : string
+    yLabel : string
+    frameColor : string
+    backgroundColor : string
+    backgroundOpacity : number
+  }
+  type BiologyCanvasTracesItemSeriesItem = {
+    samples : [BiologyCanvasTracesItemSeriesItemSamplesItem]!
+    color : string
+    label : string
+  }
+  type BiologyCanvasTracesItemSeriesItemSamplesItem = {
     x : number!
     y : number!
   }
@@ -83,7 +175,15 @@ orbital BiologyCanvasOrbital {
           post: @config.post
           nodes: @config.nodes
           edges: @config.edges
+          compartments: @config.compartments
+          bands: @config.bands
+          stages: @config.stages
+          stageStyle: @config.stageStyle
+          helix: @config.helix
+          helix3d: @config.helix3d
           shapes: @config.shapes
+          readouts: @config.readouts
+          traces: @config.traces
           showGrid: @config.showGrid
           shadows: @config.shadows
           interactive: @config.interactive
@@ -106,7 +206,15 @@ orbital BiologyCanvasOrbital {
           post: @config.post
           nodes: @payload.nodes
           edges: @payload.edges
+          compartments: @payload.compartments
+          bands: @payload.bands
+          stages: @payload.stages
+          stageStyle: @config.stageStyle
+          helix: @config.helix
+          helix3d: @config.helix3d
           shapes: @payload.shapes
+          readouts: @payload.readouts
+          traces: @payload.traces
           showGrid: @config.showGrid
           shadows: @config.shadows
           interactive: @config.interactive
@@ -130,7 +238,12 @@ orbital BiologyCanvasOrbital {
       UPDATE {
         nodes : [BiologyCanvasNodesItem]
         edges : [BiologyCanvasEdgesItem]
+        compartments : [BiologyCanvasCompartmentsItem]
+        bands : [BiologyCanvasBandsItem]
+        stages : [BiologyCanvasStagesItem]
         shapes : [BiologyCanvasShapesItem]
+        readouts : [BiologyCanvasReadoutsItem]
+        traces : [BiologyCanvasTracesItem]
       }
         @description "Live scene update; payload carries the current drawable state."
         @synonyms "tick, redraw, animate, frame"
@@ -182,9 +295,45 @@ orbital BiologyCanvasOrbital {
         @label "Edges"
         @description "edges prop"
         @tier "presentation"
+      compartments : [BiologyCanvasCompartmentsItem] = []
+        @label "Compartments"
+        @description "Organelle/membrane/cell-boundary ellipses (2D only)."
+        @synonyms "membrane, organelle region, cell boundary"
+        @tier "presentation"
+      bands : [BiologyCanvasBandsItem] = []
+        @label "Bands"
+        @description "Full-width horizontal background stripes, drawn first (2D only)."
+        @synonyms "trophic levels, zones, layers"
+        @tier "presentation"
+      stages : [BiologyCanvasStagesItem] = []
+        @label "Stages"
+        @description "Phase/step chips (2D only)."
+        @synonyms "phases, timeline, cycle"
+        @tier "presentation"
+      stageStyle : "timeline" | "ring" = timeline
+        @label "Stage Style"
+        @description "Layout for `stages`: a bottom timeline strip (default) or a radial ring."
+        @tier "presentation"
+      helix : BiologyCanvasHelix
+        @label "Helix"
+        @description "A DNA double-helix ladder panel (2D only)."
+        @synonyms "DNA ladder, replication fork, base pairs"
+        @tier "presentation"
+      helix3d : BiologyCanvasHelix3d
+        @label "Helix3d"
+        @description "A 3D DNA double-helix ladder. 3D only."
+        @tier "presentation"
       shapes : [BiologyCanvasShapesItem] = []
         @label "Shapes"
         @description "Extra declarative shapes in canvas pixel coordinates (2D mode only — ignored in 3D)."
+        @tier "presentation"
+      readouts : [BiologyCanvasReadoutsItem] = []
+        @label "Readouts"
+        @description "Top-right status chip row, forwarded to LearningCanvas verbatim."
+        @tier "presentation"
+      traces : [BiologyCanvasTracesItem] = []
+        @label "Traces"
+        @description "Inset sparkline panels, forwarded to LearningCanvas verbatim."
         @tier "presentation"
       showGrid : boolean
         @label "Show Grid"

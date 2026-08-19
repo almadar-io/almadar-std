@@ -15,7 +15,6 @@
       {
         "name": "TableViewRender",
         "emittedEvents": [
-          "ITEM_CLICK",
           "SELECT",
           "SORT",
           "VIEW",
@@ -23,12 +22,6 @@
         ],
         "listenedEvents": [],
         "events": [
-          {
-            "name": "ITEM_CLICK",
-            "direction": "emit",
-            "description": "When set, the whole row is clickable and emits UI:{itemClickEvent} with { id, row } (action-button clicks stopPropagation so they still win). Mirrors DataList's contract.",
-            "tier": "essential"
-          },
           {
             "name": "SELECT",
             "direction": "emit",
@@ -330,7 +323,7 @@
             "type": "[TableViewItemActionsItem]",
             "default": [],
             "label": "Item Actions",
-            "description": "Per-row action buttons (trailing column).",
+            "description": "Per-row actions, collected under a trailing kebab overflow menu.",
             "tier": "presentation",
             "items": {
               "properties": {
@@ -367,9 +360,9 @@
           {
             "key": "itemClickEvent",
             "type": "string",
-            "default": "ITEM_CLICK",
+            "default": "",
             "label": "Item Click Event",
-            "description": "When set, the whole row is clickable and emits UI:{itemClickEvent} with { id, row } (action-button clicks stopPropagation so they still win). Mirrors DataList's contract.",
+            "description": "When set, the whole row is clickable and emits UI:{itemClickEvent} with { id, row } (action-button clicks stopPropagation so they still win). Mirrors DataList's contract. When OMITTED and `itemActions` exist, the row click defaults to the first non-danger item action (the view/open action by authoring convention) — a danger action never becomes the row default (destructive actions require intentional reach).",
             "tier": "presentation"
           },
           {
@@ -391,7 +384,7 @@
             "key": "maxInlineActions",
             "type": "number",
             "label": "Max Inline Actions",
-            "description": "Max inline action buttons before the rest collapse into a '⋯' overflow menu. Omit = all inline.",
+            "description": "maxInlineActions prop",
             "tier": "presentation"
           },
           {
@@ -502,7 +495,6 @@
       }
     ],
     "emittedEvents": [
-      "ITEM_CLICK",
       "SELECT",
       "SORT",
       "TableViewLoaded",

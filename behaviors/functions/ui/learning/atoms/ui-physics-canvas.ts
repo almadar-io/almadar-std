@@ -46,6 +46,8 @@ export interface StdUiPhysicsCanvasShapeClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiPhysicsCanvasConfig {
+  /** Default: `[]` */
+  angles?: EntityRow[];
   /** Default: `false` */
   animate?: boolean;
   backgroundColor?: string;
@@ -57,6 +59,7 @@ export interface StdUiPhysicsCanvasConfig {
   /** Default: `[]` */
   constraints?: EntityRow[];
   error?: EntityRow;
+  field?: EntityRow;
   /** Default: `20` */
   forceScale?: number;
   /** Default: `400` */
@@ -65,12 +68,18 @@ export interface StdUiPhysicsCanvasConfig {
   isLoading?: boolean;
   /** Default: `{}` */
   lighting?: unknown;
+  /** Default: `[]` */
+  meters?: EntityRow[];
   /** Default: `"2d"` */
   mode?: '2d' | '3d';
   /** Default: `"SHAPE_CLICK"` */
   onShapeClick?: string;
   /** Default: `{}` */
   post?: unknown;
+  /** Default: `[]` */
+  readouts?: EntityRow[];
+  /** Default: `[]` */
+  sceneObjects?: EntityRow[];
   shadows?: boolean;
   /** Default: `[]` */
   shapes?: EntityRow[];
@@ -79,7 +88,18 @@ export interface StdUiPhysicsCanvasConfig {
   showGrid?: boolean;
   /** Default: `true` */
   showVelocity?: boolean;
+  surface3d?: EntityRow;
   title?: string;
+  /** Default: `[]` */
+  traces?: EntityRow[];
+  /** Default: `[]` */
+  trails?: EntityRow[];
+  /** Default: `1` */
+  vectorScale?: number;
+  /** Default: `[]` */
+  vectors?: EntityRow[];
+  /** Default: `[]` */
+  vectors3d?: EntityRow[];
   /** Default: `20` */
   velocityScale?: number;
   /** Default: `600` */

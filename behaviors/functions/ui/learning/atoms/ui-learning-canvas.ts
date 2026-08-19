@@ -68,7 +68,11 @@ export interface StdUiLearningCanvasConfig {
   /** Default: `"SHAPE_HOVER"` */
   onShapeHover?: string;
   /** Default: `[]` */
+  readouts?: EntityRow[];
+  /** Default: `[]` */
   shapes?: EntityRow[];
+  /** Default: `[]` */
+  traces?: EntityRow[];
   /** Default: `600` */
   width?: number;
 }

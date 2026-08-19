@@ -1,0 +1,192 @@
+app ui-algo-graph-canvas "1.0.0"
+"AlgoGraphCanvas — UI factory (1:1 with the @almadar/ui algo-graph-canvas pattern)."
+orbital AlgoGraphCanvasOrbital {
+  type AlgoGraphCanvasNodesItem = {
+    id : string!
+    x : number
+    y : number
+    label : string
+    state : "unvisited" | "frontier" | "current" | "visited" | "goal" | "path"
+    color : string
+    radius : number
+    badge : AlgoGraphCanvasNodesItemBadge
+  }
+  type AlgoGraphCanvasNodesItemBadge = {
+    text : string!
+    color : string
+  }
+  type AlgoGraphCanvasEdgesItem = {
+    from : string!
+    to : string!
+    directed : boolean
+    weight : number
+    label : string
+    state : "default" | "tree" | "relaxed" | "candidate" | "path"
+    color : string
+  }
+  type AlgoGraphCanvasShapesItem = {
+    type : "line" | "arrow" | "circle" | "ellipse" | "rect" | "polygon" | "path" | "text" | "axis" | "grid" | "venn-region"!
+    id : string
+    x : number
+    y : number
+    x1 : number
+    y1 : number
+    x2 : number
+    y2 : number
+    radius : number
+    width : number
+    height : number
+    points : [AlgoGraphCanvasShapesItemPointsItem]
+    path : string
+    text : string
+    label : string
+    fontSize : number
+    align : "left" | "center" | "right"
+    axis : "x" | "y"
+    min : number
+    max : number
+    step : number
+    color : string
+    fill : string
+    lineWidth : number
+    opacity : number
+    startAngle : number
+    endAngle : number
+    dash : "dashed" | "dotted"
+    inside : [string]
+    outside : [string]
+  }
+  type AlgoGraphCanvasShapesItemPointsItem = {
+    x : number!
+    y : number!
+  }
+  type AlgoGraphCanvasError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
+  }
+  type AlgoGraphCanvasSHAPECLICKPayload = {
+    id : string
+    type : string
+    index : number!
+  }
+  type AlgoGraphCanvasNODECLICKPayload = {
+    id : string!
+    label : string
+    index : number!
+  }
+
+  entity AlgoGraphCanvasItem [runtime] {
+    id : string!
+  }
+
+  trait AlgoGraphCanvasRender -> @rebindable AlgoGraphCanvasItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          className: @config.className
+          width: @config.width
+          height: @config.height
+          title: @config.title
+          backgroundColor: @config.backgroundColor
+          nodes: @config.nodes
+          edges: @config.edges
+          layout: @config.layout
+          root: @config.root
+          shapes: @config.shapes
+          interactive: @config.interactive
+          animate: @config.animate
+          onShapeClick: @config.onShapeClick
+          onNodeClick: @config.onNodeClick
+          isLoading: @config.isLoading
+          error: @config.error
+          type: algo-graph-canvas
+        })
+    }
+
+    emits {
+      @config.onShapeClick -> external {
+        payload : AlgoGraphCanvasSHAPECLICKPayload
+      }
+        @description "onShapeClick prop"
+        @tier "essential"
+      @config.onNodeClick -> external {
+        payload : AlgoGraphCanvasNODECLICKPayload
+      }
+        @description "Fires when a node circle is clicked, alongside `onShapeClick`."
+        @tier "essential"
+    }
+
+    config {
+      className : string
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+      width : number = 600
+        @label "Width"
+        @description "width prop"
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "height prop"
+        @tier "presentation"
+      title : string
+        @label "Title"
+        @description "title prop"
+        @tier "presentation"
+      backgroundColor : string
+        @label "Background Color"
+        @description "backgroundColor prop"
+        @tier "presentation"
+      nodes : [AlgoGraphCanvasNodesItem] = []
+        @label "Nodes"
+        @description "nodes prop"
+        @tier "presentation"
+      edges : [AlgoGraphCanvasEdgesItem] = []
+        @label "Edges"
+        @description "edges prop"
+        @tier "presentation"
+      layout : "manual" | "tree" | "layered" | "circle" = manual
+        @label "Layout"
+        @description "Deterministic layout to compute node positions; `manual` passes through `x`/`y`."
+        @tier "presentation"
+      root : string
+        @label "Root"
+        @description "`tree` layout only: preferred root id. Falls back to the first indegree-0 node."
+        @tier "presentation"
+      shapes : [AlgoGraphCanvasShapesItem] = []
+        @label "Shapes"
+        @description "Extra declarative shapes in canvas pixel coordinates."
+        @tier "presentation"
+      interactive : boolean = false
+        @label "Interactive"
+        @description "interactive prop"
+        @tier "presentation"
+      animate : boolean = false
+        @label "Animate"
+        @description "animate prop"
+        @tier "presentation"
+      onShapeClick : string = "SHAPE_CLICK"
+        @label "On Shape Click"
+        @description "onShapeClick prop"
+        @tier "presentation"
+      onNodeClick : string = "NODE_CLICK"
+        @label "On Node Click"
+        @description "Fires when a node circle is clicked, alongside `onShapeClick`."
+        @tier "presentation"
+      isLoading : boolean
+        @label "Is Loading"
+        @description "isLoading prop"
+        @tier "presentation"
+      error : AlgoGraphCanvasError
+        @label "Error"
+        @description "error prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/algo-graph-canvas" as AlgoGraphCanvasPage -> AlgoGraphCanvasRender
+}

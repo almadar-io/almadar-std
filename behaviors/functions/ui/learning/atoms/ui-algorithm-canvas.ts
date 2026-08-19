@@ -48,13 +48,21 @@ export interface StdUiAlgorithmCanvasShapeClickPayload {
 export interface StdUiAlgorithmCanvasConfig {
   /** Default: `false` */
   animate?: boolean;
+  /** Default: `[]` */
+  auxBars?: EntityRow[];
   backgroundColor?: string;
   /** Default: `[]` */
   bars?: EntityRow[];
   /** Default: `[]` */
+  buckets?: EntityRow[];
+  /** Default: `[]` */
   cells?: EntityRow[];
   className?: string;
+  /** Default: `[]` */
+  colLabels?: EntityRow[];
   error?: EntityRow;
+  /** Default: `[]` */
+  frames?: EntityRow[];
   /** Default: `400` */
   height?: number;
   /** Default: `false` */
@@ -65,7 +73,15 @@ export interface StdUiAlgorithmCanvasConfig {
   /** Default: `[]` */
   pointers?: EntityRow[];
   /** Default: `[]` */
+  ranges?: EntityRow[];
+  /** Default: `[]` */
+  rowLabels?: EntityRow[];
+  /** Default: `[]` */
   shapes?: EntityRow[];
+  /** Default: `"horizontal"` */
+  slotOrientation?: 'horizontal' | 'vertical';
+  /** Default: `[]` */
+  slots?: EntityRow[];
   title?: string;
   /** Default: `600` */
   width?: number;

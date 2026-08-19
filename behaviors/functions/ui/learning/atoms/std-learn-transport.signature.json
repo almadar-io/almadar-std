@@ -1,0 +1,174 @@
+[
+  {
+    "organism": "std-learn-transport",
+    "orbital": "LearnTransportOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-learn-transport.ts",
+    "entities": [
+      {
+        "name": "LearnTransportScene",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "running",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "steps",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "elapsedMs",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "done",
+            "type": "boolean",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "LearnTransportSim",
+        "emittedEvents": [
+          "LEARN_STEP",
+          "LEARN_RESET",
+          "LEARN_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "LEARN_STEP",
+            "direction": "emit",
+            "description": "Fires once per domain step — from the Step button or every stepIntervalMs of running clock — with the step counter; the composed subject trait transitions on it and applies one step of the domain computation. A harmless no-op when the atom runs standalone.",
+            "synonyms": "step, advance, tick, iterate, next",
+            "tier": "domain"
+          },
+          {
+            "name": "LEARN_RESET",
+            "direction": "emit",
+            "description": "Fires on Reset after the transport counters re-zero; the composed subject trait reseeds its domain state from config on it. A harmless no-op when the atom runs standalone.",
+            "synonyms": "reset, reseed, restart, clear",
+            "tier": "domain"
+          },
+          {
+            "name": "LEARN_UPDATED",
+            "direction": "emit",
+            "description": "Fires on INIT/MODE_SELECTED/Run-Pause toggle with the transport state — running flag and step counter — so the composed subject trait can repaint its shell (Run/Pause label, step readout). A harmless no-op when the atom runs standalone.",
+            "synonyms": "run, pause, transport, running state",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "STEP",
+            "direction": "listen"
+          },
+          {
+            "name": "TOGGLE_RUN",
+            "direction": "listen"
+          },
+          {
+            "name": "RESET",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "autoRun",
+            "type": "boolean",
+            "default": false,
+            "label": "Auto Run",
+            "description": "When true the clock starts stepping on INIT; the Reset arm restores this value.",
+            "tier": "domain"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "stepIntervalMs",
+            "type": "number",
+            "default": 500,
+            "label": "Step Interval (ms)",
+            "description": "Milliseconds of running clock per domain step — the 32ms base tick accumulates elapsed time and fires LEARN_STEP each time this interval elapses. 300-900 suits narrated steppers; 32 fires every frame for continuous sims.",
+            "tier": "domain"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Learning Instrument",
+            "label": "Title",
+            "description": "Title shown above the transport controls.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "LearnTransportScene",
+        "transitionEvents": [
+          "INIT",
+          "MODE_SELECTED",
+          "RESET",
+          "STEP",
+          "TOGGLE_RUN"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [
+            "done"
+          ],
+          "provides": [
+            "active",
+            "elapsedMs",
+            "running",
+            "steps",
+            "title"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "LearnTransportPage",
+        "defaultPath": "/learn-transport",
+        "primaryEntity": "LearnTransportScene"
+      }
+    ],
+    "emittedEvents": [
+      "LEARN_RESET",
+      "LEARN_STEP",
+      "LEARN_UPDATED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

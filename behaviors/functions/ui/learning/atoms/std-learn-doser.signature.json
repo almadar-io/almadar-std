@@ -1,0 +1,376 @@
+[
+  {
+    "organism": "std-learn-doser",
+    "orbital": "LearnDoserOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-learn-doser.ts",
+    "entities": [
+      {
+        "name": "DoserScene",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "done",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "running",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "elapsedMs",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "dose",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "bandLabel",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "bandColor",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "narration",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "containers",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "readouts",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "doseSeries",
+            "type": "array",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "LearnDoserSim",
+        "emittedEvents": [
+          "DOSE_ADDED",
+          "DOSE_RESET",
+          "DOSER_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "DOSE_ADDED",
+            "direction": "emit",
+            "description": "Fires after every dose increase — from the small/large add buttons or an auto-drip tick — with the accumulated dose and its classified band. A composed sibling trait transitions on it to recompute a domain-specific response (e.g. a chemistry pH curve) and repaint the scene it owns. A harmless no-op when the atom runs standalone.",
+            "synonyms": "dose added, increment, add, drip, titrant added, quantity added",
+            "tier": "domain"
+          },
+          {
+            "name": "DOSE_RESET",
+            "direction": "emit",
+            "description": "Fires on Reset after the dose, band, and done flag re-zero. A composed sibling trait reseeds its own domain state from config on it. A harmless no-op when the atom runs standalone.",
+            "synonyms": "reset, reseed, restart, clear",
+            "tier": "domain"
+          },
+          {
+            "name": "DOSER_UPDATED",
+            "direction": "emit",
+            "description": "Fires on INIT/MODE_SELECTED/auto-drip toggle with the transport-level state — running flag, dose, current band, done — so a composed sibling trait can repaint its own shell. A harmless no-op when the atom runs standalone.",
+            "synonyms": "drip toggle, running state, auto-dose",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "ADD_SMALL",
+            "direction": "listen"
+          },
+          {
+            "name": "ADD_LARGE",
+            "direction": "listen"
+          },
+          {
+            "name": "TOGGLE_DRIP",
+            "direction": "listen"
+          },
+          {
+            "name": "RESET",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "autoDrip",
+            "type": "boolean",
+            "default": false,
+            "label": "Auto Drip",
+            "description": "When true, INIT/MODE_SELECTED/Reset start the drip clock adding a small increment each interval; toggle live with the Auto-dose/Pause button.",
+            "tier": "domain"
+          },
+          {
+            "key": "backgroundColor",
+            "type": "string",
+            "default": "#fafafa",
+            "label": "Background Color",
+            "description": "Canvas background color.",
+            "tier": "presentation"
+          },
+          {
+            "key": "bands",
+            "type": "[DoserBand]",
+            "default": [
+              {
+                "color": "#94a3b8",
+                "label": "Low",
+                "terminal": false,
+                "upperBound": 50
+              },
+              {
+                "color": "#16a34a",
+                "label": "High",
+                "terminal": true,
+                "upperBound": 999999999
+              }
+            ],
+            "label": "Bands",
+            "description": "Ordered ascending roster of dose bands/zones — each carries the dose upper bound it covers, a label, a color, and whether crossing into it is terminal (irreversible; sets done true until Reset). The accumulated dose is classified into the first band whose upperBound it does not exceed, falling through to the last band beyond all bounds.",
+            "synonyms": "zone, band, threshold, region, stage, phase, tier",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "terminal": {
+                  "name": "terminal",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "upperBound": {
+                  "name": "upperBound",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "capacity",
+            "type": "number",
+            "default": 100,
+            "label": "Capacity",
+            "description": "Maximum total dose the source can deliver; the source vessel drains to empty and additions clamp once accumulated dose reaches this cap.",
+            "tier": "domain"
+          },
+          {
+            "key": "dripIntervalMs",
+            "type": "number",
+            "default": 500,
+            "label": "Drip Interval (ms)",
+            "description": "Milliseconds of running clock per auto-drip increment — the 32ms base tick accumulates elapsed time and adds a small step each time this interval elapses.",
+            "tier": "domain"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 400,
+            "label": "Height",
+            "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "historyLength",
+            "type": "number",
+            "default": 300,
+            "label": "Dose History",
+            "description": "Maximum points kept in the dose-history trace; older points drop off once exceeded.",
+            "tier": "domain"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "quantityLabel",
+            "type": "string",
+            "default": "Dose",
+            "label": "Quantity Label",
+            "description": "Label used for the accumulated-quantity readout and in the narration line.",
+            "synonyms": "quantity, amount, dose, volume, level",
+            "tier": "domain"
+          },
+          {
+            "key": "reservoirLabel",
+            "type": "string",
+            "default": "Reservoir",
+            "label": "Reservoir Label",
+            "description": "Label for the vessel that fills as dose accumulates.",
+            "synonyms": "reservoir, beaker, tank, container, receiving vessel",
+            "tier": "presentation"
+          },
+          {
+            "key": "showCanvas",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Canvas",
+            "description": "When true (the default, standalone use) the instrument renders its own reservoir/source canvas and narration below the control strip. Set false when a domain sibling trait composes this atom via @rebindable and owns the accurate scene render itself — then only the control strip (add/drip/reset buttons) embeds via @trait.<name>, avoiding a duplicate canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "sourceColor",
+            "type": "string",
+            "default": "#60a5fa",
+            "label": "Source Color",
+            "description": "Fill color for the source vessel.",
+            "tier": "presentation"
+          },
+          {
+            "key": "sourceLabel",
+            "type": "string",
+            "default": "Source",
+            "label": "Source Label",
+            "description": "Label for the vessel that drains as dose is delivered from it.",
+            "synonyms": "source, burette, supply, dispenser",
+            "tier": "presentation"
+          },
+          {
+            "key": "stepLarge",
+            "type": "number",
+            "default": 5,
+            "label": "Large Step",
+            "description": "Quantity added per press of the coarse add button.",
+            "tier": "domain"
+          },
+          {
+            "key": "stepSmall",
+            "type": "number",
+            "default": 1,
+            "label": "Small Step",
+            "description": "Quantity added per press of the fine add button, and per auto-drip tick — for precise control near a band boundary.",
+            "tier": "domain"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Doser",
+            "label": "Title",
+            "description": "Title shown above the instrument.",
+            "tier": "presentation"
+          },
+          {
+            "key": "unit",
+            "type": "string",
+            "default": "",
+            "label": "Unit",
+            "description": "Unit suffix appended to the step-size button labels (e.g. \"mL\", \"mg\", \"units\"); empty means no unit shown.",
+            "tier": "domain"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "description": "Canvas width in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "zoneReadoutLabel",
+            "type": "string",
+            "default": "Zone",
+            "label": "Zone Readout Label",
+            "description": "Label used for the current-band readout row.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "DoserScene",
+        "transitionEvents": [
+          "ADD_LARGE",
+          "ADD_SMALL",
+          "INIT",
+          "MODE_SELECTED",
+          "RESET",
+          "TOGGLE_DRIP"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "bandColor",
+            "bandLabel",
+            "containers",
+            "done",
+            "dose",
+            "doseSeries",
+            "elapsedMs",
+            "narration",
+            "readouts",
+            "running",
+            "title"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "LearnDoserPage",
+        "defaultPath": "/learn-doser",
+        "primaryEntity": "DoserScene"
+      }
+    ],
+    "emittedEvents": [
+      "DOSER_UPDATED",
+      "DOSE_ADDED",
+      "DOSE_RESET"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

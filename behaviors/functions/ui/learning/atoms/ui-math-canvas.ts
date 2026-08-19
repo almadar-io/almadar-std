@@ -46,16 +46,24 @@ export interface StdUiMathCanvasShapeClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiMathCanvasConfig {
+  /** Default: `[]` */
+  angles?: EntityRow[];
   /** Default: `false` */
   animate?: boolean;
+  /** Default: `[]` */
+  bars?: EntityRow[];
   className?: string;
   /** Default: `[]` */
   curves?: EntityRow[];
   error?: EntityRow;
   /** Default: `1` */
   gridStep?: number;
+  /** Default: `[]` */
+  guides?: EntityRow[];
   /** Default: `400` */
   height?: number;
+  /** Default: `[]` */
+  hops?: EntityRow[];
   /** Default: `false` */
   interactive?: boolean;
   isLoading?: boolean;
@@ -64,12 +72,22 @@ export interface StdUiMathCanvasConfig {
   /** Default: `[]` */
   points?: EntityRow[];
   /** Default: `[]` */
+  readouts?: EntityRow[];
+  /** Default: `[]` */
+  regions?: EntityRow[];
+  /** Default: `[]` */
   shapes?: EntityRow[];
   /** Default: `true` */
   showAxes?: boolean;
+  /** Default: `false` */
+  showCurveLabels?: boolean;
   /** Default: `true` */
   showGrid?: boolean;
+  /** Default: `false` */
+  showTickLabels?: boolean;
   title?: string;
+  /** Default: `[]` */
+  traces?: EntityRow[];
   /** Default: `[]` */
   vectors?: EntityRow[];
   /** Default: `600` */

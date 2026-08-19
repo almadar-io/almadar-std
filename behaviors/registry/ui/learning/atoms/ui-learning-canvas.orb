@@ -188,6 +188,34 @@
               "tier": "presentation",
               "type": "string"
             },
+            "readouts": {
+              "default": [],
+              "description": "Top-right status chip row (live measurements, scores, counters).",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "value": {
+                    "name": "value",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Readouts",
+              "synonyms": "chips, stats, measurements",
+              "tier": "presentation",
+              "type": "[LearningCanvasReadoutsItem]"
+            },
             "shapes": {
               "default": [],
               "description": "Declarative shapes to draw.",
@@ -216,6 +244,20 @@
                     "name": "color",
                     "required": false,
                     "type": "string"
+                  },
+                  "dash": {
+                    "name": "dash",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "dashed",
+                      "dotted"
+                    ]
+                  },
+                  "endAngle": {
+                    "name": "endAngle",
+                    "required": false,
+                    "type": "number"
                   },
                   "fill": {
                     "name": "fill",
@@ -292,6 +334,11 @@
                     "required": false,
                     "type": "number"
                   },
+                  "startAngle": {
+                    "name": "startAngle",
+                    "required": false,
+                    "type": "number"
+                  },
                   "step": {
                     "name": "step",
                     "required": false,
@@ -310,6 +357,7 @@
                       "line",
                       "arrow",
                       "circle",
+                      "ellipse",
                       "rect",
                       "polygon",
                       "path",
@@ -359,6 +407,104 @@
               "label": "Shapes",
               "tier": "presentation",
               "type": "[LearningCanvasShapesItem]"
+            },
+            "traces": {
+              "default": [],
+              "description": "Inset sparkline panels stacked from the bottom-right corner.",
+              "items": {
+                "properties": {
+                  "backgroundColor": {
+                    "name": "backgroundColor",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "backgroundOpacity": {
+                    "name": "backgroundOpacity",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "frameColor": {
+                    "name": "frameColor",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "height": {
+                    "name": "height",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "series": {
+                    "items": {
+                      "properties": {
+                        "color": {
+                          "name": "color",
+                          "required": false,
+                          "type": "string"
+                        },
+                        "label": {
+                          "name": "label",
+                          "required": false,
+                          "type": "string"
+                        },
+                        "samples": {
+                          "items": {
+                            "properties": {
+                              "x": {
+                                "name": "x",
+                                "required": true,
+                                "type": "number"
+                              },
+                              "y": {
+                                "name": "y",
+                                "required": true,
+                                "type": "number"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "name": "samples",
+                          "required": true,
+                          "type": "array"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "name": "series",
+                    "required": true,
+                    "type": "array"
+                  },
+                  "width": {
+                    "name": "width",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "xLabel": {
+                    "name": "xLabel",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "yLabel": {
+                    "name": "yLabel",
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Traces",
+              "synonyms": "sparkline, time series, history plot",
+              "tier": "presentation",
+              "type": "[LearningCanvasTracesItem]"
             },
             "width": {
               "default": 600.0,
@@ -567,6 +713,112 @@
                       {
                         "name": "opacity",
                         "type": "number"
+                      },
+                      {
+                        "name": "startAngle",
+                        "type": "number"
+                      },
+                      {
+                        "name": "endAngle",
+                        "type": "number"
+                      },
+                      {
+                        "name": "dash",
+                        "type": "string"
+                      }
+                    ],
+                    "type": "[object]"
+                  },
+                  {
+                    "name": "readouts",
+                    "properties": [
+                      {
+                        "name": "label",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "value",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "color",
+                        "type": "string"
+                      }
+                    ],
+                    "type": "[object]"
+                  },
+                  {
+                    "name": "traces",
+                    "properties": [
+                      {
+                        "name": "x",
+                        "type": "number"
+                      },
+                      {
+                        "name": "y",
+                        "type": "number"
+                      },
+                      {
+                        "name": "width",
+                        "type": "number"
+                      },
+                      {
+                        "name": "height",
+                        "type": "number"
+                      },
+                      {
+                        "name": "series",
+                        "properties": [
+                          {
+                            "name": "samples",
+                            "properties": [
+                              {
+                                "name": "x",
+                                "required": true,
+                                "type": "number"
+                              },
+                              {
+                                "name": "y",
+                                "required": true,
+                                "type": "number"
+                              }
+                            ],
+                            "required": true,
+                            "type": "[object]"
+                          },
+                          {
+                            "name": "color",
+                            "type": "string"
+                          },
+                          {
+                            "name": "label",
+                            "type": "string"
+                          }
+                        ],
+                        "required": true,
+                        "type": "[object]"
+                      },
+                      {
+                        "name": "xLabel",
+                        "type": "string"
+                      },
+                      {
+                        "name": "yLabel",
+                        "type": "string"
+                      },
+                      {
+                        "name": "frameColor",
+                        "type": "string"
+                      },
+                      {
+                        "name": "backgroundColor",
+                        "type": "string"
+                      },
+                      {
+                        "name": "backgroundOpacity",
+                        "type": "number"
                       }
                     ],
                     "type": "[object]"
@@ -654,7 +906,9 @@
                       "isLoading": "@config.isLoading",
                       "onShapeClick": "@config.onShapeClick",
                       "onShapeHover": "@config.onShapeHover",
+                      "readouts": "@config.readouts",
                       "shapes": "@config.shapes",
+                      "traces": "@config.traces",
                       "type": "learning-canvas",
                       "width": "@config.width"
                     }
@@ -680,7 +934,9 @@
                       "isLoading": "@config.isLoading",
                       "onShapeClick": "@config.onShapeClick",
                       "onShapeHover": "@config.onShapeHover",
+                      "readouts": "@payload.readouts",
                       "shapes": "@payload.shapes",
+                      "traces": "@payload.traces",
                       "type": "learning-canvas",
                       "width": "@config.width"
                     }

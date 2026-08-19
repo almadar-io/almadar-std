@@ -5,6 +5,7 @@ orbital MathCanvasOrbital {
     label : string
     color : string
     samples : [MathCanvasCurvesItemSamplesItem]!
+    dash : "dashed" | "dotted"
   }
   type MathCanvasCurvesItemSamplesItem = {
     x : number!
@@ -16,6 +17,7 @@ orbital MathCanvasOrbital {
     label : string
     color : string
     radius : number
+    style : "closed" | "open"
   }
   type MathCanvasVectorsItem = {
     x : number!
@@ -25,8 +27,54 @@ orbital MathCanvasOrbital {
     color : string
     label : string
   }
+  type MathCanvasRegionsItem = {
+    samples : [MathCanvasRegionsItemSamplesItem]!
+    samples2 : [MathCanvasRegionsItemSamples2Item]
+    baseline : number
+    color : string
+    opacity : number
+    label : string
+  }
+  type MathCanvasRegionsItemSamplesItem = {
+    x : number!
+    y : number!
+  }
+  type MathCanvasRegionsItemSamples2Item = {
+    x : number!
+    y : number!
+  }
+  type MathCanvasBarsItem = {
+    x : number!
+    width : number!
+    y0 : number
+    y1 : number!
+    color : string
+    opacity : number
+  }
+  type MathCanvasGuidesItem = {
+    kind : "vline" | "hline"!
+    at : number!
+    color : string
+    dash : "dashed" | "dotted"
+    label : string
+  }
+  type MathCanvasAnglesItem = {
+    x : number!
+    y : number!
+    from : number!
+    to : number!
+    radius : number
+    color : string
+    label : string
+  }
+  type MathCanvasHopsItem = {
+    from : number!
+    to : number!
+    color : string
+    label : string
+  }
   type MathCanvasShapesItem = {
-    type : "line" | "arrow" | "circle" | "rect" | "polygon" | "path" | "text" | "axis" | "grid"!
+    type : "line" | "arrow" | "circle" | "ellipse" | "rect" | "polygon" | "path" | "text" | "axis" | "grid" | "venn-region"!
     id : string
     x : number
     y : number
@@ -51,8 +99,39 @@ orbital MathCanvasOrbital {
     fill : string
     lineWidth : number
     opacity : number
+    startAngle : number
+    endAngle : number
+    dash : "dashed" | "dotted"
+    inside : [string]
+    outside : [string]
   }
   type MathCanvasShapesItemPointsItem = {
+    x : number!
+    y : number!
+  }
+  type MathCanvasReadoutsItem = {
+    label : string!
+    value : string!
+    color : string
+  }
+  type MathCanvasTracesItem = {
+    x : number
+    y : number
+    width : number
+    height : number
+    series : [MathCanvasTracesItemSeriesItem]!
+    xLabel : string
+    yLabel : string
+    frameColor : string
+    backgroundColor : string
+    backgroundOpacity : number
+  }
+  type MathCanvasTracesItemSeriesItem = {
+    samples : [MathCanvasTracesItemSeriesItemSamplesItem]!
+    color : string
+    label : string
+  }
+  type MathCanvasTracesItemSeriesItemSamplesItem = {
     x : number!
     y : number!
   }
@@ -89,10 +168,19 @@ orbital MathCanvasOrbital {
           showAxes: @config.showAxes
           showGrid: @config.showGrid
           gridStep: @config.gridStep
+          showTickLabels: @config.showTickLabels
+          showCurveLabels: @config.showCurveLabels
           curves: @config.curves
           points: @config.points
           vectors: @config.vectors
+          regions: @config.regions
+          bars: @config.bars
+          guides: @config.guides
+          angles: @config.angles
+          hops: @config.hops
           shapes: @config.shapes
+          readouts: @config.readouts
+          traces: @config.traces
           interactive: @config.interactive
           animate: @config.animate
           onShapeClick: @config.onShapeClick
@@ -113,10 +201,19 @@ orbital MathCanvasOrbital {
           showAxes: @config.showAxes
           showGrid: @config.showGrid
           gridStep: @config.gridStep
+          showTickLabels: @config.showTickLabels
+          showCurveLabels: @config.showCurveLabels
           curves: @payload.curves
           points: @payload.points
           vectors: @payload.vectors
+          regions: @payload.regions
+          bars: @payload.bars
+          guides: @payload.guides
+          angles: @payload.angles
+          hops: @payload.hops
           shapes: @payload.shapes
+          readouts: @payload.readouts
+          traces: @payload.traces
           interactive: @config.interactive
           animate: @config.animate
           onShapeClick: @config.onShapeClick
@@ -139,7 +236,14 @@ orbital MathCanvasOrbital {
         curves : [MathCanvasCurvesItem]
         points : [MathCanvasPointsItem]
         vectors : [MathCanvasVectorsItem]
+        regions : [MathCanvasRegionsItem]
+        bars : [MathCanvasBarsItem]
+        guides : [MathCanvasGuidesItem]
+        angles : [MathCanvasAnglesItem]
+        hops : [MathCanvasHopsItem]
         shapes : [MathCanvasShapesItem]
+        readouts : [MathCanvasReadoutsItem]
+        traces : [MathCanvasTracesItem]
       }
         @description "Live scene update; payload carries the current drawable state."
         @synonyms "tick, redraw, animate, frame"
@@ -191,6 +295,14 @@ orbital MathCanvasOrbital {
         @label "Grid Step"
         @description "gridStep prop"
         @tier "presentation"
+      showTickLabels : boolean = false
+        @label "Show Tick Labels"
+        @description "Draw numeric labels on grid lines (default false)."
+        @tier "presentation"
+      showCurveLabels : boolean = false
+        @label "Show Curve Labels"
+        @description "Draw each curve's `label` at its last in-range sample (default false)."
+        @tier "presentation"
       curves : [MathCanvasCurvesItem] = []
         @label "Curves"
         @description "curves prop"
@@ -203,9 +315,37 @@ orbital MathCanvasOrbital {
         @label "Vectors"
         @description "vectors prop"
         @tier "presentation"
+      regions : [MathCanvasRegionsItem] = []
+        @label "Regions"
+        @description "Filled areas under curves or between curve pairs."
+        @tier "presentation"
+      bars : [MathCanvasBarsItem] = []
+        @label "Bars"
+        @description "Riemann/histogram bar strips."
+        @tier "presentation"
+      guides : [MathCanvasGuidesItem] = []
+        @label "Guides"
+        @description "Fixed reference lines (vline/hline)."
+        @tier "presentation"
+      angles : [MathCanvasAnglesItem] = []
+        @label "Angles"
+        @description "Angle-sweep arcs at a vertex."
+        @tier "presentation"
+      hops : [MathCanvasHopsItem] = []
+        @label "Hops"
+        @description "Number-line jump arcs."
+        @tier "presentation"
       shapes : [MathCanvasShapesItem] = []
         @label "Shapes"
         @description "Extra declarative shapes in canvas pixel coordinates."
+        @tier "presentation"
+      readouts : [MathCanvasReadoutsItem] = []
+        @label "Readouts"
+        @description "Top-right status chips, forwarded verbatim to LearningCanvas."
+        @tier "presentation"
+      traces : [MathCanvasTracesItem] = []
+        @label "Traces"
+        @description "Inset sparkline panels, forwarded verbatim to LearningCanvas."
         @tier "presentation"
       interactive : boolean = false
         @label "Interactive"

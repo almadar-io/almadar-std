@@ -1,6 +1,35 @@
 app std-learn-tour-3d "1.0.0"
 "Generic guided-tour-over-3D-stations instrument. Contract: a config-declared roster of stations (id, name, caption, x, y, z, radius, color, shape, opacity) plus optional connector edges (from, to, color, label), rendered as an orbit-rotatable volumetric scene on a biology-canvas in 3D mode; pressing Tour advances the selection to the next station (mod the roster length) and clicking a shape selects its station — either way the camera retargets onto the selected station's x/y/z, the station enlarges, a name — caption narration renders, and a progress readout tracks visited stations until every station has been toured. A `backdrop` knob renders non-station scene geometry under the stations (painted, never toured). SYNC_STATIONS hot-swaps the roster mid-flight (a composed preset coordinator emits it with new stations/edges/backdrop; the tour adopts them and restarts progress at the first new station) — the single-writer entry point for dynamic rosters. Composed of a biology-canvas in 3D mode plus a tour state machine. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
 orbital LearnTour3DOrbital {
+  type SceneLight = {
+    intensity : number
+    color : string
+    position : [number]
+  }
+  type SceneHemiLight = {
+    intensity : number
+    color : string
+    groundColor : string
+  }
+  type ScenePointLight = {
+    intensity : number
+    color : string
+    position : [number]!
+    distance : number
+    decay : number
+  }
+  type Lighting3D = {
+    ambient : SceneLight
+    directional : SceneLight
+    hemisphere : SceneHemiLight
+    points : [ScenePointLight]
+    environment : "room" | "none"
+    toneMapping : "aces" | "none"
+  }
+  type Post3D = {
+    bloom : { intensity : number  threshold : number  smoothing : number }
+    vignette : { offset : number  darkness : number }
+  }
   type Learn3DStation = {
     id : string!
     name : string!
@@ -353,11 +382,11 @@ orbital LearnTour3DOrbital {
         @label "Azimuth"
         @description "Camera orbit azimuth in radians; the learner can orbit freely on top of this."
         @tier "presentation"
-      lighting : json = {}
+      lighting : Lighting3D = {}
         @label "Lighting"
         @description "3D scene light rig as data; empty object uses the standard rig."
         @tier "presentation"
-      post : json = {}
+      post : Post3D = {}
         @label "Post Processing"
         @description "3D post-processing stack (bloom/vignette) as data; empty object disables it."
         @tier "presentation"

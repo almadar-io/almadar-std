@@ -79,6 +79,21 @@
             "required": false
           },
           {
+            "name": "running",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "elapsedMs",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "score",
+            "type": "number",
+            "required": false
+          },
+          {
             "name": "categoryStats",
             "type": "array",
             "required": false
@@ -139,6 +154,12 @@
             "direction": "listen",
             "description": "Learner restarted the round from the summary screen — score, per-category breakdown, and item cursor reset to the beginning.",
             "tier": "domain"
+          },
+          {
+            "name": "TOGGLE_RUN",
+            "direction": "listen",
+            "description": "Learner toggled auto-advance: while running, the advance clock steps to the next item every advanceMs milliseconds.",
+            "tier": "domain"
           }
         ],
         "overridableConfigKeys": [
@@ -151,12 +172,28 @@
             "tier": "presentation"
           },
           {
+            "key": "advanceMs",
+            "type": "number",
+            "default": 900,
+            "label": "Auto-Advance Interval (ms)",
+            "description": "Milliseconds between automatic advances while running — the 32ms base tick accumulates elapsed time and fires ADVANCE each time this interval elapses.",
+            "tier": "domain"
+          },
+          {
             "key": "animate",
             "type": "boolean",
             "default": false,
             "label": "Animate",
             "description": "Enable continuous redraw loop.",
             "tier": "presentation"
+          },
+          {
+            "key": "autoRun",
+            "type": "boolean",
+            "default": false,
+            "label": "Auto Run",
+            "description": "When true the advance clock starts on load and the drill flips to the next item every advanceMs milliseconds; toggle live with the Auto/Pause button.",
+            "tier": "domain"
           },
           {
             "key": "backgroundColor",
@@ -275,6 +312,26 @@
                   "required": false,
                   "type": "string"
                 },
+                "options": {
+                  "name": "options",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "category": {
+                        "name": "category",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "label": {
+                        "name": "label",
+                        "required": true,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
                 "text": {
                   "name": "text",
                   "required": true,
@@ -285,6 +342,14 @@
             }
           },
           {
+            "key": "loopRound",
+            "type": "boolean",
+            "default": false,
+            "label": "Loop Round",
+            "description": "When true the item cursor wraps past the last item forever (a looping drill) instead of ending the round at the summary screen.",
+            "tier": "domain"
+          },
+          {
             "key": "matchMode",
             "type": "string",
             "default": "",
@@ -293,12 +358,60 @@
             "tier": "presentation"
           },
           {
+            "key": "orderStride",
+            "type": "number",
+            "default": 1,
+            "label": "Order Stride",
+            "description": "Items advance by this stride through the roster — 1 is sequential; a stride coprime with the roster length (e.g. 3) interleaves the corpus so adjacent items differ.",
+            "tier": "domain"
+          },
+          {
+            "key": "passScore",
+            "type": "number",
+            "default": 0,
+            "label": "Pass Score",
+            "description": "Target score shown next to the running score as \"pass at N\"; 0 hides the target.",
+            "tier": "domain"
+          },
+          {
+            "key": "penaltyPerMiss",
+            "type": "number",
+            "default": 0,
+            "label": "Penalty Per Miss",
+            "description": "Rubric points subtracted for each incorrect pick (score never drops below 0).",
+            "tier": "domain"
+          },
+          {
+            "key": "pointsPerCorrect",
+            "type": "number",
+            "default": 1,
+            "label": "Points Per Correct",
+            "description": "Rubric points added to the score for each correct pick; at the default 1 with no penalty, the plain correct/attempted counts render instead of the rubric score.",
+            "tier": "domain"
+          },
+          {
             "key": "retryLabel",
             "type": "string",
             "default": "Retry Round",
             "label": "Retry Button Label",
             "description": "Label text for the button that restarts the round from the end-of-round summary.",
             "tier": "presentation"
+          },
+          {
+            "key": "scoreCap",
+            "type": "number",
+            "default": 0,
+            "label": "Score Cap",
+            "description": "Upper bound on the rubric score; 0 means uncapped.",
+            "tier": "domain"
+          },
+          {
+            "key": "showHint",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Hint",
+            "description": "Show each item's hint line beneath the prompt before the learner picks; hide for a harder drill.",
+            "tier": "domain"
           },
           {
             "key": "title",
@@ -324,7 +437,8 @@
           "INIT",
           "MODE_SELECTED",
           "PICK",
-          "RETRY"
+          "RETRY",
+          "TOGGLE_RUN"
         ],
         "entityRebindable": true,
         "entityContract": {
@@ -336,6 +450,7 @@
             "categoryStats",
             "correctCategory",
             "correctCount",
+            "elapsedMs",
             "feedback",
             "itemExplanation",
             "itemHint",
@@ -343,6 +458,8 @@
             "itemText",
             "roundComplete",
             "roundView",
+            "running",
+            "score",
             "selectedCategory",
             "title",
             "totalItems",

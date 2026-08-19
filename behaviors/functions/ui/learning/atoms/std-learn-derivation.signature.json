@@ -1,0 +1,452 @@
+[
+  {
+    "organism": "std-learn-derivation",
+    "orbital": "LearnDerivationOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-learn-derivation.ts",
+    "entities": [
+      {
+        "name": "LearnDerivationScene",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "lines",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "feedback",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "goalReached",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "running",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "elapsedMs",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "narration",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "renderChildren",
+            "type": "array",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "LearnDerivationSim",
+        "emittedEvents": [
+          "DERIVATION_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "DERIVATION_UPDATED",
+            "direction": "emit",
+            "description": "The derivation state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "derivation update, proof step, derived line, candidate applied, goal reached",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "APPLY_STEP",
+            "direction": "listen",
+            "description": "Learner clicked a candidate-step button to try to derive the next line: the candidate's matchSide/matchNegationMode is matched against the current lines, and on success its deriveSide/deriveNegationMode determines the appended line.",
+            "tier": "domain"
+          },
+          {
+            "name": "TOGGLE_RUN",
+            "direction": "listen",
+            "description": "Learner toggled auto-derive: while running, the tick applies the first applicable candidate automatically every autoApplyIntervalMs.",
+            "tier": "domain"
+          },
+          {
+            "name": "RESET",
+            "direction": "listen",
+            "description": "Learner reset the derivation: lines restore to the config-declared starting premises, feedback/narration clear, and goalReached/running reset.",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "autoApplyIntervalMs",
+            "type": "number",
+            "default": 800,
+            "label": "Auto-Apply Interval (ms)",
+            "description": "Milliseconds of running clock per automatic candidate application — the 32ms base tick accumulates elapsed time and applies the first applicable candidate each time this interval elapses.",
+            "tier": "domain"
+          },
+          {
+            "key": "autoRun",
+            "type": "boolean",
+            "default": false,
+            "label": "Auto Run",
+            "description": "When true, INIT/MODE_SELECTED/Reset start the tick auto-applying candidates; toggle live with the Run/Pause button.",
+            "tier": "domain"
+          },
+          {
+            "key": "autoRunOffMessage",
+            "type": "string",
+            "default": "Paused — apply steps manually.",
+            "label": "Auto Run Off Message",
+            "description": "Feedback shown when Run is toggled off (Pause).",
+            "tier": "presentation"
+          },
+          {
+            "key": "autoRunOnMessage",
+            "type": "string",
+            "default": "Auto-stepping — tick applies the next available step.",
+            "label": "Auto Run On Message",
+            "description": "Feedback shown when Run is toggled on.",
+            "tier": "presentation"
+          },
+          {
+            "key": "candidates",
+            "type": "[LearnDerivationCandidate]",
+            "default": [
+              {
+                "deriveNegationMode": "same",
+                "deriveSide": "right",
+                "key": "FORWARD",
+                "label": "Forward Rule",
+                "matchNegationMode": "same",
+                "matchSide": "left",
+                "noMatchFeedback": "No matching premises yet for the forward rule.",
+                "resultBadgeLabel": "DERIVED",
+                "resultBadgeVariant": "success"
+              },
+              {
+                "deriveNegationMode": "invert",
+                "deriveSide": "left",
+                "key": "BACKWARD",
+                "label": "Backward Rule",
+                "matchNegationMode": "opposite",
+                "matchSide": "right",
+                "noMatchFeedback": "No matching premises yet for the backward rule.",
+                "resultBadgeLabel": "DERIVED",
+                "resultBadgeVariant": "success"
+              }
+            ],
+            "label": "Candidates",
+            "description": "Candidate steps offered as buttons. Each declares which side of a link it matches against a current fact (matchSide/matchNegationMode) and which side it derives (deriveSide/deriveNegationMode) — left/right and same/opposite/invert are structural roles, not domain vocabulary, so the same two candidates can encode modus ponens/modus tollens, a forward/backward chemical rule, or any other two-sided derivation pair.",
+            "synonyms": "candidate, rule, step, inference rule, derivation rule, deduction rule",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "deriveNegationMode": {
+                  "name": "deriveNegationMode",
+                  "required": true,
+                  "type": "string",
+                  "values": [
+                    "same",
+                    "invert"
+                  ]
+                },
+                "deriveSide": {
+                  "name": "deriveSide",
+                  "required": true,
+                  "type": "string",
+                  "values": [
+                    "left",
+                    "right"
+                  ]
+                },
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "matchNegationMode": {
+                  "name": "matchNegationMode",
+                  "required": true,
+                  "type": "string",
+                  "values": [
+                    "same",
+                    "opposite"
+                  ]
+                },
+                "matchSide": {
+                  "name": "matchSide",
+                  "required": true,
+                  "type": "string",
+                  "values": [
+                    "left",
+                    "right"
+                  ]
+                },
+                "noMatchFeedback": {
+                  "name": "noMatchFeedback",
+                  "required": false,
+                  "type": "string"
+                },
+                "resultBadgeLabel": {
+                  "name": "resultBadgeLabel",
+                  "required": false,
+                  "type": "string"
+                },
+                "resultBadgeVariant": {
+                  "name": "resultBadgeVariant",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "goalLabel",
+            "type": "string",
+            "default": "B",
+            "label": "Goal",
+            "description": "The line label the learner is trying to derive; goalReached fires when a newly derived line's label equals this.",
+            "synonyms": "target, goal, derivation target, conclusion",
+            "tier": "domain"
+          },
+          {
+            "key": "goalPrefix",
+            "type": "string",
+            "default": "Goal: derive ",
+            "label": "Goal Caption Prefix",
+            "description": "Text prepended to goalLabel to form the goal caption shown above the derivation panel.",
+            "tier": "presentation"
+          },
+          {
+            "key": "goalReachedMessage",
+            "type": "string",
+            "default": "Goal reached.",
+            "label": "Goal Reached Message",
+            "description": "Caption shown once goalReached is true.",
+            "tier": "presentation"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 400,
+            "label": "Height",
+            "description": "Maximum height of the scrollable derivation panel, in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "negationSymbol",
+            "type": "string",
+            "default": "¬",
+            "label": "Negation Symbol",
+            "description": "Prefix prepended to a derived line's label when it is negated.",
+            "tier": "presentation"
+          },
+          {
+            "key": "noStepAvailableMessage",
+            "type": "string",
+            "default": "No further steps are available yet.",
+            "label": "No Step Available Message",
+            "description": "Feedback shown when the auto-apply tick finds no applicable candidate.",
+            "tier": "presentation"
+          },
+          {
+            "key": "premises",
+            "type": "[LearnDerivationLine]",
+            "default": [
+              {
+                "badgeLabel": "GIVEN",
+                "badgeVariant": "neutral",
+                "id": "given-a",
+                "kind": "fact",
+                "label": "A",
+                "negated": false,
+                "subject": "A"
+              },
+              {
+                "badgeLabel": "RULE",
+                "badgeVariant": "info",
+                "id": "given-a-implies-b",
+                "kind": "link",
+                "label": "A → B",
+                "leftNegated": false,
+                "leftSubject": "A",
+                "rightNegated": false,
+                "rightSubject": "B"
+              }
+            ],
+            "label": "Premises",
+            "description": "The starting lines of the derivation: plain facts (subject/negated) and two-sided links (leftSubject/leftNegated/rightSubject/rightNegated) the learner combines with candidate steps. Each line carries its own badgeLabel/badgeVariant.",
+            "synonyms": "premise, given, starting line, hypothesis, starting statement",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "badgeLabel": {
+                  "name": "badgeLabel",
+                  "required": false,
+                  "type": "string"
+                },
+                "badgeVariant": {
+                  "name": "badgeVariant",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "kind": {
+                  "name": "kind",
+                  "required": true,
+                  "type": "string",
+                  "values": [
+                    "fact",
+                    "link"
+                  ]
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "leftNegated": {
+                  "name": "leftNegated",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "leftSubject": {
+                  "name": "leftSubject",
+                  "required": false,
+                  "type": "string"
+                },
+                "negated": {
+                  "name": "negated",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "rightNegated": {
+                  "name": "rightNegated",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "rightSubject": {
+                  "name": "rightSubject",
+                  "required": false,
+                  "type": "string"
+                },
+                "subject": {
+                  "name": "subject",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "resetLabel",
+            "type": "string",
+            "default": "Reset",
+            "label": "Reset Button Label",
+            "description": "Label text for the button that restores the starting premises.",
+            "tier": "presentation"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Derivation Lab",
+            "label": "Title",
+            "description": "Title shown above the derivation panel.",
+            "tier": "presentation"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "description": "Maximum width of the panel, in pixels.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "LearnDerivationScene",
+        "transitionEvents": [
+          "APPLY_STEP",
+          "INIT",
+          "MODE_SELECTED",
+          "RESET",
+          "TOGGLE_RUN"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "elapsedMs",
+            "feedback",
+            "goalReached",
+            "lines",
+            "narration",
+            "renderChildren",
+            "running",
+            "title"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "LearnDerivationPage",
+        "defaultPath": "/learn-derivation",
+        "primaryEntity": "LearnDerivationScene"
+      }
+    ],
+    "emittedEvents": [
+      "DERIVATION_UPDATED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

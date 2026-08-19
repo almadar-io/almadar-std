@@ -47,6 +47,34 @@
             "tier": "presentation"
           },
           {
+            "key": "auxBars",
+            "type": "[AlgorithmCanvasAuxBarsItem]",
+            "default": [],
+            "label": "Aux Bars",
+            "description": "Secondary bar strip inside the bars panel (e.g. a running total beside the primary values).",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "value": {
+                  "name": "value",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
             "key": "backgroundColor",
             "type": "string",
             "label": "Background Color",
@@ -82,6 +110,54 @@
             }
           },
           {
+            "key": "buckets",
+            "type": "[AlgorithmCanvasBucketsItem]",
+            "default": [],
+            "label": "Buckets",
+            "description": "Hash-table buckets; each row is an index chip plus its chained entries.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "entries": {
+                  "name": "entries",
+                  "required": true,
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "color": {
+                        "name": "color",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "label": {
+                        "name": "label",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "state": {
+                        "name": "state",
+                        "required": false,
+                        "type": "string",
+                        "values": [
+                          "default",
+                          "highlight",
+                          "probing"
+                        ]
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "index": {
+                  "name": "index",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
             "key": "cells",
             "type": "[AlgorithmCanvasCellsItem]",
             "default": [],
@@ -99,6 +175,33 @@
                   "name": "color",
                   "required": false,
                   "type": "string"
+                },
+                "corner": {
+                  "name": "corner",
+                  "required": false,
+                  "properties": {
+                    "bl": {
+                      "name": "bl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "br": {
+                      "name": "br",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "tl": {
+                      "name": "tl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "tr": {
+                      "name": "tr",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "label": {
                   "name": "label",
@@ -127,6 +230,34 @@
             "tier": "presentation"
           },
           {
+            "key": "colLabels",
+            "type": "[AlgorithmCanvasColLabelsItem]",
+            "default": [],
+            "label": "Col Labels",
+            "description": "Column-header labels drawn above the cells grid.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "index": {
+                  "name": "index",
+                  "required": true,
+                  "type": "number"
+                },
+                "text": {
+                  "name": "text",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
             "key": "error",
             "type": "AlgorithmCanvasError",
             "label": "Error",
@@ -153,6 +284,44 @@
                 "required": false,
                 "type": "string"
               }
+            }
+          },
+          {
+            "key": "frames",
+            "type": "[AlgorithmCanvasFramesItem]",
+            "default": [],
+            "label": "Frames",
+            "description": "Recursion/call-stack frames; laid out bottom-up like a real call stack.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "detail": {
+                  "name": "detail",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "state": {
+                  "name": "state",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "active",
+                    "returning",
+                    "done"
+                  ]
+                }
+              },
+              "type": "object"
             }
           },
           {
@@ -191,7 +360,7 @@
             "type": "[AlgorithmCanvasPointersItem]",
             "default": [],
             "label": "Pointers",
-            "description": "Index cursors (i/j/lo/hi/mid); drawn as markers beneath the referenced bar/cell column.",
+            "description": "Index cursors (i/j/lo/hi/mid); drawn as markers beneath the referenced bar/slot column.",
             "tier": "presentation",
             "items": {
               "properties": {
@@ -208,6 +377,76 @@
                 "label": {
                   "name": "label",
                   "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "ranges",
+            "type": "[AlgorithmCanvasRangesItem]",
+            "default": [],
+            "label": "Ranges",
+            "description": "Highlighted index ranges over the bars panel (translucent fill bands or labeled brackets).",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "from": {
+                  "name": "from",
+                  "required": true,
+                  "type": "number"
+                },
+                "kind": {
+                  "name": "kind",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "fill",
+                    "bracket"
+                  ]
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "to": {
+                  "name": "to",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "rowLabels",
+            "type": "[AlgorithmCanvasRowLabelsItem]",
+            "default": [],
+            "label": "Row Labels",
+            "description": "Row-header labels drawn to the left of the cells grid.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "index": {
+                  "name": "index",
+                  "required": true,
+                  "type": "number"
+                },
+                "text": {
+                  "name": "text",
+                  "required": true,
                   "type": "string"
                 }
               },
@@ -246,6 +485,20 @@
                   "name": "color",
                   "required": false,
                   "type": "string"
+                },
+                "dash": {
+                  "name": "dash",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "dashed",
+                    "dotted"
+                  ]
+                },
+                "endAngle": {
+                  "name": "endAngle",
+                  "required": false,
+                  "type": "number"
                 },
                 "fill": {
                   "name": "fill",
@@ -322,6 +575,11 @@
                   "required": false,
                   "type": "number"
                 },
+                "startAngle": {
+                  "name": "startAngle",
+                  "required": false,
+                  "type": "number"
+                },
                 "step": {
                   "name": "step",
                   "required": false,
@@ -340,6 +598,7 @@
                     "line",
                     "arrow",
                     "circle",
+                    "ellipse",
                     "rect",
                     "polygon",
                     "path",
@@ -382,6 +641,51 @@
                   "name": "y2",
                   "required": false,
                   "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "slotOrientation",
+            "type": "string",
+            "default": "horizontal",
+            "label": "Slot Orientation",
+            "description": "Slot stack direction; horizontal lays slots left-to-right, vertical stacks bottom-up.",
+            "tier": "presentation",
+            "enumValues": [
+              "horizontal",
+              "vertical"
+            ]
+          },
+          {
+            "key": "slots",
+            "type": "[AlgorithmCanvasSlotsItem]",
+            "default": [],
+            "label": "Slots",
+            "description": "Discrete value slots (registers/variables); laid out in a row or a vertical stack.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "state": {
+                  "name": "state",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "empty",
+                    "filled",
+                    "highlight"
+                  ]
+                },
+                "value": {
+                  "name": "value",
+                  "required": false,
+                  "type": "string"
                 }
               },
               "type": "object"

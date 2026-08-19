@@ -64,11 +64,11 @@ export interface StdLearnTour3dConfig {
   /** Default: `400` */
   height?: number;
   /** Default: `{}` */
-  lighting?: unknown;
+  lighting?: EntityRow;
   /** Default: `""` */
   matchMode?: string;
   /** Default: `{}` */
-  post?: unknown;
+  post?: EntityRow;
   /** Default: `"Reset"` */
   resetLabel?: string;
   /** Default: `[{"caption":"The first stop on the tour — the camera retargets here and the narration reads its caption.","color":"#2563eb","id":"alpha","name":"Station Alpha","opacity":1,"radius":1,"shape":"sphere","x":0,"y":0,"z":0},{"caption":"The second stop — press Tour again or click a shape to advance the selection.","color":"#7c3aed","id":"beta","name":"Station Beta","opacity":1,"radius":0.8,"shape":"sphere","x":3,"y":1,"z":-1},{"caption":"The final stop — once every station has been visited the tour marks itself complete.","color":"#0891b2","id":"gamma","name":"Station Gamma","opacity":1,"radius":0.8,"shape":"sphere","x":-3,"y":-1,"z":1}]` */

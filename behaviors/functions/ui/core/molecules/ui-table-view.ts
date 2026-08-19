@@ -30,14 +30,7 @@ const ALIAS = 'UiTableView';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiTableViewEventKey = 'INIT' | 'ITEM_CLICK' | 'SELECT' | 'SORT' | 'TableViewLoaded' | 'VIEW';
-
-/**
- * Payload shape for the `ITEM_CLICK` event.
- */
-export interface StdUiTableViewItemClickPayload {
-  id?: string;
-}
+export type StdUiTableViewEventKey = 'INIT' | 'SELECT' | 'SORT' | 'TableViewLoaded' | 'VIEW';
 
 /**
  * Payload shape for the `SELECT` event.
@@ -91,7 +84,7 @@ export interface StdUiTableViewConfig {
   isLoading?: boolean;
   /** Default: `[]` */
   itemActions?: EntityRow[];
-  /** Default: `"ITEM_CLICK"` */
+  /** Default: `""` */
   itemClickEvent?: string;
   /** Default: `"dense"` */
   look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'bordered';

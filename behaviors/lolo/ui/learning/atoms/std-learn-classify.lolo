@@ -32,11 +32,16 @@ orbital LearnClassifyOrbital {
     lineWidth : number
     opacity : number
   }
+  type LearnClassifyItemOption = {
+    category : string!
+    label : string!
+  }
   type LearnClassifyItem = {
     text : string!
     category : string!
     hint : string
     explanation : string
+    options : [LearnClassifyItemOption]
   }
   type LearnClassifyOption = {
     value : string!
@@ -66,6 +71,9 @@ orbital LearnClassifyOrbital {
     attemptedCount : number
     totalItems : number
     roundComplete : boolean = false
+    running : boolean = false
+    elapsedMs : number = 0
+    score : number = 0
     categoryStats : [LearnClassifyCategoryStat]
     backdropShapes : [LearnClassifyShape]
     roundView : [node]
@@ -85,6 +93,9 @@ orbital LearnClassifyOrbital {
         (set @entity.feedback "")
         (set @entity.verdict "")
         (set @entity.roundComplete false)
+        (set @entity.running @config.autoRun)
+        (set @entity.elapsedMs 0)
+        (set @entity.score 0)
         (set @entity.totalItems (array/len @config.items))
         (set @entity.categoryStats (array/map @config.categories (fn c { category: (object/get @c value), label: (object/get @c label), attempted: 0, correct: 0 })))
         (let (
@@ -141,14 +152,19 @@ orbital LearnClassifyOrbital {
             (itemView [
               { type: card, variant: bordered, padding: md, children: (array/concat [
                   { type: typography, variant: body, content: @entity.itemText }
-                ] (if (!= @entity.itemHint "") [ { type: typography, variant: caption, color: muted, content: @entity.itemHint } ] [])) },
+                ] (if (and @config.showHint (!= @entity.itemHint "")) [ { type: typography, variant: caption, color: muted, content: @entity.itemHint } ] [])) },
               { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: [], edges: [], shapes: @backdropShapes, interactive: @config.interactive, animate: @config.animate },
-              { type: stack, direction: horizontal, gap: xs, children: (array/map (array/reverse @config.categories) (fn c { type: button, action: PICK, actionPayload: { category: (object/get @c value) }, label: (object/get @c label), variant: (if (== @entity.selectedCategory (object/get @c value)) "primary" "secondary"), size: sm })) },
+              { type: stack, direction: horizontal, gap: xs, children: (let (
+                    (itemOptions (object/get (array/nth @config.items @entity.itemIndex) options []))
+                  ) (if (> (array/len @itemOptions) 0)
+                    (array/map @itemOptions (fn o { type: button, action: PICK, actionPayload: { category: (object/get @o category) }, label: (object/get @o label), variant: (if (== @entity.selectedCategory (object/get @o category)) "primary" "secondary"), size: sm }))
+                    (array/map (array/reverse @config.categories) (fn c { type: button, action: PICK, actionPayload: { category: (object/get @c value) }, label: (object/get @c label), variant: (if (== @entity.selectedCategory (object/get @c value)) "primary" "secondary"), size: sm })))) },
               { type: stack, direction: horizontal, gap: xs, children: (array/concat (if (!= @entity.verdict "") [ { type: badge, variant: (if (== @entity.verdict "correct") "success" "danger"), label: (if (== @entity.verdict "correct") "Correct" "Incorrect") } ] []) [ { type: typography, variant: caption, content: @entity.feedback } ]) },
               { type: stack, direction: horizontal, gap: sm, children: [
-                  { type: button, action: ADVANCE, label: @config.advanceLabel, variant: primary, disabled: (if (== @entity.selectedCategory "") true false) }
+                  { type: button, action: ADVANCE, label: @config.advanceLabel, variant: primary, disabled: (if (== @entity.selectedCategory "") true false) },
+                  { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Auto"), variant: ghost }
                 ] },
-              { type: stat-display, label: "Score", value: @entity.correctCount, max: @entity.attemptedCount }
+              { type: stat-display, label: (if (> @config.passScore 0) (str/concat "Score — pass at " @config.passScore) "Score"), value: (if (or (!= @config.pointsPerCorrect 1) (> @config.penaltyPerMiss 0)) @entity.score @entity.correctCount), max: (if (or (!= @config.pointsPerCorrect 1) (> @config.penaltyPerMiss 0)) (if (> @config.scoreCap 0) @config.scoreCap (* @entity.totalItems @config.pointsPerCorrect)) @entity.attemptedCount) }
             ])
           )
           (do
@@ -178,6 +194,9 @@ orbital LearnClassifyOrbital {
         (set @entity.feedback "")
         (set @entity.verdict "")
         (set @entity.roundComplete false)
+        (set @entity.running @config.autoRun)
+        (set @entity.elapsedMs 0)
+        (set @entity.score 0)
         (set @entity.totalItems (array/len @config.items))
         (set @entity.categoryStats (array/map @config.categories (fn c { category: (object/get @c value), label: (object/get @c label), attempted: 0, correct: 0 })))
         (let (
@@ -234,14 +253,19 @@ orbital LearnClassifyOrbital {
             (itemView [
               { type: card, variant: bordered, padding: md, children: (array/concat [
                   { type: typography, variant: body, content: @entity.itemText }
-                ] (if (!= @entity.itemHint "") [ { type: typography, variant: caption, color: muted, content: @entity.itemHint } ] [])) },
+                ] (if (and @config.showHint (!= @entity.itemHint "")) [ { type: typography, variant: caption, color: muted, content: @entity.itemHint } ] [])) },
               { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: [], edges: [], shapes: @backdropShapes, interactive: @config.interactive, animate: @config.animate },
-              { type: stack, direction: horizontal, gap: xs, children: (array/map (array/reverse @config.categories) (fn c { type: button, action: PICK, actionPayload: { category: (object/get @c value) }, label: (object/get @c label), variant: (if (== @entity.selectedCategory (object/get @c value)) "primary" "secondary"), size: sm })) },
+              { type: stack, direction: horizontal, gap: xs, children: (let (
+                    (itemOptions (object/get (array/nth @config.items @entity.itemIndex) options []))
+                  ) (if (> (array/len @itemOptions) 0)
+                    (array/map @itemOptions (fn o { type: button, action: PICK, actionPayload: { category: (object/get @o category) }, label: (object/get @o label), variant: (if (== @entity.selectedCategory (object/get @o category)) "primary" "secondary"), size: sm }))
+                    (array/map (array/reverse @config.categories) (fn c { type: button, action: PICK, actionPayload: { category: (object/get @c value) }, label: (object/get @c label), variant: (if (== @entity.selectedCategory (object/get @c value)) "primary" "secondary"), size: sm })))) },
               { type: stack, direction: horizontal, gap: xs, children: (array/concat (if (!= @entity.verdict "") [ { type: badge, variant: (if (== @entity.verdict "correct") "success" "danger"), label: (if (== @entity.verdict "correct") "Correct" "Incorrect") } ] []) [ { type: typography, variant: caption, content: @entity.feedback } ]) },
               { type: stack, direction: horizontal, gap: sm, children: [
-                  { type: button, action: ADVANCE, label: @config.advanceLabel, variant: primary, disabled: (if (== @entity.selectedCategory "") true false) }
+                  { type: button, action: ADVANCE, label: @config.advanceLabel, variant: primary, disabled: (if (== @entity.selectedCategory "") true false) },
+                  { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Auto"), variant: ghost }
                 ] },
-              { type: stat-display, label: "Score", value: @entity.correctCount, max: @entity.attemptedCount }
+              { type: stat-display, label: (if (> @config.passScore 0) (str/concat "Score — pass at " @config.passScore) "Score"), value: (if (or (!= @config.pointsPerCorrect 1) (> @config.penaltyPerMiss 0)) @entity.score @entity.correctCount), max: (if (or (!= @config.pointsPerCorrect 1) (> @config.penaltyPerMiss 0)) (if (> @config.scoreCap 0) @config.scoreCap (* @entity.totalItems @config.pointsPerCorrect)) @entity.attemptedCount) }
             ])
           )
           (do
@@ -272,6 +296,9 @@ orbital LearnClassifyOrbital {
           (do
             (set @entity.attemptedCount (+ @entity.attemptedCount 1))
             (set @entity.correctCount (if @isCorrect (+ @entity.correctCount 1) @entity.correctCount))
+            (set @entity.score (let (
+                (raw (if @isCorrect (+ @entity.score @config.pointsPerCorrect) (- @entity.score @config.penaltyPerMiss)))
+              ) (math/max 0 (if (> @config.scoreCap 0) (math/min @raw @config.scoreCap) @raw))))
             (set @entity.verdict (if @isCorrect "correct" "incorrect"))
             (set @entity.feedback @fullMessage)
           )
@@ -321,14 +348,19 @@ orbital LearnClassifyOrbital {
             (itemView [
               { type: card, variant: bordered, padding: md, children: (array/concat [
                   { type: typography, variant: body, content: @entity.itemText }
-                ] (if (!= @entity.itemHint "") [ { type: typography, variant: caption, color: muted, content: @entity.itemHint } ] [])) },
+                ] (if (and @config.showHint (!= @entity.itemHint "")) [ { type: typography, variant: caption, color: muted, content: @entity.itemHint } ] [])) },
               { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: [], edges: [], shapes: @backdropShapes, interactive: @config.interactive, animate: @config.animate },
-              { type: stack, direction: horizontal, gap: xs, children: (array/map (array/reverse @config.categories) (fn c { type: button, action: PICK, actionPayload: { category: (object/get @c value) }, label: (object/get @c label), variant: (if (== @entity.selectedCategory (object/get @c value)) "primary" "secondary"), size: sm })) },
+              { type: stack, direction: horizontal, gap: xs, children: (let (
+                    (itemOptions (object/get (array/nth @config.items @entity.itemIndex) options []))
+                  ) (if (> (array/len @itemOptions) 0)
+                    (array/map @itemOptions (fn o { type: button, action: PICK, actionPayload: { category: (object/get @o category) }, label: (object/get @o label), variant: (if (== @entity.selectedCategory (object/get @o category)) "primary" "secondary"), size: sm }))
+                    (array/map (array/reverse @config.categories) (fn c { type: button, action: PICK, actionPayload: { category: (object/get @c value) }, label: (object/get @c label), variant: (if (== @entity.selectedCategory (object/get @c value)) "primary" "secondary"), size: sm })))) },
               { type: stack, direction: horizontal, gap: xs, children: (array/concat (if (!= @entity.verdict "") [ { type: badge, variant: (if (== @entity.verdict "correct") "success" "danger"), label: (if (== @entity.verdict "correct") "Correct" "Incorrect") } ] []) [ { type: typography, variant: caption, content: @entity.feedback } ]) },
               { type: stack, direction: horizontal, gap: sm, children: [
-                  { type: button, action: ADVANCE, label: @config.advanceLabel, variant: primary, disabled: (if (== @entity.selectedCategory "") true false) }
+                  { type: button, action: ADVANCE, label: @config.advanceLabel, variant: primary, disabled: (if (== @entity.selectedCategory "") true false) },
+                  { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Auto"), variant: ghost }
                 ] },
-              { type: stat-display, label: "Score", value: @entity.correctCount, max: @entity.attemptedCount }
+              { type: stat-display, label: (if (> @config.passScore 0) (str/concat "Score — pass at " @config.passScore) "Score"), value: (if (or (!= @config.pointsPerCorrect 1) (> @config.penaltyPerMiss 0)) @entity.score @entity.correctCount), max: (if (or (!= @config.pointsPerCorrect 1) (> @config.penaltyPerMiss 0)) (if (> @config.scoreCap 0) @config.scoreCap (* @entity.totalItems @config.pointsPerCorrect)) @entity.attemptedCount) }
             ])
           )
           (do
@@ -351,7 +383,7 @@ orbital LearnClassifyOrbital {
 
       ADVANCE -> idle when (and (== @entity.active true) (== @entity.roundComplete false))
         (let (
-            (isLast (>= @entity.itemIndex (- @entity.totalItems 1)))
+            (isLast (and (not @config.loopRound) (>= (+ @entity.itemIndex @config.orderStride) @entity.totalItems)))
           )
           (if @isLast
             (do
@@ -361,7 +393,7 @@ orbital LearnClassifyOrbital {
               (set @entity.verdict "")
             )
             (let (
-                (nextIndex (+ @entity.itemIndex 1))
+                (nextIndex (if @config.loopRound (math/mod (+ @entity.itemIndex @config.orderStride) @entity.totalItems) (+ @entity.itemIndex @config.orderStride)))
                 (item (array/nth @config.items @nextIndex))
               )
               (do
@@ -421,14 +453,19 @@ orbital LearnClassifyOrbital {
             (itemView [
               { type: card, variant: bordered, padding: md, children: (array/concat [
                   { type: typography, variant: body, content: @entity.itemText }
-                ] (if (!= @entity.itemHint "") [ { type: typography, variant: caption, color: muted, content: @entity.itemHint } ] [])) },
+                ] (if (and @config.showHint (!= @entity.itemHint "")) [ { type: typography, variant: caption, color: muted, content: @entity.itemHint } ] [])) },
               { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: [], edges: [], shapes: @backdropShapes, interactive: @config.interactive, animate: @config.animate },
-              { type: stack, direction: horizontal, gap: xs, children: (array/map (array/reverse @config.categories) (fn c { type: button, action: PICK, actionPayload: { category: (object/get @c value) }, label: (object/get @c label), variant: (if (== @entity.selectedCategory (object/get @c value)) "primary" "secondary"), size: sm })) },
+              { type: stack, direction: horizontal, gap: xs, children: (let (
+                    (itemOptions (object/get (array/nth @config.items @entity.itemIndex) options []))
+                  ) (if (> (array/len @itemOptions) 0)
+                    (array/map @itemOptions (fn o { type: button, action: PICK, actionPayload: { category: (object/get @o category) }, label: (object/get @o label), variant: (if (== @entity.selectedCategory (object/get @o category)) "primary" "secondary"), size: sm }))
+                    (array/map (array/reverse @config.categories) (fn c { type: button, action: PICK, actionPayload: { category: (object/get @c value) }, label: (object/get @c label), variant: (if (== @entity.selectedCategory (object/get @c value)) "primary" "secondary"), size: sm })))) },
               { type: stack, direction: horizontal, gap: xs, children: (array/concat (if (!= @entity.verdict "") [ { type: badge, variant: (if (== @entity.verdict "correct") "success" "danger"), label: (if (== @entity.verdict "correct") "Correct" "Incorrect") } ] []) [ { type: typography, variant: caption, content: @entity.feedback } ]) },
               { type: stack, direction: horizontal, gap: sm, children: [
-                  { type: button, action: ADVANCE, label: @config.advanceLabel, variant: primary, disabled: (if (== @entity.selectedCategory "") true false) }
+                  { type: button, action: ADVANCE, label: @config.advanceLabel, variant: primary, disabled: (if (== @entity.selectedCategory "") true false) },
+                  { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Auto"), variant: ghost }
                 ] },
-              { type: stat-display, label: "Score", value: @entity.correctCount, max: @entity.attemptedCount }
+              { type: stat-display, label: (if (> @config.passScore 0) (str/concat "Score — pass at " @config.passScore) "Score"), value: (if (or (!= @config.pointsPerCorrect 1) (> @config.penaltyPerMiss 0)) @entity.score @entity.correctCount), max: (if (or (!= @config.pointsPerCorrect 1) (> @config.penaltyPerMiss 0)) (if (> @config.scoreCap 0) @config.scoreCap (* @entity.totalItems @config.pointsPerCorrect)) @entity.attemptedCount) }
             ])
           )
           (do
@@ -451,6 +488,9 @@ orbital LearnClassifyOrbital {
 
       RETRY -> idle when (== @entity.roundComplete true)
         (set @entity.active true)
+        (set @entity.running @config.autoRun)
+        (set @entity.elapsedMs 0)
+        (set @entity.score 0)
         (set @entity.itemIndex 0)
         (set @entity.correctCount 0)
         (set @entity.attemptedCount 0)
@@ -513,14 +553,19 @@ orbital LearnClassifyOrbital {
             (itemView [
               { type: card, variant: bordered, padding: md, children: (array/concat [
                   { type: typography, variant: body, content: @entity.itemText }
-                ] (if (!= @entity.itemHint "") [ { type: typography, variant: caption, color: muted, content: @entity.itemHint } ] [])) },
+                ] (if (and @config.showHint (!= @entity.itemHint "")) [ { type: typography, variant: caption, color: muted, content: @entity.itemHint } ] [])) },
               { type: biology-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, nodes: [], edges: [], shapes: @backdropShapes, interactive: @config.interactive, animate: @config.animate },
-              { type: stack, direction: horizontal, gap: xs, children: (array/map (array/reverse @config.categories) (fn c { type: button, action: PICK, actionPayload: { category: (object/get @c value) }, label: (object/get @c label), variant: (if (== @entity.selectedCategory (object/get @c value)) "primary" "secondary"), size: sm })) },
+              { type: stack, direction: horizontal, gap: xs, children: (let (
+                    (itemOptions (object/get (array/nth @config.items @entity.itemIndex) options []))
+                  ) (if (> (array/len @itemOptions) 0)
+                    (array/map @itemOptions (fn o { type: button, action: PICK, actionPayload: { category: (object/get @o category) }, label: (object/get @o label), variant: (if (== @entity.selectedCategory (object/get @o category)) "primary" "secondary"), size: sm }))
+                    (array/map (array/reverse @config.categories) (fn c { type: button, action: PICK, actionPayload: { category: (object/get @c value) }, label: (object/get @c label), variant: (if (== @entity.selectedCategory (object/get @c value)) "primary" "secondary"), size: sm })))) },
               { type: stack, direction: horizontal, gap: xs, children: (array/concat (if (!= @entity.verdict "") [ { type: badge, variant: (if (== @entity.verdict "correct") "success" "danger"), label: (if (== @entity.verdict "correct") "Correct" "Incorrect") } ] []) [ { type: typography, variant: caption, content: @entity.feedback } ]) },
               { type: stack, direction: horizontal, gap: sm, children: [
-                  { type: button, action: ADVANCE, label: @config.advanceLabel, variant: primary, disabled: (if (== @entity.selectedCategory "") true false) }
+                  { type: button, action: ADVANCE, label: @config.advanceLabel, variant: primary, disabled: (if (== @entity.selectedCategory "") true false) },
+                  { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Auto"), variant: ghost }
                 ] },
-              { type: stat-display, label: "Score", value: @entity.correctCount, max: @entity.attemptedCount }
+              { type: stat-display, label: (if (> @config.passScore 0) (str/concat "Score — pass at " @config.passScore) "Score"), value: (if (or (!= @config.pointsPerCorrect 1) (> @config.penaltyPerMiss 0)) @entity.score @entity.correctCount), max: (if (or (!= @config.pointsPerCorrect 1) (> @config.penaltyPerMiss 0)) (if (> @config.scoreCap 0) @config.scoreCap (* @entity.totalItems @config.pointsPerCorrect)) @entity.attemptedCount) }
             ])
           )
           (do
@@ -541,6 +586,31 @@ orbital LearnClassifyOrbital {
         })
         (emit CLASSIFY_UPDATED { itemIndex: @entity.itemIndex, correctCount: @entity.correctCount, attemptedCount: @entity.attemptedCount, selectedCategory: @entity.selectedCategory, verdict: @entity.verdict, roundComplete: @entity.roundComplete })
 
+      TOGGLE_RUN -> idle when (and (== @entity.active true) (== @entity.roundComplete false))
+        (set @entity.running (not @entity.running))
+        (set @entity.elapsedMs 0)
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: progress-bar, value: (+ @entity.itemIndex 1), max: @entity.totalItems, showPercentage: false, label: (str/concat "Item " (str/concat "" (+ @entity.itemIndex 1)) " of " (str/concat "" @entity.totalItems)) },
+                { type: stack, direction: vertical, gap: md, children: @entity.roundView }
+              ] }
+          ]
+        })
+    }
+
+    ticks {
+      advanceTick every 32ms
+        when (and (== @entity.active true) (and (== @entity.running true) (== @entity.roundComplete false)))
+        (set @entity.elapsedMs (+ @entity.elapsedMs 32))
+        (when (>= @entity.elapsedMs @config.advanceMs)
+          (do
+            (set @entity.elapsedMs 0)
+            (emit ADVANCE { })
+          ))
     }
 
     listens {
@@ -561,6 +631,10 @@ orbital LearnClassifyOrbital {
       RETRY {
       }
         @description "Learner restarted the round from the summary screen — score, per-category breakdown, and item cursor reset to the beginning."
+        @tier "domain"
+      TOGGLE_RUN {
+      }
+        @description "Learner toggled auto-advance: while running, the advance clock steps to the next item every advanceMs milliseconds."
         @tier "domain"
     }
 
@@ -634,6 +708,42 @@ orbital LearnClassifyOrbital {
         @label "Advance Button Label"
         @description "Label text for the button that advances to the next item."
         @tier "presentation"
+      showHint : boolean = true
+        @label "Show Hint"
+        @description "Show each item's hint line beneath the prompt before the learner picks; hide for a harder drill."
+        @tier "domain"
+      passScore : number = 0
+        @label "Pass Score"
+        @description "Target score shown next to the running score as \"pass at N\"; 0 hides the target."
+        @tier "domain"
+      autoRun : boolean = false
+        @label "Auto Run"
+        @description "When true the advance clock starts on load and the drill flips to the next item every advanceMs milliseconds; toggle live with the Auto/Pause button."
+        @tier "domain"
+      advanceMs : number = 900
+        @label "Auto-Advance Interval (ms)"
+        @description "Milliseconds between automatic advances while running — the 32ms base tick accumulates elapsed time and fires ADVANCE each time this interval elapses."
+        @tier "domain"
+      orderStride : number = 1
+        @label "Order Stride"
+        @description "Items advance by this stride through the roster — 1 is sequential; a stride coprime with the roster length (e.g. 3) interleaves the corpus so adjacent items differ."
+        @tier "domain"
+      loopRound : boolean = false
+        @label "Loop Round"
+        @description "When true the item cursor wraps past the last item forever (a looping drill) instead of ending the round at the summary screen."
+        @tier "domain"
+      pointsPerCorrect : number = 1
+        @label "Points Per Correct"
+        @description "Rubric points added to the score for each correct pick; at the default 1 with no penalty, the plain correct/attempted counts render instead of the rubric score."
+        @tier "domain"
+      penaltyPerMiss : number = 0
+        @label "Penalty Per Miss"
+        @description "Rubric points subtracted for each incorrect pick (score never drops below 0)."
+        @tier "domain"
+      scoreCap : number = 0
+        @label "Score Cap"
+        @description "Upper bound on the rubric score; 0 means uncapped."
+        @tier "domain"
       retryLabel : string = "Retry Round"
         @label "Retry Button Label"
         @description "Label text for the button that restarts the round from the end-of-round summary."

@@ -30,7 +30,7 @@ const ALIAS = 'LearnClassify';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdLearnClassifyEventKey = 'ADVANCE' | 'CLASSIFY_UPDATED' | 'INIT' | 'MODE_SELECTED' | 'PICK' | 'RETRY';
+export type StdLearnClassifyEventKey = 'ADVANCE' | 'CLASSIFY_UPDATED' | 'INIT' | 'MODE_SELECTED' | 'PICK' | 'RETRY' | 'TOGGLE_RUN';
 
 /**
  * Payload shape for the `CLASSIFY_UPDATED` event.
@@ -53,8 +53,12 @@ export interface StdLearnClassifyClassifyUpdatedPayload {
 export interface StdLearnClassifyConfig {
   /** Default: `"Next"` */
   advanceLabel?: string;
+  /** Default: `900` */
+  advanceMs?: number;
   /** Default: `false` */
   animate?: boolean;
+  /** Default: `false` */
+  autoRun?: boolean;
   /** Default: `"#f8fafc"` */
   backgroundColor?: string;
   /** Default: `[{"color":"#94a3b8","label":"Category A","value":"a"},{"color":"#64748b","label":"Category B","value":"b"}]` */
@@ -69,10 +73,24 @@ export interface StdLearnClassifyConfig {
   interactive?: boolean;
   /** Default: `[{"category":"a","explanation":"This example was written to satisfy category A's defining trait.","hint":"Consider what makes this belong to category A.","text":"Example item one."},{"category":"b","explanation":"This example was written to satisfy category B's defining trait.","hint":"Consider what makes this belong to category B.","text":"Example item two."}]` */
   items?: EntityRow[];
+  /** Default: `false` */
+  loopRound?: boolean;
   /** Default: `""` */
   matchMode?: string;
+  /** Default: `1` */
+  orderStride?: number;
+  /** Default: `0` */
+  passScore?: number;
+  /** Default: `0` */
+  penaltyPerMiss?: number;
+  /** Default: `1` */
+  pointsPerCorrect?: number;
   /** Default: `"Retry Round"` */
   retryLabel?: string;
+  /** Default: `0` */
+  scoreCap?: number;
+  /** Default: `true` */
+  showHint?: boolean;
   /** Default: `"Classify"` */
   title?: string;
   /** Default: `640` */

@@ -1,0 +1,805 @@
+app std-learn-scatter-fit "1.0.0"
+"Generic scatter-plot fitting instrument — points on a math-canvas (config-declared axis ranges/labels/colors) with a live least-squares refit: slope, intercept, r, and R² recompute as points are added (button or auto-add tick, up to maxPoints) or dragged. An optional guess-then-reveal mode lets the learner drag slope/intercept sliders to propose a line, scored against the fit until Reveal Fit; dashed residual segments and the r/R² readout are config-toggleable. Run/Pause drives a fixed-interval auto-add tick, Reset reseeds from the configured point roster. SCATTER_FIT_UPDATED broadcasts the fit after every learner action, tick, or reset. Every button label, caption, curve label/color, and narration phrase is config-declared so the same mechanism serves any scatter-fit domain (correlation, physics data fitting, trend lines, and beyond) on a math-canvas. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital LearnScatterFitOrbital {
+  type LearnScatterFitPoint = {
+    id : string
+    x : number!
+    y : number!
+    label : string
+    color : string
+    radius : number
+  }
+  type LearnScatterFitCurve = {
+    label : string
+    color : string
+    dash : "dashed" | "dotted"
+    samples : [LearnScatterFitCurvePoint]
+  }
+  type LearnScatterFitCurvePoint = {
+    x : number!
+    y : number!
+  }
+
+  entity LearnScatterFitScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    points : [LearnScatterFitPoint]
+    slope : number
+    intercept : number
+    r : number
+    rSquared : number
+    guessSlope : number
+    guessIntercept : number
+    guessScore : number
+    revealed : boolean = false
+    running : boolean = false
+    done : boolean = false
+    curves : [LearnScatterFitCurve]
+    narration : string
+  }
+
+  trait LearnScatterFitSim -> @rebindable LearnScatterFitScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.points @config.initialPoints)
+        (set @entity.guessSlope 0)
+        (set @entity.guessIntercept (/ (+ @config.axisYMin @config.axisYMax) 2))
+        (set @entity.revealed false)
+        (set @entity.running @config.autoRun)
+        (let (
+            (pts @config.initialPoints)
+            (n (array/len @pts))
+            (meanX (if (> @n 0) (/ (array/reduce @pts 0 (fn (acc p) (+ @acc (object/get @p x)))) @n) 0))
+            (meanY (if (> @n 0) (/ (array/reduce @pts 0 (fn (acc p) (+ @acc (object/get @p y)))) @n) 0))
+            (sxx (array/reduce @pts 0 (fn (acc p) (let ((dx (- (object/get @p x) @meanX))) (+ @acc (* @dx @dx))))))
+            (syy (array/reduce @pts 0 (fn (acc p) (let ((dy (- (object/get @p y) @meanY))) (+ @acc (* @dy @dy))))))
+            (sxy (array/reduce @pts 0 (fn (acc p) (+ @acc (* (- (object/get @p x) @meanX) (- (object/get @p y) @meanY))))))
+            (newSlope (if (> @sxx 0) (/ @sxy @sxx) 0))
+            (newIntercept (- @meanY (* @newSlope @meanX)))
+            (newR (if (and (> @sxx 0) (> @syy 0)) (/ @sxy (math/sqrt (* @sxx @syy))) 0))
+            (fitCurve { label: @config.fitLabel, color: @config.fitColor, samples: [
+              { x: @config.axisXMin, y: (math/clamp @newIntercept @config.axisYMin @config.axisYMax) },
+              { x: @config.axisXMax, y: (math/clamp (+ (* @newSlope @config.axisXMax) @newIntercept) @config.axisYMin @config.axisYMax) }
+            ]})
+            (residualCurves (if @config.showResiduals
+              (array/map @pts (fn p { label: "", color: @config.residualColor, dash: @config.residualDash, samples: [ { x: (object/get @p x), y: (object/get @p y) }, { x: (object/get @p x), y: (+ (* @newSlope (object/get @p x)) @newIntercept) } ] }))
+              []))
+          )
+          (do
+            (set @entity.slope @newSlope)
+            (set @entity.intercept @newIntercept)
+            (set @entity.r @newR)
+            (set @entity.rSquared (* @newR @newR))
+            (set @entity.guessScore 0)
+            (set @entity.curves (array/concat (array/append [] @fitCurve) @residualCurves))
+            (set @entity.done (>= @n @config.maxPoints))
+            (set @entity.narration (str/concat (str/concat "" @n) " " @config.narrationLoadedTemplate " — r = " (str/concat "" (math/round @newR 3)) ", R² = " (str/concat "" (math/round (* @newR @newR) 3))))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: ADD_POINT, label: @config.addPointLabel, variant: primary },
+                    { type: button, action: REVEAL_FIT, label: @config.revealLabel, variant: secondary },
+                    { type: button, action: TOGGLE_RUN, label: (if @entity.running @config.pauseLabel @config.runLabel), variant: secondary },
+                    { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+                  ] },
+                { type: typography, variant: caption, content: (str/concat @config.guessSlopeCaption (math/round @entity.guessSlope 2)) },
+                { type: range-slider, min: @config.guessSlopeMin, max: @config.guessSlopeMax, step: @config.guessSlopeStep, value: @entity.guessSlope, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "slope" } },
+                { type: typography, variant: caption, content: (str/concat @config.guessInterceptCaption (math/round @entity.guessIntercept 1)) },
+                { type: range-slider, min: @config.guessInterceptMin, max: @config.guessInterceptMax, step: @config.guessInterceptStep, value: @entity.guessIntercept, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "intercept" } },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.axisXMin, xMax: @config.axisXMax, yMin: @config.axisYMin, yMax: @config.axisYMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, showTickLabels: @config.showTickLabels, curves: @entity.curves, points: @entity.points, vectors: [], interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: (if @config.showR (str/concat "r = " (math/round @entity.r 3) " — R² = " (math/round @entity.rSquared 3) " — guess score " @entity.guessScore "%") "") },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit LEARN_SCATTER_FIT_UPDATED { slope: @entity.slope, intercept: @entity.intercept, r: @entity.r, rSquared: @entity.rSquared, pointCount: (array/len @entity.points), narration: @entity.narration })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.points @config.initialPoints)
+        (set @entity.guessSlope 0)
+        (set @entity.guessIntercept (/ (+ @config.axisYMin @config.axisYMax) 2))
+        (set @entity.revealed false)
+        (set @entity.running @config.autoRun)
+        (let (
+            (pts @config.initialPoints)
+            (n (array/len @pts))
+            (meanX (if (> @n 0) (/ (array/reduce @pts 0 (fn (acc p) (+ @acc (object/get @p x)))) @n) 0))
+            (meanY (if (> @n 0) (/ (array/reduce @pts 0 (fn (acc p) (+ @acc (object/get @p y)))) @n) 0))
+            (sxx (array/reduce @pts 0 (fn (acc p) (let ((dx (- (object/get @p x) @meanX))) (+ @acc (* @dx @dx))))))
+            (syy (array/reduce @pts 0 (fn (acc p) (let ((dy (- (object/get @p y) @meanY))) (+ @acc (* @dy @dy))))))
+            (sxy (array/reduce @pts 0 (fn (acc p) (+ @acc (* (- (object/get @p x) @meanX) (- (object/get @p y) @meanY))))))
+            (newSlope (if (> @sxx 0) (/ @sxy @sxx) 0))
+            (newIntercept (- @meanY (* @newSlope @meanX)))
+            (newR (if (and (> @sxx 0) (> @syy 0)) (/ @sxy (math/sqrt (* @sxx @syy))) 0))
+            (fitCurve { label: @config.fitLabel, color: @config.fitColor, samples: [
+              { x: @config.axisXMin, y: (math/clamp @newIntercept @config.axisYMin @config.axisYMax) },
+              { x: @config.axisXMax, y: (math/clamp (+ (* @newSlope @config.axisXMax) @newIntercept) @config.axisYMin @config.axisYMax) }
+            ]})
+            (residualCurves (if @config.showResiduals
+              (array/map @pts (fn p { label: "", color: @config.residualColor, dash: @config.residualDash, samples: [ { x: (object/get @p x), y: (object/get @p y) }, { x: (object/get @p x), y: (+ (* @newSlope (object/get @p x)) @newIntercept) } ] }))
+              []))
+          )
+          (do
+            (set @entity.slope @newSlope)
+            (set @entity.intercept @newIntercept)
+            (set @entity.r @newR)
+            (set @entity.rSquared (* @newR @newR))
+            (set @entity.guessScore 0)
+            (set @entity.curves (array/concat (array/append [] @fitCurve) @residualCurves))
+            (set @entity.done (>= @n @config.maxPoints))
+            (set @entity.narration (str/concat (str/concat "" @n) " " @config.narrationLoadedTemplate " — r = " (str/concat "" (math/round @newR 3)) ", R² = " (str/concat "" (math/round (* @newR @newR) 3))))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: ADD_POINT, label: @config.addPointLabel, variant: primary },
+                    { type: button, action: REVEAL_FIT, label: @config.revealLabel, variant: secondary },
+                    { type: button, action: TOGGLE_RUN, label: (if @entity.running @config.pauseLabel @config.runLabel), variant: secondary },
+                    { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+                  ] },
+                { type: typography, variant: caption, content: (str/concat @config.guessSlopeCaption (math/round @entity.guessSlope 2)) },
+                { type: range-slider, min: @config.guessSlopeMin, max: @config.guessSlopeMax, step: @config.guessSlopeStep, value: @entity.guessSlope, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "slope" } },
+                { type: typography, variant: caption, content: (str/concat @config.guessInterceptCaption (math/round @entity.guessIntercept 1)) },
+                { type: range-slider, min: @config.guessInterceptMin, max: @config.guessInterceptMax, step: @config.guessInterceptStep, value: @entity.guessIntercept, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "intercept" } },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.axisXMin, xMax: @config.axisXMax, yMin: @config.axisYMin, yMax: @config.axisYMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, showTickLabels: @config.showTickLabels, curves: @entity.curves, points: @entity.points, vectors: [], interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: (if @config.showR (str/concat "r = " (math/round @entity.r 3) " — R² = " (math/round @entity.rSquared 3) " — guess score " @entity.guessScore "%") "") },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit LEARN_SCATTER_FIT_UPDATED { slope: @entity.slope, intercept: @entity.intercept, r: @entity.r, rSquared: @entity.rSquared, pointCount: (array/len @entity.points), narration: @entity.narration })
+
+      ADD_POINT -> idle when (and @entity.active (not @entity.done))
+        (let (
+            (marginX (* (- @config.axisXMax @config.axisXMin) @config.pointMarginPct))
+            (usableX (- (- @config.axisXMax @config.axisXMin) (* @marginX 2)))
+            (marginY (* (- @config.axisYMax @config.axisYMin) @config.pointMarginPct))
+            (usableY (- (- @config.axisYMax @config.axisYMin) (* @marginY 2)))
+            (newPoint { id: (str/concat "p" (array/len @entity.points)), x: (math/round (+ @config.axisXMin (+ @marginX (* (math/random) @usableX)))), y: (math/round (+ @config.axisYMin (+ @marginY (* (math/random) @usableY)))), label: "", color: @config.newPointColor, radius: @config.newPointRadius })
+            (pts (array/append @entity.points @newPoint))
+            (n (array/len @pts))
+            (meanX (/ (array/reduce @pts 0 (fn (acc p) (+ @acc (object/get @p x)))) @n))
+            (meanY (/ (array/reduce @pts 0 (fn (acc p) (+ @acc (object/get @p y)))) @n))
+            (sxx (array/reduce @pts 0 (fn (acc p) (let ((dx (- (object/get @p x) @meanX))) (+ @acc (* @dx @dx))))))
+            (syy (array/reduce @pts 0 (fn (acc p) (let ((dy (- (object/get @p y) @meanY))) (+ @acc (* @dy @dy))))))
+            (sxy (array/reduce @pts 0 (fn (acc p) (+ @acc (* (- (object/get @p x) @meanX) (- (object/get @p y) @meanY))))))
+            (newSlope (if (> @sxx 0) (/ @sxy @sxx) 0))
+            (newIntercept (- @meanY (* @newSlope @meanX)))
+            (newR (if (and (> @sxx 0) (> @syy 0)) (/ @sxy (math/sqrt (* @sxx @syy))) 0))
+            (fitCurve { label: @config.fitLabel, color: @config.fitColor, samples: [
+              { x: @config.axisXMin, y: (math/clamp @newIntercept @config.axisYMin @config.axisYMax) },
+              { x: @config.axisXMax, y: (math/clamp (+ (* @newSlope @config.axisXMax) @newIntercept) @config.axisYMin @config.axisYMax) }
+            ]})
+            (guessCurve { label: @config.guessLabel, color: @config.guessColor, samples: [
+              { x: @config.axisXMin, y: (math/clamp @entity.guessIntercept @config.axisYMin @config.axisYMax) },
+              { x: @config.axisXMax, y: (math/clamp (+ (* @entity.guessSlope @config.axisXMax) @entity.guessIntercept) @config.axisYMin @config.axisYMax) }
+            ]})
+            (residualCurves (if @config.showResiduals
+              (array/map @pts (fn p { label: "", color: @config.residualColor, dash: @config.residualDash, samples: [ { x: (object/get @p x), y: (object/get @p y) }, { x: (object/get @p x), y: (+ (* @newSlope (object/get @p x)) @newIntercept) } ] }))
+              []))
+            (baseCurves (if (and @config.guessMode (not @entity.revealed))
+              (array/append [] @guessCurve)
+              (if @config.guessMode
+                (array/append (array/append [] @guessCurve) @fitCurve)
+                (array/append [] @fitCurve))))
+            (nowDone (>= @n @config.maxPoints))
+          )
+          (do
+            (set @entity.points @pts)
+            (set @entity.slope @newSlope)
+            (set @entity.intercept @newIntercept)
+            (set @entity.r @newR)
+            (set @entity.rSquared (* @newR @newR))
+            (set @entity.curves (array/concat @baseCurves @residualCurves))
+            (set @entity.done @nowDone)
+            (set @entity.narration (str/concat @config.narrationAddedTemplate " " (str/concat "" @n) " — r = " (str/concat "" (math/round @newR 3)) ", R² = " (str/concat "" (math/round (* @newR @newR) 3)) (if @nowDone @config.narrationMaxReachedSuffix "")))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: ADD_POINT, label: @config.addPointLabel, variant: primary },
+                    { type: button, action: REVEAL_FIT, label: @config.revealLabel, variant: secondary },
+                    { type: button, action: TOGGLE_RUN, label: (if @entity.running @config.pauseLabel @config.runLabel), variant: secondary },
+                    { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+                  ] },
+                { type: typography, variant: caption, content: (str/concat @config.guessSlopeCaption (math/round @entity.guessSlope 2)) },
+                { type: range-slider, min: @config.guessSlopeMin, max: @config.guessSlopeMax, step: @config.guessSlopeStep, value: @entity.guessSlope, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "slope" } },
+                { type: typography, variant: caption, content: (str/concat @config.guessInterceptCaption (math/round @entity.guessIntercept 1)) },
+                { type: range-slider, min: @config.guessInterceptMin, max: @config.guessInterceptMax, step: @config.guessInterceptStep, value: @entity.guessIntercept, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "intercept" } },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.axisXMin, xMax: @config.axisXMax, yMin: @config.axisYMin, yMax: @config.axisYMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, showTickLabels: @config.showTickLabels, curves: @entity.curves, points: @entity.points, vectors: [], interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: (if @config.showR (str/concat "r = " (math/round @entity.r 3) " — R² = " (math/round @entity.rSquared 3) " — guess score " @entity.guessScore "%") "") },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit LEARN_SCATTER_FIT_UPDATED { slope: @entity.slope, intercept: @entity.intercept, r: @entity.r, rSquared: @entity.rSquared, pointCount: (array/len @entity.points), narration: @entity.narration })
+
+      DRAG_POINT -> idle when (== @entity.active true)
+        (let (
+            (pts (array/map @entity.points (fn p
+              (if (== (object/get @p id) ?id)
+                (object/merge @p { x: (math/clamp ?x @config.axisXMin @config.axisXMax), y: (math/clamp ?y @config.axisYMin @config.axisYMax) })
+                @p))))
+            (n (array/len @pts))
+            (meanX (if (> @n 0) (/ (array/reduce @pts 0 (fn (acc p) (+ @acc (object/get @p x)))) @n) 0))
+            (meanY (if (> @n 0) (/ (array/reduce @pts 0 (fn (acc p) (+ @acc (object/get @p y)))) @n) 0))
+            (sxx (array/reduce @pts 0 (fn (acc p) (let ((dx (- (object/get @p x) @meanX))) (+ @acc (* @dx @dx))))))
+            (syy (array/reduce @pts 0 (fn (acc p) (let ((dy (- (object/get @p y) @meanY))) (+ @acc (* @dy @dy))))))
+            (sxy (array/reduce @pts 0 (fn (acc p) (+ @acc (* (- (object/get @p x) @meanX) (- (object/get @p y) @meanY))))))
+            (newSlope (if (> @sxx 0) (/ @sxy @sxx) 0))
+            (newIntercept (- @meanY (* @newSlope @meanX)))
+            (newR (if (and (> @sxx 0) (> @syy 0)) (/ @sxy (math/sqrt (* @sxx @syy))) 0))
+            (fitCurve { label: @config.fitLabel, color: @config.fitColor, samples: [
+              { x: @config.axisXMin, y: (math/clamp @newIntercept @config.axisYMin @config.axisYMax) },
+              { x: @config.axisXMax, y: (math/clamp (+ (* @newSlope @config.axisXMax) @newIntercept) @config.axisYMin @config.axisYMax) }
+            ]})
+            (guessCurve { label: @config.guessLabel, color: @config.guessColor, samples: [
+              { x: @config.axisXMin, y: (math/clamp @entity.guessIntercept @config.axisYMin @config.axisYMax) },
+              { x: @config.axisXMax, y: (math/clamp (+ (* @entity.guessSlope @config.axisXMax) @entity.guessIntercept) @config.axisYMin @config.axisYMax) }
+            ]})
+            (residualCurves (if @config.showResiduals
+              (array/map @pts (fn p { label: "", color: @config.residualColor, dash: @config.residualDash, samples: [ { x: (object/get @p x), y: (object/get @p y) }, { x: (object/get @p x), y: (+ (* @newSlope (object/get @p x)) @newIntercept) } ] }))
+              []))
+            (baseCurves (if (and @config.guessMode (not @entity.revealed))
+              (array/append [] @guessCurve)
+              (if @config.guessMode
+                (array/append (array/append [] @guessCurve) @fitCurve)
+                (array/append [] @fitCurve))))
+          )
+          (do
+            (set @entity.points @pts)
+            (set @entity.slope @newSlope)
+            (set @entity.intercept @newIntercept)
+            (set @entity.r @newR)
+            (set @entity.rSquared (* @newR @newR))
+            (set @entity.curves (array/concat @baseCurves @residualCurves))
+            (set @entity.narration (str/concat @config.narrationMovedTemplate " — r = " (str/concat "" (math/round @newR 3)) ", R² = " (str/concat "" (math/round (* @newR @newR) 3))))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: ADD_POINT, label: @config.addPointLabel, variant: primary },
+                    { type: button, action: REVEAL_FIT, label: @config.revealLabel, variant: secondary },
+                    { type: button, action: TOGGLE_RUN, label: (if @entity.running @config.pauseLabel @config.runLabel), variant: secondary },
+                    { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+                  ] },
+                { type: typography, variant: caption, content: (str/concat @config.guessSlopeCaption (math/round @entity.guessSlope 2)) },
+                { type: range-slider, min: @config.guessSlopeMin, max: @config.guessSlopeMax, step: @config.guessSlopeStep, value: @entity.guessSlope, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "slope" } },
+                { type: typography, variant: caption, content: (str/concat @config.guessInterceptCaption (math/round @entity.guessIntercept 1)) },
+                { type: range-slider, min: @config.guessInterceptMin, max: @config.guessInterceptMax, step: @config.guessInterceptStep, value: @entity.guessIntercept, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "intercept" } },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.axisXMin, xMax: @config.axisXMax, yMin: @config.axisYMin, yMax: @config.axisYMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, showTickLabels: @config.showTickLabels, curves: @entity.curves, points: @entity.points, vectors: [], interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: (if @config.showR (str/concat "r = " (math/round @entity.r 3) " — R² = " (math/round @entity.rSquared 3) " — guess score " @entity.guessScore "%") "") },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit LEARN_SCATTER_FIT_UPDATED { slope: @entity.slope, intercept: @entity.intercept, r: @entity.r, rSquared: @entity.rSquared, pointCount: (array/len @entity.points), narration: @entity.narration })
+
+      GUESS_LINE -> idle when (== @entity.active true)
+        (let (
+            (gSlope (if (== ?param "slope") ?value @entity.guessSlope))
+            (gIntercept (if (== ?param "intercept") ?value @entity.guessIntercept))
+            (pts @entity.points)
+            (n (array/len @pts))
+            (meanX (if (> @n 0) (/ (array/reduce @pts 0 (fn (acc p) (+ @acc (object/get @p x)))) @n) 0))
+            (meanY (if (> @n 0) (/ (array/reduce @pts 0 (fn (acc p) (+ @acc (object/get @p y)))) @n) 0))
+            (sxx (array/reduce @pts 0 (fn (acc p) (let ((dx (- (object/get @p x) @meanX))) (+ @acc (* @dx @dx))))))
+            (sxy (array/reduce @pts 0 (fn (acc p) (+ @acc (* (- (object/get @p x) @meanX) (- (object/get @p y) @meanY))))))
+            (newSlope (if (> @sxx 0) (/ @sxy @sxx) 0))
+            (newIntercept (- @meanY (* @newSlope @meanX)))
+            (ssFit (array/reduce @pts 0 (fn (acc p) (let ((e (- (object/get @p y) (+ (* @newSlope (object/get @p x)) @newIntercept)))) (+ @acc (* @e @e))))))
+            (ssGuess (array/reduce @pts 0 (fn (acc p) (let ((e (- (object/get @p y) (+ (* @gSlope (object/get @p x)) @gIntercept)))) (+ @acc (* @e @e))))))
+            (newScore (if (> @ssGuess 0) (math/round (math/clamp (* 100 (/ @ssFit @ssGuess)) 0 100)) 100))
+            (guessCurve { label: @config.guessLabel, color: @config.guessColor, samples: [
+              { x: @config.axisXMin, y: (math/clamp @gIntercept @config.axisYMin @config.axisYMax) },
+              { x: @config.axisXMax, y: (math/clamp (+ (* @gSlope @config.axisXMax) @gIntercept) @config.axisYMin @config.axisYMax) }
+            ]})
+            (fitCurve { label: @config.fitLabel, color: @config.fitColor, samples: [
+              { x: @config.axisXMin, y: (math/clamp @newIntercept @config.axisYMin @config.axisYMax) },
+              { x: @config.axisXMax, y: (math/clamp (+ (* @newSlope @config.axisXMax) @newIntercept) @config.axisYMin @config.axisYMax) }
+            ]})
+          )
+          (do
+            (set @entity.guessSlope @gSlope)
+            (set @entity.guessIntercept @gIntercept)
+            (set @entity.guessScore @newScore)
+            (set @entity.curves (if (and @config.guessMode (not @entity.revealed))
+              (array/append [] @guessCurve)
+              (if @config.guessMode
+                (array/append (array/append [] @guessCurve) @fitCurve)
+                (array/append [] @fitCurve))))
+            (set @entity.narration (str/concat @config.narrationGuessUpdatedTemplate " " (str/concat "" @newScore) "%"))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: ADD_POINT, label: @config.addPointLabel, variant: primary },
+                    { type: button, action: REVEAL_FIT, label: @config.revealLabel, variant: secondary },
+                    { type: button, action: TOGGLE_RUN, label: (if @entity.running @config.pauseLabel @config.runLabel), variant: secondary },
+                    { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+                  ] },
+                { type: typography, variant: caption, content: (str/concat @config.guessSlopeCaption (math/round @entity.guessSlope 2)) },
+                { type: range-slider, min: @config.guessSlopeMin, max: @config.guessSlopeMax, step: @config.guessSlopeStep, value: @entity.guessSlope, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "slope" } },
+                { type: typography, variant: caption, content: (str/concat @config.guessInterceptCaption (math/round @entity.guessIntercept 1)) },
+                { type: range-slider, min: @config.guessInterceptMin, max: @config.guessInterceptMax, step: @config.guessInterceptStep, value: @entity.guessIntercept, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "intercept" } },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.axisXMin, xMax: @config.axisXMax, yMin: @config.axisYMin, yMax: @config.axisYMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, showTickLabels: @config.showTickLabels, curves: @entity.curves, points: @entity.points, vectors: [], interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: (if @config.showR (str/concat "r = " (math/round @entity.r 3) " — R² = " (math/round @entity.rSquared 3) " — guess score " @entity.guessScore "%") "") },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit LEARN_SCATTER_FIT_UPDATED { slope: @entity.slope, intercept: @entity.intercept, r: @entity.r, rSquared: @entity.rSquared, pointCount: (array/len @entity.points), narration: @entity.narration })
+
+      REVEAL_FIT -> idle when (== @entity.active true)
+        (set @entity.revealed true)
+        (let (
+            (fitCurve { label: @config.fitLabel, color: @config.fitColor, samples: [
+              { x: @config.axisXMin, y: (math/clamp @entity.intercept @config.axisYMin @config.axisYMax) },
+              { x: @config.axisXMax, y: (math/clamp (+ (* @entity.slope @config.axisXMax) @entity.intercept) @config.axisYMin @config.axisYMax) }
+            ]})
+            (guessCurve { label: @config.guessLabel, color: @config.guessColor, samples: [
+              { x: @config.axisXMin, y: (math/clamp @entity.guessIntercept @config.axisYMin @config.axisYMax) },
+              { x: @config.axisXMax, y: (math/clamp (+ (* @entity.guessSlope @config.axisXMax) @entity.guessIntercept) @config.axisYMin @config.axisYMax) }
+            ]})
+          )
+          (do
+            (set @entity.curves (if @config.guessMode
+              (array/append (array/append [] @guessCurve) @fitCurve)
+              (array/append [] @fitCurve)))
+            (set @entity.narration (str/concat @config.narrationFitRevealedTemplate " — r = " (str/concat "" (math/round @entity.r 3)) ", R² = " (str/concat "" (math/round @entity.rSquared 3)) " — guess score " (str/concat "" @entity.guessScore) "%"))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: ADD_POINT, label: @config.addPointLabel, variant: primary },
+                    { type: button, action: REVEAL_FIT, label: @config.revealLabel, variant: secondary },
+                    { type: button, action: TOGGLE_RUN, label: (if @entity.running @config.pauseLabel @config.runLabel), variant: secondary },
+                    { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+                  ] },
+                { type: typography, variant: caption, content: (str/concat @config.guessSlopeCaption (math/round @entity.guessSlope 2)) },
+                { type: range-slider, min: @config.guessSlopeMin, max: @config.guessSlopeMax, step: @config.guessSlopeStep, value: @entity.guessSlope, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "slope" } },
+                { type: typography, variant: caption, content: (str/concat @config.guessInterceptCaption (math/round @entity.guessIntercept 1)) },
+                { type: range-slider, min: @config.guessInterceptMin, max: @config.guessInterceptMax, step: @config.guessInterceptStep, value: @entity.guessIntercept, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "intercept" } },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.axisXMin, xMax: @config.axisXMax, yMin: @config.axisYMin, yMax: @config.axisYMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, showTickLabels: @config.showTickLabels, curves: @entity.curves, points: @entity.points, vectors: [], interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: (if @config.showR (str/concat "r = " (math/round @entity.r 3) " — R² = " (math/round @entity.rSquared 3) " — guess score " @entity.guessScore "%") "") },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit LEARN_SCATTER_FIT_UPDATED { slope: @entity.slope, intercept: @entity.intercept, r: @entity.r, rSquared: @entity.rSquared, pointCount: (array/len @entity.points), narration: @entity.narration })
+
+      TOGGLE_RUN -> idle when (== @entity.active true)
+        (set @entity.running (not @entity.running))
+        (set @entity.narration (if @entity.running @config.narrationAutoAddingTemplate @config.narrationPausedTemplate))
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: ADD_POINT, label: @config.addPointLabel, variant: primary },
+                    { type: button, action: REVEAL_FIT, label: @config.revealLabel, variant: secondary },
+                    { type: button, action: TOGGLE_RUN, label: (if @entity.running @config.pauseLabel @config.runLabel), variant: secondary },
+                    { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+                  ] },
+                { type: typography, variant: caption, content: (str/concat @config.guessSlopeCaption (math/round @entity.guessSlope 2)) },
+                { type: range-slider, min: @config.guessSlopeMin, max: @config.guessSlopeMax, step: @config.guessSlopeStep, value: @entity.guessSlope, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "slope" } },
+                { type: typography, variant: caption, content: (str/concat @config.guessInterceptCaption (math/round @entity.guessIntercept 1)) },
+                { type: range-slider, min: @config.guessInterceptMin, max: @config.guessInterceptMax, step: @config.guessInterceptStep, value: @entity.guessIntercept, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "intercept" } },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.axisXMin, xMax: @config.axisXMax, yMin: @config.axisYMin, yMax: @config.axisYMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, showTickLabels: @config.showTickLabels, curves: @entity.curves, points: @entity.points, vectors: [], interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: (if @config.showR (str/concat "r = " (math/round @entity.r 3) " — R² = " (math/round @entity.rSquared 3) " — guess score " @entity.guessScore "%") "") },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit LEARN_SCATTER_FIT_UPDATED { slope: @entity.slope, intercept: @entity.intercept, r: @entity.r, rSquared: @entity.rSquared, pointCount: (array/len @entity.points), narration: @entity.narration })
+
+      RESET -> idle when (== @entity.active true)
+        (set @entity.points @config.initialPoints)
+        (set @entity.guessSlope 0)
+        (set @entity.guessIntercept (/ (+ @config.axisYMin @config.axisYMax) 2))
+        (set @entity.revealed false)
+        (set @entity.running @config.autoRun)
+        (let (
+            (pts @config.initialPoints)
+            (n (array/len @pts))
+            (meanX (if (> @n 0) (/ (array/reduce @pts 0 (fn (acc p) (+ @acc (object/get @p x)))) @n) 0))
+            (meanY (if (> @n 0) (/ (array/reduce @pts 0 (fn (acc p) (+ @acc (object/get @p y)))) @n) 0))
+            (sxx (array/reduce @pts 0 (fn (acc p) (let ((dx (- (object/get @p x) @meanX))) (+ @acc (* @dx @dx))))))
+            (syy (array/reduce @pts 0 (fn (acc p) (let ((dy (- (object/get @p y) @meanY))) (+ @acc (* @dy @dy))))))
+            (sxy (array/reduce @pts 0 (fn (acc p) (+ @acc (* (- (object/get @p x) @meanX) (- (object/get @p y) @meanY))))))
+            (newSlope (if (> @sxx 0) (/ @sxy @sxx) 0))
+            (newIntercept (- @meanY (* @newSlope @meanX)))
+            (newR (if (and (> @sxx 0) (> @syy 0)) (/ @sxy (math/sqrt (* @sxx @syy))) 0))
+            (fitCurve { label: @config.fitLabel, color: @config.fitColor, samples: [
+              { x: @config.axisXMin, y: (math/clamp @newIntercept @config.axisYMin @config.axisYMax) },
+              { x: @config.axisXMax, y: (math/clamp (+ (* @newSlope @config.axisXMax) @newIntercept) @config.axisYMin @config.axisYMax) }
+            ]})
+            (residualCurves (if @config.showResiduals
+              (array/map @pts (fn p { label: "", color: @config.residualColor, dash: @config.residualDash, samples: [ { x: (object/get @p x), y: (object/get @p y) }, { x: (object/get @p x), y: (+ (* @newSlope (object/get @p x)) @newIntercept) } ] }))
+              []))
+          )
+          (do
+            (set @entity.slope @newSlope)
+            (set @entity.intercept @newIntercept)
+            (set @entity.r @newR)
+            (set @entity.rSquared (* @newR @newR))
+            (set @entity.guessScore 0)
+            (set @entity.curves (array/concat (array/append [] @fitCurve) @residualCurves))
+            (set @entity.done (>= @n @config.maxPoints))
+            (set @entity.narration (str/concat (str/concat "" @n) " " @config.narrationLoadedTemplate " — r = " (str/concat "" (math/round @newR 3)) ", R² = " (str/concat "" (math/round (* @newR @newR) 3))))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: ADD_POINT, label: @config.addPointLabel, variant: primary },
+                    { type: button, action: REVEAL_FIT, label: @config.revealLabel, variant: secondary },
+                    { type: button, action: TOGGLE_RUN, label: (if @entity.running @config.pauseLabel @config.runLabel), variant: secondary },
+                    { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+                  ] },
+                { type: typography, variant: caption, content: (str/concat @config.guessSlopeCaption (math/round @entity.guessSlope 2)) },
+                { type: range-slider, min: @config.guessSlopeMin, max: @config.guessSlopeMax, step: @config.guessSlopeStep, value: @entity.guessSlope, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "slope" } },
+                { type: typography, variant: caption, content: (str/concat @config.guessInterceptCaption (math/round @entity.guessIntercept 1)) },
+                { type: range-slider, min: @config.guessInterceptMin, max: @config.guessInterceptMax, step: @config.guessInterceptStep, value: @entity.guessIntercept, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "intercept" } },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.axisXMin, xMax: @config.axisXMax, yMin: @config.axisYMin, yMax: @config.axisYMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, showTickLabels: @config.showTickLabels, curves: @entity.curves, points: @entity.points, vectors: [], interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: (if @config.showR (str/concat "r = " (math/round @entity.r 3) " — R² = " (math/round @entity.rSquared 3) " — guess score " @entity.guessScore "%") "") },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit LEARN_SCATTER_FIT_UPDATED { slope: @entity.slope, intercept: @entity.intercept, r: @entity.r, rSquared: @entity.rSquared, pointCount: (array/len @entity.points), narration: @entity.narration })
+    }
+
+    ticks {
+      scatterFitTick every 600ms
+        when (and @entity.active (and @entity.running (not @entity.done)))
+        (let (
+            (marginX (* (- @config.axisXMax @config.axisXMin) @config.pointMarginPct))
+            (usableX (- (- @config.axisXMax @config.axisXMin) (* @marginX 2)))
+            (marginY (* (- @config.axisYMax @config.axisYMin) @config.pointMarginPct))
+            (usableY (- (- @config.axisYMax @config.axisYMin) (* @marginY 2)))
+            (newPoint { id: (str/concat "p" (array/len @entity.points)), x: (math/round (+ @config.axisXMin (+ @marginX (* (math/random) @usableX)))), y: (math/round (+ @config.axisYMin (+ @marginY (* (math/random) @usableY)))), label: "", color: @config.newPointColor, radius: @config.newPointRadius })
+            (pts (array/append @entity.points @newPoint))
+            (n (array/len @pts))
+            (meanX (/ (array/reduce @pts 0 (fn (acc p) (+ @acc (object/get @p x)))) @n))
+            (meanY (/ (array/reduce @pts 0 (fn (acc p) (+ @acc (object/get @p y)))) @n))
+            (sxx (array/reduce @pts 0 (fn (acc p) (let ((dx (- (object/get @p x) @meanX))) (+ @acc (* @dx @dx))))))
+            (syy (array/reduce @pts 0 (fn (acc p) (let ((dy (- (object/get @p y) @meanY))) (+ @acc (* @dy @dy))))))
+            (sxy (array/reduce @pts 0 (fn (acc p) (+ @acc (* (- (object/get @p x) @meanX) (- (object/get @p y) @meanY))))))
+            (newSlope (if (> @sxx 0) (/ @sxy @sxx) 0))
+            (newIntercept (- @meanY (* @newSlope @meanX)))
+            (newR (if (and (> @sxx 0) (> @syy 0)) (/ @sxy (math/sqrt (* @sxx @syy))) 0))
+            (fitCurve { label: @config.fitLabel, color: @config.fitColor, samples: [
+              { x: @config.axisXMin, y: (math/clamp @newIntercept @config.axisYMin @config.axisYMax) },
+              { x: @config.axisXMax, y: (math/clamp (+ (* @newSlope @config.axisXMax) @newIntercept) @config.axisYMin @config.axisYMax) }
+            ]})
+            (guessCurve { label: @config.guessLabel, color: @config.guessColor, samples: [
+              { x: @config.axisXMin, y: (math/clamp @entity.guessIntercept @config.axisYMin @config.axisYMax) },
+              { x: @config.axisXMax, y: (math/clamp (+ (* @entity.guessSlope @config.axisXMax) @entity.guessIntercept) @config.axisYMin @config.axisYMax) }
+            ]})
+            (residualCurves (if @config.showResiduals
+              (array/map @pts (fn p { label: "", color: @config.residualColor, dash: @config.residualDash, samples: [ { x: (object/get @p x), y: (object/get @p y) }, { x: (object/get @p x), y: (+ (* @newSlope (object/get @p x)) @newIntercept) } ] }))
+              []))
+            (baseCurves (if (and @config.guessMode (not @entity.revealed))
+              (array/append [] @guessCurve)
+              (if @config.guessMode
+                (array/append (array/append [] @guessCurve) @fitCurve)
+                (array/append [] @fitCurve))))
+            (nowDone (>= @n @config.maxPoints))
+          )
+          (do
+            (set @entity.points @pts)
+            (set @entity.slope @newSlope)
+            (set @entity.intercept @newIntercept)
+            (set @entity.r @newR)
+            (set @entity.rSquared (* @newR @newR))
+            (set @entity.curves (array/concat @baseCurves @residualCurves))
+            (set @entity.done @nowDone)
+            (set @entity.narration (str/concat @config.narrationAddedTemplate " " (str/concat "" @n) " — r = " (str/concat "" (math/round @newR 3)) ", R² = " (str/concat "" (math/round (* @newR @newR) 3)) (if @nowDone @config.narrationMaxReachedSuffix "")))
+          )
+        )
+        (render-ui main {
+          type: box
+          padding: md
+          children: [
+            { type: stack, direction: vertical, gap: md, children: [
+                { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: ADD_POINT, label: @config.addPointLabel, variant: primary },
+                    { type: button, action: REVEAL_FIT, label: @config.revealLabel, variant: secondary },
+                    { type: button, action: TOGGLE_RUN, label: (if @entity.running @config.pauseLabel @config.runLabel), variant: secondary },
+                    { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+                  ] },
+                { type: typography, variant: caption, content: (str/concat @config.guessSlopeCaption (math/round @entity.guessSlope 2)) },
+                { type: range-slider, min: @config.guessSlopeMin, max: @config.guessSlopeMax, step: @config.guessSlopeStep, value: @entity.guessSlope, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "slope" } },
+                { type: typography, variant: caption, content: (str/concat @config.guessInterceptCaption (math/round @entity.guessIntercept 1)) },
+                { type: range-slider, min: @config.guessInterceptMin, max: @config.guessInterceptMax, step: @config.guessInterceptStep, value: @entity.guessIntercept, showTooltip: true, action: "GUESS_LINE", actionPayload: { param: "intercept" } },
+                { type: math-canvas, width: @config.width, height: @config.height, xMin: @config.axisXMin, xMax: @config.axisXMax, yMin: @config.axisYMin, yMax: @config.axisYMax, showAxes: @config.showAxes, showGrid: @config.showGrid, gridStep: @config.gridStep, showTickLabels: @config.showTickLabels, curves: @entity.curves, points: @entity.points, vectors: [], interactive: @config.interactive, animate: @config.animate },
+                { type: typography, variant: body, content: (if @config.showR (str/concat "r = " (math/round @entity.r 3) " — R² = " (math/round @entity.rSquared 3) " — guess score " @entity.guessScore "%") "") },
+                { type: typography, variant: body, content: @entity.narration }
+              ] }
+          ]
+        })
+        (emit LEARN_SCATTER_FIT_UPDATED { slope: @entity.slope, intercept: @entity.intercept, r: @entity.r, rSquared: @entity.rSquared, pointCount: (array/len @entity.points), narration: @entity.narration })
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      DRAG_POINT {
+        id : string
+        x : number
+        y : number
+      }
+        @description "A scatter point was dragged — id names the point, x/y its new coordinates (clamped to the axis ranges); the fit recomputes live."
+        @tier "domain"
+      GUESS_LINE {
+        param : string
+        value : number
+      }
+        @description "Learner dragged a guess-the-line slider — param is slope or intercept; the guess is scored against the least-squares fit."
+        @tier "domain"
+    }
+
+    emits {
+      LEARN_SCATTER_FIT_UPDATED -> external {
+        slope : number
+        intercept : number
+        r : number
+        rSquared : number
+        pointCount : number
+        narration : string
+      }
+        @description "The least-squares fit and narration after each learner action, auto-add tick, or reset — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "fit update, line of best fit, slope, intercept, correlation, r squared"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      autoRun : boolean = false
+        @label "Auto Run"
+        @description "When true, INIT/MODE_SELECTED start the tick auto-adding points up to Max Points; toggle live with the Run/Pause button."
+        @tier "domain"
+      title : string = "Scatter Fit"
+        @label "Title"
+        @description "Title shown above the canvas."
+        @tier "presentation"
+      initialPoints : [LearnScatterFitPoint] = [
+        { id: "p0", x: 15, y: 25, label: "", color: "#334155", radius: 5 },
+        { id: "p1", x: 32, y: 40, label: "", color: "#334155", radius: 5 },
+        { id: "p2", x: 48, y: 44, label: "", color: "#334155", radius: 5 },
+        { id: "p3", x: 63, y: 62, label: "", color: "#334155", radius: 5 },
+        { id: "p4", x: 80, y: 70, label: "", color: "#334155", radius: 5 }
+      ]
+        @label "Initial Points"
+        @description "Scatter points the canvas starts with, in axis data coordinates; Reset reseeds from this roster."
+        @synonyms "seed points, dataset, scatter data, sample"
+        @tier "domain"
+      guessMode : boolean = true
+        @label "Guess Mode"
+        @description "When true the learner's guessed line is shown instead of the fit until Reveal Fit, and the guess is scored against least squares."
+        @synonyms "guess the line, prediction, estimate the fit"
+        @tier "domain"
+      showResiduals : boolean = true
+        @label "Show Residuals"
+        @description "Draw a dashed segment from each point to the fit line — the errors least squares minimizes."
+        @synonyms "residuals, errors, deviations"
+        @tier "domain"
+      showR : boolean = true
+        @label "Show r and R²"
+        @description "Show the correlation coefficient r and coefficient of determination R² under the canvas."
+        @synonyms "correlation coefficient, r squared, goodness of fit"
+        @tier "domain"
+      maxPoints : number = 20
+        @label "Max Points"
+        @description "Cap on accumulated scatter points; Add Point and the auto-run tick stop once reached, until Reset."
+        @tier "domain"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      axisXMin : number = 0
+        @label "X Axis Min"
+        @description "Lower bound of the canvas x axis, in data coordinates."
+        @tier "domain"
+      axisXMax : number = 100
+        @label "X Axis Max"
+        @description "Upper bound of the canvas x axis, in data coordinates; also the x endpoint the fit/guess lines are drawn to."
+        @tier "domain"
+      axisYMin : number = 0
+        @label "Y Axis Min"
+        @description "Lower bound of the canvas y axis; also the floor curve samples clamp to and the low end of the guess-intercept slider default range."
+        @tier "domain"
+      axisYMax : number = 100
+        @label "Y Axis Max"
+        @description "Upper bound of the canvas y axis; also the ceiling curve samples clamp to and the high end of the guess-intercept slider default range."
+        @tier "domain"
+      gridStep : number = 20
+        @label "Grid Step"
+        @description "Spacing between canvas gridlines, in data coordinates."
+        @tier "presentation"
+      showAxes : boolean = true
+        @label "Show Axes"
+        @tier "presentation"
+      showGrid : boolean = true
+        @label "Show Grid"
+        @tier "presentation"
+      showTickLabels : boolean = true
+        @label "Show Tick Labels"
+        @tier "presentation"
+      interactive : boolean = true
+        @label "Interactive"
+        @description "Enable pointer interaction on the canvas — required for dragging points."
+        @tier "presentation"
+      animate : boolean = false
+        @label "Animate"
+        @description "Enable continuous redraw loop."
+        @tier "presentation"
+      fitLabel : string = "fit"
+        @label "Fit Curve Label"
+        @description "Legend label for the computed least-squares fit line."
+        @tier "presentation"
+      fitColor : string = "#2563eb"
+        @label "Fit Curve Color"
+        @tier "presentation"
+      guessLabel : string = "your guess"
+        @label "Guess Curve Label"
+        @description "Legend label for the learner's proposed line, shown while guessMode is on and the fit isn't yet revealed."
+        @tier "presentation"
+      guessColor : string = "#dc2626"
+        @label "Guess Curve Color"
+        @tier "presentation"
+      residualColor : string = "#f59e0b"
+        @label "Residual Color"
+        @tier "presentation"
+      residualDash : "dashed" | "dotted" = "dashed"
+        @label "Residual Dash Style"
+        @tier "presentation"
+      newPointColor : string = "#334155"
+        @label "New Point Color"
+        @description "Fill color assigned to points created by Add Point or the auto-add tick."
+        @tier "presentation"
+      newPointRadius : number = 5
+        @label "New Point Radius"
+        @tier "presentation"
+      pointMarginPct : number = 0.05
+        @label "Point Margin Percent"
+        @description "Fraction of each axis span kept clear at both ends when Add Point/the tick place a new random point, so new points never land flush against the axis edge."
+        @tier "domain"
+      guessSlopeMin : number = -3
+        @label "Guess Slope Min"
+        @description "Lower bound of the guess-slope slider."
+        @tier "domain"
+      guessSlopeMax : number = 3
+        @label "Guess Slope Max"
+        @description "Upper bound of the guess-slope slider."
+        @tier "domain"
+      guessSlopeStep : number = 0.05
+        @label "Guess Slope Step"
+        @tier "domain"
+      guessInterceptMin : number = 0
+        @label "Guess Intercept Min"
+        @description "Lower bound of the guess-intercept slider; typically set to axisYMin."
+        @tier "domain"
+      guessInterceptMax : number = 100
+        @label "Guess Intercept Max"
+        @description "Upper bound of the guess-intercept slider; typically set to axisYMax."
+        @tier "domain"
+      guessInterceptStep : number = 1
+        @label "Guess Intercept Step"
+        @tier "domain"
+      addPointLabel : string = "Add Point"
+        @label "Add Point Button Label"
+        @tier "presentation"
+      revealLabel : string = "Reveal Fit"
+        @label "Reveal Fit Button Label"
+        @tier "presentation"
+      runLabel : string = "Run"
+        @label "Run Button Label"
+        @tier "presentation"
+      pauseLabel : string = "Pause"
+        @label "Pause Button Label"
+        @tier "presentation"
+      resetLabel : string = "Reset"
+        @label "Reset Button Label"
+        @tier "presentation"
+      guessSlopeCaption : string = "Guess slope: "
+        @label "Guess Slope Caption"
+        @description "Text prefixed to the current guess-slope value above its slider."
+        @tier "presentation"
+      guessInterceptCaption : string = "Guess intercept: "
+        @label "Guess Intercept Caption"
+        @description "Text prefixed to the current guess-intercept value above its slider."
+        @tier "presentation"
+      narrationLoadedTemplate : string = "point(s) loaded"
+        @label "Loaded Narration Template"
+        @description "Narration phrase after INIT/MODE_SELECTED/Reset load the seed points, assembled as \"<n> <template> — r = .., R² = ..\"."
+        @tier "domain"
+      narrationAddedTemplate : string = "point added"
+        @label "Added Narration Template"
+        @description "Narration phrase after a point is added (button or tick), assembled as \"<template> <n> — r = .., R² = ..\"."
+        @tier "domain"
+      narrationMovedTemplate : string = "point moved"
+        @label "Moved Narration Template"
+        @description "Narration phrase after a point is dragged, assembled as \"<template> — r = .., R² = ..\"."
+        @tier "domain"
+      narrationGuessUpdatedTemplate : string = "guess updated — score"
+        @label "Guess Updated Narration Template"
+        @description "Narration phrase after a guess slider moves, assembled as \"<template> <score>%\"."
+        @tier "domain"
+      narrationFitRevealedTemplate : string = "fit revealed"
+        @label "Fit Revealed Narration Template"
+        @description "Narration phrase after Reveal Fit, assembled as \"<template> — r = .., R² = .. — guess score <score>%\"."
+        @tier "domain"
+      narrationMaxReachedSuffix : string = " — max points reached"
+        @label "Max Reached Narration Suffix"
+        @description "Suffix appended to the added-point narration once maxPoints is hit."
+        @tier "domain"
+      narrationAutoAddingTemplate : string = "Auto-adding — tick adds a new point."
+        @label "Auto-Adding Narration"
+        @description "Narration shown after Run is pressed."
+        @tier "domain"
+      narrationPausedTemplate : string = "Paused — add manually with Add Point."
+        @label "Paused Narration"
+        @description "Narration shown after Pause is pressed."
+        @tier "domain"
+    }
+  }
+
+  page "/learn-scatter-fit" as LearnScatterFitPage -> LearnScatterFitSim
+}

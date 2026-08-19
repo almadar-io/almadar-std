@@ -1,0 +1,520 @@
+app std-learn-doser "1.0.0"
+"Generic monotone-accumulation dosing instrument — the learner adds a quantity in large or small config-declared increments (or lets it auto-drip on its own inline clock) and watches an accumulated dose climb through a config-declared roster of bands/zones (thresholds, labels, colors all config), rendered as a reservoir/source vessel pair plus a dose-history trace on a canvas. Crossing into a terminal band is irreversible — done latches true and only Reset revives it. Standalone by default it renders its own control strip AND scene canvas; set showCanvas false to embed only the control strip (via @trait.<name>) beneath a composed sibling trait that owns the domain-accurate scene — see std-chem-titration for the transport-sibling shape. Behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital LearnDoserOrbital {
+  type DoserContainer = {
+    x : number
+    y : number
+    width : number
+    height : number
+    divider : "none" | "solid" | "dashed" | "dotted"
+    level : number
+    levelColor : string
+    label : string
+  }
+  type DoserReadout = {
+    label : string
+    value : string
+  }
+  type DoserTracePoint = {
+    x : number!
+    y : number!
+  }
+  type DoserBand = {
+    upperBound : number!
+    label : string!
+    color : string!
+    terminal : boolean
+  }
+
+  entity DoserScene [runtime, shared] {
+    id : string!
+    active : boolean = false
+    title : string
+    done : boolean = false
+    running : boolean = false
+    elapsedMs : number = 0
+    dose : number = 0
+    bandLabel : string
+    bandColor : string
+    narration : string
+    containers : [DoserContainer]
+    readouts : [DoserReadout]
+    doseSeries : [DoserTracePoint]
+  }
+
+  trait LearnDoserSim -> @rebindable DoserScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.dose 0)
+        (set @entity.done false)
+        (set @entity.running @config.autoDrip)
+        (set @entity.elapsedMs 0)
+        (let (
+            (matched (array/filter @config.bands (fn b (<= @entity.dose (object/get @b upperBound)))))
+            (band (if (> (array/len @matched) 0) (array/first @matched) (array/nth @config.bands (- (array/len @config.bands) 1))))
+          )
+          (do
+            (set @entity.bandLabel (object/get @band label))
+            (set @entity.bandColor (object/get @band color))
+            (set @entity.done (if (object/get @band terminal false) true @entity.done))
+          )
+        )
+        (set @entity.containers [
+          { x: (* @config.width 0.12), y: (* @config.height 0.3), width: (* @config.width 0.28), height: (* @config.height 0.6), divider: "none", level: (math/clamp (/ @entity.dose @config.capacity) 0 1), levelColor: @entity.bandColor, label: @config.reservoirLabel },
+          { x: (* @config.width 0.58), y: (* @config.height 0.05), width: (* @config.width 0.06), height: (* @config.height 0.55), divider: "none", level: (math/clamp (/ (- @config.capacity @entity.dose) @config.capacity) 0 1), levelColor: @config.sourceColor, label: @config.sourceLabel }
+        ])
+        (set @entity.readouts [
+          { label: @config.quantityLabel, value: (str/concat "" (math/round @entity.dose 2)) },
+          { label: @config.zoneReadoutLabel, value: @entity.bandLabel }
+        ])
+        (set @entity.doseSeries [{ x: 0, y: @entity.dose }])
+        (set @entity.narration (str/concat @config.quantityLabel (str/concat " at " (str/concat (str/concat "" (math/round @entity.dose 2)) (str/concat " — " @entity.bandLabel)))))
+        (if @config.showCanvas
+          (render-ui main {
+            type: box
+            padding: md
+            children: [
+              { type: stack, direction: vertical, gap: md, children: [
+                  { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: ADD_SMALL, label: (str/concat "+ " (str/concat (str/concat "" @config.stepSmall) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: primary },
+                    { type: button, action: ADD_LARGE, label: (str/concat "+ " (str/concat (str/concat "" @config.stepLarge) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: secondary },
+                    { type: button, action: TOGGLE_DRIP, label: (if @entity.running "Pause" "Auto-dose"), variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                  { type: chemistry-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, containers: @entity.containers, readouts: @entity.readouts, traces: [ { series: [ { samples: @entity.doseSeries, label: @config.quantityLabel } ], xLabel: "step", yLabel: @config.quantityLabel } ] },
+                  { type: typography, variant: body, content: @entity.narration }
+                ] }
+            ]
+          })
+          (render-ui main {
+            type: box
+            padding: md
+            children: [
+              { type: stack, direction: vertical, gap: md, children: [
+                  { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: ADD_SMALL, label: (str/concat "+ " (str/concat (str/concat "" @config.stepSmall) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: primary },
+                    { type: button, action: ADD_LARGE, label: (str/concat "+ " (str/concat (str/concat "" @config.stepLarge) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: secondary },
+                    { type: button, action: TOGGLE_DRIP, label: (if @entity.running "Pause" "Auto-dose"), variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] }
+                ] }
+            ]
+          }))
+        (emit DOSER_UPDATED { running: @entity.running, dose: @entity.dose, bandLabel: @entity.bandLabel, done: @entity.done })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.dose 0)
+        (set @entity.done false)
+        (set @entity.running @config.autoDrip)
+        (set @entity.elapsedMs 0)
+        (let (
+            (matched (array/filter @config.bands (fn b (<= @entity.dose (object/get @b upperBound)))))
+            (band (if (> (array/len @matched) 0) (array/first @matched) (array/nth @config.bands (- (array/len @config.bands) 1))))
+          )
+          (do
+            (set @entity.bandLabel (object/get @band label))
+            (set @entity.bandColor (object/get @band color))
+            (set @entity.done (if (object/get @band terminal false) true @entity.done))
+          )
+        )
+        (set @entity.containers [
+          { x: (* @config.width 0.12), y: (* @config.height 0.3), width: (* @config.width 0.28), height: (* @config.height 0.6), divider: "none", level: (math/clamp (/ @entity.dose @config.capacity) 0 1), levelColor: @entity.bandColor, label: @config.reservoirLabel },
+          { x: (* @config.width 0.58), y: (* @config.height 0.05), width: (* @config.width 0.06), height: (* @config.height 0.55), divider: "none", level: (math/clamp (/ (- @config.capacity @entity.dose) @config.capacity) 0 1), levelColor: @config.sourceColor, label: @config.sourceLabel }
+        ])
+        (set @entity.readouts [
+          { label: @config.quantityLabel, value: (str/concat "" (math/round @entity.dose 2)) },
+          { label: @config.zoneReadoutLabel, value: @entity.bandLabel }
+        ])
+        (set @entity.doseSeries [{ x: 0, y: @entity.dose }])
+        (set @entity.narration (str/concat @config.quantityLabel (str/concat " at " (str/concat (str/concat "" (math/round @entity.dose 2)) (str/concat " — " @entity.bandLabel)))))
+        (if @config.showCanvas
+          (render-ui main {
+            type: box
+            padding: md
+            children: [
+              { type: stack, direction: vertical, gap: md, children: [
+                  { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: ADD_SMALL, label: (str/concat "+ " (str/concat (str/concat "" @config.stepSmall) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: primary },
+                    { type: button, action: ADD_LARGE, label: (str/concat "+ " (str/concat (str/concat "" @config.stepLarge) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: secondary },
+                    { type: button, action: TOGGLE_DRIP, label: (if @entity.running "Pause" "Auto-dose"), variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                  { type: chemistry-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, containers: @entity.containers, readouts: @entity.readouts, traces: [ { series: [ { samples: @entity.doseSeries, label: @config.quantityLabel } ], xLabel: "step", yLabel: @config.quantityLabel } ] },
+                  { type: typography, variant: body, content: @entity.narration }
+                ] }
+            ]
+          })
+          (render-ui main {
+            type: box
+            padding: md
+            children: [
+              { type: stack, direction: vertical, gap: md, children: [
+                  { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: ADD_SMALL, label: (str/concat "+ " (str/concat (str/concat "" @config.stepSmall) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: primary },
+                    { type: button, action: ADD_LARGE, label: (str/concat "+ " (str/concat (str/concat "" @config.stepLarge) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: secondary },
+                    { type: button, action: TOGGLE_DRIP, label: (if @entity.running "Pause" "Auto-dose"), variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] }
+                ] }
+            ]
+          }))
+        (emit DOSER_UPDATED { running: @entity.running, dose: @entity.dose, bandLabel: @entity.bandLabel, done: @entity.done })
+
+      ADD_SMALL -> idle when (and (== @entity.active true) (== @entity.done false))
+        (set @entity.dose (math/min (+ @entity.dose @config.stepSmall) @config.capacity))
+        (let (
+            (matched (array/filter @config.bands (fn b (<= @entity.dose (object/get @b upperBound)))))
+            (band (if (> (array/len @matched) 0) (array/first @matched) (array/nth @config.bands (- (array/len @config.bands) 1))))
+          )
+          (do
+            (set @entity.bandLabel (object/get @band label))
+            (set @entity.bandColor (object/get @band color))
+            (set @entity.done (if (object/get @band terminal false) true @entity.done))
+          )
+        )
+        (set @entity.containers [
+          { x: (* @config.width 0.12), y: (* @config.height 0.3), width: (* @config.width 0.28), height: (* @config.height 0.6), divider: "none", level: (math/clamp (/ @entity.dose @config.capacity) 0 1), levelColor: @entity.bandColor, label: @config.reservoirLabel },
+          { x: (* @config.width 0.58), y: (* @config.height 0.05), width: (* @config.width 0.06), height: (* @config.height 0.55), divider: "none", level: (math/clamp (/ (- @config.capacity @entity.dose) @config.capacity) 0 1), levelColor: @config.sourceColor, label: @config.sourceLabel }
+        ])
+        (set @entity.readouts [
+          { label: @config.quantityLabel, value: (str/concat "" (math/round @entity.dose 2)) },
+          { label: @config.zoneReadoutLabel, value: @entity.bandLabel }
+        ])
+        (set @entity.doseSeries (array/takeLast (array/append @entity.doseSeries { x: (array/len @entity.doseSeries), y: @entity.dose }) @config.historyLength))
+        (set @entity.narration (str/concat @config.quantityLabel (str/concat " at " (str/concat (str/concat "" (math/round @entity.dose 2)) (str/concat " — " (str/concat @entity.bandLabel (if @entity.done " — locked" (if @entity.running " — auto-dosing" " — ready"))))))))
+        (if @config.showCanvas
+          (render-ui main {
+            type: box
+            padding: md
+            children: [
+              { type: stack, direction: vertical, gap: md, children: [
+                  { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: ADD_SMALL, label: (str/concat "+ " (str/concat (str/concat "" @config.stepSmall) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: primary },
+                    { type: button, action: ADD_LARGE, label: (str/concat "+ " (str/concat (str/concat "" @config.stepLarge) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: secondary },
+                    { type: button, action: TOGGLE_DRIP, label: (if @entity.running "Pause" "Auto-dose"), variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                  { type: chemistry-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, containers: @entity.containers, readouts: @entity.readouts, traces: [ { series: [ { samples: @entity.doseSeries, label: @config.quantityLabel } ], xLabel: "step", yLabel: @config.quantityLabel } ] },
+                  { type: typography, variant: body, content: @entity.narration }
+                ] }
+            ]
+          })
+          (render-ui main {
+            type: box
+            padding: md
+            children: [
+              { type: stack, direction: vertical, gap: md, children: [
+                  { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: ADD_SMALL, label: (str/concat "+ " (str/concat (str/concat "" @config.stepSmall) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: primary },
+                    { type: button, action: ADD_LARGE, label: (str/concat "+ " (str/concat (str/concat "" @config.stepLarge) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: secondary },
+                    { type: button, action: TOGGLE_DRIP, label: (if @entity.running "Pause" "Auto-dose"), variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] }
+                ] }
+            ]
+          }))
+        (emit DOSE_ADDED { dose: @entity.dose, bandLabel: @entity.bandLabel, bandColor: @entity.bandColor, done: @entity.done })
+
+      ADD_LARGE -> idle when (and (== @entity.active true) (== @entity.done false))
+        (set @entity.dose (math/min (+ @entity.dose @config.stepLarge) @config.capacity))
+        (let (
+            (matched (array/filter @config.bands (fn b (<= @entity.dose (object/get @b upperBound)))))
+            (band (if (> (array/len @matched) 0) (array/first @matched) (array/nth @config.bands (- (array/len @config.bands) 1))))
+          )
+          (do
+            (set @entity.bandLabel (object/get @band label))
+            (set @entity.bandColor (object/get @band color))
+            (set @entity.done (if (object/get @band terminal false) true @entity.done))
+          )
+        )
+        (set @entity.containers [
+          { x: (* @config.width 0.12), y: (* @config.height 0.3), width: (* @config.width 0.28), height: (* @config.height 0.6), divider: "none", level: (math/clamp (/ @entity.dose @config.capacity) 0 1), levelColor: @entity.bandColor, label: @config.reservoirLabel },
+          { x: (* @config.width 0.58), y: (* @config.height 0.05), width: (* @config.width 0.06), height: (* @config.height 0.55), divider: "none", level: (math/clamp (/ (- @config.capacity @entity.dose) @config.capacity) 0 1), levelColor: @config.sourceColor, label: @config.sourceLabel }
+        ])
+        (set @entity.readouts [
+          { label: @config.quantityLabel, value: (str/concat "" (math/round @entity.dose 2)) },
+          { label: @config.zoneReadoutLabel, value: @entity.bandLabel }
+        ])
+        (set @entity.doseSeries (array/takeLast (array/append @entity.doseSeries { x: (array/len @entity.doseSeries), y: @entity.dose }) @config.historyLength))
+        (set @entity.narration (str/concat @config.quantityLabel (str/concat " at " (str/concat (str/concat "" (math/round @entity.dose 2)) (str/concat " — " (str/concat @entity.bandLabel (if @entity.done " — locked" (if @entity.running " — auto-dosing" " — ready"))))))))
+        (if @config.showCanvas
+          (render-ui main {
+            type: box
+            padding: md
+            children: [
+              { type: stack, direction: vertical, gap: md, children: [
+                  { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: ADD_SMALL, label: (str/concat "+ " (str/concat (str/concat "" @config.stepSmall) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: primary },
+                    { type: button, action: ADD_LARGE, label: (str/concat "+ " (str/concat (str/concat "" @config.stepLarge) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: secondary },
+                    { type: button, action: TOGGLE_DRIP, label: (if @entity.running "Pause" "Auto-dose"), variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                  { type: chemistry-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, containers: @entity.containers, readouts: @entity.readouts, traces: [ { series: [ { samples: @entity.doseSeries, label: @config.quantityLabel } ], xLabel: "step", yLabel: @config.quantityLabel } ] },
+                  { type: typography, variant: body, content: @entity.narration }
+                ] }
+            ]
+          })
+          (render-ui main {
+            type: box
+            padding: md
+            children: [
+              { type: stack, direction: vertical, gap: md, children: [
+                  { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: ADD_SMALL, label: (str/concat "+ " (str/concat (str/concat "" @config.stepSmall) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: primary },
+                    { type: button, action: ADD_LARGE, label: (str/concat "+ " (str/concat (str/concat "" @config.stepLarge) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: secondary },
+                    { type: button, action: TOGGLE_DRIP, label: (if @entity.running "Pause" "Auto-dose"), variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] }
+                ] }
+            ]
+          }))
+        (emit DOSE_ADDED { dose: @entity.dose, bandLabel: @entity.bandLabel, bandColor: @entity.bandColor, done: @entity.done })
+
+      TOGGLE_DRIP -> idle when (== @entity.active true)
+        (set @entity.running (not @entity.running))
+        (set @entity.elapsedMs 0)
+        (if @config.showCanvas
+          (render-ui main {
+            type: box
+            padding: md
+            children: [
+              { type: stack, direction: vertical, gap: md, children: [
+                  { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: ADD_SMALL, label: (str/concat "+ " (str/concat (str/concat "" @config.stepSmall) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: primary },
+                    { type: button, action: ADD_LARGE, label: (str/concat "+ " (str/concat (str/concat "" @config.stepLarge) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: secondary },
+                    { type: button, action: TOGGLE_DRIP, label: (if @entity.running "Pause" "Auto-dose"), variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                  { type: chemistry-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, containers: @entity.containers, readouts: @entity.readouts, traces: [ { series: [ { samples: @entity.doseSeries, label: @config.quantityLabel } ], xLabel: "step", yLabel: @config.quantityLabel } ] },
+                  { type: typography, variant: body, content: @entity.narration }
+                ] }
+            ]
+          })
+          (render-ui main {
+            type: box
+            padding: md
+            children: [
+              { type: stack, direction: vertical, gap: md, children: [
+                  { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: ADD_SMALL, label: (str/concat "+ " (str/concat (str/concat "" @config.stepSmall) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: primary },
+                    { type: button, action: ADD_LARGE, label: (str/concat "+ " (str/concat (str/concat "" @config.stepLarge) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: secondary },
+                    { type: button, action: TOGGLE_DRIP, label: (if @entity.running "Pause" "Auto-dose"), variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] }
+                ] }
+            ]
+          }))
+        (emit DOSER_UPDATED { running: @entity.running, dose: @entity.dose, bandLabel: @entity.bandLabel, done: @entity.done })
+
+      RESET -> idle when (== @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.dose 0)
+        (set @entity.done false)
+        (set @entity.running @config.autoDrip)
+        (set @entity.elapsedMs 0)
+        (let (
+            (matched (array/filter @config.bands (fn b (<= @entity.dose (object/get @b upperBound)))))
+            (band (if (> (array/len @matched) 0) (array/first @matched) (array/nth @config.bands (- (array/len @config.bands) 1))))
+          )
+          (do
+            (set @entity.bandLabel (object/get @band label))
+            (set @entity.bandColor (object/get @band color))
+            (set @entity.done (if (object/get @band terminal false) true @entity.done))
+          )
+        )
+        (set @entity.containers [
+          { x: (* @config.width 0.12), y: (* @config.height 0.3), width: (* @config.width 0.28), height: (* @config.height 0.6), divider: "none", level: (math/clamp (/ @entity.dose @config.capacity) 0 1), levelColor: @entity.bandColor, label: @config.reservoirLabel },
+          { x: (* @config.width 0.58), y: (* @config.height 0.05), width: (* @config.width 0.06), height: (* @config.height 0.55), divider: "none", level: (math/clamp (/ (- @config.capacity @entity.dose) @config.capacity) 0 1), levelColor: @config.sourceColor, label: @config.sourceLabel }
+        ])
+        (set @entity.readouts [
+          { label: @config.quantityLabel, value: (str/concat "" (math/round @entity.dose 2)) },
+          { label: @config.zoneReadoutLabel, value: @entity.bandLabel }
+        ])
+        (set @entity.doseSeries [{ x: 0, y: @entity.dose }])
+        (set @entity.narration (str/concat @config.quantityLabel (str/concat " at " (str/concat (str/concat "" (math/round @entity.dose 2)) (str/concat " — " @entity.bandLabel)))))
+        (if @config.showCanvas
+          (render-ui main {
+            type: box
+            padding: md
+            children: [
+              { type: stack, direction: vertical, gap: md, children: [
+                  { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: ADD_SMALL, label: (str/concat "+ " (str/concat (str/concat "" @config.stepSmall) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: primary },
+                    { type: button, action: ADD_LARGE, label: (str/concat "+ " (str/concat (str/concat "" @config.stepLarge) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: secondary },
+                    { type: button, action: TOGGLE_DRIP, label: (if @entity.running "Pause" "Auto-dose"), variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] },
+                  { type: chemistry-canvas, width: @config.width, height: @config.height, backgroundColor: @config.backgroundColor, containers: @entity.containers, readouts: @entity.readouts, traces: [ { series: [ { samples: @entity.doseSeries, label: @config.quantityLabel } ], xLabel: "step", yLabel: @config.quantityLabel } ] },
+                  { type: typography, variant: body, content: @entity.narration }
+                ] }
+            ]
+          })
+          (render-ui main {
+            type: box
+            padding: md
+            children: [
+              { type: stack, direction: vertical, gap: md, children: [
+                  { type: typography, variant: h4, content: @entity.title },
+                { type: stack, direction: horizontal, gap: sm, children: [
+                    { type: button, action: ADD_SMALL, label: (str/concat "+ " (str/concat (str/concat "" @config.stepSmall) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: primary },
+                    { type: button, action: ADD_LARGE, label: (str/concat "+ " (str/concat (str/concat "" @config.stepLarge) (if (== @config.unit "") "" (str/concat " " @config.unit)))), variant: secondary },
+                    { type: button, action: TOGGLE_DRIP, label: (if @entity.running "Pause" "Auto-dose"), variant: secondary },
+                    { type: button, action: RESET, label: "Reset", variant: ghost }
+                  ] }
+                ] }
+            ]
+          }))
+        (emit DOSE_RESET { })
+    }
+
+    ticks {
+      dripTick every 32ms
+        when (and (== @entity.active true) (and (== @entity.running true) (== @entity.done false)))
+        (set @entity.elapsedMs (+ @entity.elapsedMs 32))
+        (when (>= @entity.elapsedMs @config.dripIntervalMs)
+          (do
+            (set @entity.elapsedMs 0)
+            (emit ADD_SMALL { })
+          ))
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+    }
+
+    emits {
+      DOSE_ADDED -> external {
+        dose : number
+        bandLabel : string
+        bandColor : string
+        done : boolean
+      }
+        @description "Fires after every dose increase — from the small/large add buttons or an auto-drip tick — with the accumulated dose and its classified band. A composed sibling trait transitions on it to recompute a domain-specific response (e.g. a chemistry pH curve) and repaint the scene it owns. A harmless no-op when the atom runs standalone."
+        @synonyms "dose added, increment, add, drip, titrant added, quantity added"
+        @tier "domain"
+      DOSE_RESET -> external {
+      }
+        @description "Fires on Reset after the dose, band, and done flag re-zero. A composed sibling trait reseeds its own domain state from config on it. A harmless no-op when the atom runs standalone."
+        @synonyms "reset, reseed, restart, clear"
+        @tier "domain"
+      DOSER_UPDATED -> external {
+        running : boolean
+        dose : number
+        bandLabel : string
+        done : boolean
+      }
+        @description "Fires on INIT/MODE_SELECTED/auto-drip toggle with the transport-level state — running flag, dose, current band, done — so a composed sibling trait can repaint its own shell. A harmless no-op when the atom runs standalone."
+        @synonyms "drip toggle, running state, auto-dose"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Doser"
+        @label "Title"
+        @description "Title shown above the instrument."
+        @tier "presentation"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      backgroundColor : string = "#fafafa"
+        @label "Background Color"
+        @description "Canvas background color."
+        @tier "presentation"
+      showCanvas : boolean = true
+        @label "Show Canvas"
+        @description "When true (the default, standalone use) the instrument renders its own reservoir/source canvas and narration below the control strip. Set false when a domain sibling trait composes this atom via @rebindable and owns the accurate scene render itself — then only the control strip (add/drip/reset buttons) embeds via @trait.<name>, avoiding a duplicate canvas."
+        @tier "presentation"
+      unit : string = ""
+        @label "Unit"
+        @description "Unit suffix appended to the step-size button labels (e.g. \"mL\", \"mg\", \"units\"); empty means no unit shown."
+        @tier "domain"
+      quantityLabel : string = "Dose"
+        @label "Quantity Label"
+        @description "Label used for the accumulated-quantity readout and in the narration line."
+        @synonyms "quantity, amount, dose, volume, level"
+        @tier "domain"
+      zoneReadoutLabel : string = "Zone"
+        @label "Zone Readout Label"
+        @description "Label used for the current-band readout row."
+        @tier "presentation"
+      stepSmall : number = 1
+        @label "Small Step"
+        @description "Quantity added per press of the fine add button, and per auto-drip tick — for precise control near a band boundary."
+        @tier "domain"
+      stepLarge : number = 5
+        @label "Large Step"
+        @description "Quantity added per press of the coarse add button."
+        @tier "domain"
+      capacity : number = 100
+        @label "Capacity"
+        @description "Maximum total dose the source can deliver; the source vessel drains to empty and additions clamp once accumulated dose reaches this cap."
+        @tier "domain"
+      autoDrip : boolean = false
+        @label "Auto Drip"
+        @description "When true, INIT/MODE_SELECTED/Reset start the drip clock adding a small increment each interval; toggle live with the Auto-dose/Pause button."
+        @tier "domain"
+      dripIntervalMs : number = 500
+        @label "Drip Interval (ms)"
+        @description "Milliseconds of running clock per auto-drip increment — the 32ms base tick accumulates elapsed time and adds a small step each time this interval elapses."
+        @tier "domain"
+      historyLength : number = 300
+        @label "Dose History"
+        @description "Maximum points kept in the dose-history trace; older points drop off once exceeded."
+        @tier "domain"
+      bands : [DoserBand] = [
+        { upperBound: 50, label: "Low", color: "#94a3b8", terminal: false },
+        { upperBound: 999999999, label: "High", color: "#16a34a", terminal: true }
+      ]
+        @label "Bands"
+        @description "Ordered ascending roster of dose bands/zones — each carries the dose upper bound it covers, a label, a color, and whether crossing into it is terminal (irreversible; sets done true until Reset). The accumulated dose is classified into the first band whose upperBound it does not exceed, falling through to the last band beyond all bounds."
+        @synonyms "zone, band, threshold, region, stage, phase, tier"
+        @tier "domain"
+      reservoirLabel : string = "Reservoir"
+        @label "Reservoir Label"
+        @description "Label for the vessel that fills as dose accumulates."
+        @synonyms "reservoir, beaker, tank, container, receiving vessel"
+        @tier "presentation"
+      sourceLabel : string = "Source"
+        @label "Source Label"
+        @description "Label for the vessel that drains as dose is delivered from it."
+        @synonyms "source, burette, supply, dispenser"
+        @tier "presentation"
+      sourceColor : string = "#60a5fa"
+        @label "Source Color"
+        @description "Fill color for the source vessel."
+        @tier "presentation"
+    }
+  }
+
+  page "/learn-doser" as LearnDoserPage -> LearnDoserSim
+}

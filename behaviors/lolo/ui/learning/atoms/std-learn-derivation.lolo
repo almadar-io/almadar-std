@@ -1,0 +1,428 @@
+app std-learn-derivation "1.0.0"
+"Generic goal-directed derivation/proof-builder instrument — config-declared starting lines (facts and two-sided links) sit in a scrollable derivation panel with per-line badges, a roster of config-declared candidate steps render as buttons, and picking one dynamically matches it against the CURRENT lines (a left/right side of some link plus a same/opposite negation sense) to derive a new line, appending it with config-declared badge styling on success or surfacing a config-declared feedback string on failure; an inline clock can auto-apply the first applicable candidate every autoApplyIntervalMs while running, a Reset restores the starting lines, and the goal is reached when a derived line's label matches the config-declared goal label. Left/right and same/opposite are structural roles, not domain vocabulary, so the same matching mechanism serves propositional inference, chained implications, precursor/product chemistry, or any other two-sided-relation derivation on a biology-canvas-free text panel. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
+orbital LearnDerivationOrbital {
+  type LearnDerivationLine = {
+    id : string!
+    label : string!
+    kind : "fact" | "link"!
+    subject : string
+    negated : boolean
+    leftSubject : string
+    leftNegated : boolean
+    rightSubject : string
+    rightNegated : boolean
+    badgeLabel : string
+    badgeVariant : string
+  }
+  type LearnDerivationCandidate = {
+    key : string!
+    label : string!
+    matchSide : "left" | "right"!
+    matchNegationMode : "same" | "opposite"!
+    deriveSide : "left" | "right"!
+    deriveNegationMode : "same" | "invert"!
+    resultBadgeLabel : string
+    resultBadgeVariant : string
+    noMatchFeedback : string
+  }
+
+  entity LearnDerivationScene [runtime] {
+    id : string!
+    active : boolean = false
+    title : string
+    lines : [LearnDerivationLine]
+    feedback : string
+    goalReached : boolean = false
+    running : boolean = false
+    elapsedMs : number = 0
+    narration : string
+    renderChildren : [node]
+  }
+
+  trait LearnDerivationSim -> @rebindable LearnDerivationScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (== @config.matchMode "")
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.feedback "")
+        (set @entity.narration "")
+        (set @entity.goalReached false)
+        (set @entity.running @config.autoRun)
+        (set @entity.elapsedMs 0)
+        (set @entity.lines @config.premises)
+        (set @entity.renderChildren [
+          { type: typography, variant: h4, content: @entity.title },
+          { type: typography, variant: body, content: (str/concat @config.goalPrefix @config.goalLabel) },
+          { type: stack, direction: vertical, gap: xs, style: { maxHeight: (str/concat @config.height "px"), overflowY: "auto" }, children: (array/map @entity.lines (fn line
+              { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: badge, label: @line.badgeLabel, variant: @line.badgeVariant },
+                  { type: typography, variant: body, content: @line.label }
+                ] }
+            )) },
+          { type: stack, direction: horizontal, gap: sm, children: (array/map @config.candidates (fn c { type: button, action: APPLY_STEP, actionPayload: { candidateKey: @c.key }, label: @c.label, variant: primary })) },
+          { type: stack, direction: horizontal, gap: sm, children: [
+              { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Run"), variant: secondary },
+              { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+            ] },
+          { type: typography, variant: caption, content: @entity.narration },
+          { type: typography, variant: caption, content: (if @entity.goalReached @config.goalReachedMessage "") }
+        ])
+        (render-ui main {
+          type: box
+          padding: md
+          maxWidth: (str/concat @config.width "px")
+          children: [
+            { type: stack, direction: vertical, gap: md, children: @entity.renderChildren }
+          ]
+        })
+
+      MODE_SELECTED -> idle when (== ?mode @config.matchMode)
+        (set @entity.active true)
+        (set @entity.title @config.title)
+        (set @entity.feedback "")
+        (set @entity.narration "")
+        (set @entity.goalReached false)
+        (set @entity.running @config.autoRun)
+        (set @entity.elapsedMs 0)
+        (set @entity.lines @config.premises)
+        (set @entity.renderChildren [
+          { type: typography, variant: h4, content: @entity.title },
+          { type: typography, variant: body, content: (str/concat @config.goalPrefix @config.goalLabel) },
+          { type: stack, direction: vertical, gap: xs, style: { maxHeight: (str/concat @config.height "px"), overflowY: "auto" }, children: (array/map @entity.lines (fn line
+              { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: badge, label: @line.badgeLabel, variant: @line.badgeVariant },
+                  { type: typography, variant: body, content: @line.label }
+                ] }
+            )) },
+          { type: stack, direction: horizontal, gap: sm, children: (array/map @config.candidates (fn c { type: button, action: APPLY_STEP, actionPayload: { candidateKey: @c.key }, label: @c.label, variant: primary })) },
+          { type: stack, direction: horizontal, gap: sm, children: [
+              { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Run"), variant: secondary },
+              { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+            ] },
+          { type: typography, variant: caption, content: @entity.narration },
+          { type: typography, variant: caption, content: (if @entity.goalReached @config.goalReachedMessage "") }
+        ])
+        (render-ui main {
+          type: box
+          padding: md
+          maxWidth: (str/concat @config.width "px")
+          children: [
+            { type: stack, direction: vertical, gap: md, children: @entity.renderChildren }
+          ]
+        })
+
+      APPLY_STEP -> idle when (== @entity.active true)
+        (let (
+            (candidate (array/first (array/filter @config.candidates (fn c (== @c.key ?candidateKey)))))
+            (links (array/filter @entity.lines (fn l (== @l.kind "link"))))
+            (facts (array/filter @entity.lines (fn l (== @l.kind "fact"))))
+            (wantLeft (== @candidate.matchSide "left"))
+            (matchSense (== @candidate.matchNegationMode "same"))
+            (activeLink (array/first (array/filter @links (fn l (let (
+                  (linkSubject (if @wantLeft @l.leftSubject @l.rightSubject))
+                  (linkNegated (if @wantLeft @l.leftNegated @l.rightNegated))
+                  (requiredNegated (if @matchSense @linkNegated (not @linkNegated)))
+                )
+                (array/some @facts (fn f (and (== @f.subject @linkSubject) (== @f.negated @requiredNegated)))))))))
+            (deriveLeft (== @candidate.deriveSide "left"))
+            (deriveSense (== @candidate.deriveNegationMode "same"))
+            (derivedSubject (if (!= @activeLink null) (if @deriveLeft @activeLink.leftSubject @activeLink.rightSubject) ""))
+            (derivedSideNegated (if (!= @activeLink null) (if @deriveLeft @activeLink.leftNegated @activeLink.rightNegated) false))
+            (derivedNegated (if @deriveSense @derivedSideNegated (not @derivedSideNegated)))
+            (derivedLabel (if (!= @activeLink null) (if @derivedNegated (str/concat @config.negationSymbol @derivedSubject) @derivedSubject) ""))
+            (alreadyPresent (array/some @entity.lines (fn l (== @l.label @derivedLabel))))
+            (canDerive (and (!= @activeLink null) (not @alreadyPresent)))
+          )
+          (do
+            (set @entity.lines (if @canDerive
+              (array/concat @entity.lines [{ id: (str/concat "line-" (array/len @entity.lines)), label: @derivedLabel, kind: "fact", subject: @derivedSubject, negated: @derivedNegated, badgeLabel: @candidate.resultBadgeLabel, badgeVariant: @candidate.resultBadgeVariant }])
+              @entity.lines))
+            (set @entity.feedback (if @canDerive
+              (str/concat "Derived " @derivedLabel " via " @candidate.label ".")
+              (if @alreadyPresent
+                (str/concat @derivedLabel " is already in the derivation.")
+                @candidate.noMatchFeedback)))
+            (set @entity.goalReached (if @canDerive (== @derivedLabel @config.goalLabel) @entity.goalReached))
+            (set @entity.narration @entity.feedback)
+          )
+        )
+        (set @entity.renderChildren [
+          { type: typography, variant: h4, content: @entity.title },
+          { type: typography, variant: body, content: (str/concat @config.goalPrefix @config.goalLabel) },
+          { type: stack, direction: vertical, gap: xs, style: { maxHeight: (str/concat @config.height "px"), overflowY: "auto" }, children: (array/map @entity.lines (fn line
+              { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: badge, label: @line.badgeLabel, variant: @line.badgeVariant },
+                  { type: typography, variant: body, content: @line.label }
+                ] }
+            )) },
+          { type: stack, direction: horizontal, gap: sm, children: (array/map @config.candidates (fn c { type: button, action: APPLY_STEP, actionPayload: { candidateKey: @c.key }, label: @c.label, variant: primary })) },
+          { type: stack, direction: horizontal, gap: sm, children: [
+              { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Run"), variant: secondary },
+              { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+            ] },
+          { type: typography, variant: caption, content: @entity.narration },
+          { type: typography, variant: caption, content: (if @entity.goalReached @config.goalReachedMessage "") }
+        ])
+        (render-ui main {
+          type: box
+          padding: md
+          maxWidth: (str/concat @config.width "px")
+          children: [
+            { type: stack, direction: vertical, gap: md, children: @entity.renderChildren }
+          ]
+        })
+        (emit DERIVATION_UPDATED { feedback: @entity.feedback, goalReached: @entity.goalReached, lineCount: (array/len @entity.lines), narration: @entity.narration })
+
+      TOGGLE_RUN -> idle when (== @entity.active true)
+        (set @entity.running (not @entity.running))
+        (set @entity.feedback (if @entity.running @config.autoRunOnMessage @config.autoRunOffMessage))
+        (set @entity.narration @entity.feedback)
+        (set @entity.renderChildren [
+          { type: typography, variant: h4, content: @entity.title },
+          { type: typography, variant: body, content: (str/concat @config.goalPrefix @config.goalLabel) },
+          { type: stack, direction: vertical, gap: xs, style: { maxHeight: (str/concat @config.height "px"), overflowY: "auto" }, children: (array/map @entity.lines (fn line
+              { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: badge, label: @line.badgeLabel, variant: @line.badgeVariant },
+                  { type: typography, variant: body, content: @line.label }
+                ] }
+            )) },
+          { type: stack, direction: horizontal, gap: sm, children: (array/map @config.candidates (fn c { type: button, action: APPLY_STEP, actionPayload: { candidateKey: @c.key }, label: @c.label, variant: primary })) },
+          { type: stack, direction: horizontal, gap: sm, children: [
+              { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Run"), variant: secondary },
+              { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+            ] },
+          { type: typography, variant: caption, content: @entity.narration },
+          { type: typography, variant: caption, content: (if @entity.goalReached @config.goalReachedMessage "") }
+        ])
+        (render-ui main {
+          type: box
+          padding: md
+          maxWidth: (str/concat @config.width "px")
+          children: [
+            { type: stack, direction: vertical, gap: md, children: @entity.renderChildren }
+          ]
+        })
+        (emit DERIVATION_UPDATED { feedback: @entity.feedback, goalReached: @entity.goalReached, lineCount: (array/len @entity.lines), narration: @entity.narration })
+
+      RESET -> idle when (== @entity.active true)
+        (set @entity.lines @config.premises)
+        (set @entity.feedback "")
+        (set @entity.narration "")
+        (set @entity.goalReached false)
+        (set @entity.running @config.autoRun)
+        (set @entity.elapsedMs 0)
+        (set @entity.renderChildren [
+          { type: typography, variant: h4, content: @entity.title },
+          { type: typography, variant: body, content: (str/concat @config.goalPrefix @config.goalLabel) },
+          { type: stack, direction: vertical, gap: xs, style: { maxHeight: (str/concat @config.height "px"), overflowY: "auto" }, children: (array/map @entity.lines (fn line
+              { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: badge, label: @line.badgeLabel, variant: @line.badgeVariant },
+                  { type: typography, variant: body, content: @line.label }
+                ] }
+            )) },
+          { type: stack, direction: horizontal, gap: sm, children: (array/map @config.candidates (fn c { type: button, action: APPLY_STEP, actionPayload: { candidateKey: @c.key }, label: @c.label, variant: primary })) },
+          { type: stack, direction: horizontal, gap: sm, children: [
+              { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Run"), variant: secondary },
+              { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+            ] },
+          { type: typography, variant: caption, content: @entity.narration },
+          { type: typography, variant: caption, content: (if @entity.goalReached @config.goalReachedMessage "") }
+        ])
+        (render-ui main {
+          type: box
+          padding: md
+          maxWidth: (str/concat @config.width "px")
+          children: [
+            { type: stack, direction: vertical, gap: md, children: @entity.renderChildren }
+          ]
+        })
+        (emit DERIVATION_UPDATED { feedback: @entity.feedback, goalReached: @entity.goalReached, lineCount: (array/len @entity.lines), narration: @entity.narration })
+    }
+
+    ticks {
+      derivationTick every 32ms
+        when (and (== @entity.active true) (and (== @entity.running true) (not (== @entity.goalReached true))))
+        (set @entity.elapsedMs (+ @entity.elapsedMs 32))
+        (when (>= @entity.elapsedMs @config.autoApplyIntervalMs)
+          (do
+            (set @entity.elapsedMs 0)
+            (let (
+                (links (array/filter @entity.lines (fn l (== @l.kind "link"))))
+                (facts (array/filter @entity.lines (fn l (== @l.kind "fact"))))
+                (evaluated (array/map @config.candidates (fn c (let (
+                      (wantLeft (== @c.matchSide "left"))
+                      (matchSense (== @c.matchNegationMode "same"))
+                      (activeLink (array/first (array/filter @links (fn l (let (
+                            (linkSubject (if @wantLeft @l.leftSubject @l.rightSubject))
+                            (linkNegated (if @wantLeft @l.leftNegated @l.rightNegated))
+                            (requiredNegated (if @matchSense @linkNegated (not @linkNegated)))
+                          )
+                          (array/some @facts (fn f (and (== @f.subject @linkSubject) (== @f.negated @requiredNegated)))))))))
+                      (deriveLeft (== @c.deriveSide "left"))
+                      (deriveSense (== @c.deriveNegationMode "same"))
+                      (derivedSubject (if (!= @activeLink null) (if @deriveLeft @activeLink.leftSubject @activeLink.rightSubject) ""))
+                      (derivedSideNegated (if (!= @activeLink null) (if @deriveLeft @activeLink.leftNegated @activeLink.rightNegated) false))
+                      (derivedNegated (if @deriveSense @derivedSideNegated (not @derivedSideNegated)))
+                      (derivedLabel (if (!= @activeLink null) (if @derivedNegated (str/concat @config.negationSymbol @derivedSubject) @derivedSubject) ""))
+                      (alreadyPresent (array/some @entity.lines (fn l (== @l.label @derivedLabel))))
+                      (applicable (and (!= @activeLink null) (not @alreadyPresent)))
+                    )
+                    { label: @c.label, resultBadgeLabel: @c.resultBadgeLabel, resultBadgeVariant: @c.resultBadgeVariant, derivedSubject: @derivedSubject, derivedNegated: @derivedNegated, derivedLabel: @derivedLabel, applicable: @applicable }
+                  ))))
+                (match (array/first (array/filter @evaluated (fn e (== @e.applicable true)))))
+                (found (!= @match null))
+              )
+              (do
+                (set @entity.lines (if @found
+                  (array/concat @entity.lines [{ id: (str/concat "line-" (array/len @entity.lines)), label: @match.derivedLabel, kind: "fact", subject: @match.derivedSubject, negated: @match.derivedNegated, badgeLabel: @match.resultBadgeLabel, badgeVariant: @match.resultBadgeVariant }])
+                  @entity.lines))
+                (set @entity.feedback (if @found
+                  (str/concat "Derived " @match.derivedLabel " via " @match.label ".")
+                  @config.noStepAvailableMessage))
+                (set @entity.goalReached (if @found (== @match.derivedLabel @config.goalLabel) @entity.goalReached))
+                (set @entity.narration @entity.feedback)
+              )
+            )
+            (set @entity.renderChildren [
+              { type: typography, variant: h4, content: @entity.title },
+              { type: typography, variant: body, content: (str/concat @config.goalPrefix @config.goalLabel) },
+              { type: stack, direction: vertical, gap: xs, style: { maxHeight: (str/concat @config.height "px"), overflowY: "auto" }, children: (array/map @entity.lines (fn line
+                  { type: stack, direction: horizontal, gap: sm, children: [
+                      { type: badge, label: @line.badgeLabel, variant: @line.badgeVariant },
+                      { type: typography, variant: body, content: @line.label }
+                    ] }
+                )) },
+              { type: stack, direction: horizontal, gap: sm, children: (array/map @config.candidates (fn c { type: button, action: APPLY_STEP, actionPayload: { candidateKey: @c.key }, label: @c.label, variant: primary })) },
+              { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: button, action: TOGGLE_RUN, label: (if @entity.running "Pause" "Run"), variant: secondary },
+                  { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+                ] },
+              { type: typography, variant: caption, content: @entity.narration },
+              { type: typography, variant: caption, content: (if @entity.goalReached @config.goalReachedMessage "") }
+            ])
+            (render-ui main {
+              type: box
+              padding: md
+              maxWidth: (str/concat @config.width "px")
+              children: [
+                { type: stack, direction: vertical, gap: md, children: @entity.renderChildren }
+              ]
+            })
+            (emit DERIVATION_UPDATED { feedback: @entity.feedback, goalReached: @entity.goalReached, lineCount: (array/len @entity.lines), narration: @entity.narration })
+          ))
+    }
+
+    listens {
+      MODE_SELECTED {
+        mode : string
+      }
+        @description "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null."
+        @tier "domain"
+      APPLY_STEP {
+        candidateKey : string
+      }
+        @description "Learner clicked a candidate-step button to try to derive the next line: the candidate's matchSide/matchNegationMode is matched against the current lines, and on success its deriveSide/deriveNegationMode determines the appended line."
+        @tier "domain"
+      TOGGLE_RUN {
+      }
+        @description "Learner toggled auto-derive: while running, the tick applies the first applicable candidate automatically every autoApplyIntervalMs."
+        @tier "domain"
+      RESET {
+      }
+        @description "Learner reset the derivation: lines restore to the config-declared starting premises, feedback/narration clear, and goalReached/running reset."
+        @tier "domain"
+    }
+
+    emits {
+      DERIVATION_UPDATED -> external {
+        feedback : string
+        goalReached : boolean
+        lineCount : number
+        narration : string
+      }
+        @description "The derivation state after each learner action — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "derivation update, proof step, derived line, candidate applied, goal reached"
+        @tier "domain"
+    }
+
+    config {
+      matchMode : string = ""
+        @label "Match Mode"
+        @description "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT."
+        @tier "presentation"
+      title : string = "Derivation Lab"
+        @label "Title"
+        @description "Title shown above the derivation panel."
+        @tier "presentation"
+      autoRun : boolean = false
+        @label "Auto Run"
+        @description "When true, INIT/MODE_SELECTED/Reset start the tick auto-applying candidates; toggle live with the Run/Pause button."
+        @tier "domain"
+      autoApplyIntervalMs : number = 800
+        @label "Auto-Apply Interval (ms)"
+        @description "Milliseconds of running clock per automatic candidate application — the 32ms base tick accumulates elapsed time and applies the first applicable candidate each time this interval elapses."
+        @tier "domain"
+      premises : [LearnDerivationLine] = [
+        { id: "given-a", label: "A", kind: "fact", subject: "A", negated: false, badgeLabel: "GIVEN", badgeVariant: "neutral" },
+        { id: "given-a-implies-b", label: "A → B", kind: "link", leftSubject: "A", leftNegated: false, rightSubject: "B", rightNegated: false, badgeLabel: "RULE", badgeVariant: "info" }
+      ]
+        @label "Premises"
+        @description "The starting lines of the derivation: plain facts (subject/negated) and two-sided links (leftSubject/leftNegated/rightSubject/rightNegated) the learner combines with candidate steps. Each line carries its own badgeLabel/badgeVariant."
+        @synonyms "premise, given, starting line, hypothesis, starting statement"
+        @tier "domain"
+      candidates : [LearnDerivationCandidate] = [
+        { key: "FORWARD", label: "Forward Rule", matchSide: "left", matchNegationMode: "same", deriveSide: "right", deriveNegationMode: "same", resultBadgeLabel: "DERIVED", resultBadgeVariant: "success", noMatchFeedback: "No matching premises yet for the forward rule." },
+        { key: "BACKWARD", label: "Backward Rule", matchSide: "right", matchNegationMode: "opposite", deriveSide: "left", deriveNegationMode: "invert", resultBadgeLabel: "DERIVED", resultBadgeVariant: "success", noMatchFeedback: "No matching premises yet for the backward rule." }
+      ]
+        @label "Candidates"
+        @description "Candidate steps offered as buttons. Each declares which side of a link it matches against a current fact (matchSide/matchNegationMode) and which side it derives (deriveSide/deriveNegationMode) — left/right and same/opposite/invert are structural roles, not domain vocabulary, so the same two candidates can encode modus ponens/modus tollens, a forward/backward chemical rule, or any other two-sided derivation pair."
+        @synonyms "candidate, rule, step, inference rule, derivation rule, deduction rule"
+        @tier "domain"
+      goalLabel : string = "B"
+        @label "Goal"
+        @description "The line label the learner is trying to derive; goalReached fires when a newly derived line's label equals this."
+        @synonyms "target, goal, derivation target, conclusion"
+        @tier "domain"
+      goalPrefix : string = "Goal: derive "
+        @label "Goal Caption Prefix"
+        @description "Text prepended to goalLabel to form the goal caption shown above the derivation panel."
+        @tier "presentation"
+      goalReachedMessage : string = "Goal reached."
+        @label "Goal Reached Message"
+        @description "Caption shown once goalReached is true."
+        @tier "presentation"
+      noStepAvailableMessage : string = "No further steps are available yet."
+        @label "No Step Available Message"
+        @description "Feedback shown when the auto-apply tick finds no applicable candidate."
+        @tier "presentation"
+      autoRunOnMessage : string = "Auto-stepping — tick applies the next available step."
+        @label "Auto Run On Message"
+        @description "Feedback shown when Run is toggled on."
+        @tier "presentation"
+      autoRunOffMessage : string = "Paused — apply steps manually."
+        @label "Auto Run Off Message"
+        @description "Feedback shown when Run is toggled off (Pause)."
+        @tier "presentation"
+      negationSymbol : string = "¬"
+        @label "Negation Symbol"
+        @description "Prefix prepended to a derived line's label when it is negated."
+        @tier "presentation"
+      resetLabel : string = "Reset"
+        @label "Reset Button Label"
+        @description "Label text for the button that restores the starting premises."
+        @tier "presentation"
+      width : number = 600
+        @label "Width"
+        @description "Maximum width of the panel, in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Maximum height of the scrollable derivation panel, in pixels."
+        @tier "presentation"
+    }
+  }
+
+  page "/learn-derivation" as LearnDerivationPage -> LearnDerivationSim
+}

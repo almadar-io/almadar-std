@@ -64,6 +64,15 @@
         "parent": "trt_01KZEFWYXP5EK4MMGJG1PAGTNG",
         "renames": []
       },
+      "evt_01M0C5Q7CX6XJDQZ9YRAZJGB0K": {
+        "bakedName": "TOGGLE_RUN",
+        "curName": "TOGGLE_RUN",
+        "id": "evt_01M0C5Q7CX6XJDQZ9YRAZJGB0K",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZEFWYXP5EK4MMGJG1PAGTNG",
+        "renames": []
+      },
       "orb_01KZEFWYXPQ981SKZVC2A5E2Q9": {
         "bakedName": "LearnClassifyOrbital",
         "curName": "LearnClassifyOrbital",
@@ -158,6 +167,21 @@
             "default": false,
             "name": "roundComplete",
             "type": "boolean"
+          },
+          {
+            "default": false,
+            "name": "running",
+            "type": "boolean"
+          },
+          {
+            "default": 0.0,
+            "name": "elapsedMs",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "score",
+            "type": "number"
           },
           {
             "items": {
@@ -395,11 +419,25 @@
               "tier": "presentation",
               "type": "string"
             },
+            "advanceMs": {
+              "default": 900.0,
+              "description": "Milliseconds between automatic advances while running — the 32ms base tick accumulates elapsed time and fires ADVANCE each time this interval elapses.",
+              "label": "Auto-Advance Interval (ms)",
+              "tier": "domain",
+              "type": "number"
+            },
             "animate": {
               "default": false,
               "description": "Enable continuous redraw loop.",
               "label": "Animate",
               "tier": "presentation",
+              "type": "boolean"
+            },
+            "autoRun": {
+              "default": false,
+              "description": "When true the advance clock starts on load and the drill flips to the next item every advanceMs milliseconds; toggle live with the Auto/Pause button.",
+              "label": "Auto Run",
+              "tier": "domain",
               "type": "boolean"
             },
             "backgroundColor": {
@@ -508,6 +546,26 @@
                     "required": false,
                     "type": "string"
                   },
+                  "options": {
+                    "items": {
+                      "properties": {
+                        "category": {
+                          "name": "category",
+                          "required": true,
+                          "type": "string"
+                        },
+                        "label": {
+                          "name": "label",
+                          "required": true,
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "name": "options",
+                    "required": false,
+                    "type": "array"
+                  },
                   "text": {
                     "name": "text",
                     "required": true,
@@ -521,6 +579,13 @@
               "tier": "domain",
               "type": "[LearnClassifyItem]"
             },
+            "loopRound": {
+              "default": false,
+              "description": "When true the item cursor wraps past the last item forever (a looping drill) instead of ending the round at the summary screen.",
+              "label": "Loop Round",
+              "tier": "domain",
+              "type": "boolean"
+            },
             "matchMode": {
               "default": "",
               "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
@@ -528,12 +593,54 @@
               "tier": "presentation",
               "type": "string"
             },
+            "orderStride": {
+              "default": 1.0,
+              "description": "Items advance by this stride through the roster — 1 is sequential; a stride coprime with the roster length (e.g. 3) interleaves the corpus so adjacent items differ.",
+              "label": "Order Stride",
+              "tier": "domain",
+              "type": "number"
+            },
+            "passScore": {
+              "default": 0.0,
+              "description": "Target score shown next to the running score as \"pass at N\"; 0 hides the target.",
+              "label": "Pass Score",
+              "tier": "domain",
+              "type": "number"
+            },
+            "penaltyPerMiss": {
+              "default": 0.0,
+              "description": "Rubric points subtracted for each incorrect pick (score never drops below 0).",
+              "label": "Penalty Per Miss",
+              "tier": "domain",
+              "type": "number"
+            },
+            "pointsPerCorrect": {
+              "default": 1.0,
+              "description": "Rubric points added to the score for each correct pick; at the default 1 with no penalty, the plain correct/attempted counts render instead of the rubric score.",
+              "label": "Points Per Correct",
+              "tier": "domain",
+              "type": "number"
+            },
             "retryLabel": {
               "default": "Retry Round",
               "description": "Label text for the button that restarts the round from the end-of-round summary.",
               "label": "Retry Button Label",
               "tier": "presentation",
               "type": "string"
+            },
+            "scoreCap": {
+              "default": 0.0,
+              "description": "Upper bound on the rubric score; 0 means uncapped.",
+              "label": "Score Cap",
+              "tier": "domain",
+              "type": "number"
+            },
+            "showHint": {
+              "default": true,
+              "description": "Show each item's hint line beneath the prompt before the learner picks; hide for a harder drill.",
+              "label": "Show Hint",
+              "tier": "domain",
+              "type": "boolean"
             },
             "title": {
               "default": "Classify",
@@ -594,6 +701,7 @@
               "categoryStats",
               "correctCategory",
               "correctCount",
+              "elapsedMs",
               "feedback",
               "itemExplanation",
               "itemHint",
@@ -601,6 +709,8 @@
               "itemText",
               "roundComplete",
               "roundView",
+              "running",
+              "score",
               "selectedCategory",
               "title",
               "totalItems",
@@ -662,6 +772,13 @@
                 "id": "evt_01M04B8VT5916MJXHS2FXZF6GQ",
                 "key": "RETRY",
                 "name": "Retry",
+                "tier": "domain"
+              },
+              {
+                "description": "Learner toggled auto-advance: while running, the advance clock steps to the next item every advanceMs milliseconds.",
+                "id": "evt_01M0C5Q7CX6XJDQZ9YRAZJGB0K",
+                "key": "TOGGLE_RUN",
+                "name": "Toggle Run",
                 "tier": "domain"
               },
               {
@@ -752,6 +869,21 @@
                     "set",
                     "@entity.roundComplete",
                     false
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    "@config.autoRun"
+                  ],
+                  [
+                    "set",
+                    "@entity.elapsedMs",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.score",
+                    0.0
                   ],
                   [
                     "set",
@@ -1275,9 +1407,13 @@
                               [
                                 "if",
                                 [
-                                  "!=",
-                                  "@entity.itemHint",
-                                  ""
+                                  "and",
+                                  "@config.showHint",
+                                  [
+                                    "!=",
+                                    "@entity.itemHint",
+                                    ""
+                                  ]
                                 ],
                                 [
                                   {
@@ -1307,45 +1443,113 @@
                           },
                           {
                             "children": [
-                              "array/map",
+                              "let",
                               [
-                                "array/reverse",
-                                "@config.categories"
+                                [
+                                  "itemOptions",
+                                  [
+                                    "object/get",
+                                    [
+                                      "array/nth",
+                                      "@config.items",
+                                      "@entity.itemIndex"
+                                    ],
+                                    "options",
+                                    []
+                                  ]
+                                ]
                               ],
                               [
-                                "fn",
-                                "c",
-                                {
-                                  "action": "PICK",
-                                  "actionPayload": {
-                                    "category": [
-                                      "object/get",
-                                      "@c",
-                                      "value"
-                                    ]
-                                  },
-                                  "label": [
-                                    "object/get",
-                                    "@c",
-                                    "label"
+                                "if",
+                                [
+                                  ">",
+                                  [
+                                    "array/len",
+                                    "@itemOptions"
                                   ],
-                                  "size": "sm",
-                                  "type": "button",
-                                  "variant": [
-                                    "if",
-                                    [
-                                      "==",
-                                      "@entity.selectedCategory",
-                                      [
+                                  0.0
+                                ],
+                                [
+                                  "array/map",
+                                  "@itemOptions",
+                                  [
+                                    "fn",
+                                    "o",
+                                    {
+                                      "action": "PICK",
+                                      "actionPayload": {
+                                        "category": [
+                                          "object/get",
+                                          "@o",
+                                          "category"
+                                        ]
+                                      },
+                                      "label": [
+                                        "object/get",
+                                        "@o",
+                                        "label"
+                                      ],
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.selectedCategory",
+                                          [
+                                            "object/get",
+                                            "@o",
+                                            "category"
+                                          ]
+                                        ],
+                                        "primary",
+                                        "secondary"
+                                      ]
+                                    }
+                                  ]
+                                ],
+                                [
+                                  "array/map",
+                                  [
+                                    "array/reverse",
+                                    "@config.categories"
+                                  ],
+                                  [
+                                    "fn",
+                                    "c",
+                                    {
+                                      "action": "PICK",
+                                      "actionPayload": {
+                                        "category": [
+                                          "object/get",
+                                          "@c",
+                                          "value"
+                                        ]
+                                      },
+                                      "label": [
                                         "object/get",
                                         "@c",
-                                        "value"
+                                        "label"
+                                      ],
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.selectedCategory",
+                                          [
+                                            "object/get",
+                                            "@c",
+                                            "value"
+                                          ]
+                                        ],
+                                        "primary",
+                                        "secondary"
                                       ]
-                                    ],
-                                    "primary",
-                                    "secondary"
+                                    }
                                   ]
-                                }
+                                ]
                               ]
                             ],
                             "direction": "horizontal",
@@ -1418,6 +1622,17 @@
                                 "label": "@config.advanceLabel",
                                 "type": "button",
                                 "variant": "primary"
+                              },
+                              {
+                                "action": "TOGGLE_RUN",
+                                "label": [
+                                  "if",
+                                  "@entity.running",
+                                  "Pause",
+                                  "Auto"
+                                ],
+                                "type": "button",
+                                "variant": "ghost"
                               }
                             ],
                             "direction": "horizontal",
@@ -1425,10 +1640,70 @@
                             "type": "stack"
                           },
                           {
-                            "label": "Score",
-                            "max": "@entity.attemptedCount",
+                            "label": [
+                              "if",
+                              [
+                                ">",
+                                "@config.passScore",
+                                0.0
+                              ],
+                              [
+                                "str/concat",
+                                "Score — pass at ",
+                                "@config.passScore"
+                              ],
+                              "Score"
+                            ],
+                            "max": [
+                              "if",
+                              [
+                                "or",
+                                [
+                                  "!=",
+                                  "@config.pointsPerCorrect",
+                                  1.0
+                                ],
+                                [
+                                  ">",
+                                  "@config.penaltyPerMiss",
+                                  0.0
+                                ]
+                              ],
+                              [
+                                "if",
+                                [
+                                  ">",
+                                  "@config.scoreCap",
+                                  0.0
+                                ],
+                                "@config.scoreCap",
+                                [
+                                  "*",
+                                  "@entity.totalItems",
+                                  "@config.pointsPerCorrect"
+                                ]
+                              ],
+                              "@entity.attemptedCount"
+                            ],
                             "type": "stat-display",
-                            "value": "@entity.correctCount"
+                            "value": [
+                              "if",
+                              [
+                                "or",
+                                [
+                                  "!=",
+                                  "@config.pointsPerCorrect",
+                                  1.0
+                                ],
+                                [
+                                  ">",
+                                  "@config.penaltyPerMiss",
+                                  0.0
+                                ]
+                              ],
+                              "@entity.score",
+                              "@entity.correctCount"
+                            ]
                           }
                         ]
                       ]
@@ -1569,6 +1844,21 @@
                   ],
                   [
                     "set",
+                    "@entity.running",
+                    "@config.autoRun"
+                  ],
+                  [
+                    "set",
+                    "@entity.elapsedMs",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.score",
+                    0.0
+                  ],
+                  [
+                    "set",
                     "@entity.totalItems",
                     [
                       "array/len",
@@ -2089,9 +2379,13 @@
                               [
                                 "if",
                                 [
-                                  "!=",
-                                  "@entity.itemHint",
-                                  ""
+                                  "and",
+                                  "@config.showHint",
+                                  [
+                                    "!=",
+                                    "@entity.itemHint",
+                                    ""
+                                  ]
                                 ],
                                 [
                                   {
@@ -2121,45 +2415,113 @@
                           },
                           {
                             "children": [
-                              "array/map",
+                              "let",
                               [
-                                "array/reverse",
-                                "@config.categories"
+                                [
+                                  "itemOptions",
+                                  [
+                                    "object/get",
+                                    [
+                                      "array/nth",
+                                      "@config.items",
+                                      "@entity.itemIndex"
+                                    ],
+                                    "options",
+                                    []
+                                  ]
+                                ]
                               ],
                               [
-                                "fn",
-                                "c",
-                                {
-                                  "action": "PICK",
-                                  "actionPayload": {
-                                    "category": [
-                                      "object/get",
-                                      "@c",
-                                      "value"
-                                    ]
-                                  },
-                                  "label": [
-                                    "object/get",
-                                    "@c",
-                                    "label"
+                                "if",
+                                [
+                                  ">",
+                                  [
+                                    "array/len",
+                                    "@itemOptions"
                                   ],
-                                  "size": "sm",
-                                  "type": "button",
-                                  "variant": [
-                                    "if",
-                                    [
-                                      "==",
-                                      "@entity.selectedCategory",
-                                      [
+                                  0.0
+                                ],
+                                [
+                                  "array/map",
+                                  "@itemOptions",
+                                  [
+                                    "fn",
+                                    "o",
+                                    {
+                                      "action": "PICK",
+                                      "actionPayload": {
+                                        "category": [
+                                          "object/get",
+                                          "@o",
+                                          "category"
+                                        ]
+                                      },
+                                      "label": [
+                                        "object/get",
+                                        "@o",
+                                        "label"
+                                      ],
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.selectedCategory",
+                                          [
+                                            "object/get",
+                                            "@o",
+                                            "category"
+                                          ]
+                                        ],
+                                        "primary",
+                                        "secondary"
+                                      ]
+                                    }
+                                  ]
+                                ],
+                                [
+                                  "array/map",
+                                  [
+                                    "array/reverse",
+                                    "@config.categories"
+                                  ],
+                                  [
+                                    "fn",
+                                    "c",
+                                    {
+                                      "action": "PICK",
+                                      "actionPayload": {
+                                        "category": [
+                                          "object/get",
+                                          "@c",
+                                          "value"
+                                        ]
+                                      },
+                                      "label": [
                                         "object/get",
                                         "@c",
-                                        "value"
+                                        "label"
+                                      ],
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.selectedCategory",
+                                          [
+                                            "object/get",
+                                            "@c",
+                                            "value"
+                                          ]
+                                        ],
+                                        "primary",
+                                        "secondary"
                                       ]
-                                    ],
-                                    "primary",
-                                    "secondary"
+                                    }
                                   ]
-                                }
+                                ]
                               ]
                             ],
                             "direction": "horizontal",
@@ -2232,6 +2594,17 @@
                                 "label": "@config.advanceLabel",
                                 "type": "button",
                                 "variant": "primary"
+                              },
+                              {
+                                "action": "TOGGLE_RUN",
+                                "label": [
+                                  "if",
+                                  "@entity.running",
+                                  "Pause",
+                                  "Auto"
+                                ],
+                                "type": "button",
+                                "variant": "ghost"
                               }
                             ],
                             "direction": "horizontal",
@@ -2239,10 +2612,70 @@
                             "type": "stack"
                           },
                           {
-                            "label": "Score",
-                            "max": "@entity.attemptedCount",
+                            "label": [
+                              "if",
+                              [
+                                ">",
+                                "@config.passScore",
+                                0.0
+                              ],
+                              [
+                                "str/concat",
+                                "Score — pass at ",
+                                "@config.passScore"
+                              ],
+                              "Score"
+                            ],
+                            "max": [
+                              "if",
+                              [
+                                "or",
+                                [
+                                  "!=",
+                                  "@config.pointsPerCorrect",
+                                  1.0
+                                ],
+                                [
+                                  ">",
+                                  "@config.penaltyPerMiss",
+                                  0.0
+                                ]
+                              ],
+                              [
+                                "if",
+                                [
+                                  ">",
+                                  "@config.scoreCap",
+                                  0.0
+                                ],
+                                "@config.scoreCap",
+                                [
+                                  "*",
+                                  "@entity.totalItems",
+                                  "@config.pointsPerCorrect"
+                                ]
+                              ],
+                              "@entity.attemptedCount"
+                            ],
                             "type": "stat-display",
-                            "value": "@entity.correctCount"
+                            "value": [
+                              "if",
+                              [
+                                "or",
+                                [
+                                  "!=",
+                                  "@config.pointsPerCorrect",
+                                  1.0
+                                ],
+                                [
+                                  ">",
+                                  "@config.penaltyPerMiss",
+                                  0.0
+                                ]
+                              ],
+                              "@entity.score",
+                              "@entity.correctCount"
+                            ]
                           }
                         ]
                       ]
@@ -2435,6 +2868,50 @@
                             1.0
                           ],
                           "@entity.correctCount"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.score",
+                        [
+                          "let",
+                          [
+                            [
+                              "raw",
+                              [
+                                "if",
+                                "@isCorrect",
+                                [
+                                  "+",
+                                  "@entity.score",
+                                  "@config.pointsPerCorrect"
+                                ],
+                                [
+                                  "-",
+                                  "@entity.score",
+                                  "@config.penaltyPerMiss"
+                                ]
+                              ]
+                            ]
+                          ],
+                          [
+                            "math/max",
+                            0.0,
+                            [
+                              "if",
+                              [
+                                ">",
+                                "@config.scoreCap",
+                                0.0
+                              ],
+                              [
+                                "math/min",
+                                "@raw",
+                                "@config.scoreCap"
+                              ],
+                              "@raw"
+                            ]
+                          ]
                         ]
                       ],
                       [
@@ -2950,9 +3427,13 @@
                               [
                                 "if",
                                 [
-                                  "!=",
-                                  "@entity.itemHint",
-                                  ""
+                                  "and",
+                                  "@config.showHint",
+                                  [
+                                    "!=",
+                                    "@entity.itemHint",
+                                    ""
+                                  ]
                                 ],
                                 [
                                   {
@@ -2982,45 +3463,113 @@
                           },
                           {
                             "children": [
-                              "array/map",
+                              "let",
                               [
-                                "array/reverse",
-                                "@config.categories"
+                                [
+                                  "itemOptions",
+                                  [
+                                    "object/get",
+                                    [
+                                      "array/nth",
+                                      "@config.items",
+                                      "@entity.itemIndex"
+                                    ],
+                                    "options",
+                                    []
+                                  ]
+                                ]
                               ],
                               [
-                                "fn",
-                                "c",
-                                {
-                                  "action": "PICK",
-                                  "actionPayload": {
-                                    "category": [
-                                      "object/get",
-                                      "@c",
-                                      "value"
-                                    ]
-                                  },
-                                  "label": [
-                                    "object/get",
-                                    "@c",
-                                    "label"
+                                "if",
+                                [
+                                  ">",
+                                  [
+                                    "array/len",
+                                    "@itemOptions"
                                   ],
-                                  "size": "sm",
-                                  "type": "button",
-                                  "variant": [
-                                    "if",
-                                    [
-                                      "==",
-                                      "@entity.selectedCategory",
-                                      [
+                                  0.0
+                                ],
+                                [
+                                  "array/map",
+                                  "@itemOptions",
+                                  [
+                                    "fn",
+                                    "o",
+                                    {
+                                      "action": "PICK",
+                                      "actionPayload": {
+                                        "category": [
+                                          "object/get",
+                                          "@o",
+                                          "category"
+                                        ]
+                                      },
+                                      "label": [
+                                        "object/get",
+                                        "@o",
+                                        "label"
+                                      ],
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.selectedCategory",
+                                          [
+                                            "object/get",
+                                            "@o",
+                                            "category"
+                                          ]
+                                        ],
+                                        "primary",
+                                        "secondary"
+                                      ]
+                                    }
+                                  ]
+                                ],
+                                [
+                                  "array/map",
+                                  [
+                                    "array/reverse",
+                                    "@config.categories"
+                                  ],
+                                  [
+                                    "fn",
+                                    "c",
+                                    {
+                                      "action": "PICK",
+                                      "actionPayload": {
+                                        "category": [
+                                          "object/get",
+                                          "@c",
+                                          "value"
+                                        ]
+                                      },
+                                      "label": [
                                         "object/get",
                                         "@c",
-                                        "value"
+                                        "label"
+                                      ],
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.selectedCategory",
+                                          [
+                                            "object/get",
+                                            "@c",
+                                            "value"
+                                          ]
+                                        ],
+                                        "primary",
+                                        "secondary"
                                       ]
-                                    ],
-                                    "primary",
-                                    "secondary"
+                                    }
                                   ]
-                                }
+                                ]
                               ]
                             ],
                             "direction": "horizontal",
@@ -3093,6 +3642,17 @@
                                 "label": "@config.advanceLabel",
                                 "type": "button",
                                 "variant": "primary"
+                              },
+                              {
+                                "action": "TOGGLE_RUN",
+                                "label": [
+                                  "if",
+                                  "@entity.running",
+                                  "Pause",
+                                  "Auto"
+                                ],
+                                "type": "button",
+                                "variant": "ghost"
                               }
                             ],
                             "direction": "horizontal",
@@ -3100,10 +3660,70 @@
                             "type": "stack"
                           },
                           {
-                            "label": "Score",
-                            "max": "@entity.attemptedCount",
+                            "label": [
+                              "if",
+                              [
+                                ">",
+                                "@config.passScore",
+                                0.0
+                              ],
+                              [
+                                "str/concat",
+                                "Score — pass at ",
+                                "@config.passScore"
+                              ],
+                              "Score"
+                            ],
+                            "max": [
+                              "if",
+                              [
+                                "or",
+                                [
+                                  "!=",
+                                  "@config.pointsPerCorrect",
+                                  1.0
+                                ],
+                                [
+                                  ">",
+                                  "@config.penaltyPerMiss",
+                                  0.0
+                                ]
+                              ],
+                              [
+                                "if",
+                                [
+                                  ">",
+                                  "@config.scoreCap",
+                                  0.0
+                                ],
+                                "@config.scoreCap",
+                                [
+                                  "*",
+                                  "@entity.totalItems",
+                                  "@config.pointsPerCorrect"
+                                ]
+                              ],
+                              "@entity.attemptedCount"
+                            ],
                             "type": "stat-display",
-                            "value": "@entity.correctCount"
+                            "value": [
+                              "if",
+                              [
+                                "or",
+                                [
+                                  "!=",
+                                  "@config.pointsPerCorrect",
+                                  1.0
+                                ],
+                                [
+                                  ">",
+                                  "@config.penaltyPerMiss",
+                                  0.0
+                                ]
+                              ],
+                              "@entity.score",
+                              "@entity.correctCount"
+                            ]
                           }
                         ]
                       ]
@@ -3223,12 +3843,19 @@
                       [
                         "isLast",
                         [
-                          ">=",
-                          "@entity.itemIndex",
+                          "and",
                           [
-                            "-",
-                            "@entity.totalItems",
-                            1.0
+                            "not",
+                            "@config.loopRound"
+                          ],
+                          [
+                            ">=",
+                            [
+                              "+",
+                              "@entity.itemIndex",
+                              "@config.orderStride"
+                            ],
+                            "@entity.totalItems"
                           ]
                         ]
                       ]
@@ -3265,9 +3892,22 @@
                           [
                             "nextIndex",
                             [
-                              "+",
-                              "@entity.itemIndex",
-                              1.0
+                              "if",
+                              "@config.loopRound",
+                              [
+                                "math/mod",
+                                [
+                                  "+",
+                                  "@entity.itemIndex",
+                                  "@config.orderStride"
+                                ],
+                                "@entity.totalItems"
+                              ],
+                              [
+                                "+",
+                                "@entity.itemIndex",
+                                "@config.orderStride"
+                              ]
                             ]
                           ],
                           [
@@ -3777,9 +4417,13 @@
                               [
                                 "if",
                                 [
-                                  "!=",
-                                  "@entity.itemHint",
-                                  ""
+                                  "and",
+                                  "@config.showHint",
+                                  [
+                                    "!=",
+                                    "@entity.itemHint",
+                                    ""
+                                  ]
                                 ],
                                 [
                                   {
@@ -3809,45 +4453,113 @@
                           },
                           {
                             "children": [
-                              "array/map",
+                              "let",
                               [
-                                "array/reverse",
-                                "@config.categories"
+                                [
+                                  "itemOptions",
+                                  [
+                                    "object/get",
+                                    [
+                                      "array/nth",
+                                      "@config.items",
+                                      "@entity.itemIndex"
+                                    ],
+                                    "options",
+                                    []
+                                  ]
+                                ]
                               ],
                               [
-                                "fn",
-                                "c",
-                                {
-                                  "action": "PICK",
-                                  "actionPayload": {
-                                    "category": [
-                                      "object/get",
-                                      "@c",
-                                      "value"
-                                    ]
-                                  },
-                                  "label": [
-                                    "object/get",
-                                    "@c",
-                                    "label"
+                                "if",
+                                [
+                                  ">",
+                                  [
+                                    "array/len",
+                                    "@itemOptions"
                                   ],
-                                  "size": "sm",
-                                  "type": "button",
-                                  "variant": [
-                                    "if",
-                                    [
-                                      "==",
-                                      "@entity.selectedCategory",
-                                      [
+                                  0.0
+                                ],
+                                [
+                                  "array/map",
+                                  "@itemOptions",
+                                  [
+                                    "fn",
+                                    "o",
+                                    {
+                                      "action": "PICK",
+                                      "actionPayload": {
+                                        "category": [
+                                          "object/get",
+                                          "@o",
+                                          "category"
+                                        ]
+                                      },
+                                      "label": [
+                                        "object/get",
+                                        "@o",
+                                        "label"
+                                      ],
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.selectedCategory",
+                                          [
+                                            "object/get",
+                                            "@o",
+                                            "category"
+                                          ]
+                                        ],
+                                        "primary",
+                                        "secondary"
+                                      ]
+                                    }
+                                  ]
+                                ],
+                                [
+                                  "array/map",
+                                  [
+                                    "array/reverse",
+                                    "@config.categories"
+                                  ],
+                                  [
+                                    "fn",
+                                    "c",
+                                    {
+                                      "action": "PICK",
+                                      "actionPayload": {
+                                        "category": [
+                                          "object/get",
+                                          "@c",
+                                          "value"
+                                        ]
+                                      },
+                                      "label": [
                                         "object/get",
                                         "@c",
-                                        "value"
+                                        "label"
+                                      ],
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.selectedCategory",
+                                          [
+                                            "object/get",
+                                            "@c",
+                                            "value"
+                                          ]
+                                        ],
+                                        "primary",
+                                        "secondary"
                                       ]
-                                    ],
-                                    "primary",
-                                    "secondary"
+                                    }
                                   ]
-                                }
+                                ]
                               ]
                             ],
                             "direction": "horizontal",
@@ -3920,6 +4632,17 @@
                                 "label": "@config.advanceLabel",
                                 "type": "button",
                                 "variant": "primary"
+                              },
+                              {
+                                "action": "TOGGLE_RUN",
+                                "label": [
+                                  "if",
+                                  "@entity.running",
+                                  "Pause",
+                                  "Auto"
+                                ],
+                                "type": "button",
+                                "variant": "ghost"
                               }
                             ],
                             "direction": "horizontal",
@@ -3927,10 +4650,70 @@
                             "type": "stack"
                           },
                           {
-                            "label": "Score",
-                            "max": "@entity.attemptedCount",
+                            "label": [
+                              "if",
+                              [
+                                ">",
+                                "@config.passScore",
+                                0.0
+                              ],
+                              [
+                                "str/concat",
+                                "Score — pass at ",
+                                "@config.passScore"
+                              ],
+                              "Score"
+                            ],
+                            "max": [
+                              "if",
+                              [
+                                "or",
+                                [
+                                  "!=",
+                                  "@config.pointsPerCorrect",
+                                  1.0
+                                ],
+                                [
+                                  ">",
+                                  "@config.penaltyPerMiss",
+                                  0.0
+                                ]
+                              ],
+                              [
+                                "if",
+                                [
+                                  ">",
+                                  "@config.scoreCap",
+                                  0.0
+                                ],
+                                "@config.scoreCap",
+                                [
+                                  "*",
+                                  "@entity.totalItems",
+                                  "@config.pointsPerCorrect"
+                                ]
+                              ],
+                              "@entity.attemptedCount"
+                            ],
                             "type": "stat-display",
-                            "value": "@entity.correctCount"
+                            "value": [
+                              "if",
+                              [
+                                "or",
+                                [
+                                  "!=",
+                                  "@config.pointsPerCorrect",
+                                  1.0
+                                ],
+                                [
+                                  ">",
+                                  "@config.penaltyPerMiss",
+                                  0.0
+                                ]
+                              ],
+                              "@entity.score",
+                              "@entity.correctCount"
+                            ]
                           }
                         ]
                       ]
@@ -4048,6 +4831,21 @@
                     "set",
                     "@entity.active",
                     true
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    "@config.autoRun"
+                  ],
+                  [
+                    "set",
+                    "@entity.elapsedMs",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.score",
+                    0.0
                   ],
                   [
                     "set",
@@ -4598,9 +5396,13 @@
                               [
                                 "if",
                                 [
-                                  "!=",
-                                  "@entity.itemHint",
-                                  ""
+                                  "and",
+                                  "@config.showHint",
+                                  [
+                                    "!=",
+                                    "@entity.itemHint",
+                                    ""
+                                  ]
                                 ],
                                 [
                                   {
@@ -4630,45 +5432,113 @@
                           },
                           {
                             "children": [
-                              "array/map",
+                              "let",
                               [
-                                "array/reverse",
-                                "@config.categories"
+                                [
+                                  "itemOptions",
+                                  [
+                                    "object/get",
+                                    [
+                                      "array/nth",
+                                      "@config.items",
+                                      "@entity.itemIndex"
+                                    ],
+                                    "options",
+                                    []
+                                  ]
+                                ]
                               ],
                               [
-                                "fn",
-                                "c",
-                                {
-                                  "action": "PICK",
-                                  "actionPayload": {
-                                    "category": [
-                                      "object/get",
-                                      "@c",
-                                      "value"
-                                    ]
-                                  },
-                                  "label": [
-                                    "object/get",
-                                    "@c",
-                                    "label"
+                                "if",
+                                [
+                                  ">",
+                                  [
+                                    "array/len",
+                                    "@itemOptions"
                                   ],
-                                  "size": "sm",
-                                  "type": "button",
-                                  "variant": [
-                                    "if",
-                                    [
-                                      "==",
-                                      "@entity.selectedCategory",
-                                      [
+                                  0.0
+                                ],
+                                [
+                                  "array/map",
+                                  "@itemOptions",
+                                  [
+                                    "fn",
+                                    "o",
+                                    {
+                                      "action": "PICK",
+                                      "actionPayload": {
+                                        "category": [
+                                          "object/get",
+                                          "@o",
+                                          "category"
+                                        ]
+                                      },
+                                      "label": [
+                                        "object/get",
+                                        "@o",
+                                        "label"
+                                      ],
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.selectedCategory",
+                                          [
+                                            "object/get",
+                                            "@o",
+                                            "category"
+                                          ]
+                                        ],
+                                        "primary",
+                                        "secondary"
+                                      ]
+                                    }
+                                  ]
+                                ],
+                                [
+                                  "array/map",
+                                  [
+                                    "array/reverse",
+                                    "@config.categories"
+                                  ],
+                                  [
+                                    "fn",
+                                    "c",
+                                    {
+                                      "action": "PICK",
+                                      "actionPayload": {
+                                        "category": [
+                                          "object/get",
+                                          "@c",
+                                          "value"
+                                        ]
+                                      },
+                                      "label": [
                                         "object/get",
                                         "@c",
-                                        "value"
+                                        "label"
+                                      ],
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@entity.selectedCategory",
+                                          [
+                                            "object/get",
+                                            "@c",
+                                            "value"
+                                          ]
+                                        ],
+                                        "primary",
+                                        "secondary"
                                       ]
-                                    ],
-                                    "primary",
-                                    "secondary"
+                                    }
                                   ]
-                                }
+                                ]
                               ]
                             ],
                             "direction": "horizontal",
@@ -4741,6 +5611,17 @@
                                 "label": "@config.advanceLabel",
                                 "type": "button",
                                 "variant": "primary"
+                              },
+                              {
+                                "action": "TOGGLE_RUN",
+                                "label": [
+                                  "if",
+                                  "@entity.running",
+                                  "Pause",
+                                  "Auto"
+                                ],
+                                "type": "button",
+                                "variant": "ghost"
                               }
                             ],
                             "direction": "horizontal",
@@ -4748,10 +5629,70 @@
                             "type": "stack"
                           },
                           {
-                            "label": "Score",
-                            "max": "@entity.attemptedCount",
+                            "label": [
+                              "if",
+                              [
+                                ">",
+                                "@config.passScore",
+                                0.0
+                              ],
+                              [
+                                "str/concat",
+                                "Score — pass at ",
+                                "@config.passScore"
+                              ],
+                              "Score"
+                            ],
+                            "max": [
+                              "if",
+                              [
+                                "or",
+                                [
+                                  "!=",
+                                  "@config.pointsPerCorrect",
+                                  1.0
+                                ],
+                                [
+                                  ">",
+                                  "@config.penaltyPerMiss",
+                                  0.0
+                                ]
+                              ],
+                              [
+                                "if",
+                                [
+                                  ">",
+                                  "@config.scoreCap",
+                                  0.0
+                                ],
+                                "@config.scoreCap",
+                                [
+                                  "*",
+                                  "@entity.totalItems",
+                                  "@config.pointsPerCorrect"
+                                ]
+                              ],
+                              "@entity.attemptedCount"
+                            ],
                             "type": "stat-display",
-                            "value": "@entity.correctCount"
+                            "value": [
+                              "if",
+                              [
+                                "or",
+                                [
+                                  "!=",
+                                  "@config.pointsPerCorrect",
+                                  1.0
+                                ],
+                                [
+                                  ">",
+                                  "@config.penaltyPerMiss",
+                                  0.0
+                                ]
+                              ],
+                              "@entity.score",
+                              "@entity.correctCount"
+                            ]
                           }
                         ]
                       ]
@@ -4854,9 +5795,159 @@
                   true
                 ],
                 "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.running",
+                    [
+                      "not",
+                      "@entity.running"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.elapsedMs",
+                    0.0
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "label": [
+                                "str/concat",
+                                "Item ",
+                                [
+                                  "str/concat",
+                                  "",
+                                  [
+                                    "+",
+                                    "@entity.itemIndex",
+                                    1.0
+                                  ]
+                                ],
+                                " of ",
+                                [
+                                  "str/concat",
+                                  "",
+                                  "@entity.totalItems"
+                                ]
+                              ],
+                              "max": "@entity.totalItems",
+                              "showPercentage": false,
+                              "type": "progress-bar",
+                              "value": [
+                                "+",
+                                "@entity.itemIndex",
+                                1.0
+                              ]
+                            },
+                            {
+                              "children": "@entity.roundView",
+                              "direction": "vertical",
+                              "gap": "md",
+                              "type": "stack"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ]
+                ],
+                "event": "TOGGLE_RUN",
+                "eventId": "evt_01M0C5Q7CX6XJDQZ9YRAZJGB0K",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@entity.active",
+                    true
+                  ],
+                  [
+                    "==",
+                    "@entity.roundComplete",
+                    false
+                  ]
+                ],
+                "to": "idle"
               }
             ]
-          }
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.elapsedMs",
+                  [
+                    "+",
+                    "@entity.elapsedMs",
+                    32.0
+                  ]
+                ],
+                [
+                  "when",
+                  [
+                    ">=",
+                    "@entity.elapsedMs",
+                    "@config.advanceMs"
+                  ],
+                  [
+                    "do",
+                    [
+                      "set",
+                      "@entity.elapsedMs",
+                      0.0
+                    ],
+                    [
+                      "emit",
+                      "ADVANCE",
+                      {}
+                    ]
+                  ]
+                ]
+              ],
+              "guard": [
+                "and",
+                [
+                  "==",
+                  "@entity.active",
+                  true
+                ],
+                [
+                  "and",
+                  [
+                    "==",
+                    "@entity.running",
+                    true
+                  ],
+                  [
+                    "==",
+                    "@entity.roundComplete",
+                    false
+                  ]
+                ]
+              ],
+              "interval": 32.0,
+              "name": "advanceTick"
+            }
+          ]
         }
       ]
     }

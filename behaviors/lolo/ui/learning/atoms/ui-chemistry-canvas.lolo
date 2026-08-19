@@ -9,12 +9,15 @@ orbital ChemistryCanvasOrbital {
     element : string
     radius : number
     color : string
+    charge : string
+    lonePairs : number
   }
   type ChemistryCanvasBondsItem = {
     from : string!
     to : string!
     type : "single" | "double" | "triple"
     color : string
+    state : "default" | "forming" | "breaking" | "highlight"
   }
   type ChemistryCanvasArrowsItem = {
     x : number!
@@ -24,8 +27,58 @@ orbital ChemistryCanvasOrbital {
     color : string
     label : string
   }
+  type ChemistryCanvasContainersItem = {
+    x : number!
+    y : number!
+    width : number!
+    height : number!
+    color : string
+    fill : string
+    lineWidth : number
+    divider : "none" | "solid" | "dashed" | "dotted"
+    dividerColor : string
+    leftLabel : string
+    rightLabel : string
+    label : string
+    level : number
+    levelColor : string
+  }
+  type ChemistryCanvasLattice3d = {
+    basis : [ChemistryCanvasLattice3dBasisItem]!
+    nx : number
+    ny : number
+    nz : number
+    latticeConstant : number
+    bonds : [ChemistryCanvasLattice3dBondsItem]
+    bondRadius : number
+    highlightCell : boolean
+    dimColor : string
+    showLabels : boolean
+    selectedId : string
+    selectedColor : string
+  }
+  type ChemistryCanvasLattice3dBasisItem = {
+    key : string!
+    dx : number!
+    dy : number!
+    dz : number!
+    element : string
+    color : string
+    radius : number
+    xEdge : boolean
+    yEdge : boolean
+    zEdge : boolean
+  }
+  type ChemistryCanvasLattice3dBondsItem = {
+    from : string!
+    to : string!
+    dx : number
+    dy : number
+    dz : number
+    color : string
+  }
   type ChemistryCanvasShapesItem = {
-    type : "line" | "arrow" | "circle" | "rect" | "polygon" | "path" | "text" | "axis" | "grid"!
+    type : "line" | "arrow" | "circle" | "ellipse" | "rect" | "polygon" | "path" | "text" | "axis" | "grid" | "venn-region"!
     id : string
     x : number
     y : number
@@ -50,8 +103,39 @@ orbital ChemistryCanvasOrbital {
     fill : string
     lineWidth : number
     opacity : number
+    startAngle : number
+    endAngle : number
+    dash : "dashed" | "dotted"
+    inside : [string]
+    outside : [string]
   }
   type ChemistryCanvasShapesItemPointsItem = {
+    x : number!
+    y : number!
+  }
+  type ChemistryCanvasReadoutsItem = {
+    label : string!
+    value : string!
+    color : string
+  }
+  type ChemistryCanvasTracesItem = {
+    x : number
+    y : number
+    width : number
+    height : number
+    series : [ChemistryCanvasTracesItemSeriesItem]!
+    xLabel : string
+    yLabel : string
+    frameColor : string
+    backgroundColor : string
+    backgroundOpacity : number
+  }
+  type ChemistryCanvasTracesItemSeriesItem = {
+    samples : [ChemistryCanvasTracesItemSeriesItemSamplesItem]!
+    color : string
+    label : string
+  }
+  type ChemistryCanvasTracesItemSeriesItemSamplesItem = {
     x : number!
     y : number!
   }
@@ -89,7 +173,14 @@ orbital ChemistryCanvasOrbital {
           atoms: @config.atoms
           bonds: @config.bonds
           arrows: @config.arrows
+          bondStyle: @config.bondStyle
+          containers: @config.containers
+          equation: @config.equation
+          equationColor: @config.equationColor
+          lattice3d: @config.lattice3d
           shapes: @config.shapes
+          readouts: @config.readouts
+          traces: @config.traces
           showGrid: @config.showGrid
           shadows: @config.shadows
           interactive: @config.interactive
@@ -113,7 +204,14 @@ orbital ChemistryCanvasOrbital {
           atoms: @payload.atoms
           bonds: @payload.bonds
           arrows: @payload.arrows
+          bondStyle: @config.bondStyle
+          containers: @payload.containers
+          equation: @config.equation
+          equationColor: @config.equationColor
+          lattice3d: @config.lattice3d
           shapes: @payload.shapes
+          readouts: @payload.readouts
+          traces: @payload.traces
           showGrid: @config.showGrid
           shadows: @config.shadows
           interactive: @config.interactive
@@ -138,7 +236,10 @@ orbital ChemistryCanvasOrbital {
         atoms : [ChemistryCanvasAtomsItem]
         bonds : [ChemistryCanvasBondsItem]
         arrows : [ChemistryCanvasArrowsItem]
+        containers : [ChemistryCanvasContainersItem]
         shapes : [ChemistryCanvasShapesItem]
+        readouts : [ChemistryCanvasReadoutsItem]
+        traces : [ChemistryCanvasTracesItem]
       }
         @description "Live scene update; payload carries the current drawable state."
         @synonyms "tick, redraw, animate, frame"
@@ -194,9 +295,39 @@ orbital ChemistryCanvasOrbital {
         @label "Arrows"
         @description "arrows prop"
         @tier "presentation"
+      bondStyle : "thick" | "parallel" = thick
+        @label "Bond Style"
+        @description "Bond line rendering: 'thick' varies stroke width by order (default), 'parallel' draws offset parallel strokes. 2D only."
+        @tier "presentation"
+      containers : [ChemistryCanvasContainersItem] = []
+        @label "Containers"
+        @description "Beaker/flask/container outlines (2D only)."
+        @synonyms "beaker, flask, box, membrane, burette"
+        @tier "presentation"
+      equation : string
+        @label "Equation"
+        @description "Reaction equation text centered at the top of the canvas. 2D only."
+        @synonyms "reaction equation, formula"
+        @tier "presentation"
+      equationColor : string
+        @label "Equation Color"
+        @description "Equation text color (default '#111827')."
+        @tier "presentation"
+      lattice3d : ChemistryCanvasLattice3d
+        @label "Lattice3d"
+        @description "A 3D crystal lattice block (simple cubic, BCC, FCC, rock salt, diamond, ...). 3D only."
+        @tier "presentation"
       shapes : [ChemistryCanvasShapesItem] = []
         @label "Shapes"
         @description "Extra declarative shapes in canvas pixel coordinates (2D mode only — ignored in 3D)."
+        @tier "presentation"
+      readouts : [ChemistryCanvasReadoutsItem] = []
+        @label "Readouts"
+        @description "Top-right status chip row, forwarded to LearningCanvas verbatim."
+        @tier "presentation"
+      traces : [ChemistryCanvasTracesItem] = []
+        @label "Traces"
+        @description "Inset sparkline panels, forwarded to LearningCanvas verbatim."
         @tier "presentation"
       showGrid : boolean
         @label "Show Grid"

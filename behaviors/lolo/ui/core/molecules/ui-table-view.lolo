@@ -116,11 +116,6 @@ orbital TableViewOrbital {
     }
 
     emits {
-      @config.itemClickEvent -> external {
-        id : string
-      }
-        @description "When set, the whole row is clickable and emits UI:{itemClickEvent} with { id, row } (action-button clicks stopPropagation so they still win). Mirrors DataList's contract."
-        @tier "essential"
       @config.selectEvent -> external {
         id : string
       }
@@ -185,15 +180,15 @@ orbital TableViewOrbital {
         @tier "presentation"
       itemActions : [TableViewItemActionsItem] = []
         @label "Item Actions"
-        @description "Per-row action buttons (trailing column)."
+        @description "Per-row actions, collected under a trailing kebab overflow menu."
         @tier "presentation"
       maxInlineActions : number
         @label "Max Inline Actions"
-        @description "Max inline action buttons before the rest collapse into a '⋯' overflow menu. Omit = all inline."
+        @description "maxInlineActions prop"
         @tier "presentation"
-      itemClickEvent : string = "ITEM_CLICK"
+      itemClickEvent : string = ""
         @label "Item Click Event"
-        @description "When set, the whole row is clickable and emits UI:{itemClickEvent} with { id, row } (action-button clicks stopPropagation so they still win). Mirrors DataList's contract."
+        @description "When set, the whole row is clickable and emits UI:{itemClickEvent} with { id, row } (action-button clicks stopPropagation so they still win). Mirrors DataList's contract. When OMITTED and `itemActions` exist, the row click defaults to the first non-danger item action (the view/open action by authoring convention) — a danger action never becomes the row default (destructive actions require intentional reach)."
         @tier "presentation"
       selectable : boolean = false
         @label "Selectable"

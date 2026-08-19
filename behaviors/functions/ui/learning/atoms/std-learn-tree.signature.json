@@ -1,0 +1,340 @@
+[
+  {
+    "organism": "std-learn-tree",
+    "orbital": "LearnTreeOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-learn-tree.ts",
+    "entities": [
+      {
+        "name": "LearnTreeScene",
+        "fields": [
+          {
+            "name": "active",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "nodes",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "edges",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "entries",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "cursor",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "pending",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "descending",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "trail",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "curId",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "curVal",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "curRank",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "curRankOffset",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "depth",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "maxDepth",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "count",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "traversing",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "traversalOrder",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "sweptIds",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "done",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "running",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "narration",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "LearnTreeSim",
+        "emittedEvents": [
+          "TREE_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "TREE_UPDATED",
+            "direction": "emit",
+            "description": "The tree after each insert/delete/traversal step — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "tree update, insert result, traversal result, node count",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MODE_SELECTED",
+            "direction": "listen",
+            "description": "Lab router broadcast naming the active mode; this instrument renders when the mode equals matchMode, otherwise renders null.",
+            "tier": "domain"
+          },
+          {
+            "name": "INSERT_VALUE",
+            "direction": "listen",
+            "description": "Insert the next config-declared value: descends one comparison step per press from the root, coloring the descent cursor and comparison trail, until it attaches as a leaf. Pressing again while a descent is in flight continues that same descent.",
+            "synonyms": "insert, add, next value, descend, attach",
+            "tier": "domain"
+          },
+          {
+            "name": "DELETE_VALUE",
+            "direction": "listen",
+            "description": "Undo the most recently inserted value — removes its node/edge/entry and rewinds the insert cursor by one so the same value can be re-inserted.",
+            "synonyms": "delete, remove, undo, rewind",
+            "tier": "domain"
+          },
+          {
+            "name": "RUN_TRAVERSAL",
+            "direction": "listen",
+            "description": "Advance the traversal sweep one node at a time in the configured order (inorder/preorder/levelorder); pressing after the sweep completes starts a fresh sweep.",
+            "synonyms": "traverse, sweep, visit, walk, in-order, pre-order, level-order",
+            "tier": "domain"
+          },
+          {
+            "name": "TOGGLE_RUN",
+            "direction": "listen",
+            "description": "Toggle auto-stepping: while running, the tick sweeps the traversal one node forward every step. Has no effect on Insert/Delete, which stay manual.",
+            "synonyms": "run, pause, auto, auto-step",
+            "tier": "domain"
+          },
+          {
+            "name": "RESET",
+            "direction": "listen",
+            "description": "Clear the tree back to empty and restore the insert cursor and running flag from config, ready to insert from the first value again.",
+            "synonyms": "reset, clear, restart, start over",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "autoRun",
+            "type": "boolean",
+            "default": false,
+            "label": "Auto Run",
+            "description": "When true, the tick auto-steps the traversal sweep started by Traverse; toggle live with the Run/Pause button. Has no effect on Insert/Delete, which stay manual.",
+            "synonyms": "auto run, auto step, auto play",
+            "tier": "domain"
+          },
+          {
+            "key": "backgroundColor",
+            "type": "string",
+            "default": "#f8fafc",
+            "label": "Background Color",
+            "description": "Canvas background color.",
+            "tier": "presentation"
+          },
+          {
+            "key": "balanced",
+            "type": "boolean",
+            "default": false,
+            "label": "Balance Readout",
+            "description": "When true, each insert's narration reports the tree's current height against its node count so the learner can judge balance; no auto-rotation is performed.",
+            "synonyms": "balance, height, balance readout",
+            "tier": "domain"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 400,
+            "label": "Height",
+            "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "matchMode",
+            "type": "string",
+            "default": "",
+            "label": "Match Mode",
+            "description": "When composed behind a lab router, the MODE_SELECTED mode value this instrument responds to. Empty string means standalone — render immediately on INIT.",
+            "tier": "presentation"
+          },
+          {
+            "key": "showComparisons",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Comparisons",
+            "description": "Include each left/right comparison in the narration while a value descends; turn off for a terse attach-only narration.",
+            "synonyms": "comparisons, narration detail",
+            "tier": "presentation"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Ordered Tree",
+            "label": "Title",
+            "description": "Title shown above the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "traversalKind",
+            "type": "string",
+            "default": "inorder",
+            "label": "Traversal Kind",
+            "description": "Which sweep Traverse replays — inorder (sorted order, left to right), preorder (root before children), or levelorder (breadth first, top to bottom).",
+            "synonyms": "traversal, in-order, pre-order, level-order, sweep",
+            "tier": "domain"
+          },
+          {
+            "key": "values",
+            "type": "[number]",
+            "default": [
+              50,
+              30,
+              70,
+              20,
+              40,
+              60,
+              80
+            ],
+            "label": "Values",
+            "description": "The values Insert feeds into the tree, one per descent, in order.",
+            "synonyms": "keys, values to insert, dataset, sequence",
+            "tier": "domain",
+            "items": {
+              "type": "number"
+            }
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "description": "Canvas width in pixels.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "LearnTreeScene",
+        "transitionEvents": [
+          "DELETE_VALUE",
+          "INIT",
+          "INSERT_VALUE",
+          "MODE_SELECTED",
+          "RESET",
+          "RUN_TRAVERSAL",
+          "TOGGLE_RUN"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "active",
+            "count",
+            "curId",
+            "curRank",
+            "curRankOffset",
+            "curVal",
+            "cursor",
+            "depth",
+            "descending",
+            "done",
+            "edges",
+            "entries",
+            "maxDepth",
+            "narration",
+            "nodes",
+            "pending",
+            "running",
+            "sweptIds",
+            "title",
+            "trail",
+            "traversalOrder",
+            "traversing"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "LearnTreePage",
+        "defaultPath": "/learn-tree",
+        "primaryEntity": "LearnTreeScene"
+      }
+    ],
+    "emittedEvents": [
+      "TREE_UPDATED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

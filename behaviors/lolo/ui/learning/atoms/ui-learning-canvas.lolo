@@ -2,7 +2,7 @@ app ui-learning-canvas "1.0.0"
 "LearningCanvas — UI factory (1:1 with the @almadar/ui learning-canvas pattern)."
 orbital LearningCanvasOrbital {
   type LearningCanvasShapesItem = {
-    type : "line" | "arrow" | "circle" | "rect" | "polygon" | "path" | "text" | "axis" | "grid"!
+    type : "line" | "arrow" | "circle" | "ellipse" | "rect" | "polygon" | "path" | "text" | "axis" | "grid" | "venn-region"!
     id : string
     x : number
     y : number
@@ -27,8 +27,39 @@ orbital LearningCanvasOrbital {
     fill : string
     lineWidth : number
     opacity : number
+    startAngle : number
+    endAngle : number
+    dash : "dashed" | "dotted"
+    inside : [string]
+    outside : [string]
   }
   type LearningCanvasShapesItemPointsItem = {
+    x : number!
+    y : number!
+  }
+  type LearningCanvasReadoutsItem = {
+    label : string!
+    value : string!
+    color : string
+  }
+  type LearningCanvasTracesItem = {
+    x : number
+    y : number
+    width : number
+    height : number
+    series : [LearningCanvasTracesItemSeriesItem]!
+    xLabel : string
+    yLabel : string
+    frameColor : string
+    backgroundColor : string
+    backgroundOpacity : number
+  }
+  type LearningCanvasTracesItemSeriesItem = {
+    samples : [LearningCanvasTracesItemSeriesItemSamplesItem]!
+    color : string
+    label : string
+  }
+  type LearningCanvasTracesItemSeriesItemSamplesItem = {
     x : number!
     y : number!
   }
@@ -64,6 +95,8 @@ orbital LearningCanvasOrbital {
           height: @config.height
           backgroundColor: @config.backgroundColor
           shapes: @config.shapes
+          readouts: @config.readouts
+          traces: @config.traces
           interactive: @config.interactive
           animate: @config.animate
           onShapeClick: @config.onShapeClick
@@ -79,6 +112,8 @@ orbital LearningCanvasOrbital {
           height: @config.height
           backgroundColor: @config.backgroundColor
           shapes: @payload.shapes
+          readouts: @payload.readouts
+          traces: @payload.traces
           interactive: @config.interactive
           animate: @config.animate
           onShapeClick: @config.onShapeClick
@@ -105,6 +140,8 @@ orbital LearningCanvasOrbital {
     listens {
       UPDATE {
         shapes : [LearningCanvasShapesItem]
+        readouts : [LearningCanvasReadoutsItem]
+        traces : [LearningCanvasTracesItem]
       }
         @description "Live scene update; payload carries the current drawable state."
         @synonyms "tick, redraw, animate, frame"
@@ -131,6 +168,16 @@ orbital LearningCanvasOrbital {
       shapes : [LearningCanvasShapesItem] = []
         @label "Shapes"
         @description "Declarative shapes to draw."
+        @tier "presentation"
+      readouts : [LearningCanvasReadoutsItem] = []
+        @label "Readouts"
+        @description "Top-right status chip row (live measurements, scores, counters)."
+        @synonyms "chips, stats, measurements"
+        @tier "presentation"
+      traces : [LearningCanvasTracesItem] = []
+        @label "Traces"
+        @description "Inset sparkline panels stacked from the bottom-right corner."
+        @synonyms "sparkline, time series, history plot"
         @tier "presentation"
       interactive : boolean = false
         @label "Interactive"

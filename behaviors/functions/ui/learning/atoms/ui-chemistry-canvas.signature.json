@@ -98,6 +98,11 @@
             "tier": "presentation",
             "items": {
               "properties": {
+                "charge": {
+                  "name": "charge",
+                  "required": false,
+                  "type": "string"
+                },
                 "color": {
                   "name": "color",
                   "required": false,
@@ -112,6 +117,11 @@
                   "name": "id",
                   "required": false,
                   "type": "string"
+                },
+                "lonePairs": {
+                  "name": "lonePairs",
+                  "required": false,
+                  "type": "number"
                 },
                 "radius": {
                   "name": "radius",
@@ -145,6 +155,18 @@
             "tier": "presentation"
           },
           {
+            "key": "bondStyle",
+            "type": "string",
+            "default": "thick",
+            "label": "Bond Style",
+            "description": "Bond line rendering: 'thick' varies stroke width by order (default), 'parallel' draws offset parallel strokes. 2D only.",
+            "tier": "presentation",
+            "enumValues": [
+              "thick",
+              "parallel"
+            ]
+          },
+          {
             "key": "bonds",
             "type": "[ChemistryCanvasBondsItem]",
             "default": [],
@@ -162,6 +184,17 @@
                   "name": "from",
                   "required": true,
                   "type": "string"
+                },
+                "state": {
+                  "name": "state",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "default",
+                    "forming",
+                    "breaking",
+                    "highlight"
+                  ]
                 },
                 "to": {
                   "name": "to",
@@ -195,6 +228,111 @@
             "type": "string",
             "label": "Class Name",
             "description": "className prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "containers",
+            "type": "[ChemistryCanvasContainersItem]",
+            "default": [],
+            "label": "Containers",
+            "description": "Beaker/flask/container outlines (2D only).",
+            "synonyms": "beaker, flask, box, membrane, burette",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "divider": {
+                  "name": "divider",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "none",
+                    "solid",
+                    "dashed",
+                    "dotted"
+                  ]
+                },
+                "dividerColor": {
+                  "name": "dividerColor",
+                  "required": false,
+                  "type": "string"
+                },
+                "fill": {
+                  "name": "fill",
+                  "required": false,
+                  "type": "string"
+                },
+                "height": {
+                  "name": "height",
+                  "required": true,
+                  "type": "number"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "leftLabel": {
+                  "name": "leftLabel",
+                  "required": false,
+                  "type": "string"
+                },
+                "level": {
+                  "name": "level",
+                  "required": false,
+                  "type": "number"
+                },
+                "levelColor": {
+                  "name": "levelColor",
+                  "required": false,
+                  "type": "string"
+                },
+                "lineWidth": {
+                  "name": "lineWidth",
+                  "required": false,
+                  "type": "number"
+                },
+                "rightLabel": {
+                  "name": "rightLabel",
+                  "required": false,
+                  "type": "string"
+                },
+                "width": {
+                  "name": "width",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "equation",
+            "type": "string",
+            "label": "Equation",
+            "description": "Reaction equation text centered at the top of the canvas. 2D only.",
+            "synonyms": "reaction equation, formula",
+            "tier": "presentation"
+          },
+          {
+            "key": "equationColor",
+            "type": "string",
+            "label": "Equation Color",
+            "description": "Equation text color (default '#111827').",
             "tier": "presentation"
           },
           {
@@ -249,6 +387,165 @@
             "tier": "presentation"
           },
           {
+            "key": "lattice3d",
+            "type": "ChemistryCanvasLattice3d",
+            "label": "Lattice3d",
+            "description": "A 3D crystal lattice block (simple cubic, BCC, FCC, rock salt, diamond, ...). 3D only.",
+            "tier": "presentation",
+            "properties": {
+              "basis": {
+                "name": "basis",
+                "required": true,
+                "type": "array",
+                "items": {
+                  "properties": {
+                    "color": {
+                      "name": "color",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dx": {
+                      "name": "dx",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "dy": {
+                      "name": "dy",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "dz": {
+                      "name": "dz",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "element": {
+                      "name": "element",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "key": {
+                      "name": "key",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "radius": {
+                      "name": "radius",
+                      "required": false,
+                      "type": "number"
+                    },
+                    "xEdge": {
+                      "name": "xEdge",
+                      "required": false,
+                      "type": "boolean"
+                    },
+                    "yEdge": {
+                      "name": "yEdge",
+                      "required": false,
+                      "type": "boolean"
+                    },
+                    "zEdge": {
+                      "name": "zEdge",
+                      "required": false,
+                      "type": "boolean"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "bondRadius": {
+                "name": "bondRadius",
+                "required": false,
+                "type": "number"
+              },
+              "bonds": {
+                "name": "bonds",
+                "required": false,
+                "type": "array",
+                "items": {
+                  "properties": {
+                    "color": {
+                      "name": "color",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dx": {
+                      "name": "dx",
+                      "required": false,
+                      "type": "number"
+                    },
+                    "dy": {
+                      "name": "dy",
+                      "required": false,
+                      "type": "number"
+                    },
+                    "dz": {
+                      "name": "dz",
+                      "required": false,
+                      "type": "number"
+                    },
+                    "from": {
+                      "name": "from",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "to": {
+                      "name": "to",
+                      "required": true,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "dimColor": {
+                "name": "dimColor",
+                "required": false,
+                "type": "string"
+              },
+              "highlightCell": {
+                "name": "highlightCell",
+                "required": false,
+                "type": "boolean"
+              },
+              "latticeConstant": {
+                "name": "latticeConstant",
+                "required": false,
+                "type": "number"
+              },
+              "nx": {
+                "name": "nx",
+                "required": false,
+                "type": "number"
+              },
+              "ny": {
+                "name": "ny",
+                "required": false,
+                "type": "number"
+              },
+              "nz": {
+                "name": "nz",
+                "required": false,
+                "type": "number"
+              },
+              "selectedColor": {
+                "name": "selectedColor",
+                "required": false,
+                "type": "string"
+              },
+              "selectedId": {
+                "name": "selectedId",
+                "required": false,
+                "type": "string"
+              },
+              "showLabels": {
+                "name": "showLabels",
+                "required": false,
+                "type": "boolean"
+              }
+            }
+          },
+          {
             "key": "lighting",
             "type": "json",
             "default": {},
@@ -283,6 +580,34 @@
             "label": "Post",
             "description": "3D only: post-processing stack (bloom/vignette).",
             "tier": "presentation"
+          },
+          {
+            "key": "readouts",
+            "type": "[ChemistryCanvasReadoutsItem]",
+            "default": [],
+            "label": "Readouts",
+            "description": "Top-right status chip row, forwarded to LearningCanvas verbatim.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "value": {
+                  "name": "value",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
           },
           {
             "key": "shadows",
@@ -323,6 +648,20 @@
                   "name": "color",
                   "required": false,
                   "type": "string"
+                },
+                "dash": {
+                  "name": "dash",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "dashed",
+                    "dotted"
+                  ]
+                },
+                "endAngle": {
+                  "name": "endAngle",
+                  "required": false,
+                  "type": "number"
                 },
                 "fill": {
                   "name": "fill",
@@ -399,6 +738,11 @@
                   "required": false,
                   "type": "number"
                 },
+                "startAngle": {
+                  "name": "startAngle",
+                  "required": false,
+                  "type": "number"
+                },
                 "step": {
                   "name": "step",
                   "required": false,
@@ -417,6 +761,7 @@
                     "line",
                     "arrow",
                     "circle",
+                    "ellipse",
                     "rect",
                     "polygon",
                     "path",
@@ -477,6 +822,104 @@
             "label": "Title",
             "description": "title prop",
             "tier": "presentation"
+          },
+          {
+            "key": "traces",
+            "type": "[ChemistryCanvasTracesItem]",
+            "default": [],
+            "label": "Traces",
+            "description": "Inset sparkline panels, forwarded to LearningCanvas verbatim.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "backgroundColor": {
+                  "name": "backgroundColor",
+                  "required": false,
+                  "type": "string"
+                },
+                "backgroundOpacity": {
+                  "name": "backgroundOpacity",
+                  "required": false,
+                  "type": "number"
+                },
+                "frameColor": {
+                  "name": "frameColor",
+                  "required": false,
+                  "type": "string"
+                },
+                "height": {
+                  "name": "height",
+                  "required": false,
+                  "type": "number"
+                },
+                "series": {
+                  "name": "series",
+                  "required": true,
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "color": {
+                        "name": "color",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "label": {
+                        "name": "label",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "samples": {
+                        "name": "samples",
+                        "required": true,
+                        "type": "array",
+                        "items": {
+                          "properties": {
+                            "x": {
+                              "name": "x",
+                              "required": true,
+                              "type": "number"
+                            },
+                            "y": {
+                              "name": "y",
+                              "required": true,
+                              "type": "number"
+                            }
+                          },
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "width": {
+                  "name": "width",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": false,
+                  "type": "number"
+                },
+                "xLabel": {
+                  "name": "xLabel",
+                  "required": false,
+                  "type": "string"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "yLabel": {
+                  "name": "yLabel",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
           },
           {
             "key": "width",

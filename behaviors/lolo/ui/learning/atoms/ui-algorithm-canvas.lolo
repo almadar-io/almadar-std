@@ -12,14 +12,63 @@ orbital AlgorithmCanvasOrbital {
     value : number
     color : string
     label : string
+    corner : AlgorithmCanvasCellsItemCorner
+  }
+  type AlgorithmCanvasCellsItemCorner = {
+    tl : string
+    tr : string
+    bl : string
+    br : string
   }
   type AlgorithmCanvasPointersItem = {
     index : number!
     label : string
     color : string
   }
+  type AlgorithmCanvasRangesItem = {
+    from : number!
+    to : number!
+    color : string
+    label : string
+    kind : "fill" | "bracket"
+  }
+  type AlgorithmCanvasSlotsItem = {
+    value : string
+    state : "empty" | "filled" | "highlight"
+    color : string
+  }
+  type AlgorithmCanvasFramesItem = {
+    label : string!
+    detail : string
+    state : "active" | "returning" | "done"
+    color : string
+  }
+  type AlgorithmCanvasBucketsItem = {
+    index : number!
+    entries : [AlgorithmCanvasBucketsItemEntriesItem]!
+  }
+  type AlgorithmCanvasBucketsItemEntriesItem = {
+    label : string!
+    state : "default" | "highlight" | "probing"
+    color : string
+  }
+  type AlgorithmCanvasAuxBarsItem = {
+    value : number!
+    color : string
+    label : string
+  }
+  type AlgorithmCanvasRowLabelsItem = {
+    index : number!
+    text : string!
+    color : string
+  }
+  type AlgorithmCanvasColLabelsItem = {
+    index : number!
+    text : string!
+    color : string
+  }
   type AlgorithmCanvasShapesItem = {
-    type : "line" | "arrow" | "circle" | "rect" | "polygon" | "path" | "text" | "axis" | "grid"!
+    type : "line" | "arrow" | "circle" | "ellipse" | "rect" | "polygon" | "path" | "text" | "axis" | "grid" | "venn-region"!
     id : string
     x : number
     y : number
@@ -44,6 +93,11 @@ orbital AlgorithmCanvasOrbital {
     fill : string
     lineWidth : number
     opacity : number
+    startAngle : number
+    endAngle : number
+    dash : "dashed" | "dotted"
+    inside : [string]
+    outside : [string]
   }
   type AlgorithmCanvasShapesItemPointsItem = {
     x : number!
@@ -79,6 +133,14 @@ orbital AlgorithmCanvasOrbital {
           bars: @config.bars
           cells: @config.cells
           pointers: @config.pointers
+          ranges: @config.ranges
+          slots: @config.slots
+          slotOrientation: @config.slotOrientation
+          frames: @config.frames
+          buckets: @config.buckets
+          auxBars: @config.auxBars
+          rowLabels: @config.rowLabels
+          colLabels: @config.colLabels
           shapes: @config.shapes
           interactive: @config.interactive
           animate: @config.animate
@@ -97,6 +159,14 @@ orbital AlgorithmCanvasOrbital {
           bars: @payload.bars
           cells: @payload.cells
           pointers: @payload.pointers
+          ranges: @payload.ranges
+          slots: @payload.slots
+          slotOrientation: @config.slotOrientation
+          frames: @payload.frames
+          buckets: @payload.buckets
+          auxBars: @payload.auxBars
+          rowLabels: @payload.rowLabels
+          colLabels: @payload.colLabels
           shapes: @payload.shapes
           interactive: @config.interactive
           animate: @config.animate
@@ -120,6 +190,13 @@ orbital AlgorithmCanvasOrbital {
         bars : [AlgorithmCanvasBarsItem]
         cells : [AlgorithmCanvasCellsItem]
         pointers : [AlgorithmCanvasPointersItem]
+        ranges : [AlgorithmCanvasRangesItem]
+        slots : [AlgorithmCanvasSlotsItem]
+        frames : [AlgorithmCanvasFramesItem]
+        buckets : [AlgorithmCanvasBucketsItem]
+        auxBars : [AlgorithmCanvasAuxBarsItem]
+        rowLabels : [AlgorithmCanvasRowLabelsItem]
+        colLabels : [AlgorithmCanvasColLabelsItem]
         shapes : [AlgorithmCanvasShapesItem]
       }
         @description "Live scene update; payload carries the current drawable state."
@@ -158,7 +235,39 @@ orbital AlgorithmCanvasOrbital {
         @tier "presentation"
       pointers : [AlgorithmCanvasPointersItem] = []
         @label "Pointers"
-        @description "Index cursors (i/j/lo/hi/mid); drawn as markers beneath the referenced bar/cell column."
+        @description "Index cursors (i/j/lo/hi/mid); drawn as markers beneath the referenced bar/slot column."
+        @tier "presentation"
+      ranges : [AlgorithmCanvasRangesItem] = []
+        @label "Ranges"
+        @description "Highlighted index ranges over the bars panel (translucent fill bands or labeled brackets)."
+        @tier "presentation"
+      slots : [AlgorithmCanvasSlotsItem] = []
+        @label "Slots"
+        @description "Discrete value slots (registers/variables); laid out in a row or a vertical stack."
+        @tier "presentation"
+      slotOrientation : "horizontal" | "vertical" = horizontal
+        @label "Slot Orientation"
+        @description "Slot stack direction; horizontal lays slots left-to-right, vertical stacks bottom-up."
+        @tier "presentation"
+      frames : [AlgorithmCanvasFramesItem] = []
+        @label "Frames"
+        @description "Recursion/call-stack frames; laid out bottom-up like a real call stack."
+        @tier "presentation"
+      buckets : [AlgorithmCanvasBucketsItem] = []
+        @label "Buckets"
+        @description "Hash-table buckets; each row is an index chip plus its chained entries."
+        @tier "presentation"
+      auxBars : [AlgorithmCanvasAuxBarsItem] = []
+        @label "Aux Bars"
+        @description "Secondary bar strip inside the bars panel (e.g. a running total beside the primary values)."
+        @tier "presentation"
+      rowLabels : [AlgorithmCanvasRowLabelsItem] = []
+        @label "Row Labels"
+        @description "Row-header labels drawn to the left of the cells grid."
+        @tier "presentation"
+      colLabels : [AlgorithmCanvasColLabelsItem] = []
+        @label "Col Labels"
+        @description "Column-header labels drawn above the cells grid."
         @tier "presentation"
       shapes : [AlgorithmCanvasShapesItem] = []
         @label "Shapes"
