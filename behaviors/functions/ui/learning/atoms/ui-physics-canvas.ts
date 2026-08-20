@@ -67,7 +67,7 @@ export interface StdUiPhysicsCanvasConfig {
   interactive?: boolean;
   isLoading?: boolean;
   /** Default: `{}` */
-  lighting?: unknown;
+  lighting?: TraitConfig;
   /** Default: `[]` */
   meters?: EntityRow[];
   /** Default: `"2d"` */
@@ -75,7 +75,7 @@ export interface StdUiPhysicsCanvasConfig {
   /** Default: `"SHAPE_CLICK"` */
   onShapeClick?: string;
   /** Default: `{}` */
-  post?: unknown;
+  post?: TraitConfig;
   /** Default: `[]` */
   readouts?: EntityRow[];
   /** Default: `[]` */

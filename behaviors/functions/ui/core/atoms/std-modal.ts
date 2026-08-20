@@ -66,6 +66,8 @@ export interface StdModalConfig {
   /** Default: `"modal"` */
   detailSlot?: unknown;
   /** Default: `[]` */
+  fieldOverrides?: EntityRow[];
+  /** Default: `[]` */
   fields?: string[];
   /** Default: `"layout-panel-top"` */
   icon?: string;
@@ -258,6 +260,39 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
             'label': 'Render slot',
             'tier': 'internal',
             'type': 'slot',
+          },
+          'fieldOverrides': {
+            'default': [],
+            'description': 'Per-field label/placeholder/hint overrides, keyed by field name. Types, options and required-ness stay entity-schema-driven (declare once on the entity); override only display copy the entity\'s @description doesn\'t fit.',
+            'items': {
+              'properties': {
+                'hint': {
+                  'name': 'hint',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': false,
+                  'type': 'string',
+                },
+                'name': {
+                  'name': 'name',
+                  'required': true,
+                  'type': 'string',
+                },
+                'placeholder': {
+                  'name': 'placeholder',
+                  'required': false,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Any per-field display copy overrides?',
+            'synonyms': 'field labels, custom labels, help text overrides, placeholder text',
+            'tier': 'presentation',
+            'type': '[ModalFieldOverride]',
           },
           'fields': {
             'default': [],
@@ -490,6 +525,7 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
                       {
                         'cancelEvent': 'CLOSE',
                         'entity': '@payload.row',
+                        'fieldOverrides': '@config.fieldOverrides',
                         'fields': '@config.fields',
                         'mode': '@config.mode',
                         'submitEvent': 'SAVE',

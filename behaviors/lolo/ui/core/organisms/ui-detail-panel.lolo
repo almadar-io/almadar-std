@@ -29,9 +29,25 @@ orbital DetailPanelOrbital {
     navigatesTo : string
     variant : "primary" | "secondary" | "ghost" | "danger"
   }
+  type DetailPanelBackAction = {
+    label : string!
+    icon : icon
+    event : string
+    navigatesTo : string
+    variant : "primary" | "secondary" | "ghost" | "danger"
+  }
   type DetailPanelFieldsItem = {
     key : string!
     header : string
+    type : string
+    values : [string]
+    relation : string
+  }
+  type DetailPanelRelationsDataValueItem = {
+    value : string!
+    label : string!
+    description : string
+    disabled : boolean
   }
 
   entity DetailPanelItem [runtime] {
@@ -63,6 +79,7 @@ orbital DetailPanelOrbital {
           avatar: @config.avatar
           sections: @config.sections
           actions: @config.actions
+          backAction: @config.backAction
           footer: @config.footer
           slideOver: @config.slideOver
           fields: @config.fields
@@ -73,6 +90,7 @@ orbital DetailPanelOrbital {
           width: @config.width
           displayFields: @config.displayFields
           showActions: @config.showActions
+          relationsData: @config.relationsData
           type: detail-panel
         })
       DetailPanelLoaded -> idle
@@ -95,6 +113,7 @@ orbital DetailPanelOrbital {
           avatar: @config.avatar
           sections: @config.sections
           actions: @config.actions
+          backAction: @config.backAction
           footer: @config.footer
           slideOver: @config.slideOver
           fields: @config.fields
@@ -105,6 +124,7 @@ orbital DetailPanelOrbital {
           width: @config.width
           displayFields: @config.displayFields
           showActions: @config.showActions
+          relationsData: @config.relationsData
           type: detail-panel
         })
     }
@@ -186,6 +206,10 @@ orbital DetailPanelOrbital {
         @label "Actions"
         @description "Unified actions array - first action with variant='primary' is the main action"
         @tier "presentation"
+      backAction : DetailPanelBackAction
+        @label "Back Action"
+        @description "Navigation-back affordance. Renders top-LEFT before the title (OS/back convention — Almadar_UX §8.4), spatially separated from the right-aligned action buttons + close X. Never inferred from actions[] labels."
+        @tier "presentation"
       footer : node
         @label "Footer"
         @description "footer prop"
@@ -194,7 +218,7 @@ orbital DetailPanelOrbital {
         @label "Slide Over"
         @description "slideOver prop"
         @tier "presentation"
-      fields : [DetailPanelFieldsItem] = [{ key: "Key", header: "Header" }, { key: "Key 2", header: "Header 2" }]
+      fields : [DetailPanelFieldsItem] = [{ key: "Key", header: "Header", type: "Type", values: ["Item", "Item 2"], relation: "Relation" }, { key: "Key 2", header: "Header 2", type: "Type 2", values: ["Item", "Item 2"], relation: "Relation 2" }]
         @label "Fields"
         @description "Fields to display - accepts string[], {key, header}[], or DetailField[]"
         @tier "presentation"
@@ -221,6 +245,10 @@ orbital DetailPanelOrbital {
       showActions : boolean
         @label "Show Actions"
         @description "Show actions flag"
+        @tier "presentation"
+      relationsData : Map string [DetailPanelRelationsDataValueItem] = {}
+        @label "Relations Data"
+        @description "Relation display data: { fieldName: [{value, label}] } — injected server-side by the runtime (relation-option injection) or bound by compiled codegen; resolves stored foreign ids to display names."
         @tier "presentation"
     }
   }

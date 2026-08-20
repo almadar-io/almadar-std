@@ -8,6 +8,13 @@ app std-modal "1.0.0"
 ;; notify) belong in a sibling coordinator trait that
 ;; `listens { ModalTrait SAVE -> DO_PERSIST }`.
 orbital ModalRecordOrbital {
+    type ModalFieldOverride = {
+      name : string!
+      label : string
+      placeholder : string
+      hint : string
+    }
+
     type ModalRecordLoaded = Event { data : [ModalRecord] }
 
     type ModalRecordLoadFailed = Event { error : string, code : string }
@@ -48,6 +55,7 @@ orbital ModalRecordOrbital {
           }, { type: divider }, {
             cancelEvent: CLOSE
             entity: ?row
+            fieldOverrides: @config.fieldOverrides
             fields: @config.fields
             mode: @config.mode
             submitEvent: SAVE
@@ -127,6 +135,11 @@ orbital ModalRecordOrbital {
         @description "Entity fields rendered as inputs inside the modal form."
         @synonyms "form fields, inputs, editable fields, field list"
         @tier "domain"
+      fieldOverrides : [ModalFieldOverride] = []
+        @label "Any per-field display copy overrides?"
+        @description "Per-field label/placeholder/hint overrides, keyed by field name. Types, options and required-ness stay entity-schema-driven (declare once on the entity); override only display copy the entity's @description doesn't fit."
+        @synonyms "field labels, custom labels, help text overrides, placeholder text"
+        @tier "presentation"
       mode : string = create
         @label "Is this for creating or editing?"
         @description "create = blank form; edit = pre-filled from the selected row."

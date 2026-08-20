@@ -20,6 +20,7 @@ orbital FormOrbital {
     validation : FormFieldsItemValidation
     readonly : boolean
     disabled : boolean
+    hint : string
   }
   type FormFieldsItemOptionsItem = {
     value : string!
@@ -45,6 +46,12 @@ orbital FormOrbital {
     description : string
     disabled : boolean
   }
+  type FormFieldOverridesItem = {
+    name : string!
+    label : string
+    placeholder : string
+    hint : string
+  }
   type FormHiddenCalculationsItem = {
     variableName : string!
     expression : SExpr!
@@ -62,10 +69,10 @@ orbital FormOrbital {
     message : string!
   }
   type FormEvaluationContext = {
-    formValues : json!
+    formValues : object!
     globalVariables : Map string json!
     localVariables : Map string json
-    entity : json
+    entity : object
   }
   type FormSectionsItem = {
     id : string!
@@ -92,6 +99,7 @@ orbital FormOrbital {
     validation : FormSectionsItemFieldsItemValidation
     readonly : boolean
     disabled : boolean
+    hint : string
   }
   type FormSectionsItemFieldsItemOptionsItem = {
     value : string!
@@ -107,8 +115,8 @@ orbital FormOrbital {
   }
   type FormFIELDCHANGEChange = {
     fieldId : string!
-    value : json!
-    formValues : Map string json!
+    value : object!
+    formValues : Map string object!
   }
 
   entity FormItem [runtime] {
@@ -143,6 +151,7 @@ orbital FormOrbital {
           cancelEvent: @config.cancelEvent
           relationsData: @config.relationsData
           relationsLoading: @config.relationsLoading
+          fieldOverrides: @config.fieldOverrides
           conditionalFields: @config.conditionalFields
           hiddenCalculations: @config.hiddenCalculations
           violationTriggers: @config.violationTriggers
@@ -176,6 +185,7 @@ orbital FormOrbital {
           cancelEvent: @config.cancelEvent
           relationsData: @config.relationsData
           relationsLoading: @config.relationsLoading
+          fieldOverrides: @config.fieldOverrides
           conditionalFields: @config.conditionalFields
           hiddenCalculations: @config.hiddenCalculations
           violationTriggers: @config.violationTriggers
@@ -239,7 +249,7 @@ orbital FormOrbital {
         @label "Mode"
         @description "Form mode — 'create' for new records, 'edit' for updating existing. Accepts `string` so schema-driven callers (whose `config.mode` is typed as `string` per the trait's declared config block) compile cleanly. The runtime treats anything other than 'edit' as 'create'."
         @tier "presentation"
-      fields : [FormFieldsItem] = [{ name: "Name", field: "Field", label: "Label", type: "Type", inputType: "Input Type", placeholder: "Placeholder", required: false, options: [{ value: "Value", label: "Label" }, { value: "Value 2", label: "Label 2" }], values: ["Item", "Item 2"], relation: { entity: "Entity", displayField: "Display Field", cardinality: one }, min: 1, max: 1, pattern: "Pattern", validation: { enum: ["Item", "Item 2"] }, readonly: false, disabled: false }, { name: "Name 2", field: "Field 2", label: "Label 2", type: "Type 2", inputType: "Input Type 2", placeholder: "Placeholder 2", required: true, options: [{ value: "Value", label: "Label" }, { value: "Value 2", label: "Label 2" }], values: ["Item", "Item 2"], relation: { entity: "Entity 2", displayField: "Display Field 2", cardinality: many }, min: 2, max: 2, pattern: "Pattern 2", validation: { enum: ["Item", "Item 2"] }, readonly: true, disabled: true }]
+      fields : [FormFieldsItem] = [{ name: "Name", field: "Field", label: "Label", type: "Type", inputType: "Input Type", placeholder: "Placeholder", required: false, options: [{ value: "Value", label: "Label" }, { value: "Value 2", label: "Label 2" }], values: ["Item", "Item 2"], relation: { entity: "Entity", displayField: "Display Field", cardinality: one }, min: 1, max: 1, pattern: "Pattern", validation: { enum: ["Item", "Item 2"] }, readonly: false, disabled: false, hint: "Hint" }, { name: "Name 2", field: "Field 2", label: "Label 2", type: "Type 2", inputType: "Input Type 2", placeholder: "Placeholder 2", required: true, options: [{ value: "Value", label: "Label" }, { value: "Value 2", label: "Label 2" }], values: ["Item", "Item 2"], relation: { entity: "Entity 2", displayField: "Display Field 2", cardinality: many }, min: 2, max: 2, pattern: "Pattern 2", validation: { enum: ["Item", "Item 2"] }, readonly: true, disabled: true, hint: "Hint 2" }]
         @label "Fields"
         @description "Fields definition (schema format) - accepts readonly for generated const arrays"
         @tier "presentation"
@@ -286,6 +296,10 @@ orbital FormOrbital {
       relationsLoading : Map string boolean = {}
         @label "Relations Loading"
         @description "Loading state for relation data: { fieldName: boolean }"
+        @tier "presentation"
+      fieldOverrides : [FormFieldOverridesItem] = []
+        @label "Field Overrides"
+        @description "Per-field display-copy overrides (label/placeholder/hint), merged by field name over the schema-enriched fields."
         @tier "presentation"
       conditionalFields : Map string SExpr = {}
         @label "Conditional Fields"

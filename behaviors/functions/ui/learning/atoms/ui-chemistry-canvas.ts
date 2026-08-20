@@ -71,13 +71,13 @@ export interface StdUiChemistryCanvasConfig {
   isLoading?: boolean;
   lattice3d?: EntityRow;
   /** Default: `{}` */
-  lighting?: unknown;
+  lighting?: TraitConfig;
   /** Default: `"2d"` */
   mode?: '2d' | '3d';
   /** Default: `"SHAPE_CLICK"` */
   onShapeClick?: string;
   /** Default: `{}` */
-  post?: unknown;
+  post?: TraitConfig;
   /** Default: `[]` */
   readouts?: EntityRow[];
   shadows?: boolean;

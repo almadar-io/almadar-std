@@ -42,7 +42,7 @@ export interface StdUiSegmentRendererConfig {
   className?: string;
   containerClassName?: string;
   /** Default: `[]` */
-  segments?: EntityRow[];
+  segments?: TraitConfig[];
   userProgress?: EntityRow;
 }
 
@@ -137,7 +137,7 @@ export function stdUiSegmentRendererSegmentRendererOrbital(params: StdUiSegmentR
             },
             'label': 'Segments',
             'tier': 'presentation',
-            'type': '[json]',
+            'type': '[object]',
           },
           'userProgress': {
             'description': 'User progress for restoring activation/reflection state',

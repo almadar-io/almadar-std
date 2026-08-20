@@ -40,7 +40,7 @@ export type StdUiModuleCardEventKey = 'INIT';
  */
 export interface StdUiModuleCardConfig {
   /** Default: `{}` */
-  data?: unknown;
+  data?: TraitConfig;
 }
 
 /**

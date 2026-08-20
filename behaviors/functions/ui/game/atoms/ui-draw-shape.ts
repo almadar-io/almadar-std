@@ -40,7 +40,7 @@ export type StdUiDrawShapeEventKey = 'INIT';
  */
 export interface StdUiDrawShapeConfig {
   /** Default: `{}` */
-  anchor?: unknown;
+  anchor?: TraitConfig;
   animation?: EntityRow;
   /** Default: `"source-over"` */
   blendMode?: 'source-over' | 'lighter' | 'multiply' | 'screen' | 'overlay' | 'darken' | 'lighten' | 'color-dodge' | 'color-burn' | 'hard-light' | 'soft-light' | 'difference' | 'exclusion' | 'hue' | 'saturation' | 'color' | 'luminosity' | 'source-atop' | 'destination-over' | 'destination-out' | 'xor';

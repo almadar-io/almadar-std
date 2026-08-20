@@ -67,6 +67,10 @@ export interface StdUiMathCanvasConfig {
   /** Default: `false` */
   interactive?: boolean;
   isLoading?: boolean;
+  /** Default: `{"item":"Item"}` */
+  keyMap?: Record<string, TraitConfig>;
+  /** Default: `{"item":"Item"}` */
+  keyUpMap?: Record<string, TraitConfig>;
   /** Default: `"SHAPE_CLICK"` */
   onShapeClick?: string;
   /** Default: `[]` */

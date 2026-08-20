@@ -40,7 +40,7 @@ export type StdUiDrawSpriteEventKey = 'INIT';
  */
 export interface StdUiDrawSpriteConfig {
   /** Default: `{}` */
-  anchor?: unknown;
+  anchor?: TraitConfig;
   animation?: string;
   asset?: EntityRow;
   flipX?: boolean;

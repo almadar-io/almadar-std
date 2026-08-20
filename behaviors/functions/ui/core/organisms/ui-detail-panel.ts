@@ -51,13 +51,14 @@ export interface StdUiDetailPanelConfig {
   /** Default: `{}` */
   activeFilters?: Record<string, TraitConfig>;
   avatar?: PatternValue;
+  backAction?: EntityRow;
   className?: string;
   /** Default: `[]` */
   displayFields?: string[];
   error?: EntityRow;
   /** Default: `[]` */
   fieldNames?: string[];
-  /** Default: `[{"header":"Header","key":"Key"},{"header":"Header 2","key":"Key 2"}]` */
+  /** Default: `[{"header":"Header","key":"Key","relation":"Relation","type":"Type","values":["Item","Item 2"]},{"header":"Header 2","key":"Key 2","relation":"Relation 2","type":"Type 2","values":["Item","Item 2"]}]` */
   fields?: EntityRow[];
   footer?: PatternValue;
   /** Default: `false` */
@@ -67,6 +68,8 @@ export interface StdUiDetailPanelConfig {
   pageSize?: number;
   /** Default: `"left"` */
   position?: 'left' | 'right';
+  /** Default: `{}` */
+  relationsData?: Record<string, TraitConfig>;
   searchValue?: string;
   /** Default: `[]` */
   sections?: EntityRow[];
@@ -215,6 +218,45 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
             'tier': 'presentation',
             'type': 'node',
           },
+          'backAction': {
+            'description': 'Navigation-back affordance. Renders top-LEFT before the title (OS/back convention — Almadar_UX §8.4), spatially separated from the right-aligned action buttons + close X. Never inferred from actions[] labels.',
+            'label': 'Back Action',
+            'properties': {
+              'event': {
+                'name': 'event',
+                'required': false,
+                'type': 'string',
+              },
+              'icon': {
+                'name': 'icon',
+                'required': false,
+                'type': 'string',
+              },
+              'label': {
+                'name': 'label',
+                'required': true,
+                'type': 'string',
+              },
+              'navigatesTo': {
+                'name': 'navigatesTo',
+                'required': false,
+                'type': 'string',
+              },
+              'variant': {
+                'name': 'variant',
+                'required': false,
+                'type': 'string',
+                'values': [
+                  'primary',
+                  'secondary',
+                  'ghost',
+                  'danger',
+                ],
+              },
+            },
+            'tier': 'presentation',
+            'type': 'DetailPanelBackAction',
+          },
           'className': {
             'description': 'Additional CSS classes',
             'label': 'Class Name',
@@ -274,10 +316,22 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
               {
                 'header': 'Header',
                 'key': 'Key',
+                'relation': 'Relation',
+                'type': 'Type',
+                'values': [
+                  'Item',
+                  'Item 2',
+                ],
               },
               {
                 'header': 'Header 2',
                 'key': 'Key 2',
+                'relation': 'Relation 2',
+                'type': 'Type 2',
+                'values': [
+                  'Item',
+                  'Item 2',
+                ],
               },
             ],
             'description': 'Fields to display - accepts string[], {key, header}[], or DetailField[]',
@@ -292,6 +346,24 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                   'name': 'key',
                   'required': true,
                   'type': 'string',
+                },
+                'relation': {
+                  'name': 'relation',
+                  'required': false,
+                  'type': 'string',
+                },
+                'type': {
+                  'name': 'type',
+                  'required': false,
+                  'type': 'string',
+                },
+                'values': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'values',
+                  'required': false,
+                  'type': 'array',
                 },
               },
               'type': 'object',
@@ -342,6 +414,41 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
               'left',
               'right',
             ],
+          },
+          'relationsData': {
+            'default': {},
+            'description': 'Relation display data: { fieldName: [{value, label}] } — injected server-side by the runtime (relation-option injection) or bound by compiled codegen; resolves stored foreign ids to display names.',
+            'items': {
+              'items': {
+                'properties': {
+                  'description': {
+                    'name': 'description',
+                    'required': false,
+                    'type': 'string',
+                  },
+                  'disabled': {
+                    'name': 'disabled',
+                    'required': false,
+                    'type': 'boolean',
+                  },
+                  'label': {
+                    'name': 'label',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  'value': {
+                    'name': 'value',
+                    'required': true,
+                    'type': 'string',
+                  },
+                },
+                'type': 'object',
+              },
+              'type': 'array',
+            },
+            'label': 'Relations Data',
+            'tier': 'presentation',
+            'type': 'Map<string,[DetailPanelRelationsDataValueItem]>',
           },
           'searchValue': {
             'description': 'Current search query value',
@@ -554,6 +661,7 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                     'actions': '@config.actions',
                     'activeFilters': '@config.activeFilters',
                     'avatar': '@config.avatar',
+                    'backAction': '@config.backAction',
                     'className': '@config.className',
                     'displayFields': '@config.displayFields',
                     'entity': '@entity',
@@ -567,6 +675,7 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                     'page': '@config.pageProp',
                     'pageSize': '@config.pageSize',
                     'position': '@config.position',
+                    'relationsData': '@config.relationsData',
                     'searchValue': '@config.searchValue',
                     'sections': '@config.sections',
                     'selectedIds': '@config.selectedIds',
@@ -596,6 +705,7 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                     'actions': '@config.actions',
                     'activeFilters': '@config.activeFilters',
                     'avatar': '@config.avatar',
+                    'backAction': '@config.backAction',
                     'className': '@config.className',
                     'displayFields': '@config.displayFields',
                     'entity': '@payload.data',
@@ -609,6 +719,7 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                     'page': '@config.pageProp',
                     'pageSize': '@config.pageSize',
                     'position': '@config.position',
+                    'relationsData': '@config.relationsData',
                     'searchValue': '@config.searchValue',
                     'sections': '@config.sections',
                     'selectedIds': '@config.selectedIds',

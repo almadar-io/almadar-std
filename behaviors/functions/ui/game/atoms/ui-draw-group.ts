@@ -43,7 +43,7 @@ export interface StdUiDrawGroupConfig {
   bone?: string;
   clip?: string;
   /** Default: `[]` */
-  items?: EntityRow[];
+  items?: TraitConfig[];
   opacity?: number;
   /** Default: `{"x":1,"y":1,"z":1}` */
   position?: EntityRow;

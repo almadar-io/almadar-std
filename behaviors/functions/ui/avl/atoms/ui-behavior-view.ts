@@ -40,7 +40,7 @@ export type StdUiBehaviorViewEventKey = 'INIT';
  */
 export interface StdUiBehaviorViewConfig {
   /** Default: `{}` */
-  data?: unknown;
+  data?: TraitConfig;
 }
 
 /**

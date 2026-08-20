@@ -42,7 +42,7 @@ export interface StdUiDrawTextConfig {
   /** Default: `"center"` */
   align?: 'center' | 'end' | 'left' | 'right' | 'start';
   /** Default: `{}` */
-  anchor?: unknown;
+  anchor?: TraitConfig;
   /** Default: `"alphabetic"` */
   baseline?: 'alphabetic' | 'bottom' | 'hanging' | 'ideographic' | 'middle' | 'top';
   /** Default: `""` */

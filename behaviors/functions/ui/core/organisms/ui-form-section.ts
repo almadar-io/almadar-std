@@ -77,7 +77,9 @@ export interface StdUiFormSectionConfig {
   configPath?: string;
   error?: EntityRow;
   evaluationContext?: EntityRow;
-  /** Default: `[{"disabled":false,"field":"Field","inputType":"Input Type","label":"Label","max":1,"min":1,"name":"Name","options":[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}],"pattern":"Pattern","placeholder":"Placeholder","readonly":false,"relation":{"cardinality":"one","displayField":"Display Field","entity":"Entity"},"required":false,"type":"Type","validation":{"enum":["Item","Item 2"]},"values":["Item","Item 2"]},{"disabled":true,"field":"Field 2","inputType":"Input Type 2","label":"Label 2","max":2,"min":2,"name":"Name 2","options":[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}],"pattern":"Pattern 2","placeholder":"Placeholder 2","readonly":true,"relation":{"cardinality":"many","displayField":"Display Field 2","entity":"Entity 2"},"required":true,"type":"Type 2","validation":{"enum":["Item","Item 2"]},"values":["Item","Item 2"]}]` */
+  /** Default: `[]` */
+  fieldOverrides?: EntityRow[];
+  /** Default: `[{"disabled":false,"field":"Field","hint":"Hint","inputType":"Input Type","label":"Label","max":1,"min":1,"name":"Name","options":[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}],"pattern":"Pattern","placeholder":"Placeholder","readonly":false,"relation":{"cardinality":"one","displayField":"Display Field","entity":"Entity"},"required":false,"type":"Type","validation":{"enum":["Item","Item 2"]},"values":["Item","Item 2"]},{"disabled":true,"field":"Field 2","hint":"Hint 2","inputType":"Input Type 2","label":"Label 2","max":2,"min":2,"name":"Name 2","options":[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}],"pattern":"Pattern 2","placeholder":"Placeholder 2","readonly":true,"relation":{"cardinality":"many","displayField":"Display Field 2","entity":"Entity 2"},"required":true,"type":"Type 2","validation":{"enum":["Item","Item 2"]},"values":["Item","Item 2"]}]` */
   fields?: EntityRow[];
   /** Default: `"md"` */
   gap?: 'sm' | 'md' | 'lg';
@@ -258,12 +260,12 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
               'entity': {
                 'name': 'entity',
                 'required': false,
-                'type': 'string',
+                'type': 'object',
               },
               'formValues': {
                 'name': 'formValues',
                 'required': true,
-                'type': 'string',
+                'type': 'object',
               },
               'globalVariables': {
                 'items': {
@@ -285,11 +287,44 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
             'tier': 'presentation',
             'type': 'FormSectionEvaluationContext',
           },
+          'fieldOverrides': {
+            'default': [],
+            'description': 'Per-field display-copy overrides (label/placeholder/hint), merged by field name over the schema-enriched fields.',
+            'items': {
+              'properties': {
+                'hint': {
+                  'name': 'hint',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': false,
+                  'type': 'string',
+                },
+                'name': {
+                  'name': 'name',
+                  'required': true,
+                  'type': 'string',
+                },
+                'placeholder': {
+                  'name': 'placeholder',
+                  'required': false,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Field Overrides',
+            'tier': 'presentation',
+            'type': '[FormSectionFieldOverridesItem]',
+          },
           'fields': {
             'default': [
               {
                 'disabled': false,
                 'field': 'Field',
+                'hint': 'Hint',
                 'inputType': 'Input Type',
                 'label': 'Label',
                 'max': 1,
@@ -329,6 +364,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
               {
                 'disabled': true,
                 'field': 'Field 2',
+                'hint': 'Hint 2',
                 'inputType': 'Input Type 2',
                 'label': 'Label 2',
                 'max': 2,
@@ -381,6 +417,11 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                 },
                 'field': {
                   'name': 'field',
+                  'required': false,
+                  'type': 'string',
+                },
+                'hint': {
+                  'name': 'hint',
                   'required': false,
                   'type': 'string',
                 },
@@ -685,6 +726,11 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                         'required': false,
                         'type': 'string',
                       },
+                      'hint': {
+                        'name': 'hint',
+                        'required': false,
+                        'type': 'string',
+                      },
                       'inputType': {
                         'name': 'inputType',
                         'required': false,
@@ -955,12 +1001,12 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                   {
                     'name': 'value',
                     'required': true,
-                    'type': 'json',
+                    'type': 'object',
                   },
                   {
                     'name': 'formValues',
                     'required': true,
-                    'type': 'Map<string,json>',
+                    'type': 'Map<string,object>',
                   },
                 ],
                 'type': 'object',
@@ -1050,12 +1096,12 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                     {
                       'name': 'value',
                       'required': true,
-                      'type': 'json',
+                      'type': 'object',
                     },
                     {
                       'name': 'formValues',
                       'required': true,
-                      'type': 'Map<string,json>',
+                      'type': 'Map<string,object>',
                     },
                   ],
                   'type': 'object',
@@ -1095,6 +1141,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                     'entity': '@entity',
                     'error': '@config.error',
                     'evaluationContext': '@config.evaluationContext',
+                    'fieldOverrides': '@config.fieldOverrides',
                     'fields': '@config.fields',
                     'gap': '@config.gap',
                     'hiddenCalculations': '@config.hiddenCalculations',
@@ -1138,6 +1185,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                     'entity': '@payload.data',
                     'error': '@config.error',
                     'evaluationContext': '@config.evaluationContext',
+                    'fieldOverrides': '@config.fieldOverrides',
                     'fields': '@config.fields',
                     'gap': '@config.gap',
                     'hiddenCalculations': '@config.hiddenCalculations',

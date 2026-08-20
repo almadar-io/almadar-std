@@ -66,7 +66,7 @@ export interface StdUiBiologyCanvasConfig {
   interactive?: boolean;
   isLoading?: boolean;
   /** Default: `{}` */
-  lighting?: unknown;
+  lighting?: TraitConfig;
   /** Default: `"2d"` */
   mode?: '2d' | '3d';
   /** Default: `[]` */
@@ -74,7 +74,7 @@ export interface StdUiBiologyCanvasConfig {
   /** Default: `"SHAPE_CLICK"` */
   onShapeClick?: string;
   /** Default: `{}` */
-  post?: unknown;
+  post?: TraitConfig;
   /** Default: `[]` */
   readouts?: EntityRow[];
   shadows?: boolean;
