@@ -1,0 +1,230 @@
+[
+  {
+    "organism": "std-motion-body",
+    "orbital": "MotionBodyOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/game/atoms/std-motion-body.ts",
+    "entities": [
+      {
+        "name": "MotionBodyData",
+        "fields": [
+          {
+            "name": "bodies",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "gravity",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "biasAx",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "biasAy",
+            "type": "number",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "MotionBody",
+        "emittedEvents": [
+          "BODY_MOVED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "BODY_MOVED",
+            "direction": "emit",
+            "description": "Lead body (bodies[0]) after this motion tick: position, velocity, and scalar speed; boards render it, objective mechanics score it, game rules adapt from it",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "THRUST",
+            "direction": "listen"
+          },
+          {
+            "name": "IMPULSE",
+            "direction": "listen"
+          },
+          {
+            "name": "PLACE",
+            "direction": "listen"
+          },
+          {
+            "name": "SET_GRAVITY",
+            "direction": "listen"
+          },
+          {
+            "name": "SET_BIAS",
+            "direction": "listen"
+          },
+          {
+            "name": "RESTART",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "bodies",
+            "type": "[Body]",
+            "default": [],
+            "label": "Initial Bodies",
+            "description": "Seed roster — bodies[0] is the lead body reported by BODY_MOVED",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "ax": {
+                  "name": "ax",
+                  "required": false,
+                  "type": "number"
+                },
+                "ay": {
+                  "name": "ay",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "vx": {
+                  "name": "vx",
+                  "required": false,
+                  "type": "number"
+                },
+                "vy": {
+                  "name": "vy",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "damping",
+            "type": "number",
+            "default": 0.98,
+            "label": "Damping",
+            "description": "Velocity retained each 50ms tick (1 = frictionless coast, 0.9 = quick stop); the ice-to-mud feel knob",
+            "tier": "presentation"
+          },
+          {
+            "key": "gravity",
+            "type": "number",
+            "default": 0,
+            "label": "Gravity",
+            "description": "Constant acceleration added to every body's vertical velocity each tick (positive pulls toward +y); seeded onto the entity so SET_GRAVITY can retune it live",
+            "tier": "domain"
+          },
+          {
+            "key": "maxSpeed",
+            "type": "number",
+            "default": 8,
+            "label": "Max Speed",
+            "description": "Per-axis speed cap in world units per second",
+            "tier": "presentation"
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true the 50ms motion tick integrates; toggle to freeze all bodies",
+            "tier": "domain"
+          },
+          {
+            "key": "xMax",
+            "type": "number",
+            "default": 1000000,
+            "label": "Right Wall",
+            "description": "Largest x a body may hold; hitting it zeroes vx",
+            "tier": "presentation"
+          },
+          {
+            "key": "xMin",
+            "type": "number",
+            "default": -1000000,
+            "label": "Left Wall",
+            "description": "Smallest x a body may hold; hitting it zeroes vx",
+            "tier": "presentation"
+          },
+          {
+            "key": "yMax",
+            "type": "number",
+            "default": 1000000,
+            "label": "Ceiling",
+            "description": "Largest y a body may hold; hitting it zeroes vy",
+            "tier": "presentation"
+          },
+          {
+            "key": "yMin",
+            "type": "number",
+            "default": -1000000,
+            "label": "Floor",
+            "description": "Smallest y a body may hold; hitting it zeroes vy",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "MotionBodyData",
+        "transitionEvents": [
+          "IMPULSE",
+          "INIT",
+          "PLACE",
+          "RESTART",
+          "SET_BIAS",
+          "SET_GRAVITY",
+          "THRUST"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "biasAx",
+            "biasAy",
+            "bodies",
+            "gravity"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "MotionBodyPage",
+        "defaultPath": "/motion-body",
+        "primaryEntity": "MotionBodyData"
+      }
+    ],
+    "emittedEvents": [
+      "BODY_MOVED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

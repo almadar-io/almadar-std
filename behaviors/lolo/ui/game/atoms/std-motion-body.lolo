@@ -1,0 +1,139 @@
+app std-motion-body "1.1.0"
+"Headless continuous-motion authority: the SOLE writer of bodies + gravity + bias on physics boards. Every 50ms motion tick it integrates each body — thrust acceleration plus the board-wide bias field (biasAx/biasAy — the hill-force / wind / conveyor-belt channel, written only through the SET_BIAS intent) plus gravity feed velocity, damping bleeds it, maxSpeed caps it, velocity steps position, and the world walls clamp it (a clamped axis kills that axis's velocity). Intents: THRUST sets a body's acceleration (hold-to-push input: keydown pushes, keyup zeroes), IMPULSE kicks velocity instantly (jumps, d-pad nudges), PLACE teleports (spawns, curve-riding pins), SET_GRAVITY retunes the pull live, SET_BIAS steers the bias field, RESTART reseeds. Emits BODY_MOVED for the lead body (bodies[0]) every tick so boards that subscribe can react — boards that don't subscribe pay nothing. Renders nothing."
+orbital MotionBodyOrbital {
+  type Body = {
+    id : string!
+    x : number!
+    y : number!
+    vx : number
+    vy : number
+    ax : number
+    ay : number
+  }
+
+  entity MotionBodyData [runtime, shared] {
+    id : string!
+    bodies : [Body]
+    gravity : number = 0
+    biasAx : number = 0
+    biasAy : number = 0
+  }
+
+  trait MotionBody -> @rebindable MotionBodyData [lifecycle] {
+    initial: active
+
+    state active {
+      INIT -> active
+        (set @entity.bodies @config.bodies)
+        (set @entity.gravity @config.gravity)
+
+      THRUST -> active
+        (set @entity.bodies (array/map @entity.bodies (fn b (if (== @b.id @payload.id) (object/merge @b { ax: @payload.ax, ay: @payload.ay }) @b))))
+
+      IMPULSE -> active
+        (set @entity.bodies (array/map @entity.bodies (fn b (if (== @b.id @payload.id) (object/merge @b { vx: (+ (object/get @b vx) @payload.dvx), vy: (+ (object/get @b vy) @payload.dvy) }) @b))))
+
+      PLACE -> active
+        (set @entity.bodies (array/map @entity.bodies (fn b (if (== @b.id @payload.id) (object/merge @b { x: @payload.x, y: @payload.y }) @b))))
+
+      SET_GRAVITY -> active
+        (set @entity.gravity @payload.gravity)
+
+      SET_BIAS -> active
+        (set @entity.biasAx @payload.biasAx)
+        (set @entity.biasAy @payload.biasAy)
+
+      RESTART -> active
+        (set @entity.bodies @config.bodies)
+        (set @entity.gravity @config.gravity)
+    }
+
+    ticks {
+      motionTick every 50ms
+        when (and @config.running (> (array/len @entity.bodies) 0))
+        (do
+          (set @entity.bodies (array/map @entity.bodies (fn b
+            (let ((nvx (math/clamp (* (+ (object/get @b vx) (* (+ (object/get @b ax) @entity.biasAx) 0.05)) @config.damping) (- 0 @config.maxSpeed) @config.maxSpeed)))
+            (let ((nvy (math/clamp (* (+ (object/get @b vy) (* (+ (+ (object/get @b ay) @entity.biasAy) @entity.gravity) 0.05)) @config.damping) (- 0 @config.maxSpeed) @config.maxSpeed)))
+            (let ((nx (math/clamp (+ (object/get @b x) (* @nvx 0.05)) @config.xMin @config.xMax)))
+            (let ((ny (math/clamp (+ (object/get @b y) (* @nvy 0.05)) @config.yMin @config.yMax)))
+              (object/merge @b {
+                x: @nx,
+                y: @ny,
+                vx: (if (or (== @nx @config.xMin) (== @nx @config.xMax)) 0 @nvx),
+                vy: (if (or (== @ny @config.yMin) (== @ny @config.yMax)) 0 @nvy)
+              }))))))))
+          (emit BODY_MOVED {
+            id: (object/get (array/first @entity.bodies) id),
+            x: (object/get (array/first @entity.bodies) x),
+            y: (object/get (array/first @entity.bodies) y),
+            vx: (object/get (array/first @entity.bodies) vx),
+            vy: (object/get (array/first @entity.bodies) vy),
+            speed: (math/hypot (object/get (array/first @entity.bodies) vx) (object/get (array/first @entity.bodies) vy))
+          }))
+    }
+
+    emits {
+      BODY_MOVED -> external {
+        id : string!
+        x : number!
+        y : number!
+        vx : number!
+        vy : number!
+        speed : number!
+      }
+        @description "Lead body (bodies[0]) after this motion tick: position, velocity, and scalar speed; boards render it, objective mechanics score it, game rules adapt from it"
+        @tier "domain"
+    }
+
+    listens {
+      THRUST { id : string!, ax : number!, ay : number! }
+      IMPULSE { id : string!, dvx : number!, dvy : number! }
+      PLACE { id : string!, x : number!, y : number! }
+      SET_GRAVITY { gravity : number! }
+      SET_BIAS { biasAx : number!, biasAy : number! }
+      RESTART { id : string }
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true the 50ms motion tick integrates; toggle to freeze all bodies"
+        @tier "domain"
+      bodies : [Body] = []
+        @label "Initial Bodies"
+        @description "Seed roster — bodies[0] is the lead body reported by BODY_MOVED"
+        @tier "domain"
+      gravity : number = 0
+        @label "Gravity"
+        @description "Constant acceleration added to every body's vertical velocity each tick (positive pulls toward +y); seeded onto the entity so SET_GRAVITY can retune it live"
+        @tier "domain"
+      damping : number = 0.98
+        @label "Damping"
+        @description "Velocity retained each 50ms tick (1 = frictionless coast, 0.9 = quick stop); the ice-to-mud feel knob"
+        @tier "presentation"
+      maxSpeed : number = 8
+        @label "Max Speed"
+        @description "Per-axis speed cap in world units per second"
+        @tier "presentation"
+      xMin : number = -1000000
+        @label "Left Wall"
+        @description "Smallest x a body may hold; hitting it zeroes vx"
+        @tier "presentation"
+      xMax : number = 1000000
+        @label "Right Wall"
+        @description "Largest x a body may hold; hitting it zeroes vx"
+        @tier "presentation"
+      yMin : number = -1000000
+        @label "Floor"
+        @description "Smallest y a body may hold; hitting it zeroes vy"
+        @tier "presentation"
+      yMax : number = 1000000
+        @label "Ceiling"
+        @description "Largest y a body may hold; hitting it zeroes vy"
+        @tier "presentation"
+    }
+  }
+
+  page "/motion-body" as MotionBodyPage -> MotionBody
+}
