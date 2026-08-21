@@ -30,14 +30,7 @@ const ALIAS = 'UiBadge';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiBadgeEventKey = 'INIT' | 'REMOVE';
-
-/**
- * Payload shape for the `REMOVE` event.
- */
-export interface StdUiBadgeRemovePayload {
-  id?: string;
-}
+export type StdUiBadgeEventKey = 'INIT';
 
 /**
  * Typed call-site config block for this trait — every
@@ -51,7 +44,7 @@ export interface StdUiBadgeConfig {
   icon?: unknown;
   iconAsset?: EntityRow;
   label?: string;
-  /** Default: `"REMOVE"` */
+  /** Default: `""` */
   onRemove?: string;
   removeLabel?: string;
   /** Default: `"sm"` */

@@ -25,21 +25,6 @@ orbital FilterPillOrbital {
           removeEvent: @config.removeEvent
           type: filter-pill
         })
-      REMOVE -> idle
-        (set @entity.label ?label)
-        (render-ui main {
-          className: @config.className
-          variant: @config.variant
-          size: @config.size
-          label: @entity.label
-          icon: @config.icon
-          onRemove: @config.onRemove
-          removable: @config.removable
-          onClick: @config.onClick
-          clickEvent: @config.clickEvent
-          removeEvent: @config.removeEvent
-          type: filter-pill
-        })
       CLICK -> idle
         (set @entity.label ?label)
         (render-ui main {
@@ -58,11 +43,6 @@ orbital FilterPillOrbital {
     }
 
     emits {
-      @config.onRemove -> external {
-        label : string!
-      }
-        @description "Called when the user clicks the remove (×) button"
-        @tier "essential"
       @config.onClick -> external {
         label : string!
       }
@@ -71,9 +51,6 @@ orbital FilterPillOrbital {
     }
 
     listens {
-      REMOVE {
-        label : string!
-      }
       CLICK {
         label : string!
       }
@@ -100,7 +77,7 @@ orbital FilterPillOrbital {
         @label "Icon"
         @description "Lucide icon component or canonical kebab-case icon name string"
         @tier "presentation"
-      onRemove : string = "REMOVE"
+      onRemove : string = ""
         @label "On Remove"
         @description "Called when the user clicks the remove (×) button"
         @tier "presentation"
@@ -116,7 +93,7 @@ orbital FilterPillOrbital {
         @label "Click Event"
         @description "Event name dispatched via event bus when the pill body is clicked. Payload: { label }"
         @tier "presentation"
-      removeEvent : string = "REMOVE"
+      removeEvent : string = ""
         @label "Remove Event"
         @description "Event name dispatched via event bus when the remove (×) button is clicked. Payload: { label }"
         @tier "presentation"

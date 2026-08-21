@@ -30,7 +30,7 @@ const ALIAS = 'UiTraitSlot';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiTraitSlotEventKey = 'CLICK' | 'DRAG_START' | 'DROP' | 'INIT' | 'ITEM_DROP' | 'REMOVE';
+export type StdUiTraitSlotEventKey = 'CLICK' | 'DRAG_START' | 'DROP' | 'INIT' | 'ITEM_DROP';
 
 /**
  * Payload shape for the `ITEM_DROP` event.
@@ -50,13 +50,6 @@ export interface StdUiTraitSlotDragStartPayload {
  * Payload shape for the `CLICK` event.
  */
 export interface StdUiTraitSlotClickPayload {
-  slotNumber: number;
-}
-
-/**
- * Payload shape for the `REMOVE` event.
- */
-export interface StdUiTraitSlotRemovePayload {
   slotNumber: number;
 }
 
@@ -98,9 +91,9 @@ export interface StdUiTraitSlotConfig {
   onDragStart?: string;
   /** Default: `"ITEM_DROP"` */
   onItemDrop?: string;
-  /** Default: `"REMOVE"` */
+  /** Default: `""` */
   onRemove?: string;
-  /** Default: `"REMOVE"` */
+  /** Default: `""` */
   removeEvent?: string;
   /** Default: `false` */
   selected?: boolean;

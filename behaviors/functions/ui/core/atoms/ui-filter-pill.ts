@@ -30,14 +30,7 @@ const ALIAS = 'UiFilterPill';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiFilterPillEventKey = 'CLICK' | 'INIT' | 'REMOVE';
-
-/**
- * Payload shape for the `REMOVE` event.
- */
-export interface StdUiFilterPillRemovePayload {
-  label: string;
-}
+export type StdUiFilterPillEventKey = 'CLICK' | 'INIT';
 
 /**
  * Payload shape for the `CLICK` event.
@@ -60,11 +53,11 @@ export interface StdUiFilterPillConfig {
   label?: string;
   /** Default: `"CLICK"` */
   onClick?: string;
-  /** Default: `"REMOVE"` */
+  /** Default: `""` */
   onRemove?: string;
   /** Default: `true` */
   removable?: boolean;
-  /** Default: `"REMOVE"` */
+  /** Default: `""` */
   removeEvent?: string;
   /** Default: `"sm"` */
   size?: 'sm' | 'md' | 'lg';
