@@ -43,6 +43,7 @@ export * from './ui/core/atoms/std-dashboard-grid-embedded.js';
 export * from './ml/atoms/std-data-collector.js';
 export * from './infra/atoms/std-data-erasure.js';
 export * from './ui/core/atoms/std-date-range.js';
+export * from './ui/core/atoms/std-detail-layout.js';
 export * from './ui/game/atoms/std-dungeon-combat.js';
 export * from './ui/core/atoms/std-esign-flow.js';
 export * from './ui/core/atoms/std-esign-request.js';

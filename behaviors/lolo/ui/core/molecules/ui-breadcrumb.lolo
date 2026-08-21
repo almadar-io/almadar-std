@@ -21,6 +21,8 @@ orbital BreadcrumbOrbital {
       INIT -> idle
         (render-ui main {
           items: @config.items
+          fromNavStack: @config.fromNavStack
+          itemEvent: @config.itemEvent
           separator: @config.separator
           maxItems: @config.maxItems
           className: @config.className
@@ -28,10 +30,26 @@ orbital BreadcrumbOrbital {
         })
     }
 
+    emits {
+      @config.itemEvent -> external {
+        id : string
+      }
+        @description "Event emitted when a non-current crumb is clicked, with payload `{ label, href, index }` — the trait handles it with `(navigate ?href)`. Without it, stack crumbs navigate directly."
+        @tier "essential"
+    }
+
     config {
-      items : [BreadcrumbItemsItem] = [{ label: "Label", href: "Href", path: "Path", icon: "circle", isCurrent: false }, { label: "Label 2", href: "Href 2", path: "Path 2", icon: "circle", isCurrent: true }]
+      items : [BreadcrumbItemsItem] = []
         @label "Items"
-        @description "Breadcrumb items"
+        @description "Breadcrumb items. Omit together with `fromNavStack` to render the orbital-scoped navigation stack instead of an authored trail."
+        @tier "presentation"
+      fromNavStack : boolean = false
+        @label "From Nav Stack"
+        @description "Render the current orbital's navigation stack (NavStackProvider) as the trail: one crumb per visited/declared level, last entry current. The stack is client-session state both execution paths maintain; outside a provider this renders nothing."
+        @tier "presentation"
+      itemEvent : string = "ITEM"
+        @label "Item Event"
+        @description "Event emitted when a non-current crumb is clicked, with payload `{ label, href, index }` — the trait handles it with `(navigate ?href)`. Without it, stack crumbs navigate directly."
         @tier "presentation"
       separator : icon
         @label "Separator"

@@ -19,6 +19,15 @@
         "parent": "trt_01KXG04MX6C96QT73HKMXSSXW9",
         "renames": []
       },
+      "evt_01M0HZ7JXZT1B3WE2JVP75FDGK": {
+        "bakedName": "@config.itemEvent",
+        "curName": "@config.itemEvent",
+        "id": "evt_01M0HZ7JXZT1B3WE2JVP75FDGK",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04MX6C96QT73HKMXSSXW9",
+        "renames": []
+      },
       "orb_01KXG04MX6C39A82D7NECQJ0X8": {
         "bakedName": "BreadcrumbOrbital",
         "curName": "BreadcrumbOrbital",
@@ -86,24 +95,23 @@
               "tier": "presentation",
               "type": "string"
             },
+            "fromNavStack": {
+              "default": false,
+              "description": "Render the current orbital's navigation stack (NavStackProvider) as the trail: one crumb per visited/declared level, last entry current. The stack is client-session state both execution paths maintain; outside a provider this renders nothing.",
+              "label": "From Nav Stack",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "itemEvent": {
+              "default": "ITEM",
+              "description": "Event emitted when a non-current crumb is clicked, with payload `{ label, href, index }` — the trait handles it with `(navigate ?href)`. Without it, stack crumbs navigate directly.",
+              "label": "Item Event",
+              "tier": "presentation",
+              "type": "string"
+            },
             "items": {
-              "default": [
-                {
-                  "href": "Href",
-                  "icon": "circle",
-                  "isCurrent": false,
-                  "label": "Label",
-                  "path": "Path"
-                },
-                {
-                  "href": "Href 2",
-                  "icon": "circle",
-                  "isCurrent": true,
-                  "label": "Label 2",
-                  "path": "Path 2"
-                }
-              ],
-              "description": "Breadcrumb items",
+              "default": [],
+              "description": "Breadcrumb items. Omit together with `fromNavStack` to render the orbital-scoped navigation stack instead of an authored trail.",
               "items": {
                 "properties": {
                   "event": {
@@ -156,6 +164,21 @@
               "type": "icon"
             }
           },
+          "emits": [
+            {
+              "description": "Event emitted when a non-current crumb is clicked, with payload `{ label, href, index }` — the trait handles it with `(navigate ?href)`. Without it, stack crumbs navigate directly.",
+              "event": "@config.itemEvent",
+              "eventId": "evt_01M0HZ7JXZT1B3WE2JVP75FDGK",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
           "entityContract": {
             "provides": [],
             "requires": []
@@ -175,6 +198,19 @@
                 "id": "evt_01KXG04MX61JX4AMH0MQK0YQ6W",
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "description": "Event emitted when a non-current crumb is clicked, with payload `{ label, href, index }` — the trait handles it with `(navigate ?href)`. Without it, stack crumbs navigate directly.",
+                "id": "evt_01M0HZ7JXZT1B3WE2JVP75FDGK",
+                "key": "@config.itemEvent",
+                "name": "@config.item event",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
               }
             ],
             "states": [
@@ -191,6 +227,8 @@
                     "main",
                     {
                       "className": "@config.className",
+                      "fromNavStack": "@config.fromNavStack",
+                      "itemEvent": "@config.itemEvent",
                       "items": "@config.items",
                       "maxItems": "@config.maxItems",
                       "separator": "@config.separator",

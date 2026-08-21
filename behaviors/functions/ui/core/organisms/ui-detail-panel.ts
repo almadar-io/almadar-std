@@ -63,6 +63,7 @@ export interface StdUiDetailPanelConfig {
   footer?: PatternValue;
   /** Default: `false` */
   isLoading?: boolean;
+  maxInlineActions?: number;
   mode?: string;
   pageProp?: number;
   pageSize?: number;
@@ -385,6 +386,12 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
             'tier': 'presentation',
             'type': 'boolean',
           },
+          'maxInlineActions': {
+            'description': 'Max inline action buttons before the rest collapse into a \'⋯\' overflow menu (mirrors DataGrid\'s maxInlineActions). Omit = all inline.',
+            'label': 'Max Inline Actions',
+            'tier': 'presentation',
+            'type': 'number',
+          },
           'mode': {
             'description': 'Display mode (passed by compiler)',
             'label': 'Mode',
@@ -671,6 +678,7 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                     'footer': '@config.footer',
                     'initialData': '@entity',
                     'isLoading': '@config.isLoading',
+                    'maxInlineActions': '@config.maxInlineActions',
                     'mode': '@config.mode',
                     'page': '@config.pageProp',
                     'pageSize': '@config.pageSize',
@@ -715,6 +723,7 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                     'footer': '@config.footer',
                     'initialData': '@payload.data',
                     'isLoading': '@config.isLoading',
+                    'maxInlineActions': '@config.maxInlineActions',
                     'mode': '@config.mode',
                     'page': '@config.pageProp',
                     'pageSize': '@config.pageSize',

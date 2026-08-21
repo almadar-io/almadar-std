@@ -14,9 +14,17 @@
     "traits": [
       {
         "name": "BreadcrumbRender",
-        "emittedEvents": [],
+        "emittedEvents": [
+          "ITEM"
+        ],
         "listenedEvents": [],
         "events": [
+          {
+            "name": "ITEM",
+            "direction": "emit",
+            "description": "Event emitted when a non-current crumb is clicked, with payload `{ label, href, index }` — the trait handles it with `(navigate ?href)`. Without it, stack crumbs navigate directly.",
+            "tier": "essential"
+          },
           {
             "name": "INIT",
             "direction": "listen"
@@ -31,26 +39,27 @@
             "tier": "presentation"
           },
           {
+            "key": "fromNavStack",
+            "type": "boolean",
+            "default": false,
+            "label": "From Nav Stack",
+            "description": "Render the current orbital's navigation stack (NavStackProvider) as the trail: one crumb per visited/declared level, last entry current. The stack is client-session state both execution paths maintain; outside a provider this renders nothing.",
+            "tier": "presentation"
+          },
+          {
+            "key": "itemEvent",
+            "type": "string",
+            "default": "ITEM",
+            "label": "Item Event",
+            "description": "Event emitted when a non-current crumb is clicked, with payload `{ label, href, index }` — the trait handles it with `(navigate ?href)`. Without it, stack crumbs navigate directly.",
+            "tier": "presentation"
+          },
+          {
             "key": "items",
             "type": "[BreadcrumbItemsItem]",
-            "default": [
-              {
-                "href": "Href",
-                "icon": "circle",
-                "isCurrent": false,
-                "label": "Label",
-                "path": "Path"
-              },
-              {
-                "href": "Href 2",
-                "icon": "circle",
-                "isCurrent": true,
-                "label": "Label 2",
-                "path": "Path 2"
-              }
-            ],
+            "default": [],
             "label": "Items",
-            "description": "Breadcrumb items",
+            "description": "Breadcrumb items. Omit together with `fromNavStack` to render the orbital-scoped navigation stack instead of an authored trail.",
             "tier": "presentation",
             "items": {
               "properties": {
@@ -122,7 +131,9 @@
         "primaryEntity": "BreadcrumbItem"
       }
     ],
-    "emittedEvents": [],
+    "emittedEvents": [
+      "ITEM"
+    ],
     "listenedEvents": [],
     "exposure": "palette",
     "provenance": "generated",

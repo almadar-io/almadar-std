@@ -1,0 +1,82 @@
+app std-detail-layout "1.0.0"
+"std-detail-layout — detail-page chrome band (back button + navigation-stack breadcrumb trail) above a single contentTrait slot. Use as the contentTrait of a detail page's AppShell binding: the band renders `← Back | Contracts › Contract details` from the orbital-scoped client navigation stack (session history, seeded from declared page-path ancestry on cold loads — the trail is never empty), and the consumer's detail trait renders below it. Back pops the stack; crumb clicks navigate to their level; a list router's `(navigate path payload { crumb: ?row.title })` labels the detail crumb with the real record title. Bind once per detail page — `XDetailLayout = DetailShell.traits.DetailLayout` with `contentTrait: @trait.XDetail`."
+;; @capabilities "detail page shell, breadcrumb trail, back navigation, record detail chrome, navigation stack, drill-down hierarchy"
+orbital DetailLayoutOrbital {
+  entity DetailLayoutData [runtime] {
+    id : string!
+  }
+
+  trait DetailLayout -> @rebindable DetailLayoutData [interaction, instance] {
+    initial: composing
+
+    state composing {
+      INIT -> composing
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          className: "w-full"
+          children: [{
+            type: stack
+            direction: horizontal
+            align: center
+            gap: sm
+            className: "w-full border-b border-border pb-3"
+            children: [{
+              type: button
+              variant: ghost
+              size: sm
+              icon: arrow-left
+              label: @config.backLabel
+              action: BACK
+            }, {
+              type: breadcrumb
+              fromNavStack: true
+              itemEvent: CRUMB_NAV
+            }]
+          },
+          @config.contentTrait]
+        })
+      BACK -> composing
+        (navigate-back)
+      CRUMB_NAV -> composing
+        (navigate ?href)
+    }
+
+    emits {
+      BACK
+        @description "The shell's back affordance was pressed; the layout pops the navigation stack."
+        @synonyms "go back, return, previous page, up one level"
+        @tier "internal"
+      CRUMB_NAV
+        @description "A breadcrumb level was clicked; the layout navigates to that level's href."
+        @synonyms "breadcrumb click, jump to level, trail navigation"
+        @tier "internal"
+    }
+
+    listens {
+      CRUMB_NAV {
+        label : string
+        href : string!
+        index : number
+      }
+        @description "Breadcrumb level picked from the navigation-stack trail."
+        @synonyms "breadcrumb click, trail navigation"
+        @tier "internal"
+    }
+
+    config {
+      contentTrait : trait
+        @label "Content trait"
+        @description "The detail trait rendered below the navigation band (the DetailPanel + sections view)."
+        @tier "presentation"
+      backLabel : string = Back
+        @label "Back button label"
+        @description "Label on the band's back button, e.g. \"Back to contracts\"."
+        @synonyms "back text, return label"
+        @tier "presentation"
+    }
+  }
+
+  page "/detail-layout" as DetailLayoutPage -> DetailLayout
+}
