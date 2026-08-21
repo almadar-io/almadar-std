@@ -1,0 +1,381 @@
+[
+  {
+    "organism": "std-platformer-body",
+    "orbital": "PlatformerBodyOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/game/atoms/std-platformer-body.ts",
+    "entities": [
+      {
+        "name": "PlatformerBodyData",
+        "fields": [
+          {
+            "name": "body",
+            "type": "object",
+            "required": false
+          },
+          {
+            "name": "fell",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "hazardId",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "goalId",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "skating",
+            "type": "boolean",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "PlatformerBody",
+        "emittedEvents": [
+          "BODY_MOVED",
+          "BODY_SKATE_START",
+          "BODY_SKATE_END",
+          "BODY_JUMPED",
+          "BODY_LANDED",
+          "BODY_HAZARD",
+          "BODY_GOAL",
+          "BODY_FELL"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "BODY_MOVED",
+            "direction": "emit",
+            "description": "The body after this physics tick: position, velocity, grounded and skating flags, and scalar speed; render layers subscribe (or read the shared entity), rule layers stay on the sparse signals",
+            "tier": "domain"
+          },
+          {
+            "name": "BODY_SKATE_START",
+            "direction": "emit",
+            "description": "Body engaged curve skating this tick (grounded within skateSnap of the skateCurve surface); slope is the local dy/dx — boards layer fx and equation readouts",
+            "tier": "domain"
+          },
+          {
+            "name": "BODY_SKATE_END",
+            "direction": "emit",
+            "description": "Body left the curve surface (jumped, walked past an end, or drifted beyond skateSnap); boards tear down skate fx",
+            "tier": "domain"
+          },
+          {
+            "name": "BODY_JUMPED",
+            "direction": "emit",
+            "description": "Jump accepted (grounded at intent time) and vertical velocity kicked against gravity; boards layer squash/sound fx",
+            "tier": "domain"
+          },
+          {
+            "name": "BODY_LANDED",
+            "direction": "emit",
+            "description": "Body transitioned airborne → standing on a ground/platform tile this tick; impact is the pre-landing fall speed in units/s so boards can scale dust or damage",
+            "tier": "domain"
+          },
+          {
+            "name": "BODY_HAZARD",
+            "direction": "emit",
+            "description": "Body entered overlap with a hazard tile; fires once per entry and re-arms only after the body leaves, so damage rules stay sparse",
+            "tier": "domain"
+          },
+          {
+            "name": "BODY_GOAL",
+            "direction": "emit",
+            "description": "Body entered overlap with a goal tile; fires once per entry and re-arms only after the body leaves — the board's win-rule trigger",
+            "tier": "domain"
+          },
+          {
+            "name": "BODY_FELL",
+            "direction": "emit",
+            "description": "Body crossed killY in the gravity direction (pit fall); fires once per fall and re-arms on PLACE/RESTART, leaving the respawn rule to the board",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "STEER",
+            "direction": "listen"
+          },
+          {
+            "name": "JUMP",
+            "direction": "listen"
+          },
+          {
+            "name": "PLACE",
+            "direction": "listen"
+          },
+          {
+            "name": "RESTART",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "gravity",
+            "type": "number",
+            "default": 24,
+            "label": "Gravity",
+            "description": "Units/s² added to vertical velocity; the SIGN is the vertical convention — positive pulls toward +y (screen boards, y down), negative toward −y (math canvases, y up) — and jumps always fire against it",
+            "tier": "domain"
+          },
+          {
+            "key": "jumpStrength",
+            "type": "number",
+            "default": 11,
+            "label": "Jump Strength",
+            "description": "Vertical speed in units/s imparted by JUMP, directed against gravity; apex height ≈ jumpStrength² / (2·|gravity|)",
+            "tier": "domain"
+          },
+          {
+            "key": "killY",
+            "type": "number",
+            "default": 1000000,
+            "label": "Kill Y",
+            "description": "Fall line: crossing it in the gravity direction fires BODY_FELL once (past it downward on y-down boards, below it on y-up canvases); y-up consumers must set a value below their world floor",
+            "tier": "domain"
+          },
+          {
+            "key": "maxFallSpeed",
+            "type": "number",
+            "default": 14,
+            "label": "Max Fall Speed",
+            "description": "Terminal velocity cap in units/s applied to vertical speed each tick",
+            "tier": "presentation"
+          },
+          {
+            "key": "moveSpeed",
+            "type": "number",
+            "default": 5,
+            "label": "Move Speed",
+            "description": "Horizontal run speed in units/s applied by STEER dir ±1",
+            "tier": "domain"
+          },
+          {
+            "key": "platforms",
+            "type": "[PlatformerPlatform]",
+            "default": [],
+            "label": "Platforms",
+            "description": "Level geometry as min-corner rects: ground/platform tiles are solid one-way landing surfaces, hazard tiles emit BODY_HAZARD on touch, goal tiles emit BODY_GOAL",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "height": {
+                  "name": "height",
+                  "required": true,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "type": {
+                  "name": "type",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "ground",
+                    "platform",
+                    "hazard",
+                    "goal"
+                  ]
+                },
+                "width": {
+                  "name": "width",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true the 33ms physics tick integrates and collides; toggle to freeze the body",
+            "tier": "domain"
+          },
+          {
+            "key": "skate",
+            "type": "boolean",
+            "default": false,
+            "label": "Curve Skating",
+            "description": "When true, a grounded body within skateSnap of the skateCurve surface rides the curve: y snaps to the interpolated surface and tangential gravity (g·slope/(1+slope²)) accelerates vx, so the body slides downhill along the graph and launches off its ends; JUMP kicks free",
+            "tier": "domain"
+          },
+          {
+            "key": "skateCurve",
+            "type": "[PlatformerCurveSample]",
+            "default": [],
+            "label": "Skate Curve",
+            "description": "Surface samples (x strictly increasing) the body skates when skate is on; y is the surface height for the body's MIN corner, linearly interpolated between bracketing samples — mirror the render-side curve so what you see is what you ride",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "skateSnap",
+            "type": "number",
+            "default": 0.75,
+            "label": "Skate Snap",
+            "description": "Max vertical gap (world units) between the body's min corner and the curve surface for skating to engage or stay engaged; larger values grab earlier on landing, smaller values release sooner on bumps",
+            "tier": "domain"
+          },
+          {
+            "key": "spawn",
+            "type": "PlatformerBody",
+            "default": {
+              "facingRight": true,
+              "grounded": false,
+              "height": 0.6,
+              "vx": 0,
+              "vy": 0,
+              "width": 0.6,
+              "x": 2,
+              "y": 8
+            },
+            "label": "Spawn Body",
+            "description": "Initial body rect (min-corner x/y plus width/height) seeded on INIT/RESTART; width/height also define the collision box",
+            "tier": "domain",
+            "properties": {
+              "facingRight": {
+                "name": "facingRight",
+                "required": false,
+                "type": "boolean"
+              },
+              "grounded": {
+                "name": "grounded",
+                "required": false,
+                "type": "boolean"
+              },
+              "height": {
+                "name": "height",
+                "required": true,
+                "type": "number"
+              },
+              "vx": {
+                "name": "vx",
+                "required": false,
+                "type": "number"
+              },
+              "vy": {
+                "name": "vy",
+                "required": false,
+                "type": "number"
+              },
+              "width": {
+                "name": "width",
+                "required": true,
+                "type": "number"
+              },
+              "x": {
+                "name": "x",
+                "required": true,
+                "type": "number"
+              },
+              "y": {
+                "name": "y",
+                "required": true,
+                "type": "number"
+              }
+            }
+          },
+          {
+            "key": "xMax",
+            "type": "number",
+            "default": 1000000,
+            "label": "Right Wall",
+            "description": "Largest x the body's min corner may hold (world bounds, not level geometry)",
+            "tier": "presentation"
+          },
+          {
+            "key": "xMin",
+            "type": "number",
+            "default": -1000000,
+            "label": "Left Wall",
+            "description": "Smallest x the body's min corner may hold (world bounds, not level geometry)",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "PlatformerBodyData",
+        "transitionEvents": [
+          "INIT",
+          "JUMP",
+          "PLACE",
+          "RESTART",
+          "STEER"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "body",
+            "fell",
+            "goalId",
+            "hazardId",
+            "skating"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "PlatformerBodyPage",
+        "defaultPath": "/platformer-body",
+        "primaryEntity": "PlatformerBodyData"
+      }
+    ],
+    "emittedEvents": [
+      "BODY_FELL",
+      "BODY_GOAL",
+      "BODY_HAZARD",
+      "BODY_JUMPED",
+      "BODY_LANDED",
+      "BODY_MOVED",
+      "BODY_SKATE_END",
+      "BODY_SKATE_START"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

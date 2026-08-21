@@ -174,6 +174,7 @@ orbital PredictOrbital {
         (emit PREDICTION_COMMITTED { scenarioIndex: @entity.scenarioIndex, chosenIndex: @entity.chosenIndex })
 
       NEXT -> idle when (and (== @entity.active true) (and (== @entity.phase "judged") (== @entity.done false)))
+        (if (>= (+ @entity.scenarioIndex 1) (array/len @config.scenarios)) (emit LEARN_ROUND_COMPLETE { score: @entity.score, total: (array/len @config.scenarios) }) null)
         (let (
             (nextIndex (+ @entity.scenarioIndex 1))
             (finished (>= @nextIndex (array/len @config.scenarios)))
@@ -340,6 +341,13 @@ orbital PredictOrbital {
         totalScenarios : number
       }
         @description "The learner restarted the round from scratch."
+        @tier "domain"
+      LEARN_ROUND_COMPLETE -> external {
+        score : number
+        total : number
+      }
+        @description "Fired once when the round finishes (advancing past the final scenario) — the standard learning completion broadcast a celebration/progression sibling (fx cues, badges) rides."
+        @synonyms "round complete, finished, done, completion"
         @tier "domain"
     }
 

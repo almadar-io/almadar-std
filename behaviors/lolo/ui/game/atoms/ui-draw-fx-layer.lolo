@@ -1,0 +1,109 @@
+app ui-draw-fx-layer "1.0.0"
+"DrawFxLayer — UI factory (1:1 with the @almadar/ui draw-fx-layer pattern)."
+orbital DrawFxLayerOrbital {
+  type DrawFxLayerItemsItem = {
+    id : string!
+    type : string!
+    position : DrawFxLayerItemsItemPosition
+    x : number!
+    z : number
+    y : number
+    message : string
+    ttl : number!
+    maxTtl : number
+    bornAt : number
+    space : "world" | "screen"
+    effect : "confetti" | "flash" | "shake" | "sparkle" | "float-text" | "streak-glow"
+    color : string
+    size : number
+    vx : number
+    vy : number
+    vz : number
+    particleCount : number
+  }
+  type DrawFxLayerItemsItemPosition = {
+    x : number!
+    y : number!
+    z : number
+  }
+  type DrawFxLayerPresetsItem = {
+    type : string!
+    color : string
+    color2 : string
+    size : number
+    shape : "spark" | "ring" | "puff" | "streak"
+    count : number
+    glow : number
+    gravity : number
+    vx : number
+    vy : number
+    vz : number
+    space : "world" | "screen"
+    effect : "confetti" | "flash" | "shake" | "sparkle" | "float-text" | "streak-glow"
+    particleCount : number
+  }
+  type DrawFxLayerSpritesValue = {
+    url : asset!
+    role : string!
+    category : string!
+    animations : [string]
+    style : "pixel" | "vector" | "hd" | "1-bit" | "isometric"
+    variant : string
+    dimension : "2d" | "3d"
+    aspect : "1:1" | "16:9" | "5:7" | "8:1"
+    atlas : asset
+    sprite : string
+    name : string
+    thumbnailUrl : string
+  }
+
+  entity DrawFxLayerItem [runtime] {
+    id : string!
+  }
+
+  trait DrawFxLayerRender -> @rebindable DrawFxLayerItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          items: @config.items
+          presets: @config.presets
+          art: @config.art
+          sprites: @config.sprites
+          tickMs: @config.tickMs
+          textColor: @config.textColor
+          type: draw-fx-layer
+        })
+    }
+
+    config {
+      items : [DrawFxLayerItemsItem] = [{ id: "e1", x: 2, y: 2, type: "spawn", message: "Unit spawned" }, { id: "e2", x: 3, y: 1, type: "effect", message: "Attack landed" }]
+        @label "Items"
+        @description "The live fx entries — the mechanic's `@entity.fx` list passed whole; `space: 'screen'` entries are skipped (the overlay owns those)."
+        @tier "presentation"
+      presets : [DrawFxLayerPresetsItem] = []
+        @label "Presets"
+        @description "Consumer-declared effect vocabulary — one row per fx `type` (look + recipe). Unknown types fall back to a neutral spark burst."
+        @tier "presentation"
+      art : Map string Map string [object] = { item: {} }
+        @label "Art"
+        @description "Vector art per fx type (an asset-art map: type → anim-state → drawables); a type's `idle` state wins over sprites/procedural."
+        @tier "presentation"
+      sprites : Map string DrawFxLayerSpritesValue = { item: { url: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/features/sword.png", role: "item", category: "item", animations: ["static"], style: "pixel", dimension: "2d", aspect: "1:1", name: "item", thumbnailUrl: "" } }
+        @label "Sprites"
+        @description "Sprite asset per fx type (an asset-manifest effects map) — used when no vector art matches."
+        @tier "presentation"
+      tickMs : number
+        @label "Tick Ms"
+        @description "The fx mechanic's decay tick period in ms; lifetime = maxTtl × tickMs. Default 500."
+        @tier "presentation"
+      textColor : string
+        @label "Text Color"
+        @description "Floating-message text color when an item declares none. Default `#ffe066`."
+        @tier "presentation"
+    }
+  }
+
+  page "/draw-fx-layer" as DrawFxLayerPage -> DrawFxLayerRender
+}

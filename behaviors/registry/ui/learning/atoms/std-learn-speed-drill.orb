@@ -82,6 +82,15 @@
         "parent": "trt_01M07581K2JSWMZDZSAVQSR6A2",
         "renames": []
       },
+      "evt_01M0GTSZHFPPWVV9N240SJMS4J": {
+        "bakedName": "LEARN_ROUND_COMPLETE",
+        "curName": "LEARN_ROUND_COMPLETE",
+        "id": "evt_01M0GTSZHFPPWVV9N240SJMS4J",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M07581K2JSWMZDZSAVQSR6A2",
+        "renames": []
+      },
       "orb_01M07581K2ME2E69WCC1KWC0X8": {
         "bakedName": "SpeedDrillOrbital",
         "curName": "SpeedDrillOrbital",
@@ -392,6 +401,24 @@
               ],
               "scope": "external",
               "tier": "domain"
+            },
+            {
+              "description": "Fired once when the round finishes (advancing past the final prompt) — the standard learning completion broadcast a celebration/progression sibling (fx cues, badges) rides.",
+              "event": "LEARN_ROUND_COMPLETE",
+              "eventId": "evt_01M0GTSZHFPPWVV9N240SJMS4J",
+              "payloadSchema": [
+                {
+                  "name": "score",
+                  "type": "number"
+                },
+                {
+                  "name": "total",
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "round complete, finished, done, completion",
+              "tier": "domain"
             }
           ],
           "entityContract": {
@@ -529,6 +556,24 @@
                     "type": "number"
                   }
                 ],
+                "tier": "domain"
+              },
+              {
+                "description": "Fired once when the round finishes (advancing past the final prompt) — the standard learning completion broadcast a celebration/progression sibling (fx cues, badges) rides.",
+                "id": "evt_01M0GTSZHFPPWVV9N240SJMS4J",
+                "key": "LEARN_ROUND_COMPLETE",
+                "name": "Learn Round Complete",
+                "payloadSchema": [
+                  {
+                    "name": "score",
+                    "type": "number"
+                  },
+                  {
+                    "name": "total",
+                    "type": "number"
+                  }
+                ],
+                "synonyms": "round complete, finished, done, completion",
                 "tier": "domain"
               }
             ],
@@ -1411,6 +1456,33 @@
               },
               {
                 "effects": [
+                  [
+                    "if",
+                    [
+                      ">=",
+                      [
+                        "+",
+                        "@entity.itemIndex",
+                        1.0
+                      ],
+                      [
+                        "array/len",
+                        "@config.items"
+                      ]
+                    ],
+                    [
+                      "emit",
+                      "LEARN_ROUND_COMPLETE",
+                      {
+                        "score": "@entity.score",
+                        "total": [
+                          "array/len",
+                          "@config.items"
+                        ]
+                      }
+                    ],
+                    null
+                  ],
                   [
                     "let",
                     [

@@ -638,13 +638,48 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
             'default': [],
             'items': {
               'properties': {
+                'bornAt': {
+                  'name': 'bornAt',
+                  'required': false,
+                  'type': 'number',
+                },
+                'color': {
+                  'name': 'color',
+                  'required': false,
+                  'type': 'string',
+                },
+                'effect': {
+                  'name': 'effect',
+                  'required': false,
+                  'type': 'string',
+                },
                 'id': {
                   'name': 'id',
                   'required': true,
                   'type': 'string',
                 },
+                'maxTtl': {
+                  'name': 'maxTtl',
+                  'required': false,
+                  'type': 'number',
+                },
                 'message': {
                   'name': 'message',
+                  'required': false,
+                  'type': 'string',
+                },
+                'particleCount': {
+                  'name': 'particleCount',
+                  'required': false,
+                  'type': 'number',
+                },
+                'size': {
+                  'name': 'size',
+                  'required': false,
+                  'type': 'number',
+                },
+                'space': {
+                  'name': 'space',
                   'required': false,
                   'type': 'string',
                 },
@@ -657,6 +692,21 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                   'name': 'type',
                   'required': true,
                   'type': 'string',
+                },
+                'vx': {
+                  'name': 'vx',
+                  'required': false,
+                  'type': 'number',
+                },
+                'vy': {
+                  'name': 'vy',
+                  'required': false,
+                  'type': 'number',
+                },
+                'vz': {
+                  'name': 'vz',
+                  'required': false,
+                  'type': 'number',
                 },
                 'x': {
                   'name': 'x',
@@ -1285,6 +1335,98 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
             'label': 'Extra Stats',
             'tier': 'presentation',
             'type': '[HudStat]',
+          },
+          'fxPresets': {
+            'default': [
+              {
+                'color': '#84a98c',
+                'color2': '#6b4226',
+                'count': 5,
+                'shape': 'spark',
+                'size': 0.45,
+                'type': 'pickup',
+                'vy': -0.2,
+              },
+            ],
+            'description': 'This board\'s effect vocabulary — one look/recipe row per fx type its mechanics emit; unknown types fall back to a neutral spark.',
+            'items': {
+              'properties': {
+                'color': {
+                  'name': 'color',
+                  'required': false,
+                  'type': 'string',
+                },
+                'color2': {
+                  'name': 'color2',
+                  'required': false,
+                  'type': 'string',
+                },
+                'count': {
+                  'name': 'count',
+                  'required': false,
+                  'type': 'number',
+                },
+                'effect': {
+                  'name': 'effect',
+                  'required': false,
+                  'type': 'string',
+                },
+                'glow': {
+                  'name': 'glow',
+                  'required': false,
+                  'type': 'number',
+                },
+                'gravity': {
+                  'name': 'gravity',
+                  'required': false,
+                  'type': 'number',
+                },
+                'particleCount': {
+                  'name': 'particleCount',
+                  'required': false,
+                  'type': 'number',
+                },
+                'shape': {
+                  'name': 'shape',
+                  'required': false,
+                  'type': 'string',
+                },
+                'size': {
+                  'name': 'size',
+                  'required': false,
+                  'type': 'number',
+                },
+                'space': {
+                  'name': 'space',
+                  'required': false,
+                  'type': 'string',
+                },
+                'type': {
+                  'name': 'type',
+                  'required': true,
+                  'type': 'string',
+                },
+                'vx': {
+                  'name': 'vx',
+                  'required': false,
+                  'type': 'number',
+                },
+                'vy': {
+                  'name': 'vy',
+                  'required': false,
+                  'type': 'number',
+                },
+                'vz': {
+                  'name': 'vz',
+                  'required': false,
+                  'type': 'number',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Fx Presets',
+            'tier': 'presentation',
+            'type': '[FxPreset]',
           },
           'gridHeight': {
             'default': 16,
@@ -1919,36 +2061,10 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                             'type': 'draw-text-layer',
                           },
                           {
-                            'items': [
-                              'array/map',
-                              '@entity.fx',
-                              [
-                                'fn',
-                                'f',
-                                {
-                                  'color': '#ffe066',
-                                  'position': {
-                                    'x': [
-                                      'object/get',
-                                      '@f',
-                                      'x',
-                                    ],
-                                    'y': [
-                                      'object/get',
-                                      '@f',
-                                      'y',
-                                    ],
-                                  },
-                                  'text': [
-                                    'object/get',
-                                    '@f',
-                                    'message',
-                                  ],
-                                  'type': 'draw-text',
-                                },
-                              ],
-                            ],
-                            'type': 'draw-text-layer',
+                            'items': '@entity.fx',
+                            'presets': '@config.fxPresets',
+                            'tickMs': 500,
+                            'type': 'draw-fx-layer',
                           },
                         ],
                         'mode': '3d',
@@ -2812,36 +2928,10 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                           'type': 'draw-text-layer',
                         },
                         {
-                          'items': [
-                            'array/map',
-                            '@entity.fx',
-                            [
-                              'fn',
-                              'f',
-                              {
-                                'color': '#ffe066',
-                                'position': {
-                                  'x': [
-                                    'object/get',
-                                    '@f',
-                                    'x',
-                                  ],
-                                  'y': [
-                                    'object/get',
-                                    '@f',
-                                    'y',
-                                  ],
-                                },
-                                'text': [
-                                  'object/get',
-                                  '@f',
-                                  'message',
-                                ],
-                                'type': 'draw-text',
-                              },
-                            ],
-                          ],
-                          'type': 'draw-text-layer',
+                          'items': '@entity.fx',
+                          'presets': '@config.fxPresets',
+                          'tickMs': 500,
+                          'type': 'draw-fx-layer',
                         },
                       ],
                       'mode': '3d',

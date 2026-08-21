@@ -1,0 +1,63 @@
+app ui-fx-overlay "1.0.0"
+"FxOverlay — UI factory (1:1 with the @almadar/ui fx-overlay pattern)."
+orbital FxOverlayOrbital {
+  type FxOverlayItemsItem = {
+    id : string!
+    type : string!
+    effect : "confetti" | "flash" | "shake" | "sparkle" | "float-text" | "streak-glow"
+    message : string
+    color : string
+    size : number
+    x : number
+    z : number
+    y : number
+    ttl : number!
+    maxTtl : number
+    bornAt : number
+    space : "world" | "screen"
+    particleCount : number
+    vx : number
+    vy : number
+    vz : number
+  }
+
+  entity FxOverlayItem [runtime] {
+    id : string!
+  }
+
+  trait FxOverlayRender -> @rebindable FxOverlayItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          items: @config.items
+          tickMs: @config.tickMs
+          children: @config.children
+          className: @config.className
+          type: fx-overlay
+        })
+    }
+
+    config {
+      items : [FxOverlayItemsItem] = [{ id: "e1", x: 2, y: 2, type: "spawn", message: "Unit spawned" }, { id: "e2", x: 3, y: 1, type: "effect", message: "Attack landed" }]
+        @label "Items"
+        @description "Live screen-space fx entries (the mechanic's fx list filtered to `space == 'screen'`); mount starts each item's animation, ttl decay unmounts it."
+        @tier "presentation"
+      tickMs : number
+        @label "Tick Ms"
+        @description "The fx mechanic's decay tick period in ms; per-item animation duration = maxTtl × tickMs. Default 500."
+        @tier "presentation"
+      children : node
+        @label "Children"
+        @description "Wrapped content — the `shake` target and the overlay's bounds."
+        @tier "presentation"
+      className : string
+        @label "Class Name"
+        @description "Additional class names on the outermost element."
+        @tier "presentation"
+    }
+  }
+
+  page "/fx-overlay" as FxOverlayPage -> FxOverlayRender
+}

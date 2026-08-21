@@ -333,13 +333,48 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
             'default': [],
             'items': {
               'properties': {
+                'bornAt': {
+                  'name': 'bornAt',
+                  'required': false,
+                  'type': 'number',
+                },
+                'color': {
+                  'name': 'color',
+                  'required': false,
+                  'type': 'string',
+                },
+                'effect': {
+                  'name': 'effect',
+                  'required': false,
+                  'type': 'string',
+                },
                 'id': {
                   'name': 'id',
                   'required': true,
                   'type': 'string',
                 },
+                'maxTtl': {
+                  'name': 'maxTtl',
+                  'required': false,
+                  'type': 'number',
+                },
                 'message': {
                   'name': 'message',
+                  'required': false,
+                  'type': 'string',
+                },
+                'particleCount': {
+                  'name': 'particleCount',
+                  'required': false,
+                  'type': 'number',
+                },
+                'size': {
+                  'name': 'size',
+                  'required': false,
+                  'type': 'number',
+                },
+                'space': {
+                  'name': 'space',
                   'required': false,
                   'type': 'string',
                 },
@@ -352,6 +387,21 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                   'name': 'type',
                   'required': true,
                   'type': 'string',
+                },
+                'vx': {
+                  'name': 'vx',
+                  'required': false,
+                  'type': 'number',
+                },
+                'vy': {
+                  'name': 'vy',
+                  'required': false,
+                  'type': 'number',
+                },
+                'vz': {
+                  'name': 'vz',
+                  'required': false,
+                  'type': 'number',
                 },
                 'x': {
                   'name': 'x',
@@ -1557,6 +1607,99 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
             'label': 'Features',
             'tier': 'presentation',
             'type': '[Feature]',
+          },
+          'fxPresets': {
+            'default': [
+              {
+                'color': '#ff6b6b',
+                'color2': '#ffb347',
+                'count': 6,
+                'glow': 0.12,
+                'shape': 'spark',
+                'size': 0.45,
+                'type': 'hit',
+                'vy': -0.3,
+              },
+            ],
+            'description': 'This board\'s effect vocabulary — one look/recipe row per fx type its mechanics emit; unknown types fall back to a neutral spark.',
+            'items': {
+              'properties': {
+                'color': {
+                  'name': 'color',
+                  'required': false,
+                  'type': 'string',
+                },
+                'color2': {
+                  'name': 'color2',
+                  'required': false,
+                  'type': 'string',
+                },
+                'count': {
+                  'name': 'count',
+                  'required': false,
+                  'type': 'number',
+                },
+                'effect': {
+                  'name': 'effect',
+                  'required': false,
+                  'type': 'string',
+                },
+                'glow': {
+                  'name': 'glow',
+                  'required': false,
+                  'type': 'number',
+                },
+                'gravity': {
+                  'name': 'gravity',
+                  'required': false,
+                  'type': 'number',
+                },
+                'particleCount': {
+                  'name': 'particleCount',
+                  'required': false,
+                  'type': 'number',
+                },
+                'shape': {
+                  'name': 'shape',
+                  'required': false,
+                  'type': 'string',
+                },
+                'size': {
+                  'name': 'size',
+                  'required': false,
+                  'type': 'number',
+                },
+                'space': {
+                  'name': 'space',
+                  'required': false,
+                  'type': 'string',
+                },
+                'type': {
+                  'name': 'type',
+                  'required': true,
+                  'type': 'string',
+                },
+                'vx': {
+                  'name': 'vx',
+                  'required': false,
+                  'type': 'number',
+                },
+                'vy': {
+                  'name': 'vy',
+                  'required': false,
+                  'type': 'number',
+                },
+                'vz': {
+                  'name': 'vz',
+                  'required': false,
+                  'type': 'number',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Fx Presets',
+            'tier': 'presentation',
+            'type': '[FxPreset]',
           },
           'gridHeight': {
             'default': 2,
@@ -3015,169 +3158,21 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                           'type': 'draw-text-layer',
                                         },
                                         {
-                                          'items': [
-                                            'array/map',
-                                            '@entity.fx',
-                                            [
-                                              'fn',
-                                              'f',
-                                              {
-                                                'color': '#ffe066',
-                                                'position': {
-                                                  'x': [
-                                                    'object/get',
-                                                    '@f',
-                                                    'x',
-                                                  ],
-                                                  'y': [
-                                                    'object/get',
-                                                    '@f',
-                                                    'z',
-                                                  ],
-                                                },
-                                                'text': [
-                                                  'object/get',
-                                                  '@f',
-                                                  'message',
-                                                ],
-                                                'type': 'draw-text',
-                                              },
-                                            ],
+                                          'art': '@entity.svgAssetArt',
+                                          'items': '@entity.fx',
+                                          'presets': '@config.fxPresets',
+                                          'sprites': [
+                                            'object/get',
+                                            '@config.assetManifest',
+                                            'effects',
                                           ],
-                                          'type': 'draw-text-layer',
-                                        },
-                                        {
-                                          'items': [
-                                            'array/filter',
-                                            [
-                                              'array/map',
-                                              [
-                                                'array/filter',
-                                                '@entity.fx',
-                                                [
-                                                  'fn',
-                                                  'f',
-                                                  [
-                                                    'not',
-                                                    [
-                                                      'object/get',
-                                                      '@entity.svgAssetArt',
-                                                      [
-                                                        'object/get',
-                                                        '@f',
-                                                        'type',
-                                                      ],
-                                                    ],
-                                                  ],
-                                                ],
-                                              ],
-                                              [
-                                                'fn',
-                                                'f',
-                                                {
-                                                  'anchor': 'center',
-                                                  'asset': [
-                                                    'object/get',
-                                                    [
-                                                      'object/get',
-                                                      '@config.assetManifest',
-                                                      'effects',
-                                                    ],
-                                                    [
-                                                      'object/get',
-                                                      '@f',
-                                                      'type',
-                                                    ],
-                                                  ],
-                                                  'height': 0.6,
-                                                  'position': {
-                                                    'x': [
-                                                      'object/get',
-                                                      '@f',
-                                                      'x',
-                                                    ],
-                                                    'y': [
-                                                      'object/get',
-                                                      '@f',
-                                                      'z',
-                                                    ],
-                                                  },
-                                                  'type': 'draw-sprite',
-                                                  'width': 0.6,
-                                                },
-                                              ],
-                                            ],
-                                            [
-                                              'fn',
-                                              's',
-                                              [
-                                                'object/get',
-                                                [
-                                                  'object/get',
-                                                  '@s',
-                                                  'asset',
-                                                ],
-                                                'url',
-                                              ],
-                                            ],
-                                          ],
-                                          'type': 'draw-sprite-layer',
+                                          'tickMs': 500,
+                                          'type': 'draw-fx-layer',
                                         },
                                       ],
                                       [
                                         'array/concat',
-                                        [
-                                          'array/map',
-                                          [
-                                            'array/filter',
-                                            '@entity.fx',
-                                            [
-                                              'fn',
-                                              'f',
-                                              [
-                                                'object/get',
-                                                '@entity.svgAssetArt',
-                                                [
-                                                  'object/get',
-                                                  '@f',
-                                                  'type',
-                                                ],
-                                              ],
-                                            ],
-                                          ],
-                                          [
-                                            'fn',
-                                            'f',
-                                            {
-                                              'items': [
-                                                'object/get',
-                                                [
-                                                  'object/get',
-                                                  '@entity.svgAssetArt',
-                                                  [
-                                                    'object/get',
-                                                    '@f',
-                                                    'type',
-                                                  ],
-                                                ],
-                                                'idle',
-                                              ],
-                                              'position': {
-                                                'x': [
-                                                  'object/get',
-                                                  '@f',
-                                                  'x',
-                                                ],
-                                                'y': [
-                                                  'object/get',
-                                                  '@f',
-                                                  'z',
-                                                ],
-                                              },
-                                              'type': 'draw-group',
-                                            },
-                                          ],
-                                        ],
+                                        [],
                                         [
                                           {
                                             'items': [
@@ -5566,167 +5561,19 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
                                         'type': 'draw-text-layer',
                                       },
                                       {
-                                        'items': [
-                                          'array/map',
-                                          '@entity.fx',
-                                          [
-                                            'fn',
-                                            'f',
-                                            {
-                                              'color': '#ffe066',
-                                              'position': {
-                                                'x': [
-                                                  'object/get',
-                                                  '@f',
-                                                  'x',
-                                                ],
-                                                'y': [
-                                                  'object/get',
-                                                  '@f',
-                                                  'z',
-                                                ],
-                                              },
-                                              'text': [
-                                                'object/get',
-                                                '@f',
-                                                'message',
-                                              ],
-                                              'type': 'draw-text',
-                                            },
-                                          ],
+                                        'art': '@entity.svgAssetArt',
+                                        'items': '@entity.fx',
+                                        'presets': '@config.fxPresets',
+                                        'sprites': [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'effects',
                                         ],
-                                        'type': 'draw-text-layer',
-                                      },
-                                      {
-                                        'items': [
-                                          'array/filter',
-                                          [
-                                            'array/map',
-                                            [
-                                              'array/filter',
-                                              '@entity.fx',
-                                              [
-                                                'fn',
-                                                'f',
-                                                [
-                                                  'not',
-                                                  [
-                                                    'object/get',
-                                                    '@entity.svgAssetArt',
-                                                    [
-                                                      'object/get',
-                                                      '@f',
-                                                      'type',
-                                                    ],
-                                                  ],
-                                                ],
-                                              ],
-                                            ],
-                                            [
-                                              'fn',
-                                              'f',
-                                              {
-                                                'anchor': 'center',
-                                                'asset': [
-                                                  'object/get',
-                                                  [
-                                                    'object/get',
-                                                    '@config.assetManifest',
-                                                    'effects',
-                                                  ],
-                                                  [
-                                                    'object/get',
-                                                    '@f',
-                                                    'type',
-                                                  ],
-                                                ],
-                                                'height': 0.6,
-                                                'position': {
-                                                  'x': [
-                                                    'object/get',
-                                                    '@f',
-                                                    'x',
-                                                  ],
-                                                  'y': [
-                                                    'object/get',
-                                                    '@f',
-                                                    'z',
-                                                  ],
-                                                },
-                                                'type': 'draw-sprite',
-                                                'width': 0.6,
-                                              },
-                                            ],
-                                          ],
-                                          [
-                                            'fn',
-                                            's',
-                                            [
-                                              'object/get',
-                                              [
-                                                'object/get',
-                                                '@s',
-                                                'asset',
-                                              ],
-                                              'url',
-                                            ],
-                                          ],
-                                        ],
-                                        'type': 'draw-sprite-layer',
+                                        'tickMs': 500,
+                                        'type': 'draw-fx-layer',
                                       },
                                     ],
-                                    [
-                                      'array/map',
-                                      [
-                                        'array/filter',
-                                        '@entity.fx',
-                                        [
-                                          'fn',
-                                          'f',
-                                          [
-                                            'object/get',
-                                            '@entity.svgAssetArt',
-                                            [
-                                              'object/get',
-                                              '@f',
-                                              'type',
-                                            ],
-                                          ],
-                                        ],
-                                      ],
-                                      [
-                                        'fn',
-                                        'f',
-                                        {
-                                          'items': [
-                                            'object/get',
-                                            [
-                                              'object/get',
-                                              '@entity.svgAssetArt',
-                                              [
-                                                'object/get',
-                                                '@f',
-                                                'type',
-                                              ],
-                                            ],
-                                            'idle',
-                                          ],
-                                          'position': {
-                                            'x': [
-                                              'object/get',
-                                              '@f',
-                                              'x',
-                                            ],
-                                            'y': [
-                                              'object/get',
-                                              '@f',
-                                              'z',
-                                            ],
-                                          },
-                                          'type': 'draw-group',
-                                        },
-                                      ],
-                                    ],
+                                    [],
                                   ],
                                 ],
                               ],

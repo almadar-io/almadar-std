@@ -30,7 +30,7 @@ const ALIAS = 'LearnPredict';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdLearnPredictEventKey = 'INIT' | 'MODE_SELECTED' | 'NEXT' | 'PREDICT' | 'PREDICTION_COMMITTED' | 'RETRY' | 'ROUND_RESTARTED' | 'SCENARIO_ADVANCED';
+export type StdLearnPredictEventKey = 'INIT' | 'LEARN_ROUND_COMPLETE' | 'MODE_SELECTED' | 'NEXT' | 'PREDICT' | 'PREDICTION_COMMITTED' | 'RETRY' | 'ROUND_RESTARTED' | 'SCENARIO_ADVANCED';
 
 /**
  * Payload shape for the `PREDICTION_COMMITTED` event.
@@ -54,6 +54,14 @@ export interface StdLearnPredictScenarioAdvancedPayload {
  */
 export interface StdLearnPredictRoundRestartedPayload {
   totalScenarios?: number;
+}
+
+/**
+ * Payload shape for the `LEARN_ROUND_COMPLETE` event.
+ */
+export interface StdLearnPredictLearnRoundCompletePayload {
+  score?: number;
+  total?: number;
 }
 
 /**

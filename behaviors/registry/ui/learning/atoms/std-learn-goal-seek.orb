@@ -91,6 +91,15 @@
         "parent": "trt_01M07580VZCAQ803GS0E38Q1J0",
         "renames": []
       },
+      "evt_01M0GTSZBCSEV6BAPBGF6979KG": {
+        "bakedName": "LEARN_ROUND_COMPLETE",
+        "curName": "LEARN_ROUND_COMPLETE",
+        "id": "evt_01M0GTSZBCSEV6BAPBGF6979KG",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M07580VZCAQ803GS0E38Q1J0",
+        "renames": []
+      },
       "orb_01M07580VZ7B4B990TA9QZ36GF": {
         "bakedName": "GoalSeekOrbital",
         "curName": "GoalSeekOrbital",
@@ -523,6 +532,24 @@
               ],
               "scope": "external",
               "tier": "domain"
+            },
+            {
+              "description": "Fired once when a Check lands within tolerance (the goal is matched) — the standard learning completion broadcast a celebration/progression sibling (fx cues, badges) rides.",
+              "event": "LEARN_ROUND_COMPLETE",
+              "eventId": "evt_01M0GTSZBCSEV6BAPBGF6979KG",
+              "payloadSchema": [
+                {
+                  "name": "score",
+                  "type": "number"
+                },
+                {
+                  "name": "total",
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "round complete, finished, done, completion, solved",
+              "tier": "domain"
             }
           ],
           "entityContract": {
@@ -669,6 +696,24 @@
                     "type": "number"
                   }
                 ],
+                "tier": "domain"
+              },
+              {
+                "description": "Fired once when a Check lands within tolerance (the goal is matched) — the standard learning completion broadcast a celebration/progression sibling (fx cues, badges) rides.",
+                "id": "evt_01M0GTSZBCSEV6BAPBGF6979KG",
+                "key": "LEARN_ROUND_COMPLETE",
+                "name": "Learn Round Complete",
+                "payloadSchema": [
+                  {
+                    "name": "score",
+                    "type": "number"
+                  },
+                  {
+                    "name": "total",
+                    "type": "number"
+                  }
+                ],
+                "synonyms": "round complete, finished, done, completion, solved",
                 "tier": "domain"
               }
             ],
@@ -3373,6 +3418,19 @@
                       "distance": "@entity.distance",
                       "matched": "@entity.solved"
                     }
+                  ],
+                  [
+                    "if",
+                    "@entity.solved",
+                    [
+                      "emit",
+                      "LEARN_ROUND_COMPLETE",
+                      {
+                        "score": 1.0,
+                        "total": 1.0
+                      }
+                    ],
+                    null
                   ]
                 ],
                 "event": "CHECK",

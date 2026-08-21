@@ -30,7 +30,7 @@ const ALIAS = 'LearnDoser';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdLearnDoserEventKey = 'ADD_LARGE' | 'ADD_SMALL' | 'DOSER_UPDATED' | 'DOSE_ADDED' | 'DOSE_RESET' | 'INIT' | 'MODE_SELECTED' | 'RESET' | 'TOGGLE_DRIP';
+export type StdLearnDoserEventKey = 'ADD_LARGE' | 'ADD_SMALL' | 'DOSER_UPDATED' | 'DOSE_ADDED' | 'DOSE_RESET' | 'INIT' | 'LEARN_ROUND_COMPLETE' | 'MODE_SELECTED' | 'RESET' | 'TOGGLE_DRIP';
 
 /**
  * Payload shape for the `DOSE_ADDED` event.
@@ -50,6 +50,14 @@ export interface StdLearnDoserDoserUpdatedPayload {
   dose?: number;
   bandLabel?: string;
   done?: boolean;
+}
+
+/**
+ * Payload shape for the `LEARN_ROUND_COMPLETE` event.
+ */
+export interface StdLearnDoserLearnRoundCompletePayload {
+  score?: number;
+  total?: number;
 }
 
 /**

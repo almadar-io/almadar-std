@@ -362,6 +362,7 @@ orbital GoalSeekOrbital {
           ]
         })
         (emit GOAL_CHECKED { matched: @entity.solved, distance: @entity.distance, attempts: @entity.attempts })
+        (if @entity.solved (emit LEARN_ROUND_COMPLETE { score: 1, total: 1 }) null)
 
       RESET -> idle when (== @entity.active true)
         (let (
@@ -477,6 +478,13 @@ orbital GoalSeekOrbital {
         attempts : number
       }
         @description "The learner reset the instrument back to the default parameters."
+        @tier "domain"
+      LEARN_ROUND_COMPLETE -> external {
+        score : number
+        total : number
+      }
+        @description "Fired once when a Check lands within tolerance (the goal is matched) — the standard learning completion broadcast a celebration/progression sibling (fx cues, badges) rides."
+        @synonyms "round complete, finished, done, completion, solved"
         @tier "domain"
     }
 

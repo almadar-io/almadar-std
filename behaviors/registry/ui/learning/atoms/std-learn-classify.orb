@@ -73,6 +73,15 @@
         "parent": "trt_01KZEFWYXP5EK4MMGJG1PAGTNG",
         "renames": []
       },
+      "evt_01M0GTSZ2XJ5HY779EQ093CV2M": {
+        "bakedName": "LEARN_ROUND_COMPLETE",
+        "curName": "LEARN_ROUND_COMPLETE",
+        "id": "evt_01M0GTSZ2XJ5HY779EQ093CV2M",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KZEFWYXP5EK4MMGJG1PAGTNG",
+        "renames": []
+      },
       "orb_01KZEFWYXPQ981SKZVC2A5E2Q9": {
         "bakedName": "LearnClassifyOrbital",
         "curName": "LearnClassifyOrbital",
@@ -691,6 +700,24 @@
               "scope": "external",
               "synonyms": "classify update, pick result, score, running score, verdict",
               "tier": "domain"
+            },
+            {
+              "description": "Fired once when the round finishes (the advance past the final item) — the standard learning completion broadcast a celebration/progression sibling (fx cues, badges) rides.",
+              "event": "LEARN_ROUND_COMPLETE",
+              "eventId": "evt_01M0GTSZ2XJ5HY779EQ093CV2M",
+              "payloadSchema": [
+                {
+                  "name": "score",
+                  "type": "number"
+                },
+                {
+                  "name": "total",
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "round complete, finished, done, completion",
+              "tier": "domain"
             }
           ],
           "entityContract": {
@@ -813,6 +840,24 @@
                   }
                 ],
                 "synonyms": "classify update, pick result, score, running score, verdict",
+                "tier": "domain"
+              },
+              {
+                "description": "Fired once when the round finishes (the advance past the final item) — the standard learning completion broadcast a celebration/progression sibling (fx cues, badges) rides.",
+                "id": "evt_01M0GTSZ2XJ5HY779EQ093CV2M",
+                "key": "LEARN_ROUND_COMPLETE",
+                "name": "Learn Round Complete",
+                "payloadSchema": [
+                  {
+                    "name": "score",
+                    "type": "number"
+                  },
+                  {
+                    "name": "total",
+                    "type": "number"
+                  }
+                ],
+                "synonyms": "round complete, finished, done, completion",
                 "tier": "domain"
               }
             ],
@@ -3837,6 +3882,34 @@
               },
               {
                 "effects": [
+                  [
+                    "if",
+                    [
+                      "and",
+                      [
+                        "not",
+                        "@config.loopRound"
+                      ],
+                      [
+                        ">=",
+                        [
+                          "+",
+                          "@entity.itemIndex",
+                          "@config.orderStride"
+                        ],
+                        "@entity.totalItems"
+                      ]
+                    ],
+                    [
+                      "emit",
+                      "LEARN_ROUND_COMPLETE",
+                      {
+                        "score": "@entity.correctCount",
+                        "total": "@entity.totalItems"
+                      }
+                    ],
+                    null
+                  ],
                   [
                     "let",
                     [

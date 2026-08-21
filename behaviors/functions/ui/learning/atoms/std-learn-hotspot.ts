@@ -30,7 +30,7 @@ const ALIAS = 'LearnHotspot';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdLearnHotspotEventKey = 'INIT' | 'MODE_SELECTED' | 'NEXT' | 'PROMPT_ADVANCED' | 'RETRY' | 'ROUND_RESTARTED' | 'TAP_JUDGED' | 'TAP_SHAPE';
+export type StdLearnHotspotEventKey = 'INIT' | 'LEARN_ROUND_COMPLETE' | 'MODE_SELECTED' | 'NEXT' | 'PROMPT_ADVANCED' | 'RETRY' | 'ROUND_RESTARTED' | 'TAP_JUDGED' | 'TAP_SHAPE';
 
 /**
  * Payload shape for the `TAP_JUDGED` event.
@@ -55,6 +55,14 @@ export interface StdLearnHotspotPromptAdvancedPayload {
  */
 export interface StdLearnHotspotRoundRestartedPayload {
   totalPrompts?: number;
+}
+
+/**
+ * Payload shape for the `LEARN_ROUND_COMPLETE` event.
+ */
+export interface StdLearnHotspotLearnRoundCompletePayload {
+  score?: number;
+  total?: number;
 }
 
 /**

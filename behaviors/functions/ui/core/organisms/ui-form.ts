@@ -258,11 +258,17 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
             'label': 'Evaluation Context',
             'properties': {
               'entity': {
+                'items': {
+                  'type': 'object',
+                },
                 'name': 'entity',
                 'required': false,
                 'type': 'object',
               },
               'formValues': {
+                'items': {
+                  'type': 'object',
+                },
                 'name': 'formValues',
                 'required': true,
                 'type': 'object',

@@ -80,6 +80,32 @@ orbital TacticsBoard3DOrbital {
     y : number
     message : string
     ttl : number!
+    maxTtl : number
+    bornAt : number
+    space : string
+    effect : string
+    color : string
+    size : number
+    vx : number
+    vy : number
+    vz : number
+    particleCount : number
+  }
+  type FxPreset = {
+    type : string!
+    color : string
+    color2 : string
+    size : number
+    shape : string
+    count : number
+    glow : number
+    gravity : number
+    vx : number
+    vy : number
+    vz : number
+    space : string
+    effect : string
+    particleCount : number
   }
   type ValidMove = { x : number!  z : number! }
   type Feature = {
@@ -184,9 +210,9 @@ orbital TacticsBoard3DOrbital {
             { type: draw-shape-layer, items: (array/map @entity.units (fn u { type: draw-shape, shape: "rect", position: { x: (object/get @u x), y: (object/get @u y), z: (object/get @u z) }, offsetY: -0.6, width: (* 0.8 (/ (object/get @u health) (object/get @u maxHealth))), height: 0.12, fill: "#22c55e" })) }
             { type: draw-text-layer, items: (array/map @entity.units (fn u { type: draw-text, text: (object/get @u name), position: { x: (object/get @u x), y: (object/get @u y), z: (object/get @u z) }, offsetY: -0.85, color: "#ffffff" })) }
           ] (array/concat
-            (array/map (array/filter @entity.fx (fn f (object/get @entity.meshAssetArt (object/get @f type)))) (fn f { type: draw-group, position: { x: (object/get @f x), y: (object/get @f y), z: (object/get @f z) }, items: (object/get (object/get @entity.meshAssetArt (object/get @f type)) "idle") }))
+            []
           [
-            { type: draw-text-layer, items: (array/map @entity.fx (fn f { type: draw-text, text: (object/get @f message), position: { x: (object/get @f x), y: (object/get @f y), z: (object/get @f z) }, color: "#ffe066" })) }
+            { type: draw-fx-layer, items: @entity.fx, tickMs: 500, presets: @config.fxPresets, art: @entity.meshAssetArt }
           ])))))))) } ]
         })
 
@@ -252,9 +278,9 @@ orbital TacticsBoard3DOrbital {
             { type: draw-shape-layer, items: (array/map @entity.units (fn u { type: draw-shape, shape: "rect", position: { x: (object/get @u x), y: (object/get @u y), z: (object/get @u z) }, offsetY: -0.6, width: (* 0.8 (/ (object/get @u health) (object/get @u maxHealth))), height: 0.12, fill: "#22c55e" })) }
             { type: draw-text-layer, items: (array/map @entity.units (fn u { type: draw-text, text: (object/get @u name), position: { x: (object/get @u x), y: (object/get @u y), z: (object/get @u z) }, offsetY: -0.85, color: "#ffffff" })) }
           ] (array/concat
-            (array/map (array/filter @entity.fx (fn f (object/get @entity.meshAssetArt (object/get @f type)))) (fn f { type: draw-group, position: { x: (object/get @f x), y: (object/get @f y), z: (object/get @f z) }, items: (object/get (object/get @entity.meshAssetArt (object/get @f type)) "idle") }))
+            []
           [
-            { type: draw-text-layer, items: (array/map @entity.fx (fn f { type: draw-text, text: (object/get @f message), position: { x: (object/get @f x), y: (object/get @f y), z: (object/get @f z) }, color: "#ffe066" })) }
+            { type: draw-fx-layer, items: @entity.fx, tickMs: 500, presets: @config.fxPresets, art: @entity.meshAssetArt }
           ])))))))) } ]
         })
     }
@@ -314,6 +340,10 @@ orbital TacticsBoard3DOrbital {
       features : [Feature] = []
         @label "Features"
         @description "Decorative environment features drawn on the board."
+        @tier "presentation"
+      fxPresets : [FxPreset] = [ { type: "hit", color: "#ff5252", color2: "#7a1010", size: 0.5, shape: "spark", count: 6, glow: 0.12, gravity: 0.6, vy: -0.2 } ]
+        @label "Fx Presets"
+        @description "This board's effect vocabulary — one look/recipe row per fx type its mechanics emit; unknown types fall back to a neutral spark."
         @tier "presentation"
       assetManifest : AssetManifest = { terrains: {}, units: {}, features: {}, effects: {} }
         @label "Asset Manifest"

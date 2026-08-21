@@ -30,7 +30,7 @@ const ALIAS = 'LearnClassify';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdLearnClassifyEventKey = 'ADVANCE' | 'CLASSIFY_UPDATED' | 'INIT' | 'MODE_SELECTED' | 'PICK' | 'RETRY' | 'TOGGLE_RUN';
+export type StdLearnClassifyEventKey = 'ADVANCE' | 'CLASSIFY_UPDATED' | 'INIT' | 'LEARN_ROUND_COMPLETE' | 'MODE_SELECTED' | 'PICK' | 'RETRY' | 'TOGGLE_RUN';
 
 /**
  * Payload shape for the `CLASSIFY_UPDATED` event.
@@ -42,6 +42,14 @@ export interface StdLearnClassifyClassifyUpdatedPayload {
   selectedCategory?: string;
   verdict?: string;
   roundComplete?: boolean;
+}
+
+/**
+ * Payload shape for the `LEARN_ROUND_COMPLETE` event.
+ */
+export interface StdLearnClassifyLearnRoundCompletePayload {
+  score?: number;
+  total?: number;
 }
 
 /**

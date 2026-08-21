@@ -30,13 +30,21 @@ const ALIAS = 'LearnArrangement';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdLearnArrangementEventKey = 'ARRANGEMENT_CHECKED' | 'ARRANGEMENT_RESET' | 'CHECK' | 'INIT' | 'MODE_SELECTED' | 'PLACE' | 'RETRY' | 'UNDO';
+export type StdLearnArrangementEventKey = 'ARRANGEMENT_CHECKED' | 'ARRANGEMENT_RESET' | 'CHECK' | 'INIT' | 'LEARN_ROUND_COMPLETE' | 'MODE_SELECTED' | 'PLACE' | 'RETRY' | 'UNDO';
 
 /**
  * Payload shape for the `ARRANGEMENT_CHECKED` event.
  */
 export interface StdLearnArrangementArrangementCheckedPayload {
   correctCount?: number;
+  total?: number;
+}
+
+/**
+ * Payload shape for the `LEARN_ROUND_COMPLETE` event.
+ */
+export interface StdLearnArrangementLearnRoundCompletePayload {
+  score?: number;
   total?: number;
 }
 

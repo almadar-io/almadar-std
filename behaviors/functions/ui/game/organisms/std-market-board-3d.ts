@@ -939,13 +939,48 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
             'default': [],
             'items': {
               'properties': {
+                'bornAt': {
+                  'name': 'bornAt',
+                  'required': false,
+                  'type': 'number',
+                },
+                'color': {
+                  'name': 'color',
+                  'required': false,
+                  'type': 'string',
+                },
+                'effect': {
+                  'name': 'effect',
+                  'required': false,
+                  'type': 'string',
+                },
                 'id': {
                   'name': 'id',
                   'required': true,
                   'type': 'string',
                 },
+                'maxTtl': {
+                  'name': 'maxTtl',
+                  'required': false,
+                  'type': 'number',
+                },
                 'message': {
                   'name': 'message',
+                  'required': false,
+                  'type': 'string',
+                },
+                'particleCount': {
+                  'name': 'particleCount',
+                  'required': false,
+                  'type': 'number',
+                },
+                'size': {
+                  'name': 'size',
+                  'required': false,
+                  'type': 'number',
+                },
+                'space': {
+                  'name': 'space',
                   'required': false,
                   'type': 'string',
                 },
@@ -958,6 +993,21 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                   'name': 'type',
                   'required': true,
                   'type': 'string',
+                },
+                'vx': {
+                  'name': 'vx',
+                  'required': false,
+                  'type': 'number',
+                },
+                'vy': {
+                  'name': 'vy',
+                  'required': false,
+                  'type': 'number',
+                },
+                'vz': {
+                  'name': 'vz',
+                  'required': false,
+                  'type': 'number',
                 },
                 'x': {
                   'name': 'x',
@@ -1931,6 +1981,108 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
             'tier': 'presentation',
             'type': '[Feature]',
           },
+          'fxPresets': {
+            'default': [
+              {
+                'color': '#fbbf24',
+                'color2': '#fde68a',
+                'count': 6,
+                'glow': 0.1,
+                'shape': 'spark',
+                'size': 0.45,
+                'type': 'score',
+                'vy': -0.3,
+              },
+              {
+                'color': '#ef4444',
+                'color2': '#450a0a',
+                'count': 4,
+                'gravity': 0.3,
+                'shape': 'puff',
+                'size': 0.5,
+                'type': 'damage',
+              },
+            ],
+            'description': 'This board\'s effect vocabulary — one look/recipe row per fx type its mechanics emit; unknown types fall back to a neutral spark.',
+            'items': {
+              'properties': {
+                'color': {
+                  'name': 'color',
+                  'required': false,
+                  'type': 'string',
+                },
+                'color2': {
+                  'name': 'color2',
+                  'required': false,
+                  'type': 'string',
+                },
+                'count': {
+                  'name': 'count',
+                  'required': false,
+                  'type': 'number',
+                },
+                'effect': {
+                  'name': 'effect',
+                  'required': false,
+                  'type': 'string',
+                },
+                'glow': {
+                  'name': 'glow',
+                  'required': false,
+                  'type': 'number',
+                },
+                'gravity': {
+                  'name': 'gravity',
+                  'required': false,
+                  'type': 'number',
+                },
+                'particleCount': {
+                  'name': 'particleCount',
+                  'required': false,
+                  'type': 'number',
+                },
+                'shape': {
+                  'name': 'shape',
+                  'required': false,
+                  'type': 'string',
+                },
+                'size': {
+                  'name': 'size',
+                  'required': false,
+                  'type': 'number',
+                },
+                'space': {
+                  'name': 'space',
+                  'required': false,
+                  'type': 'string',
+                },
+                'type': {
+                  'name': 'type',
+                  'required': true,
+                  'type': 'string',
+                },
+                'vx': {
+                  'name': 'vx',
+                  'required': false,
+                  'type': 'number',
+                },
+                'vy': {
+                  'name': 'vy',
+                  'required': false,
+                  'type': 'number',
+                },
+                'vz': {
+                  'name': 'vz',
+                  'required': false,
+                  'type': 'number',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Fx Presets',
+            'tier': 'presentation',
+            'type': '[FxPreset]',
+          },
           'goalText': {
             'default': 'Serve customers before their patience runs out',
             'description': 'HUD goal description.',
@@ -2754,41 +2906,10 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                             'type': 'draw-text-layer',
                           },
                           {
-                            'items': [
-                              'array/map',
-                              '@entity.fx',
-                              [
-                                'fn',
-                                'f',
-                                {
-                                  'color': '#ffe066',
-                                  'position': {
-                                    'x': [
-                                      'object/get',
-                                      '@f',
-                                      'x',
-                                    ],
-                                    'y': [
-                                      'object/get',
-                                      '@f',
-                                      'y',
-                                    ],
-                                    'z': [
-                                      'object/get',
-                                      '@f',
-                                      'z',
-                                    ],
-                                  },
-                                  'text': [
-                                    'object/get',
-                                    '@f',
-                                    'message',
-                                  ],
-                                  'type': 'draw-text',
-                                },
-                              ],
-                            ],
-                            'type': 'draw-text-layer',
+                            'items': '@entity.fx',
+                            'presets': '@config.fxPresets',
+                            'tickMs': 500,
+                            'type': 'draw-fx-layer',
                           },
                         ],
                         'mode': '3d',
@@ -3914,41 +4035,10 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
                           'type': 'draw-text-layer',
                         },
                         {
-                          'items': [
-                            'array/map',
-                            '@entity.fx',
-                            [
-                              'fn',
-                              'f',
-                              {
-                                'color': '#ffe066',
-                                'position': {
-                                  'x': [
-                                    'object/get',
-                                    '@f',
-                                    'x',
-                                  ],
-                                  'y': [
-                                    'object/get',
-                                    '@f',
-                                    'y',
-                                  ],
-                                  'z': [
-                                    'object/get',
-                                    '@f',
-                                    'z',
-                                  ],
-                                },
-                                'text': [
-                                  'object/get',
-                                  '@f',
-                                  'message',
-                                ],
-                                'type': 'draw-text',
-                              },
-                            ],
-                          ],
-                          'type': 'draw-text-layer',
+                          'items': '@entity.fx',
+                          'presets': '@config.fxPresets',
+                          'tickMs': 500,
+                          'type': 'draw-fx-layer',
                         },
                       ],
                       'mode': '3d',

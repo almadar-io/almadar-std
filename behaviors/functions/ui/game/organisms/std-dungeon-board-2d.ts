@@ -1078,13 +1078,48 @@ export function stdDungeonBoard2dDungeonBoard2DOrbital(params: StdDungeonBoard2d
             'default': [],
             'items': {
               'properties': {
+                'bornAt': {
+                  'name': 'bornAt',
+                  'required': false,
+                  'type': 'number',
+                },
+                'color': {
+                  'name': 'color',
+                  'required': false,
+                  'type': 'string',
+                },
+                'effect': {
+                  'name': 'effect',
+                  'required': false,
+                  'type': 'string',
+                },
                 'id': {
                   'name': 'id',
                   'required': true,
                   'type': 'string',
                 },
+                'maxTtl': {
+                  'name': 'maxTtl',
+                  'required': false,
+                  'type': 'number',
+                },
                 'message': {
                   'name': 'message',
+                  'required': false,
+                  'type': 'string',
+                },
+                'particleCount': {
+                  'name': 'particleCount',
+                  'required': false,
+                  'type': 'number',
+                },
+                'size': {
+                  'name': 'size',
+                  'required': false,
+                  'type': 'number',
+                },
+                'space': {
+                  'name': 'space',
                   'required': false,
                   'type': 'string',
                 },
@@ -1097,6 +1132,21 @@ export function stdDungeonBoard2dDungeonBoard2DOrbital(params: StdDungeonBoard2d
                   'name': 'type',
                   'required': true,
                   'type': 'string',
+                },
+                'vx': {
+                  'name': 'vx',
+                  'required': false,
+                  'type': 'number',
+                },
+                'vy': {
+                  'name': 'vy',
+                  'required': false,
+                  'type': 'number',
+                },
+                'vz': {
+                  'name': 'vz',
+                  'required': false,
+                  'type': 'number',
                 },
                 'x': {
                   'name': 'x',
@@ -2396,6 +2446,109 @@ export function stdDungeonBoard2dDungeonBoard2DOrbital(params: StdDungeonBoard2d
             'tier': 'presentation',
             'type': 'string',
           },
+          'fxPresets': {
+            'default': [
+              {
+                'color': '#fb923c',
+                'color2': '#7c2d12',
+                'count': 8,
+                'glow': 0.2,
+                'gravity': 0.4,
+                'shape': 'ring',
+                'size': 0.85,
+                'type': 'explosion',
+              },
+              {
+                'color': '#ffe066',
+                'color2': '#fff4cc',
+                'count': 5,
+                'glow': 0.1,
+                'shape': 'spark',
+                'size': 0.4,
+                'type': 'pickup',
+                'vy': -0.5,
+              },
+            ],
+            'description': 'This board\'s effect vocabulary — one look/recipe row per fx type its mechanics emit; unknown types fall back to a neutral spark.',
+            'items': {
+              'properties': {
+                'color': {
+                  'name': 'color',
+                  'required': false,
+                  'type': 'string',
+                },
+                'color2': {
+                  'name': 'color2',
+                  'required': false,
+                  'type': 'string',
+                },
+                'count': {
+                  'name': 'count',
+                  'required': false,
+                  'type': 'number',
+                },
+                'effect': {
+                  'name': 'effect',
+                  'required': false,
+                  'type': 'string',
+                },
+                'glow': {
+                  'name': 'glow',
+                  'required': false,
+                  'type': 'number',
+                },
+                'gravity': {
+                  'name': 'gravity',
+                  'required': false,
+                  'type': 'number',
+                },
+                'particleCount': {
+                  'name': 'particleCount',
+                  'required': false,
+                  'type': 'number',
+                },
+                'shape': {
+                  'name': 'shape',
+                  'required': false,
+                  'type': 'string',
+                },
+                'size': {
+                  'name': 'size',
+                  'required': false,
+                  'type': 'number',
+                },
+                'space': {
+                  'name': 'space',
+                  'required': false,
+                  'type': 'string',
+                },
+                'type': {
+                  'name': 'type',
+                  'required': true,
+                  'type': 'string',
+                },
+                'vx': {
+                  'name': 'vx',
+                  'required': false,
+                  'type': 'number',
+                },
+                'vy': {
+                  'name': 'vy',
+                  'required': false,
+                  'type': 'number',
+                },
+                'vz': {
+                  'name': 'vz',
+                  'required': false,
+                  'type': 'number',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Fx Presets',
+            'tier': 'presentation',
+            'type': '[FxPreset]',
+          },
           'gridHeight': {
             'default': 4,
             'description': 'Grid row count (matches HeroAuthority/Enemies.gridHeight).',
@@ -3055,36 +3208,15 @@ export function stdDungeonBoard2dDungeonBoard2DOrbital(params: StdDungeonBoard2d
                             'type': 'draw-text-layer',
                           },
                           {
-                            'items': [
-                              'array/map',
-                              '@entity.fx',
-                              [
-                                'fn',
-                                'f',
-                                {
-                                  'color': '#ffe066',
-                                  'position': {
-                                    'x': [
-                                      'object/get',
-                                      '@f',
-                                      'x',
-                                    ],
-                                    'y': [
-                                      'object/get',
-                                      '@f',
-                                      'z',
-                                    ],
-                                  },
-                                  'text': [
-                                    'object/get',
-                                    '@f',
-                                    'message',
-                                  ],
-                                  'type': 'draw-text',
-                                },
-                              ],
+                            'items': '@entity.fx',
+                            'presets': '@config.fxPresets',
+                            'sprites': [
+                              'object/get',
+                              '@config.assetManifest',
+                              'effects',
                             ],
-                            'type': 'draw-text-layer',
+                            'tickMs': 500,
+                            'type': 'draw-fx-layer',
                           },
                         ],
                         'fit': true,
@@ -4381,36 +4513,15 @@ export function stdDungeonBoard2dDungeonBoard2DOrbital(params: StdDungeonBoard2d
                           'type': 'draw-text-layer',
                         },
                         {
-                          'items': [
-                            'array/map',
-                            '@entity.fx',
-                            [
-                              'fn',
-                              'f',
-                              {
-                                'color': '#ffe066',
-                                'position': {
-                                  'x': [
-                                    'object/get',
-                                    '@f',
-                                    'x',
-                                  ],
-                                  'y': [
-                                    'object/get',
-                                    '@f',
-                                    'z',
-                                  ],
-                                },
-                                'text': [
-                                  'object/get',
-                                  '@f',
-                                  'message',
-                                ],
-                                'type': 'draw-text',
-                              },
-                            ],
+                          'items': '@entity.fx',
+                          'presets': '@config.fxPresets',
+                          'sprites': [
+                            'object/get',
+                            '@config.assetManifest',
+                            'effects',
                           ],
-                          'type': 'draw-text-layer',
+                          'tickMs': 500,
+                          'type': 'draw-fx-layer',
                         },
                       ],
                       'fit': true,

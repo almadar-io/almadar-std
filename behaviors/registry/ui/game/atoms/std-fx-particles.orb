@@ -1,5 +1,5 @@
 {
-  "description": "Headless floating-text/particle mechanic: decays each fx entry's ttl every tick and drops the dead ones, and appends spawned particles on BURST. Composed onto a [runtime, shared] game entity; renders nothing (the board owns the single render authority).",
+  "description": "Headless transient-fx mechanic serving BOTH game boards and learning shells: appends spawned particles on BURST — stamping maxTtl (fade envelope) and bornAt (epoch ms, smooth render interpolation) when absent — decays each entry's ttl every tick, drops the dead ones, and clears on RESTART. Name-blind mechanism: the effect-kind vocabulary is consumer-declared (FxPreset tables at the render call sites). Composed onto a [runtime, shared] entity; renders nothing — the board/shell owns the single render authority (draw-fx-layer for space \"world\", fx-overlay for space \"screen\").",
   "ledger": {
     "entries": {
       "ent_01KXG04TFZP9QXE9KF516SP9KC": {
@@ -23,6 +23,15 @@
         "bakedName": "INIT",
         "curName": "INIT",
         "id": "evt_01KXG04TFZPVWV1QJ0VNE89MJ2",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04TFZQZVT3F7J3DTM2PXF",
+        "renames": []
+      },
+      "evt_01M0GQT46B85EN8MWSSC1V9FJV": {
+        "bakedName": "RESTART",
+        "curName": "RESTART",
+        "id": "evt_01M0GQT46B85EN8MWSSC1V9FJV",
         "kind": "event",
         "owner": "workspace",
         "parent": "trt_01KXG04TFZQZVT3F7J3DTM2PXF",
@@ -69,13 +78,48 @@
             "default": [],
             "items": {
               "properties": {
+                "bornAt": {
+                  "name": "bornAt",
+                  "required": false,
+                  "type": "number"
+                },
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "effect": {
+                  "name": "effect",
+                  "required": false,
+                  "type": "string"
+                },
                 "id": {
                   "name": "id",
                   "required": true,
                   "type": "string"
                 },
+                "maxTtl": {
+                  "name": "maxTtl",
+                  "required": false,
+                  "type": "number"
+                },
                 "message": {
                   "name": "message",
+                  "required": false,
+                  "type": "string"
+                },
+                "particleCount": {
+                  "name": "particleCount",
+                  "required": false,
+                  "type": "number"
+                },
+                "size": {
+                  "name": "size",
+                  "required": false,
+                  "type": "number"
+                },
+                "space": {
+                  "name": "space",
                   "required": false,
                   "type": "string"
                 },
@@ -88,6 +132,21 @@
                   "name": "type",
                   "required": true,
                   "type": "string"
+                },
+                "vx": {
+                  "name": "vx",
+                  "required": false,
+                  "type": "number"
+                },
+                "vy": {
+                  "name": "vy",
+                  "required": false,
+                  "type": "number"
+                },
+                "vz": {
+                  "name": "vz",
+                  "required": false,
+                  "type": "number"
                 },
                 "x": {
                   "name": "x",
@@ -147,13 +206,48 @@
               "description": "Seed particles rendered before the first BURST; usually empty.",
               "items": {
                 "properties": {
+                  "bornAt": {
+                    "name": "bornAt",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "effect": {
+                    "name": "effect",
+                    "required": false,
+                    "type": "string"
+                  },
                   "id": {
                     "name": "id",
                     "required": true,
                     "type": "string"
                   },
+                  "maxTtl": {
+                    "name": "maxTtl",
+                    "required": false,
+                    "type": "number"
+                  },
                   "message": {
                     "name": "message",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "particleCount": {
+                    "name": "particleCount",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "size": {
+                    "name": "size",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "space": {
+                    "name": "space",
                     "required": false,
                     "type": "string"
                   },
@@ -166,6 +260,21 @@
                     "name": "type",
                     "required": true,
                     "type": "string"
+                  },
+                  "vx": {
+                    "name": "vx",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "vy": {
+                    "name": "vy",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "vz": {
+                    "name": "vz",
+                    "required": false,
+                    "type": "number"
                   },
                   "x": {
                     "name": "x",
@@ -258,11 +367,56 @@
                         "name": "ttl",
                         "required": true,
                         "type": "number"
+                      },
+                      {
+                        "name": "maxTtl",
+                        "type": "number"
+                      },
+                      {
+                        "name": "bornAt",
+                        "type": "number"
+                      },
+                      {
+                        "name": "space",
+                        "type": "string"
+                      },
+                      {
+                        "name": "effect",
+                        "type": "string"
+                      },
+                      {
+                        "name": "color",
+                        "type": "string"
+                      },
+                      {
+                        "name": "size",
+                        "type": "number"
+                      },
+                      {
+                        "name": "vx",
+                        "type": "number"
+                      },
+                      {
+                        "name": "vy",
+                        "type": "number"
+                      },
+                      {
+                        "name": "vz",
+                        "type": "number"
+                      },
+                      {
+                        "name": "particleCount",
+                        "type": "number"
                       }
                     ],
                     "type": "[object]"
                   }
                 ]
+              },
+              {
+                "id": "evt_01M0GQT46B85EN8MWSSC1V9FJV",
+                "key": "RESTART",
+                "name": "Restart"
               }
             ],
             "states": [
@@ -277,7 +431,54 @@
                   [
                     "set",
                     "@entity.fx",
-                    "@config.fx"
+                    [
+                      "array/map",
+                      "@config.fx",
+                      [
+                        "fn",
+                        "p",
+                        [
+                          "object/merge",
+                          "@p",
+                          {
+                            "bornAt": [
+                              "if",
+                              [
+                                "object/get",
+                                "@p",
+                                "bornAt"
+                              ],
+                              [
+                                "object/get",
+                                "@p",
+                                "bornAt"
+                              ],
+                              [
+                                "time/now"
+                              ]
+                            ],
+                            "maxTtl": [
+                              "if",
+                              [
+                                "object/get",
+                                "@p",
+                                "maxTtl"
+                              ],
+                              [
+                                "object/get",
+                                "@p",
+                                "maxTtl"
+                              ],
+                              [
+                                "object/get",
+                                "@p",
+                                "ttl"
+                              ]
+                            ]
+                          }
+                        ]
+                      ]
+                    ]
                   ]
                 ],
                 "event": "INIT",
@@ -293,12 +494,72 @@
                     [
                       "array/concat",
                       "@entity.fx",
-                      "@payload.particles"
+                      [
+                        "array/map",
+                        "@payload.particles",
+                        [
+                          "fn",
+                          "p",
+                          [
+                            "object/merge",
+                            "@p",
+                            {
+                              "bornAt": [
+                                "if",
+                                [
+                                  "object/get",
+                                  "@p",
+                                  "bornAt"
+                                ],
+                                [
+                                  "object/get",
+                                  "@p",
+                                  "bornAt"
+                                ],
+                                [
+                                  "time/now"
+                                ]
+                              ],
+                              "maxTtl": [
+                                "if",
+                                [
+                                  "object/get",
+                                  "@p",
+                                  "maxTtl"
+                                ],
+                                [
+                                  "object/get",
+                                  "@p",
+                                  "maxTtl"
+                                ],
+                                [
+                                  "object/get",
+                                  "@p",
+                                  "ttl"
+                                ]
+                              ]
+                            }
+                          ]
+                        ]
+                      ]
                     ]
                   ]
                 ],
                 "event": "BURST",
                 "eventId": "evt_01KXG04TFZ6CNYD7941WGQW3A6",
+                "from": "active",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.fx",
+                    []
+                  ]
+                ],
+                "event": "RESTART",
+                "eventId": "evt_01M0GQT46B85EN8MWSSC1V9FJV",
                 "from": "active",
                 "to": "active"
               }
@@ -372,5 +633,5 @@
     }
   ],
   "schemaVersion": 1,
-  "version": "1.0.0"
+  "version": "1.1.0"
 }

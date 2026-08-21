@@ -30,7 +30,7 @@ const ALIAS = 'LearnSpeedDrill';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdLearnSpeedDrillEventKey = 'ANSWER' | 'ANSWER_JUDGED' | 'INIT' | 'MODE_SELECTED' | 'NEXT' | 'PROMPT_ADVANCED' | 'RETRY' | 'ROUND_RESTARTED';
+export type StdLearnSpeedDrillEventKey = 'ANSWER' | 'ANSWER_JUDGED' | 'INIT' | 'LEARN_ROUND_COMPLETE' | 'MODE_SELECTED' | 'NEXT' | 'PROMPT_ADVANCED' | 'RETRY' | 'ROUND_RESTARTED';
 
 /**
  * Payload shape for the `ANSWER_JUDGED` event.
@@ -56,6 +56,14 @@ export interface StdLearnSpeedDrillPromptAdvancedPayload {
  */
 export interface StdLearnSpeedDrillRoundRestartedPayload {
   totalItems?: number;
+}
+
+/**
+ * Payload shape for the `LEARN_ROUND_COMPLETE` event.
+ */
+export interface StdLearnSpeedDrillLearnRoundCompletePayload {
+  score?: number;
+  total?: number;
 }
 
 /**

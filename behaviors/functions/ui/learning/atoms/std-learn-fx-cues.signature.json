@@ -1,0 +1,620 @@
+[
+  {
+    "organism": "std-learn-fx-cues",
+    "orbital": "LearnFxCuesOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-learn-fx-cues.ts",
+    "entities": [
+      {
+        "name": "LearnFxCuesScene",
+        "fields": [
+          {
+            "name": "cueSeq",
+            "type": "number",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "LearnFxCues",
+        "emittedEvents": [
+          "BURST"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "BURST",
+            "direction": "emit",
+            "description": "Spawned fx cues for a composed std-fx-particles sink (and the fx-overlay reading its entity list) — the same BURST channel the game mechanics use.",
+            "synonyms": "fx, cue, celebration, feedback burst, confetti, shake",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "ANSWER_JUDGED",
+            "direction": "listen"
+          },
+          {
+            "name": "TAP_JUDGED",
+            "direction": "listen"
+          },
+          {
+            "name": "ESTIMATE_JUDGED",
+            "direction": "listen"
+          },
+          {
+            "name": "CLASSIFY_UPDATED",
+            "direction": "listen"
+          },
+          {
+            "name": "ARRANGEMENT_CHECKED",
+            "direction": "listen"
+          },
+          {
+            "name": "GOAL_CHECKED",
+            "direction": "listen"
+          },
+          {
+            "name": "LEARN_ROUND_COMPLETE",
+            "direction": "listen"
+          },
+          {
+            "name": "TRACE_DONE",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "bandCues",
+            "type": "[FxBandCue]",
+            "default": [],
+            "label": "Band Cues",
+            "description": "Per-band cues for ESTIMATE_JUDGED — one row per error band (exact/close/off); bands with no row spawn nothing.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "band": {
+                  "name": "band",
+                  "required": true,
+                  "type": "string"
+                },
+                "cue": {
+                  "name": "cue",
+                  "required": true,
+                  "properties": {
+                    "color": {
+                      "name": "color",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "effect": {
+                      "name": "effect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "message": {
+                      "name": "message",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "particleCount": {
+                      "name": "particleCount",
+                      "required": false,
+                      "type": "number"
+                    },
+                    "size": {
+                      "name": "size",
+                      "required": false,
+                      "type": "number"
+                    },
+                    "space": {
+                      "name": "space",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "ttl": {
+                      "name": "ttl",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "type": {
+                      "name": "type",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "z": {
+                      "name": "z",
+                      "required": false,
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "celebrationCue",
+            "type": "FxCue",
+            "default": {
+              "color": "#facc15",
+              "effect": "confetti",
+              "particleCount": 40,
+              "space": "screen",
+              "ttl": 5,
+              "type": "celebration",
+              "x": 0.5,
+              "z": 0.45
+            },
+            "label": "Celebration Cue",
+            "description": "Cue spawned when a round completes (LEARN_ROUND_COMPLETE / TRACE_DONE).",
+            "tier": "presentation",
+            "properties": {
+              "color": {
+                "name": "color",
+                "required": false,
+                "type": "string"
+              },
+              "effect": {
+                "name": "effect",
+                "required": false,
+                "type": "string"
+              },
+              "message": {
+                "name": "message",
+                "required": false,
+                "type": "string"
+              },
+              "particleCount": {
+                "name": "particleCount",
+                "required": false,
+                "type": "number"
+              },
+              "size": {
+                "name": "size",
+                "required": false,
+                "type": "number"
+              },
+              "space": {
+                "name": "space",
+                "required": false,
+                "type": "string"
+              },
+              "ttl": {
+                "name": "ttl",
+                "required": true,
+                "type": "number"
+              },
+              "type": {
+                "name": "type",
+                "required": true,
+                "type": "string"
+              },
+              "x": {
+                "name": "x",
+                "required": true,
+                "type": "number"
+              },
+              "z": {
+                "name": "z",
+                "required": false,
+                "type": "number"
+              }
+            }
+          },
+          {
+            "key": "correctCue",
+            "type": "FxCue",
+            "default": {
+              "color": "#4ade80",
+              "effect": "sparkle",
+              "particleCount": 10,
+              "space": "screen",
+              "ttl": 1.5,
+              "type": "correct",
+              "x": 0.5,
+              "z": 0.35
+            },
+            "label": "Correct Cue",
+            "description": "Cue spawned on a correct judged answer.",
+            "tier": "presentation",
+            "properties": {
+              "color": {
+                "name": "color",
+                "required": false,
+                "type": "string"
+              },
+              "effect": {
+                "name": "effect",
+                "required": false,
+                "type": "string"
+              },
+              "message": {
+                "name": "message",
+                "required": false,
+                "type": "string"
+              },
+              "particleCount": {
+                "name": "particleCount",
+                "required": false,
+                "type": "number"
+              },
+              "size": {
+                "name": "size",
+                "required": false,
+                "type": "number"
+              },
+              "space": {
+                "name": "space",
+                "required": false,
+                "type": "string"
+              },
+              "ttl": {
+                "name": "ttl",
+                "required": true,
+                "type": "number"
+              },
+              "type": {
+                "name": "type",
+                "required": true,
+                "type": "string"
+              },
+              "x": {
+                "name": "x",
+                "required": true,
+                "type": "number"
+              },
+              "z": {
+                "name": "z",
+                "required": false,
+                "type": "number"
+              }
+            }
+          },
+          {
+            "key": "progressCue",
+            "type": "FxCue",
+            "default": {
+              "color": "#a5b4fc",
+              "effect": "sparkle",
+              "particleCount": 4,
+              "space": "screen",
+              "ttl": 1.5,
+              "type": "progress",
+              "x": 0.5,
+              "z": 0.35
+            },
+            "label": "Progress Cue",
+            "description": "Cue spawned on a partial arrangement check (some but not all slots correct).",
+            "tier": "presentation",
+            "properties": {
+              "color": {
+                "name": "color",
+                "required": false,
+                "type": "string"
+              },
+              "effect": {
+                "name": "effect",
+                "required": false,
+                "type": "string"
+              },
+              "message": {
+                "name": "message",
+                "required": false,
+                "type": "string"
+              },
+              "particleCount": {
+                "name": "particleCount",
+                "required": false,
+                "type": "number"
+              },
+              "size": {
+                "name": "size",
+                "required": false,
+                "type": "number"
+              },
+              "space": {
+                "name": "space",
+                "required": false,
+                "type": "string"
+              },
+              "ttl": {
+                "name": "ttl",
+                "required": true,
+                "type": "number"
+              },
+              "type": {
+                "name": "type",
+                "required": true,
+                "type": "string"
+              },
+              "x": {
+                "name": "x",
+                "required": true,
+                "type": "number"
+              },
+              "z": {
+                "name": "z",
+                "required": false,
+                "type": "number"
+              }
+            }
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When false every cue arm is inert — visual feedback fully disabled without unmounting.",
+            "tier": "domain"
+          },
+          {
+            "key": "streakCue",
+            "type": "FxCue",
+            "default": {
+              "color": "#fbbf24",
+              "effect": "streak-glow",
+              "space": "screen",
+              "ttl": 2.5,
+              "type": "streak",
+              "x": 0.5,
+              "z": 0.2
+            },
+            "label": "Streak Cue",
+            "description": "Extra cue layered on the correct cue once the streak reaches the threshold.",
+            "tier": "presentation",
+            "properties": {
+              "color": {
+                "name": "color",
+                "required": false,
+                "type": "string"
+              },
+              "effect": {
+                "name": "effect",
+                "required": false,
+                "type": "string"
+              },
+              "message": {
+                "name": "message",
+                "required": false,
+                "type": "string"
+              },
+              "particleCount": {
+                "name": "particleCount",
+                "required": false,
+                "type": "number"
+              },
+              "size": {
+                "name": "size",
+                "required": false,
+                "type": "number"
+              },
+              "space": {
+                "name": "space",
+                "required": false,
+                "type": "string"
+              },
+              "ttl": {
+                "name": "ttl",
+                "required": true,
+                "type": "number"
+              },
+              "type": {
+                "name": "type",
+                "required": true,
+                "type": "string"
+              },
+              "x": {
+                "name": "x",
+                "required": true,
+                "type": "number"
+              },
+              "z": {
+                "name": "z",
+                "required": false,
+                "type": "number"
+              }
+            }
+          },
+          {
+            "key": "streakThreshold",
+            "type": "number",
+            "default": 3,
+            "label": "Streak Threshold",
+            "description": "Minimum ANSWER_JUDGED streak that adds the streak cue on top of the correct cue.",
+            "tier": "domain"
+          },
+          {
+            "key": "verdictCues",
+            "type": "[FxBandCue]",
+            "default": [],
+            "label": "Verdict Cues",
+            "description": "Per-verdict cues for CLASSIFY_UPDATED — one row per verdict string; verdicts with no row spawn nothing.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "band": {
+                  "name": "band",
+                  "required": true,
+                  "type": "string"
+                },
+                "cue": {
+                  "name": "cue",
+                  "required": true,
+                  "properties": {
+                    "color": {
+                      "name": "color",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "effect": {
+                      "name": "effect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "message": {
+                      "name": "message",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "particleCount": {
+                      "name": "particleCount",
+                      "required": false,
+                      "type": "number"
+                    },
+                    "size": {
+                      "name": "size",
+                      "required": false,
+                      "type": "number"
+                    },
+                    "space": {
+                      "name": "space",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "ttl": {
+                      "name": "ttl",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "type": {
+                      "name": "type",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "z": {
+                      "name": "z",
+                      "required": false,
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "wrongCue",
+            "type": "FxCue",
+            "default": {
+              "color": "#fda4af",
+              "effect": "shake",
+              "space": "screen",
+              "ttl": 1,
+              "type": "wrong",
+              "x": 0.5,
+              "z": 0.35
+            },
+            "label": "Wrong Cue",
+            "description": "Cue spawned on a wrong judged answer (and an unmatched goal check).",
+            "tier": "presentation",
+            "properties": {
+              "color": {
+                "name": "color",
+                "required": false,
+                "type": "string"
+              },
+              "effect": {
+                "name": "effect",
+                "required": false,
+                "type": "string"
+              },
+              "message": {
+                "name": "message",
+                "required": false,
+                "type": "string"
+              },
+              "particleCount": {
+                "name": "particleCount",
+                "required": false,
+                "type": "number"
+              },
+              "size": {
+                "name": "size",
+                "required": false,
+                "type": "number"
+              },
+              "space": {
+                "name": "space",
+                "required": false,
+                "type": "string"
+              },
+              "ttl": {
+                "name": "ttl",
+                "required": true,
+                "type": "number"
+              },
+              "type": {
+                "name": "type",
+                "required": true,
+                "type": "string"
+              },
+              "x": {
+                "name": "x",
+                "required": true,
+                "type": "number"
+              },
+              "z": {
+                "name": "z",
+                "required": false,
+                "type": "number"
+              }
+            }
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "LearnFxCuesScene",
+        "transitionEvents": [
+          "ANSWER_JUDGED",
+          "ARRANGEMENT_CHECKED",
+          "CLASSIFY_UPDATED",
+          "ESTIMATE_JUDGED",
+          "GOAL_CHECKED",
+          "INIT",
+          "LEARN_ROUND_COMPLETE",
+          "TAP_JUDGED",
+          "TRACE_DONE"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "cueSeq"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "LearnFxCuesPage",
+        "defaultPath": "/learn-fx-cues",
+        "primaryEntity": "LearnFxCuesScene"
+      }
+    ],
+    "emittedEvents": [
+      "BURST"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

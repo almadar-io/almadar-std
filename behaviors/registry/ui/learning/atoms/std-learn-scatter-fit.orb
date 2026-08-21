@@ -91,6 +91,15 @@
         "parent": "trt_01M0CGSNDKZW4BAAQ48B923K0C",
         "renames": []
       },
+      "evt_01M0GTSZG6B8B6VFWSEN7M2AT4": {
+        "bakedName": "LEARN_ROUND_COMPLETE",
+        "curName": "LEARN_ROUND_COMPLETE",
+        "id": "evt_01M0GTSZG6B8B6VFWSEN7M2AT4",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M0CGSNDKZW4BAAQ48B923K0C",
+        "renames": []
+      },
       "orb_01M0CGSNDKXGJ1SK9X9MV7YKYG": {
         "bakedName": "LearnScatterFitOrbital",
         "curName": "LearnScatterFitOrbital",
@@ -749,6 +758,24 @@
               "scope": "external",
               "synonyms": "fit update, line of best fit, slope, intercept, correlation, r squared",
               "tier": "domain"
+            },
+            {
+              "description": "Fired once when the point that reaches maxPoints lands and the round latches done — the standard learning completion broadcast a celebration/progression sibling (fx cues, badges) rides.",
+              "event": "LEARN_ROUND_COMPLETE",
+              "eventId": "evt_01M0GTSZG6B8B6VFWSEN7M2AT4",
+              "payloadSchema": [
+                {
+                  "name": "score",
+                  "type": "number"
+                },
+                {
+                  "name": "total",
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "round complete, finished, done, completion, max points",
+              "tier": "domain"
             }
           ],
           "entityContract": {
@@ -890,6 +917,24 @@
                   }
                 ],
                 "synonyms": "fit update, line of best fit, slope, intercept, correlation, r squared",
+                "tier": "domain"
+              },
+              {
+                "description": "Fired once when the point that reaches maxPoints lands and the round latches done — the standard learning completion broadcast a celebration/progression sibling (fx cues, badges) rides.",
+                "id": "evt_01M0GTSZG6B8B6VFWSEN7M2AT4",
+                "key": "LEARN_ROUND_COMPLETE",
+                "name": "Learn Round Complete",
+                "payloadSchema": [
+                  {
+                    "name": "score",
+                    "type": "number"
+                  },
+                  {
+                    "name": "total",
+                    "type": "number"
+                  }
+                ],
+                "synonyms": "round complete, finished, done, completion, max points",
                 "tier": "domain"
               }
             ],
@@ -2894,6 +2939,19 @@
                             ""
                           ]
                         ]
+                      ],
+                      [
+                        "if",
+                        "@nowDone",
+                        [
+                          "emit",
+                          "LEARN_ROUND_COMPLETE",
+                          {
+                            "score": "@n",
+                            "total": "@config.maxPoints"
+                          }
+                        ],
+                        null
                       ]
                     ]
                   ],
@@ -6337,6 +6395,19 @@
                           ""
                         ]
                       ]
+                    ],
+                    [
+                      "if",
+                      "@nowDone",
+                      [
+                        "emit",
+                        "LEARN_ROUND_COMPLETE",
+                        {
+                          "score": "@n",
+                          "total": "@config.maxPoints"
+                        }
+                      ],
+                      null
                     ]
                   ]
                 ],

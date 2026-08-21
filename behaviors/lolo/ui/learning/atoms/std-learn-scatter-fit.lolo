@@ -211,6 +211,7 @@ orbital LearnScatterFitOrbital {
             (set @entity.curves (array/concat @baseCurves @residualCurves))
             (set @entity.done @nowDone)
             (set @entity.narration (str/concat @config.narrationAddedTemplate " " (str/concat "" @n) " — r = " (str/concat "" (math/round @newR 3)) ", R² = " (str/concat "" (math/round (* @newR @newR) 3)) (if @nowDone @config.narrationMaxReachedSuffix "")))
+            (if @nowDone (emit LEARN_ROUND_COMPLETE { score: @n, total: @config.maxPoints }) null)
           )
         )
         (render-ui main {
@@ -540,6 +541,7 @@ orbital LearnScatterFitOrbital {
             (set @entity.curves (array/concat @baseCurves @residualCurves))
             (set @entity.done @nowDone)
             (set @entity.narration (str/concat @config.narrationAddedTemplate " " (str/concat "" @n) " — r = " (str/concat "" (math/round @newR 3)) ", R² = " (str/concat "" (math/round (* @newR @newR) 3)) (if @nowDone @config.narrationMaxReachedSuffix "")))
+            (if @nowDone (emit LEARN_ROUND_COMPLETE { score: @n, total: @config.maxPoints }) null)
           )
         )
         (render-ui main {
@@ -599,6 +601,13 @@ orbital LearnScatterFitOrbital {
       }
         @description "The least-squares fit and narration after each learner action, auto-add tick, or reset — a composed listener (readout, grader) can subscribe; a harmless no-op when the atom runs standalone."
         @synonyms "fit update, line of best fit, slope, intercept, correlation, r squared"
+        @tier "domain"
+      LEARN_ROUND_COMPLETE -> external {
+        score : number
+        total : number
+      }
+        @description "Fired once when the point that reaches maxPoints lands and the round latches done — the standard learning completion broadcast a celebration/progression sibling (fx cues, badges) rides."
+        @synonyms "round complete, finished, done, completion, max points"
         @tier "domain"
     }
 

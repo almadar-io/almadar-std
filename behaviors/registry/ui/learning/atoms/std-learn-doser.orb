@@ -91,6 +91,15 @@
         "parent": "trt_01M0CGZ8SPD6WYV3H0J6SV7NBD",
         "renames": []
       },
+      "evt_01M0GTSZ6G05SHZYRFF1Q2YSR0": {
+        "bakedName": "LEARN_ROUND_COMPLETE",
+        "curName": "LEARN_ROUND_COMPLETE",
+        "id": "evt_01M0GTSZ6G05SHZYRFF1Q2YSR0",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M0CGZ8SPD6WYV3H0J6SV7NBD",
+        "renames": []
+      },
       "orb_01M0CGZ8SPVWFV0VMERY7EXKM3": {
         "bakedName": "LearnDoserOrbital",
         "curName": "LearnDoserOrbital",
@@ -523,6 +532,24 @@
               "scope": "external",
               "synonyms": "drip toggle, running state, auto-dose",
               "tier": "domain"
+            },
+            {
+              "description": "Fired once when the dose crosses into a terminal band and latches done — the standard learning completion broadcast a celebration/progression sibling (fx cues, badges) rides.",
+              "event": "LEARN_ROUND_COMPLETE",
+              "eventId": "evt_01M0GTSZ6G05SHZYRFF1Q2YSR0",
+              "payloadSchema": [
+                {
+                  "name": "score",
+                  "type": "number"
+                },
+                {
+                  "name": "total",
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "round complete, finished, done, completion, terminal band",
+              "tier": "domain"
             }
           ],
           "entityContract": {
@@ -649,6 +676,24 @@
                   }
                 ],
                 "synonyms": "drip toggle, running state, auto-dose",
+                "tier": "domain"
+              },
+              {
+                "description": "Fired once when the dose crosses into a terminal band and latches done — the standard learning completion broadcast a celebration/progression sibling (fx cues, badges) rides.",
+                "id": "evt_01M0GTSZ6G05SHZYRFF1Q2YSR0",
+                "key": "LEARN_ROUND_COMPLETE",
+                "name": "Learn Round Complete",
+                "payloadSchema": [
+                  {
+                    "name": "score",
+                    "type": "number"
+                  },
+                  {
+                    "name": "total",
+                    "type": "number"
+                  }
+                ],
+                "synonyms": "round complete, finished, done, completion, terminal band",
                 "tier": "domain"
               }
             ],
@@ -2243,6 +2288,19 @@
                       "done": "@entity.done",
                       "dose": "@entity.dose"
                     }
+                  ],
+                  [
+                    "if",
+                    "@entity.done",
+                    [
+                      "emit",
+                      "LEARN_ROUND_COMPLETE",
+                      {
+                        "score": 1.0,
+                        "total": 1.0
+                      }
+                    ],
+                    null
                   ]
                 ],
                 "event": "ADD_SMALL",
@@ -2787,6 +2845,19 @@
                       "done": "@entity.done",
                       "dose": "@entity.dose"
                     }
+                  ],
+                  [
+                    "if",
+                    "@entity.done",
+                    [
+                      "emit",
+                      "LEARN_ROUND_COMPLETE",
+                      {
+                        "score": 1.0,
+                        "total": 1.0
+                      }
+                    ],
+                    null
                   ]
                 ],
                 "event": "ADD_LARGE",

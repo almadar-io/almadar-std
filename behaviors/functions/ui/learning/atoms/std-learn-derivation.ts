@@ -30,7 +30,7 @@ const ALIAS = 'LearnDerivation';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdLearnDerivationEventKey = 'APPLY_STEP' | 'DERIVATION_UPDATED' | 'INIT' | 'MODE_SELECTED' | 'RESET' | 'TOGGLE_RUN';
+export type StdLearnDerivationEventKey = 'APPLY_STEP' | 'DERIVATION_UPDATED' | 'INIT' | 'LEARN_ROUND_COMPLETE' | 'MODE_SELECTED' | 'RESET' | 'TOGGLE_RUN';
 
 /**
  * Payload shape for the `DERIVATION_UPDATED` event.
@@ -40,6 +40,14 @@ export interface StdLearnDerivationDerivationUpdatedPayload {
   goalReached?: boolean;
   lineCount?: number;
   narration?: string;
+}
+
+/**
+ * Payload shape for the `LEARN_ROUND_COMPLETE` event.
+ */
+export interface StdLearnDerivationLearnRoundCompletePayload {
+  score?: number;
+  total?: number;
 }
 
 /**

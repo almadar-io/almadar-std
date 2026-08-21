@@ -144,6 +144,7 @@ orbital SpeedDrillOrbital {
         (emit ANSWER_JUDGED { correct: (== @entity.verdict "correct"), timeLeftTenths: @entity.remaining, score: @entity.score, streak: @entity.streak })
 
       NEXT -> idle when (and (== @entity.active true) (and (== @entity.running false) (and (!= @entity.verdict "") (== @entity.done false))))
+        (if (>= (+ @entity.itemIndex 1) (array/len @config.items)) (emit LEARN_ROUND_COMPLETE { score: @entity.score, total: (array/len @config.items) }) null)
         (let (
             (nextIndex (+ @entity.itemIndex 1))
             (finished (>= @nextIndex (array/len @config.items)))
@@ -291,6 +292,13 @@ orbital SpeedDrillOrbital {
         totalItems : number
       }
         @description "The learner restarted the round from scratch."
+        @tier "domain"
+      LEARN_ROUND_COMPLETE -> external {
+        score : number
+        total : number
+      }
+        @description "Fired once when the round finishes (advancing past the final prompt) — the standard learning completion broadcast a celebration/progression sibling (fx cues, badges) rides."
+        @synonyms "round complete, finished, done, completion"
         @tier "domain"
     }
 

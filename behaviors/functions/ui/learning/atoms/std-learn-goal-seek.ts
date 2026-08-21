@@ -30,7 +30,7 @@ const ALIAS = 'LearnGoalSeek';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdLearnGoalSeekEventKey = 'CHECK' | 'GOAL_CHECKED' | 'GOAL_RESET' | 'INIT' | 'MODE_SELECTED' | 'PARAMS_CHANGED' | 'RESET' | 'SET_PARAM_A' | 'SET_PARAM_B';
+export type StdLearnGoalSeekEventKey = 'CHECK' | 'GOAL_CHECKED' | 'GOAL_RESET' | 'INIT' | 'LEARN_ROUND_COMPLETE' | 'MODE_SELECTED' | 'PARAMS_CHANGED' | 'RESET' | 'SET_PARAM_A' | 'SET_PARAM_B';
 
 /**
  * Payload shape for the `PARAMS_CHANGED` event.
@@ -55,6 +55,14 @@ export interface StdLearnGoalSeekGoalCheckedPayload {
  */
 export interface StdLearnGoalSeekGoalResetPayload {
   attempts?: number;
+}
+
+/**
+ * Payload shape for the `LEARN_ROUND_COMPLETE` event.
+ */
+export interface StdLearnGoalSeekLearnRoundCompletePayload {
+  score?: number;
+  total?: number;
 }
 
 /**

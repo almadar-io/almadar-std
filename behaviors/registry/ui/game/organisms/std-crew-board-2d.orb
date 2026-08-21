@@ -491,13 +491,48 @@
             "default": [],
             "items": {
               "properties": {
+                "bornAt": {
+                  "name": "bornAt",
+                  "required": false,
+                  "type": "number"
+                },
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "effect": {
+                  "name": "effect",
+                  "required": false,
+                  "type": "string"
+                },
                 "id": {
                   "name": "id",
                   "required": true,
                   "type": "string"
                 },
+                "maxTtl": {
+                  "name": "maxTtl",
+                  "required": false,
+                  "type": "number"
+                },
                 "message": {
                   "name": "message",
+                  "required": false,
+                  "type": "string"
+                },
+                "particleCount": {
+                  "name": "particleCount",
+                  "required": false,
+                  "type": "number"
+                },
+                "size": {
+                  "name": "size",
+                  "required": false,
+                  "type": "number"
+                },
+                "space": {
+                  "name": "space",
                   "required": false,
                   "type": "string"
                 },
@@ -510,6 +545,21 @@
                   "name": "type",
                   "required": true,
                   "type": "string"
+                },
+                "vx": {
+                  "name": "vx",
+                  "required": false,
+                  "type": "number"
+                },
+                "vy": {
+                  "name": "vy",
+                  "required": false,
+                  "type": "number"
+                },
+                "vz": {
+                  "name": "vz",
+                  "required": false,
+                  "type": "number"
                 },
                 "x": {
                   "name": "x",
@@ -1422,6 +1472,88 @@
               "label": "Features",
               "tier": "presentation",
               "type": "[Feature]"
+            },
+            "fxPresets": {
+              "default": [],
+              "description": "This board's effect vocabulary — one look/recipe row per fx type; its composed mechanics currently emit none, so the channel is forward-compat only.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "color2": {
+                    "name": "color2",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "count": {
+                    "name": "count",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "effect": {
+                    "name": "effect",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "glow": {
+                    "name": "glow",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "gravity": {
+                    "name": "gravity",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "particleCount": {
+                    "name": "particleCount",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "shape": {
+                    "name": "shape",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "size": {
+                    "name": "size",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "space": {
+                    "name": "space",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "vx": {
+                    "name": "vx",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "vy": {
+                    "name": "vy",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "vz": {
+                    "name": "vz",
+                    "required": false,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Fx Presets",
+              "tier": "presentation",
+              "type": "[FxPreset]"
             },
             "gridHeight": {
               "default": 7.0,
@@ -2343,36 +2475,15 @@
                               "type": "draw-text-layer"
                             },
                             {
-                              "items": [
-                                "array/map",
-                                "@entity.fx",
-                                [
-                                  "fn",
-                                  "f",
-                                  {
-                                    "color": "#ffe066",
-                                    "position": {
-                                      "x": [
-                                        "object/get",
-                                        "@f",
-                                        "x"
-                                      ],
-                                      "y": [
-                                        "object/get",
-                                        "@f",
-                                        "y"
-                                      ]
-                                    },
-                                    "text": [
-                                      "object/get",
-                                      "@f",
-                                      "message"
-                                    ],
-                                    "type": "draw-text"
-                                  }
-                                ]
+                              "items": "@entity.fx",
+                              "presets": "@config.fxPresets",
+                              "sprites": [
+                                "object/get",
+                                "@config.assetManifest",
+                                "effects"
                               ],
-                              "type": "draw-text-layer"
+                              "tickMs": 500.0,
+                              "type": "draw-fx-layer"
                             },
                             {
                               "items": [
@@ -3676,36 +3787,15 @@
                             "type": "draw-text-layer"
                           },
                           {
-                            "items": [
-                              "array/map",
-                              "@entity.fx",
-                              [
-                                "fn",
-                                "f",
-                                {
-                                  "color": "#ffe066",
-                                  "position": {
-                                    "x": [
-                                      "object/get",
-                                      "@f",
-                                      "x"
-                                    ],
-                                    "y": [
-                                      "object/get",
-                                      "@f",
-                                      "y"
-                                    ]
-                                  },
-                                  "text": [
-                                    "object/get",
-                                    "@f",
-                                    "message"
-                                  ],
-                                  "type": "draw-text"
-                                }
-                              ]
+                            "items": "@entity.fx",
+                            "presets": "@config.fxPresets",
+                            "sprites": [
+                              "object/get",
+                              "@config.assetManifest",
+                              "effects"
                             ],
-                            "type": "draw-text-layer"
+                            "tickMs": 500.0,
+                            "type": "draw-fx-layer"
                           },
                           {
                             "items": [

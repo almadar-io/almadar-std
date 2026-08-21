@@ -1,5 +1,5 @@
-app std-fx-particles "1.0.0"
-"Headless floating-text/particle mechanic: decays each fx entry's ttl every tick and drops the dead ones, and appends spawned particles on BURST. Composed onto a [runtime, shared] game entity; renders nothing (the board owns the single render authority)."
+app std-fx-particles "1.1.0"
+"Headless transient-fx mechanic serving BOTH game boards and learning shells: appends spawned particles on BURST — stamping maxTtl (fade envelope) and bornAt (epoch ms, smooth render interpolation) when absent — decays each entry's ttl every tick, drops the dead ones, and clears on RESTART. Name-blind mechanism: the effect-kind vocabulary is consumer-declared (FxPreset tables at the render call sites). Composed onto a [runtime, shared] entity; renders nothing — the board/shell owns the single render authority (draw-fx-layer for space \"world\", fx-overlay for space \"screen\")."
 orbital FxParticlesOrbital {
   type Fx = {
     id : string!
@@ -9,6 +9,16 @@ orbital FxParticlesOrbital {
     y : number
     message : string
     ttl : number!
+    maxTtl : number
+    bornAt : number
+    space : string
+    effect : string
+    color : string
+    size : number
+    vx : number
+    vy : number
+    vz : number
+    particleCount : number
   }
 
   entity FxState [runtime, shared] {
@@ -21,9 +31,17 @@ orbital FxParticlesOrbital {
 
     state active {
       INIT -> active
-        (set @entity.fx @config.fx)
+        (set @entity.fx (array/map @config.fx (fn p (object/merge @p {
+          maxTtl: (if (object/get @p maxTtl) (object/get @p maxTtl) (object/get @p ttl))
+          bornAt: (if (object/get @p bornAt) (object/get @p bornAt) (time/now))
+        }))))
       BURST -> active
-        (set @entity.fx (array/concat @entity.fx @payload.particles))
+        (set @entity.fx (array/concat @entity.fx (array/map @payload.particles (fn p (object/merge @p {
+          maxTtl: (if (object/get @p maxTtl) (object/get @p maxTtl) (object/get @p ttl))
+          bornAt: (if (object/get @p bornAt) (object/get @p bornAt) (time/now))
+        })))))
+      RESTART -> active
+        (set @entity.fx [])
     }
 
     ticks {
@@ -36,6 +54,7 @@ orbital FxParticlesOrbital {
 
     listens {
       BURST { particles : [Fx] }
+      RESTART { }
     }
 
     config {

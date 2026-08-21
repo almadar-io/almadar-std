@@ -345,6 +345,11 @@ import {
   isStdPaginationPagedItemOrbitalParams,
 } from './ui/core/atoms/std-pagination.js';
 import {
+  stdPlatformerBoard2dPlatformerBoard2DOrbital,
+  StdPlatformerBoard2dPlatformerBoard2DOrbitalManifest,
+  isStdPlatformerBoard2dPlatformerBoard2DOrbitalParams,
+} from './ui/game/organisms/std-platformer-board-2d.js';
+import {
   stdRateLimiterRateBucketOrbital,
   StdRateLimiterRateBucketOrbitalManifest,
   isStdRateLimiterRateBucketOrbitalParams,
@@ -682,1196 +687,1205 @@ interface DispatchEntry {
   manifest: OrbitalParamsManifest;
 }
 
-const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEntry>([
-  ['std-agent-builder::AgentBuilderOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdAgentBuilderAgentBuilderOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-agent-builder::AgentBuilderOrbital');
-      }
-      return stdAgentBuilderAgentBuilderOrbital(p);
-    },
-    manifest: StdAgentBuilderAgentBuilderOrbitalManifest,
-  }],
-  ['std-agent-completion::AgentCompletionOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdAgentCompletionAgentCompletionOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-agent-completion::AgentCompletionOrbital');
-      }
-      return stdAgentCompletionAgentCompletionOrbital(p);
-    },
-    manifest: StdAgentCompletionAgentCompletionOrbitalManifest,
-  }],
-  ['std-agent-context::AgentContextOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdAgentContextAgentContextOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-agent-context::AgentContextOrbital');
-      }
-      return stdAgentContextAgentContextOrbital(p);
-    },
-    manifest: StdAgentContextAgentContextOrbitalManifest,
-  }],
-  ['std-agent-fix-loop::AgentFixLoopOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdAgentFixLoopAgentFixLoopOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-agent-fix-loop::AgentFixLoopOrbital');
-      }
-      return stdAgentFixLoopAgentFixLoopOrbital(p);
-    },
-    manifest: StdAgentFixLoopAgentFixLoopOrbitalManifest,
-  }],
-  ['std-agent-memory::AgentMemoryOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdAgentMemoryAgentMemoryOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-agent-memory::AgentMemoryOrbital');
-      }
-      return stdAgentMemoryAgentMemoryOrbital(p);
-    },
-    manifest: StdAgentMemoryAgentMemoryOrbitalManifest,
-  }],
-  ['std-agent-planner::AgentPlannerOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdAgentPlannerAgentPlannerOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-agent-planner::AgentPlannerOrbital');
-      }
-      return stdAgentPlannerAgentPlannerOrbital(p);
-    },
-    manifest: StdAgentPlannerAgentPlannerOrbitalManifest,
-  }],
-  ['std-agent-rabit::CoordinatorOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdAgentRabitCoordinatorOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-agent-rabit::CoordinatorOrbital');
-      }
-      return stdAgentRabitCoordinatorOrbital(p);
-    },
-    manifest: StdAgentRabitCoordinatorOrbitalManifest,
-  }],
-  ['std-agent-rabit::OrbitalProcessOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdAgentRabitOrbitalProcessOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-agent-rabit::OrbitalProcessOrbital');
-      }
-      return stdAgentRabitOrbitalProcessOrbital(p);
-    },
-    manifest: StdAgentRabitOrbitalProcessOrbitalManifest,
-  }],
-  ['std-agent-session::AgentSessionOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdAgentSessionAgentSessionOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-agent-session::AgentSessionOrbital');
-      }
-      return stdAgentSessionAgentSessionOrbital(p);
-    },
-    manifest: StdAgentSessionAgentSessionOrbitalManifest,
-  }],
-  ['std-agent-tool-call::AgentToolCallOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdAgentToolCallAgentToolCallOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-agent-tool-call::AgentToolCallOrbital');
-      }
-      return stdAgentToolCallAgentToolCallOrbital(p);
-    },
-    manifest: StdAgentToolCallAgentToolCallOrbitalManifest,
-  }],
-  ['std-agent-tool-loop::AgentToolLoopOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdAgentToolLoopAgentToolLoopOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-agent-tool-loop::AgentToolLoopOrbital');
-      }
-      return stdAgentToolLoopAgentToolLoopOrbital(p);
-    },
-    manifest: StdAgentToolLoopAgentToolLoopOrbitalManifest,
-  }],
-  ['std-agent-trace::AgentTraceOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdAgentTraceAgentTraceOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-agent-trace::AgentTraceOrbital');
-      }
-      return stdAgentTraceAgentTraceOrbital(p);
-    },
-    manifest: StdAgentTraceAgentTraceOrbitalManifest,
-  }],
-  ['std-anim-tick::AnimTickOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdAnimTickAnimTickOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-anim-tick::AnimTickOrbital');
-      }
-      return stdAnimTickAnimTickOrbital(p);
-    },
-    manifest: StdAnimTickAnimTickOrbitalManifest,
-  }],
-  ['std-app-layout::AppLayoutOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdAppLayoutAppLayoutOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-app-layout::AppLayoutOrbital');
-      }
-      return stdAppLayoutAppLayoutOrbital(p);
-    },
-    manifest: StdAppLayoutAppLayoutOrbitalManifest,
-  }],
-  ['std-app-search::AppSearchOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdAppSearchAppSearchOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-app-search::AppSearchOrbital');
-      }
-      return stdAppSearchAppSearchOrbital(p);
-    },
-    manifest: StdAppSearchAppSearchOrbitalManifest,
-  }],
-  ['std-approval-gate::ApprovalGateOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdApprovalGateApprovalGateOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-approval-gate::ApprovalGateOrbital');
-      }
-      return stdApprovalGateApprovalGateOrbital(p);
-    },
-    manifest: StdApprovalGateApprovalGateOrbitalManifest,
-  }],
-  ['std-arcade-board-3d::ArcadeBoard3DFrameOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdArcadeBoard3dArcadeBoard3DFrameOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-arcade-board-3d::ArcadeBoard3DFrameOrbital');
-      }
-      return stdArcadeBoard3dArcadeBoard3DFrameOrbital(p);
-    },
-    manifest: StdArcadeBoard3dArcadeBoard3DFrameOrbitalManifest,
-  }],
-  ['std-audit-capture::AuditCaptureOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdAuditCaptureAuditCaptureOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-audit-capture::AuditCaptureOrbital');
-      }
-      return stdAuditCaptureAuditCaptureOrbital(p);
-    },
-    manifest: StdAuditCaptureAuditCaptureOrbitalManifest,
-  }],
-  ['std-billable-hour::BillableHourOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdBillableHourBillableHourOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-billable-hour::BillableHourOrbital');
-      }
-      return stdBillableHourBillableHourOrbital(p);
-    },
-    manifest: StdBillableHourBillableHourOrbitalManifest,
-  }],
-  ['std-board::BoardOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdBoardBoardOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-board::BoardOrbital');
-      }
-      return stdBoardBoardOrbital(p);
-    },
-    manifest: StdBoardBoardOrbitalManifest,
-  }],
-  ['std-browse::BrowseItemOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdBrowseBrowseItemOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-browse::BrowseItemOrbital');
-      }
-      return stdBrowseBrowseItemOrbital(p);
-    },
-    manifest: StdBrowseBrowseItemOrbitalManifest,
-  }],
-  ['std-cache-aside::CacheEntryOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdCacheAsideCacheEntryOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-cache-aside::CacheEntryOrbital');
-      }
-      return stdCacheAsideCacheEntryOrbital(p);
-    },
-    manifest: StdCacheAsideCacheEntryOrbitalManifest,
-  }],
-  ['std-calendar::CalendarEventOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdCalendarCalendarEventOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-calendar::CalendarEventOrbital');
-      }
-      return stdCalendarCalendarEventOrbital(p);
-    },
-    manifest: StdCalendarCalendarEventOrbitalManifest,
-  }],
-  ['std-cascade-on-delete::CascadeOnDeleteOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdCascadeOnDeleteCascadeOnDeleteOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-cascade-on-delete::CascadeOnDeleteOrbital');
-      }
-      return stdCascadeOnDeleteCascadeOnDeleteOrbital(p);
-    },
-    manifest: StdCascadeOnDeleteCascadeOnDeleteOrbitalManifest,
-  }],
-  ['std-circuit-breaker::ServiceNodeOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdCircuitBreakerServiceNodeOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-circuit-breaker::ServiceNodeOrbital');
-      }
-      return stdCircuitBreakerServiceNodeOrbital(p);
-    },
-    manifest: StdCircuitBreakerServiceNodeOrbitalManifest,
-  }],
-  ['std-confirmation::ConfirmActionOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdConfirmationConfirmActionOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-confirmation::ConfirmActionOrbital');
-      }
-      return stdConfirmationConfirmActionOrbital(p);
-    },
-    manifest: StdConfirmationConfirmActionOrbitalManifest,
-  }],
-  ['std-cooldown::CooldownOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdCooldownCooldownOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-cooldown::CooldownOrbital');
-      }
-      return stdCooldownCooldownOrbital(p);
-    },
-    manifest: StdCooldownCooldownOrbitalManifest,
-  }],
-  ['std-crew-board-2d::CrewBoard2DOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdCrewBoard2dCrewBoard2DOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-crew-board-2d::CrewBoard2DOrbital');
-      }
-      return stdCrewBoard2dCrewBoard2DOrbital(p);
-    },
-    manifest: StdCrewBoard2dCrewBoard2DOrbitalManifest,
-  }],
-  ['std-cross-reference::CrossReferenceOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdCrossReferenceCrossReferenceOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-cross-reference::CrossReferenceOrbital');
-      }
-      return stdCrossReferenceCrossReferenceOrbital(p);
-    },
-    manifest: StdCrossReferenceCrossReferenceOrbitalManifest,
-  }],
-  ['std-dashboard-grid-embedded::DashboardGridEmbeddedOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdDashboardGridEmbeddedDashboardGridEmbeddedOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-dashboard-grid-embedded::DashboardGridEmbeddedOrbital');
-      }
-      return stdDashboardGridEmbeddedDashboardGridEmbeddedOrbital(p);
-    },
-    manifest: StdDashboardGridEmbeddedDashboardGridEmbeddedOrbitalManifest,
-  }],
-  ['std-data-collector::MlDataCollectorOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdDataCollectorMlDataCollectorOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-data-collector::MlDataCollectorOrbital');
-      }
-      return stdDataCollectorMlDataCollectorOrbital(p);
-    },
-    manifest: StdDataCollectorMlDataCollectorOrbitalManifest,
-  }],
-  ['std-data-erasure::DataErasureOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdDataErasureDataErasureOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-data-erasure::DataErasureOrbital');
-      }
-      return stdDataErasureDataErasureOrbital(p);
-    },
-    manifest: StdDataErasureDataErasureOrbitalManifest,
-  }],
-  ['std-date-range::DateRangeOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdDateRangeDateRangeOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-date-range::DateRangeOrbital');
-      }
-      return stdDateRangeDateRangeOrbital(p);
-    },
-    manifest: StdDateRangeDateRangeOrbitalManifest,
-  }],
-  ['std-dungeon-board-2d::DungeonBoard2DOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdDungeonBoard2dDungeonBoard2DOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-dungeon-board-2d::DungeonBoard2DOrbital');
-      }
-      return stdDungeonBoard2dDungeonBoard2DOrbital(p);
-    },
-    manifest: StdDungeonBoard2dDungeonBoard2DOrbitalManifest,
-  }],
-  ['std-escalating-decision::EscalatingDecisionOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdEscalatingDecisionEscalatingDecisionOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-escalating-decision::EscalatingDecisionOrbital');
-      }
-      return stdEscalatingDecisionEscalatingDecisionOrbital(p);
-    },
-    manifest: StdEscalatingDecisionEscalatingDecisionOrbitalManifest,
-  }],
-  ['std-esign-flow::SignatureSessionOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdEsignFlowSignatureSessionOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-esign-flow::SignatureSessionOrbital');
-      }
-      return stdEsignFlowSignatureSessionOrbital(p);
-    },
-    manifest: StdEsignFlowSignatureSessionOrbitalManifest,
-  }],
-  ['std-esign-request::ESignRequestOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdEsignRequestESignRequestOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-esign-request::ESignRequestOrbital');
-      }
-      return stdEsignRequestESignRequestOrbital(p);
-    },
-    manifest: StdEsignRequestESignRequestOrbitalManifest,
-  }],
-  ['std-event-log::EventLogOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdEventLogEventLogOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-event-log::EventLogOrbital');
-      }
-      return stdEventLogEventLogOrbital(p);
-    },
-    manifest: StdEventLogEventLogOrbitalManifest,
-  }],
-  ['std-export::ExportOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdExportExportOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-export::ExportOrbital');
-      }
-      return stdExportExportOrbital(p);
-    },
-    manifest: StdExportExportOrbitalManifest,
-  }],
-  ['std-file-store::StoredFileOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdFileStoreStoredFileOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-file-store::StoredFileOrbital');
-      }
-      return stdFileStoreStoredFileOrbital(p);
-    },
-    manifest: StdFileStoreStoredFileOrbitalManifest,
-  }],
-  ['std-filter::FilterTargetOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdFilterFilterTargetOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-filter::FilterTargetOrbital');
-      }
-      return stdFilterFilterTargetOrbital(p);
-    },
-    manifest: StdFilterFilterTargetOrbitalManifest,
-  }],
-  ['std-form-advanced::FormEntryOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdFormAdvancedFormEntryOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-form-advanced::FormEntryOrbital');
-      }
-      return stdFormAdvancedFormEntryOrbital(p);
-    },
-    manifest: StdFormAdvancedFormEntryOrbitalManifest,
-  }],
-  ['std-gallery::GalleryItemOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdGalleryGalleryItemOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-gallery::GalleryItemOrbital');
-      }
-      return stdGalleryGalleryItemOrbital(p);
-    },
-    manifest: StdGalleryGalleryItemOrbitalManifest,
-  }],
-  ['std-game-clock::GameClockOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdGameClockGameClockOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-game-clock::GameClockOrbital');
-      }
-      return stdGameClockGameClockOrbital(p);
-    },
-    manifest: StdGameClockGameClockOrbitalManifest,
-  }],
-  ['std-geosearch::GeoSearchResultOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdGeosearchGeoSearchResultOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-geosearch::GeoSearchResultOrbital');
-      }
-      return stdGeosearchGeoSearchResultOrbital(p);
-    },
-    manifest: StdGeosearchGeoSearchResultOrbitalManifest,
-  }],
-  ['std-graph-builder::GraphBuilderOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdGraphBuilderGraphBuilderOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-graph-builder::GraphBuilderOrbital');
-      }
-      return stdGraphBuilderGraphBuilderOrbital(p);
-    },
-    manifest: StdGraphBuilderGraphBuilderOrbitalManifest,
-  }],
-  ['std-graphs::GraphItemOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdGraphsGraphItemOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-graphs::GraphItemOrbital');
-      }
-      return stdGraphsGraphItemOrbital(p);
-    },
-    manifest: StdGraphsGraphItemOrbitalManifest,
-  }],
-  ['std-image-upload-multi::UploadedImageOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdImageUploadMultiUploadedImageOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-image-upload-multi::UploadedImageOrbital');
-      }
-      return stdImageUploadMultiUploadedImageOrbital(p);
-    },
-    manifest: StdImageUploadMultiUploadedImageOrbitalManifest,
-  }],
-  ['std-knowledge-tracing::KnowledgeTracingOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdKnowledgeTracingKnowledgeTracingOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-knowledge-tracing::KnowledgeTracingOrbital');
-      }
-      return stdKnowledgeTracingKnowledgeTracingOrbital(p);
-    },
-    manifest: StdKnowledgeTracingKnowledgeTracingOrbitalManifest,
-  }],
-  ['std-lifecycle::LifecycleOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLifecycleLifecycleOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-lifecycle::LifecycleOrbital');
-      }
-      return stdLifecycleLifecycleOrbital(p);
-    },
-    manifest: StdLifecycleLifecycleOrbitalManifest,
-  }],
-  ['std-list::ListItemOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdListListItemOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-list::ListItemOrbital');
-      }
-      return stdListListItemOrbital(p);
-    },
-    manifest: StdListListItemOrbitalManifest,
-  }],
-  ['std-market-board-3d::MarketBoard3DOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdMarketBoard3dMarketBoard3DOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-market-board-3d::MarketBoard3DOrbital');
-      }
-      return stdMarketBoard3dMarketBoard3DOrbital(p);
-    },
-    manifest: StdMarketBoard3dMarketBoard3DOrbitalManifest,
-  }],
-  ['std-migration-job::MigrationJobOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdMigrationJobMigrationJobOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-migration-job::MigrationJobOrbital');
-      }
-      return stdMigrationJobMigrationJobOrbital(p);
-    },
-    manifest: StdMigrationJobMigrationJobOrbitalManifest,
-  }],
-  ['std-ml-classify::MlClassifyOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdMlClassifyMlClassifyOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-ml-classify::MlClassifyOrbital');
-      }
-      return stdMlClassifyMlClassifyOrbital(p);
-    },
-    manifest: StdMlClassifyMlClassifyOrbitalManifest,
-  }],
-  ['std-ml-exact-check::MlExactCheckOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdMlExactCheckMlExactCheckOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-ml-exact-check::MlExactCheckOrbital');
-      }
-      return stdMlExactCheckMlExactCheckOrbital(p);
-    },
-    manifest: StdMlExactCheckMlExactCheckOrbitalManifest,
-  }],
-  ['std-ml-infer::MlInferOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdMlInferMlInferOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-ml-infer::MlInferOrbital');
-      }
-      return stdMlInferMlInferOrbital(p);
-    },
-    manifest: StdMlInferMlInferOrbitalManifest,
-  }],
-  ['std-ml-label-capture::MlLabelCaptureOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdMlLabelCaptureMlLabelCaptureOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-ml-label-capture::MlLabelCaptureOrbital');
-      }
-      return stdMlLabelCaptureMlLabelCaptureOrbital(p);
-    },
-    manifest: StdMlLabelCaptureMlLabelCaptureOrbitalManifest,
-  }],
-  ['std-ml-lookup::MlLookupOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdMlLookupMlLookupOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-ml-lookup::MlLookupOrbital');
-      }
-      return stdMlLookupMlLookupOrbital(p);
-    },
-    manifest: StdMlLookupMlLookupOrbitalManifest,
-  }],
-  ['std-ml-posterior::MlPosteriorOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdMlPosteriorMlPosteriorOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-ml-posterior::MlPosteriorOrbital');
-      }
-      return stdMlPosteriorMlPosteriorOrbital(p);
-    },
-    manifest: StdMlPosteriorMlPosteriorOrbitalManifest,
-  }],
-  ['std-ml-similarity::MlSimilarityOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdMlSimilarityMlSimilarityOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-ml-similarity::MlSimilarityOrbital');
-      }
-      return stdMlSimilarityMlSimilarityOrbital(p);
-    },
-    manifest: StdMlSimilarityMlSimilarityOrbitalManifest,
-  }],
-  ['std-mod-queue::ModQueueItemOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdModQueueModQueueItemOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-mod-queue::ModQueueItemOrbital');
-      }
-      return stdModQueueModQueueItemOrbital(p);
-    },
-    manifest: StdModQueueModQueueItemOrbitalManifest,
-  }],
-  ['std-modal::ModalRecordOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdModalModalRecordOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-modal::ModalRecordOrbital');
-      }
-      return stdModalModalRecordOrbital(p);
-    },
-    manifest: StdModalModalRecordOrbitalManifest,
-  }],
-  ['std-multi-party-flow::MultiPartyFlowOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdMultiPartyFlowMultiPartyFlowOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-multi-party-flow::MultiPartyFlowOrbital');
-      }
-      return stdMultiPartyFlowMultiPartyFlowOrbital(p);
-    },
-    manifest: StdMultiPartyFlowMultiPartyFlowOrbitalManifest,
-  }],
-  ['std-notify-on-event::NotifyOnEventOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdNotifyOnEventNotifyOnEventOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-notify-on-event::NotifyOnEventOrbital');
-      }
-      return stdNotifyOnEventNotifyOnEventOrbital(p);
-    },
-    manifest: StdNotifyOnEventNotifyOnEventOrbitalManifest,
-  }],
-  ['std-objective-board-3d::ObjectiveBoard3DOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdObjectiveBoard3dObjectiveBoard3DOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-objective-board-3d::ObjectiveBoard3DOrbital');
-      }
-      return stdObjectiveBoard3dObjectiveBoard3DOrbital(p);
-    },
-    manifest: StdObjectiveBoard3dObjectiveBoard3DOrbitalManifest,
-  }],
-  ['std-pagination::PagedItemOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdPaginationPagedItemOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-pagination::PagedItemOrbital');
-      }
-      return stdPaginationPagedItemOrbital(p);
-    },
-    manifest: StdPaginationPagedItemOrbitalManifest,
-  }],
-  ['std-rate-limiter::RateBucketOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdRateLimiterRateBucketOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-rate-limiter::RateBucketOrbital');
-      }
-      return stdRateLimiterRateBucketOrbital(p);
-    },
-    manifest: StdRateLimiterRateBucketOrbitalManifest,
-  }],
-  ['std-rating-review::RatingReviewOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdRatingReviewRatingReviewOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-rating-review::RatingReviewOrbital');
-      }
-      return stdRatingReviewRatingReviewOrbital(p);
-    },
-    manifest: StdRatingReviewRatingReviewOrbitalManifest,
-  }],
-  ['std-recurrence::RecurrenceOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdRecurrenceRecurrenceOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-recurrence::RecurrenceOrbital');
-      }
-      return stdRecurrenceRecurrenceOrbital(p);
-    },
-    manifest: StdRecurrenceRecurrenceOrbitalManifest,
-  }],
-  ['std-related::RelatedItemOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdRelatedRelatedItemOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-related::RelatedItemOrbital');
-      }
-      return stdRelatedRelatedItemOrbital(p);
-    },
-    manifest: StdRelatedRelatedItemOrbitalManifest,
-  }],
-  ['std-reminder-scheduler::ReminderSchedulerOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdReminderSchedulerReminderSchedulerOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-reminder-scheduler::ReminderSchedulerOrbital');
-      }
-      return stdReminderSchedulerReminderSchedulerOrbital(p);
-    },
-    manifest: StdReminderSchedulerReminderSchedulerOrbitalManifest,
-  }],
-  ['std-rich-editor::DocumentOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdRichEditorDocumentOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-rich-editor::DocumentOrbital');
-      }
-      return stdRichEditorDocumentOrbital(p);
-    },
-    manifest: StdRichEditorDocumentOrbitalManifest,
-  }],
-  ['std-row-access-control::RowAccessControlOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdRowAccessControlRowAccessControlOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-row-access-control::RowAccessControlOrbital');
-      }
-      return stdRowAccessControlRowAccessControlOrbital(p);
-    },
-    manifest: StdRowAccessControlRowAccessControlOrbitalManifest,
-  }],
-  ['std-saved-search::SavedSearchOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdSavedSearchSavedSearchOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-saved-search::SavedSearchOrbital');
-      }
-      return stdSavedSearchSavedSearchOrbital(p);
-    },
-    manifest: StdSavedSearchSavedSearchOrbitalManifest,
-  }],
-  ['std-scatter::ScatterItemOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdScatterScatterItemOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-scatter::ScatterItemOrbital');
-      }
-      return stdScatterScatterItemOrbital(p);
-    },
-    manifest: StdScatterScatterItemOrbitalManifest,
-  }],
-  ['std-search::SearchResultOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdSearchSearchResultOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-search::SearchResultOrbital');
-      }
-      return stdSearchSearchResultOrbital(p);
-    },
-    manifest: StdSearchSearchResultOrbitalManifest,
-  }],
-  ['std-selection::SelectableItemOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdSelectionSelectableItemOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-selection::SelectableItemOrbital');
-      }
-      return stdSelectionSelectableItemOrbital(p);
-    },
-    manifest: StdSelectionSelectableItemOrbitalManifest,
-  }],
-  ['std-signature-capture::SignatureCaptureOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdSignatureCaptureSignatureCaptureOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-signature-capture::SignatureCaptureOrbital');
-      }
-      return stdSignatureCaptureSignatureCaptureOrbital(p);
-    },
-    manifest: StdSignatureCaptureSignatureCaptureOrbitalManifest,
-  }],
-  ['std-stats::StatsItemOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdStatsStatsItemOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-stats::StatsItemOrbital');
-      }
-      return stdStatsStatsItemOrbital(p);
-    },
-    manifest: StdStatsStatsItemOrbitalManifest,
-  }],
-  ['std-status-lifecycle::StatusLifecycleOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdStatusLifecycleStatusLifecycleOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-status-lifecycle::StatusLifecycleOrbital');
-      }
-      return stdStatusLifecycleStatusLifecycleOrbital(p);
-    },
-    manifest: StdStatusLifecycleStatusLifecycleOrbitalManifest,
-  }],
-  ['std-status-lifecycle-control::StatusLifecycleControlOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdStatusLifecycleControlStatusLifecycleControlOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-status-lifecycle-control::StatusLifecycleControlOrbital');
-      }
-      return stdStatusLifecycleControlStatusLifecycleControlOrbital(p);
-    },
-    manifest: StdStatusLifecycleControlStatusLifecycleControlOrbitalManifest,
-  }],
-  ['std-step-flow::StepFlowOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdStepFlowStepFlowOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-step-flow::StepFlowOrbital');
-      }
-      return stdStepFlowStepFlowOrbital(p);
-    },
-    manifest: StdStepFlowStepFlowOrbitalManifest,
-  }],
-  ['std-survival-board-3d::SurvivalBoard3DOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdSurvivalBoard3dSurvivalBoard3DOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-survival-board-3d::SurvivalBoard3DOrbital');
-      }
-      return stdSurvivalBoard3dSurvivalBoard3DOrbital(p);
-    },
-    manifest: StdSurvivalBoard3dSurvivalBoard3DOrbitalManifest,
-  }],
-  ['std-tabs::TabsItemOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdTabsTabsItemOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-tabs::TabsItemOrbital');
-      }
-      return stdTabsTabsItemOrbital(p);
-    },
-    manifest: StdTabsTabsItemOrbitalManifest,
-  }],
-  ['std-tactics-board-2d::TacticsBoard2DOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdTacticsBoard2dTacticsBoard2DOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-tactics-board-2d::TacticsBoard2DOrbital');
-      }
-      return stdTacticsBoard2dTacticsBoard2DOrbital(p);
-    },
-    manifest: StdTacticsBoard2dTacticsBoard2DOrbitalManifest,
-  }],
-  ['std-tactics-board-3d::TacticsBoard3DOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdTacticsBoard3dTacticsBoard3DOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-tactics-board-3d::TacticsBoard3DOrbital');
-      }
-      return stdTacticsBoard3dTacticsBoard3DOrbital(p);
-    },
-    manifest: StdTacticsBoard3dTacticsBoard3DOrbitalManifest,
-  }],
-  ['std-tag-taxonomy::TagTaxonomyOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdTagTaxonomyTagTaxonomyOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-tag-taxonomy::TagTaxonomyOrbital');
-      }
-      return stdTagTaxonomyTagTaxonomyOrbital(p);
-    },
-    manifest: StdTagTaxonomyTagTaxonomyOrbitalManifest,
-  }],
-  ['std-thread::ThreadPostOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdThreadThreadPostOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-thread::ThreadPostOrbital');
-      }
-      return stdThreadThreadPostOrbital(p);
-    },
-    manifest: StdThreadThreadPostOrbitalManifest,
-  }],
-  ['std-tokenizer::MlTokenizerOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdTokenizerMlTokenizerOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-tokenizer::MlTokenizerOrbital');
-      }
-      return stdTokenizerMlTokenizerOrbital(p);
-    },
-    manifest: StdTokenizerMlTokenizerOrbitalManifest,
-  }],
-  ['std-version-history::RevisionOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdVersionHistoryRevisionOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-version-history::RevisionOrbital');
-      }
-      return stdVersionHistoryRevisionOrbital(p);
-    },
-    manifest: StdVersionHistoryRevisionOrbitalManifest,
-  }],
-  ['std-vote::VoteOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdVoteVoteOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-vote::VoteOrbital');
-      }
-      return stdVoteVoteOrbital(p);
-    },
-    manifest: StdVoteVoteOrbitalManifest,
-  }],
-  ['std-weight-validator::MlWeightValidatorOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdWeightValidatorMlWeightValidatorOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-weight-validator::MlWeightValidatorOrbital');
-      }
-      return stdWeightValidatorMlWeightValidatorOrbital(p);
-    },
-    manifest: StdWeightValidatorMlWeightValidatorOrbitalManifest,
-  }],
-  ['std-wizard::WizardOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdWizardWizardOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-wizard::WizardOrbital');
-      }
-      return stdWizardWizardOrbital(p);
-    },
-    manifest: StdWizardWizardOrbitalManifest,
-  }],
-  ['std-worldmap-board-2d::WorldMapBoard2DOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdWorldmapBoard2dWorldMapBoard2DOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-worldmap-board-2d::WorldMapBoard2DOrbital');
-      }
-      return stdWorldmapBoard2dWorldMapBoard2DOrbital(p);
-    },
-    manifest: StdWorldmapBoard2dWorldMapBoard2DOrbitalManifest,
-  }],
-  ['ui-book-chapter-view::BookChapterViewOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiBookChapterViewBookChapterViewOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-book-chapter-view::BookChapterViewOrbital');
-      }
-      return stdUiBookChapterViewBookChapterViewOrbital(p);
-    },
-    manifest: StdUiBookChapterViewBookChapterViewOrbitalManifest,
-  }],
-  ['ui-book-cover-page::BookCoverPageOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiBookCoverPageBookCoverPageOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-book-cover-page::BookCoverPageOrbital');
-      }
-      return stdUiBookCoverPageBookCoverPageOrbital(p);
-    },
-    manifest: StdUiBookCoverPageBookCoverPageOrbitalManifest,
-  }],
-  ['ui-book-nav-bar::BookNavBarOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiBookNavBarBookNavBarOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-book-nav-bar::BookNavBarOrbital');
-      }
-      return stdUiBookNavBarBookNavBarOrbital(p);
-    },
-    manifest: StdUiBookNavBarBookNavBarOrbitalManifest,
-  }],
-  ['ui-book-table-of-contents::BookTableOfContentsOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiBookTableOfContentsBookTableOfContentsOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-book-table-of-contents::BookTableOfContentsOrbital');
-      }
-      return stdUiBookTableOfContentsBookTableOfContentsOrbital(p);
-    },
-    manifest: StdUiBookTableOfContentsBookTableOfContentsOrbitalManifest,
-  }],
-  ['ui-book-viewer::BookViewerOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiBookViewerBookViewerOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-book-viewer::BookViewerOrbital');
-      }
-      return stdUiBookViewerBookViewerOrbital(p);
-    },
-    manifest: StdUiBookViewerBookViewerOrbitalManifest,
-  }],
-  ['ui-case-study-organism::CaseStudyOrganismOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiCaseStudyOrganismCaseStudyOrganismOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-case-study-organism::CaseStudyOrganismOrbital');
-      }
-      return stdUiCaseStudyOrganismCaseStudyOrganismOrbital(p);
-    },
-    manifest: StdUiCaseStudyOrganismCaseStudyOrganismOrbitalManifest,
-  }],
-  ['ui-chat-bar::ChatBarOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiChatBarChatBarOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-chat-bar::ChatBarOrbital');
-      }
-      return stdUiChatBarChatBarOrbital(p);
-    },
-    manifest: StdUiChatBarChatBarOrbitalManifest,
-  }],
-  ['ui-code-runner-panel::CodeRunnerPanelOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiCodeRunnerPanelCodeRunnerPanelOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-code-runner-panel::CodeRunnerPanelOrbital');
-      }
-      return stdUiCodeRunnerPanelCodeRunnerPanelOrbital(p);
-    },
-    manifest: StdUiCodeRunnerPanelCodeRunnerPanelOrbitalManifest,
-  }],
-  ['ui-dashboard-grid::DashboardGridOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiDashboardGridDashboardGridOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-dashboard-grid::DashboardGridOrbital');
-      }
-      return stdUiDashboardGridDashboardGridOrbital(p);
-    },
-    manifest: StdUiDashboardGridDashboardGridOrbitalManifest,
-  }],
-  ['ui-detail-panel::DetailPanelOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiDetailPanelDetailPanelOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-detail-panel::DetailPanelOrbital');
-      }
-      return stdUiDetailPanelDetailPanelOrbital(p);
-    },
-    manifest: StdUiDetailPanelDetailPanelOrbitalManifest,
-  }],
-  ['ui-drawer-slot::DrawerSlotOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiDrawerSlotDrawerSlotOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-drawer-slot::DrawerSlotOrbital');
-      }
-      return stdUiDrawerSlotDrawerSlotOrbital(p);
-    },
-    manifest: StdUiDrawerSlotDrawerSlotOrbitalManifest,
-  }],
-  ['ui-entity-cards::EntityCardsOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiEntityCardsEntityCardsOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-entity-cards::EntityCardsOrbital');
-      }
-      return stdUiEntityCardsEntityCardsOrbital(p);
-    },
-    manifest: StdUiEntityCardsEntityCardsOrbitalManifest,
-  }],
-  ['ui-entity-list::EntityListOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiEntityListEntityListOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-entity-list::EntityListOrbital');
-      }
-      return stdUiEntityListEntityListOrbital(p);
-    },
-    manifest: StdUiEntityListEntityListOrbitalManifest,
-  }],
-  ['ui-entity-table::EntityTableOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiEntityTableEntityTableOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-entity-table::EntityTableOrbital');
-      }
-      return stdUiEntityTableEntityTableOrbital(p);
-    },
-    manifest: StdUiEntityTableEntityTableOrbitalManifest,
-  }],
-  ['ui-feature-grid-organism::FeatureGridOrganismOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiFeatureGridOrganismFeatureGridOrganismOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-feature-grid-organism::FeatureGridOrganismOrbital');
-      }
-      return stdUiFeatureGridOrganismFeatureGridOrganismOrbital(p);
-    },
-    manifest: StdUiFeatureGridOrganismFeatureGridOrganismOrbitalManifest,
-  }],
-  ['ui-form::FormOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiFormFormOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-form::FormOrbital');
-      }
-      return stdUiFormFormOrbital(p);
-    },
-    manifest: StdUiFormFormOrbitalManifest,
-  }],
-  ['ui-form-section::FormSectionOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiFormSectionFormSectionOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-form-section::FormSectionOrbital');
-      }
-      return stdUiFormSectionFormSectionOrbital(p);
-    },
-    manifest: StdUiFormSectionFormSectionOrbitalManifest,
-  }],
-  ['ui-hero-organism::HeroOrganismOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiHeroOrganismHeroOrganismOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-hero-organism::HeroOrganismOrbital');
-      }
-      return stdUiHeroOrganismHeroOrganismOrbital(p);
-    },
-    manifest: StdUiHeroOrganismHeroOrganismOrbitalManifest,
-  }],
-  ['ui-master-detail::MasterDetailOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiMasterDetailMasterDetailOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-master-detail::MasterDetailOrbital');
-      }
-      return stdUiMasterDetailMasterDetailOrbital(p);
-    },
-    manifest: StdUiMasterDetailMasterDetailOrbitalManifest,
-  }],
-  ['ui-master-detail-layout::MasterDetailLayoutOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiMasterDetailLayoutMasterDetailLayoutOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-master-detail-layout::MasterDetailLayoutOrbital');
-      }
-      return stdUiMasterDetailLayoutMasterDetailLayoutOrbital(p);
-    },
-    manifest: StdUiMasterDetailLayoutMasterDetailLayoutOrbitalManifest,
-  }],
-  ['ui-media-gallery::MediaGalleryOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiMediaGalleryMediaGalleryOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-media-gallery::MediaGalleryOrbital');
-      }
-      return stdUiMediaGalleryMediaGalleryOrbital(p);
-    },
-    manifest: StdUiMediaGalleryMediaGalleryOrbitalManifest,
-  }],
-  ['ui-modal-slot::ModalSlotOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiModalSlotModalSlotOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-modal-slot::ModalSlotOrbital');
-      }
-      return stdUiModalSlotModalSlotOrbital(p);
-    },
-    manifest: StdUiModalSlotModalSlotOrbitalManifest,
-  }],
-  ['ui-pricing-organism::PricingOrganismOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiPricingOrganismPricingOrganismOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-pricing-organism::PricingOrganismOrbital');
-      }
-      return stdUiPricingOrganismPricingOrganismOrbital(p);
-    },
-    manifest: StdUiPricingOrganismPricingOrganismOrbitalManifest,
-  }],
-  ['ui-runtime-debugger::RuntimeDebuggerOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiRuntimeDebuggerRuntimeDebuggerOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-runtime-debugger::RuntimeDebuggerOrbital');
-      }
-      return stdUiRuntimeDebuggerRuntimeDebuggerOrbital(p);
-    },
-    manifest: StdUiRuntimeDebuggerRuntimeDebuggerOrbitalManifest,
-  }],
-  ['ui-segment-renderer::SegmentRendererOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiSegmentRendererSegmentRendererOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-segment-renderer::SegmentRendererOrbital');
-      }
-      return stdUiSegmentRendererSegmentRendererOrbital(p);
-    },
-    manifest: StdUiSegmentRendererSegmentRendererOrbitalManifest,
-  }],
-  ['ui-showcase-organism::ShowcaseOrganismOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiShowcaseOrganismShowcaseOrganismOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-showcase-organism::ShowcaseOrganismOrbital');
-      }
-      return stdUiShowcaseOrganismShowcaseOrganismOrbital(p);
-    },
-    manifest: StdUiShowcaseOrganismShowcaseOrganismOrbitalManifest,
-  }],
-  ['ui-split-pane::SplitPaneOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiSplitPaneSplitPaneOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-split-pane::SplitPaneOrbital');
-      }
-      return stdUiSplitPaneSplitPaneOrbital(p);
-    },
-    manifest: StdUiSplitPaneSplitPaneOrbitalManifest,
-  }],
-  ['ui-stat-card::StatCardOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiStatCardStatCardOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-stat-card::StatCardOrbital');
-      }
-      return stdUiStatCardStatCardOrbital(p);
-    },
-    manifest: StdUiStatCardStatCardOrbitalManifest,
-  }],
-  ['ui-state-machine-view::StateMachineViewOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiStateMachineViewStateMachineViewOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-state-machine-view::StateMachineViewOrbital');
-      }
-      return stdUiStateMachineViewStateMachineViewOrbital(p);
-    },
-    manifest: StdUiStateMachineViewStateMachineViewOrbitalManifest,
-  }],
-  ['ui-stats-organism::StatsOrganismOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiStatsOrganismStatsOrganismOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-stats-organism::StatsOrganismOrbital');
-      }
-      return stdUiStatsOrganismStatsOrganismOrbital(p);
-    },
-    manifest: StdUiStatsOrganismStatsOrganismOrbitalManifest,
-  }],
-  ['ui-step-flow-organism::StepFlowOrganismOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiStepFlowOrganismStepFlowOrganismOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-step-flow-organism::StepFlowOrganismOrbital');
-      }
-      return stdUiStepFlowOrganismStepFlowOrganismOrbital(p);
-    },
-    manifest: StdUiStepFlowOrganismStepFlowOrganismOrbitalManifest,
-  }],
-  ['ui-subagent-trace-panel::SubagentTracePanelOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiSubagentTracePanelSubagentTracePanelOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-subagent-trace-panel::SubagentTracePanelOrbital');
-      }
-      return stdUiSubagentTracePanelSubagentTracePanelOrbital(p);
-    },
-    manifest: StdUiSubagentTracePanelSubagentTracePanelOrbitalManifest,
-  }],
-  ['ui-tabbed-container::TabbedContainerOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiTabbedContainerTabbedContainerOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-tabbed-container::TabbedContainerOrbital');
-      }
-      return stdUiTabbedContainerTabbedContainerOrbital(p);
-    },
-    manifest: StdUiTabbedContainerTabbedContainerOrbitalManifest,
-  }],
-  ['ui-team-organism::TeamOrganismOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiTeamOrganismTeamOrganismOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-team-organism::TeamOrganismOrbital');
-      }
-      return stdUiTeamOrganismTeamOrganismOrbital(p);
-    },
-    manifest: StdUiTeamOrganismTeamOrganismOrbitalManifest,
-  }],
-  ['ui-timeline::TimelineOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiTimelineTimelineOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-timeline::TimelineOrbital');
-      }
-      return stdUiTimelineTimelineOrbital(p);
-    },
-    manifest: StdUiTimelineTimelineOrbitalManifest,
-  }],
-  ['ui-timer-display::TimerDisplayOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiTimerDisplayTimerDisplayOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-timer-display::TimerDisplayOrbital');
-      }
-      return stdUiTimerDisplayTimerDisplayOrbital(p);
-    },
-    manifest: StdUiTimerDisplayTimerDisplayOrbitalManifest,
-  }],
-  ['ui-toast-slot::ToastSlotOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiToastSlotToastSlotOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-toast-slot::ToastSlotOrbital');
-      }
-      return stdUiToastSlotToastSlotOrbital(p);
-    },
-    manifest: StdUiToastSlotToastSlotOrbitalManifest,
-  }],
-  ['ui-ui-slot-renderer::UiSlotRendererOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiUiSlotRendererUiSlotRendererOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-ui-slot-renderer::UiSlotRendererOrbital');
-      }
-      return stdUiUiSlotRendererUiSlotRendererOrbital(p);
-    },
-    manifest: StdUiUiSlotRendererUiSlotRendererOrbitalManifest,
-  }],
-]);
+const REGISTRY_MUT = new Map<string, DispatchEntry>();
+REGISTRY_MUT.set('std-agent-builder::AgentBuilderOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdAgentBuilderAgentBuilderOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-agent-builder::AgentBuilderOrbital');
+    }
+    return stdAgentBuilderAgentBuilderOrbital(p);
+  },
+  manifest: StdAgentBuilderAgentBuilderOrbitalManifest,
+});
+REGISTRY_MUT.set('std-agent-completion::AgentCompletionOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdAgentCompletionAgentCompletionOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-agent-completion::AgentCompletionOrbital');
+    }
+    return stdAgentCompletionAgentCompletionOrbital(p);
+  },
+  manifest: StdAgentCompletionAgentCompletionOrbitalManifest,
+});
+REGISTRY_MUT.set('std-agent-context::AgentContextOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdAgentContextAgentContextOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-agent-context::AgentContextOrbital');
+    }
+    return stdAgentContextAgentContextOrbital(p);
+  },
+  manifest: StdAgentContextAgentContextOrbitalManifest,
+});
+REGISTRY_MUT.set('std-agent-fix-loop::AgentFixLoopOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdAgentFixLoopAgentFixLoopOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-agent-fix-loop::AgentFixLoopOrbital');
+    }
+    return stdAgentFixLoopAgentFixLoopOrbital(p);
+  },
+  manifest: StdAgentFixLoopAgentFixLoopOrbitalManifest,
+});
+REGISTRY_MUT.set('std-agent-memory::AgentMemoryOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdAgentMemoryAgentMemoryOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-agent-memory::AgentMemoryOrbital');
+    }
+    return stdAgentMemoryAgentMemoryOrbital(p);
+  },
+  manifest: StdAgentMemoryAgentMemoryOrbitalManifest,
+});
+REGISTRY_MUT.set('std-agent-planner::AgentPlannerOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdAgentPlannerAgentPlannerOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-agent-planner::AgentPlannerOrbital');
+    }
+    return stdAgentPlannerAgentPlannerOrbital(p);
+  },
+  manifest: StdAgentPlannerAgentPlannerOrbitalManifest,
+});
+REGISTRY_MUT.set('std-agent-rabit::CoordinatorOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdAgentRabitCoordinatorOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-agent-rabit::CoordinatorOrbital');
+    }
+    return stdAgentRabitCoordinatorOrbital(p);
+  },
+  manifest: StdAgentRabitCoordinatorOrbitalManifest,
+});
+REGISTRY_MUT.set('std-agent-rabit::OrbitalProcessOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdAgentRabitOrbitalProcessOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-agent-rabit::OrbitalProcessOrbital');
+    }
+    return stdAgentRabitOrbitalProcessOrbital(p);
+  },
+  manifest: StdAgentRabitOrbitalProcessOrbitalManifest,
+});
+REGISTRY_MUT.set('std-agent-session::AgentSessionOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdAgentSessionAgentSessionOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-agent-session::AgentSessionOrbital');
+    }
+    return stdAgentSessionAgentSessionOrbital(p);
+  },
+  manifest: StdAgentSessionAgentSessionOrbitalManifest,
+});
+REGISTRY_MUT.set('std-agent-tool-call::AgentToolCallOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdAgentToolCallAgentToolCallOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-agent-tool-call::AgentToolCallOrbital');
+    }
+    return stdAgentToolCallAgentToolCallOrbital(p);
+  },
+  manifest: StdAgentToolCallAgentToolCallOrbitalManifest,
+});
+REGISTRY_MUT.set('std-agent-tool-loop::AgentToolLoopOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdAgentToolLoopAgentToolLoopOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-agent-tool-loop::AgentToolLoopOrbital');
+    }
+    return stdAgentToolLoopAgentToolLoopOrbital(p);
+  },
+  manifest: StdAgentToolLoopAgentToolLoopOrbitalManifest,
+});
+REGISTRY_MUT.set('std-agent-trace::AgentTraceOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdAgentTraceAgentTraceOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-agent-trace::AgentTraceOrbital');
+    }
+    return stdAgentTraceAgentTraceOrbital(p);
+  },
+  manifest: StdAgentTraceAgentTraceOrbitalManifest,
+});
+REGISTRY_MUT.set('std-anim-tick::AnimTickOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdAnimTickAnimTickOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-anim-tick::AnimTickOrbital');
+    }
+    return stdAnimTickAnimTickOrbital(p);
+  },
+  manifest: StdAnimTickAnimTickOrbitalManifest,
+});
+REGISTRY_MUT.set('std-app-layout::AppLayoutOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdAppLayoutAppLayoutOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-app-layout::AppLayoutOrbital');
+    }
+    return stdAppLayoutAppLayoutOrbital(p);
+  },
+  manifest: StdAppLayoutAppLayoutOrbitalManifest,
+});
+REGISTRY_MUT.set('std-app-search::AppSearchOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdAppSearchAppSearchOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-app-search::AppSearchOrbital');
+    }
+    return stdAppSearchAppSearchOrbital(p);
+  },
+  manifest: StdAppSearchAppSearchOrbitalManifest,
+});
+REGISTRY_MUT.set('std-approval-gate::ApprovalGateOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdApprovalGateApprovalGateOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-approval-gate::ApprovalGateOrbital');
+    }
+    return stdApprovalGateApprovalGateOrbital(p);
+  },
+  manifest: StdApprovalGateApprovalGateOrbitalManifest,
+});
+REGISTRY_MUT.set('std-arcade-board-3d::ArcadeBoard3DFrameOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdArcadeBoard3dArcadeBoard3DFrameOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-arcade-board-3d::ArcadeBoard3DFrameOrbital');
+    }
+    return stdArcadeBoard3dArcadeBoard3DFrameOrbital(p);
+  },
+  manifest: StdArcadeBoard3dArcadeBoard3DFrameOrbitalManifest,
+});
+REGISTRY_MUT.set('std-audit-capture::AuditCaptureOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdAuditCaptureAuditCaptureOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-audit-capture::AuditCaptureOrbital');
+    }
+    return stdAuditCaptureAuditCaptureOrbital(p);
+  },
+  manifest: StdAuditCaptureAuditCaptureOrbitalManifest,
+});
+REGISTRY_MUT.set('std-billable-hour::BillableHourOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdBillableHourBillableHourOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-billable-hour::BillableHourOrbital');
+    }
+    return stdBillableHourBillableHourOrbital(p);
+  },
+  manifest: StdBillableHourBillableHourOrbitalManifest,
+});
+REGISTRY_MUT.set('std-board::BoardOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdBoardBoardOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-board::BoardOrbital');
+    }
+    return stdBoardBoardOrbital(p);
+  },
+  manifest: StdBoardBoardOrbitalManifest,
+});
+REGISTRY_MUT.set('std-browse::BrowseItemOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdBrowseBrowseItemOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-browse::BrowseItemOrbital');
+    }
+    return stdBrowseBrowseItemOrbital(p);
+  },
+  manifest: StdBrowseBrowseItemOrbitalManifest,
+});
+REGISTRY_MUT.set('std-cache-aside::CacheEntryOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdCacheAsideCacheEntryOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-cache-aside::CacheEntryOrbital');
+    }
+    return stdCacheAsideCacheEntryOrbital(p);
+  },
+  manifest: StdCacheAsideCacheEntryOrbitalManifest,
+});
+REGISTRY_MUT.set('std-calendar::CalendarEventOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdCalendarCalendarEventOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-calendar::CalendarEventOrbital');
+    }
+    return stdCalendarCalendarEventOrbital(p);
+  },
+  manifest: StdCalendarCalendarEventOrbitalManifest,
+});
+REGISTRY_MUT.set('std-cascade-on-delete::CascadeOnDeleteOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdCascadeOnDeleteCascadeOnDeleteOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-cascade-on-delete::CascadeOnDeleteOrbital');
+    }
+    return stdCascadeOnDeleteCascadeOnDeleteOrbital(p);
+  },
+  manifest: StdCascadeOnDeleteCascadeOnDeleteOrbitalManifest,
+});
+REGISTRY_MUT.set('std-circuit-breaker::ServiceNodeOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdCircuitBreakerServiceNodeOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-circuit-breaker::ServiceNodeOrbital');
+    }
+    return stdCircuitBreakerServiceNodeOrbital(p);
+  },
+  manifest: StdCircuitBreakerServiceNodeOrbitalManifest,
+});
+REGISTRY_MUT.set('std-confirmation::ConfirmActionOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdConfirmationConfirmActionOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-confirmation::ConfirmActionOrbital');
+    }
+    return stdConfirmationConfirmActionOrbital(p);
+  },
+  manifest: StdConfirmationConfirmActionOrbitalManifest,
+});
+REGISTRY_MUT.set('std-cooldown::CooldownOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdCooldownCooldownOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-cooldown::CooldownOrbital');
+    }
+    return stdCooldownCooldownOrbital(p);
+  },
+  manifest: StdCooldownCooldownOrbitalManifest,
+});
+REGISTRY_MUT.set('std-crew-board-2d::CrewBoard2DOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdCrewBoard2dCrewBoard2DOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-crew-board-2d::CrewBoard2DOrbital');
+    }
+    return stdCrewBoard2dCrewBoard2DOrbital(p);
+  },
+  manifest: StdCrewBoard2dCrewBoard2DOrbitalManifest,
+});
+REGISTRY_MUT.set('std-cross-reference::CrossReferenceOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdCrossReferenceCrossReferenceOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-cross-reference::CrossReferenceOrbital');
+    }
+    return stdCrossReferenceCrossReferenceOrbital(p);
+  },
+  manifest: StdCrossReferenceCrossReferenceOrbitalManifest,
+});
+REGISTRY_MUT.set('std-dashboard-grid-embedded::DashboardGridEmbeddedOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdDashboardGridEmbeddedDashboardGridEmbeddedOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-dashboard-grid-embedded::DashboardGridEmbeddedOrbital');
+    }
+    return stdDashboardGridEmbeddedDashboardGridEmbeddedOrbital(p);
+  },
+  manifest: StdDashboardGridEmbeddedDashboardGridEmbeddedOrbitalManifest,
+});
+REGISTRY_MUT.set('std-data-collector::MlDataCollectorOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdDataCollectorMlDataCollectorOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-data-collector::MlDataCollectorOrbital');
+    }
+    return stdDataCollectorMlDataCollectorOrbital(p);
+  },
+  manifest: StdDataCollectorMlDataCollectorOrbitalManifest,
+});
+REGISTRY_MUT.set('std-data-erasure::DataErasureOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdDataErasureDataErasureOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-data-erasure::DataErasureOrbital');
+    }
+    return stdDataErasureDataErasureOrbital(p);
+  },
+  manifest: StdDataErasureDataErasureOrbitalManifest,
+});
+REGISTRY_MUT.set('std-date-range::DateRangeOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdDateRangeDateRangeOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-date-range::DateRangeOrbital');
+    }
+    return stdDateRangeDateRangeOrbital(p);
+  },
+  manifest: StdDateRangeDateRangeOrbitalManifest,
+});
+REGISTRY_MUT.set('std-dungeon-board-2d::DungeonBoard2DOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdDungeonBoard2dDungeonBoard2DOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-dungeon-board-2d::DungeonBoard2DOrbital');
+    }
+    return stdDungeonBoard2dDungeonBoard2DOrbital(p);
+  },
+  manifest: StdDungeonBoard2dDungeonBoard2DOrbitalManifest,
+});
+REGISTRY_MUT.set('std-escalating-decision::EscalatingDecisionOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdEscalatingDecisionEscalatingDecisionOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-escalating-decision::EscalatingDecisionOrbital');
+    }
+    return stdEscalatingDecisionEscalatingDecisionOrbital(p);
+  },
+  manifest: StdEscalatingDecisionEscalatingDecisionOrbitalManifest,
+});
+REGISTRY_MUT.set('std-esign-flow::SignatureSessionOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdEsignFlowSignatureSessionOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-esign-flow::SignatureSessionOrbital');
+    }
+    return stdEsignFlowSignatureSessionOrbital(p);
+  },
+  manifest: StdEsignFlowSignatureSessionOrbitalManifest,
+});
+REGISTRY_MUT.set('std-esign-request::ESignRequestOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdEsignRequestESignRequestOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-esign-request::ESignRequestOrbital');
+    }
+    return stdEsignRequestESignRequestOrbital(p);
+  },
+  manifest: StdEsignRequestESignRequestOrbitalManifest,
+});
+REGISTRY_MUT.set('std-event-log::EventLogOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdEventLogEventLogOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-event-log::EventLogOrbital');
+    }
+    return stdEventLogEventLogOrbital(p);
+  },
+  manifest: StdEventLogEventLogOrbitalManifest,
+});
+REGISTRY_MUT.set('std-export::ExportOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdExportExportOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-export::ExportOrbital');
+    }
+    return stdExportExportOrbital(p);
+  },
+  manifest: StdExportExportOrbitalManifest,
+});
+REGISTRY_MUT.set('std-file-store::StoredFileOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdFileStoreStoredFileOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-file-store::StoredFileOrbital');
+    }
+    return stdFileStoreStoredFileOrbital(p);
+  },
+  manifest: StdFileStoreStoredFileOrbitalManifest,
+});
+REGISTRY_MUT.set('std-filter::FilterTargetOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdFilterFilterTargetOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-filter::FilterTargetOrbital');
+    }
+    return stdFilterFilterTargetOrbital(p);
+  },
+  manifest: StdFilterFilterTargetOrbitalManifest,
+});
+REGISTRY_MUT.set('std-form-advanced::FormEntryOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdFormAdvancedFormEntryOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-form-advanced::FormEntryOrbital');
+    }
+    return stdFormAdvancedFormEntryOrbital(p);
+  },
+  manifest: StdFormAdvancedFormEntryOrbitalManifest,
+});
+REGISTRY_MUT.set('std-gallery::GalleryItemOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdGalleryGalleryItemOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-gallery::GalleryItemOrbital');
+    }
+    return stdGalleryGalleryItemOrbital(p);
+  },
+  manifest: StdGalleryGalleryItemOrbitalManifest,
+});
+REGISTRY_MUT.set('std-game-clock::GameClockOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdGameClockGameClockOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-game-clock::GameClockOrbital');
+    }
+    return stdGameClockGameClockOrbital(p);
+  },
+  manifest: StdGameClockGameClockOrbitalManifest,
+});
+REGISTRY_MUT.set('std-geosearch::GeoSearchResultOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdGeosearchGeoSearchResultOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-geosearch::GeoSearchResultOrbital');
+    }
+    return stdGeosearchGeoSearchResultOrbital(p);
+  },
+  manifest: StdGeosearchGeoSearchResultOrbitalManifest,
+});
+REGISTRY_MUT.set('std-graph-builder::GraphBuilderOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdGraphBuilderGraphBuilderOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-graph-builder::GraphBuilderOrbital');
+    }
+    return stdGraphBuilderGraphBuilderOrbital(p);
+  },
+  manifest: StdGraphBuilderGraphBuilderOrbitalManifest,
+});
+REGISTRY_MUT.set('std-graphs::GraphItemOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdGraphsGraphItemOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-graphs::GraphItemOrbital');
+    }
+    return stdGraphsGraphItemOrbital(p);
+  },
+  manifest: StdGraphsGraphItemOrbitalManifest,
+});
+REGISTRY_MUT.set('std-image-upload-multi::UploadedImageOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdImageUploadMultiUploadedImageOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-image-upload-multi::UploadedImageOrbital');
+    }
+    return stdImageUploadMultiUploadedImageOrbital(p);
+  },
+  manifest: StdImageUploadMultiUploadedImageOrbitalManifest,
+});
+REGISTRY_MUT.set('std-knowledge-tracing::KnowledgeTracingOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdKnowledgeTracingKnowledgeTracingOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-knowledge-tracing::KnowledgeTracingOrbital');
+    }
+    return stdKnowledgeTracingKnowledgeTracingOrbital(p);
+  },
+  manifest: StdKnowledgeTracingKnowledgeTracingOrbitalManifest,
+});
+REGISTRY_MUT.set('std-lifecycle::LifecycleOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdLifecycleLifecycleOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-lifecycle::LifecycleOrbital');
+    }
+    return stdLifecycleLifecycleOrbital(p);
+  },
+  manifest: StdLifecycleLifecycleOrbitalManifest,
+});
+REGISTRY_MUT.set('std-list::ListItemOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdListListItemOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-list::ListItemOrbital');
+    }
+    return stdListListItemOrbital(p);
+  },
+  manifest: StdListListItemOrbitalManifest,
+});
+REGISTRY_MUT.set('std-market-board-3d::MarketBoard3DOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdMarketBoard3dMarketBoard3DOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-market-board-3d::MarketBoard3DOrbital');
+    }
+    return stdMarketBoard3dMarketBoard3DOrbital(p);
+  },
+  manifest: StdMarketBoard3dMarketBoard3DOrbitalManifest,
+});
+REGISTRY_MUT.set('std-migration-job::MigrationJobOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdMigrationJobMigrationJobOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-migration-job::MigrationJobOrbital');
+    }
+    return stdMigrationJobMigrationJobOrbital(p);
+  },
+  manifest: StdMigrationJobMigrationJobOrbitalManifest,
+});
+REGISTRY_MUT.set('std-ml-classify::MlClassifyOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdMlClassifyMlClassifyOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-ml-classify::MlClassifyOrbital');
+    }
+    return stdMlClassifyMlClassifyOrbital(p);
+  },
+  manifest: StdMlClassifyMlClassifyOrbitalManifest,
+});
+REGISTRY_MUT.set('std-ml-exact-check::MlExactCheckOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdMlExactCheckMlExactCheckOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-ml-exact-check::MlExactCheckOrbital');
+    }
+    return stdMlExactCheckMlExactCheckOrbital(p);
+  },
+  manifest: StdMlExactCheckMlExactCheckOrbitalManifest,
+});
+REGISTRY_MUT.set('std-ml-infer::MlInferOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdMlInferMlInferOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-ml-infer::MlInferOrbital');
+    }
+    return stdMlInferMlInferOrbital(p);
+  },
+  manifest: StdMlInferMlInferOrbitalManifest,
+});
+REGISTRY_MUT.set('std-ml-label-capture::MlLabelCaptureOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdMlLabelCaptureMlLabelCaptureOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-ml-label-capture::MlLabelCaptureOrbital');
+    }
+    return stdMlLabelCaptureMlLabelCaptureOrbital(p);
+  },
+  manifest: StdMlLabelCaptureMlLabelCaptureOrbitalManifest,
+});
+REGISTRY_MUT.set('std-ml-lookup::MlLookupOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdMlLookupMlLookupOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-ml-lookup::MlLookupOrbital');
+    }
+    return stdMlLookupMlLookupOrbital(p);
+  },
+  manifest: StdMlLookupMlLookupOrbitalManifest,
+});
+REGISTRY_MUT.set('std-ml-posterior::MlPosteriorOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdMlPosteriorMlPosteriorOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-ml-posterior::MlPosteriorOrbital');
+    }
+    return stdMlPosteriorMlPosteriorOrbital(p);
+  },
+  manifest: StdMlPosteriorMlPosteriorOrbitalManifest,
+});
+REGISTRY_MUT.set('std-ml-similarity::MlSimilarityOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdMlSimilarityMlSimilarityOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-ml-similarity::MlSimilarityOrbital');
+    }
+    return stdMlSimilarityMlSimilarityOrbital(p);
+  },
+  manifest: StdMlSimilarityMlSimilarityOrbitalManifest,
+});
+REGISTRY_MUT.set('std-mod-queue::ModQueueItemOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdModQueueModQueueItemOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-mod-queue::ModQueueItemOrbital');
+    }
+    return stdModQueueModQueueItemOrbital(p);
+  },
+  manifest: StdModQueueModQueueItemOrbitalManifest,
+});
+REGISTRY_MUT.set('std-modal::ModalRecordOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdModalModalRecordOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-modal::ModalRecordOrbital');
+    }
+    return stdModalModalRecordOrbital(p);
+  },
+  manifest: StdModalModalRecordOrbitalManifest,
+});
+REGISTRY_MUT.set('std-multi-party-flow::MultiPartyFlowOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdMultiPartyFlowMultiPartyFlowOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-multi-party-flow::MultiPartyFlowOrbital');
+    }
+    return stdMultiPartyFlowMultiPartyFlowOrbital(p);
+  },
+  manifest: StdMultiPartyFlowMultiPartyFlowOrbitalManifest,
+});
+REGISTRY_MUT.set('std-notify-on-event::NotifyOnEventOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdNotifyOnEventNotifyOnEventOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-notify-on-event::NotifyOnEventOrbital');
+    }
+    return stdNotifyOnEventNotifyOnEventOrbital(p);
+  },
+  manifest: StdNotifyOnEventNotifyOnEventOrbitalManifest,
+});
+REGISTRY_MUT.set('std-objective-board-3d::ObjectiveBoard3DOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdObjectiveBoard3dObjectiveBoard3DOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-objective-board-3d::ObjectiveBoard3DOrbital');
+    }
+    return stdObjectiveBoard3dObjectiveBoard3DOrbital(p);
+  },
+  manifest: StdObjectiveBoard3dObjectiveBoard3DOrbitalManifest,
+});
+REGISTRY_MUT.set('std-pagination::PagedItemOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdPaginationPagedItemOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-pagination::PagedItemOrbital');
+    }
+    return stdPaginationPagedItemOrbital(p);
+  },
+  manifest: StdPaginationPagedItemOrbitalManifest,
+});
+REGISTRY_MUT.set('std-platformer-board-2d::PlatformerBoard2DOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdPlatformerBoard2dPlatformerBoard2DOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-platformer-board-2d::PlatformerBoard2DOrbital');
+    }
+    return stdPlatformerBoard2dPlatformerBoard2DOrbital(p);
+  },
+  manifest: StdPlatformerBoard2dPlatformerBoard2DOrbitalManifest,
+});
+REGISTRY_MUT.set('std-rate-limiter::RateBucketOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdRateLimiterRateBucketOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-rate-limiter::RateBucketOrbital');
+    }
+    return stdRateLimiterRateBucketOrbital(p);
+  },
+  manifest: StdRateLimiterRateBucketOrbitalManifest,
+});
+REGISTRY_MUT.set('std-rating-review::RatingReviewOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdRatingReviewRatingReviewOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-rating-review::RatingReviewOrbital');
+    }
+    return stdRatingReviewRatingReviewOrbital(p);
+  },
+  manifest: StdRatingReviewRatingReviewOrbitalManifest,
+});
+REGISTRY_MUT.set('std-recurrence::RecurrenceOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdRecurrenceRecurrenceOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-recurrence::RecurrenceOrbital');
+    }
+    return stdRecurrenceRecurrenceOrbital(p);
+  },
+  manifest: StdRecurrenceRecurrenceOrbitalManifest,
+});
+REGISTRY_MUT.set('std-related::RelatedItemOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdRelatedRelatedItemOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-related::RelatedItemOrbital');
+    }
+    return stdRelatedRelatedItemOrbital(p);
+  },
+  manifest: StdRelatedRelatedItemOrbitalManifest,
+});
+REGISTRY_MUT.set('std-reminder-scheduler::ReminderSchedulerOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdReminderSchedulerReminderSchedulerOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-reminder-scheduler::ReminderSchedulerOrbital');
+    }
+    return stdReminderSchedulerReminderSchedulerOrbital(p);
+  },
+  manifest: StdReminderSchedulerReminderSchedulerOrbitalManifest,
+});
+REGISTRY_MUT.set('std-rich-editor::DocumentOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdRichEditorDocumentOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-rich-editor::DocumentOrbital');
+    }
+    return stdRichEditorDocumentOrbital(p);
+  },
+  manifest: StdRichEditorDocumentOrbitalManifest,
+});
+REGISTRY_MUT.set('std-row-access-control::RowAccessControlOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdRowAccessControlRowAccessControlOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-row-access-control::RowAccessControlOrbital');
+    }
+    return stdRowAccessControlRowAccessControlOrbital(p);
+  },
+  manifest: StdRowAccessControlRowAccessControlOrbitalManifest,
+});
+REGISTRY_MUT.set('std-saved-search::SavedSearchOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdSavedSearchSavedSearchOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-saved-search::SavedSearchOrbital');
+    }
+    return stdSavedSearchSavedSearchOrbital(p);
+  },
+  manifest: StdSavedSearchSavedSearchOrbitalManifest,
+});
+REGISTRY_MUT.set('std-scatter::ScatterItemOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdScatterScatterItemOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-scatter::ScatterItemOrbital');
+    }
+    return stdScatterScatterItemOrbital(p);
+  },
+  manifest: StdScatterScatterItemOrbitalManifest,
+});
+REGISTRY_MUT.set('std-search::SearchResultOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdSearchSearchResultOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-search::SearchResultOrbital');
+    }
+    return stdSearchSearchResultOrbital(p);
+  },
+  manifest: StdSearchSearchResultOrbitalManifest,
+});
+REGISTRY_MUT.set('std-selection::SelectableItemOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdSelectionSelectableItemOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-selection::SelectableItemOrbital');
+    }
+    return stdSelectionSelectableItemOrbital(p);
+  },
+  manifest: StdSelectionSelectableItemOrbitalManifest,
+});
+REGISTRY_MUT.set('std-signature-capture::SignatureCaptureOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdSignatureCaptureSignatureCaptureOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-signature-capture::SignatureCaptureOrbital');
+    }
+    return stdSignatureCaptureSignatureCaptureOrbital(p);
+  },
+  manifest: StdSignatureCaptureSignatureCaptureOrbitalManifest,
+});
+REGISTRY_MUT.set('std-stats::StatsItemOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdStatsStatsItemOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-stats::StatsItemOrbital');
+    }
+    return stdStatsStatsItemOrbital(p);
+  },
+  manifest: StdStatsStatsItemOrbitalManifest,
+});
+REGISTRY_MUT.set('std-status-lifecycle::StatusLifecycleOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdStatusLifecycleStatusLifecycleOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-status-lifecycle::StatusLifecycleOrbital');
+    }
+    return stdStatusLifecycleStatusLifecycleOrbital(p);
+  },
+  manifest: StdStatusLifecycleStatusLifecycleOrbitalManifest,
+});
+REGISTRY_MUT.set('std-status-lifecycle-control::StatusLifecycleControlOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdStatusLifecycleControlStatusLifecycleControlOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-status-lifecycle-control::StatusLifecycleControlOrbital');
+    }
+    return stdStatusLifecycleControlStatusLifecycleControlOrbital(p);
+  },
+  manifest: StdStatusLifecycleControlStatusLifecycleControlOrbitalManifest,
+});
+REGISTRY_MUT.set('std-step-flow::StepFlowOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdStepFlowStepFlowOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-step-flow::StepFlowOrbital');
+    }
+    return stdStepFlowStepFlowOrbital(p);
+  },
+  manifest: StdStepFlowStepFlowOrbitalManifest,
+});
+REGISTRY_MUT.set('std-survival-board-3d::SurvivalBoard3DOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdSurvivalBoard3dSurvivalBoard3DOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-survival-board-3d::SurvivalBoard3DOrbital');
+    }
+    return stdSurvivalBoard3dSurvivalBoard3DOrbital(p);
+  },
+  manifest: StdSurvivalBoard3dSurvivalBoard3DOrbitalManifest,
+});
+REGISTRY_MUT.set('std-tabs::TabsItemOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdTabsTabsItemOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-tabs::TabsItemOrbital');
+    }
+    return stdTabsTabsItemOrbital(p);
+  },
+  manifest: StdTabsTabsItemOrbitalManifest,
+});
+REGISTRY_MUT.set('std-tactics-board-2d::TacticsBoard2DOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdTacticsBoard2dTacticsBoard2DOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-tactics-board-2d::TacticsBoard2DOrbital');
+    }
+    return stdTacticsBoard2dTacticsBoard2DOrbital(p);
+  },
+  manifest: StdTacticsBoard2dTacticsBoard2DOrbitalManifest,
+});
+REGISTRY_MUT.set('std-tactics-board-3d::TacticsBoard3DOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdTacticsBoard3dTacticsBoard3DOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-tactics-board-3d::TacticsBoard3DOrbital');
+    }
+    return stdTacticsBoard3dTacticsBoard3DOrbital(p);
+  },
+  manifest: StdTacticsBoard3dTacticsBoard3DOrbitalManifest,
+});
+REGISTRY_MUT.set('std-tag-taxonomy::TagTaxonomyOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdTagTaxonomyTagTaxonomyOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-tag-taxonomy::TagTaxonomyOrbital');
+    }
+    return stdTagTaxonomyTagTaxonomyOrbital(p);
+  },
+  manifest: StdTagTaxonomyTagTaxonomyOrbitalManifest,
+});
+REGISTRY_MUT.set('std-thread::ThreadPostOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdThreadThreadPostOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-thread::ThreadPostOrbital');
+    }
+    return stdThreadThreadPostOrbital(p);
+  },
+  manifest: StdThreadThreadPostOrbitalManifest,
+});
+REGISTRY_MUT.set('std-tokenizer::MlTokenizerOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdTokenizerMlTokenizerOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-tokenizer::MlTokenizerOrbital');
+    }
+    return stdTokenizerMlTokenizerOrbital(p);
+  },
+  manifest: StdTokenizerMlTokenizerOrbitalManifest,
+});
+REGISTRY_MUT.set('std-version-history::RevisionOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdVersionHistoryRevisionOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-version-history::RevisionOrbital');
+    }
+    return stdVersionHistoryRevisionOrbital(p);
+  },
+  manifest: StdVersionHistoryRevisionOrbitalManifest,
+});
+REGISTRY_MUT.set('std-vote::VoteOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdVoteVoteOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-vote::VoteOrbital');
+    }
+    return stdVoteVoteOrbital(p);
+  },
+  manifest: StdVoteVoteOrbitalManifest,
+});
+REGISTRY_MUT.set('std-weight-validator::MlWeightValidatorOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdWeightValidatorMlWeightValidatorOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-weight-validator::MlWeightValidatorOrbital');
+    }
+    return stdWeightValidatorMlWeightValidatorOrbital(p);
+  },
+  manifest: StdWeightValidatorMlWeightValidatorOrbitalManifest,
+});
+REGISTRY_MUT.set('std-wizard::WizardOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdWizardWizardOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-wizard::WizardOrbital');
+    }
+    return stdWizardWizardOrbital(p);
+  },
+  manifest: StdWizardWizardOrbitalManifest,
+});
+REGISTRY_MUT.set('std-worldmap-board-2d::WorldMapBoard2DOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdWorldmapBoard2dWorldMapBoard2DOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-worldmap-board-2d::WorldMapBoard2DOrbital');
+    }
+    return stdWorldmapBoard2dWorldMapBoard2DOrbital(p);
+  },
+  manifest: StdWorldmapBoard2dWorldMapBoard2DOrbitalManifest,
+});
+REGISTRY_MUT.set('ui-book-chapter-view::BookChapterViewOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdUiBookChapterViewBookChapterViewOrbitalParams(p)) {
+      throw new TypeError('Invalid params for ui-book-chapter-view::BookChapterViewOrbital');
+    }
+    return stdUiBookChapterViewBookChapterViewOrbital(p);
+  },
+  manifest: StdUiBookChapterViewBookChapterViewOrbitalManifest,
+});
+REGISTRY_MUT.set('ui-book-cover-page::BookCoverPageOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdUiBookCoverPageBookCoverPageOrbitalParams(p)) {
+      throw new TypeError('Invalid params for ui-book-cover-page::BookCoverPageOrbital');
+    }
+    return stdUiBookCoverPageBookCoverPageOrbital(p);
+  },
+  manifest: StdUiBookCoverPageBookCoverPageOrbitalManifest,
+});
+REGISTRY_MUT.set('ui-book-nav-bar::BookNavBarOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdUiBookNavBarBookNavBarOrbitalParams(p)) {
+      throw new TypeError('Invalid params for ui-book-nav-bar::BookNavBarOrbital');
+    }
+    return stdUiBookNavBarBookNavBarOrbital(p);
+  },
+  manifest: StdUiBookNavBarBookNavBarOrbitalManifest,
+});
+REGISTRY_MUT.set('ui-book-table-of-contents::BookTableOfContentsOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdUiBookTableOfContentsBookTableOfContentsOrbitalParams(p)) {
+      throw new TypeError('Invalid params for ui-book-table-of-contents::BookTableOfContentsOrbital');
+    }
+    return stdUiBookTableOfContentsBookTableOfContentsOrbital(p);
+  },
+  manifest: StdUiBookTableOfContentsBookTableOfContentsOrbitalManifest,
+});
+REGISTRY_MUT.set('ui-book-viewer::BookViewerOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdUiBookViewerBookViewerOrbitalParams(p)) {
+      throw new TypeError('Invalid params for ui-book-viewer::BookViewerOrbital');
+    }
+    return stdUiBookViewerBookViewerOrbital(p);
+  },
+  manifest: StdUiBookViewerBookViewerOrbitalManifest,
+});
+REGISTRY_MUT.set('ui-case-study-organism::CaseStudyOrganismOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdUiCaseStudyOrganismCaseStudyOrganismOrbitalParams(p)) {
+      throw new TypeError('Invalid params for ui-case-study-organism::CaseStudyOrganismOrbital');
+    }
+    return stdUiCaseStudyOrganismCaseStudyOrganismOrbital(p);
+  },
+  manifest: StdUiCaseStudyOrganismCaseStudyOrganismOrbitalManifest,
+});
+REGISTRY_MUT.set('ui-chat-bar::ChatBarOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdUiChatBarChatBarOrbitalParams(p)) {
+      throw new TypeError('Invalid params for ui-chat-bar::ChatBarOrbital');
+    }
+    return stdUiChatBarChatBarOrbital(p);
+  },
+  manifest: StdUiChatBarChatBarOrbitalManifest,
+});
+REGISTRY_MUT.set('ui-code-runner-panel::CodeRunnerPanelOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdUiCodeRunnerPanelCodeRunnerPanelOrbitalParams(p)) {
+      throw new TypeError('Invalid params for ui-code-runner-panel::CodeRunnerPanelOrbital');
+    }
+    return stdUiCodeRunnerPanelCodeRunnerPanelOrbital(p);
+  },
+  manifest: StdUiCodeRunnerPanelCodeRunnerPanelOrbitalManifest,
+});
+REGISTRY_MUT.set('ui-dashboard-grid::DashboardGridOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdUiDashboardGridDashboardGridOrbitalParams(p)) {
+      throw new TypeError('Invalid params for ui-dashboard-grid::DashboardGridOrbital');
+    }
+    return stdUiDashboardGridDashboardGridOrbital(p);
+  },
+  manifest: StdUiDashboardGridDashboardGridOrbitalManifest,
+});
+REGISTRY_MUT.set('ui-detail-panel::DetailPanelOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdUiDetailPanelDetailPanelOrbitalParams(p)) {
+      throw new TypeError('Invalid params for ui-detail-panel::DetailPanelOrbital');
+    }
+    return stdUiDetailPanelDetailPanelOrbital(p);
+  },
+  manifest: StdUiDetailPanelDetailPanelOrbitalManifest,
+});
+REGISTRY_MUT.set('ui-drawer-slot::DrawerSlotOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdUiDrawerSlotDrawerSlotOrbitalParams(p)) {
+      throw new TypeError('Invalid params for ui-drawer-slot::DrawerSlotOrbital');
+    }
+    return stdUiDrawerSlotDrawerSlotOrbital(p);
+  },
+  manifest: StdUiDrawerSlotDrawerSlotOrbitalManifest,
+});
+REGISTRY_MUT.set('ui-entity-cards::EntityCardsOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdUiEntityCardsEntityCardsOrbitalParams(p)) {
+      throw new TypeError('Invalid params for ui-entity-cards::EntityCardsOrbital');
+    }
+    return stdUiEntityCardsEntityCardsOrbital(p);
+  },
+  manifest: StdUiEntityCardsEntityCardsOrbitalManifest,
+});
+REGISTRY_MUT.set('ui-entity-list::EntityListOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdUiEntityListEntityListOrbitalParams(p)) {
+      throw new TypeError('Invalid params for ui-entity-list::EntityListOrbital');
+    }
+    return stdUiEntityListEntityListOrbital(p);
+  },
+  manifest: StdUiEntityListEntityListOrbitalManifest,
+});
+REGISTRY_MUT.set('ui-entity-table::EntityTableOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdUiEntityTableEntityTableOrbitalParams(p)) {
+      throw new TypeError('Invalid params for ui-entity-table::EntityTableOrbital');
+    }
+    return stdUiEntityTableEntityTableOrbital(p);
+  },
+  manifest: StdUiEntityTableEntityTableOrbitalManifest,
+});
+REGISTRY_MUT.set('ui-feature-grid-organism::FeatureGridOrganismOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdUiFeatureGridOrganismFeatureGridOrganismOrbitalParams(p)) {
+      throw new TypeError('Invalid params for ui-feature-grid-organism::FeatureGridOrganismOrbital');
+    }
+    return stdUiFeatureGridOrganismFeatureGridOrganismOrbital(p);
+  },
+  manifest: StdUiFeatureGridOrganismFeatureGridOrganismOrbitalManifest,
+});
+REGISTRY_MUT.set('ui-form::FormOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdUiFormFormOrbitalParams(p)) {
+      throw new TypeError('Invalid params for ui-form::FormOrbital');
+    }
+    return stdUiFormFormOrbital(p);
+  },
+  manifest: StdUiFormFormOrbitalManifest,
+});
+REGISTRY_MUT.set('ui-form-section::FormSectionOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdUiFormSectionFormSectionOrbitalParams(p)) {
+      throw new TypeError('Invalid params for ui-form-section::FormSectionOrbital');
+    }
+    return stdUiFormSectionFormSectionOrbital(p);
+  },
+  manifest: StdUiFormSectionFormSectionOrbitalManifest,
+});
+REGISTRY_MUT.set('ui-hero-organism::HeroOrganismOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdUiHeroOrganismHeroOrganismOrbitalParams(p)) {
+      throw new TypeError('Invalid params for ui-hero-organism::HeroOrganismOrbital');
+    }
+    return stdUiHeroOrganismHeroOrganismOrbital(p);
+  },
+  manifest: StdUiHeroOrganismHeroOrganismOrbitalManifest,
+});
+REGISTRY_MUT.set('ui-master-detail::MasterDetailOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdUiMasterDetailMasterDetailOrbitalParams(p)) {
+      throw new TypeError('Invalid params for ui-master-detail::MasterDetailOrbital');
+    }
+    return stdUiMasterDetailMasterDetailOrbital(p);
+  },
+  manifest: StdUiMasterDetailMasterDetailOrbitalManifest,
+});
+REGISTRY_MUT.set('ui-master-detail-layout::MasterDetailLayoutOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdUiMasterDetailLayoutMasterDetailLayoutOrbitalParams(p)) {
+      throw new TypeError('Invalid params for ui-master-detail-layout::MasterDetailLayoutOrbital');
+    }
+    return stdUiMasterDetailLayoutMasterDetailLayoutOrbital(p);
+  },
+  manifest: StdUiMasterDetailLayoutMasterDetailLayoutOrbitalManifest,
+});
+REGISTRY_MUT.set('ui-media-gallery::MediaGalleryOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdUiMediaGalleryMediaGalleryOrbitalParams(p)) {
+      throw new TypeError('Invalid params for ui-media-gallery::MediaGalleryOrbital');
+    }
+    return stdUiMediaGalleryMediaGalleryOrbital(p);
+  },
+  manifest: StdUiMediaGalleryMediaGalleryOrbitalManifest,
+});
+REGISTRY_MUT.set('ui-modal-slot::ModalSlotOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdUiModalSlotModalSlotOrbitalParams(p)) {
+      throw new TypeError('Invalid params for ui-modal-slot::ModalSlotOrbital');
+    }
+    return stdUiModalSlotModalSlotOrbital(p);
+  },
+  manifest: StdUiModalSlotModalSlotOrbitalManifest,
+});
+REGISTRY_MUT.set('ui-pricing-organism::PricingOrganismOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdUiPricingOrganismPricingOrganismOrbitalParams(p)) {
+      throw new TypeError('Invalid params for ui-pricing-organism::PricingOrganismOrbital');
+    }
+    return stdUiPricingOrganismPricingOrganismOrbital(p);
+  },
+  manifest: StdUiPricingOrganismPricingOrganismOrbitalManifest,
+});
+REGISTRY_MUT.set('ui-runtime-debugger::RuntimeDebuggerOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdUiRuntimeDebuggerRuntimeDebuggerOrbitalParams(p)) {
+      throw new TypeError('Invalid params for ui-runtime-debugger::RuntimeDebuggerOrbital');
+    }
+    return stdUiRuntimeDebuggerRuntimeDebuggerOrbital(p);
+  },
+  manifest: StdUiRuntimeDebuggerRuntimeDebuggerOrbitalManifest,
+});
+REGISTRY_MUT.set('ui-segment-renderer::SegmentRendererOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdUiSegmentRendererSegmentRendererOrbitalParams(p)) {
+      throw new TypeError('Invalid params for ui-segment-renderer::SegmentRendererOrbital');
+    }
+    return stdUiSegmentRendererSegmentRendererOrbital(p);
+  },
+  manifest: StdUiSegmentRendererSegmentRendererOrbitalManifest,
+});
+REGISTRY_MUT.set('ui-showcase-organism::ShowcaseOrganismOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdUiShowcaseOrganismShowcaseOrganismOrbitalParams(p)) {
+      throw new TypeError('Invalid params for ui-showcase-organism::ShowcaseOrganismOrbital');
+    }
+    return stdUiShowcaseOrganismShowcaseOrganismOrbital(p);
+  },
+  manifest: StdUiShowcaseOrganismShowcaseOrganismOrbitalManifest,
+});
+REGISTRY_MUT.set('ui-split-pane::SplitPaneOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdUiSplitPaneSplitPaneOrbitalParams(p)) {
+      throw new TypeError('Invalid params for ui-split-pane::SplitPaneOrbital');
+    }
+    return stdUiSplitPaneSplitPaneOrbital(p);
+  },
+  manifest: StdUiSplitPaneSplitPaneOrbitalManifest,
+});
+REGISTRY_MUT.set('ui-stat-card::StatCardOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdUiStatCardStatCardOrbitalParams(p)) {
+      throw new TypeError('Invalid params for ui-stat-card::StatCardOrbital');
+    }
+    return stdUiStatCardStatCardOrbital(p);
+  },
+  manifest: StdUiStatCardStatCardOrbitalManifest,
+});
+REGISTRY_MUT.set('ui-state-machine-view::StateMachineViewOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdUiStateMachineViewStateMachineViewOrbitalParams(p)) {
+      throw new TypeError('Invalid params for ui-state-machine-view::StateMachineViewOrbital');
+    }
+    return stdUiStateMachineViewStateMachineViewOrbital(p);
+  },
+  manifest: StdUiStateMachineViewStateMachineViewOrbitalManifest,
+});
+REGISTRY_MUT.set('ui-stats-organism::StatsOrganismOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdUiStatsOrganismStatsOrganismOrbitalParams(p)) {
+      throw new TypeError('Invalid params for ui-stats-organism::StatsOrganismOrbital');
+    }
+    return stdUiStatsOrganismStatsOrganismOrbital(p);
+  },
+  manifest: StdUiStatsOrganismStatsOrganismOrbitalManifest,
+});
+REGISTRY_MUT.set('ui-step-flow-organism::StepFlowOrganismOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdUiStepFlowOrganismStepFlowOrganismOrbitalParams(p)) {
+      throw new TypeError('Invalid params for ui-step-flow-organism::StepFlowOrganismOrbital');
+    }
+    return stdUiStepFlowOrganismStepFlowOrganismOrbital(p);
+  },
+  manifest: StdUiStepFlowOrganismStepFlowOrganismOrbitalManifest,
+});
+REGISTRY_MUT.set('ui-subagent-trace-panel::SubagentTracePanelOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdUiSubagentTracePanelSubagentTracePanelOrbitalParams(p)) {
+      throw new TypeError('Invalid params for ui-subagent-trace-panel::SubagentTracePanelOrbital');
+    }
+    return stdUiSubagentTracePanelSubagentTracePanelOrbital(p);
+  },
+  manifest: StdUiSubagentTracePanelSubagentTracePanelOrbitalManifest,
+});
+REGISTRY_MUT.set('ui-tabbed-container::TabbedContainerOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdUiTabbedContainerTabbedContainerOrbitalParams(p)) {
+      throw new TypeError('Invalid params for ui-tabbed-container::TabbedContainerOrbital');
+    }
+    return stdUiTabbedContainerTabbedContainerOrbital(p);
+  },
+  manifest: StdUiTabbedContainerTabbedContainerOrbitalManifest,
+});
+REGISTRY_MUT.set('ui-team-organism::TeamOrganismOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdUiTeamOrganismTeamOrganismOrbitalParams(p)) {
+      throw new TypeError('Invalid params for ui-team-organism::TeamOrganismOrbital');
+    }
+    return stdUiTeamOrganismTeamOrganismOrbital(p);
+  },
+  manifest: StdUiTeamOrganismTeamOrganismOrbitalManifest,
+});
+REGISTRY_MUT.set('ui-timeline::TimelineOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdUiTimelineTimelineOrbitalParams(p)) {
+      throw new TypeError('Invalid params for ui-timeline::TimelineOrbital');
+    }
+    return stdUiTimelineTimelineOrbital(p);
+  },
+  manifest: StdUiTimelineTimelineOrbitalManifest,
+});
+REGISTRY_MUT.set('ui-timer-display::TimerDisplayOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdUiTimerDisplayTimerDisplayOrbitalParams(p)) {
+      throw new TypeError('Invalid params for ui-timer-display::TimerDisplayOrbital');
+    }
+    return stdUiTimerDisplayTimerDisplayOrbital(p);
+  },
+  manifest: StdUiTimerDisplayTimerDisplayOrbitalManifest,
+});
+REGISTRY_MUT.set('ui-toast-slot::ToastSlotOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdUiToastSlotToastSlotOrbitalParams(p)) {
+      throw new TypeError('Invalid params for ui-toast-slot::ToastSlotOrbital');
+    }
+    return stdUiToastSlotToastSlotOrbital(p);
+  },
+  manifest: StdUiToastSlotToastSlotOrbitalManifest,
+});
+REGISTRY_MUT.set('ui-ui-slot-renderer::UiSlotRendererOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdUiUiSlotRendererUiSlotRendererOrbitalParams(p)) {
+      throw new TypeError('Invalid params for ui-ui-slot-renderer::UiSlotRendererOrbital');
+    }
+    return stdUiUiSlotRendererUiSlotRendererOrbital(p);
+  },
+  manifest: StdUiUiSlotRendererUiSlotRendererOrbitalManifest,
+});
+const REGISTRY: ReadonlyMap<string, DispatchEntry> = REGISTRY_MUT;
 
 /**
  * One trait reference appended via `params.extraTraits[]`. Phase 2

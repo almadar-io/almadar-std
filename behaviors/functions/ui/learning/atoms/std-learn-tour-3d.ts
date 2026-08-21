@@ -30,7 +30,7 @@ const ALIAS = 'LearnTour3d';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdLearnTour3dEventKey = 'INIT' | 'MODE_SELECTED' | 'RESET' | 'SELECT_STATION' | 'SYNC_STATIONS' | 'TOUR' | 'TOUR_3D_UPDATED';
+export type StdLearnTour3dEventKey = 'INIT' | 'LEARN_ROUND_COMPLETE' | 'MODE_SELECTED' | 'RESET' | 'SELECT_STATION' | 'SYNC_STATIONS' | 'TOUR' | 'TOUR_3D_UPDATED';
 
 /**
  * Payload shape for the `TOUR_3D_UPDATED` event.
@@ -42,6 +42,14 @@ export interface StdLearnTour3dTour3dUpdatedPayload {
   visited?: number;
   total?: number;
   tourComplete?: boolean;
+}
+
+/**
+ * Payload shape for the `LEARN_ROUND_COMPLETE` event.
+ */
+export interface StdLearnTour3dLearnRoundCompletePayload {
+  score?: number;
+  total?: number;
 }
 
 /**

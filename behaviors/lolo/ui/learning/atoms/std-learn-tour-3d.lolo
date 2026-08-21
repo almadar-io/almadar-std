@@ -153,6 +153,7 @@ orbital LearnTour3DOrbital {
         (emit TOUR_3D_UPDATED { id: @entity.selectedId, name: (object/get (array/nth @entity.stations 0) name), caption: (object/get (array/nth @entity.stations 0) caption), visited: (array/len @entity.visitedIds), total: (array/len @entity.stations), tourComplete: false })
 
       TOUR -> idle when (== @entity.active true)
+        (if (and (not @entity.tourComplete) (== (if (array/includes @entity.visitedIds (object/get (array/nth @entity.stations (math/mod (+ @entity.selectedIndex 1) (array/len @entity.stations))) id)) (array/len @entity.visitedIds) (+ (array/len @entity.visitedIds) 1)) (array/len @entity.stations))) (emit LEARN_ROUND_COMPLETE { score: (array/len @entity.stations), total: (array/len @entity.stations) }) null)
         (set @entity.selectedIndex (math/mod (+ @entity.selectedIndex 1) (array/len @entity.stations)))
         (set @entity.selectedId (object/get (array/nth @entity.stations @entity.selectedIndex) id))
         (set @entity.visitedIds (if (array/includes @entity.visitedIds @entity.selectedId) @entity.visitedIds (array/append @entity.visitedIds @entity.selectedId)))
@@ -193,6 +194,7 @@ orbital LearnTour3DOrbital {
             (idx (if (>= @found 0) @found @entity.selectedIndex))
           )
           (do
+            (if (and (not @entity.tourComplete) (== (if (array/includes @entity.visitedIds (object/get (array/nth @entity.stations @idx) id)) (array/len @entity.visitedIds) (+ (array/len @entity.visitedIds) 1)) (array/len @entity.stations))) (emit LEARN_ROUND_COMPLETE { score: (array/len @entity.stations), total: (array/len @entity.stations) }) null)
             (set @entity.selectedIndex @idx)
             (set @entity.selectedId (object/get (array/nth @entity.stations @idx) id))
             (set @entity.visitedIds (if (array/includes @entity.visitedIds @entity.selectedId) @entity.visitedIds (array/append @entity.visitedIds @entity.selectedId)))
@@ -331,6 +333,13 @@ orbital LearnTour3DOrbital {
       }
         @description "Fires on INIT/MODE_SELECTED/Tour/click/Reset with the currently selected station's id, name, and caption, plus visited/total progress and whether every station has now been visited — a composed listener (readout, quiz) can subscribe; a harmless no-op when the atom runs standalone."
         @synonyms "select, choose, station, explore, tour, flythrough, pick"
+        @tier "domain"
+      LEARN_ROUND_COMPLETE -> external {
+        score : number
+        total : number
+      }
+        @description "Fired once when the visit that completes the tour lands (every station explored) — the standard learning completion broadcast a celebration/progression sibling (fx cues, badges) rides."
+        @synonyms "round complete, finished, done, completion, tour complete"
         @tier "domain"
     }
 
