@@ -52,6 +52,8 @@ export interface StdUiGameHudConfig {
   stats?: EntityRow[];
   /** Default: `true` */
   transparent?: boolean;
+  /** Default: `"floating"` */
+  variant?: 'floating' | 'bar';
 }
 
 /**

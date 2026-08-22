@@ -81,6 +81,8 @@ export interface StdUiControlGridConfig {
   onDirection?: string;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
+  /** Default: `"auto"` */
+  visibility?: 'auto' | 'always';
 }
 
 /**

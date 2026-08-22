@@ -63,6 +63,7 @@ export interface StdUiDetailPanelConfig {
   footer?: PatternValue;
   /** Default: `false` */
   isLoading?: boolean;
+  /** Default: `2` */
   maxInlineActions?: number;
   mode?: string;
   pageProp?: number;
@@ -76,6 +77,7 @@ export interface StdUiDetailPanelConfig {
   sections?: EntityRow[];
   /** Default: `[]` */
   selectedIds?: string[];
+  /** Default: `true` */
   showActions?: boolean;
   /** Default: `false` */
   slideOver?: boolean;
@@ -387,7 +389,8 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
             'type': 'boolean',
           },
           'maxInlineActions': {
-            'description': 'Max inline action buttons before the rest collapse into a \'⋯\' overflow menu (mirrors DataGrid\'s maxInlineActions). Omit = all inline.',
+            'default': 2,
+            'description': 'Max inline action buttons before the rest collapse into a \'⋯\' overflow menu (mirrors DataGrid\'s maxInlineActions). Defaults to 2 — primary + secondary visible, the rest under the menu — so every detail panel carries the same action pattern.',
             'label': 'Max Inline Actions',
             'tier': 'presentation',
             'type': 'number',
@@ -521,7 +524,8 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
             'type': '[string]',
           },
           'showActions': {
-            'description': 'Show actions flag',
+            'default': true,
+            'description': 'When false, hides the action buttons + overflow menu (and the close ×). Defaults to true.',
             'label': 'Show Actions',
             'tier': 'presentation',
             'type': 'boolean',

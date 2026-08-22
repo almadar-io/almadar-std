@@ -1,0 +1,278 @@
+[
+  {
+    "organism": "std-notification-center",
+    "orbital": "NotificationCenterOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/infra/atoms/std-notification-center.ts",
+    "entities": [
+      {
+        "name": "NotificationPreference",
+        "fields": [
+          {
+            "name": "userId",
+            "type": "string",
+            "required": false,
+            "description": "Owner of this preference row — rows are meant to be private to their owner. Access predicates need an [identity] roster, so the binding organism (which declares one) owns the @read/@update scoping; the generic atom cannot.",
+            "synonyms": "user, owner, account"
+          },
+          {
+            "name": "eventType",
+            "type": "string",
+            "required": false,
+            "description": "Event key this preference applies to (matches a listener's eventKey); blank = all events.",
+            "synonyms": "event, trigger, subscription, topic"
+          },
+          {
+            "name": "mode",
+            "type": "string",
+            "required": false,
+            "description": "Delivery mode: instant (default), digest (deferred to the drain cycle), or off (muted).",
+            "synonyms": "delivery mode, frequency, cadence, mute, defer"
+          },
+          {
+            "name": "channel",
+            "type": "string",
+            "required": false,
+            "description": "Channel override for this user (in-app/email/sms/push/webhook); blank = the listener's configured channel.",
+            "synonyms": "preferred channel, delivery method"
+          },
+          {
+            "name": "quietStartHour",
+            "type": "number",
+            "required": false,
+            "description": "Per-user quiet-hours start (hour 0-23); equal to quietEndHour = disabled.",
+            "synonyms": "quiet start, do not disturb from"
+          },
+          {
+            "name": "quietEndHour",
+            "type": "number",
+            "required": false,
+            "description": "Per-user quiet-hours end (hour 0-23); equal to quietStartHour = disabled.",
+            "synonyms": "quiet end, do not disturb until"
+          }
+        ],
+        "persistence": "persistent"
+      }
+    ],
+    "traits": [
+      {
+        "name": "PushSubscriber",
+        "emittedEvents": [
+          "PUSH_SUBSCRIBED",
+          "PUSH_SUBSCRIBE_FAILED",
+          "PUSH_SAVED",
+          "PUSH_SAVE_FAILED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "PUSH_SUBSCRIBED",
+            "direction": "emit",
+            "description": "browser/push-subscribe resolved with the flat subscription credentials in `result`",
+            "tier": "secondary"
+          },
+          {
+            "name": "PUSH_SUBSCRIBE_FAILED",
+            "direction": "emit",
+            "description": "Push API unavailable, permission denied, or the host has no VAPID key",
+            "tier": "secondary"
+          },
+          {
+            "name": "PUSH_SAVED",
+            "direction": "emit",
+            "description": "Subscription row persisted for the current user",
+            "tier": "secondary"
+          },
+          {
+            "name": "PUSH_SAVE_FAILED",
+            "direction": "emit",
+            "description": "Persisting the subscription row failed",
+            "tier": "secondary"
+          },
+          {
+            "name": "SUBSCRIBE_PUSH",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [],
+        "capabilities": [],
+        "linkedEntity": "PushSubscription",
+        "transitionEvents": [
+          "PUSH_SAVED",
+          "PUSH_SAVE_FAILED",
+          "PUSH_SUBSCRIBED",
+          "PUSH_SUBSCRIBE_FAILED",
+          "SUBSCRIBE_PUSH"
+        ],
+        "effectEntityRefs": [
+          "PushSubscription"
+        ]
+      },
+      {
+        "name": "PreferenceEditor",
+        "emittedEvents": [
+          "PREFERENCE_SAVED",
+          "PREFERENCE_DELETED",
+          "PREFERENCE_SAVE_FAILED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "PREFERENCE_SAVED",
+            "direction": "emit",
+            "description": "Preference row persisted",
+            "tier": "secondary"
+          },
+          {
+            "name": "PREFERENCE_DELETED",
+            "direction": "emit",
+            "description": "Preference row removed",
+            "tier": "secondary"
+          },
+          {
+            "name": "PREFERENCE_SAVE_FAILED",
+            "direction": "emit",
+            "description": "Preference persist failed",
+            "tier": "secondary"
+          },
+          {
+            "name": "SAVE_PREFERENCE",
+            "direction": "listen"
+          },
+          {
+            "name": "UPDATE_PREFERENCE",
+            "direction": "listen"
+          },
+          {
+            "name": "DELETE_PREFERENCE",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [],
+        "capabilities": [],
+        "linkedEntity": "NotificationPreference",
+        "transitionEvents": [
+          "DELETE_PREFERENCE",
+          "PREFERENCE_DELETED",
+          "PREFERENCE_SAVED",
+          "PREFERENCE_SAVE_FAILED",
+          "SAVE_PREFERENCE",
+          "UPDATE_PREFERENCE"
+        ],
+        "effectEntityRefs": [
+          "NotificationPreference"
+        ]
+      },
+      {
+        "name": "DigestDrain",
+        "emittedEvents": [
+          "DIGEST_ROWS_LOADED",
+          "DIGEST_ITEM_SENT",
+          "DIGEST_STEPPED",
+          "DIGEST_FAILED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "DIGEST_ROWS_LOADED",
+            "direction": "emit",
+            "description": "Undispatched digest/quiet-hours audit rows past minAgeHours, oldest batch first",
+            "tier": "secondary"
+          },
+          {
+            "name": "DIGEST_ITEM_SENT",
+            "direction": "emit",
+            "description": "email.send result for the current digest row",
+            "tier": "secondary"
+          },
+          {
+            "name": "DIGEST_STEPPED",
+            "direction": "emit",
+            "description": "Current row marked dispatched; drives the next loop pass",
+            "tier": "secondary"
+          },
+          {
+            "name": "DIGEST_FAILED",
+            "direction": "emit",
+            "description": "Digest scan / delivery / persist failed — the cycle stops until the next tick",
+            "tier": "secondary"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "digestEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Deliver digests",
+            "description": "Drain suppressed notifications (digest-deferred and quiet-hours audit rows) on the hourly cycle. Off by default.",
+            "synonyms": "enable digest, digest mode, batch notifications, daily summary, drain suppressed",
+            "tier": "infra"
+          },
+          {
+            "key": "digestSubject",
+            "type": "string",
+            "default": "Notification digest",
+            "label": "Digest email subject",
+            "description": "Subject line for drained digest deliveries.",
+            "synonyms": "digest title, summary subject, email subject",
+            "tier": "presentation"
+          },
+          {
+            "key": "minAgeHours",
+            "type": "number",
+            "default": 1,
+            "label": "Minimum age (hours)",
+            "description": "Only drain audit rows at least this many hours old, so quiet-hours suppressions are not redelivered inside their window.",
+            "synonyms": "delay, drain delay, hold for, batch window",
+            "tier": "infra"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "DigestRunView",
+        "transitionEvents": [
+          "DIGEST_FAILED",
+          "DIGEST_ITEM_SENT",
+          "DIGEST_ROWS_LOADED",
+          "DIGEST_STEPPED"
+        ],
+        "effectEntityRefs": [
+          "NotificationRecord"
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "name": "NotificationPreferencesPage",
+        "defaultPath": "/notifications/preferences",
+        "primaryEntity": "NotificationPreference"
+      },
+      {
+        "name": "PushSubscribePage",
+        "defaultPath": "/notifications/subscribe",
+        "primaryEntity": "NotificationPreference"
+      },
+      {
+        "name": "NotificationDigestPage",
+        "defaultPath": "/notifications/digest",
+        "primaryEntity": "NotificationPreference"
+      }
+    ],
+    "emittedEvents": [
+      "DIGEST_FAILED",
+      "DIGEST_ITEM_SENT",
+      "DIGEST_ROWS_LOADED",
+      "DIGEST_STEPPED",
+      "PREFERENCE_DELETED",
+      "PREFERENCE_SAVED",
+      "PREFERENCE_SAVE_FAILED",
+      "PUSH_SAVED",
+      "PUSH_SAVE_FAILED",
+      "PUSH_SUBSCRIBED",
+      "PUSH_SUBSCRIBE_FAILED"
+    ],
+    "listenedEvents": [],
+    "exposure": "both",
+    "provenance": "authored",
+    "sourceValid": true
+  }
+]

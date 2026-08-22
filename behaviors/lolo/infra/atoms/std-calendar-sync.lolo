@@ -1,0 +1,290 @@
+app std-calendar-sync "1.0.0"
+"std-calendar-sync — two-way Google Calendar synchronization engine. PUSH: a 15-minute cron scan (and the user-addressable SYNC_NOW) walks `targetEntity` rows whose `externalEventId` marker is blank and creates a remote event per row through calendar.createEvent, reading the summary/start/end via the configured field mapping (`titleField`/`startField`/`endField`/`durationMinutes` fallback/`locationField`/`descriptionField`) — so ANY event-shaped host entity pushes, provided it declares the two marker columns `externalEventId : string` and `syncedAt : number` (the remindedAt precedent). PULL: `CAL_REMOTE_CHANGED` (delivered by the shared /api/hooks/google-calendar ingress from a calendar.watch channel) or the same cycle after a clean push lists remote events (incremental via the in-memory sync token; a restart falls back to a full window list) and upserts each into the atom's own canonical `CalendarEvent` store, matched by `externalEventId` — pulls land in the canonical store, NOT the arbitrary target, because persist keys are static in the language; bind calendar UI to `CalendarEvent` to surface remote events. Conflict detection (local-newer-than-remote) needs a local-modified marker convention and is a recorded gap, not a decorative state. Composes with std-notify-on-event via CAL_SYNCED / CAL_SYNC_FAILED."
+type RemoteEvent = { id : string, summary : string, description : string, location : string, start : string, end : string, status : string, updated : string }
+type TargetRow = { id : string, externalEventId : string }
+orbital CalendarSyncOrbital {
+    type CAL_REMOTE_CHANGED = Event { channelId : string, resourceId : string, resourceState : string } "Google watch-channel push notification, delivered by the /api/hooks/google-calendar ingress."
+
+  entity CalendarSyncRun [persistent: calendarSyncState] {
+    id : string!
+    syncToken : string @description "Scratch: Google incremental-sync token from the last listEvents; in-memory per instance — a restart falls back to a full list." @synonyms "sync cursor, next token" = ""
+    lastSyncedAt : number @description "When the last full push+pull cycle completed; 0 = never." @synonyms "last sync time" = 0
+    headId : string @description "Scratch: id of the target row the push loop is currently exporting." @synonyms "cursor, current row" = ""
+    pending : [RemoteEvent] @description "Scratch: remote events remaining in the current pull-upsert loop." @synonyms "pull queue, remaining events" = []
+    lastError : string @description "Last sync failure detail; blank = none." @synonyms "sync error, failure" = ""
+  }
+
+  entity CalendarEvent [persistent: calendarEvents] {
+    id : string!
+    title : string @description "Event title/summary." @synonyms "summary, name, subject" = ""
+    startsAt : string @description "ISO start (dateTime, or YYYY-MM-DD for all-day)." @synonyms "start, begins, from" = ""
+    endsAt : string @description "ISO end (dateTime, or YYYY-MM-DD for all-day)." @synonyms "end, finishes, until" = ""
+    location : string @description "Event location." @synonyms "place, where, venue" = ""
+    description : string @description "Event description/notes." @synonyms "notes, details, body" = ""
+    status : string @description "Remote status (confirmed/tentative/cancelled)." @synonyms "state, confirmation" = ""
+    externalEventId : string @description "Google Calendar event id this row mirrors; the pull-upsert match key." @synonyms "remote id, google id, calendar event id" = ""
+    syncedAt : number @description "When this row last synced with the remote calendar; 0 = never." @synonyms "last sync, synced" = 0
+  }
+
+  trait CalendarSync -> CalendarSyncRun [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      SYNC_NOW -> idle when @config.enabled
+        (fetch @config.targetEntity {
+          emit: { failure: CAL_SYNC_FAILED, success: PUSH_ROWS_LOADED }
+          filter: ["=", (object/get @entity externalEventId), ""]
+        })
+      CAL_REMOTE_CHANGED -> idle when @config.enabled
+        (call-service "calendar" "listEvents" {
+          calendarId: @config.calendarId
+          syncToken: @entity.syncToken
+        } { emit: { failure: CAL_SYNC_FAILED, success: CAL_REMOTE_LISTED } })
+      PUSH_ROWS_LOADED -> pushing when (and @config.enabled [">", (array/len ?data), 0])
+        (set @entity.headId (object/get (array/first ?data) id))
+        (call-service "calendar" "createEvent" {
+          calendarId: @config.calendarId
+          summary: (object/get (array/first ?data) @config.titleField)
+          description: (if ["=", @config.descriptionField, ""] "" (object/get (array/first ?data) @config.descriptionField))
+          location: (if ["=", @config.locationField, ""] "" (object/get (array/first ?data) @config.locationField))
+          start: (object/get (array/first ?data) @config.startField)
+          end: (if ["=", @config.endField, ""] "" (object/get (array/first ?data) @config.endField))
+          durationMinutes: (if ["=", @config.durationField, ""] @config.durationMinutes (object/get (array/first ?data) @config.durationField))
+        } { emit: { failure: CAL_SYNC_FAILED, success: CAL_EVENT_CREATED } })
+      PUSH_ROWS_LOADED -> idle when ["=", (array/len ?data), 0]
+        (call-service "calendar" "listEvents" {
+          calendarId: @config.calendarId
+          syncToken: @entity.syncToken
+        } { emit: { failure: CAL_SYNC_FAILED, success: CAL_REMOTE_LISTED } })
+      CAL_REMOTE_LISTED -> pulling when [">", (array/len ?events), 0]
+        (set @entity.pending ?events)
+        (set @entity.syncToken (str/default ?nextSyncToken ""))
+        (fetch CalendarEvent {
+          emit: { failure: CAL_SYNC_FAILED, success: PULL_TARGET_LOADED }
+        })
+      CAL_REMOTE_LISTED -> idle when ["=", (array/len ?events), 0]
+        (set @entity.syncToken (str/default ?nextSyncToken ""))
+        (set @entity.lastSyncedAt @now)
+        (emit CAL_SYNCED { syncedAt: @entity.lastSyncedAt })
+      CAL_SYNC_FAILED -> idle
+        (set @entity.lastError ?error)
+    }
+
+    state pushing {
+      CAL_EVENT_CREATED -> pushing
+        (persist update @config.targetEntity { id: @entity.headId, externalEventId: ?id, syncedAt: @now } {
+          emit: { failure: CAL_SYNC_FAILED, success: PUSH_STEPPED }
+        })
+      PUSH_STEPPED -> pushing
+        (fetch @config.targetEntity {
+          emit: { failure: CAL_SYNC_FAILED, success: PUSH_ROWS_LOADED }
+          filter: ["=", (object/get @entity externalEventId), ""]
+        })
+      PUSH_ROWS_LOADED -> pushing when [">", (array/len ?data), 0]
+        (set @entity.headId (object/get (array/first ?data) id))
+        (call-service "calendar" "createEvent" {
+          calendarId: @config.calendarId
+          summary: (object/get (array/first ?data) @config.titleField)
+          description: (if ["=", @config.descriptionField, ""] "" (object/get (array/first ?data) @config.descriptionField))
+          location: (if ["=", @config.locationField, ""] "" (object/get (array/first ?data) @config.locationField))
+          start: (object/get (array/first ?data) @config.startField)
+          end: (if ["=", @config.endField, ""] "" (object/get (array/first ?data) @config.endField))
+          durationMinutes: (if ["=", @config.durationField, ""] @config.durationMinutes (object/get (array/first ?data) @config.durationField))
+        } { emit: { failure: CAL_SYNC_FAILED, success: CAL_EVENT_CREATED } })
+      PUSH_ROWS_LOADED -> idle when ["=", (array/len ?data), 0]
+        (call-service "calendar" "listEvents" {
+          calendarId: @config.calendarId
+          syncToken: @entity.syncToken
+        } { emit: { failure: CAL_SYNC_FAILED, success: CAL_REMOTE_LISTED } })
+      CAL_SYNC_FAILED -> idle
+        (set @entity.lastError ?error)
+    }
+
+    state pulling {
+      PULL_TARGET_LOADED -> pulling
+        (set @entity.headId (object/get (array/first @entity.pending) id))
+        (if ["=", (array/len (array/filter ?data (fn r ["=", (object/get @r externalEventId), @entity.headId]))), 0] (persist create CalendarEvent {
+          title: (object/get (array/first @entity.pending) summary)
+          startsAt: (object/get (array/first @entity.pending) start)
+          endsAt: (object/get (array/first @entity.pending) end)
+          location: (object/get (array/first @entity.pending) location)
+          description: (object/get (array/first @entity.pending) description)
+          status: (object/get (array/first @entity.pending) status)
+          externalEventId: @entity.headId
+          syncedAt: @now
+        } { emit: { failure: CAL_SYNC_FAILED, success: PULL_STEPPED } }) (persist update CalendarEvent {
+          id: (object/get (array/first (array/filter ?data (fn r ["=", (object/get @r externalEventId), @entity.headId]))) id)
+          title: (object/get (array/first @entity.pending) summary)
+          startsAt: (object/get (array/first @entity.pending) start)
+          endsAt: (object/get (array/first @entity.pending) end)
+          location: (object/get (array/first @entity.pending) location)
+          description: (object/get (array/first @entity.pending) description)
+          status: (object/get (array/first @entity.pending) status)
+          syncedAt: @now
+        } { emit: { failure: CAL_SYNC_FAILED, success: PULL_STEPPED } }))
+      PULL_STEPPED -> pulling
+        (set @entity.pending (array/drop @entity.pending 1))
+        (emit PULL_NEXT {
+          remaining: (array/len @entity.pending)
+        })
+      PULL_NEXT -> pulling when [">", ?remaining, 0]
+        (fetch CalendarEvent {
+          emit: { failure: CAL_SYNC_FAILED, success: PULL_TARGET_LOADED }
+        })
+      PULL_NEXT -> idle when ["=", ?remaining, 0]
+        (set @entity.lastSyncedAt @now)
+        (emit CAL_SYNCED { syncedAt: @entity.lastSyncedAt })
+      CAL_SYNC_FAILED -> idle
+        (set @entity.lastError ?error)
+    }
+
+    emits {
+      CAL_SYNCED -> external {
+        syncedAt : number
+      }
+        @description "A full push+pull cycle completed; wire to std-notify-on-event or a status surface."
+      CAL_SYNC_FAILED {
+        error : string!
+      }
+        @description "A calendar service call / fetch / persist failed — lastError carries the detail and the cycle stops until the next trigger."
+        @tier "secondary"
+      PUSH_ROWS_LOADED {
+        data : [TargetRow]
+      }
+        @description "Target rows with a blank externalEventId marker — the remaining local→remote export queue."
+        @tier "secondary"
+      CAL_EVENT_CREATED {
+        id : string!
+        status : string!
+        htmlLink : string!
+      }
+        @description "calendar.createEvent result, flattened onto the payload by the call-service effect executor."
+        @tier "secondary"
+      PUSH_STEPPED {
+        id : string!
+      }
+        @description "Target row stamped with its new externalEventId; drives the next push pass."
+        @tier "secondary"
+      CAL_REMOTE_LISTED {
+        events : [RemoteEvent]
+        nextSyncToken : string
+      }
+        @description "calendar.listEvents result — the remote change set for the pull-upsert loop."
+        @tier "secondary"
+      PULL_TARGET_LOADED {
+        data : [TargetRow]
+      }
+        @description "CalendarEvent rows loaded for externalEventId matching in the pull-upsert."
+        @tier "secondary"
+      PULL_STEPPED {
+        id : string!
+      }
+        @description "One remote event upserted into the CalendarEvent store; drives the next pull pass."
+        @tier "secondary"
+      PULL_NEXT {
+        remaining : number
+      }
+        @description "Pull loop control: how many remote events remain in the queue."
+        @tier "secondary"
+    }
+
+    listens {
+      SYNC_NOW {
+      }
+      CAL_REMOTE_CHANGED {
+        channelId : string
+        resourceId : string
+        resourceState : string
+      }
+      PUSH_ROWS_LOADED {
+        data : [TargetRow]
+      }
+      CAL_EVENT_CREATED {
+        id : string!
+        status : string!
+        htmlLink : string!
+      }
+      PUSH_STEPPED {
+        id : string!
+      }
+      CAL_REMOTE_LISTED {
+        events : [RemoteEvent]
+        nextSyncToken : string
+      }
+      PULL_TARGET_LOADED {
+        data : [TargetRow]
+      }
+      PULL_STEPPED {
+        id : string!
+      }
+      PULL_NEXT {
+        remaining : number
+      }
+    }
+
+    ticks {
+      syncCycle every "*/15 * * * *"
+        (fetch @config.targetEntity {
+          emit: { failure: CAL_SYNC_FAILED, success: PUSH_ROWS_LOADED }
+          filter: ["=", (object/get @entity externalEventId), ""]
+        })
+
+    }
+
+    config {
+      enabled : boolean = false
+        @label "Sync with Google Calendar"
+        @description "Push local records to Google Calendar and pull remote events into the CalendarEvent store. Off by default; needs the calendar service credentials (GOOGLE_CALENDAR_SA_KEY)."
+        @synonyms "enable, calendar sync, google calendar, two-way sync, sync events, connect calendar"
+        @tier "infra"
+      targetEntity : entity = CalendarEvent
+        @label "Entity to push"
+        @description "Event-shaped entity whose rows export to Google Calendar. MUST declare the marker columns `externalEventId : string = \"\"` and `syncedAt : number = 0` (stamped by the push loop). Defaults to the atom's own CalendarEvent store so the standalone validates; rebind per composition."
+        @synonyms "entity to sync, source entity, record type, appointments entity, sessions entity"
+        @tier "internal"
+      calendarId : string = ""
+        @label "Calendar id"
+        @description "Google calendar to sync with; blank = the service's default (GOOGLE_CALENDAR_ID env, else primary)."
+        @synonyms "google calendar id, target calendar"
+        @tier "infra"
+      titleField : string = title
+        @label "Title field"
+        @description "Target-entity field holding the event title."
+        @synonyms "summary field, name field"
+        @tier "internal"
+      startField : string = startsAt
+        @label "Start field"
+        @description "Target-entity field holding the ISO start (dateTime, or YYYY-MM-DD for all-day)."
+        @synonyms "start date field, begins field, scheduledAt field"
+        @tier "internal"
+      endField : string = endsAt
+        @label "End field"
+        @description "Target-entity field holding the ISO end. Blank = derive the end from `durationMinutes` instead (the corpus carries all four event shapes)."
+        @synonyms "end date field, finishes field"
+        @tier "internal"
+      durationMinutes : number = 60
+        @label "Duration (minutes)"
+        @description "Fixed event length used when both `endField` and `durationField` are blank; the calendar service computes the timezone-correct end."
+        @synonyms "length, event duration, minutes"
+        @tier "internal"
+      durationField : string = ""
+        @label "Duration field"
+        @description "Target-entity field holding the per-row duration in minutes (e.g. ClassSession.durationMinutes). Takes precedence over the fixed `durationMinutes` when set; ignored when `endField` is set. Field precedence: endField > durationField > durationMinutes — the corpus carries all these event shapes."
+        @synonyms "minutes field, length field, per-row duration"
+        @tier "internal"
+      locationField : string = ""
+        @label "Location field"
+        @description "Target-entity field holding the location; blank = none."
+        @synonyms "place field, venue field"
+        @tier "internal"
+      descriptionField : string = ""
+        @label "Description field"
+        @description "Target-entity field holding the description/notes; blank = none."
+        @synonyms "notes field, details field"
+        @tier "internal"
+    }
+  }
+
+  page "/calendar-sync" as CalendarSyncPage -> CalendarSync
+}

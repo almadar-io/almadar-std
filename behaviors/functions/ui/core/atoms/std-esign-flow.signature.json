@@ -65,6 +65,13 @@
             "synonyms": "signed date, completion date, signature time"
           },
           {
+            "name": "envelopeId",
+            "type": "string",
+            "required": false,
+            "description": "Provider envelope id stamped when the real e-sign dispatch succeeds; blank = never dispatched. Written by EnvelopeDispatcher, not user-facing.",
+            "synonyms": "docusign id, provider reference"
+          },
+          {
             "name": "pendingId",
             "type": "string",
             "required": false,
@@ -81,6 +88,7 @@
         "emittedEvents": [
           "CREATE",
           "RESEND_REQUEST",
+          "CHECK_ENVELOPE_STATUS",
           "REQUEST_DELETE",
           "SignatureSessionLoaded",
           "SignatureSessionLoadFailed"
@@ -104,6 +112,13 @@
             "description": "Indicates a signature request has been resent.",
             "synonyms": "resend, retransmit, repeat",
             "tier": "presentation"
+          },
+          {
+            "name": "CHECK_ENVELOPE_STATUS",
+            "direction": "emit",
+            "description": "Pull the provider's current envelope status for this request.",
+            "synonyms": "refresh status, check signature, poll envelope",
+            "tier": "domain"
           },
           {
             "name": "REQUEST_DELETE",
@@ -296,6 +311,88 @@
         "effectEntityRefs": [
           "SignatureSession"
         ]
+      },
+      {
+        "name": "EnvelopeDispatcher",
+        "emittedEvents": [
+          "ENVELOPE_SENT",
+          "ENVELOPE_SEND_FAILED",
+          "ENVELOPE_STATUS_LOADED",
+          "ENVELOPE_STATUS_FAILED",
+          "ENVELOPE_STAMPED",
+          "ENVELOPE_STAMP_FAILED"
+        ],
+        "listenedEvents": [
+          "CHECK_ENVELOPE_STATUS"
+        ],
+        "events": [
+          {
+            "name": "ENVELOPE_SENT",
+            "direction": "emit",
+            "description": "The provider accepted the envelope; carries its id.",
+            "tier": "internal"
+          },
+          {
+            "name": "ENVELOPE_SEND_FAILED",
+            "direction": "emit",
+            "description": "The e-sign provider rejected or failed the dispatch.",
+            "tier": "internal"
+          },
+          {
+            "name": "ENVELOPE_STATUS_LOADED",
+            "direction": "emit",
+            "description": "The provider returned the envelope's current status.",
+            "tier": "internal"
+          },
+          {
+            "name": "ENVELOPE_STATUS_FAILED",
+            "direction": "emit",
+            "description": "Reading the envelope status failed.",
+            "tier": "internal"
+          },
+          {
+            "name": "ENVELOPE_STAMPED",
+            "direction": "emit",
+            "description": "The session row now carries the latest provider state (envelopeId / status / timestamps).",
+            "tier": "domain"
+          },
+          {
+            "name": "ENVELOPE_STAMP_FAILED",
+            "direction": "emit",
+            "description": "Writing the provider state back onto the session row failed.",
+            "tier": "internal"
+          },
+          {
+            "name": "SEND_ENVELOPE",
+            "direction": "listen",
+            "description": "Dispatch this session as a real e-sign envelope; `file.content` is the document as a base64 data URL (UploadDropZone shape).",
+            "synonyms": "send envelope, dispatch signature, send for signing",
+            "tier": "domain"
+          },
+          {
+            "name": "CHECK_ENVELOPE_STATUS",
+            "direction": "listen",
+            "description": "Pull the provider's current envelope status and stamp it onto the session row.",
+            "synonyms": "refresh status, check signature, poll envelope",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [],
+        "capabilities": [],
+        "linkedEntity": "SignatureSession",
+        "transitionEvents": [
+          "CHECK_ENVELOPE_STATUS",
+          "ENVELOPE_SEND_FAILED",
+          "ENVELOPE_SENT",
+          "ENVELOPE_STAMPED",
+          "ENVELOPE_STAMP_FAILED",
+          "ENVELOPE_STATUS_FAILED",
+          "ENVELOPE_STATUS_LOADED",
+          "SEND_ENVELOPE"
+        ],
+        "effectEntityRefs": [
+          "SignatureSession"
+        ]
       }
     ],
     "pages": [
@@ -306,7 +403,14 @@
       }
     ],
     "emittedEvents": [
+      "CHECK_ENVELOPE_STATUS",
       "CREATE",
+      "ENVELOPE_SEND_FAILED",
+      "ENVELOPE_SENT",
+      "ENVELOPE_STAMPED",
+      "ENVELOPE_STAMP_FAILED",
+      "ENVELOPE_STATUS_FAILED",
+      "ENVELOPE_STATUS_LOADED",
       "REQUEST_DELETE",
       "RESEND_REQUEST",
       "SESSION_CREATED",
@@ -316,6 +420,7 @@
       "SignatureSessionLoaded"
     ],
     "listenedEvents": [
+      "CHECK_ENVELOPE_STATUS",
       "CONFIRM_DELETE",
       "CREATE",
       "REQUEST_DELETE",

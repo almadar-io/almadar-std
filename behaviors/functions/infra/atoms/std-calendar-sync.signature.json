@@ -1,0 +1,268 @@
+[
+  {
+    "organism": "std-calendar-sync",
+    "orbital": "CalendarSyncOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/infra/atoms/std-calendar-sync.ts",
+    "entities": [
+      {
+        "name": "CalendarSyncRun",
+        "fields": [
+          {
+            "name": "syncToken",
+            "type": "string",
+            "required": false,
+            "description": "Scratch: Google incremental-sync token from the last listEvents; in-memory per instance — a restart falls back to a full list.",
+            "synonyms": "sync cursor, next token"
+          },
+          {
+            "name": "lastSyncedAt",
+            "type": "number",
+            "required": false,
+            "description": "When the last full push+pull cycle completed; 0 = never.",
+            "synonyms": "last sync time"
+          },
+          {
+            "name": "headId",
+            "type": "string",
+            "required": false,
+            "description": "Scratch: id of the target row the push loop is currently exporting.",
+            "synonyms": "cursor, current row"
+          },
+          {
+            "name": "pending",
+            "type": "array",
+            "required": false,
+            "description": "Scratch: remote events remaining in the current pull-upsert loop.",
+            "synonyms": "pull queue, remaining events"
+          },
+          {
+            "name": "lastError",
+            "type": "string",
+            "required": false,
+            "description": "Last sync failure detail; blank = none.",
+            "synonyms": "sync error, failure"
+          }
+        ],
+        "persistence": "persistent"
+      }
+    ],
+    "traits": [
+      {
+        "name": "CalendarSync",
+        "emittedEvents": [
+          "CAL_SYNCED",
+          "CAL_SYNC_FAILED",
+          "PUSH_ROWS_LOADED",
+          "CAL_EVENT_CREATED",
+          "PUSH_STEPPED",
+          "CAL_REMOTE_LISTED",
+          "PULL_TARGET_LOADED",
+          "PULL_STEPPED",
+          "PULL_NEXT"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "CAL_SYNCED",
+            "direction": "emit",
+            "description": "A full push+pull cycle completed; wire to std-notify-on-event or a status surface."
+          },
+          {
+            "name": "CAL_SYNC_FAILED",
+            "direction": "emit",
+            "description": "A calendar service call / fetch / persist failed — lastError carries the detail and the cycle stops until the next trigger.",
+            "tier": "secondary"
+          },
+          {
+            "name": "PUSH_ROWS_LOADED",
+            "direction": "emit",
+            "description": "Target rows with a blank externalEventId marker — the remaining local→remote export queue.",
+            "tier": "secondary"
+          },
+          {
+            "name": "CAL_EVENT_CREATED",
+            "direction": "emit",
+            "description": "calendar.createEvent result, flattened onto the payload by the call-service effect executor.",
+            "tier": "secondary"
+          },
+          {
+            "name": "PUSH_STEPPED",
+            "direction": "emit",
+            "description": "Target row stamped with its new externalEventId; drives the next push pass.",
+            "tier": "secondary"
+          },
+          {
+            "name": "CAL_REMOTE_LISTED",
+            "direction": "emit",
+            "description": "calendar.listEvents result — the remote change set for the pull-upsert loop.",
+            "tier": "secondary"
+          },
+          {
+            "name": "PULL_TARGET_LOADED",
+            "direction": "emit",
+            "description": "CalendarEvent rows loaded for externalEventId matching in the pull-upsert.",
+            "tier": "secondary"
+          },
+          {
+            "name": "PULL_STEPPED",
+            "direction": "emit",
+            "description": "One remote event upserted into the CalendarEvent store; drives the next pull pass.",
+            "tier": "secondary"
+          },
+          {
+            "name": "PULL_NEXT",
+            "direction": "emit",
+            "description": "Pull loop control: how many remote events remain in the queue.",
+            "tier": "secondary"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "SYNC_NOW",
+            "direction": "listen"
+          },
+          {
+            "name": "CAL_REMOTE_CHANGED",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "calendarId",
+            "type": "string",
+            "default": "",
+            "label": "Calendar id",
+            "description": "Google calendar to sync with; blank = the service's default (GOOGLE_CALENDAR_ID env, else primary).",
+            "synonyms": "google calendar id, target calendar",
+            "tier": "infra"
+          },
+          {
+            "key": "descriptionField",
+            "type": "string",
+            "default": "",
+            "label": "Description field",
+            "description": "Target-entity field holding the description/notes; blank = none.",
+            "synonyms": "notes field, details field",
+            "tier": "internal"
+          },
+          {
+            "key": "durationField",
+            "type": "string",
+            "default": "",
+            "label": "Duration field",
+            "description": "Target-entity field holding the per-row duration in minutes (e.g. ClassSession.durationMinutes). Takes precedence over the fixed `durationMinutes` when set; ignored when `endField` is set. Field precedence: endField > durationField > durationMinutes — the corpus carries all these event shapes.",
+            "synonyms": "minutes field, length field, per-row duration",
+            "tier": "internal"
+          },
+          {
+            "key": "durationMinutes",
+            "type": "number",
+            "default": 60,
+            "label": "Duration (minutes)",
+            "description": "Fixed event length used when both `endField` and `durationField` are blank; the calendar service computes the timezone-correct end.",
+            "synonyms": "length, event duration, minutes",
+            "tier": "internal"
+          },
+          {
+            "key": "enabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Sync with Google Calendar",
+            "description": "Push local records to Google Calendar and pull remote events into the CalendarEvent store. Off by default; needs the calendar service credentials (GOOGLE_CALENDAR_SA_KEY).",
+            "synonyms": "enable, calendar sync, google calendar, two-way sync, sync events, connect calendar",
+            "tier": "infra"
+          },
+          {
+            "key": "endField",
+            "type": "string",
+            "default": "endsAt",
+            "label": "End field",
+            "description": "Target-entity field holding the ISO end. Blank = derive the end from `durationMinutes` instead (the corpus carries all four event shapes).",
+            "synonyms": "end date field, finishes field",
+            "tier": "internal"
+          },
+          {
+            "key": "locationField",
+            "type": "string",
+            "default": "",
+            "label": "Location field",
+            "description": "Target-entity field holding the location; blank = none.",
+            "synonyms": "place field, venue field",
+            "tier": "internal"
+          },
+          {
+            "key": "startField",
+            "type": "string",
+            "default": "startsAt",
+            "label": "Start field",
+            "description": "Target-entity field holding the ISO start (dateTime, or YYYY-MM-DD for all-day).",
+            "synonyms": "start date field, begins field, scheduledAt field",
+            "tier": "internal"
+          },
+          {
+            "key": "targetEntity",
+            "type": "entity",
+            "default": "CalendarEvent",
+            "label": "Entity to push",
+            "description": "Event-shaped entity whose rows export to Google Calendar. MUST declare the marker columns `externalEventId : string = \"\"` and `syncedAt : number = 0` (stamped by the push loop). Defaults to the atom's own CalendarEvent store so the standalone validates; rebind per composition.",
+            "synonyms": "entity to sync, source entity, record type, appointments entity, sessions entity",
+            "tier": "internal",
+            "entityRef": true
+          },
+          {
+            "key": "titleField",
+            "type": "string",
+            "default": "title",
+            "label": "Title field",
+            "description": "Target-entity field holding the event title.",
+            "synonyms": "summary field, name field",
+            "tier": "internal"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "CalendarSyncRun",
+        "transitionEvents": [
+          "CAL_EVENT_CREATED",
+          "CAL_REMOTE_CHANGED",
+          "CAL_REMOTE_LISTED",
+          "CAL_SYNC_FAILED",
+          "INIT",
+          "PULL_NEXT",
+          "PULL_STEPPED",
+          "PULL_TARGET_LOADED",
+          "PUSH_ROWS_LOADED",
+          "PUSH_STEPPED",
+          "SYNC_NOW"
+        ],
+        "effectEntityRefs": [
+          "CalendarEvent"
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "name": "CalendarSyncPage",
+        "defaultPath": "/calendar-sync",
+        "primaryEntity": "CalendarSyncRun"
+      }
+    ],
+    "emittedEvents": [
+      "CAL_EVENT_CREATED",
+      "CAL_REMOTE_LISTED",
+      "CAL_SYNCED",
+      "CAL_SYNC_FAILED",
+      "PULL_NEXT",
+      "PULL_STEPPED",
+      "PULL_TARGET_LOADED",
+      "PUSH_ROWS_LOADED",
+      "PUSH_STEPPED"
+    ],
+    "listenedEvents": [],
+    "exposure": "both",
+    "provenance": "authored",
+    "sourceValid": true
+  }
+]

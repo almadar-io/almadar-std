@@ -90,6 +90,28 @@ export const BROWSER_OPERATORS: Record<string, StdOperatorMeta> = {
     },
     example: '["browser/clipboard-write", "@entity.inviteUrl", { "emit": { "success": "COPIED", "failure": "COPY_DENIED" } }]',
   },
+  'browser/push-subscribe': {
+    module: 'browser',
+    category: 'std-browser',
+    minArity: 0,
+    maxArity: 0,
+    description:
+      'Subscribe this browser to Web Push notifications: registers the shared push service worker, fetches the VAPID public key from the host (/api/push/vapid-public-key — no key material in the schema), and calls PushManager.subscribe. Requires notification permission (user gesture). Resolves with the flat subscription credentials { endpoint, p256dh, auth } via the trailing { emit } envelope — persist them on an owner-scoped entity row and pass them back to the push.send service as subscription: { endpoint, keys: { p256dh, auth } }. Emits failure when the Push API is unavailable, permission is denied, or the host has no VAPID key configured.',
+    hasSideEffects: true,
+    returnType: 'object',
+    effect: {
+      kind: 'custom',
+      produces: {
+        kind: 'object',
+        fields: {
+          endpoint: 'string',
+          p256dh: 'string',
+          auth: 'string',
+        },
+      },
+    },
+    example: '["browser/push-subscribe", { "emit": { "success": "PUSH_SUBSCRIBED", "failure": "PUSH_SUBSCRIBE_FAILED" } }]',
+  },
   'browser/geolocation-current': {
     module: 'browser',
     category: 'std-browser',

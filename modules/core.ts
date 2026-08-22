@@ -471,8 +471,9 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     module: 'core',
     category: 'effect',
     minArity: 1,
-    maxArity: 2,
-    description: 'Navigate to a route',
+    maxArity: 3,
+    description:
+      'Navigate to a route: (navigate path payload? options?) — options carries { crumb } labelling the navigation-stack entry for the target page',
     hasSideEffects: true,
     returnType: 'void',
     params: [
@@ -483,9 +484,25 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
         description: 'Optional route params',
         optional: true,
       },
+      {
+        name: 'options',
+        type: { kind: 'object', fields: {}, open: true },
+        description: 'Optional navigation options: { crumb } labels the navigation-stack entry for the target page',
+        optional: true,
+      },
     ],
     example: '["navigate", "/tasks/:id", { "id": "@entity.id" }]',
     effect: { kind: 'navigate' },
+  },
+  'navigate-back': {
+    module: 'core',
+    category: 'effect',
+    minArity: 0,
+    maxArity: 0,
+    description: 'Pop the orbital-scoped navigation stack and return to the previous entry',
+    hasSideEffects: true,
+    returnType: 'void',
+    effect: { kind: 'navigate-back' },
   },
   notify: {
     module: 'core',

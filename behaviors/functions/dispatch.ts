@@ -130,6 +130,11 @@ import {
   isStdCalendarCalendarEventOrbitalParams,
 } from './ui/core/atoms/std-calendar.js';
 import {
+  stdCalendarSyncCalendarSyncOrbital,
+  StdCalendarSyncCalendarSyncOrbitalManifest,
+  isStdCalendarSyncCalendarSyncOrbitalParams,
+} from './infra/atoms/std-calendar-sync.js';
+import {
   stdCascadeOnDeleteCascadeOnDeleteOrbital,
   StdCascadeOnDeleteCascadeOnDeleteOrbitalManifest,
   isStdCascadeOnDeleteCascadeOnDeleteOrbitalParams,
@@ -329,6 +334,11 @@ import {
   StdMultiPartyFlowMultiPartyFlowOrbitalManifest,
   isStdMultiPartyFlowMultiPartyFlowOrbitalParams,
 } from './ui/core/atoms/std-multi-party-flow.js';
+import {
+  stdNotificationCenterNotificationCenterOrbital,
+  StdNotificationCenterNotificationCenterOrbitalManifest,
+  isStdNotificationCenterNotificationCenterOrbitalParams,
+} from './infra/atoms/std-notification-center.js';
 import {
   stdNotifyOnEventNotifyOnEventOrbital,
   StdNotifyOnEventNotifyOnEventOrbitalManifest,
@@ -895,6 +905,15 @@ REGISTRY_MUT.set('std-calendar::CalendarEventOrbital', {
   },
   manifest: StdCalendarCalendarEventOrbitalManifest,
 });
+REGISTRY_MUT.set('std-calendar-sync::CalendarSyncOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdCalendarSyncCalendarSyncOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-calendar-sync::CalendarSyncOrbital');
+    }
+    return stdCalendarSyncCalendarSyncOrbital(p);
+  },
+  manifest: StdCalendarSyncCalendarSyncOrbitalManifest,
+});
 REGISTRY_MUT.set('std-cascade-on-delete::CascadeOnDeleteOrbital', {
   factory: (p: object): OrbitalDefinition => {
     if (!isStdCascadeOnDeleteCascadeOnDeleteOrbitalParams(p)) {
@@ -1254,6 +1273,15 @@ REGISTRY_MUT.set('std-multi-party-flow::MultiPartyFlowOrbital', {
     return stdMultiPartyFlowMultiPartyFlowOrbital(p);
   },
   manifest: StdMultiPartyFlowMultiPartyFlowOrbitalManifest,
+});
+REGISTRY_MUT.set('std-notification-center::NotificationCenterOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdNotificationCenterNotificationCenterOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-notification-center::NotificationCenterOrbital');
+    }
+    return stdNotificationCenterNotificationCenterOrbital(p);
+  },
+  manifest: StdNotificationCenterNotificationCenterOrbitalManifest,
 });
 REGISTRY_MUT.set('std-notify-on-event::NotifyOnEventOrbital', {
   factory: (p: object): OrbitalDefinition => {

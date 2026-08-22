@@ -1,6 +1,8 @@
-app std-notify-on-event "1.5.0"
-"std-notify-on-event — cross-orbital wiring atom. Subscribes to events from another orbital (e.g. CheckoutOrbital emits OrderPlaced, OrderRecordOrbital reacts via this atom) and dispatches a notification. Use when one orbital needs to react to or be notified about events that happen in another orbital — the wiring goes through this atom's `EventOccurred` listener which the molecule renames via traitOverrides.events to the upstream event name. Dispatch gates on `guardOp`: `eq` (default) does string-equality on `triggerStatus` against the upstream event's `status` field, exactly as before; `gt`/`lt`/`gte`/`lte` instead numerically compare `guardField` (read from the event's `data` payload) against `guardValue`, for threshold-crossing asks such as low-stock alerts. Resolves recipient from `recipients` (first entry; multi-recipient fan-out is a future extension), falling back to `fallbackRecipient` when set, or `@user.id` otherwise — set `fallbackRecipient` for system/ops alerts (e.g. low-stock, shipping) so the acting user isn't notified in place of the intended audience. Skips dispatch when the recipient is in `suppressionList`. Emits in-app `notify` when `notifyChannel` is `\"in-app\"` (default, unchanged). `\"email\"`/`\"sms\"`/`\"webhook\"` dispatch through call-service at event time (email.send / twilio.sendSMS / webhook.send respectively) and persist a `NotificationRecord` audit row with an honest `dispatched` flag — true only once the service call succeeds, false with the failure detail in `error` otherwise. `email` uses `emailSubject` (falls back to `template` when blank); `webhook` requires `webhookUrl` to actually dispatch (`webhookSecret` signs the payload) — a blank `webhookUrl` still records the audit row undispatched rather than failing."
-type QuietHoursSpec = { start : string, end : string }
+app std-notify-on-event "2.0.0"
+"std-notify-on-event — cross-orbital wiring atom. Subscribes to events from another orbital (e.g. CheckoutOrbital emits OrderPlaced, OrderRecordOrbital reacts via this atom) and dispatches a notification. Use when one orbital needs to react to or be notified about events that happen in another orbital — the wiring goes through this atom's `EventOccurred` listener which the molecule renames via traitOverrides.events to the upstream event name. Dispatch gates on `guardOp`: `eq` (default) does string-equality on `triggerStatus` against the upstream event's `status` field; `gt`/`lt`/`gte`/`lte` instead numerically compare `guardField` (read from the event's `data` payload) against `guardValue`, for threshold-crossing asks such as low-stock alerts. Resolves recipient from `recipients` (first entry; multi-recipient fan-out is a future extension), falling back to `fallbackRecipient` when set, or `@user.id` otherwise. Skips dispatch when the recipient is in `suppressionList`. Delivery consults std-notification-center data before dispatching: per-user NotificationPreference rows (matched on `userId` = recipient and `eventType` = this listener's `eventKey`, blank = all) can mute (`mode: off`), defer to the digest drain (`mode: digest`), override the channel, or impose per-user quiet hours; the atom-level `quietStartHour`/`quietEndHour` window and the `frequencyCapPerWeek` rolling cap (counted against dispatched NotificationRecord audit rows for the same recipient + channel) suppress likewise. Every suppression persists an honest audit row (`dispatched: false` with the reason in `error`: quiet-hours / digest-deferred / muted-by-preference / frequency-cap / no-push-subscription) which std-notification-center's digest cycle drains later. Channels: `in-app` emits the `notify` toast; `email`/`sms`/`webhook` dispatch through call-service (email.send / twilio.sendSMS / webhook.send); `push` looks up the recipient's PushSubscription row (owned by std-notification-center) and dispatches web-push via push.send (`pushTitle` falls back to `template`; `pushDeepLink`/`pushIcon` optional). The audit row's `dispatched` flag is honest — true only once the service call succeeds."
+type PrefRow = { userId : string, eventType : string, mode : string, channel : string, quietStartHour : number, quietEndHour : number }
+type AuditRow = { recipient : string, channel : string, dispatched : boolean, recordedAt : number }
+type SubRow = { userId : string, endpoint : string, p256dh : string, auth : string }
 orbital NotifyOnEventOrbital {
     type EventOccurred = Event { data : object, status : string } "Rename via traitOverrides.events to the upstream event (e.g. ContactSaved). The atom listens on this sentinel and dispatches a notification. The optional `status` field lets `triggerStatus` gate dispatch to a single status-change value."
 
@@ -13,8 +15,34 @@ orbital NotifyOnEventOrbital {
     message : string @description "The content of the notification message." @synonyms "text, content, body" = ""
     severity : string @description "Indicates the importance or urgency level of the notification." @synonyms "priority, level, importance" = info
     dispatched : boolean @description "Indicates whether the notification has been successfully sent." @synonyms "sent, delivered, status" = false
-    error : string @description "Failure detail from the delivery service when dispatched is false (email/sms/webhook channels only)." @synonyms "error message, failure reason, dispatch error" = ""
+    error : string @description "Failure detail from the delivery service when dispatched is false, or the suppression reason (quiet-hours / digest-deferred / muted-by-preference / frequency-cap / no-push-subscription)." @synonyms "error message, failure reason, dispatch error" = ""
     recordedAt : number @description "Timestamp indicating when the notification record was created." @synonyms "creation time, timestamp, date, when" = 0
+    prefMode : string @description "Scratch: effective preference mode resolved for the current dispatch (instant/digest/off)." @synonyms "resolved mode" = ""
+    prefChannel : string @description "Scratch: channel override from the matched preference row; blank = no override." @synonyms "channel override" = ""
+    prefQuietStart : number @description "Scratch: per-user quiet-hours start (hour 0-23) from the matched preference row." @synonyms "user quiet start" = 0
+    prefQuietEnd : number @description "Scratch: per-user quiet-hours end (hour 0-23) from the matched preference row." @synonyms "user quiet end" = 0
+    pushEndpoint : string @description "Scratch: push endpoint of the recipient's subscription for the current dispatch." @synonyms "subscription endpoint" = ""
+    pushP256dh : string @description "Scratch: p256dh key of the recipient's push subscription." @synonyms "push key" = ""
+    pushAuth : string @description "Scratch: auth secret of the recipient's push subscription." @synonyms "push auth" = ""
+  }
+
+  entity NotificationPreference [persistent: notificationPreferences] {
+    id : string!
+    userId : string @description "Owner of this preference row." @synonyms "user, owner, account" = ""
+    eventType : string @description "Event key this preference applies to (matches the listener's eventKey); blank = all events." @synonyms "event, trigger, subscription" = ""
+    mode : string @description "Delivery mode: instant, digest, or off." @synonyms "delivery mode, frequency, cadence" = instant
+    channel : string @description "Channel override for this user (in-app/email/sms/push/webhook); blank = the listener's configured channel." @synonyms "preferred channel, delivery method" = ""
+    quietStartHour : number @description "Per-user quiet-hours start (hour 0-23); equal to quietEndHour = disabled." @synonyms "quiet start, do not disturb from" = 0
+    quietEndHour : number @description "Per-user quiet-hours end (hour 0-23); equal to quietStartHour = disabled." @synonyms "quiet end, do not disturb until" = 0
+  }
+
+  entity PushSubscription [persistent: pushSubscriptions] {
+    id : string!
+    userId : string @description "Owner of this browser push subscription." @synonyms "user, owner, account" = ""
+    endpoint : string @description "Push service endpoint URL for this subscription." @synonyms "push url, subscription endpoint" = ""
+    p256dh : string @description "Client public key (p256dh) of the subscription." @synonyms "public key" = ""
+    auth : string @description "Auth secret of the subscription." @synonyms "auth secret" = ""
+    createdAt : number @description "When this subscription was captured." @synonyms "subscribed at, created" = 0
   }
 
   trait NotifyOnEventListener -> NotificationRecord [lifecycle, instance] {
@@ -26,35 +54,106 @@ orbital NotifyOnEventOrbital {
         (set @entity.channel @config.notifyChannel)
         (set @entity.message @config.template)
         (set @entity.severity @config.severity)
-        (set @entity.dispatched (and ["=", @config.notifyChannel, in-app] (not (array/includes @config.suppressionList @entity.recipient))))
-        (set @entity.recordedAt 0)
-        (when (not (array/includes @config.suppressionList @entity.recipient)) (if ["=", @config.notifyChannel, in-app] (notify @config.severity @config.template) (if ["=", @config.notifyChannel, email] (call-service "email" "send" {
-          body: @config.template
+        (set @entity.dispatched false)
+        (set @entity.recordedAt @now)
+        (when (not (array/includes @config.suppressionList @entity.recipient)) (if (and (not ["=", @config.quietStartHour, @config.quietEndHour]) (if ["<", @config.quietStartHour, @config.quietEndHour] (and [">=", (time/hour @now), @config.quietStartHour] ["<", (time/hour @now), @config.quietEndHour]) (or [">=", (time/hour @now), @config.quietStartHour] ["<", (time/hour @now), @config.quietEndHour]))) (persist create NotificationRecord {
+          channel: @entity.channel
+          dispatched: false
+          error: "quiet-hours"
+          message: @entity.message
+          recipient: @entity.recipient
+          recordedAt: @now
+          severity: @entity.severity
+        }) (fetch NotificationPreference { emit: { failure: NOTIFY_LOOKUP_FAILED, success: NOTIFY_PREFS_LOADED } })))
+        (emit NotificationDispatched {
+          channel: @entity.channel
+          message: @entity.message
+          recipient: @entity.recipient
+          severity: @entity.severity
+        })
+      NOTIFY_PREFS_LOADED -> idle
+        (set @entity.prefMode (if ["=", (array/len (array/filter ?data (fn p (and ["=", (object/get @p userId), @entity.recipient] (or ["=", (object/get @p eventType), ""] ["=", (object/get @p eventType), @config.eventKey]))))), 0] "instant" (object/get (array/first (array/filter ?data (fn p (and ["=", (object/get @p userId), @entity.recipient] (or ["=", (object/get @p eventType), ""] ["=", (object/get @p eventType), @config.eventKey]))))) mode)))
+        (set @entity.prefChannel (if ["=", (array/len (array/filter ?data (fn p (and ["=", (object/get @p userId), @entity.recipient] (or ["=", (object/get @p eventType), ""] ["=", (object/get @p eventType), @config.eventKey]))))), 0] "" (object/get (array/first (array/filter ?data (fn p (and ["=", (object/get @p userId), @entity.recipient] (or ["=", (object/get @p eventType), ""] ["=", (object/get @p eventType), @config.eventKey]))))) channel)))
+        (set @entity.prefQuietStart (if ["=", (array/len (array/filter ?data (fn p (and ["=", (object/get @p userId), @entity.recipient] (or ["=", (object/get @p eventType), ""] ["=", (object/get @p eventType), @config.eventKey]))))), 0] 0 (object/get (array/first (array/filter ?data (fn p (and ["=", (object/get @p userId), @entity.recipient] (or ["=", (object/get @p eventType), ""] ["=", (object/get @p eventType), @config.eventKey]))))) quietStartHour)))
+        (set @entity.prefQuietEnd (if ["=", (array/len (array/filter ?data (fn p (and ["=", (object/get @p userId), @entity.recipient] (or ["=", (object/get @p eventType), ""] ["=", (object/get @p eventType), @config.eventKey]))))), 0] 0 (object/get (array/first (array/filter ?data (fn p (and ["=", (object/get @p userId), @entity.recipient] (or ["=", (object/get @p eventType), ""] ["=", (object/get @p eventType), @config.eventKey]))))) quietEndHour)))
+        (set @entity.channel (if ["=", @entity.prefChannel, ""] @entity.channel @entity.prefChannel))
+        (if ["=", @entity.prefMode, "off"] (persist create NotificationRecord {
+          channel: @entity.channel
+          dispatched: false
+          error: "muted-by-preference"
+          message: @entity.message
+          recipient: @entity.recipient
+          recordedAt: @now
+          severity: @entity.severity
+        }) (if ["=", @entity.prefMode, "digest"] (persist create NotificationRecord {
+          channel: @entity.channel
+          dispatched: false
+          error: "digest-deferred"
+          message: @entity.message
+          recipient: @entity.recipient
+          recordedAt: @now
+          severity: @entity.severity
+        }) (if (and (not ["=", @entity.prefQuietStart, @entity.prefQuietEnd]) (if ["<", @entity.prefQuietStart, @entity.prefQuietEnd] (and [">=", (time/hour @now), @entity.prefQuietStart] ["<", (time/hour @now), @entity.prefQuietEnd]) (or [">=", (time/hour @now), @entity.prefQuietStart] ["<", (time/hour @now), @entity.prefQuietEnd]))) (persist create NotificationRecord {
+          channel: @entity.channel
+          dispatched: false
+          error: "quiet-hours"
+          message: @entity.message
+          recipient: @entity.recipient
+          recordedAt: @now
+          severity: @entity.severity
+        }) (if ["=", @entity.channel, in-app] (do (set @entity.dispatched true) (notify @config.severity @config.template)) (fetch NotificationRecord {
+          emit: { failure: NOTIFY_LOOKUP_FAILED, success: NOTIFY_CAP_LOADED }
+          filter: [">", (object/get @entity recordedAt), ["-", @now, 604800000]]
+        })))))
+      NOTIFY_CAP_LOADED -> idle
+        (if (and [">", @config.frequencyCapPerWeek, 0] [">=", (array/len (array/filter ?data (fn r (and ["=", (object/get @r recipient), @entity.recipient] ["=", (object/get @r channel), @entity.channel] ["=", (object/get @r dispatched), true])))), @config.frequencyCapPerWeek]) (persist create NotificationRecord {
+          channel: @entity.channel
+          dispatched: false
+          error: "frequency-cap"
+          message: @entity.message
+          recipient: @entity.recipient
+          recordedAt: @now
+          severity: @entity.severity
+        }) (if ["=", @entity.channel, email] (call-service "email" "send" {
+          body: @entity.message
           from: ""
-          subject: (if ["=", @config.emailSubject, ""] @config.template @config.emailSubject)
+          subject: (if ["=", @config.emailSubject, ""] @entity.message @config.emailSubject)
           to: @entity.recipient
-        } { emit: { failure: NOTIFY_EMAIL_FAILED, success: NOTIFY_EMAIL_SENT } }) (if ["=", @config.notifyChannel, sms] (call-service "twilio" "sendSMS" {
-          body: @config.template
+        } { emit: { failure: NOTIFY_EMAIL_FAILED, success: NOTIFY_EMAIL_SENT } }) (if ["=", @entity.channel, sms] (call-service "twilio" "sendSMS" {
+          body: @entity.message
           to: @entity.recipient
-        } { emit: { failure: NOTIFY_SMS_FAILED, success: NOTIFY_SMS_SENT } }) (if (not ["=", @config.webhookUrl, ""]) (call-service "webhook" "send" {
-          event: @config.template
-          payload: { message: @config.template, recipient: @entity.recipient, severity: @config.severity }
+        } { emit: { failure: NOTIFY_SMS_FAILED, success: NOTIFY_SMS_SENT } }) (if ["=", @entity.channel, push] (fetch PushSubscription { emit: { failure: NOTIFY_LOOKUP_FAILED, success: NOTIFY_PUSH_SUBS } }) (if (not ["=", @config.webhookUrl, ""]) (call-service "webhook" "send" {
+          event: @entity.message
+          payload: { message: @entity.message, recipient: @entity.recipient, severity: @entity.severity }
           secret: @config.webhookSecret
           url: @config.webhookUrl
         } { emit: { failure: NOTIFY_WEBHOOK_FAILED, success: NOTIFY_WEBHOOK_SENT } }) (persist create NotificationRecord {
-          channel: @config.notifyChannel
+          channel: @entity.channel
           dispatched: false
-          message: @config.template
+          message: @entity.message
           recipient: @entity.recipient
-          recordedAt: 0
-          severity: @config.severity
+          recordedAt: @now
+          severity: @entity.severity
         }))))))
-        (emit NotificationDispatched {
-          channel: @config.notifyChannel
-          message: @config.template
+      NOTIFY_PUSH_SUBS -> idle
+        (set @entity.pushEndpoint (if ["=", (array/len (array/filter ?data (fn s ["=", (object/get @s userId), @entity.recipient]))), 0] "" (object/get (array/first (array/filter ?data (fn s ["=", (object/get @s userId), @entity.recipient]))) endpoint)))
+        (set @entity.pushP256dh (if ["=", (array/len (array/filter ?data (fn s ["=", (object/get @s userId), @entity.recipient]))), 0] "" (object/get (array/first (array/filter ?data (fn s ["=", (object/get @s userId), @entity.recipient]))) p256dh)))
+        (set @entity.pushAuth (if ["=", (array/len (array/filter ?data (fn s ["=", (object/get @s userId), @entity.recipient]))), 0] "" (object/get (array/first (array/filter ?data (fn s ["=", (object/get @s userId), @entity.recipient]))) auth)))
+        (if ["=", @entity.pushEndpoint, ""] (persist create NotificationRecord {
+          channel: @entity.channel
+          dispatched: false
+          error: "no-push-subscription"
+          message: @entity.message
           recipient: @entity.recipient
-          severity: @config.severity
-        })
+          recordedAt: @now
+          severity: @entity.severity
+        }) (call-service "push" "send" {
+          subscription: { endpoint: @entity.pushEndpoint, keys: { auth: @entity.pushAuth, p256dh: @entity.pushP256dh } }
+          title: (if ["=", @config.pushTitle, ""] @entity.message @config.pushTitle)
+          body: @entity.message
+          url: @config.pushDeepLink
+          icon: @config.pushIcon
+        } { emit: { failure: NOTIFY_PUSH_FAILED, success: NOTIFY_PUSH_SENT } }))
       NOTIFY_EMAIL_SENT -> idle
         (set @entity.dispatched true)
         (persist create NotificationRecord {
@@ -62,7 +161,7 @@ orbital NotifyOnEventOrbital {
           dispatched: true
           message: @entity.message
           recipient: @entity.recipient
-          recordedAt: 0
+          recordedAt: @now
           severity: @entity.severity
         })
       NOTIFY_EMAIL_FAILED -> idle
@@ -74,7 +173,7 @@ orbital NotifyOnEventOrbital {
           error: @entity.error
           message: @entity.message
           recipient: @entity.recipient
-          recordedAt: 0
+          recordedAt: @now
           severity: @entity.severity
         })
       NOTIFY_SMS_SENT -> idle
@@ -84,7 +183,7 @@ orbital NotifyOnEventOrbital {
           dispatched: true
           message: @entity.message
           recipient: @entity.recipient
-          recordedAt: 0
+          recordedAt: @now
           severity: @entity.severity
         })
       NOTIFY_SMS_FAILED -> idle
@@ -96,7 +195,7 @@ orbital NotifyOnEventOrbital {
           error: @entity.error
           message: @entity.message
           recipient: @entity.recipient
-          recordedAt: 0
+          recordedAt: @now
           severity: @entity.severity
         })
       NOTIFY_WEBHOOK_SENT -> idle
@@ -106,7 +205,7 @@ orbital NotifyOnEventOrbital {
           dispatched: true
           message: @entity.message
           recipient: @entity.recipient
-          recordedAt: 0
+          recordedAt: @now
           severity: @entity.severity
         })
       NOTIFY_WEBHOOK_FAILED -> idle
@@ -118,7 +217,41 @@ orbital NotifyOnEventOrbital {
           error: @entity.error
           message: @entity.message
           recipient: @entity.recipient
-          recordedAt: 0
+          recordedAt: @now
+          severity: @entity.severity
+        })
+      NOTIFY_PUSH_SENT -> idle
+        (set @entity.dispatched true)
+        (persist create NotificationRecord {
+          channel: @entity.channel
+          dispatched: true
+          message: @entity.message
+          recipient: @entity.recipient
+          recordedAt: @now
+          severity: @entity.severity
+        })
+      NOTIFY_PUSH_FAILED -> idle
+        (set @entity.dispatched false)
+        (set @entity.error ?error)
+        (persist create NotificationRecord {
+          channel: @entity.channel
+          dispatched: false
+          error: @entity.error
+          message: @entity.message
+          recipient: @entity.recipient
+          recordedAt: @now
+          severity: @entity.severity
+        })
+      NOTIFY_LOOKUP_FAILED -> idle
+        (set @entity.dispatched false)
+        (set @entity.error ?error)
+        (persist create NotificationRecord {
+          channel: @entity.channel
+          dispatched: false
+          error: @entity.error
+          message: @entity.message
+          recipient: @entity.recipient
+          recordedAt: @now
           severity: @entity.severity
         })
     }
@@ -130,6 +263,21 @@ orbital NotifyOnEventOrbital {
         message : string
         severity : string
       }
+      NOTIFY_PREFS_LOADED {
+        data : [PrefRow]
+      }
+        @description "NotificationPreference rows loaded; the arm resolves the recipient's effective mode/channel/quiet-hours"
+        @tier "secondary"
+      NOTIFY_CAP_LOADED {
+        data : [AuditRow]
+      }
+        @description "Rolling 7-day NotificationRecord window loaded; the arm enforces frequencyCapPerWeek then dispatches"
+        @tier "secondary"
+      NOTIFY_PUSH_SUBS {
+        data : [SubRow]
+      }
+        @description "PushSubscription rows loaded; the arm picks the recipient's subscription and dispatches push.send"
+        @tier "secondary"
       NOTIFY_EMAIL_SENT {
         id : string!
         status : string!
@@ -164,12 +312,38 @@ orbital NotifyOnEventOrbital {
       }
         @description "webhook.send service call failed — dispatched lands false and error carries the service detail"
         @tier "secondary"
+      NOTIFY_PUSH_SENT {
+        statusCode : number!
+        ok : boolean!
+        expired : boolean!
+      }
+        @description "push.send service result — expired:true means the subscription is gone and should be pruned"
+        @tier "secondary"
+      NOTIFY_PUSH_FAILED {
+        error : string!
+      }
+        @description "push.send service call failed — dispatched lands false and error carries the service detail"
+        @tier "secondary"
+      NOTIFY_LOOKUP_FAILED {
+        error : string!
+      }
+        @description "A preference / cap-window / subscription fetch failed — dispatched lands false with the fetch error"
+        @tier "secondary"
     }
 
     listens {
       EventOccurred {
         data : object
         status : string
+      }
+      NOTIFY_PREFS_LOADED {
+        data : [PrefRow]
+      }
+      NOTIFY_CAP_LOADED {
+        data : [AuditRow]
+      }
+      NOTIFY_PUSH_SUBS {
+        data : [SubRow]
       }
     }
 
@@ -199,15 +373,35 @@ orbital NotifyOnEventOrbital {
         @description "Event names that should fire a notification. Set this to the upstream event name (e.g. OrderPlaced, CheckoutCompleted) so this atom listens for events from the orbital that emits them. The orbital owning this trait reacts whenever the named event fires anywhere in the schema."
         @synonyms "subscribe to event, listen for event, react to event, watch for, wire upstream event, observe event from another orbital, cross-orbital subscription, on-event trigger"
         @tier "internal"
-      notifyChannel : "in-app" | "email" | "sms" | "webhook" = in-app
+      eventKey : string = ""
+        @label "Event key for preferences"
+        @description "Stable key naming the upstream event this listener is bound to (e.g. 'OrderPlaced'). NotificationPreference rows (std-notification-center) whose eventType equals this key — or is blank — apply to this listener's dispatches."
+        @synonyms "preference key, event name, subscription key, notification topic"
+        @tier "policy"
+      notifyChannel : "in-app" | "email" | "sms" | "push" | "webhook" = in-app
         @label "Channel"
-        @description "Delivery channel. `in-app` (default) emits the in-app `notify` toast — unchanged from prior versions. `email`/`sms`/`webhook` dispatch through call-service at event time (email.send / twilio.sendSMS / webhook.send) and persist a NotificationRecord audit row with an honest `dispatched` flag: true only once the service call succeeds, false plus the failure detail in `error` otherwise. `webhook` requires `webhookUrl` to actually dispatch; a blank `webhookUrl` still records the audit row undispatched rather than failing."
-        @synonyms "delivery method, notification channel, send via, dispatch through"
+        @description "Delivery channel. `in-app` (default) emits the in-app `notify` toast. `email`/`sms`/`webhook` dispatch through call-service at event time (email.send / twilio.sendSMS / webhook.send) and persist a NotificationRecord audit row with an honest `dispatched` flag: true only once the service call succeeds, false plus the failure detail in `error` otherwise. `push` looks up the recipient's PushSubscription row (captured by std-notification-center's subscribe flow) and dispatches web-push via push.send — a recipient with no subscription records the audit row undispatched (`no-push-subscription`). `webhook` requires `webhookUrl` to actually dispatch; a blank `webhookUrl` still records the audit row undispatched rather than failing. A per-user NotificationPreference row with a non-blank `channel` overrides this value for that recipient."
+        @synonyms "delivery method, notification channel, send via, dispatch through, push notification, web push"
         @tier "policy"
       emailSubject : string = ""
         @label "Email subject"
         @description "Subject line used for the email channel. Falls back to `template` when blank. Ignored for other channels."
         @synonyms "subject, subject line, email title, mail subject"
+        @tier "presentation"
+      pushTitle : string = ""
+        @label "Push title"
+        @description "Notification title for the push channel. Falls back to `template` when blank. Ignored for other channels."
+        @synonyms "notification title, push heading, alert title"
+        @tier "presentation"
+      pushDeepLink : string = ""
+        @label "Push deep link"
+        @description "In-app path opened when the recipient clicks the push notification (e.g. '/orders'). Blank = the app root."
+        @synonyms "click url, open on click, target path, notification link"
+        @tier "presentation"
+      pushIcon : string = ""
+        @label "Push icon"
+        @description "Icon URL shown on the push notification. Blank = the browser default."
+        @synonyms "notification icon, badge image"
         @tier "presentation"
       webhookUrl : string = ""
         @label "Webhook URL"
@@ -244,16 +438,20 @@ orbital NotifyOnEventOrbital {
         @description "Recipient ids/addresses to skip (e.g. unsubscribed users). Suppression check runs before dispatch."
         @synonyms "block list, unsubscribed, opt-out list"
         @tier "policy"
-      quietHours : QuietHoursSpec = {
-        end: ""
-        start: ""
-      }
-        @label "Quiet hours"
-        @description "Local-time window during which dispatch is suppressed. Both start and end required to activate. WIRING DEFERRED: needs @now-aware time comparison primitive (gap — docs/Almadar_Std_Factories.md)."
+      quietStartHour : number = 0
+        @label "Quiet hours start"
+        @description "Hour of day (0-23) when the atom-level quiet window opens. Equal to `quietEndHour` = disabled. Dispatches inside the window persist an audit row (`error: quiet-hours`, dispatched:false) which std-notification-center's digest cycle drains later. Per-user quiet hours from NotificationPreference rows apply in addition."
+        @synonyms "quiet hours, do not disturb from, silence start, night mode start"
+        @tier "policy"
+      quietEndHour : number = 0
+        @label "Quiet hours end"
+        @description "Hour of day (0-23) when the atom-level quiet window closes. Equal to `quietStartHour` = disabled."
+        @synonyms "do not disturb until, silence end, night mode end"
         @tier "policy"
       frequencyCapPerWeek : number = 0
         @label "Frequency cap (per week)"
-        @description "Max sends per (channel, recipient) per rolling 7-day window. 0 = uncapped. WIRING DEFERRED: needs stateful history query (gap — docs/Almadar_Std_Factories.md)."
+        @description "Max dispatched sends per (channel, recipient) per rolling 7-day window, counted against dispatched NotificationRecord audit rows. 0 = uncapped. Applies to the persisted channels (email/sms/push/webhook); in-app toasts are not audited and not capped. A capped dispatch persists an audit row (`error: frequency-cap`, dispatched:false)."
+        @synonyms "rate limit, cap, max per week, throttle, send limit"
         @tier "policy"
     }
   }

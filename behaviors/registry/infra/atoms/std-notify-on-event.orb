@@ -1,11 +1,27 @@
 {
-  "description": "std-notify-on-event — cross-orbital wiring atom. Subscribes to events from another orbital (e.g. CheckoutOrbital emits OrderPlaced, OrderRecordOrbital reacts via this atom) and dispatches a notification. Use when one orbital needs to react to or be notified about events that happen in another orbital — the wiring goes through this atom's `EventOccurred` listener which the molecule renames via traitOverrides.events to the upstream event name. Dispatch gates on `guardOp`: `eq` (default) does string-equality on `triggerStatus` against the upstream event's `status` field, exactly as before; `gt`/`lt`/`gte`/`lte` instead numerically compare `guardField` (read from the event's `data` payload) against `guardValue`, for threshold-crossing asks such as low-stock alerts. Resolves recipient from `recipients` (first entry; multi-recipient fan-out is a future extension), falling back to `fallbackRecipient` when set, or `@user.id` otherwise — set `fallbackRecipient` for system/ops alerts (e.g. low-stock, shipping) so the acting user isn't notified in place of the intended audience. Skips dispatch when the recipient is in `suppressionList`. Emits in-app `notify` when `notifyChannel` is `\"in-app\"` (default, unchanged). `\"email\"`/`\"sms\"`/`\"webhook\"` dispatch through call-service at event time (email.send / twilio.sendSMS / webhook.send respectively) and persist a `NotificationRecord` audit row with an honest `dispatched` flag — true only once the service call succeeds, false with the failure detail in `error` otherwise. `email` uses `emailSubject` (falls back to `template` when blank); `webhook` requires `webhookUrl` to actually dispatch (`webhookSecret` signs the payload) — a blank `webhookUrl` still records the audit row undispatched rather than failing.",
+  "description": "std-notify-on-event — cross-orbital wiring atom. Subscribes to events from another orbital (e.g. CheckoutOrbital emits OrderPlaced, OrderRecordOrbital reacts via this atom) and dispatches a notification. Use when one orbital needs to react to or be notified about events that happen in another orbital — the wiring goes through this atom's `EventOccurred` listener which the molecule renames via traitOverrides.events to the upstream event name. Dispatch gates on `guardOp`: `eq` (default) does string-equality on `triggerStatus` against the upstream event's `status` field; `gt`/`lt`/`gte`/`lte` instead numerically compare `guardField` (read from the event's `data` payload) against `guardValue`, for threshold-crossing asks such as low-stock alerts. Resolves recipient from `recipients` (first entry; multi-recipient fan-out is a future extension), falling back to `fallbackRecipient` when set, or `@user.id` otherwise. Skips dispatch when the recipient is in `suppressionList`. Delivery consults std-notification-center data before dispatching: per-user NotificationPreference rows (matched on `userId` = recipient and `eventType` = this listener's `eventKey`, blank = all) can mute (`mode: off`), defer to the digest drain (`mode: digest`), override the channel, or impose per-user quiet hours; the atom-level `quietStartHour`/`quietEndHour` window and the `frequencyCapPerWeek` rolling cap (counted against dispatched NotificationRecord audit rows for the same recipient + channel) suppress likewise. Every suppression persists an honest audit row (`dispatched: false` with the reason in `error`: quiet-hours / digest-deferred / muted-by-preference / frequency-cap / no-push-subscription) which std-notification-center's digest cycle drains later. Channels: `in-app` emits the `notify` toast; `email`/`sms`/`webhook` dispatch through call-service (email.send / twilio.sendSMS / webhook.send); `push` looks up the recipient's PushSubscription row (owned by std-notification-center) and dispatches web-push via push.send (`pushTitle` falls back to `template`; `pushDeepLink`/`pushIcon` optional). The audit row's `dispatched` flag is honest — true only once the service call succeeds.",
   "ledger": {
     "entries": {
       "ent_01KXG04FE9SA0FVQV9VJC8915N": {
         "bakedName": "NotificationRecord",
         "curName": "NotificationRecord",
         "id": "ent_01KXG04FE9SA0FVQV9VJC8915N",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "ent_01M0M65FF6PA66WQD276TVZ489": {
+        "bakedName": "NotificationPreference",
+        "curName": "NotificationPreference",
+        "id": "ent_01M0M65FF6PA66WQD276TVZ489",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "ent_01M0M65FF6PZ5Q2FSJKKWJE4NH": {
+        "bakedName": "PushSubscription",
+        "curName": "PushSubscription",
+        "id": "ent_01M0M65FF6PZ5Q2FSJKKWJE4NH",
         "kind": "entity",
         "owner": "workspace",
         "renames": []
@@ -82,6 +98,60 @@
         "parent": "trt_01KXG04FE9HSGJRHVVCWZJ77YF",
         "renames": []
       },
+      "evt_01M0M65FF68HQ6K67FGYDE0P4V": {
+        "bakedName": "NOTIFY_PREFS_LOADED",
+        "curName": "NOTIFY_PREFS_LOADED",
+        "id": "evt_01M0M65FF68HQ6K67FGYDE0P4V",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04FE9HSGJRHVVCWZJ77YF",
+        "renames": []
+      },
+      "evt_01M0M65FF6CS2R9V2JQ6EJYGDX": {
+        "bakedName": "NOTIFY_LOOKUP_FAILED",
+        "curName": "NOTIFY_LOOKUP_FAILED",
+        "id": "evt_01M0M65FF6CS2R9V2JQ6EJYGDX",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04FE9HSGJRHVVCWZJ77YF",
+        "renames": []
+      },
+      "evt_01M0M65FF6DKMEW2D2E96T9VTH": {
+        "bakedName": "NOTIFY_PUSH_SENT",
+        "curName": "NOTIFY_PUSH_SENT",
+        "id": "evt_01M0M65FF6DKMEW2D2E96T9VTH",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04FE9HSGJRHVVCWZJ77YF",
+        "renames": []
+      },
+      "evt_01M0M65FF6F8X646FMC2ZYX7HW": {
+        "bakedName": "NOTIFY_CAP_LOADED",
+        "curName": "NOTIFY_CAP_LOADED",
+        "id": "evt_01M0M65FF6F8X646FMC2ZYX7HW",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04FE9HSGJRHVVCWZJ77YF",
+        "renames": []
+      },
+      "evt_01M0M65FF6JAF7JE380C3CWWXM": {
+        "bakedName": "NOTIFY_PUSH_FAILED",
+        "curName": "NOTIFY_PUSH_FAILED",
+        "id": "evt_01M0M65FF6JAF7JE380C3CWWXM",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04FE9HSGJRHVVCWZJ77YF",
+        "renames": []
+      },
+      "evt_01M0M65FF6Z4XVMQTZT0P95WJQ": {
+        "bakedName": "NOTIFY_PUSH_SUBS",
+        "curName": "NOTIFY_PUSH_SUBS",
+        "id": "evt_01M0M65FF6Z4XVMQTZT0P95WJQ",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04FE9HSGJRHVVCWZJ77YF",
+        "renames": []
+      },
       "orb_01KXG04FE9P09BNXECH6P7JQ7H": {
         "bakedName": "NotifyOnEventOrbital",
         "curName": "NotifyOnEventOrbital",
@@ -112,6 +182,111 @@
   "name": "std-notify-on-event",
   "orbitals": [
     {
+      "auxiliaryEntities": [
+        {
+          "collection": "notificationPreferences",
+          "fields": [
+            {
+              "name": "id",
+              "required": true,
+              "type": "string"
+            },
+            {
+              "default": "",
+              "description": "Owner of this preference row.",
+              "name": "userId",
+              "synonyms": "user, owner, account",
+              "type": "string"
+            },
+            {
+              "default": "",
+              "description": "Event key this preference applies to (matches the listener's eventKey); blank = all events.",
+              "name": "eventType",
+              "synonyms": "event, trigger, subscription",
+              "type": "string"
+            },
+            {
+              "default": "instant",
+              "description": "Delivery mode: instant, digest, or off.",
+              "name": "mode",
+              "synonyms": "delivery mode, frequency, cadence",
+              "type": "string"
+            },
+            {
+              "default": "",
+              "description": "Channel override for this user (in-app/email/sms/push/webhook); blank = the listener's configured channel.",
+              "name": "channel",
+              "synonyms": "preferred channel, delivery method",
+              "type": "string"
+            },
+            {
+              "default": 0.0,
+              "description": "Per-user quiet-hours start (hour 0-23); equal to quietEndHour = disabled.",
+              "name": "quietStartHour",
+              "synonyms": "quiet start, do not disturb from",
+              "type": "number"
+            },
+            {
+              "default": 0.0,
+              "description": "Per-user quiet-hours end (hour 0-23); equal to quietStartHour = disabled.",
+              "name": "quietEndHour",
+              "synonyms": "quiet end, do not disturb until",
+              "type": "number"
+            }
+          ],
+          "id": "ent_01M0M65FF6PA66WQD276TVZ489",
+          "name": "NotificationPreference",
+          "persistence": "persistent"
+        },
+        {
+          "collection": "pushSubscriptions",
+          "fields": [
+            {
+              "name": "id",
+              "required": true,
+              "type": "string"
+            },
+            {
+              "default": "",
+              "description": "Owner of this browser push subscription.",
+              "name": "userId",
+              "synonyms": "user, owner, account",
+              "type": "string"
+            },
+            {
+              "default": "",
+              "description": "Push service endpoint URL for this subscription.",
+              "name": "endpoint",
+              "synonyms": "push url, subscription endpoint",
+              "type": "string"
+            },
+            {
+              "default": "",
+              "description": "Client public key (p256dh) of the subscription.",
+              "name": "p256dh",
+              "synonyms": "public key",
+              "type": "string"
+            },
+            {
+              "default": "",
+              "description": "Auth secret of the subscription.",
+              "name": "auth",
+              "synonyms": "auth secret",
+              "type": "string"
+            },
+            {
+              "default": 0.0,
+              "description": "When this subscription was captured.",
+              "name": "createdAt",
+              "synonyms": "subscribed at, created",
+              "type": "number"
+            }
+          ],
+          "id": "ent_01M0M65FF6PZ5Q2FSJKKWJE4NH",
+          "name": "PushSubscription",
+          "persistence": "persistent"
+        }
+      ],
       "entity": {
         "collection": "notifications",
         "fields": [
@@ -157,7 +332,7 @@
           },
           {
             "default": "",
-            "description": "Failure detail from the delivery service when dispatched is false (email/sms/webhook channels only).",
+            "description": "Failure detail from the delivery service when dispatched is false, or the suppression reason (quiet-hours / digest-deferred / muted-by-preference / frequency-cap / no-push-subscription).",
             "name": "error",
             "synonyms": "error message, failure reason, dispatch error",
             "type": "string"
@@ -168,6 +343,55 @@
             "name": "recordedAt",
             "synonyms": "creation time, timestamp, date, when",
             "type": "number"
+          },
+          {
+            "default": "",
+            "description": "Scratch: effective preference mode resolved for the current dispatch (instant/digest/off).",
+            "name": "prefMode",
+            "synonyms": "resolved mode",
+            "type": "string"
+          },
+          {
+            "default": "",
+            "description": "Scratch: channel override from the matched preference row; blank = no override.",
+            "name": "prefChannel",
+            "synonyms": "channel override",
+            "type": "string"
+          },
+          {
+            "default": 0.0,
+            "description": "Scratch: per-user quiet-hours start (hour 0-23) from the matched preference row.",
+            "name": "prefQuietStart",
+            "synonyms": "user quiet start",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "description": "Scratch: per-user quiet-hours end (hour 0-23) from the matched preference row.",
+            "name": "prefQuietEnd",
+            "synonyms": "user quiet end",
+            "type": "number"
+          },
+          {
+            "default": "",
+            "description": "Scratch: push endpoint of the recipient's subscription for the current dispatch.",
+            "name": "pushEndpoint",
+            "synonyms": "subscription endpoint",
+            "type": "string"
+          },
+          {
+            "default": "",
+            "description": "Scratch: p256dh key of the recipient's push subscription.",
+            "name": "pushP256dh",
+            "synonyms": "push key",
+            "type": "string"
+          },
+          {
+            "default": "",
+            "description": "Scratch: auth secret of the recipient's push subscription.",
+            "name": "pushAuth",
+            "synonyms": "push auth",
+            "type": "string"
           }
         ],
         "id": "ent_01KXG04FE9SA0FVQV9VJC8915N",
@@ -201,6 +425,14 @@
               "tier": "presentation",
               "type": "string"
             },
+            "eventKey": {
+              "default": "",
+              "description": "Stable key naming the upstream event this listener is bound to (e.g. 'OrderPlaced'). NotificationPreference rows (std-notification-center) whose eventType equals this key — or is blank — apply to this listener's dispatches.",
+              "label": "Event key for preferences",
+              "synonyms": "preference key, event name, subscription key, notification topic",
+              "tier": "policy",
+              "type": "string"
+            },
             "fallbackRecipient": {
               "default": "",
               "description": "Recipient used when `recipients` is empty, instead of the acting user. The acting-user fallback (used when this is blank) is intended for personal notifications only — set this to an ops/team address (e.g. 'ops@example.com') for system alerts like low-stock or shipping notices, so the acting user isn't notified in place of the intended audience.",
@@ -211,8 +443,9 @@
             },
             "frequencyCapPerWeek": {
               "default": 0.0,
-              "description": "Max sends per (channel, recipient) per rolling 7-day window. 0 = uncapped. WIRING DEFERRED: needs stateful history query (gap — docs/Almadar_Std_Factories.md).",
+              "description": "Max dispatched sends per (channel, recipient) per rolling 7-day window, counted against dispatched NotificationRecord audit rows. 0 = uncapped. Applies to the persisted channels (email/sms/push/webhook); in-app toasts are not audited and not capped. A capped dispatch persists an audit row (`error: frequency-cap`, dispatched:false).",
               "label": "Frequency cap (per week)",
+              "synonyms": "rate limit, cap, max per week, throttle, send limit",
               "tier": "policy",
               "type": "number"
             },
@@ -260,39 +493,58 @@
             },
             "notifyChannel": {
               "default": "in-app",
-              "description": "Delivery channel. `in-app` (default) emits the in-app `notify` toast — unchanged from prior versions. `email`/`sms`/`webhook` dispatch through call-service at event time (email.send / twilio.sendSMS / webhook.send) and persist a NotificationRecord audit row with an honest `dispatched` flag: true only once the service call succeeds, false plus the failure detail in `error` otherwise. `webhook` requires `webhookUrl` to actually dispatch; a blank `webhookUrl` still records the audit row undispatched rather than failing.",
+              "description": "Delivery channel. `in-app` (default) emits the in-app `notify` toast. `email`/`sms`/`webhook` dispatch through call-service at event time (email.send / twilio.sendSMS / webhook.send) and persist a NotificationRecord audit row with an honest `dispatched` flag: true only once the service call succeeds, false plus the failure detail in `error` otherwise. `push` looks up the recipient's PushSubscription row (captured by std-notification-center's subscribe flow) and dispatches web-push via push.send — a recipient with no subscription records the audit row undispatched (`no-push-subscription`). `webhook` requires `webhookUrl` to actually dispatch; a blank `webhookUrl` still records the audit row undispatched rather than failing. A per-user NotificationPreference row with a non-blank `channel` overrides this value for that recipient.",
               "label": "Channel",
-              "synonyms": "delivery method, notification channel, send via, dispatch through",
+              "synonyms": "delivery method, notification channel, send via, dispatch through, push notification, web push",
               "tier": "policy",
               "type": "string",
               "values": [
                 "in-app",
                 "email",
                 "sms",
+                "push",
                 "webhook"
               ]
             },
-            "quietHours": {
-              "default": {
-                "end": "",
-                "start": ""
-              },
-              "description": "Local-time window during which dispatch is suppressed. Both start and end required to activate. WIRING DEFERRED: needs @now-aware time comparison primitive (gap — docs/Almadar_Std_Factories.md).",
-              "label": "Quiet hours",
-              "properties": {
-                "end": {
-                  "name": "end",
-                  "required": false,
-                  "type": "string"
-                },
-                "start": {
-                  "name": "start",
-                  "required": false,
-                  "type": "string"
-                }
-              },
+            "pushDeepLink": {
+              "default": "",
+              "description": "In-app path opened when the recipient clicks the push notification (e.g. '/orders'). Blank = the app root.",
+              "label": "Push deep link",
+              "synonyms": "click url, open on click, target path, notification link",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "pushIcon": {
+              "default": "",
+              "description": "Icon URL shown on the push notification. Blank = the browser default.",
+              "label": "Push icon",
+              "synonyms": "notification icon, badge image",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "pushTitle": {
+              "default": "",
+              "description": "Notification title for the push channel. Falls back to `template` when blank. Ignored for other channels.",
+              "label": "Push title",
+              "synonyms": "notification title, push heading, alert title",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "quietEndHour": {
+              "default": 0.0,
+              "description": "Hour of day (0-23) when the atom-level quiet window closes. Equal to `quietStartHour` = disabled.",
+              "label": "Quiet hours end",
+              "synonyms": "do not disturb until, silence end, night mode end",
               "tier": "policy",
-              "type": "QuietHoursSpec"
+              "type": "number"
+            },
+            "quietStartHour": {
+              "default": 0.0,
+              "description": "Hour of day (0-23) when the atom-level quiet window opens. Equal to `quietEndHour` = disabled. Dispatches inside the window persist an audit row (`error: quiet-hours`, dispatched:false) which std-notification-center's digest cycle drains later. Per-user quiet hours from NotificationPreference rows apply in addition.",
+              "label": "Quiet hours start",
+              "synonyms": "quiet hours, do not disturb from, silence start, night mode start",
+              "tier": "policy",
+              "type": "number"
             },
             "recipients": {
               "default": [],
@@ -380,6 +632,42 @@
                 }
               ],
               "scope": "external"
+            },
+            {
+              "description": "NotificationPreference rows loaded; the arm resolves the recipient's effective mode/channel/quiet-hours",
+              "event": "NOTIFY_PREFS_LOADED",
+              "eventId": "evt_01M0M65FF68HQ6K67FGYDE0P4V",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[PrefRow]"
+                }
+              ],
+              "tier": "secondary"
+            },
+            {
+              "description": "Rolling 7-day NotificationRecord window loaded; the arm enforces frequencyCapPerWeek then dispatches",
+              "event": "NOTIFY_CAP_LOADED",
+              "eventId": "evt_01M0M65FF6F8X646FMC2ZYX7HW",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[AuditRow]"
+                }
+              ],
+              "tier": "secondary"
+            },
+            {
+              "description": "PushSubscription rows loaded; the arm picks the recipient's subscription and dispatches push.send",
+              "event": "NOTIFY_PUSH_SUBS",
+              "eventId": "evt_01M0M65FF6Z4XVMQTZT0P95WJQ",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[SubRow]"
+                }
+              ],
+              "tier": "secondary"
             },
             {
               "description": "email.send service result, flattened onto the payload by the call-service effect executor",
@@ -478,10 +766,61 @@
                 }
               ],
               "tier": "secondary"
+            },
+            {
+              "description": "push.send service result — expired:true means the subscription is gone and should be pruned",
+              "event": "NOTIFY_PUSH_SENT",
+              "eventId": "evt_01M0M65FF6DKMEW2D2E96T9VTH",
+              "payloadSchema": [
+                {
+                  "name": "statusCode",
+                  "required": true,
+                  "type": "number"
+                },
+                {
+                  "name": "ok",
+                  "required": true,
+                  "type": "boolean"
+                },
+                {
+                  "name": "expired",
+                  "required": true,
+                  "type": "boolean"
+                }
+              ],
+              "tier": "secondary"
+            },
+            {
+              "description": "push.send service call failed — dispatched lands false and error carries the service detail",
+              "event": "NOTIFY_PUSH_FAILED",
+              "eventId": "evt_01M0M65FF6JAF7JE380C3CWWXM",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "tier": "secondary"
+            },
+            {
+              "description": "A preference / cap-window / subscription fetch failed — dispatched lands false with the fetch error",
+              "event": "NOTIFY_LOOKUP_FAILED",
+              "eventId": "evt_01M0M65FF6CS2R9V2JQ6EJYGDX",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "tier": "secondary"
             }
           ],
           "entityRefIds": {
-            "NotificationRecord": "ent_01KXG04FE9SA0FVQV9VJC8915N"
+            "NotificationPreference": "ent_01M0M65FF6PA66WQD276TVZ489",
+            "NotificationRecord": "ent_01KXG04FE9SA0FVQV9VJC8915N",
+            "PushSubscription": "ent_01M0M65FF6PZ5Q2FSJKKWJE4NH"
           },
           "id": "trt_01KXG04FE9HSGJRHVVCWZJ77YF",
           "linkedEntity": "NotificationRecord",
@@ -504,6 +843,107 @@
                     "type": "string"
                   }
                 ]
+              },
+              {
+                "description": "NotificationPreference rows loaded; the arm resolves the recipient's effective mode/channel/quiet-hours",
+                "id": "evt_01M0M65FF68HQ6K67FGYDE0P4V",
+                "key": "NOTIFY_PREFS_LOADED",
+                "name": "Notify Prefs Loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "properties": [
+                      {
+                        "name": "userId",
+                        "type": "string"
+                      },
+                      {
+                        "name": "eventType",
+                        "type": "string"
+                      },
+                      {
+                        "name": "mode",
+                        "type": "string"
+                      },
+                      {
+                        "name": "channel",
+                        "type": "string"
+                      },
+                      {
+                        "name": "quietStartHour",
+                        "type": "number"
+                      },
+                      {
+                        "name": "quietEndHour",
+                        "type": "number"
+                      }
+                    ],
+                    "type": "[object]"
+                  }
+                ],
+                "tier": "secondary"
+              },
+              {
+                "description": "Rolling 7-day NotificationRecord window loaded; the arm enforces frequencyCapPerWeek then dispatches",
+                "id": "evt_01M0M65FF6F8X646FMC2ZYX7HW",
+                "key": "NOTIFY_CAP_LOADED",
+                "name": "Notify Cap Loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "properties": [
+                      {
+                        "name": "recipient",
+                        "type": "string"
+                      },
+                      {
+                        "name": "channel",
+                        "type": "string"
+                      },
+                      {
+                        "name": "dispatched",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "recordedAt",
+                        "type": "number"
+                      }
+                    ],
+                    "type": "[object]"
+                  }
+                ],
+                "tier": "secondary"
+              },
+              {
+                "description": "PushSubscription rows loaded; the arm picks the recipient's subscription and dispatches push.send",
+                "id": "evt_01M0M65FF6Z4XVMQTZT0P95WJQ",
+                "key": "NOTIFY_PUSH_SUBS",
+                "name": "Notify Push Subs",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "properties": [
+                      {
+                        "name": "userId",
+                        "type": "string"
+                      },
+                      {
+                        "name": "endpoint",
+                        "type": "string"
+                      },
+                      {
+                        "name": "p256dh",
+                        "type": "string"
+                      },
+                      {
+                        "name": "auth",
+                        "type": "string"
+                      }
+                    ],
+                    "type": "[object]"
+                  }
+                ],
+                "tier": "secondary"
               },
               {
                 "description": "email.send service result, flattened onto the payload by the call-service effect executor",
@@ -610,6 +1050,58 @@
                 "tier": "secondary"
               },
               {
+                "description": "push.send service result — expired:true means the subscription is gone and should be pruned",
+                "id": "evt_01M0M65FF6DKMEW2D2E96T9VTH",
+                "key": "NOTIFY_PUSH_SENT",
+                "name": "Notify Push Sent",
+                "payloadSchema": [
+                  {
+                    "name": "statusCode",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "ok",
+                    "required": true,
+                    "type": "boolean"
+                  },
+                  {
+                    "name": "expired",
+                    "required": true,
+                    "type": "boolean"
+                  }
+                ],
+                "tier": "secondary"
+              },
+              {
+                "description": "push.send service call failed — dispatched lands false and error carries the service detail",
+                "id": "evt_01M0M65FF6JAF7JE380C3CWWXM",
+                "key": "NOTIFY_PUSH_FAILED",
+                "name": "Notify Push Failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "secondary"
+              },
+              {
+                "description": "A preference / cap-window / subscription fetch failed — dispatched lands false with the fetch error",
+                "id": "evt_01M0M65FF6CS2R9V2JQ6EJYGDX",
+                "key": "NOTIFY_LOOKUP_FAILED",
+                "name": "Notify Lookup Failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "secondary"
+              },
+              {
                 "id": "evt_01KXG04FE9R85M0QY4RN3YHY2G",
                 "key": "NotificationDispatched",
                 "name": "Notification dispatched",
@@ -692,27 +1184,12 @@
                   [
                     "set",
                     "@entity.dispatched",
-                    [
-                      "and",
-                      [
-                        "=",
-                        "@config.notifyChannel",
-                        "in-app"
-                      ],
-                      [
-                        "not",
-                        [
-                          "array/includes",
-                          "@config.suppressionList",
-                          "@entity.recipient"
-                        ]
-                      ]
-                    ]
+                    false
                   ],
                   [
                     "set",
                     "@entity.recordedAt",
-                    0.0
+                    "@now"
                   ],
                   [
                     "when",
@@ -727,116 +1204,85 @@
                     [
                       "if",
                       [
-                        "=",
-                        "@config.notifyChannel",
-                        "in-app"
-                      ],
-                      [
-                        "notify",
-                        "@config.severity",
-                        "@config.template"
-                      ],
-                      [
-                        "if",
+                        "and",
                         [
-                          "=",
-                          "@config.notifyChannel",
-                          "email"
-                        ],
-                        [
-                          "call-service",
-                          "email",
-                          "send",
-                          {
-                            "body": "@config.template",
-                            "from": "",
-                            "subject": [
-                              "if",
-                              [
-                                "=",
-                                "@config.emailSubject",
-                                ""
-                              ],
-                              "@config.template",
-                              "@config.emailSubject"
-                            ],
-                            "to": "@entity.recipient"
-                          },
-                          {
-                            "emit": {
-                              "failure": "NOTIFY_EMAIL_FAILED",
-                              "success": "NOTIFY_EMAIL_SENT"
-                            }
-                          }
+                          "not",
+                          [
+                            "=",
+                            "@config.quietStartHour",
+                            "@config.quietEndHour"
+                          ]
                         ],
                         [
                           "if",
                           [
-                            "=",
-                            "@config.notifyChannel",
-                            "sms"
+                            "<",
+                            "@config.quietStartHour",
+                            "@config.quietEndHour"
                           ],
                           [
-                            "call-service",
-                            "twilio",
-                            "sendSMS",
-                            {
-                              "body": "@config.template",
-                              "to": "@entity.recipient"
-                            },
-                            {
-                              "emit": {
-                                "failure": "NOTIFY_SMS_FAILED",
-                                "success": "NOTIFY_SMS_SENT"
-                              }
-                            }
-                          ],
-                          [
-                            "if",
+                            "and",
                             [
-                              "not",
+                              ">=",
                               [
-                                "=",
-                                "@config.webhookUrl",
-                                ""
-                              ]
+                                "time/hour",
+                                "@now"
+                              ],
+                              "@config.quietStartHour"
                             ],
                             [
-                              "call-service",
-                              "webhook",
-                              "send",
-                              {
-                                "event": "@config.template",
-                                "payload": {
-                                  "message": "@config.template",
-                                  "recipient": "@entity.recipient",
-                                  "severity": "@config.severity"
-                                },
-                                "secret": "@config.webhookSecret",
-                                "url": "@config.webhookUrl"
-                              },
-                              {
-                                "emit": {
-                                  "failure": "NOTIFY_WEBHOOK_FAILED",
-                                  "success": "NOTIFY_WEBHOOK_SENT"
-                                }
-                              }
+                              "<",
+                              [
+                                "time/hour",
+                                "@now"
+                              ],
+                              "@config.quietEndHour"
+                            ]
+                          ],
+                          [
+                            "or",
+                            [
+                              ">=",
+                              [
+                                "time/hour",
+                                "@now"
+                              ],
+                              "@config.quietStartHour"
                             ],
                             [
-                              "persist",
-                              "create",
-                              "NotificationRecord",
-                              {
-                                "channel": "@config.notifyChannel",
-                                "dispatched": false,
-                                "message": "@config.template",
-                                "recipient": "@entity.recipient",
-                                "recordedAt": 0.0,
-                                "severity": "@config.severity"
-                              }
+                              "<",
+                              [
+                                "time/hour",
+                                "@now"
+                              ],
+                              "@config.quietEndHour"
                             ]
                           ]
                         ]
+                      ],
+                      [
+                        "persist",
+                        "create",
+                        "NotificationRecord",
+                        {
+                          "channel": "@entity.channel",
+                          "dispatched": false,
+                          "error": "quiet-hours",
+                          "message": "@entity.message",
+                          "recipient": "@entity.recipient",
+                          "recordedAt": "@now",
+                          "severity": "@entity.severity"
+                        }
+                      ],
+                      [
+                        "fetch",
+                        "NotificationPreference",
+                        {
+                          "emit": {
+                            "failure": "NOTIFY_LOOKUP_FAILED",
+                            "success": "NOTIFY_PREFS_LOADED"
+                          }
+                        }
                       ]
                     ]
                   ],
@@ -844,10 +1290,10 @@
                     "emit",
                     "NotificationDispatched",
                     {
-                      "channel": "@config.notifyChannel",
-                      "message": "@config.template",
+                      "channel": "@entity.channel",
+                      "message": "@entity.message",
                       "recipient": "@entity.recipient",
-                      "severity": "@config.severity"
+                      "severity": "@entity.severity"
                     }
                   ]
                 ],
@@ -941,6 +1387,1035 @@
                 "effects": [
                   [
                     "set",
+                    "@entity.prefMode",
+                    [
+                      "if",
+                      [
+                        "=",
+                        [
+                          "array/len",
+                          [
+                            "array/filter",
+                            "@payload.data",
+                            [
+                              "fn",
+                              "p",
+                              [
+                                "and",
+                                [
+                                  "=",
+                                  [
+                                    "object/get",
+                                    "@p",
+                                    "userId"
+                                  ],
+                                  "@entity.recipient"
+                                ],
+                                [
+                                  "or",
+                                  [
+                                    "=",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "eventType"
+                                    ],
+                                    ""
+                                  ],
+                                  [
+                                    "=",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "eventType"
+                                    ],
+                                    "@config.eventKey"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ],
+                        0.0
+                      ],
+                      "instant",
+                      [
+                        "object/get",
+                        [
+                          "array/first",
+                          [
+                            "array/filter",
+                            "@payload.data",
+                            [
+                              "fn",
+                              "p",
+                              [
+                                "and",
+                                [
+                                  "=",
+                                  [
+                                    "object/get",
+                                    "@p",
+                                    "userId"
+                                  ],
+                                  "@entity.recipient"
+                                ],
+                                [
+                                  "or",
+                                  [
+                                    "=",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "eventType"
+                                    ],
+                                    ""
+                                  ],
+                                  [
+                                    "=",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "eventType"
+                                    ],
+                                    "@config.eventKey"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ],
+                        "mode"
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.prefChannel",
+                    [
+                      "if",
+                      [
+                        "=",
+                        [
+                          "array/len",
+                          [
+                            "array/filter",
+                            "@payload.data",
+                            [
+                              "fn",
+                              "p",
+                              [
+                                "and",
+                                [
+                                  "=",
+                                  [
+                                    "object/get",
+                                    "@p",
+                                    "userId"
+                                  ],
+                                  "@entity.recipient"
+                                ],
+                                [
+                                  "or",
+                                  [
+                                    "=",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "eventType"
+                                    ],
+                                    ""
+                                  ],
+                                  [
+                                    "=",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "eventType"
+                                    ],
+                                    "@config.eventKey"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ],
+                        0.0
+                      ],
+                      "",
+                      [
+                        "object/get",
+                        [
+                          "array/first",
+                          [
+                            "array/filter",
+                            "@payload.data",
+                            [
+                              "fn",
+                              "p",
+                              [
+                                "and",
+                                [
+                                  "=",
+                                  [
+                                    "object/get",
+                                    "@p",
+                                    "userId"
+                                  ],
+                                  "@entity.recipient"
+                                ],
+                                [
+                                  "or",
+                                  [
+                                    "=",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "eventType"
+                                    ],
+                                    ""
+                                  ],
+                                  [
+                                    "=",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "eventType"
+                                    ],
+                                    "@config.eventKey"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ],
+                        "channel"
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.prefQuietStart",
+                    [
+                      "if",
+                      [
+                        "=",
+                        [
+                          "array/len",
+                          [
+                            "array/filter",
+                            "@payload.data",
+                            [
+                              "fn",
+                              "p",
+                              [
+                                "and",
+                                [
+                                  "=",
+                                  [
+                                    "object/get",
+                                    "@p",
+                                    "userId"
+                                  ],
+                                  "@entity.recipient"
+                                ],
+                                [
+                                  "or",
+                                  [
+                                    "=",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "eventType"
+                                    ],
+                                    ""
+                                  ],
+                                  [
+                                    "=",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "eventType"
+                                    ],
+                                    "@config.eventKey"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ],
+                        0.0
+                      ],
+                      0.0,
+                      [
+                        "object/get",
+                        [
+                          "array/first",
+                          [
+                            "array/filter",
+                            "@payload.data",
+                            [
+                              "fn",
+                              "p",
+                              [
+                                "and",
+                                [
+                                  "=",
+                                  [
+                                    "object/get",
+                                    "@p",
+                                    "userId"
+                                  ],
+                                  "@entity.recipient"
+                                ],
+                                [
+                                  "or",
+                                  [
+                                    "=",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "eventType"
+                                    ],
+                                    ""
+                                  ],
+                                  [
+                                    "=",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "eventType"
+                                    ],
+                                    "@config.eventKey"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ],
+                        "quietStartHour"
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.prefQuietEnd",
+                    [
+                      "if",
+                      [
+                        "=",
+                        [
+                          "array/len",
+                          [
+                            "array/filter",
+                            "@payload.data",
+                            [
+                              "fn",
+                              "p",
+                              [
+                                "and",
+                                [
+                                  "=",
+                                  [
+                                    "object/get",
+                                    "@p",
+                                    "userId"
+                                  ],
+                                  "@entity.recipient"
+                                ],
+                                [
+                                  "or",
+                                  [
+                                    "=",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "eventType"
+                                    ],
+                                    ""
+                                  ],
+                                  [
+                                    "=",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "eventType"
+                                    ],
+                                    "@config.eventKey"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ],
+                        0.0
+                      ],
+                      0.0,
+                      [
+                        "object/get",
+                        [
+                          "array/first",
+                          [
+                            "array/filter",
+                            "@payload.data",
+                            [
+                              "fn",
+                              "p",
+                              [
+                                "and",
+                                [
+                                  "=",
+                                  [
+                                    "object/get",
+                                    "@p",
+                                    "userId"
+                                  ],
+                                  "@entity.recipient"
+                                ],
+                                [
+                                  "or",
+                                  [
+                                    "=",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "eventType"
+                                    ],
+                                    ""
+                                  ],
+                                  [
+                                    "=",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "eventType"
+                                    ],
+                                    "@config.eventKey"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ],
+                        "quietEndHour"
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.channel",
+                    [
+                      "if",
+                      [
+                        "=",
+                        "@entity.prefChannel",
+                        ""
+                      ],
+                      "@entity.channel",
+                      "@entity.prefChannel"
+                    ]
+                  ],
+                  [
+                    "if",
+                    [
+                      "=",
+                      "@entity.prefMode",
+                      "off"
+                    ],
+                    [
+                      "persist",
+                      "create",
+                      "NotificationRecord",
+                      {
+                        "channel": "@entity.channel",
+                        "dispatched": false,
+                        "error": "muted-by-preference",
+                        "message": "@entity.message",
+                        "recipient": "@entity.recipient",
+                        "recordedAt": "@now",
+                        "severity": "@entity.severity"
+                      }
+                    ],
+                    [
+                      "if",
+                      [
+                        "=",
+                        "@entity.prefMode",
+                        "digest"
+                      ],
+                      [
+                        "persist",
+                        "create",
+                        "NotificationRecord",
+                        {
+                          "channel": "@entity.channel",
+                          "dispatched": false,
+                          "error": "digest-deferred",
+                          "message": "@entity.message",
+                          "recipient": "@entity.recipient",
+                          "recordedAt": "@now",
+                          "severity": "@entity.severity"
+                        }
+                      ],
+                      [
+                        "if",
+                        [
+                          "and",
+                          [
+                            "not",
+                            [
+                              "=",
+                              "@entity.prefQuietStart",
+                              "@entity.prefQuietEnd"
+                            ]
+                          ],
+                          [
+                            "if",
+                            [
+                              "<",
+                              "@entity.prefQuietStart",
+                              "@entity.prefQuietEnd"
+                            ],
+                            [
+                              "and",
+                              [
+                                ">=",
+                                [
+                                  "time/hour",
+                                  "@now"
+                                ],
+                                "@entity.prefQuietStart"
+                              ],
+                              [
+                                "<",
+                                [
+                                  "time/hour",
+                                  "@now"
+                                ],
+                                "@entity.prefQuietEnd"
+                              ]
+                            ],
+                            [
+                              "or",
+                              [
+                                ">=",
+                                [
+                                  "time/hour",
+                                  "@now"
+                                ],
+                                "@entity.prefQuietStart"
+                              ],
+                              [
+                                "<",
+                                [
+                                  "time/hour",
+                                  "@now"
+                                ],
+                                "@entity.prefQuietEnd"
+                              ]
+                            ]
+                          ]
+                        ],
+                        [
+                          "persist",
+                          "create",
+                          "NotificationRecord",
+                          {
+                            "channel": "@entity.channel",
+                            "dispatched": false,
+                            "error": "quiet-hours",
+                            "message": "@entity.message",
+                            "recipient": "@entity.recipient",
+                            "recordedAt": "@now",
+                            "severity": "@entity.severity"
+                          }
+                        ],
+                        [
+                          "if",
+                          [
+                            "=",
+                            "@entity.channel",
+                            "in-app"
+                          ],
+                          [
+                            "do",
+                            [
+                              "set",
+                              "@entity.dispatched",
+                              true
+                            ],
+                            [
+                              "notify",
+                              "@config.severity",
+                              "@config.template"
+                            ]
+                          ],
+                          [
+                            "fetch",
+                            "NotificationRecord",
+                            {
+                              "emit": {
+                                "failure": "NOTIFY_LOOKUP_FAILED",
+                                "success": "NOTIFY_CAP_LOADED"
+                              },
+                              "filter": [
+                                ">",
+                                [
+                                  "object/get",
+                                  "@entity",
+                                  "recordedAt"
+                                ],
+                                [
+                                  "-",
+                                  "@now",
+                                  604800000.0
+                                ]
+                              ]
+                            }
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                "event": "NOTIFY_PREFS_LOADED",
+                "eventId": "evt_01M0M65FF68HQ6K67FGYDE0P4V",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "if",
+                    [
+                      "and",
+                      [
+                        ">",
+                        "@config.frequencyCapPerWeek",
+                        0.0
+                      ],
+                      [
+                        ">=",
+                        [
+                          "array/len",
+                          [
+                            "array/filter",
+                            "@payload.data",
+                            [
+                              "fn",
+                              "r",
+                              [
+                                "and",
+                                [
+                                  "=",
+                                  [
+                                    "object/get",
+                                    "@r",
+                                    "recipient"
+                                  ],
+                                  "@entity.recipient"
+                                ],
+                                [
+                                  "=",
+                                  [
+                                    "object/get",
+                                    "@r",
+                                    "channel"
+                                  ],
+                                  "@entity.channel"
+                                ],
+                                [
+                                  "=",
+                                  [
+                                    "object/get",
+                                    "@r",
+                                    "dispatched"
+                                  ],
+                                  true
+                                ]
+                              ]
+                            ]
+                          ]
+                        ],
+                        "@config.frequencyCapPerWeek"
+                      ]
+                    ],
+                    [
+                      "persist",
+                      "create",
+                      "NotificationRecord",
+                      {
+                        "channel": "@entity.channel",
+                        "dispatched": false,
+                        "error": "frequency-cap",
+                        "message": "@entity.message",
+                        "recipient": "@entity.recipient",
+                        "recordedAt": "@now",
+                        "severity": "@entity.severity"
+                      }
+                    ],
+                    [
+                      "if",
+                      [
+                        "=",
+                        "@entity.channel",
+                        "email"
+                      ],
+                      [
+                        "call-service",
+                        "email",
+                        "send",
+                        {
+                          "body": "@entity.message",
+                          "from": "",
+                          "subject": [
+                            "if",
+                            [
+                              "=",
+                              "@config.emailSubject",
+                              ""
+                            ],
+                            "@entity.message",
+                            "@config.emailSubject"
+                          ],
+                          "to": "@entity.recipient"
+                        },
+                        {
+                          "emit": {
+                            "failure": "NOTIFY_EMAIL_FAILED",
+                            "success": "NOTIFY_EMAIL_SENT"
+                          }
+                        }
+                      ],
+                      [
+                        "if",
+                        [
+                          "=",
+                          "@entity.channel",
+                          "sms"
+                        ],
+                        [
+                          "call-service",
+                          "twilio",
+                          "sendSMS",
+                          {
+                            "body": "@entity.message",
+                            "to": "@entity.recipient"
+                          },
+                          {
+                            "emit": {
+                              "failure": "NOTIFY_SMS_FAILED",
+                              "success": "NOTIFY_SMS_SENT"
+                            }
+                          }
+                        ],
+                        [
+                          "if",
+                          [
+                            "=",
+                            "@entity.channel",
+                            "push"
+                          ],
+                          [
+                            "fetch",
+                            "PushSubscription",
+                            {
+                              "emit": {
+                                "failure": "NOTIFY_LOOKUP_FAILED",
+                                "success": "NOTIFY_PUSH_SUBS"
+                              }
+                            }
+                          ],
+                          [
+                            "if",
+                            [
+                              "not",
+                              [
+                                "=",
+                                "@config.webhookUrl",
+                                ""
+                              ]
+                            ],
+                            [
+                              "call-service",
+                              "webhook",
+                              "send",
+                              {
+                                "event": "@entity.message",
+                                "payload": {
+                                  "message": "@entity.message",
+                                  "recipient": "@entity.recipient",
+                                  "severity": "@entity.severity"
+                                },
+                                "secret": "@config.webhookSecret",
+                                "url": "@config.webhookUrl"
+                              },
+                              {
+                                "emit": {
+                                  "failure": "NOTIFY_WEBHOOK_FAILED",
+                                  "success": "NOTIFY_WEBHOOK_SENT"
+                                }
+                              }
+                            ],
+                            [
+                              "persist",
+                              "create",
+                              "NotificationRecord",
+                              {
+                                "channel": "@entity.channel",
+                                "dispatched": false,
+                                "message": "@entity.message",
+                                "recipient": "@entity.recipient",
+                                "recordedAt": "@now",
+                                "severity": "@entity.severity"
+                              }
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                "event": "NOTIFY_CAP_LOADED",
+                "eventId": "evt_01M0M65FF6F8X646FMC2ZYX7HW",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.pushEndpoint",
+                    [
+                      "if",
+                      [
+                        "=",
+                        [
+                          "array/len",
+                          [
+                            "array/filter",
+                            "@payload.data",
+                            [
+                              "fn",
+                              "s",
+                              [
+                                "=",
+                                [
+                                  "object/get",
+                                  "@s",
+                                  "userId"
+                                ],
+                                "@entity.recipient"
+                              ]
+                            ]
+                          ]
+                        ],
+                        0.0
+                      ],
+                      "",
+                      [
+                        "object/get",
+                        [
+                          "array/first",
+                          [
+                            "array/filter",
+                            "@payload.data",
+                            [
+                              "fn",
+                              "s",
+                              [
+                                "=",
+                                [
+                                  "object/get",
+                                  "@s",
+                                  "userId"
+                                ],
+                                "@entity.recipient"
+                              ]
+                            ]
+                          ]
+                        ],
+                        "endpoint"
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.pushP256dh",
+                    [
+                      "if",
+                      [
+                        "=",
+                        [
+                          "array/len",
+                          [
+                            "array/filter",
+                            "@payload.data",
+                            [
+                              "fn",
+                              "s",
+                              [
+                                "=",
+                                [
+                                  "object/get",
+                                  "@s",
+                                  "userId"
+                                ],
+                                "@entity.recipient"
+                              ]
+                            ]
+                          ]
+                        ],
+                        0.0
+                      ],
+                      "",
+                      [
+                        "object/get",
+                        [
+                          "array/first",
+                          [
+                            "array/filter",
+                            "@payload.data",
+                            [
+                              "fn",
+                              "s",
+                              [
+                                "=",
+                                [
+                                  "object/get",
+                                  "@s",
+                                  "userId"
+                                ],
+                                "@entity.recipient"
+                              ]
+                            ]
+                          ]
+                        ],
+                        "p256dh"
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.pushAuth",
+                    [
+                      "if",
+                      [
+                        "=",
+                        [
+                          "array/len",
+                          [
+                            "array/filter",
+                            "@payload.data",
+                            [
+                              "fn",
+                              "s",
+                              [
+                                "=",
+                                [
+                                  "object/get",
+                                  "@s",
+                                  "userId"
+                                ],
+                                "@entity.recipient"
+                              ]
+                            ]
+                          ]
+                        ],
+                        0.0
+                      ],
+                      "",
+                      [
+                        "object/get",
+                        [
+                          "array/first",
+                          [
+                            "array/filter",
+                            "@payload.data",
+                            [
+                              "fn",
+                              "s",
+                              [
+                                "=",
+                                [
+                                  "object/get",
+                                  "@s",
+                                  "userId"
+                                ],
+                                "@entity.recipient"
+                              ]
+                            ]
+                          ]
+                        ],
+                        "auth"
+                      ]
+                    ]
+                  ],
+                  [
+                    "if",
+                    [
+                      "=",
+                      "@entity.pushEndpoint",
+                      ""
+                    ],
+                    [
+                      "persist",
+                      "create",
+                      "NotificationRecord",
+                      {
+                        "channel": "@entity.channel",
+                        "dispatched": false,
+                        "error": "no-push-subscription",
+                        "message": "@entity.message",
+                        "recipient": "@entity.recipient",
+                        "recordedAt": "@now",
+                        "severity": "@entity.severity"
+                      }
+                    ],
+                    [
+                      "call-service",
+                      "push",
+                      "send",
+                      {
+                        "body": "@entity.message",
+                        "icon": "@config.pushIcon",
+                        "subscription": {
+                          "endpoint": "@entity.pushEndpoint",
+                          "keys": {
+                            "auth": "@entity.pushAuth",
+                            "p256dh": "@entity.pushP256dh"
+                          }
+                        },
+                        "title": [
+                          "if",
+                          [
+                            "=",
+                            "@config.pushTitle",
+                            ""
+                          ],
+                          "@entity.message",
+                          "@config.pushTitle"
+                        ],
+                        "url": "@config.pushDeepLink"
+                      },
+                      {
+                        "emit": {
+                          "failure": "NOTIFY_PUSH_FAILED",
+                          "success": "NOTIFY_PUSH_SENT"
+                        }
+                      }
+                    ]
+                  ]
+                ],
+                "event": "NOTIFY_PUSH_SUBS",
+                "eventId": "evt_01M0M65FF6Z4XVMQTZT0P95WJQ",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
                     "@entity.dispatched",
                     true
                   ],
@@ -953,7 +2428,7 @@
                       "dispatched": true,
                       "message": "@entity.message",
                       "recipient": "@entity.recipient",
-                      "recordedAt": 0.0,
+                      "recordedAt": "@now",
                       "severity": "@entity.severity"
                     }
                   ]
@@ -985,7 +2460,7 @@
                       "error": "@entity.error",
                       "message": "@entity.message",
                       "recipient": "@entity.recipient",
-                      "recordedAt": 0.0,
+                      "recordedAt": "@now",
                       "severity": "@entity.severity"
                     }
                   ]
@@ -1011,7 +2486,7 @@
                       "dispatched": true,
                       "message": "@entity.message",
                       "recipient": "@entity.recipient",
-                      "recordedAt": 0.0,
+                      "recordedAt": "@now",
                       "severity": "@entity.severity"
                     }
                   ]
@@ -1043,7 +2518,7 @@
                       "error": "@entity.error",
                       "message": "@entity.message",
                       "recipient": "@entity.recipient",
-                      "recordedAt": 0.0,
+                      "recordedAt": "@now",
                       "severity": "@entity.severity"
                     }
                   ]
@@ -1069,7 +2544,7 @@
                       "dispatched": true,
                       "message": "@entity.message",
                       "recipient": "@entity.recipient",
-                      "recordedAt": 0.0,
+                      "recordedAt": "@now",
                       "severity": "@entity.severity"
                     }
                   ]
@@ -1101,13 +2576,103 @@
                       "error": "@entity.error",
                       "message": "@entity.message",
                       "recipient": "@entity.recipient",
-                      "recordedAt": 0.0,
+                      "recordedAt": "@now",
                       "severity": "@entity.severity"
                     }
                   ]
                 ],
                 "event": "NOTIFY_WEBHOOK_FAILED",
                 "eventId": "evt_01M04F6YS1THM7EMY3BAB7CSCV",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.dispatched",
+                    true
+                  ],
+                  [
+                    "persist",
+                    "create",
+                    "NotificationRecord",
+                    {
+                      "channel": "@entity.channel",
+                      "dispatched": true,
+                      "message": "@entity.message",
+                      "recipient": "@entity.recipient",
+                      "recordedAt": "@now",
+                      "severity": "@entity.severity"
+                    }
+                  ]
+                ],
+                "event": "NOTIFY_PUSH_SENT",
+                "eventId": "evt_01M0M65FF6DKMEW2D2E96T9VTH",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.dispatched",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.error",
+                    "@payload.error"
+                  ],
+                  [
+                    "persist",
+                    "create",
+                    "NotificationRecord",
+                    {
+                      "channel": "@entity.channel",
+                      "dispatched": false,
+                      "error": "@entity.error",
+                      "message": "@entity.message",
+                      "recipient": "@entity.recipient",
+                      "recordedAt": "@now",
+                      "severity": "@entity.severity"
+                    }
+                  ]
+                ],
+                "event": "NOTIFY_PUSH_FAILED",
+                "eventId": "evt_01M0M65FF6JAF7JE380C3CWWXM",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.dispatched",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.error",
+                    "@payload.error"
+                  ],
+                  [
+                    "persist",
+                    "create",
+                    "NotificationRecord",
+                    {
+                      "channel": "@entity.channel",
+                      "dispatched": false,
+                      "error": "@entity.error",
+                      "message": "@entity.message",
+                      "recipient": "@entity.recipient",
+                      "recordedAt": "@now",
+                      "severity": "@entity.severity"
+                    }
+                  ]
+                ],
+                "event": "NOTIFY_LOOKUP_FAILED",
+                "eventId": "evt_01M0M65FF6CS2R9V2JQ6EJYGDX",
                 "from": "idle",
                 "to": "idle"
               }
@@ -1118,5 +2683,5 @@
     }
   ],
   "schemaVersion": 1,
-  "version": "1.5.0"
+  "version": "2.0.0"
 }

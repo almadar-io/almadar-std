@@ -94,6 +94,8 @@ export interface StdUiCalendarGridConfig {
   /** Default: `"color"` */
   colorField?: string;
   dayWindow?: string;
+  /** Default: `"endTime"` */
+  endField?: string;
   /** Default: `"LONG_PRESS"` */
   longPressEvent?: string;
   /** Default: `{}` */

@@ -1,5 +1,5 @@
-app std-esign-flow "1.1.0"
-"std-esign-flow — the send-for-signature flow: list signature requests, create one (pick document + recipient), resend or cancel, track status. Composes std-file-store + std-esign-request; no document-rendering or code-preview chrome."
+app std-esign-flow "1.2.0"
+"std-esign-flow — the send-for-signature flow: list signature requests, create one (pick document + recipient), resend or cancel, track status. Composes std-file-store + std-esign-request; no document-rendering or code-preview chrome. v1.2 (W5): EnvelopeDispatcher wires sessions to the real `esign` service — SEND_ENVELOPE dispatches a DocuSign envelope (the document rides the event as an UploadDropZone-shaped file payload, since StoredFile rows are metadata-only) and stamps `envelopeId`/`sentAt`/status=sent; the browse grid's per-row \"Refresh status\" pulls getEnvelopeStatus and maps completed/delivered/declined onto signed/viewed/declined."
 orbital SignatureSessionOrbital {
   uses StoredFile from "std/behaviors/std-file-store"
 
@@ -23,6 +23,7 @@ orbital SignatureSessionOrbital {
     status : "draft" | "sent" | "viewed" | "signed" | "declined" @description "Current state of the signature request." @synonyms "state, condition, stage" = draft
     sentAt : datetime @description "Timestamp indicating when the request was sent." @synonyms "sent date, submission time, dispatched"
     signedAt : datetime @description "The date and time the signature was applied." @synonyms "signed date, completion date, signature time"
+    envelopeId : string @description "Provider envelope id stamped when the real e-sign dispatch succeeds; blank = never dispatched. Written by EnvelopeDispatcher, not user-facing." @synonyms "docusign id, provider reference" = ""
     pendingId : string @description "Unique identifier for a pending action or task." @synonyms "taskId, pendingKey, referenceId" = ""
   }
 
@@ -102,6 +103,10 @@ orbital SignatureSessionOrbital {
               event: REQUEST_DELETE
               label: Cancel
               variant: danger
+            }, {
+              event: CHECK_ENVELOPE_STATUS
+              label: "Refresh status"
+              variant: secondary
             }]
             type: data-grid
           }]
@@ -174,6 +179,13 @@ orbital SignatureSessionOrbital {
         @description "Indicates a signature request has been resent."
         @synonyms "resend, retransmit, repeat"
         @tier "presentation"
+      CHECK_ENVELOPE_STATUS {
+        id : string!
+        row : SignatureSession
+      }
+        @description "Pull the provider's current envelope status for this request."
+        @synonyms "refresh status, check signature, poll envelope"
+        @tier "domain"
       REQUEST_DELETE {
         id : string!
         row : SignatureSession
@@ -339,5 +351,170 @@ orbital SignatureSessionOrbital {
     }
   }
 
-  page "/esign-flow" as SignatureSessionPage -> SignatureSessionBrowse, SignatureSessionCreate, SignatureSessionDelete, SignatureSessionPersistor
+  ;; W5: the real e-sign wire. SEND_ENVELOPE dispatches a provider envelope —
+  ;; the document travels IN the event as an UploadDropZone-shaped file payload
+  ;; (StoredFile rows are metadata-only, so there is nothing to fetch); the
+  ;; session row is stamped envelopeId/sentAt/status=sent on success. The
+  ;; browse grid's "Refresh status" action pulls the provider status and maps
+  ;; completed/delivered/declined onto the session's signed/viewed/declined.
+  trait EnvelopeDispatcher -> SignatureSession [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      SEND_ENVELOPE -> dispatching
+        (set @entity.id ?id)
+        (call-service esign sendEnvelope {
+          documentContent: (object/get ?file content)
+          documentName: (object/get ?row documentName)
+          emailSubject: (str/concat "Signature requested: " (object/get ?row documentName))
+          recipientEmail: (object/get ?row recipientEmail)
+          recipientName: (object/get ?row recipientName)
+        } {
+          emit: { failure: ENVELOPE_SEND_FAILED, success: ENVELOPE_SENT }
+        })
+      CHECK_ENVELOPE_STATUS -> polling when ["!=", (object/get ?row envelopeId), ""]
+        (set @entity.id ?id)
+        (call-service esign getEnvelopeStatus {
+          envelopeId: (object/get ?row envelopeId)
+        } {
+          emit: { failure: ENVELOPE_STATUS_FAILED, success: ENVELOPE_STATUS_LOADED }
+        })
+      CHECK_ENVELOPE_STATUS -> idle
+        (notify info "This request was never dispatched to the e-sign provider — send it first")
+      ENVELOPE_STAMPED -> idle
+      ENVELOPE_STAMP_FAILED -> idle
+        (notify warning "Could not record the envelope state on the request")
+    }
+
+    state dispatching {
+      ENVELOPE_SENT -> idle
+        (persist update SignatureSession {
+          id: @entity.id
+          envelopeId: ?envelopeId
+          sentAt: @now
+          status: sent
+        } {
+          emit: { failure: ENVELOPE_STAMP_FAILED, success: ENVELOPE_STAMPED }
+        })
+        (notify success "Signature request sent")
+      ENVELOPE_SEND_FAILED -> idle
+        (notify warning "Could not send the signature request")
+    }
+
+    state polling {
+      ENVELOPE_STATUS_LOADED -> idle when ["=", ?status, "completed"]
+        (persist update SignatureSession {
+          id: @entity.id
+          signedAt: @now
+          status: signed
+        } {
+          emit: { failure: ENVELOPE_STAMP_FAILED, success: ENVELOPE_STAMPED }
+        })
+      ENVELOPE_STATUS_LOADED -> idle when ["=", ?status, "delivered"]
+        (persist update SignatureSession {
+          id: @entity.id
+          status: viewed
+        } {
+          emit: { failure: ENVELOPE_STAMP_FAILED, success: ENVELOPE_STAMPED }
+        })
+      ENVELOPE_STATUS_LOADED -> idle when ["=", ?status, "declined"]
+        (persist update SignatureSession {
+          id: @entity.id
+          status: declined
+        } {
+          emit: { failure: ENVELOPE_STAMP_FAILED, success: ENVELOPE_STAMPED }
+        })
+      ENVELOPE_STATUS_LOADED -> idle
+        (persist update SignatureSession {
+          id: @entity.id
+          status: sent
+        } {
+          emit: { failure: ENVELOPE_STAMP_FAILED, success: ENVELOPE_STAMPED }
+        })
+      ENVELOPE_STATUS_FAILED -> idle
+        (notify warning "Could not read the envelope status")
+    }
+
+    emits {
+      ENVELOPE_SENT {
+        envelopeId : string
+        status : string
+      }
+        @description "The provider accepted the envelope; carries its id."
+        @tier "internal"
+      ENVELOPE_SEND_FAILED {
+        error : string
+        code : string
+      }
+        @description "The e-sign provider rejected or failed the dispatch."
+        @tier "internal"
+      ENVELOPE_STATUS_LOADED {
+        status : string
+        completedAt : string
+      }
+        @description "The provider returned the envelope's current status."
+        @tier "internal"
+      ENVELOPE_STATUS_FAILED {
+        error : string
+        code : string
+      }
+        @description "Reading the envelope status failed."
+        @tier "internal"
+      ENVELOPE_STAMPED -> external {
+        id : string
+      }
+        @description "The session row now carries the latest provider state (envelopeId / status / timestamps)."
+        @tier "domain"
+      ENVELOPE_STAMP_FAILED {
+        error : string
+        code : string
+      }
+        @description "Writing the provider state back onto the session row failed."
+        @tier "internal"
+    }
+
+    listens {
+      SEND_ENVELOPE {
+        id : string!
+        row : SignatureSession
+        file : { name : string, size : number, type : string, content : string }
+      }
+        @description "Dispatch this session as a real e-sign envelope; `file.content` is the document as a base64 data URL (UploadDropZone shape)."
+        @synonyms "send envelope, dispatch signature, send for signing"
+        @tier "domain"
+      SignatureSessionBrowse.CHECK_ENVELOPE_STATUS -> CHECK_ENVELOPE_STATUS
+      CHECK_ENVELOPE_STATUS {
+        id : string!
+        row : SignatureSession
+      }
+        @description "Pull the provider's current envelope status and stamp it onto the session row."
+        @synonyms "refresh status, check signature, poll envelope"
+        @tier "domain"
+      ENVELOPE_SENT {
+        envelopeId : string
+        status : string
+      }
+      ENVELOPE_SEND_FAILED {
+        error : string
+        code : string
+      }
+      ENVELOPE_STATUS_LOADED {
+        status : string
+        completedAt : string
+      }
+      ENVELOPE_STATUS_FAILED {
+        error : string
+        code : string
+      }
+      ENVELOPE_STAMPED {
+        id : string
+      }
+      ENVELOPE_STAMP_FAILED {
+        error : string
+        code : string
+      }
+    }
+  }
+
+  page "/esign-flow" as SignatureSessionPage -> SignatureSessionBrowse, SignatureSessionCreate, SignatureSessionDelete, SignatureSessionPersistor, EnvelopeDispatcher
 }

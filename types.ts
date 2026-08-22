@@ -273,6 +273,7 @@ export interface OperatorEffectMeta {
     | 'ref'
     | 'render-ui'
     | 'navigate'
+    | 'navigate-back'
     | 'notify'
     | 'spawn'
     | 'despawn'

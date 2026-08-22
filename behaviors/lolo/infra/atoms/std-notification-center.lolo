@@ -1,0 +1,290 @@
+app std-notification-center "1.0.0"
+"std-notification-center — per-user notification preferences, web-push subscriptions, and the digest drain for suppressed notifications. Owns the two owner-scoped stores std-notify-on-event consults at dispatch time: NotificationPreference rows (per event key: mode instant/digest/off, channel override, per-user quiet hours) and PushSubscription rows (captured via the browser/push-subscribe flow — the shared service worker + PushManager subscription, persisted as flat endpoint/p256dh/auth credentials). The DigestDrain trait is the delivery half of every suppression std-notify-on-event records: an hourly cron tick scans NotificationRecord audit rows left undispatched for digest/quiet-hours reasons and at least `minAgeHours` old, delivers each by email (the digest channel), and marks it dispatched — the reminder-scheduler self-driving scan loop verbatim. Compose alongside std-notify-on-event: the listener suppresses and records, this atom captures subscriptions, edits preferences, and drains."
+type NotifRow = { id : string, recipient : string, channel : string, message : string, severity : string, dispatched : boolean, error : string, recordedAt : number }
+type PushCreds = { endpoint : string, p256dh : string, auth : string }
+orbital NotificationCenterOrbital {
+    type PUSH_SUBSCRIBED = Event { result : PushCreds } "browser/push-subscribe resolved — the flat subscription credentials arrive in `result`."
+
+  entity NotificationPreference [persistent: notificationPreferences] {
+    id : string!
+    userId : string @description "Owner of this preference row — rows are meant to be private to their owner. Access predicates need an [identity] roster, so the binding organism (which declares one) owns the @read/@update scoping; the generic atom cannot." @synonyms "user, owner, account" = ""
+    eventType : string @description "Event key this preference applies to (matches a listener's eventKey); blank = all events." @synonyms "event, trigger, subscription, topic" = ""
+    mode : "instant" | "digest" | "off" @description "Delivery mode: instant (default), digest (deferred to the drain cycle), or off (muted)." @synonyms "delivery mode, frequency, cadence, mute, defer" = instant
+    channel : string @description "Channel override for this user (in-app/email/sms/push/webhook); blank = the listener's configured channel." @synonyms "preferred channel, delivery method" = ""
+    quietStartHour : number @description "Per-user quiet-hours start (hour 0-23); equal to quietEndHour = disabled." @synonyms "quiet start, do not disturb from" = 0
+    quietEndHour : number @description "Per-user quiet-hours end (hour 0-23); equal to quietStartHour = disabled." @synonyms "quiet end, do not disturb until" = 0
+  }
+
+  entity PushSubscription [persistent: pushSubscriptions] {
+    id : string!
+    userId : string @description "Owner of this browser push subscription. Owner-scoped access predicates belong to the binding organism's [identity] roster, as with NotificationPreference." @synonyms "user, owner, account" = ""
+    endpoint : string @description "Push service endpoint URL for this subscription." @synonyms "push url, subscription endpoint" = ""
+    p256dh : string @description "Client public key (p256dh) of the subscription." @synonyms "public key" = ""
+    auth : string @description "Auth secret of the subscription." @synonyms "auth secret" = ""
+    createdAt : number @description "When this subscription was captured." @synonyms "subscribed at, created" = 0
+    lastError : string @description "Scratch: last subscribe-flow failure shown to the user; blank = none." @synonyms "subscribe error, failure reason" = ""
+  }
+
+  entity NotificationRecord [persistent: notifications] {
+    id : string!
+    recipient : string @description "The identifier of the entity receiving the notification." @synonyms "user, target, receiver, destination" = ""
+    channel : string @description "The delivery method for the notification (e.g., email, SMS, in-app)." @synonyms "delivery, medium, type" = in-app
+    message : string @description "The content of the notification message." @synonyms "text, content, body" = ""
+    severity : string @description "Indicates the importance or urgency level of the notification." @synonyms "priority, level, importance" = info
+    dispatched : boolean @description "Indicates whether the notification has been successfully sent." @synonyms "sent, delivered, status" = false
+    error : string @description "Suppression reason or delivery failure detail when dispatched is false." @synonyms "error message, failure reason, dispatch error" = ""
+    recordedAt : number @description "Timestamp indicating when the notification record was created." @synonyms "creation time, timestamp, date, when" = 0
+  }
+
+  entity DigestRunView [runtime] {
+    id : string!
+    headId : string @description "Scratch: id of the audit row the drain loop is currently delivering." @synonyms "current id, cursor" = ""
+    headRecipient : string @description "Scratch: recipient of the row being delivered." @synonyms "current recipient" = ""
+    headMessage : string @description "Scratch: message of the row being delivered." @synonyms "current message" = ""
+    drainedCount : number @description "Number of rows delivered in the current drain cycle." @synonyms "delivered count, processed" = 0
+    lastError : string @description "Last drain failure; blank = none." @synonyms "drain error, failure" = ""
+  }
+
+  trait PushSubscriber -> PushSubscription [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      SUBSCRIBE_PUSH -> idle
+        (browser/push-subscribe { emit: { failure: PUSH_SUBSCRIBE_FAILED, success: PUSH_SUBSCRIBED } })
+      PUSH_SUBSCRIBED -> idle
+        (set @entity.lastError "")
+        (persist create PushSubscription {
+          auth: ?result.auth
+          createdAt: @now
+          endpoint: ?result.endpoint
+          p256dh: ?result.p256dh
+          userId: @user.id
+        } { emit: { failure: PUSH_SAVE_FAILED, success: PUSH_SAVED } })
+      PUSH_SAVED -> idle
+        (notify success "Push notifications enabled on this browser")
+      PUSH_SUBSCRIBE_FAILED -> idle
+        (set @entity.lastError ?error)
+        (notify warning "Could not enable push notifications")
+      PUSH_SAVE_FAILED -> idle
+        (set @entity.lastError ?error)
+        (notify warning "Could not save the push subscription")
+    }
+
+    emits {
+      PUSH_SUBSCRIBED {
+        result : PushCreds
+      }
+        @description "browser/push-subscribe resolved with the flat subscription credentials in `result`"
+        @tier "secondary"
+      PUSH_SUBSCRIBE_FAILED {
+        error : string!
+      }
+        @description "Push API unavailable, permission denied, or the host has no VAPID key"
+        @tier "secondary"
+      PUSH_SAVED {
+        id : string!
+      }
+        @description "Subscription row persisted for the current user"
+        @tier "secondary"
+      PUSH_SAVE_FAILED {
+        error : string!
+      }
+        @description "Persisting the subscription row failed"
+        @tier "secondary"
+    }
+
+    listens {
+      SUBSCRIBE_PUSH {
+      }
+    }
+  }
+
+  trait PreferenceEditor -> NotificationPreference [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      SAVE_PREFERENCE -> idle
+        (persist create NotificationPreference {
+          channel: ?channel
+          eventType: ?eventType
+          mode: ?mode
+          quietEndHour: ?quietEndHour
+          quietStartHour: ?quietStartHour
+          userId: @user.id
+        } { emit: { failure: PREFERENCE_SAVE_FAILED, success: PREFERENCE_SAVED } })
+      UPDATE_PREFERENCE -> idle
+        (persist update NotificationPreference {
+          id: ?id
+          channel: ?channel
+          eventType: ?eventType
+          mode: ?mode
+          quietEndHour: ?quietEndHour
+          quietStartHour: ?quietStartHour
+        } { emit: { failure: PREFERENCE_SAVE_FAILED, success: PREFERENCE_SAVED } })
+      DELETE_PREFERENCE -> idle
+        (persist delete NotificationPreference ?id { emit: { failure: PREFERENCE_SAVE_FAILED, success: PREFERENCE_DELETED } })
+      PREFERENCE_SAVED -> idle
+        (notify success "Notification preference saved")
+      PREFERENCE_DELETED -> idle
+        (notify info "Notification preference removed")
+      PREFERENCE_SAVE_FAILED -> idle
+        (notify warning "Could not save the notification preference")
+    }
+
+    emits {
+      PREFERENCE_SAVED {
+        id : string!
+      }
+        @description "Preference row persisted"
+        @tier "secondary"
+      PREFERENCE_DELETED {
+        id : string!
+      }
+        @description "Preference row removed"
+        @tier "secondary"
+      PREFERENCE_SAVE_FAILED {
+        error : string!
+      }
+        @description "Preference persist failed"
+        @tier "secondary"
+    }
+
+    listens {
+      SAVE_PREFERENCE {
+        eventType : string
+        mode : string
+        channel : string
+        quietStartHour : number
+        quietEndHour : number
+      }
+      UPDATE_PREFERENCE {
+        id : string
+        eventType : string
+        mode : string
+        channel : string
+        quietStartHour : number
+        quietEndHour : number
+      }
+      DELETE_PREFERENCE {
+        id : string
+      }
+    }
+  }
+
+  trait DigestDrain -> DigestRunView [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      DIGEST_ROWS_LOADED -> draining when (and @config.digestEnabled [">", (array/len ?data), 0])
+        (set @entity.headId (object/get (array/first ?data) id))
+        (set @entity.headRecipient (object/get (array/first ?data) recipient))
+        (set @entity.headMessage (object/get (array/first ?data) message))
+        (call-service "email" "send" {
+          body: @entity.headMessage
+          from: ""
+          subject: @config.digestSubject
+          to: @entity.headRecipient
+        } { emit: { failure: DIGEST_FAILED, success: DIGEST_ITEM_SENT } })
+      DIGEST_ROWS_LOADED -> idle when ["=", (array/len ?data), 0]
+      DIGEST_FAILED -> idle
+        (set @entity.lastError ?error)
+    }
+
+    state draining {
+      DIGEST_ITEM_SENT -> draining
+        (set @entity.drainedCount ["+", @entity.drainedCount, 1])
+        (persist update NotificationRecord { id: @entity.headId, dispatched: true } {
+          emit: { failure: DIGEST_FAILED, success: DIGEST_STEPPED }
+        })
+      DIGEST_STEPPED -> draining
+        (fetch NotificationRecord {
+          emit: { failure: DIGEST_FAILED, success: DIGEST_ROWS_LOADED }
+          filter: (and ["=", (object/get @entity dispatched), false] (or ["=", (object/get @entity error), "digest-deferred"] ["=", (object/get @entity error), "quiet-hours"]) ["<", (object/get @entity recordedAt), ["-", @now, ["*", @config.minAgeHours, 3600000]]])
+        })
+      DIGEST_ROWS_LOADED -> draining when [">", (array/len ?data), 0]
+        (set @entity.headId (object/get (array/first ?data) id))
+        (set @entity.headRecipient (object/get (array/first ?data) recipient))
+        (set @entity.headMessage (object/get (array/first ?data) message))
+        (call-service "email" "send" {
+          body: @entity.headMessage
+          from: ""
+          subject: @config.digestSubject
+          to: @entity.headRecipient
+        } { emit: { failure: DIGEST_FAILED, success: DIGEST_ITEM_SENT } })
+      DIGEST_ROWS_LOADED -> idle when ["=", (array/len ?data), 0]
+      DIGEST_FAILED -> idle
+        (set @entity.lastError ?error)
+    }
+
+    emits {
+      DIGEST_ROWS_LOADED {
+        data : [NotifRow]
+      }
+        @description "Undispatched digest/quiet-hours audit rows past minAgeHours, oldest batch first"
+        @tier "secondary"
+      DIGEST_ITEM_SENT {
+        id : string!
+        status : string!
+      }
+        @description "email.send result for the current digest row"
+        @tier "secondary"
+      DIGEST_STEPPED {
+        id : string!
+      }
+        @description "Current row marked dispatched; drives the next loop pass"
+        @tier "secondary"
+      DIGEST_FAILED {
+        error : string!
+      }
+        @description "Digest scan / delivery / persist failed — the cycle stops until the next tick"
+        @tier "secondary"
+    }
+
+    listens {
+      DIGEST_ROWS_LOADED {
+        data : [NotifRow]
+      }
+      DIGEST_ITEM_SENT {
+        id : string!
+        status : string!
+      }
+      DIGEST_STEPPED {
+        id : string!
+      }
+      DIGEST_FAILED {
+        error : string!
+      }
+    }
+
+    ticks {
+      digestCycle every "0 * * * *"
+        (fetch NotificationRecord {
+          emit: { failure: DIGEST_FAILED, success: DIGEST_ROWS_LOADED }
+          filter: (and ["=", (object/get @entity dispatched), false] (or ["=", (object/get @entity error), "digest-deferred"] ["=", (object/get @entity error), "quiet-hours"]) ["<", (object/get @entity recordedAt), ["-", @now, ["*", @config.minAgeHours, 3600000]]])
+        })
+
+    }
+
+    config {
+      digestEnabled : boolean = false
+        @label "Deliver digests"
+        @description "Drain suppressed notifications (digest-deferred and quiet-hours audit rows) on the hourly cycle. Off by default."
+        @synonyms "enable digest, digest mode, batch notifications, daily summary, drain suppressed"
+        @tier "infra"
+      digestSubject : string = "Notification digest"
+        @label "Digest email subject"
+        @description "Subject line for drained digest deliveries."
+        @synonyms "digest title, summary subject, email subject"
+        @tier "presentation"
+      minAgeHours : number = 1
+        @label "Minimum age (hours)"
+        @description "Only drain audit rows at least this many hours old, so quiet-hours suppressions are not redelivered inside their window."
+        @synonyms "delay, drain delay, hold for, batch window"
+        @tier "infra"
+    }
+  }
+
+  page "/notifications/preferences" as NotificationPreferencesPage -> PreferenceEditor
+  page "/notifications/subscribe" as PushSubscribePage -> PushSubscriber
+  page "/notifications/digest" as NotificationDigestPage -> DigestDrain
+}

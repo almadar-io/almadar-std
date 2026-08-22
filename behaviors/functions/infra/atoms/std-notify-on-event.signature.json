@@ -47,7 +47,7 @@
             "name": "error",
             "type": "string",
             "required": false,
-            "description": "Failure detail from the delivery service when dispatched is false (email/sms/webhook channels only).",
+            "description": "Failure detail from the delivery service when dispatched is false, or the suppression reason (quiet-hours / digest-deferred / muted-by-preference / frequency-cap / no-push-subscription).",
             "synonyms": "error message, failure reason, dispatch error"
           },
           {
@@ -56,6 +56,55 @@
             "required": false,
             "description": "Timestamp indicating when the notification record was created.",
             "synonyms": "creation time, timestamp, date, when"
+          },
+          {
+            "name": "prefMode",
+            "type": "string",
+            "required": false,
+            "description": "Scratch: effective preference mode resolved for the current dispatch (instant/digest/off).",
+            "synonyms": "resolved mode"
+          },
+          {
+            "name": "prefChannel",
+            "type": "string",
+            "required": false,
+            "description": "Scratch: channel override from the matched preference row; blank = no override.",
+            "synonyms": "channel override"
+          },
+          {
+            "name": "prefQuietStart",
+            "type": "number",
+            "required": false,
+            "description": "Scratch: per-user quiet-hours start (hour 0-23) from the matched preference row.",
+            "synonyms": "user quiet start"
+          },
+          {
+            "name": "prefQuietEnd",
+            "type": "number",
+            "required": false,
+            "description": "Scratch: per-user quiet-hours end (hour 0-23) from the matched preference row.",
+            "synonyms": "user quiet end"
+          },
+          {
+            "name": "pushEndpoint",
+            "type": "string",
+            "required": false,
+            "description": "Scratch: push endpoint of the recipient's subscription for the current dispatch.",
+            "synonyms": "subscription endpoint"
+          },
+          {
+            "name": "pushP256dh",
+            "type": "string",
+            "required": false,
+            "description": "Scratch: p256dh key of the recipient's push subscription.",
+            "synonyms": "push key"
+          },
+          {
+            "name": "pushAuth",
+            "type": "string",
+            "required": false,
+            "description": "Scratch: auth secret of the recipient's push subscription.",
+            "synonyms": "push auth"
           }
         ],
         "persistence": "persistent"
@@ -66,18 +115,42 @@
         "name": "NotifyOnEventListener",
         "emittedEvents": [
           "NotificationDispatched",
+          "NOTIFY_PREFS_LOADED",
+          "NOTIFY_CAP_LOADED",
+          "NOTIFY_PUSH_SUBS",
           "NOTIFY_EMAIL_SENT",
           "NOTIFY_EMAIL_FAILED",
           "NOTIFY_SMS_SENT",
           "NOTIFY_SMS_FAILED",
           "NOTIFY_WEBHOOK_SENT",
-          "NOTIFY_WEBHOOK_FAILED"
+          "NOTIFY_WEBHOOK_FAILED",
+          "NOTIFY_PUSH_SENT",
+          "NOTIFY_PUSH_FAILED",
+          "NOTIFY_LOOKUP_FAILED"
         ],
         "listenedEvents": [],
         "events": [
           {
             "name": "NotificationDispatched",
             "direction": "emit"
+          },
+          {
+            "name": "NOTIFY_PREFS_LOADED",
+            "direction": "emit",
+            "description": "NotificationPreference rows loaded; the arm resolves the recipient's effective mode/channel/quiet-hours",
+            "tier": "secondary"
+          },
+          {
+            "name": "NOTIFY_CAP_LOADED",
+            "direction": "emit",
+            "description": "Rolling 7-day NotificationRecord window loaded; the arm enforces frequencyCapPerWeek then dispatches",
+            "tier": "secondary"
+          },
+          {
+            "name": "NOTIFY_PUSH_SUBS",
+            "direction": "emit",
+            "description": "PushSubscription rows loaded; the arm picks the recipient's subscription and dispatches push.send",
+            "tier": "secondary"
           },
           {
             "name": "NOTIFY_EMAIL_SENT",
@@ -116,6 +189,24 @@
             "tier": "secondary"
           },
           {
+            "name": "NOTIFY_PUSH_SENT",
+            "direction": "emit",
+            "description": "push.send service result — expired:true means the subscription is gone and should be pruned",
+            "tier": "secondary"
+          },
+          {
+            "name": "NOTIFY_PUSH_FAILED",
+            "direction": "emit",
+            "description": "push.send service call failed — dispatched lands false and error carries the service detail",
+            "tier": "secondary"
+          },
+          {
+            "name": "NOTIFY_LOOKUP_FAILED",
+            "direction": "emit",
+            "description": "A preference / cap-window / subscription fetch failed — dispatched lands false with the fetch error",
+            "tier": "secondary"
+          },
+          {
             "name": "EventOccurred",
             "direction": "listen"
           }
@@ -131,6 +222,15 @@
             "tier": "presentation"
           },
           {
+            "key": "eventKey",
+            "type": "string",
+            "default": "",
+            "label": "Event key for preferences",
+            "description": "Stable key naming the upstream event this listener is bound to (e.g. 'OrderPlaced'). NotificationPreference rows (std-notification-center) whose eventType equals this key — or is blank — apply to this listener's dispatches.",
+            "synonyms": "preference key, event name, subscription key, notification topic",
+            "tier": "policy"
+          },
+          {
             "key": "fallbackRecipient",
             "type": "string",
             "default": "",
@@ -144,7 +244,8 @@
             "type": "number",
             "default": 0,
             "label": "Frequency cap (per week)",
-            "description": "Max sends per (channel, recipient) per rolling 7-day window. 0 = uncapped. WIRING DEFERRED: needs stateful history query (gap — docs/Almadar_Std_Factories.md).",
+            "description": "Max dispatched sends per (channel, recipient) per rolling 7-day window, counted against dispatched NotificationRecord audit rows. 0 = uncapped. Applies to the persisted channels (email/sms/push/webhook); in-app toasts are not audited and not capped. A capped dispatch persists an audit row (`error: frequency-cap`, dispatched:false).",
+            "synonyms": "rate limit, cap, max per week, throttle, send limit",
             "tier": "policy"
           },
           {
@@ -198,38 +299,61 @@
             "type": "string",
             "default": "in-app",
             "label": "Channel",
-            "description": "Delivery channel. `in-app` (default) emits the in-app `notify` toast — unchanged from prior versions. `email`/`sms`/`webhook` dispatch through call-service at event time (email.send / twilio.sendSMS / webhook.send) and persist a NotificationRecord audit row with an honest `dispatched` flag: true only once the service call succeeds, false plus the failure detail in `error` otherwise. `webhook` requires `webhookUrl` to actually dispatch; a blank `webhookUrl` still records the audit row undispatched rather than failing.",
-            "synonyms": "delivery method, notification channel, send via, dispatch through",
+            "description": "Delivery channel. `in-app` (default) emits the in-app `notify` toast. `email`/`sms`/`webhook` dispatch through call-service at event time (email.send / twilio.sendSMS / webhook.send) and persist a NotificationRecord audit row with an honest `dispatched` flag: true only once the service call succeeds, false plus the failure detail in `error` otherwise. `push` looks up the recipient's PushSubscription row (captured by std-notification-center's subscribe flow) and dispatches web-push via push.send — a recipient with no subscription records the audit row undispatched (`no-push-subscription`). `webhook` requires `webhookUrl` to actually dispatch; a blank `webhookUrl` still records the audit row undispatched rather than failing. A per-user NotificationPreference row with a non-blank `channel` overrides this value for that recipient.",
+            "synonyms": "delivery method, notification channel, send via, dispatch through, push notification, web push",
             "tier": "policy",
             "enumValues": [
               "in-app",
               "email",
               "sms",
+              "push",
               "webhook"
             ]
           },
           {
-            "key": "quietHours",
-            "type": "QuietHoursSpec",
-            "default": {
-              "end": "",
-              "start": ""
-            },
-            "label": "Quiet hours",
-            "description": "Local-time window during which dispatch is suppressed. Both start and end required to activate. WIRING DEFERRED: needs @now-aware time comparison primitive (gap — docs/Almadar_Std_Factories.md).",
-            "tier": "policy",
-            "properties": {
-              "end": {
-                "name": "end",
-                "required": false,
-                "type": "string"
-              },
-              "start": {
-                "name": "start",
-                "required": false,
-                "type": "string"
-              }
-            }
+            "key": "pushDeepLink",
+            "type": "string",
+            "default": "",
+            "label": "Push deep link",
+            "description": "In-app path opened when the recipient clicks the push notification (e.g. '/orders'). Blank = the app root.",
+            "synonyms": "click url, open on click, target path, notification link",
+            "tier": "presentation"
+          },
+          {
+            "key": "pushIcon",
+            "type": "string",
+            "default": "",
+            "label": "Push icon",
+            "description": "Icon URL shown on the push notification. Blank = the browser default.",
+            "synonyms": "notification icon, badge image",
+            "tier": "presentation"
+          },
+          {
+            "key": "pushTitle",
+            "type": "string",
+            "default": "",
+            "label": "Push title",
+            "description": "Notification title for the push channel. Falls back to `template` when blank. Ignored for other channels.",
+            "synonyms": "notification title, push heading, alert title",
+            "tier": "presentation"
+          },
+          {
+            "key": "quietEndHour",
+            "type": "number",
+            "default": 0,
+            "label": "Quiet hours end",
+            "description": "Hour of day (0-23) when the atom-level quiet window closes. Equal to `quietStartHour` = disabled.",
+            "synonyms": "do not disturb until, silence end, night mode end",
+            "tier": "policy"
+          },
+          {
+            "key": "quietStartHour",
+            "type": "number",
+            "default": 0,
+            "label": "Quiet hours start",
+            "description": "Hour of day (0-23) when the atom-level quiet window opens. Equal to `quietEndHour` = disabled. Dispatches inside the window persist an audit row (`error: quiet-hours`, dispatched:false) which std-notification-center's digest cycle drains later. Per-user quiet hours from NotificationPreference rows apply in addition.",
+            "synonyms": "quiet hours, do not disturb from, silence start, night mode start",
+            "tier": "policy"
           },
           {
             "key": "recipients",
@@ -305,15 +429,23 @@
         "linkedEntity": "NotificationRecord",
         "transitionEvents": [
           "EventOccurred",
+          "NOTIFY_CAP_LOADED",
           "NOTIFY_EMAIL_FAILED",
           "NOTIFY_EMAIL_SENT",
+          "NOTIFY_LOOKUP_FAILED",
+          "NOTIFY_PREFS_LOADED",
+          "NOTIFY_PUSH_FAILED",
+          "NOTIFY_PUSH_SENT",
+          "NOTIFY_PUSH_SUBS",
           "NOTIFY_SMS_FAILED",
           "NOTIFY_SMS_SENT",
           "NOTIFY_WEBHOOK_FAILED",
           "NOTIFY_WEBHOOK_SENT"
         ],
         "effectEntityRefs": [
-          "NotificationRecord"
+          "NotificationPreference",
+          "NotificationRecord",
+          "PushSubscription"
         ]
       }
     ],
@@ -325,8 +457,14 @@
       }
     ],
     "emittedEvents": [
+      "NOTIFY_CAP_LOADED",
       "NOTIFY_EMAIL_FAILED",
       "NOTIFY_EMAIL_SENT",
+      "NOTIFY_LOOKUP_FAILED",
+      "NOTIFY_PREFS_LOADED",
+      "NOTIFY_PUSH_FAILED",
+      "NOTIFY_PUSH_SENT",
+      "NOTIFY_PUSH_SUBS",
       "NOTIFY_SMS_FAILED",
       "NOTIFY_SMS_SENT",
       "NOTIFY_WEBHOOK_FAILED",
