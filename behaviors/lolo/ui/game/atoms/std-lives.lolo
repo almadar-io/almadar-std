@@ -1,0 +1,121 @@
+app std-lives "1.0.0"
+"Headless lives + checkpoint authority for boards with stakes: owns lives, the current respawn point, and nothing else. DAMAGE (call sites rename their hazard sources — BODY_HAZARD, BODY_FELL, PATROL_HIT — onto it) costs one life, respecting an invulnerability window so overlapping hazards can't chain-drain; losing a life emits LIFE_LOST plus RESPAWN with the current checkpoint (boards route RESPAWN to the body authority's PLACE), and losing the last emits GAME_OVER instead. Checkpoints advance automatically: BODY_MOVED crossing a configured checkpoint's atX moves the respawn point forward and emits CHECKPOINT_REACHED once per checkpoint (tracked by furthest atX reached, so checkpoints are ordered along the run). RESTART reseeds lives and respawn to the spawn. Renders nothing — HUDs read lives off the shared entity."
+orbital LivesOrbital {
+  type Checkpoint = {
+    id : string!
+    atX : number!
+    x : number!
+    y : number!
+  }
+
+  entity LivesData [runtime, shared] {
+    id : string!
+    lives : number = 3
+    respawnX : number = 0
+    respawnY : number = 0
+    cpX : number = -1000000
+    lastHitAt : number = 0
+  }
+
+  trait Lives -> @rebindable LivesData [lifecycle] {
+    initial: active
+
+    state active {
+      INIT -> active
+        (set @entity.lives @config.maxLives)
+        (set @entity.respawnX @config.spawnX)
+        (set @entity.respawnY @config.spawnY)
+        (set @entity.cpX (- 0 1000000))
+        (set @entity.lastHitAt 0)
+
+      DAMAGE -> active when (and @config.running (> @entity.lives 0))
+        (if (>= (- (time/now) @entity.lastHitAt) @config.invulnMs)
+          (do
+            (set @entity.lastHitAt (time/now))
+            (set @entity.lives (- @entity.lives 1))
+            (if (> @entity.lives 0)
+              (do
+                (emit LIFE_LOST { lives: @entity.lives })
+                (emit RESPAWN { x: @entity.respawnX, y: @entity.respawnY }))
+              (emit GAME_OVER { id: "lives" })))
+          null)
+
+      BODY_MOVED -> active when @config.running
+        (let ((reached (array/filter @config.checkpoints (fn c (and (<= (object/get @c atX) @payload.x) (> (object/get @c atX) @entity.cpX))))))
+        (if (> (array/len @reached) 0)
+          (let ((cp (array/last @reached)))
+            (do
+              (set @entity.respawnX (object/get @cp x))
+              (set @entity.respawnY (object/get @cp y))
+              (set @entity.cpX (object/get @cp atX))
+              (emit CHECKPOINT_REACHED { id: (object/get @cp id) })))
+          null))
+
+      RESTART -> active
+        (set @entity.lives @config.maxLives)
+        (set @entity.respawnX @config.spawnX)
+        (set @entity.respawnY @config.spawnY)
+        (set @entity.cpX (- 0 1000000))
+        (set @entity.lastHitAt 0)
+    }
+
+    emits {
+      LIFE_LOST -> external {
+        lives : number!
+      }
+        @description "A life was spent (post-invulnerability check); carries the lives remaining. Boards layer damage fx / HUD heartbeat."
+        @tier "domain"
+      RESPAWN -> external {
+        x : number!
+        y : number!
+      }
+        @description "The checkpoint the body should restart from after this life loss; boards forward it to the body authority's PLACE."
+        @tier "domain"
+      GAME_OVER -> external {
+        id : string!
+      }
+        @description "The last life was spent; boards show the game-over overlay and wait for RESTART."
+        @tier "domain"
+      CHECKPOINT_REACHED -> external {
+        id : string!
+      }
+        @description "The player crossed a checkpoint's atX for the first time this run; the respawn point moved to it. Boards layer flag/save fx."
+        @tier "domain"
+    }
+
+    listens {
+      DAMAGE { source : string }
+      BODY_MOVED { x : number!, y : number!, vx : number!, vy : number!, grounded : boolean!, skating : boolean!, speed : number! }
+      RESTART { id : string }
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true, DAMAGE and checkpoint crossings are processed; toggle to make the run harmless (practice mode)."
+        @tier "domain"
+      maxLives : number = 3
+        @label "Max Lives"
+        @description "Lives seeded on INIT/RESTART; reaching zero fires GAME_OVER."
+        @tier "domain"
+      invulnMs : number = 1500
+        @label "Invulnerability Window (ms)"
+        @description "Milliseconds after a accepted hit during which further DAMAGE is ignored, so a hazard overlapping the respawn can't chain-drain."
+        @tier "domain"
+      spawnX : number = 0
+        @label "Spawn X"
+        @description "Respawn x before any checkpoint is reached (match the body authority's spawn)."
+        @tier "domain"
+      spawnY : number = 0
+        @label "Spawn Y"
+        @description "Respawn y before any checkpoint is reached."
+        @tier "domain"
+      checkpoints : [Checkpoint] = []
+        @label "Checkpoints"
+        @description "Ordered along the run: when the player's x crosses atX the respawn point moves to (x, y). Must be sorted by atX ascending."
+        @tier "domain"
+    }
+  }
+
+  page "/lives" as LivesPage -> Lives
+}

@@ -1,0 +1,96 @@
+app std-patrol-hazard "1.0.0"
+"Headless patrol-hazard mechanic for side-view boards: moves each configured patrol back and forth along its [x0, x1] beat at its own speed (33ms tick, ping-pong with clamped turnarounds), tracks the player position off the body authority's BODY_MOVED, and emits PATROL_HIT once per contact — a per-patrol hit flag re-arms only after the player separates, so damage rules stay sparse (when two patrols connect on the same tick the first reports; the other reports on the next tick). Patrols live on a [runtime, shared] entity for the render layer (boards draw them as markers/sprites); damage, lives, and respawn stay downstream (std-lives) — this atom simulates, it never judges. Renders nothing."
+orbital PatrolHazardOrbital {
+  type Patrol = {
+    id : string!
+    x0 : number!
+    x1 : number!
+    y : number!
+    speed : number!
+    x : number
+    dir : number
+    touching : boolean
+    hit : boolean
+  }
+
+  entity PatrolState [runtime, shared] {
+    id : string!
+    patrols : [Patrol] = []
+    px : number = 0
+    py : number = 0
+  }
+
+  trait PatrolHazard -> @rebindable PatrolState [lifecycle] {
+    initial: active
+
+    state active {
+      INIT -> active
+        (set @entity.patrols (array/map @config.patrols (fn p (object/merge @p { x: (object/get @p x0), dir: 1, touching: false, hit: false }))))
+        (set @entity.px @config.playerSpawnX)
+        (set @entity.py @config.playerSpawnY)
+
+      BODY_MOVED -> active
+        (set @entity.px @payload.x)
+        (set @entity.py @payload.y)
+
+      RESTART -> active
+        (set @entity.patrols (array/map @config.patrols (fn p (object/merge @p { x: (object/get @p x0), dir: 1, touching: false, hit: false }))))
+    }
+
+    ticks {
+      patrolTick every 33ms
+        when (and @config.running (> (array/len @entity.patrols) 0))
+        (set @entity.patrols (array/map @entity.patrols (fn p
+          (let ((nx (+ (object/get @p x) (* (* (object/get @p dir) (object/get @p speed)) 0.033))))
+          (let ((overshoot (> @nx (object/get @p x1))) (undershoot (< @nx (object/get @p x0))))
+          (let ((cx (if @overshoot (object/get @p x1) (if @undershoot (object/get @p x0) @nx)))
+                (cdir (if @overshoot -1 (if @undershoot 1 (object/get @p dir)))))
+          (let ((near (and (<= (math/abs (- @entity.px @cx)) @config.hitRadius) (<= (math/abs (- @entity.py (object/get @p y))) @config.hitRadius))))
+            (object/merge @p { x: @cx, dir: @cdir, hit: (and @near (== (object/get @p touching) false)), touching: @near }))))))))
+        (let ((hits (array/filter @entity.patrols (fn p (== (object/get @p hit) true)))))
+        (if (> (array/len @hits) 0)
+          (emit PATROL_HIT { id: (object/get (array/first @hits) id), x: (object/get (array/first @hits) x), y: (object/get (array/first @hits) y) })
+          null))
+    }
+
+    emits {
+      PATROL_HIT -> external {
+        id : string!
+        x : number!
+        y : number!
+      }
+        @description "A patrol made contact with the player this tick; fires once per contact and re-arms only after separation — boards route it to their damage rule (std-lives DAMAGE)."
+        @tier "domain"
+    }
+
+    listens {
+      BODY_MOVED { x : number!, y : number!, vx : number!, vy : number!, grounded : boolean!, skating : boolean!, speed : number! }
+      RESTART { id : string }
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true the 33ms tick moves patrols and tests contact; toggle to freeze every patrol in place."
+        @tier "domain"
+      patrols : [Patrol] = []
+        @label "Patrols"
+        @description "One row per patroller: id, the [x0, x1] beat it walks, its fixed y, and its speed in units/s. Current x/dir/touching/hit are stamped at runtime."
+        @tier "domain"
+      hitRadius : number = 0.7
+        @label "Hit Radius"
+        @description "Per-axis distance (world units) within which a patrol counts as touching the player; smaller values demand precise contact, larger values forgive."
+        @tier "domain"
+      playerSpawnX : number = 0
+        @label "Player Spawn X"
+        @description "Player x assumed before the first BODY_MOVED arrives (match the body authority's spawn)."
+        @tier "domain"
+      playerSpawnY : number = 0
+        @label "Player Spawn Y"
+        @description "Player y assumed before the first BODY_MOVED arrives."
+        @tier "domain"
+    }
+  }
+
+  page "/patrol-hazard" as PatrolHazardPage -> PatrolHazard
+}

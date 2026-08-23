@@ -1,0 +1,96 @@
+app std-gate-lock "1.0.0"
+"Headless collectible-gate mechanic: doors that stay shut until the player's collected total reaches their cost. Listens COLLECT (the board's running total — stars, coins, keys) and flips every door whose cost is met, stamping open on the shared door rows and emitting GATE_OPENED for the first newly opened door (the shared entity is the render authority for the rest). While a closed door's rect contains the player it emits GATE_BLOCKED once per approach — re-arming only after the player steps out — so the board can answer with a PLACE back and a locked fx. RESTART re-locks every door and zeroes the total. Renders nothing; boards draw closed doors as bars/walls and open ones as gaps."
+orbital GateLockOrbital {
+  type Door = {
+    id : string!
+    x : number!
+    y : number!
+    width : number!
+    height : number!
+    cost : number!
+    open : boolean
+    touching : boolean
+    blocked : boolean
+  }
+
+  entity GateLockData [runtime, shared] {
+    id : string!
+    doors : [Door] = []
+    total : number = 0
+  }
+
+  trait GateLock -> @rebindable GateLockData [lifecycle] {
+    initial: active
+
+    state active {
+      INIT -> active
+        (set @entity.doors (array/map @config.doors (fn d (object/merge @d { open: false, touching: false, blocked: false }))))
+        (set @entity.total 0)
+
+      COLLECT -> active when @config.running
+        (set @entity.total @payload.total)
+        (let ((newly (array/filter @entity.doors (fn d (and (== (object/get @d open) false) (<= (object/get @d cost) @payload.total))))))
+        (if (> (array/len @newly) 0)
+          (do
+            (set @entity.doors (array/map @entity.doors (fn d (if (and (== (object/get @d open) false) (<= (object/get @d cost) @payload.total)) (object/merge @d { open: true }) @d))))
+            (emit GATE_OPENED { id: (object/get (array/first @newly) id), cost: (object/get (array/first @newly) cost) }))
+          null))
+
+      BODY_MOVED -> active when @config.running
+        (set @entity.doors (array/map @entity.doors (fn d
+          (let ((inside (and (== (object/get @d open) false)
+                             (and (>= @payload.x (- (object/get @d x) @config.reachMargin))
+                                  (and (<= @payload.x (+ (object/get @d x) (object/get @d width) @config.reachMargin))
+                                       (and (>= @payload.y (- (object/get @d y) @config.reachMargin))
+                                            (<= @payload.y (+ (object/get @d y) (object/get @d height) @config.reachMargin))))))))
+            (object/merge @d { touching: @inside, blocked: (and @inside (== (object/get @d touching) false)) })))))
+        (let ((blocked (array/filter @entity.doors (fn d (== (object/get @d blocked) true)))))
+        (if (> (array/len @blocked) 0)
+          (emit GATE_BLOCKED { id: (object/get (array/first @blocked) id), x: (object/get (array/first @blocked) x), y: (object/get (array/first @blocked) y) })
+          null))
+
+      RESTART -> active
+        (set @entity.doors (array/map @config.doors (fn d (object/merge @d { open: false, touching: false, blocked: false }))))
+        (set @entity.total 0)
+    }
+
+    emits {
+      GATE_OPENED -> external {
+        id : string!
+        cost : number!
+      }
+        @description "A door's cost was reached by the collected total and it flipped open; boards layer unlock fx. When several doors open on one total, the first reports and the shared entity carries the rest."
+        @tier "domain"
+      GATE_BLOCKED -> external {
+        id : string!
+        x : number!
+        y : number!
+      }
+        @description "The player is inside a closed door's rect; fires once per approach and re-arms after they step out. Boards answer with a PLACE back plus a locked fx."
+        @tier "domain"
+    }
+
+    listens {
+      COLLECT { total : number! }
+      BODY_MOVED { x : number!, y : number!, vx : number!, vy : number!, grounded : boolean!, skating : boolean!, speed : number! }
+      RESTART { id : string }
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true, COLLECT opens doors and closed doors report contact; toggle to freeze every door as-is."
+        @tier "domain"
+      doors : [Door] = []
+        @label "Doors"
+        @description "One row per gate: id, min-corner rect (x, y, width, height in world units) and the collected total that opens it. open/touching are stamped at runtime."
+        @tier "domain"
+      reachMargin : number = 0.6
+        @label "Reach Margin"
+        @description "Extra world units padded around a closed door's rect when testing player contact (approximates the body's size)."
+        @tier "domain"
+    }
+  }
+
+  page "/gate-lock" as GateLockPage -> GateLock
+}

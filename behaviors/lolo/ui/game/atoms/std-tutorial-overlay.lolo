@@ -1,0 +1,164 @@
+app std-tutorial-overlay "1.0.0"
+"Tutorial modal with media steps for game boards and learning shells: a paged overlay — title, an animated GIF/clip showing exactly how the mechanic is done, one line of body copy, a step counter, and Back / Next / Skip — composed entirely from registered render types (stack + text + image + button) into the overlay slot, so no new UI component is needed. autoShow opens it on INIT for first-time players; a board's help button re-opens it any time via SHOW (which rewinds to step one). DISMISS (or finishing the last step) marks the run done, clears the overlay, and emits TUTORIAL_DONE so the board can unpause or log. Steps are pure config — a board teaches a new mechanic by adding one { id, title, body, media } row."
+orbital TutorialOverlayOrbital {
+  type TutorialStep = {
+    id : string!
+    title : string!
+    body : string
+    media : string
+    mediaAlt : string
+  }
+
+  entity TutorialState [runtime, shared] {
+    id : string!
+    step : number = 0
+    done : boolean = false
+  }
+
+  trait TutorialOverlay -> @rebindable TutorialState [interaction, instance] {
+    initial: hidden
+
+    state hidden {
+      INIT -> hidden
+        (if @config.autoShow
+          (emit TUT_AUTO { id: "auto" })
+          (render-ui overlay null))
+
+      TUT_AUTO -> showing
+        (set @entity.step 0)
+        (render-ui overlay {
+          type: stack
+          direction: vertical
+          className: "bg-card text-card-foreground border border-border rounded-lg shadow-lg p-6 max-w-md mx-auto mt-16"
+          children: [
+            { type: typography, content: (object/get (array/nth @config.steps 0) title), variant: "h4", weight: "bold" }
+            { type: atlas-image, asset: { url: (object/get (array/nth @config.steps 0) media), name: (object/get (array/nth @config.steps 0) id), category: "tutorial" }, fit: "contain", alt: (object/get (array/nth @config.steps 0) mediaAlt), className: "rounded-md" }
+            { type: typography, content: (object/get (array/nth @config.steps 0) body), variant: "body" }
+            { type: typography, content: (str/concat "1 / " (array/len @config.steps)), variant: "caption", align: "center" }
+            { type: stack, direction: horizontal, justify: "center", className: "pt-2", children: [
+              { type: button, label: (if (> (array/len @config.steps) 1) "Next ▶" "Got it"), action: "TUT_NEXT", variant: "primary" }
+              { type: button, label: "Skip", action: "TUT_DISMISS", variant: "secondary" }
+            ] }
+          ]
+        })
+
+      SHOW -> showing
+        (set @entity.step 0)
+        (render-ui overlay {
+          type: stack
+          direction: vertical
+          className: "bg-card text-card-foreground border border-border rounded-lg shadow-lg p-6 max-w-md mx-auto mt-16"
+          children: [
+            { type: typography, content: (object/get (array/nth @config.steps 0) title), variant: "h4", weight: "bold" }
+            { type: atlas-image, asset: { url: (object/get (array/nth @config.steps 0) media), name: (object/get (array/nth @config.steps 0) id), category: "tutorial" }, fit: "contain", alt: (object/get (array/nth @config.steps 0) mediaAlt), className: "rounded-md" }
+            { type: typography, content: (object/get (array/nth @config.steps 0) body), variant: "body" }
+            { type: typography, content: (str/concat "1 / " (array/len @config.steps)), variant: "caption", align: "center" }
+            { type: stack, direction: horizontal, justify: "center", className: "pt-2", children: [
+              { type: button, label: (if (> (array/len @config.steps) 1) "Next ▶" "Got it"), action: "TUT_NEXT", variant: "primary" }
+              { type: button, label: "Skip", action: "TUT_DISMISS", variant: "secondary" }
+            ] }
+          ]
+        })
+    }
+
+    state showing {
+      TUT_NEXT -> showing when (< (+ @entity.step 1) (array/len @config.steps))
+        (set @entity.step (+ @entity.step 1))
+        (render-ui overlay {
+          type: stack
+          direction: vertical
+          className: "bg-card text-card-foreground border border-border rounded-lg shadow-lg p-6 max-w-md mx-auto mt-16"
+          children: [
+            { type: typography, content: (object/get (array/nth @config.steps @entity.step) title), variant: "h4", weight: "bold" }
+            { type: atlas-image, asset: { url: (object/get (array/nth @config.steps @entity.step) media), name: (object/get (array/nth @config.steps @entity.step) id), category: "tutorial" }, fit: "contain", alt: (object/get (array/nth @config.steps @entity.step) mediaAlt), className: "rounded-md" }
+            { type: typography, content: (object/get (array/nth @config.steps @entity.step) body), variant: "body" }
+            { type: typography, content: (str/concat (+ @entity.step 1) " / " (array/len @config.steps)), variant: "caption", align: "center" }
+            { type: stack, direction: horizontal, justify: "center", className: "pt-2", children: [
+              { type: button, label: "◀ Back", action: "TUT_BACK", variant: "secondary" }
+              { type: button, label: (if (< (+ @entity.step 1) (array/len @config.steps)) "Next ▶" "Got it"), action: "TUT_NEXT", variant: "primary" }
+              { type: button, label: "Skip", action: "TUT_DISMISS", variant: "secondary" }
+            ] }
+          ]
+        })
+
+      TUT_NEXT -> hidden when (>= (+ @entity.step 1) (array/len @config.steps))
+        (set @entity.done true)
+        (render-ui overlay null)
+        (emit TUTORIAL_DONE { id: "tutorial" })
+
+      TUT_BACK -> showing when (> @entity.step 0)
+        (set @entity.step (- @entity.step 1))
+        (render-ui overlay {
+          type: stack
+          direction: vertical
+          className: "bg-card text-card-foreground border border-border rounded-lg shadow-lg p-6 max-w-md mx-auto mt-16"
+          children: [
+            { type: typography, content: (object/get (array/nth @config.steps @entity.step) title), variant: "h4", weight: "bold" }
+            { type: atlas-image, asset: { url: (object/get (array/nth @config.steps @entity.step) media), name: (object/get (array/nth @config.steps @entity.step) id), category: "tutorial" }, fit: "contain", alt: (object/get (array/nth @config.steps @entity.step) mediaAlt), className: "rounded-md" }
+            { type: typography, content: (object/get (array/nth @config.steps @entity.step) body), variant: "body" }
+            { type: typography, content: (str/concat (+ @entity.step 1) " / " (array/len @config.steps)), variant: "caption", align: "center" }
+            { type: stack, direction: horizontal, justify: "center", className: "pt-2", children: [
+              { type: button, label: "◀ Back", action: "TUT_BACK", variant: "secondary" }
+              { type: button, label: (if (< (+ @entity.step 1) (array/len @config.steps)) "Next ▶" "Got it"), action: "TUT_NEXT", variant: "primary" }
+              { type: button, label: "Skip", action: "TUT_DISMISS", variant: "secondary" }
+            ] }
+          ]
+        })
+
+      TUT_DISMISS -> hidden
+        (set @entity.done true)
+        (render-ui overlay null)
+        (emit TUTORIAL_DONE { id: "tutorial" })
+    }
+
+    emits {
+      TUT_AUTO -> external {
+        id : string
+      }
+        @description "Self-emitted on INIT when autoShow is on — opens step one. (A config-valued INIT guard would be constant-folded at compose time and misfire; the self-event keeps the decision in an effect.)"
+        @tier "essential"
+      TUT_NEXT -> external {
+        id : string
+      }
+        @description "Advance one step; on the last step it finishes the tutorial (marks done, clears the overlay, emits TUTORIAL_DONE)."
+        @tier "essential"
+      TUT_BACK -> external {
+        id : string
+      }
+        @description "Return one step (inert on the first)."
+        @tier "essential"
+      TUT_DISMISS -> external {
+        id : string
+      }
+        @description "Skip/close the tutorial; marks done and clears the overlay."
+        @tier "essential"
+      SHOW -> external {
+        id : string
+      }
+        @description "Re-open the tutorial from step one — wire a board's help button here."
+        @tier "essential"
+      TUTORIAL_DONE -> external {
+        id : string!
+      }
+        @description "The tutorial was finished or skipped; boards unpause or log completion."
+        @tier "domain"
+    }
+
+    listens {
+      SHOW { id : string }
+    }
+
+    config {
+      steps : [TutorialStep] = []
+        @label "Steps"
+        @description "One row per tutorial page: title, one line of body copy, and media — the URL of an animated GIF/clip showing exactly how the mechanic is performed (recorded from real gameplay)."
+        @tier "presentation"
+      autoShow : boolean = true
+        @label "Auto Show"
+        @description "When true the tutorial opens on INIT for this run; when false it stays hidden until SHOW."
+        @tier "domain"
+    }
+  }
+
+  page "/tutorial-overlay" as TutorialOverlayPage -> TutorialOverlay
+}

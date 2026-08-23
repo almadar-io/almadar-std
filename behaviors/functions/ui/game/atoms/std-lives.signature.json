@@ -1,0 +1,206 @@
+[
+  {
+    "organism": "std-lives",
+    "orbital": "LivesOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/game/atoms/std-lives.ts",
+    "entities": [
+      {
+        "name": "LivesData",
+        "fields": [
+          {
+            "name": "lives",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "respawnX",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "respawnY",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "cpX",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "lastHitAt",
+            "type": "number",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "Lives",
+        "emittedEvents": [
+          "LIFE_LOST",
+          "RESPAWN",
+          "GAME_OVER",
+          "CHECKPOINT_REACHED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "LIFE_LOST",
+            "direction": "emit",
+            "description": "A life was spent (post-invulnerability check); carries the lives remaining. Boards layer damage fx / HUD heartbeat.",
+            "tier": "domain"
+          },
+          {
+            "name": "RESPAWN",
+            "direction": "emit",
+            "description": "The checkpoint the body should restart from after this life loss; boards forward it to the body authority's PLACE.",
+            "tier": "domain"
+          },
+          {
+            "name": "GAME_OVER",
+            "direction": "emit",
+            "description": "The last life was spent; boards show the game-over overlay and wait for RESTART.",
+            "tier": "domain"
+          },
+          {
+            "name": "CHECKPOINT_REACHED",
+            "direction": "emit",
+            "description": "The player crossed a checkpoint's atX for the first time this run; the respawn point moved to it. Boards layer flag/save fx.",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "DAMAGE",
+            "direction": "listen"
+          },
+          {
+            "name": "BODY_MOVED",
+            "direction": "listen"
+          },
+          {
+            "name": "RESTART",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "checkpoints",
+            "type": "[Checkpoint]",
+            "default": [],
+            "label": "Checkpoints",
+            "description": "Ordered along the run: when the player's x crosses atX the respawn point moves to (x, y). Must be sorted by atX ascending.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "atX": {
+                  "name": "atX",
+                  "required": true,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "invulnMs",
+            "type": "number",
+            "default": 1500,
+            "label": "Invulnerability Window (ms)",
+            "description": "Milliseconds after a accepted hit during which further DAMAGE is ignored, so a hazard overlapping the respawn can't chain-drain.",
+            "tier": "domain"
+          },
+          {
+            "key": "maxLives",
+            "type": "number",
+            "default": 3,
+            "label": "Max Lives",
+            "description": "Lives seeded on INIT/RESTART; reaching zero fires GAME_OVER.",
+            "tier": "domain"
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true, DAMAGE and checkpoint crossings are processed; toggle to make the run harmless (practice mode).",
+            "tier": "domain"
+          },
+          {
+            "key": "spawnX",
+            "type": "number",
+            "default": 0,
+            "label": "Spawn X",
+            "description": "Respawn x before any checkpoint is reached (match the body authority's spawn).",
+            "tier": "domain"
+          },
+          {
+            "key": "spawnY",
+            "type": "number",
+            "default": 0,
+            "label": "Spawn Y",
+            "description": "Respawn y before any checkpoint is reached.",
+            "tier": "domain"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "LivesData",
+        "transitionEvents": [
+          "BODY_MOVED",
+          "DAMAGE",
+          "INIT",
+          "RESTART"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "cpX",
+            "lastHitAt",
+            "lives",
+            "respawnX",
+            "respawnY"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "LivesPage",
+        "defaultPath": "/lives",
+        "primaryEntity": "LivesData"
+      }
+    ],
+    "emittedEvents": [
+      "CHECKPOINT_REACHED",
+      "GAME_OVER",
+      "LIFE_LOST",
+      "RESPAWN"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

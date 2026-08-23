@@ -1,0 +1,63 @@
+app std-fx-trail "1.0.0"
+"Headless motion-trail mechanic: records the moving body's recent positions as timestamped dots on a [runtime, shared] entity so the render layer can draw a fading comet trail. Rides the body authority's BODY_MOVED — appends a dot only when the body's speed exceeds minSpeed (standing still leaves no trail) and prunes dots older than ttl on the same pass, so no decay tick is needed and a stopped body's trail simply stops growing (the render side fades each dot by bornAt/ttl). RESTART clears. Renders nothing."
+orbital FxTrailOrbital {
+  type TrailDot = {
+    id : string!
+    x : number!
+    y : number!
+    bornAt : number!
+    ttl : number!
+  }
+
+  entity FxTrailData [runtime, shared] {
+    id : string!
+    trail : [TrailDot] = []
+    seq : number = 0
+  }
+
+  trait FxTrail -> @rebindable FxTrailData [lifecycle] {
+    initial: active
+
+    state active {
+      INIT -> active
+        (set @entity.trail [])
+        (set @entity.seq 0)
+
+      BODY_MOVED -> active when @config.running
+        (set @entity.trail
+          (array/filter
+            (if (> @payload.speed @config.minSpeed)
+              (array/concat @entity.trail [ { id: (str/concat "trail-" (+ @entity.seq 1)), x: @payload.x, y: @payload.y, bornAt: (time/now), ttl: @config.ttl } ])
+              @entity.trail)
+            (fn d (< (- (time/now) (object/get @d bornAt)) (object/get @d ttl)))))
+        (if (> @payload.speed @config.minSpeed)
+          (set @entity.seq (+ @entity.seq 1))
+          null)
+
+      RESTART -> active
+        (set @entity.trail [])
+    }
+
+    listens {
+      BODY_MOVED { x : number!, y : number!, vx : number!, vy : number!, grounded : boolean!, skating : boolean!, speed : number! }
+      RESTART { id : string }
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true, BODY_MOVED appends trail dots; toggle to freeze the trail (existing dots still age out)."
+        @tier "domain"
+      ttl : number = 600
+        @label "Trail Ttl (ms)"
+        @description "Milliseconds a trail dot lives; at a 33ms move cadence ~600ms keeps the last eighteen positions. The ttl is also the natural length cap — no separate limit needed."
+        @tier "presentation"
+      minSpeed : number = 0.5
+        @label "Min Speed"
+        @description "Body speed (units/s, from BODY_MOVED) below which no dot is appended, so a resting body doesn't pile dots on one spot."
+        @tier "domain"
+    }
+  }
+
+  page "/fx-trail" as FxTrailPage -> FxTrail
+}

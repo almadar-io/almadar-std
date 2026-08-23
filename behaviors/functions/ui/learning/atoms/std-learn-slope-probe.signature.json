@@ -1,0 +1,217 @@
+[
+  {
+    "organism": "std-learn-slope-probe",
+    "orbital": "LearnSlopeProbeOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-learn-slope-probe.ts",
+    "entities": [
+      {
+        "name": "SlopeProbeState",
+        "fields": [
+          {
+            "name": "probing",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "x",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "y",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "slope",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "tax",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "tay",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "tbx",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "tby",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "triAx",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "triAy",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "triBx",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "triBy",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "triCx",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "triCy",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "segment",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "bucket",
+            "type": "number",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "LearnSlopeProbe",
+        "emittedEvents": [
+          "SLOPE_CHANGED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "SLOPE_CHANGED",
+            "direction": "emit",
+            "description": "The local dy/dx crossed a 0.5 bucket boundary while the probe was active; slope is exact, bucket is the rounded step — fx/HUD scale with steepness without paying per-tick events.",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "BODY_MOVED",
+            "direction": "listen"
+          },
+          {
+            "name": "RESTART",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "curve",
+            "type": "[ProbeSample]",
+            "default": [],
+            "label": "Curve",
+            "description": "Surface samples (x strictly increasing) of the graph being ridden — the same table the body skates and the canvas draws, so the readout matches what is underfoot.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true the probe derives the readout off BODY_MOVED; toggle to freeze it (the board hides the tangent overlays when probing goes stale).",
+            "tier": "domain"
+          },
+          {
+            "key": "triRun",
+            "type": "number",
+            "default": 1,
+            "label": "Triangle Run",
+            "description": "Horizontal leg of the rise-over-run triangle; the vertical leg is slope × triRun, so triRun = 1 reads the slope directly.",
+            "tier": "presentation"
+          },
+          {
+            "key": "window",
+            "type": "number",
+            "default": 1.5,
+            "label": "Tangent Window",
+            "description": "Half-length (world units along the tangent) of the tangent segment and of the glow sample window around the contact point.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "SlopeProbeState",
+        "transitionEvents": [
+          "BODY_MOVED",
+          "INIT",
+          "RESTART"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "bucket",
+            "probing",
+            "segment",
+            "slope",
+            "tax",
+            "tay",
+            "tbx",
+            "tby",
+            "triAx",
+            "triAy",
+            "triBx",
+            "triBy",
+            "triCx",
+            "triCy",
+            "x",
+            "y"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "LearnSlopeProbePage",
+        "defaultPath": "/learn-slope-probe",
+        "primaryEntity": "SlopeProbeState"
+      }
+    ],
+    "emittedEvents": [
+      "SLOPE_CHANGED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

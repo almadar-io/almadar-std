@@ -1,0 +1,182 @@
+[
+  {
+    "organism": "std-patrol-hazard",
+    "orbital": "PatrolHazardOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/game/atoms/std-patrol-hazard.ts",
+    "entities": [
+      {
+        "name": "PatrolState",
+        "fields": [
+          {
+            "name": "patrols",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "px",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "py",
+            "type": "number",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "PatrolHazard",
+        "emittedEvents": [
+          "PATROL_HIT"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "PATROL_HIT",
+            "direction": "emit",
+            "description": "A patrol made contact with the player this tick; fires once per contact and re-arms only after separation — boards route it to their damage rule (std-lives DAMAGE).",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "BODY_MOVED",
+            "direction": "listen"
+          },
+          {
+            "name": "RESTART",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "hitRadius",
+            "type": "number",
+            "default": 0.7,
+            "label": "Hit Radius",
+            "description": "Per-axis distance (world units) within which a patrol counts as touching the player; smaller values demand precise contact, larger values forgive.",
+            "tier": "domain"
+          },
+          {
+            "key": "patrols",
+            "type": "[Patrol]",
+            "default": [],
+            "label": "Patrols",
+            "description": "One row per patroller: id, the [x0, x1] beat it walks, its fixed y, and its speed in units/s. Current x/dir/touching/hit are stamped at runtime.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "dir": {
+                  "name": "dir",
+                  "required": false,
+                  "type": "number"
+                },
+                "hit": {
+                  "name": "hit",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "speed": {
+                  "name": "speed",
+                  "required": true,
+                  "type": "number"
+                },
+                "touching": {
+                  "name": "touching",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "x": {
+                  "name": "x",
+                  "required": false,
+                  "type": "number"
+                },
+                "x0": {
+                  "name": "x0",
+                  "required": true,
+                  "type": "number"
+                },
+                "x1": {
+                  "name": "x1",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "playerSpawnX",
+            "type": "number",
+            "default": 0,
+            "label": "Player Spawn X",
+            "description": "Player x assumed before the first BODY_MOVED arrives (match the body authority's spawn).",
+            "tier": "domain"
+          },
+          {
+            "key": "playerSpawnY",
+            "type": "number",
+            "default": 0,
+            "label": "Player Spawn Y",
+            "description": "Player y assumed before the first BODY_MOVED arrives.",
+            "tier": "domain"
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true the 33ms tick moves patrols and tests contact; toggle to freeze every patrol in place.",
+            "tier": "domain"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "PatrolState",
+        "transitionEvents": [
+          "BODY_MOVED",
+          "INIT",
+          "RESTART"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "patrols",
+            "px",
+            "py"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "PatrolHazardPage",
+        "defaultPath": "/patrol-hazard",
+        "primaryEntity": "PatrolState"
+      }
+    ],
+    "emittedEvents": [
+      "PATROL_HIT"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

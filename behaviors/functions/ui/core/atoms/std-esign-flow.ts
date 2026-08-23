@@ -1037,14 +1037,14 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                             'variant': 'primary',
                           },
                           {
-                            'event': 'CHECK_ENVELOPE_STATUS',
-                            'label': 'Refresh status',
-                            'variant': 'secondary',
-                          },
-                          {
                             'event': 'REQUEST_DELETE',
                             'label': 'Cancel',
                             'variant': 'danger',
+                          },
+                          {
+                            'event': 'CHECK_ENVELOPE_STATUS',
+                            'label': 'Refresh status',
+                            'variant': 'secondary',
                           },
                         ],
                         'type': 'data-grid',

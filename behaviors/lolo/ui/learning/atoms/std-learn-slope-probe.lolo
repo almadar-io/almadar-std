@@ -1,0 +1,117 @@
+app std-learn-slope-probe "1.0.0"
+"Headless derivative probe for graph-riding learning boards: while the body authority's BODY_MOVED reports its `skating` flag (body riding the curve), it brackets the configured curve around the body's x and derives the local calculus readout — the slope dy/dx, a tangent-line segment of half-width `window` centered on the contact point, a rise-over-run triangle (run `triRun`, rise slope·run), and the glow window of curve samples around the contact — all written to a [runtime, shared] entity so the board renders the math the player is physically riding. Emits the sparse SLOPE_CHANGED signal only when the slope crosses a 0.5 bucket boundary, so fx and HUD meters react to *changes* in steepness without paying a per-tick event. The curve is the same sample table the body skates and the canvas draws — one source, three views. Renders nothing."
+orbital LearnSlopeProbeOrbital {
+  type ProbeSample = {
+    x : number!
+    y : number!
+  }
+
+  entity SlopeProbeState [runtime, shared] {
+    id : string!
+    probing : boolean = false
+    x : number = 0
+    y : number = 0
+    slope : number = 0
+    tax : number = 0
+    tay : number = 0
+    tbx : number = 0
+    tby : number = 0
+    triAx : number = 0
+    triAy : number = 0
+    triBx : number = 0
+    triBy : number = 0
+    triCx : number = 0
+    triCy : number = 0
+    segment : [ProbeSample] = []
+    bucket : number = 9999
+  }
+
+  trait LearnSlopeProbe -> @rebindable SlopeProbeState [lifecycle] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.probing false)
+        (set @entity.segment [])
+        (set @entity.bucket 9999)
+
+      BODY_MOVED -> idle when @config.running
+        (let ((on (and @payload.skating (> (array/len @config.curve) 1))))
+        (let ((inRange (and @on (and (>= @payload.x (object/get (array/first @config.curve) x)) (<= @payload.x (object/get (array/last @config.curve) x))))))
+        (if @inRange
+          (let ((leftSamp (array/last (array/filter @config.curve (fn s (<= (object/get @s x) @payload.x)))))
+                (rightSamp (array/first (array/filter @config.curve (fn s (> (object/get @s x) @payload.x))))))
+          (let ((slope (if (== @rightSamp null) 0 (/ (- (object/get @rightSamp y) (object/get @leftSamp y)) (- (object/get @rightSamp x) (object/get @leftSamp x))))))
+          (let ((curveY (if (== @rightSamp null) (object/get @leftSamp y) (+ (object/get @leftSamp y) (* @slope (- @payload.x (object/get @leftSamp x)))))))
+          (let ((norm (math/sqrt (+ 1 (* @slope @slope)))))
+          (let ((dx (/ @config.window @norm)) (dy (/ (* @slope @config.window) @norm)))
+          (let ((newBucket (* (math/round (* @slope 2) 0) 0.5)))
+            (do
+              (set @entity.probing true)
+              (set @entity.x @payload.x)
+              (set @entity.y @curveY)
+              (set @entity.slope @slope)
+              (set @entity.tax (- @payload.x @dx))
+              (set @entity.tay (- @curveY @dy))
+              (set @entity.tbx (+ @payload.x @dx))
+              (set @entity.tby (+ @curveY @dy))
+              (set @entity.triAx @payload.x)
+              (set @entity.triAy @curveY)
+              (set @entity.triBx (+ @payload.x @config.triRun))
+              (set @entity.triBy @curveY)
+              (set @entity.triCx (+ @payload.x @config.triRun))
+              (set @entity.triCy (+ @curveY (* @slope @config.triRun)))
+              (set @entity.segment (array/filter @config.curve (fn s (and (>= (object/get @s x) (- @payload.x @config.window)) (<= (object/get @s x) (+ @payload.x @config.window))))))
+              (if (!= @newBucket @entity.bucket)
+                (do
+                  (set @entity.bucket @newBucket)
+                  (emit SLOPE_CHANGED { slope: @slope, bucket: @newBucket }))
+                null))))))))
+          (if @entity.probing
+            (do
+              (set @entity.probing false)
+              (set @entity.segment []))
+            null))))
+
+      RESTART -> idle
+        (set @entity.probing false)
+        (set @entity.segment [])
+        (set @entity.bucket 9999)
+    }
+
+    emits {
+      SLOPE_CHANGED -> external {
+        slope : number!
+        bucket : number!
+      }
+        @description "The local dy/dx crossed a 0.5 bucket boundary while the probe was active; slope is exact, bucket is the rounded step — fx/HUD scale with steepness without paying per-tick events."
+        @tier "domain"
+    }
+
+    listens {
+      BODY_MOVED { x : number!, y : number!, vx : number!, vy : number!, grounded : boolean!, skating : boolean!, speed : number! }
+      RESTART { id : string }
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true the probe derives the readout off BODY_MOVED; toggle to freeze it (the board hides the tangent overlays when probing goes stale)."
+        @tier "domain"
+      curve : [ProbeSample] = []
+        @label "Curve"
+        @description "Surface samples (x strictly increasing) of the graph being ridden — the same table the body skates and the canvas draws, so the readout matches what is underfoot."
+        @tier "domain"
+      window : number = 1.5
+        @label "Tangent Window"
+        @description "Half-length (world units along the tangent) of the tangent segment and of the glow sample window around the contact point."
+        @tier "presentation"
+      triRun : number = 1
+        @label "Triangle Run"
+        @description "Horizontal leg of the rise-over-run triangle; the vertical leg is slope × triRun, so triRun = 1 reads the slope directly."
+        @tier "presentation"
+    }
+  }
+
+  page "/learn-slope-probe" as LearnSlopeProbePage -> LearnSlopeProbe
+}

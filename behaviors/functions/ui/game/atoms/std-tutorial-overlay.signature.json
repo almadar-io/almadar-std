@@ -1,0 +1,167 @@
+[
+  {
+    "organism": "std-tutorial-overlay",
+    "orbital": "TutorialOverlayOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/game/atoms/std-tutorial-overlay.ts",
+    "entities": [
+      {
+        "name": "TutorialState",
+        "fields": [
+          {
+            "name": "step",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "done",
+            "type": "boolean",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "TutorialOverlay",
+        "emittedEvents": [
+          "TUT_AUTO",
+          "TUT_NEXT",
+          "TUT_BACK",
+          "TUT_DISMISS",
+          "SHOW",
+          "TUTORIAL_DONE"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "TUT_AUTO",
+            "direction": "emit",
+            "description": "Self-emitted on INIT when autoShow is on — opens step one. (A config-valued INIT guard would be constant-folded at compose time and misfire; the self-event keeps the decision in an effect.)",
+            "tier": "essential"
+          },
+          {
+            "name": "TUT_NEXT",
+            "direction": "emit",
+            "description": "Advance one step; on the last step it finishes the tutorial (marks done, clears the overlay, emits TUTORIAL_DONE).",
+            "tier": "essential"
+          },
+          {
+            "name": "TUT_BACK",
+            "direction": "emit",
+            "description": "Return one step (inert on the first).",
+            "tier": "essential"
+          },
+          {
+            "name": "TUT_DISMISS",
+            "direction": "emit",
+            "description": "Skip/close the tutorial; marks done and clears the overlay.",
+            "tier": "essential"
+          },
+          {
+            "name": "SHOW",
+            "direction": "emit",
+            "description": "Re-open the tutorial from step one — wire a board's help button here.",
+            "tier": "essential"
+          },
+          {
+            "name": "TUTORIAL_DONE",
+            "direction": "emit",
+            "description": "The tutorial was finished or skipped; boards unpause or log completion.",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "autoShow",
+            "type": "boolean",
+            "default": true,
+            "label": "Auto Show",
+            "description": "When true the tutorial opens on INIT for this run; when false it stays hidden until SHOW.",
+            "tier": "domain"
+          },
+          {
+            "key": "steps",
+            "type": "[TutorialStep]",
+            "default": [],
+            "label": "Steps",
+            "description": "One row per tutorial page: title, one line of body copy, and media — the URL of an animated GIF/clip showing exactly how the mechanic is performed (recorded from real gameplay).",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "body": {
+                  "name": "body",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "media": {
+                  "name": "media",
+                  "required": false,
+                  "type": "string"
+                },
+                "mediaAlt": {
+                  "name": "mediaAlt",
+                  "required": false,
+                  "type": "string"
+                },
+                "title": {
+                  "name": "title",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "TutorialState",
+        "transitionEvents": [
+          "INIT",
+          "SHOW",
+          "TUT_AUTO",
+          "TUT_BACK",
+          "TUT_DISMISS",
+          "TUT_NEXT"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "done",
+            "step"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "TutorialOverlayPage",
+        "defaultPath": "/tutorial-overlay",
+        "primaryEntity": "TutorialState"
+      }
+    ],
+    "emittedEvents": [
+      "SHOW",
+      "TUTORIAL_DONE",
+      "TUT_AUTO",
+      "TUT_BACK",
+      "TUT_DISMISS",
+      "TUT_NEXT"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

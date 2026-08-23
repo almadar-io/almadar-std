@@ -1,0 +1,100 @@
+[
+  {
+    "organism": "std-fx-trail",
+    "orbital": "FxTrailOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/game/atoms/std-fx-trail.ts",
+    "entities": [
+      {
+        "name": "FxTrailData",
+        "fields": [
+          {
+            "name": "trail",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "seq",
+            "type": "number",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "FxTrail",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "BODY_MOVED",
+            "direction": "listen"
+          },
+          {
+            "name": "RESTART",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "minSpeed",
+            "type": "number",
+            "default": 0.5,
+            "label": "Min Speed",
+            "description": "Body speed (units/s, from BODY_MOVED) below which no dot is appended, so a resting body doesn't pile dots on one spot.",
+            "tier": "domain"
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true, BODY_MOVED appends trail dots; toggle to freeze the trail (existing dots still age out).",
+            "tier": "domain"
+          },
+          {
+            "key": "ttl",
+            "type": "number",
+            "default": 600,
+            "label": "Trail Ttl (ms)",
+            "description": "Milliseconds a trail dot lives; at a 33ms move cadence ~600ms keeps the last eighteen positions. The ttl is also the natural length cap — no separate limit needed.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "FxTrailData",
+        "transitionEvents": [
+          "BODY_MOVED",
+          "INIT",
+          "RESTART"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "seq",
+            "trail"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "FxTrailPage",
+        "defaultPath": "/fx-trail",
+        "primaryEntity": "FxTrailData"
+      }
+    ],
+    "emittedEvents": [],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

@@ -1,0 +1,173 @@
+[
+  {
+    "organism": "std-gate-lock",
+    "orbital": "GateLockOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/game/atoms/std-gate-lock.ts",
+    "entities": [
+      {
+        "name": "GateLockData",
+        "fields": [
+          {
+            "name": "doors",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "total",
+            "type": "number",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "GateLock",
+        "emittedEvents": [
+          "GATE_OPENED",
+          "GATE_BLOCKED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "GATE_OPENED",
+            "direction": "emit",
+            "description": "A door's cost was reached by the collected total and it flipped open; boards layer unlock fx. When several doors open on one total, the first reports and the shared entity carries the rest.",
+            "tier": "domain"
+          },
+          {
+            "name": "GATE_BLOCKED",
+            "direction": "emit",
+            "description": "The player is inside a closed door's rect; fires once per approach and re-arms after they step out. Boards answer with a PLACE back plus a locked fx.",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "COLLECT",
+            "direction": "listen"
+          },
+          {
+            "name": "BODY_MOVED",
+            "direction": "listen"
+          },
+          {
+            "name": "RESTART",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "doors",
+            "type": "[Door]",
+            "default": [],
+            "label": "Doors",
+            "description": "One row per gate: id, min-corner rect (x, y, width, height in world units) and the collected total that opens it. open/touching are stamped at runtime.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "blocked": {
+                  "name": "blocked",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "cost": {
+                  "name": "cost",
+                  "required": true,
+                  "type": "number"
+                },
+                "height": {
+                  "name": "height",
+                  "required": true,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "open": {
+                  "name": "open",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "touching": {
+                  "name": "touching",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "width": {
+                  "name": "width",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "reachMargin",
+            "type": "number",
+            "default": 0.6,
+            "label": "Reach Margin",
+            "description": "Extra world units padded around a closed door's rect when testing player contact (approximates the body's size).",
+            "tier": "domain"
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true, COLLECT opens doors and closed doors report contact; toggle to freeze every door as-is.",
+            "tier": "domain"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "GateLockData",
+        "transitionEvents": [
+          "BODY_MOVED",
+          "COLLECT",
+          "INIT",
+          "RESTART"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "doors",
+            "total"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "GateLockPage",
+        "defaultPath": "/gate-lock",
+        "primaryEntity": "GateLockData"
+      }
+    ],
+    "emittedEvents": [
+      "GATE_BLOCKED",
+      "GATE_OPENED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]
