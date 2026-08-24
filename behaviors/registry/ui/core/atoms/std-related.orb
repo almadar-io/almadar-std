@@ -46,6 +46,24 @@
         "parent": "trt_01KXG04HAWB43BWZ07VSETQEW3",
         "renames": []
       },
+      "evt_01M0RY3YKG5AXYCBSMYMGG5B4E": {
+        "bakedName": "SHOW_RELATED",
+        "curName": "SHOW_RELATED",
+        "id": "evt_01M0RY3YKG5AXYCBSMYMGG5B4E",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04HAWB43BWZ07VSETQEW3",
+        "renames": []
+      },
+      "evt_01M0RY3YKG814RWTP8NGJZCGG7": {
+        "bakedName": "SELECT_RELATED",
+        "curName": "SELECT_RELATED",
+        "id": "evt_01M0RY3YKG814RWTP8NGJZCGG7",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04HAWB43BWZ07VSETQEW3",
+        "renames": []
+      },
       "orb_01KXG04HAW4F728HDBS2FDVGF1": {
         "bakedName": "RelatedItemOrbital",
         "curName": "RelatedItemOrbital",
@@ -114,6 +132,13 @@
         {
           "category": "interaction",
           "config": {
+            "relationField": {
+              "default": "",
+              "description": "RelatedItem field compared against SHOW_RELATED's key to scope the fetch to one parent document; empty renders the full unfiltered collection (default).",
+              "label": "Relation field",
+              "tier": "domain",
+              "type": "string"
+            },
             "tableLook": {
               "default": "dense",
               "description": "Layer 2 visual treatment for the data table rendered by this atom.",
@@ -127,6 +152,13 @@
                 "borderless",
                 "card-rows"
               ]
+            },
+            "title": {
+              "default": "Related",
+              "description": "Heading shown above the related list.",
+              "label": "Section title",
+              "tier": "presentation",
+              "type": "string"
             }
           },
           "emits": [
@@ -161,6 +193,25 @@
               "scope": "internal",
               "synonyms": "error, failure, problem, unsuccessful",
               "tier": "internal"
+            },
+            {
+              "description": "Signals a related item was selected to drive a detail view.",
+              "event": "SELECT_RELATED",
+              "eventId": "evt_01M0RY3YKG814RWTP8NGJZCGG7",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "select, choose, open, view",
+              "tier": "domain"
             }
           ],
           "entityContract": {
@@ -182,6 +233,21 @@
                 "id": "evt_01KXG04HAW1G9NN0VW2WQP98QY",
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "description": "Scopes the related fetch to rows whose relationField equals key.",
+                "id": "evt_01M0RY3YKG5AXYCBSMYMGG5B4E",
+                "key": "SHOW_RELATED",
+                "name": "Show Related",
+                "payloadSchema": [
+                  {
+                    "name": "key",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "scope, filter, focus, target",
+                "tier": "domain"
               },
               {
                 "description": "Signals that related items have been successfully loaded.",
@@ -214,6 +280,25 @@
                 ],
                 "synonyms": "error, failure, problem, unsuccessful",
                 "tier": "internal"
+              },
+              {
+                "description": "Signals a related item was selected to drive a detail view.",
+                "id": "evt_01M0RY3YKG814RWTP8NGJZCGG7",
+                "key": "SELECT_RELATED",
+                "name": "Select Related",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "name",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "select, choose, open, view",
+                "tier": "domain"
               },
               {
                 "id": "evt_01KYXKHATCCRC9NH1SPH7KH8BC",
@@ -277,6 +362,63 @@
               {
                 "effects": [
                   [
+                    "fetch",
+                    "RelatedItem",
+                    {
+                      "emit": {
+                        "failure": "RelatedItemLoadFailed",
+                        "success": "RelatedItemLoaded"
+                      },
+                      "filter": [
+                        "or",
+                        [
+                          "=",
+                          "@config.relationField",
+                          ""
+                        ],
+                        [
+                          "=",
+                          [
+                            "object/get",
+                            "@entity",
+                            "@config.relationField"
+                          ],
+                          "@payload.key"
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Loading related…",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ],
+                      "className": "py-8",
+                      "direction": "vertical",
+                      "gap": "sm",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "SHOW_RELATED",
+                "eventId": "evt_01M0RY3YKG5AXYCBSMYMGG5B4E",
+                "from": "loading",
+                "to": "loading"
+              },
+              {
+                "effects": [
+                  [
                     "render-ui",
                     "main",
                     {
@@ -289,7 +431,7 @@
                               "type": "icon"
                             },
                             {
-                              "content": "Related",
+                              "content": "@config.title",
                               "type": "typography",
                               "variant": "h3"
                             }
@@ -309,15 +451,29 @@
                             "fn",
                             "item",
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "content": "@item.name",
                                   "type": "typography",
                                   "variant": "body"
+                                },
+                                {
+                                  "action": "SELECT_RELATED",
+                                  "actionPayload": {
+                                    "id": "@item.id",
+                                    "name": "@item.name"
+                                  },
+                                  "icon": "chevron-right",
+                                  "label": "Open",
+                                  "size": "sm",
+                                  "type": "button",
+                                  "variant": "ghost"
                                 }
                               ],
-                              "direction": "vertical",
+                              "direction": "horizontal",
                               "gap": "xs",
+                              "justify": "between",
                               "type": "stack"
                             }
                           ],
@@ -407,6 +563,61 @@
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ]
+                ],
+                "event": "SELECT_RELATED",
+                "eventId": "evt_01M0RY3YKG814RWTP8NGJZCGG7",
+                "from": "loaded",
+                "to": "loaded"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "RelatedItem",
+                    {
+                      "emit": {
+                        "failure": "RelatedItemLoadFailed",
+                        "success": "RelatedItemLoaded"
+                      },
+                      "filter": [
+                        "or",
+                        [
+                          "=",
+                          "@config.relationField",
+                          ""
+                        ],
+                        [
+                          "=",
+                          [
+                            "object/get",
+                            "@entity",
+                            "@config.relationField"
+                          ],
+                          "@payload.key"
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner"
+                    }
+                  ]
+                ],
+                "event": "SHOW_RELATED",
+                "eventId": "evt_01M0RY3YKG5AXYCBSMYMGG5B4E",
+                "from": "loaded",
+                "to": "loading"
+              },
+              {
+                "effects": [
+                  [
                     "fetch",
                     "RelatedItem",
                     {
@@ -453,6 +664,48 @@
                 "eventId": "evt_01KYXKHATCCRC9NH1SPH7KH8BC",
                 "from": "error",
                 "to": "loading"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "RelatedItem",
+                    {
+                      "emit": {
+                        "failure": "RelatedItemLoadFailed",
+                        "success": "RelatedItemLoaded"
+                      },
+                      "filter": [
+                        "or",
+                        [
+                          "=",
+                          "@config.relationField",
+                          ""
+                        ],
+                        [
+                          "=",
+                          [
+                            "object/get",
+                            "@entity",
+                            "@config.relationField"
+                          ],
+                          "@payload.key"
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner"
+                    }
+                  ]
+                ],
+                "event": "SHOW_RELATED",
+                "eventId": "evt_01M0RY3YKG5AXYCBSMYMGG5B4E",
+                "from": "error",
+                "to": "loading"
               }
             ]
           }
@@ -461,5 +714,5 @@
     }
   ],
   "schemaVersion": 1,
-  "version": "1.0.0"
+  "version": "1.1.0"
 }

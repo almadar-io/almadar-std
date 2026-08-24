@@ -1,0 +1,136 @@
+app std-tutorial-autodemo "1.0.0"
+"Generic scripted input-replay atom: the demo half of a tutorial. Holds one or more named cue scripts (each an ordered list of { at, event, arg } rows where at is a millisecond offset and event is LEFT/RIGHT/JUMP/STOP); listens for TUTORIAL_DEMO_START { demoId } (from std-tutorial-overlay's demoId step) and plays the matching script on a 32ms clock, emitting the semantic DEMO_LEFT / DEMO_RIGHT / DEMO_JUMP / DEMO_STOP events the host board maps onto its own movement. TUTORIAL_DEMO_STOP, DEMO_CANCEL (real user input), or exhausting the cue list end the demo and emit DEMO_STOP so the character stops moving. Renders a small Demo badge while playing. Domain-agnostic: the demo never emits board events (OW_*, etc.) — the organism maps DEMO_* to its own steering, so a demo cannot self-cancel through the board's input path."
+orbital TutorialAutoDemoOrbital {
+  type DemoCue = {
+    at : number!
+    event : string!
+    arg : number
+  }
+  type DemoScript = {
+    id : string!
+    cues : [DemoCue]!
+  }
+
+  entity AutoDemoData [runtime] {
+    id : string!
+    playing : boolean = false
+    scriptId : string = ""
+    elapsed : number = 0
+    cueIndex : number = 0
+  }
+
+  trait AutoDemo -> @rebindable AutoDemoData [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui hud-top null)
+
+      TUTORIAL_DEMO_START -> playing
+        (set @entity.scriptId @payload.demoId)
+        (set @entity.elapsed 0)
+        (set @entity.cueIndex 0)
+        (set @entity.playing true)
+        (render-ui hud-top {
+          type: badge
+          label: "Demo"
+          variant: "info"
+        })
+
+      TUTORIAL_DEMO_STOP -> idle
+        (render-ui hud-top null)
+
+      DEMO_CANCEL -> idle
+        (render-ui hud-top null)
+    }
+
+    state playing {
+      TUTORIAL_DEMO_START -> playing
+        (set @entity.scriptId @payload.demoId)
+        (set @entity.elapsed 0)
+        (set @entity.cueIndex 0)
+        (render-ui hud-top {
+          type: badge
+          label: "Demo"
+          variant: "info"
+        })
+
+      TUTORIAL_DEMO_STOP -> idle
+        (set @entity.playing false)
+        (render-ui hud-top null)
+        (emit DEMO_STOP {})
+
+      DEMO_CANCEL -> idle
+        (set @entity.playing false)
+        (render-ui hud-top null)
+        (emit DEMO_STOP {})
+    }
+
+    ticks {
+      demoTick every 32ms when (== @entity.playing true)
+        (set @entity.elapsed (+ @entity.elapsed 32))
+        (let ((scriptMatch (array/filter @config.scripts (fn s (== (object/get @s id) @entity.scriptId)))))
+        (let ((cueList (if (> (array/len @scriptMatch) 0) (object/get (array/first @scriptMatch) cues []) [])))
+        (let ((cue (if (< @entity.cueIndex (array/len @cueList)) (array/nth @cueList @entity.cueIndex) { at: 999999, event: "" })))
+        (do
+          (if (<= (object/get @cue at 0) @entity.elapsed)
+            (do
+              (set @entity.cueIndex (+ @entity.cueIndex 1))
+              (if (== (object/get @cue event "") "LEFT") (emit DEMO_LEFT {}) null)
+              (if (== (object/get @cue event "") "RIGHT") (emit DEMO_RIGHT {}) null)
+              (if (== (object/get @cue event "") "JUMP") (emit DEMO_JUMP {}) null)
+              (if (== (object/get @cue event "") "STOP") (emit DEMO_STOP {}) null))
+            null)
+          (if (>= @entity.cueIndex (array/len @cueList))
+            (do
+              (set @entity.playing false)
+              (render-ui hud-top null)
+              (emit DEMO_STOP {}))
+            null)))))
+    }
+
+    listens {
+      TUTORIAL_DEMO_START {
+        demoId : string!
+      }
+        @description "A tutorial step carrying a demoId was shown (std-tutorial-overlay); begin playing the cue script whose id matches demoId."
+        @tier "domain"
+      TUTORIAL_DEMO_STOP {
+      }
+        @description "The tutorial left a demo step or was dismissed; stop the demo and release control."
+        @tier "domain"
+      DEMO_CANCEL {
+      }
+        @description "Real user input was received by the host board; stop the demo immediately and hand control back to the player."
+        @tier "domain"
+    }
+
+    emits {
+      DEMO_LEFT -> external {
+      }
+        @description "Scripted run-left cue; the host board maps this to its own steer-left."
+        @tier "domain"
+      DEMO_RIGHT -> external {
+      }
+        @description "Scripted run-right cue; the host board maps this to its own steer-right."
+        @tier "domain"
+      DEMO_JUMP -> external {
+      }
+        @description "Scripted jump cue; the host board maps this to its own jump."
+        @tier "domain"
+      DEMO_STOP -> external {
+      }
+        @description "Scripted stop cue (or demo end/cancel); the host board maps this to stop movement."
+        @tier "domain"
+    }
+
+    config {
+      scripts : [DemoScript] = []
+        @label "Scripts"
+        @description "Named cue scripts keyed by the tutorial step's demoId; each cue fires its event after `at` milliseconds of the demo clock."
+        @tier "domain"
+    }
+  }
+
+  page "/tutorial-autodemo" as TutorialAutoDemoPage -> AutoDemo
+}

@@ -1,5 +1,5 @@
 {
-  "description": "std-version-history — wiki/CMS revision history with diff + rollback. Browses revisions; opens detail in `viewing_single`; compares two revisions in `comparing` with intrinsic version-diff; persists rollback.",
+  "description": "std-version-history — wiki/CMS revision history with diff + rollback. Browses revisions; opens detail in `viewing_single`; compares two revisions in `comparing` with intrinsic version-diff; persists rollback. `RevisionManage` is a rebindable single-entity trait: a consumer rebinds it to its own entity via `linkedEntity`. `config.scopeField` names the Revision field holding the parent document id; a page-mounted `{id}` route param scopes INIT's own fetch, and a consumer forwards SHOW_HISTORY { key } (via a `listens` override) to rescope the feed to one document — empty scopeField (default) or no id keeps today's unfiltered global feed. Rollback and retry refetches stay scoped.",
   "ledger": {
     "entries": {
       "ent_01KXG04HV98PSNYWMGHCREKPA4": {
@@ -86,6 +86,15 @@
         "bakedName": "RevisionLoadFailed",
         "curName": "RevisionLoadFailed",
         "id": "evt_01KXG04HVBZ24ADMJNJ02VY298",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04HV9PK97EVFG9ZP3V3V4",
+        "renames": []
+      },
+      "evt_01M0RXX5R8MGMZM16RGXCFK7VK": {
+        "bakedName": "SHOW_HISTORY",
+        "curName": "SHOW_HISTORY",
+        "id": "evt_01M0RXX5R8MGMZM16RGXCFK7VK",
         "kind": "event",
         "owner": "workspace",
         "parent": "trt_01KXG04HV9PK97EVFG9ZP3V3V4",
@@ -184,6 +193,14 @@
           {
             "name": "createdAt",
             "type": "string"
+          },
+          {
+            "default": "",
+            "description": "The parent document id the feed is currently scoped to, set by SHOW_HISTORY. Empty when browsing the unfiltered global feed.",
+            "intrinsic": true,
+            "name": "scopeKey",
+            "synonyms": "scope, filter key, document scope",
+            "type": "string"
           }
         ],
         "id": "ent_01KXG04HV98PSNYWMGHCREKPA4",
@@ -209,6 +226,13 @@
         {
           "category": "interaction",
           "config": {
+            "scopeField": {
+              "default": "",
+              "description": "Revision entity field holding the parent document's id. When set, a page-mounted {id} route param scopes INIT's fetch, and a SHOW_HISTORY { key } event rescopes the feed, to rows whose scopeField equals the id/key; rollback and retry refetches stay scoped too. Empty (default) or no id = unfiltered global feed, unchanged from prior behavior.",
+              "label": "Scope field",
+              "tier": "domain",
+              "type": "string"
+            },
             "statLook": {
               "default": "elevated",
               "description": "Layer 2 visual treatment for stat / KPI cards.",
@@ -301,6 +325,10 @@
                     },
                     {
                       "name": "createdAt",
+                      "type": "string"
+                    },
+                    {
+                      "name": "scopeKey",
                       "type": "string"
                     }
                   ],
@@ -440,6 +468,10 @@
                     {
                       "name": "createdAt",
                       "type": "string"
+                    },
+                    {
+                      "name": "scopeKey",
+                      "type": "string"
                     }
                   ],
                   "type": "object"
@@ -466,6 +498,20 @@
               "tier": "internal"
             }
           ],
+          "entityContract": {
+            "provides": [
+              "authorId",
+              "authorName",
+              "content",
+              "documentId",
+              "documentType",
+              "scopeKey",
+              "summary",
+              "versionNumber"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
           "entityRefIds": {
             "Revision": "ent_01KXG04HV98PSNYWMGHCREKPA4"
           },
@@ -477,9 +523,18 @@
           "stateMachine": {
             "events": [
               {
+                "description": "Optional route param delivered on mount (e.g. an :id page segment); scopes INIT's own fetch to rows whose scopeField equals id. Absent id or empty scopeField config keeps the unfiltered global feed.",
                 "id": "evt_01KXG04HV9D9FEAFFAPEMZ9RP2",
                 "key": "INIT",
-                "name": "Initialize"
+                "name": "Initialize",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "route id, deep link, initial scope",
+                "tier": "domain"
               },
               {
                 "description": "Signals a revision has been successfully retrieved and is ready.",
@@ -544,6 +599,21 @@
                 ],
                 "synonyms": "error, fail, problem, unsuccessful",
                 "tier": "internal"
+              },
+              {
+                "description": "Requests the revision feed scoped to one parent document; stores the key and refetches filtered by config.scopeField.",
+                "id": "evt_01M0RXX5R8MGMZM16RGXCFK7VK",
+                "key": "SHOW_HISTORY",
+                "name": "Show History",
+                "payloadSchema": [
+                  {
+                    "name": "key",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "view history, doc history, filter revisions",
+                "tier": "domain"
               },
               {
                 "description": "Signals a revision has been selected for viewing.",
@@ -639,13 +709,48 @@
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.scopeKey",
+                    [
+                      "str/default",
+                      "@payload.id",
+                      ""
+                    ]
+                  ],
+                  [
                     "fetch",
                     "Revision",
                     {
                       "emit": {
                         "failure": "RevisionLoadFailed",
                         "success": "RevisionLoaded"
-                      }
+                      },
+                      "filter": [
+                        "or",
+                        [
+                          "=",
+                          "@config.scopeField",
+                          ""
+                        ],
+                        [
+                          "=",
+                          [
+                            "str/default",
+                            "@payload.id",
+                            ""
+                          ],
+                          ""
+                        ],
+                        [
+                          "=",
+                          [
+                            "object/get",
+                            "@entity",
+                            "@config.scopeField"
+                          ],
+                          "@payload.id"
+                        ]
+                      ]
                     }
                   ],
                   [
@@ -758,13 +863,55 @@
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.scopeKey",
+                    [
+                      "object/get",
+                      "@payload.row",
+                      "@config.scopeField",
+                      ""
+                    ]
+                  ],
+                  [
                     "fetch",
                     "Revision",
                     {
                       "emit": {
                         "failure": "RevisionLoadFailed",
                         "success": "RevisionLoaded"
-                      }
+                      },
+                      "filter": [
+                        "or",
+                        [
+                          "=",
+                          "@config.scopeField",
+                          ""
+                        ],
+                        [
+                          "=",
+                          [
+                            "object/get",
+                            "@payload.row",
+                            "@config.scopeField",
+                            ""
+                          ],
+                          ""
+                        ],
+                        [
+                          "=",
+                          [
+                            "object/get",
+                            "@entity",
+                            "@config.scopeField"
+                          ],
+                          [
+                            "object/get",
+                            "@payload.row",
+                            "@config.scopeField",
+                            ""
+                          ]
+                        ]
+                      ]
                     }
                   ]
                 ],
@@ -810,13 +957,102 @@
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.scopeKey",
+                    "@payload.key"
+                  ],
+                  [
                     "fetch",
                     "Revision",
                     {
                       "emit": {
                         "failure": "RevisionLoadFailed",
                         "success": "RevisionLoaded"
-                      }
+                      },
+                      "filter": [
+                        "=",
+                        [
+                          "object/get",
+                          "@entity",
+                          "@config.scopeField"
+                        ],
+                        "@payload.key"
+                      ]
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Loading version history…",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ],
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "SHOW_HISTORY",
+                "eventId": "evt_01M0RXX5R8MGMZM16RGXCFK7VK",
+                "from": "loading",
+                "to": "loading"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.scopeKey",
+                    [
+                      "str/default",
+                      "@payload.id",
+                      ""
+                    ]
+                  ],
+                  [
+                    "fetch",
+                    "Revision",
+                    {
+                      "emit": {
+                        "failure": "RevisionLoadFailed",
+                        "success": "RevisionLoaded"
+                      },
+                      "filter": [
+                        "or",
+                        [
+                          "=",
+                          "@config.scopeField",
+                          ""
+                        ],
+                        [
+                          "=",
+                          [
+                            "str/default",
+                            "@payload.id",
+                            ""
+                          ],
+                          ""
+                        ],
+                        [
+                          "=",
+                          [
+                            "object/get",
+                            "@entity",
+                            "@config.scopeField"
+                          ],
+                          "@payload.id"
+                        ]
+                      ]
                     }
                   ],
                   [
@@ -1109,6 +1345,60 @@
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.scopeKey",
+                    "@payload.key"
+                  ],
+                  [
+                    "fetch",
+                    "Revision",
+                    {
+                      "emit": {
+                        "failure": "RevisionLoadFailed",
+                        "success": "RevisionLoaded"
+                      },
+                      "filter": [
+                        "=",
+                        [
+                          "object/get",
+                          "@entity",
+                          "@config.scopeField"
+                        ],
+                        "@payload.key"
+                      ]
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Loading version history…",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ],
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "SHOW_HISTORY",
+                "eventId": "evt_01M0RXX5R8MGMZM16RGXCFK7VK",
+                "from": "browsing",
+                "to": "loading"
+              },
+              {
+                "effects": [
+                  [
                     "fetch",
                     "Revision",
                     {
@@ -1271,6 +1561,60 @@
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.scopeKey",
+                    "@payload.key"
+                  ],
+                  [
+                    "fetch",
+                    "Revision",
+                    {
+                      "emit": {
+                        "failure": "RevisionLoadFailed",
+                        "success": "RevisionLoaded"
+                      },
+                      "filter": [
+                        "=",
+                        [
+                          "object/get",
+                          "@entity",
+                          "@config.scopeField"
+                        ],
+                        "@payload.key"
+                      ]
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Loading version history…",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ],
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "SHOW_HISTORY",
+                "eventId": "evt_01M0RXX5R8MGMZM16RGXCFK7VK",
+                "from": "viewing_single",
+                "to": "loading"
+              },
+              {
+                "effects": [
+                  [
                     "fetch",
                     "Revision",
                     {
@@ -1358,13 +1702,102 @@
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.scopeKey",
+                    "@payload.key"
+                  ],
+                  [
                     "fetch",
                     "Revision",
                     {
                       "emit": {
                         "failure": "RevisionLoadFailed",
                         "success": "RevisionLoaded"
-                      }
+                      },
+                      "filter": [
+                        "=",
+                        [
+                          "object/get",
+                          "@entity",
+                          "@config.scopeField"
+                        ],
+                        "@payload.key"
+                      ]
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Loading version history…",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ],
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "SHOW_HISTORY",
+                "eventId": "evt_01M0RXX5R8MGMZM16RGXCFK7VK",
+                "from": "comparing",
+                "to": "loading"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.scopeKey",
+                    [
+                      "str/default",
+                      "@payload.id",
+                      ""
+                    ]
+                  ],
+                  [
+                    "fetch",
+                    "Revision",
+                    {
+                      "emit": {
+                        "failure": "RevisionLoadFailed",
+                        "success": "RevisionLoaded"
+                      },
+                      "filter": [
+                        "or",
+                        [
+                          "=",
+                          "@config.scopeField",
+                          ""
+                        ],
+                        [
+                          "=",
+                          [
+                            "str/default",
+                            "@payload.id",
+                            ""
+                          ],
+                          ""
+                        ],
+                        [
+                          "=",
+                          [
+                            "object/get",
+                            "@entity",
+                            "@config.scopeField"
+                          ],
+                          "@payload.id"
+                        ]
+                      ]
                     }
                   ],
                   [
@@ -1378,6 +1811,46 @@
                 ],
                 "event": "INIT",
                 "eventId": "evt_01KXG04HV9D9FEAFFAPEMZ9RP2",
+                "from": "error",
+                "to": "loading"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.scopeKey",
+                    "@payload.key"
+                  ],
+                  [
+                    "fetch",
+                    "Revision",
+                    {
+                      "emit": {
+                        "failure": "RevisionLoadFailed",
+                        "success": "RevisionLoaded"
+                      },
+                      "filter": [
+                        "=",
+                        [
+                          "object/get",
+                          "@entity",
+                          "@config.scopeField"
+                        ],
+                        "@payload.key"
+                      ]
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "sm",
+                      "type": "spinner"
+                    }
+                  ]
+                ],
+                "event": "SHOW_HISTORY",
+                "eventId": "evt_01M0RXX5R8MGMZM16RGXCFK7VK",
                 "from": "error",
                 "to": "loading"
               }

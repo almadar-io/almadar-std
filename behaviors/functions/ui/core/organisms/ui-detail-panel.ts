@@ -58,7 +58,7 @@ export interface StdUiDetailPanelConfig {
   error?: EntityRow;
   /** Default: `[]` */
   fieldNames?: string[];
-  /** Default: `[{"header":"Header","key":"Key","relation":"Relation","type":"Type","values":["Item","Item 2"]},{"header":"Header 2","key":"Key 2","relation":"Relation 2","type":"Type 2","values":["Item","Item 2"]}]` */
+  /** Default: `[{"header":"Header","key":"Key","relation":{"cardinality":"one","entity":"Entity"},"type":"Type","values":["Item","Item 2"]},{"header":"Header 2","key":"Key 2","relation":{"cardinality":"many","entity":"Entity 2"},"type":"Type 2","values":["Item","Item 2"]}]` */
   fields?: EntityRow[];
   footer?: PatternValue;
   /** Default: `false` */
@@ -319,7 +319,10 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
               {
                 'header': 'Header',
                 'key': 'Key',
-                'relation': 'Relation',
+                'relation': {
+                  'cardinality': 'one',
+                  'entity': 'Entity',
+                },
                 'type': 'Type',
                 'values': [
                   'Item',
@@ -329,7 +332,10 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
               {
                 'header': 'Header 2',
                 'key': 'Key 2',
-                'relation': 'Relation 2',
+                'relation': {
+                  'cardinality': 'many',
+                  'entity': 'Entity 2',
+                },
                 'type': 'Type 2',
                 'values': [
                   'Item',
@@ -352,8 +358,27 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                 },
                 'relation': {
                   'name': 'relation',
+                  'properties': {
+                    'cardinality': {
+                      'name': 'cardinality',
+                      'required': false,
+                      'type': 'string',
+                      'values': [
+                        'one',
+                        'many',
+                        'one-to-many',
+                        'many-to-one',
+                        'many-to-many',
+                      ],
+                    },
+                    'entity': {
+                      'name': 'entity',
+                      'required': true,
+                      'type': 'string',
+                    },
+                  },
                   'required': false,
-                  'type': 'string',
+                  'type': 'object',
                 },
                 'type': {
                   'name': 'type',

@@ -50,12 +50,17 @@ export interface StdUiMathCanvasConfig {
   angles?: EntityRow[];
   /** Default: `false` */
   animate?: boolean;
+  /** Default: `"var(--color-muted-foreground, #374151)"` */
+  axisColor?: string;
+  backgroundColor?: string;
   /** Default: `[]` */
   bars?: EntityRow[];
   className?: string;
   /** Default: `[]` */
   curves?: EntityRow[];
   error?: EntityRow;
+  /** Default: `"var(--color-border, #9ca3af)"` */
+  gridColor?: string;
   /** Default: `1` */
   gridStep?: number;
   /** Default: `[]` */

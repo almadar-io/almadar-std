@@ -158,6 +158,8 @@ export * from './ui/core/atoms/std-tabs.js';
 export * from './ui/core/atoms/std-tag-taxonomy.js';
 export * from './ui/core/atoms/std-thread.js';
 export * from './ml/atoms/std-tokenizer.js';
+export * from './ui/core/atoms/std-tree.js';
+export * from './ui/game/atoms/std-tutorial-autodemo.js';
 export * from './ui/game/atoms/std-tutorial-overlay.js';
 export * from './ui/core/atoms/std-version-history.js';
 export * from './ui/core/atoms/std-vote.js';

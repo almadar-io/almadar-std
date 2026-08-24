@@ -84,6 +84,7 @@ orbital BrowseItemOrbital {
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
           filter: (and (or ["=", @config.scopeField, ""] ["=", (object/get @entity @config.scopeField), @user.id]) (or ["=", @config.initialFilterField, ""] ["=", (object/get @entity @config.initialFilterField), @config.initialFilterValue]))
+          include: @config.include
           limit: @config.pageSize
           offset: 0
         })
@@ -113,6 +114,7 @@ orbital BrowseItemOrbital {
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
           filter: (and (or ["=", @config.scopeField, ""] ["=", (object/get @entity @config.scopeField), @user.id]) (or ["=", @config.initialFilterField, ""] ["=", (object/get @entity @config.initialFilterField), @config.initialFilterValue]))
+          include: @config.include
           limit: @config.pageSize
           offset: 0
         })
@@ -126,6 +128,7 @@ orbital BrowseItemOrbital {
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
           filter: (and (or ["=", @config.scopeField, ""] ["=", (object/get @entity @config.scopeField), @user.id]) (or ["=", ?searchTerm, ""] (str/includes (object/get @entity name) ?searchTerm)))
+          include: @config.include
           limit: @config.pageSize
           offset: 0
         })
@@ -133,6 +136,7 @@ orbital BrowseItemOrbital {
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
           filter: (and (or ["=", @config.scopeField, ""] ["=", (object/get @entity @config.scopeField), @user.id]) (or ["=", ?value, ""] ["=", (object/get @entity ?field), ?value]))
+          include: @config.include
           limit: @config.pageSize
           offset: 0
         })
@@ -140,6 +144,7 @@ orbital BrowseItemOrbital {
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
           filter: (or ["=", @config.scopeField, ""] ["=", (object/get @entity @config.scopeField), @user.id])
+          include: @config.include
           limit: @config.pageSize
           offset: ["*", ["-", ?page, 1], @config.pageSize]
         })
@@ -170,6 +175,7 @@ orbital BrowseItemOrbital {
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
           filter: (and (or ["=", @config.scopeField, ""] ["=", (object/get @entity @config.scopeField), @user.id]) (or ["=", @config.initialFilterField, ""] ["=", (object/get @entity @config.initialFilterField), @config.initialFilterValue]))
+          include: @config.include
           limit: @config.pageSize
           offset: 0
         })
@@ -346,6 +352,11 @@ orbital BrowseItemOrbital {
         @description "Rows visible per page before the pagination control appears."
         @synonyms "visible rows, items per page, display limit, show per page"
         @tier "presentation"
+      include : [string] = []
+        @label "Which relation fields to hydrate?"
+        @description "Entity relation field names to hydrate on fetch (e.g. a `tag : Category` field named `tag`), so grid columns can use dot-paths like tag.name. Empty = no hydration, the default."
+        @synonyms "relation hydration, populate relations, joined fields, hydrate relations"
+        @tier "internal"
       filters : [FilterSpec] = []
         @label "Which filters should appear above the list?"
         @description "Dropdown filter facets by field. Each fires a refetch when the user changes the selection. Empty = no filter bar."

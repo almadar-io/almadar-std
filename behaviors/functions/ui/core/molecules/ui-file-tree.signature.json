@@ -47,11 +47,52 @@
             "tier": "presentation"
           },
           {
+            "key": "items",
+            "type": "[FileTreeItemsItem]",
+            "default": [],
+            "label": "Items",
+            "description": "Flat node list, nested by `parentId` at render time — takes precedence over `tree` when provided. A `parentId` with no matching row renders that node as a root rather than dropping it.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "parentId": {
+                  "name": "parentId",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
             "key": "onFileSelect",
             "type": "string",
             "default": "FILE_SELECT",
             "label": "On File Select",
             "description": "Called when a file is clicked",
+            "tier": "presentation"
+          },
+          {
+            "key": "onNodeSelect",
+            "type": "string",
+            "default": "",
+            "label": "On Node Select",
+            "description": "Called when a node is clicked, in flat `items` mode; carries the selected node's id. Presence-gated: binding this prop is what turns on the click-to-select affordance, mirroring Badge's `onRemove`.",
             "tier": "presentation"
           },
           {
@@ -64,26 +105,9 @@
           {
             "key": "tree",
             "type": "[FileTreeTreeItem]",
-            "default": [
-              {
-                "children": [],
-                "language": "Language",
-                "name": "Name",
-                "path": "Path",
-                "size": 1,
-                "type": "file"
-              },
-              {
-                "children": [],
-                "language": "Language 2",
-                "name": "Name 2",
-                "path": "Path 2",
-                "size": 2,
-                "type": "dir"
-              }
-            ],
+            "default": [],
             "label": "Tree",
-            "description": "The tree data",
+            "description": "The tree data (pre-nested). Ignored when `items` is provided.",
             "tier": "presentation",
             "items": {
               "properties": {

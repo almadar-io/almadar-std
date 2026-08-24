@@ -1,5 +1,5 @@
 {
-  "description": "std-thread — forum-style nested replies with collapse + flat-mode toggle. Owns ThreadPost (persistent). flat:true covers 1:1 linear inquiry threads; flat:false renders forum-style nested. INIT fetches, scoped by @config.threadRootId when set (blank = every root, the default). REPLY persists a child post under @payload.parentId, stamped with the real @user identity. Layer 3 variants override `bodyContent` to deliver chat-bubble, email-threaded, or linear-comments UX while inheriting the same trait, state machine, emits, and listens.",
+  "description": "std-thread — forum-style nested replies with collapse + flat-mode toggle. Owns ThreadPost (persistent). flat:true covers 1:1 linear inquiry threads; flat:false renders forum-style nested. INIT fetches, scoped by @config.threadRootId when set (blank = every root, the default). REPLY persists a child post under @payload.parentId, stamped with the real @user identity. A consumer that mounts this as page comments forwards its own document-opened signal to SET_THREAD_ROOT { rootId }, which stamps the frame and refetches filtered by the payload; the after-create and after-select refetch arms keep filtering by @config.threadRootId, so a mutation re-widens the panel until the consumer re-fires SET_THREAD_ROOT. Layer 3 variants override `bodyContent` to deliver chat-bubble, email-threaded, or linear-comments UX while inheriting the same trait, state machine, emits, and listens.",
   "ledger": {
     "entries": {
       "ent_01KXG04HSZB16HRNNZWKASR1J1": {
@@ -95,6 +95,15 @@
         "bakedName": "ThreadPostLoadFailed",
         "curName": "ThreadPostLoadFailed",
         "id": "evt_01KXG04HT2YRXSNWXJXN2VGZGX",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04HSZF049W9Y5QFRH82Y8",
+        "renames": []
+      },
+      "evt_01M0S6FKJ5QKA9TN648DJVXR6G": {
+        "bakedName": "SET_THREAD_ROOT",
+        "curName": "SET_THREAD_ROOT",
+        "id": "evt_01M0S6FKJ5QKA9TN648DJVXR6G",
         "kind": "event",
         "owner": "workspace",
         "parent": "trt_01KXG04HSZF049W9Y5QFRH82Y8",
@@ -603,7 +612,8 @@
             "provides": [
               "content",
               "focusedRow",
-              "parentId"
+              "parentId",
+              "threadRootId"
             ],
             "requires": []
           },
@@ -654,6 +664,21 @@
                 ],
                 "synonyms": "load error, fetch failed, retrieval failed",
                 "tier": "internal"
+              },
+              {
+                "description": "Scopes every fetch, and new-reply threadRootId stamping, to the descendants of one document root.",
+                "id": "evt_01M0S6FKJ5QKA9TN648DJVXR6G",
+                "key": "SET_THREAD_ROOT",
+                "name": "Set Thread Root",
+                "payloadSchema": [
+                  {
+                    "name": "rootId",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "scope, focus, set root, document scope, thread scope",
+                "tier": "domain"
               },
               {
                 "description": "Indicates a new reply has been created and added to the thread.",
@@ -862,6 +887,57 @@
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.threadRootId",
+                    "@payload.rootId"
+                  ],
+                  [
+                    "fetch",
+                    "ThreadPost",
+                    {
+                      "emit": {
+                        "failure": "ThreadPostLoadFailed",
+                        "success": "ThreadPostLoaded"
+                      },
+                      "filter": [
+                        "or",
+                        [
+                          "=",
+                          "@payload.rootId",
+                          ""
+                        ],
+                        [
+                          "=",
+                          [
+                            "object/get",
+                            "@entity",
+                            "threadRootId"
+                          ],
+                          "@payload.rootId"
+                        ]
+                      ],
+                      "include": [
+                        "replies"
+                      ]
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "sm",
+                      "type": "spinner"
+                    }
+                  ]
+                ],
+                "event": "SET_THREAD_ROOT",
+                "eventId": "evt_01M0S6FKJ5QKA9TN648DJVXR6G",
+                "from": "loading",
+                "to": "loading"
+              },
+              {
+                "effects": [
+                  [
                     "fetch",
                     "ThreadPost",
                     {
@@ -938,8 +1014,12 @@
                         "@payload.parentNodeId",
                         [
                           "str/default",
-                          "@config.threadRootId",
-                          "root"
+                          "@entity.threadRootId",
+                          [
+                            "str/default",
+                            "@config.threadRootId",
+                            "root"
+                          ]
                         ]
                       ]
                     },
@@ -977,6 +1057,23 @@
                       "str/default",
                       "@payload.parentNodeId",
                       "@payload.parentId"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.threadRootId",
+                    [
+                      "str/default",
+                      "@payload.parentNodeId",
+                      [
+                        "str/default",
+                        "@entity.threadRootId",
+                        [
+                          "str/default",
+                          "@config.threadRootId",
+                          "root"
+                        ]
+                      ]
                     ]
                   ],
                   [
@@ -1154,6 +1251,57 @@
                 "effects": [
                   [
                     "set",
+                    "@entity.threadRootId",
+                    "@payload.rootId"
+                  ],
+                  [
+                    "fetch",
+                    "ThreadPost",
+                    {
+                      "emit": {
+                        "failure": "ThreadPostLoadFailed",
+                        "success": "ThreadPostLoaded"
+                      },
+                      "filter": [
+                        "or",
+                        [
+                          "=",
+                          "@payload.rootId",
+                          ""
+                        ],
+                        [
+                          "=",
+                          [
+                            "object/get",
+                            "@entity",
+                            "threadRootId"
+                          ],
+                          "@payload.rootId"
+                        ]
+                      ],
+                      "include": [
+                        "replies"
+                      ]
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "sm",
+                      "type": "spinner"
+                    }
+                  ]
+                ],
+                "event": "SET_THREAD_ROOT",
+                "eventId": "evt_01M0S6FKJ5QKA9TN648DJVXR6G",
+                "from": "browsing",
+                "to": "loading"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
                     "@entity.content",
                     "@payload.value"
                   ]
@@ -1276,6 +1424,57 @@
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.threadRootId",
+                    "@payload.rootId"
+                  ],
+                  [
+                    "fetch",
+                    "ThreadPost",
+                    {
+                      "emit": {
+                        "failure": "ThreadPostLoadFailed",
+                        "success": "ThreadPostLoaded"
+                      },
+                      "filter": [
+                        "or",
+                        [
+                          "=",
+                          "@payload.rootId",
+                          ""
+                        ],
+                        [
+                          "=",
+                          [
+                            "object/get",
+                            "@entity",
+                            "threadRootId"
+                          ],
+                          "@payload.rootId"
+                        ]
+                      ],
+                      "include": [
+                        "replies"
+                      ]
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "sm",
+                      "type": "spinner"
+                    }
+                  ]
+                ],
+                "event": "SET_THREAD_ROOT",
+                "eventId": "evt_01M0S6FKJ5QKA9TN648DJVXR6G",
+                "from": "replying",
+                "to": "loading"
+              },
+              {
+                "effects": [
+                  [
                     "fetch",
                     "ThreadPost",
                     {
@@ -1316,6 +1515,57 @@
                 ],
                 "event": "INIT",
                 "eventId": "evt_01KXG04HSZX5981M24BW264BRJ",
+                "from": "error",
+                "to": "loading"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.threadRootId",
+                    "@payload.rootId"
+                  ],
+                  [
+                    "fetch",
+                    "ThreadPost",
+                    {
+                      "emit": {
+                        "failure": "ThreadPostLoadFailed",
+                        "success": "ThreadPostLoaded"
+                      },
+                      "filter": [
+                        "or",
+                        [
+                          "=",
+                          "@payload.rootId",
+                          ""
+                        ],
+                        [
+                          "=",
+                          [
+                            "object/get",
+                            "@entity",
+                            "threadRootId"
+                          ],
+                          "@payload.rootId"
+                        ]
+                      ],
+                      "include": [
+                        "replies"
+                      ]
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "sm",
+                      "type": "spinner"
+                    }
+                  ]
+                ],
+                "event": "SET_THREAD_ROOT",
+                "eventId": "evt_01M0S6FKJ5QKA9TN648DJVXR6G",
                 "from": "error",
                 "to": "loading"
               }

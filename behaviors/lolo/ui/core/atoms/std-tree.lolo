@@ -1,0 +1,247 @@
+app std-tree "1.0.0"
+"std-tree — generic hierarchical node browser. Fetches a flat TreeNode collection and renders it through file-tree's flat `items` mode (parentId-nested at render time by the component, not the .lolo); OPEN_NODE is the external handoff for a selected node's id. Rebindable: pass `fields` at the call site to retarget it at any parent-pointer entity (categories, org units, comment threads)."
+orbital TreeNodeOrbital {
+    type TreeNodeLoaded = Event { data : [TreeNode] } "Fired when the tree node collection finishes loading"
+
+    type TreeNodeLoadFailed = Event { error : string, code : string } "Fired when the tree node collection fails to load"
+
+  entity TreeNode [persistent: treenodes] {
+    id : string!
+    name : string! @description "The descriptive label for this node." @synonyms "label, title, text"
+    parentId : string @description "Reference to the parent node in the hierarchy; empty marks a root." @synonyms "parent, superior, ancestor" = ""
+    icon : string @description "Icon name shown beside the node." @synonyms "glyph, symbol, pictogram" = ""
+    createdAt : string
+  }
+
+  trait TreeBrowse -> @rebindable TreeNode [interaction, collection] {
+    initial: loading
+
+    state loading {
+      INIT -> loading
+        (fetch TreeNode {
+          emit: { failure: TreeNodeLoadFailed, success: TreeNodeLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading tree…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      TreeNodeLoaded -> browsing
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: list-tree, type: icon }, {
+              content: @config.title
+              type: typography
+              variant: h3
+            }, {
+              label: (array/len ?data)
+              size: sm
+              type: badge
+              variant: neutral
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            items: (array/map ?data (fn row {
+              icon: @row.icon
+              id: @row.id
+              label: @row.name
+              parentId: @row.parentId
+            }))
+            onNodeSelect: OPEN_NODE
+            type: file-tree
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      TreeNodeLoadFailed -> error
+        (render-ui main {
+          align: center
+          children: [{
+            color: error
+            name: alert-triangle
+            type: icon
+          }, {
+            content: "Failed to load tree"
+            type: typography
+            variant: body
+          }, {
+            color: muted
+            content: ?error
+            type: typography
+            variant: caption
+          }, {
+            action: RETRY
+            icon: rotate-ccw
+            label: Retry
+            type: button
+            variant: ghost
+          }]
+          className: py-8
+          direction: vertical
+          gap: sm
+          type: stack
+        })
+    }
+
+    state browsing {
+      INIT -> loading
+        (fetch TreeNode {
+          emit: { failure: TreeNodeLoadFailed, success: TreeNodeLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading tree…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      OPEN_NODE -> browsing
+        (set @entity.id ?id)
+      TreeNodeLoaded -> browsing
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: list-tree, type: icon }, {
+              content: @config.title
+              type: typography
+              variant: h3
+            }, {
+              label: (array/len ?data)
+              size: sm
+              type: badge
+              variant: neutral
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            items: (array/map ?data (fn row {
+              icon: @row.icon
+              id: @row.id
+              label: @row.name
+              parentId: @row.parentId
+            }))
+            onNodeSelect: OPEN_NODE
+            type: file-tree
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      TreeNodeLoadFailed -> error
+        (render-ui main {
+          align: center
+          children: [{
+            color: error
+            name: alert-triangle
+            type: icon
+          }, {
+            content: "Failed to load tree"
+            type: typography
+            variant: body
+          }, {
+            color: muted
+            content: ?error
+            type: typography
+            variant: caption
+          }, {
+            action: RETRY
+            icon: rotate-ccw
+            label: Retry
+            type: button
+            variant: ghost
+          }]
+          className: py-8
+          direction: vertical
+          gap: sm
+          type: stack
+        })
+    }
+
+    state error {
+      INIT -> loading
+        (fetch TreeNode {
+          emit: { failure: TreeNodeLoadFailed, success: TreeNodeLoaded }
+        })
+        (render-ui main { type: spinner })
+      ;; the error screen's Retry button: INIT is lifecycle-only and the bus never
+      ;; delivers it, so the affordance must target a first-class user event
+      RETRY -> loading
+        (fetch TreeNode {
+          emit: { failure: TreeNodeLoadFailed, success: TreeNodeLoaded }
+        })
+        (render-ui main { type: spinner })
+    }
+
+    emits {
+      OPEN_NODE {
+        id : string!
+      }
+        @description "Signals a tree node has been selected for external handoff."
+        @synonyms "select, choose, open, activate"
+        @tier "domain"
+      TreeNodeLoaded {
+        data : [TreeNode]
+      }
+        @description "Indicates the tree node collection has been successfully retrieved."
+        @synonyms "loaded, fetched, retrieved, ready"
+        @tier "domain"
+      TreeNodeLoadFailed {
+        error : string
+        code : string
+      }
+        @description "Indicates a failure to load the tree node collection."
+        @synonyms "error, failed, problem, unsuccessful"
+        @tier "internal"
+    }
+
+    listens {
+      OPEN_NODE {
+        id : string!
+      }
+        @description "A tree node was selected for external handoff."
+        @synonyms "select, choose, open, activate"
+        @tier "domain"
+      TreeNodeLoaded {
+        data : [TreeNode]
+      }
+        @description "Indicates the tree node collection has been successfully retrieved."
+        @synonyms "loaded, fetched, retrieved, ready"
+        @tier "domain"
+      TreeNodeLoadFailed {
+        error : string
+        code : string
+      }
+        @description "Indicates a failure to load the tree node collection."
+        @synonyms "error, failed, problem, unsuccessful"
+        @tier "internal"
+    }
+
+    config {
+      title : string = Tree
+        @label "Section title"
+        @description "Heading shown above the tree"
+        @tier "presentation"
+    }
+  }
+
+  page "/tree" as TreePage -> TreeBrowse
+}

@@ -475,6 +475,11 @@ import {
   isStdTokenizerMlTokenizerOrbitalParams,
 } from './ml/atoms/std-tokenizer.js';
 import {
+  stdTreeTreeNodeOrbital,
+  StdTreeTreeNodeOrbitalManifest,
+  isStdTreeTreeNodeOrbitalParams,
+} from './ui/core/atoms/std-tree.js';
+import {
   stdVersionHistoryRevisionOrbital,
   StdVersionHistoryRevisionOrbitalManifest,
   isStdVersionHistoryRevisionOrbitalParams,
@@ -1525,6 +1530,15 @@ REGISTRY_MUT.set('std-tokenizer::MlTokenizerOrbital', {
     return stdTokenizerMlTokenizerOrbital(p);
   },
   manifest: StdTokenizerMlTokenizerOrbitalManifest,
+});
+REGISTRY_MUT.set('std-tree::TreeNodeOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdTreeTreeNodeOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-tree::TreeNodeOrbital');
+    }
+    return stdTreeTreeNodeOrbital(p);
+  },
+  manifest: StdTreeTreeNodeOrbitalManifest,
 });
 REGISTRY_MUT.set('std-version-history::RevisionOrbital', {
   factory: (p: object): OrbitalDefinition => {

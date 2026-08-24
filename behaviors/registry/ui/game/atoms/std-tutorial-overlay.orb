@@ -1,5 +1,5 @@
 {
-  "description": "Tutorial modal with media steps for game boards and learning shells: a paged overlay — title, an animated GIF/clip showing exactly how the mechanic is done, one line of body copy, a step counter, and Back / Next / Skip — composed entirely from registered render types (stack + text + image + button) into the overlay slot, so no new UI component is needed. autoShow opens it on INIT for first-time players; a board's help button re-opens it any time via SHOW (which rewinds to step one). DISMISS (or finishing the last step) marks the run done, clears the overlay, and emits TUTORIAL_DONE so the board can unpause or log. Steps are pure config — a board teaches a new mechanic by adding one { id, title, body, media } row.",
+  "description": "Tutorial modal with live-demo steps for game boards and learning shells: a paged overlay — title, a live previewTrait frame playing the mechanic via std-tutorial-autodemo (a bare game canvas, no shell chrome), one line of body copy, a step counter, and Back / Next / Skip — composed entirely from registered render types (stack + text + button + trait frame) into the overlay slot, so no new UI component is needed. autoShow opens it on INIT for first-time players; a board's help button re-opens it any time via SHOW (which rewinds to step one). DISMISS (or finishing the last step) marks the run done, clears the overlay, and emits TUTORIAL_DONE so the board can unpause or log. Steps are pure config — a board teaches a new mechanic by adding one { id, title, body, demoId } row plus a previewTrait binding.",
   "ledger": {
     "entries": {
       "ent_01M0PEDYHYWBHKSA6ZVNM086R4": {
@@ -73,6 +73,33 @@
         "parent": "trt_01M0PEDYHY2HA8AFMMAD5883VT",
         "renames": []
       },
+      "evt_01M0S0M8T1MCJ051JCTX2K24E1": {
+        "bakedName": "TUTORIAL_DEMO_STOP",
+        "curName": "TUTORIAL_DEMO_STOP",
+        "id": "evt_01M0S0M8T1MCJ051JCTX2K24E1",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M0PEDYHY2HA8AFMMAD5883VT",
+        "renames": []
+      },
+      "evt_01M0S0M8T1W8J768EA9RE2QKYV": {
+        "bakedName": "TUTORIAL_DEMO_START",
+        "curName": "TUTORIAL_DEMO_START",
+        "id": "evt_01M0S0M8T1W8J768EA9RE2QKYV",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M0PEDYHY2HA8AFMMAD5883VT",
+        "renames": []
+      },
+      "evt_01M0S4ZSRVVV6WKG0VWGTMRV88": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01M0S4ZSRVVV6WKG0VWGTMRV88",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M0S4ZSRVQBN2JT81Y534547C",
+        "renames": []
+      },
       "orb_01M0PEDYHYEZSSAA4NT93JBSNS": {
         "bakedName": "TutorialOverlayOrbital",
         "curName": "TutorialOverlayOrbital",
@@ -93,6 +120,14 @@
         "bakedName": "TutorialOverlay",
         "curName": "TutorialOverlay",
         "id": "trt_01M0PEDYHY2HA8AFMMAD5883VT",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M0S4ZSRVQBN2JT81Y534547C": {
+        "bakedName": "TutorialEmptyPreview",
+        "curName": "TutorialEmptyPreview",
+        "id": "trt_01M0S4ZSRVQBN2JT81Y534547C",
         "kind": "trait",
         "owner": "workspace",
         "renames": []
@@ -144,6 +179,47 @@
       "traits": [
         {
           "category": "interaction",
+          "entityRefIds": {
+            "TutorialState": "ent_01M0PEDYHYWBHKSA6ZVNM086R4"
+          },
+          "id": "trt_01M0S4ZSRVQBN2JT81Y534547C",
+          "linkedEntity": "TutorialState",
+          "linkedEntityId": "ent_01M0PEDYHYWBHKSA6ZVNM086R4",
+          "name": "TutorialEmptyPreview",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "id": "evt_01M0S4ZSRVVV6WKG0VWGTMRV88",
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "overlay",
+                    null
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01M0S4ZSRVVV6WKG0VWGTMRV88",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        },
+        {
+          "category": "interaction",
           "config": {
             "autoShow": {
               "default": true,
@@ -152,9 +228,17 @@
               "tier": "domain",
               "type": "boolean"
             },
+            "previewTrait": {
+              "default": "@trait.TutorialEmptyPreview",
+              "description": "Trait rendered in the media position of the modal — the live, demo-driven preview of the mechanic (a bare game canvas, no shell chrome). '@trait.TutorialEmptyPreview' leaves the slot blank. Override with '@trait.<TraitName>' to show a board's live frame.",
+              "label": "Preview trait",
+              "refId": "trt_01M0S4ZSRVQBN2JT81Y534547C",
+              "tier": "presentation",
+              "type": "trait"
+            },
             "steps": {
               "default": [],
-              "description": "One row per tutorial page: title, one line of body copy, and media — the URL of an animated GIF/clip showing exactly how the mechanic is performed (recorded from real gameplay).",
+              "description": "One row per tutorial page: title, one line of body copy, and an optional demoId that plays a scripted live demo (std-tutorial-autodemo) for the mechanic being taught.",
               "items": {
                 "properties": {
                   "body": {
@@ -162,19 +246,14 @@
                     "required": false,
                     "type": "string"
                   },
+                  "demoId": {
+                    "name": "demoId",
+                    "required": false,
+                    "type": "string"
+                  },
                   "id": {
                     "name": "id",
                     "required": true,
-                    "type": "string"
-                  },
-                  "media": {
-                    "name": "media",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "mediaAlt": {
-                    "name": "mediaAlt",
-                    "required": false,
                     "type": "string"
                   },
                   "title": {
@@ -267,6 +346,27 @@
                   "type": "string"
                 }
               ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Emitted when a tutorial step carrying a demoId is shown; the composed std-tutorial-autodemo atom plays that scripted demo.",
+              "event": "TUTORIAL_DEMO_START",
+              "eventId": "evt_01M0S0M8T1W8J768EA9RE2QKYV",
+              "payloadSchema": [
+                {
+                  "name": "demoId",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Emitted when the tutorial leaves a demo step (next/back) or is dismissed/finished; the autodemo atom stops and releases control.",
+              "event": "TUTORIAL_DEMO_STOP",
+              "eventId": "evt_01M0S0M8T1MCJ051JCTX2K24E1",
               "scope": "external",
               "tier": "domain"
             }
@@ -372,6 +472,27 @@
                   }
                 ],
                 "tier": "domain"
+              },
+              {
+                "description": "Emitted when a tutorial step carrying a demoId is shown; the composed std-tutorial-autodemo atom plays that scripted demo.",
+                "id": "evt_01M0S0M8T1W8J768EA9RE2QKYV",
+                "key": "TUTORIAL_DEMO_START",
+                "name": "Tutorial Demo Start",
+                "payloadSchema": [
+                  {
+                    "name": "demoId",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Emitted when the tutorial leaves a demo step (next/back) or is dismissed/finished; the autodemo atom stops and releases control.",
+                "id": "evt_01M0S0M8T1MCJ051JCTX2K24E1",
+                "key": "TUTORIAL_DEMO_STOP",
+                "name": "Tutorial Demo Stop",
+                "tier": "domain"
               }
             ],
             "states": [
@@ -434,41 +555,7 @@
                           "variant": "h4",
                           "weight": "bold"
                         },
-                        {
-                          "alt": [
-                            "object/get",
-                            [
-                              "array/nth",
-                              "@config.steps",
-                              0.0
-                            ],
-                            "mediaAlt"
-                          ],
-                          "asset": {
-                            "category": "tutorial",
-                            "name": [
-                              "object/get",
-                              [
-                                "array/nth",
-                                "@config.steps",
-                                0.0
-                              ],
-                              "id"
-                            ],
-                            "url": [
-                              "object/get",
-                              [
-                                "array/nth",
-                                "@config.steps",
-                                0.0
-                              ],
-                              "media"
-                            ]
-                          },
-                          "className": "rounded-md",
-                          "fit": "contain",
-                          "type": "atlas-image"
-                        },
+                        "@config.previewTrait",
                         {
                           "content": [
                             "object/get",
@@ -532,6 +619,42 @@
                       "direction": "vertical",
                       "type": "stack"
                     }
+                  ],
+                  [
+                    "when",
+                    [
+                      "!=",
+                      [
+                        "object/get",
+                        [
+                          "array/nth",
+                          "@config.steps",
+                          0.0
+                        ],
+                        "demoId",
+                        ""
+                      ],
+                      ""
+                    ],
+                    [
+                      "do",
+                      [
+                        "emit",
+                        "TUTORIAL_DEMO_START",
+                        {
+                          "demoId": [
+                            "object/get",
+                            [
+                              "array/nth",
+                              "@config.steps",
+                              0.0
+                            ],
+                            "demoId",
+                            ""
+                          ]
+                        }
+                      ]
+                    ]
                   ]
                 ],
                 "event": "TUT_AUTO",
@@ -565,41 +688,7 @@
                           "variant": "h4",
                           "weight": "bold"
                         },
-                        {
-                          "alt": [
-                            "object/get",
-                            [
-                              "array/nth",
-                              "@config.steps",
-                              0.0
-                            ],
-                            "mediaAlt"
-                          ],
-                          "asset": {
-                            "category": "tutorial",
-                            "name": [
-                              "object/get",
-                              [
-                                "array/nth",
-                                "@config.steps",
-                                0.0
-                              ],
-                              "id"
-                            ],
-                            "url": [
-                              "object/get",
-                              [
-                                "array/nth",
-                                "@config.steps",
-                                0.0
-                              ],
-                              "media"
-                            ]
-                          },
-                          "className": "rounded-md",
-                          "fit": "contain",
-                          "type": "atlas-image"
-                        },
+                        "@config.previewTrait",
                         {
                           "content": [
                             "object/get",
@@ -663,6 +752,42 @@
                       "direction": "vertical",
                       "type": "stack"
                     }
+                  ],
+                  [
+                    "when",
+                    [
+                      "!=",
+                      [
+                        "object/get",
+                        [
+                          "array/nth",
+                          "@config.steps",
+                          0.0
+                        ],
+                        "demoId",
+                        ""
+                      ],
+                      ""
+                    ],
+                    [
+                      "do",
+                      [
+                        "emit",
+                        "TUTORIAL_DEMO_START",
+                        {
+                          "demoId": [
+                            "object/get",
+                            [
+                              "array/nth",
+                              "@config.steps",
+                              0.0
+                            ],
+                            "demoId",
+                            ""
+                          ]
+                        }
+                      ]
+                    ]
                   ]
                 ],
                 "event": "SHOW",
@@ -700,41 +825,7 @@
                           "variant": "h4",
                           "weight": "bold"
                         },
-                        {
-                          "alt": [
-                            "object/get",
-                            [
-                              "array/nth",
-                              "@config.steps",
-                              "@entity.step"
-                            ],
-                            "mediaAlt"
-                          ],
-                          "asset": {
-                            "category": "tutorial",
-                            "name": [
-                              "object/get",
-                              [
-                                "array/nth",
-                                "@config.steps",
-                                "@entity.step"
-                              ],
-                              "id"
-                            ],
-                            "url": [
-                              "object/get",
-                              [
-                                "array/nth",
-                                "@config.steps",
-                                "@entity.step"
-                              ],
-                              "media"
-                            ]
-                          },
-                          "className": "rounded-md",
-                          "fit": "contain",
-                          "type": "atlas-image"
-                        },
+                        "@config.previewTrait",
                         {
                           "content": [
                             "object/get",
@@ -813,6 +904,47 @@
                       "direction": "vertical",
                       "type": "stack"
                     }
+                  ],
+                  [
+                    "emit",
+                    "TUTORIAL_DEMO_STOP",
+                    {}
+                  ],
+                  [
+                    "when",
+                    [
+                      "!=",
+                      [
+                        "object/get",
+                        [
+                          "array/nth",
+                          "@config.steps",
+                          "@entity.step"
+                        ],
+                        "demoId",
+                        ""
+                      ],
+                      ""
+                    ],
+                    [
+                      "do",
+                      [
+                        "emit",
+                        "TUTORIAL_DEMO_START",
+                        {
+                          "demoId": [
+                            "object/get",
+                            [
+                              "array/nth",
+                              "@config.steps",
+                              "@entity.step"
+                            ],
+                            "demoId",
+                            ""
+                          ]
+                        }
+                      ]
+                    ]
                   ]
                 ],
                 "event": "TUT_NEXT",
@@ -843,6 +975,11 @@
                     "render-ui",
                     "overlay",
                     null
+                  ],
+                  [
+                    "emit",
+                    "TUTORIAL_DEMO_STOP",
+                    {}
                   ],
                   [
                     "emit",
@@ -899,41 +1036,7 @@
                           "variant": "h4",
                           "weight": "bold"
                         },
-                        {
-                          "alt": [
-                            "object/get",
-                            [
-                              "array/nth",
-                              "@config.steps",
-                              "@entity.step"
-                            ],
-                            "mediaAlt"
-                          ],
-                          "asset": {
-                            "category": "tutorial",
-                            "name": [
-                              "object/get",
-                              [
-                                "array/nth",
-                                "@config.steps",
-                                "@entity.step"
-                              ],
-                              "id"
-                            ],
-                            "url": [
-                              "object/get",
-                              [
-                                "array/nth",
-                                "@config.steps",
-                                "@entity.step"
-                              ],
-                              "media"
-                            ]
-                          },
-                          "className": "rounded-md",
-                          "fit": "contain",
-                          "type": "atlas-image"
-                        },
+                        "@config.previewTrait",
                         {
                           "content": [
                             "object/get",
@@ -1012,6 +1115,47 @@
                       "direction": "vertical",
                       "type": "stack"
                     }
+                  ],
+                  [
+                    "emit",
+                    "TUTORIAL_DEMO_STOP",
+                    {}
+                  ],
+                  [
+                    "when",
+                    [
+                      "!=",
+                      [
+                        "object/get",
+                        [
+                          "array/nth",
+                          "@config.steps",
+                          "@entity.step"
+                        ],
+                        "demoId",
+                        ""
+                      ],
+                      ""
+                    ],
+                    [
+                      "do",
+                      [
+                        "emit",
+                        "TUTORIAL_DEMO_START",
+                        {
+                          "demoId": [
+                            "object/get",
+                            [
+                              "array/nth",
+                              "@config.steps",
+                              "@entity.step"
+                            ],
+                            "demoId",
+                            ""
+                          ]
+                        }
+                      ]
+                    ]
                   ]
                 ],
                 "event": "TUT_BACK",
@@ -1038,6 +1182,11 @@
                   ],
                   [
                     "emit",
+                    "TUTORIAL_DEMO_STOP",
+                    {}
+                  ],
+                  [
+                    "emit",
                     "TUTORIAL_DONE",
                     {
                       "id": "tutorial"
@@ -1050,6 +1199,9 @@
                 "to": "hidden"
               }
             ]
+          },
+          "traitEmbedIds": {
+            "TutorialEmptyPreview": "trt_01M0S4ZSRVQBN2JT81Y534547C"
           }
         }
       ]

@@ -1,0 +1,176 @@
+[
+  {
+    "organism": "std-tutorial-autodemo",
+    "orbital": "TutorialAutoDemoOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/game/atoms/std-tutorial-autodemo.ts",
+    "entities": [
+      {
+        "name": "AutoDemoData",
+        "fields": [
+          {
+            "name": "playing",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "scriptId",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "elapsed",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "cueIndex",
+            "type": "number",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "AutoDemo",
+        "emittedEvents": [
+          "DEMO_LEFT",
+          "DEMO_RIGHT",
+          "DEMO_JUMP",
+          "DEMO_STOP"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "DEMO_LEFT",
+            "direction": "emit",
+            "description": "Scripted run-left cue; the host board maps this to its own steer-left.",
+            "tier": "domain"
+          },
+          {
+            "name": "DEMO_RIGHT",
+            "direction": "emit",
+            "description": "Scripted run-right cue; the host board maps this to its own steer-right.",
+            "tier": "domain"
+          },
+          {
+            "name": "DEMO_JUMP",
+            "direction": "emit",
+            "description": "Scripted jump cue; the host board maps this to its own jump.",
+            "tier": "domain"
+          },
+          {
+            "name": "DEMO_STOP",
+            "direction": "emit",
+            "description": "Scripted stop cue (or demo end/cancel); the host board maps this to stop movement.",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "TUTORIAL_DEMO_START",
+            "direction": "listen",
+            "description": "A tutorial step carrying a demoId was shown (std-tutorial-overlay); begin playing the cue script whose id matches demoId.",
+            "tier": "domain"
+          },
+          {
+            "name": "TUTORIAL_DEMO_STOP",
+            "direction": "listen",
+            "description": "The tutorial left a demo step or was dismissed; stop the demo and release control.",
+            "tier": "domain"
+          },
+          {
+            "name": "DEMO_CANCEL",
+            "direction": "listen",
+            "description": "Real user input was received by the host board; stop the demo immediately and hand control back to the player.",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "scripts",
+            "type": "[DemoScript]",
+            "default": [],
+            "label": "Scripts",
+            "description": "Named cue scripts keyed by the tutorial step's demoId; each cue fires its event after `at` milliseconds of the demo clock.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "cues": {
+                  "name": "cues",
+                  "required": true,
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "arg": {
+                        "name": "arg",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "at": {
+                        "name": "at",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "event": {
+                        "name": "event",
+                        "required": true,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "AutoDemoData",
+        "transitionEvents": [
+          "DEMO_CANCEL",
+          "INIT",
+          "TUTORIAL_DEMO_START",
+          "TUTORIAL_DEMO_STOP"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "cueIndex",
+            "elapsed",
+            "playing",
+            "scriptId"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "TutorialAutoDemoPage",
+        "defaultPath": "/tutorial-autodemo",
+        "primaryEntity": "AutoDemoData"
+      }
+    ],
+    "emittedEvents": [
+      "DEMO_JUMP",
+      "DEMO_LEFT",
+      "DEMO_RIGHT",
+      "DEMO_STOP"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

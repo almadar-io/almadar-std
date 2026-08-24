@@ -63,6 +63,14 @@
             "required": false,
             "description": "The current search query the user submitted.",
             "synonyms": "query, term, q"
+          },
+          {
+            "name": "scopeKey",
+            "type": "string",
+            "required": false,
+            "intrinsic": true,
+            "description": "The parent document id the feed is currently scoped to, set by SHOW_HISTORY. Empty when browsing the unfiltered global feed.",
+            "synonyms": "scope, filter key, document scope"
           }
         ],
         "persistence": "persistent"
@@ -141,10 +149,28 @@
           },
           {
             "name": "INIT",
-            "direction": "listen"
+            "direction": "listen",
+            "description": "Optional route param delivered on mount (e.g. an :id page segment); scopes INIT's own fetch to rows whose scopeField equals id. Absent id or empty scopeField config keeps the unfiltered global feed.",
+            "synonyms": "route id, deep link, initial scope",
+            "tier": "domain"
+          },
+          {
+            "name": "SHOW_HISTORY",
+            "direction": "listen",
+            "description": "Requests the revision feed scoped to one parent document; stores the key and refetches filtered by config.scopeField.",
+            "synonyms": "view history, doc history, filter revisions",
+            "tier": "domain"
           }
         ],
         "overridableConfigKeys": [
+          {
+            "key": "scopeField",
+            "type": "string",
+            "default": "",
+            "label": "Scope field",
+            "description": "Revision entity field holding the parent document's id. When set, a page-mounted {id} route param scopes INIT's fetch, and a SHOW_HISTORY { key } event rescopes the feed, to rows whose scopeField equals the id/key; rollback and retry refetches stay scoped too. Empty (default) or no id = unfiltered global feed, unchanged from prior behavior.",
+            "tier": "domain"
+          },
           {
             "key": "statLook",
             "type": "string",
@@ -195,8 +221,23 @@
           "RevisionLoadFailed",
           "RevisionLoaded",
           "RevisionRollbackFailed",
-          "RevisionRolledBack"
+          "RevisionRolledBack",
+          "SHOW_HISTORY"
         ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "authorId",
+            "authorName",
+            "content",
+            "documentId",
+            "documentType",
+            "scopeKey",
+            "summary",
+            "versionNumber"
+          ]
+        },
         "effectEntityRefs": [
           "Revision"
         ]

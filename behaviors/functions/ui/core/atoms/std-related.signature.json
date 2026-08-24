@@ -24,7 +24,8 @@
         "name": "RelatedItemList",
         "emittedEvents": [
           "RelatedItemLoaded",
-          "RelatedItemLoadFailed"
+          "RelatedItemLoadFailed",
+          "SELECT_RELATED"
         ],
         "listenedEvents": [],
         "events": [
@@ -43,8 +44,22 @@
             "tier": "internal"
           },
           {
+            "name": "SELECT_RELATED",
+            "direction": "emit",
+            "description": "Signals a related item was selected to drive a detail view.",
+            "synonyms": "select, choose, open, view",
+            "tier": "domain"
+          },
+          {
             "name": "INIT",
             "direction": "listen"
+          },
+          {
+            "name": "SHOW_RELATED",
+            "direction": "listen",
+            "description": "Scopes the related fetch to rows whose relationField equals key.",
+            "synonyms": "scope, filter, focus, target",
+            "tier": "domain"
           },
           {
             "name": "RETRY",
@@ -52,6 +67,14 @@
           }
         ],
         "overridableConfigKeys": [
+          {
+            "key": "relationField",
+            "type": "string",
+            "default": "",
+            "label": "Relation field",
+            "description": "RelatedItem field compared against SHOW_RELATED's key to scope the fetch to one parent document; empty renders the full unfiltered collection (default).",
+            "tier": "domain"
+          },
           {
             "key": "tableLook",
             "type": "string",
@@ -66,6 +89,14 @@
               "borderless",
               "card-rows"
             ]
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Related",
+            "label": "Section title",
+            "description": "Heading shown above the related list.",
+            "tier": "presentation"
           }
         ],
         "capabilities": [],
@@ -74,7 +105,9 @@
           "INIT",
           "RETRY",
           "RelatedItemLoadFailed",
-          "RelatedItemLoaded"
+          "RelatedItemLoaded",
+          "SELECT_RELATED",
+          "SHOW_RELATED"
         ],
         "entityRebindable": true,
         "entityContract": {
@@ -95,7 +128,8 @@
     ],
     "emittedEvents": [
       "RelatedItemLoadFailed",
-      "RelatedItemLoaded"
+      "RelatedItemLoaded",
+      "SELECT_RELATED"
     ],
     "listenedEvents": [],
     "exposure": "both",

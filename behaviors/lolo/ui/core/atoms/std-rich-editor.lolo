@@ -1,5 +1,5 @@
 app std-rich-editor "1.0.0"
-"std-rich-editor — wiki/CMS Notion-style block editor. Browses documents in `browsing`; opens the rich-block-editor on a selected row; persists block edits + publish status."
+"std-rich-editor — wiki/CMS Notion-style block editor. Browses documents in `browsing`; opens the rich-block-editor on a selected row; persists block edits + publish status. `BlockEdit` is a rebindable single-row overlay editor: an organism rebinds it to its own entity (WikiPage, Note, …), passes the row's id + blocksJson via OPEN, and routes the emitted BLOCKS_SAVED into its own persistor — this atom never fetches or persists."
 ;; @capabilities "notes app, note-taking, journal, personal journal entries, document editor, write and organize notes"
 type BlockSpec = { type : string!, content : string, id : string }
 type ObjectSpec = { id : string, label : string, value : string }
@@ -419,5 +419,119 @@ orbital DocumentOrbital {
     }
   }
 
+  trait BlockEdit -> @rebindable Document [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      OPEN -> editing
+        (set @entity.id ?id)
+        (set @entity.blocksJson ?blocksJson)
+        (render-ui modal {
+          children: [{
+            align: center
+            children: [{ name: file-text, type: icon }, {
+              content: @config.title
+              type: typography
+              variant: h3
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }, {
+            changeEvent: BLOCKS_CHANGE
+            initialBlocks: @entity.blocksJson
+            placeholder: @config.placeholder
+            showToolbar: true
+            type: rich-block-editor
+          }, {
+            align: center
+            children: [{
+              action: SAVE
+              label: Save
+              type: button
+              variant: primary
+            }, {
+              action: CLOSE
+              label: Cancel
+              type: button
+              variant: ghost
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      ;; self-loop on the external emit so the validator sees an in-atom
+      ;; listener — the real consumer is the composing organism's persistor.
+      BLOCKS_SAVED -> idle
+    }
+
+    state editing {
+      BLOCKS_CHANGE -> editing
+        (set @entity.blocksJson ?blocks)
+      SAVE -> idle
+        (render-ui modal null)
+        (emit BLOCKS_SAVED { id: @entity.id, blocksJson: @entity.blocksJson })
+      CLOSE -> idle
+        (render-ui modal null)
+    }
+
+    emits {
+      BLOCKS_SAVED -> external {
+        id : string!
+        blocksJson : [BlockSpec]
+      }
+        @description "Signals a row's block content is ready to persist. This atom never persists — the composing organism routes BLOCKS_SAVED into its own persistor's update event."
+        @synonyms "saved, persist, update, commit"
+        @tier "domain"
+      CLOSE
+        @description "Indicates the block editor overlay is being dismissed."
+        @synonyms "dismiss, hide, cancel, close"
+        @tier "domain"
+      BLOCKS_CHANGE {
+        blocks : [BlockSpec]
+      }
+        @description "Signals that the content of a block has been modified while editing."
+        @synonyms "update, modify, changed, edit"
+        @tier "domain"
+    }
+
+    listens {
+      OPEN {
+        id : string!
+        blocksJson : [BlockSpec]
+      }
+        @description "Requests the block editor overlay open for the given row. The caller supplies the row's id and current blocks — this trait never fetches them itself."
+        @synonyms "show, launch, reveal, edit"
+        @tier "domain"
+      BLOCKS_CHANGE {
+        blocks : [BlockSpec]
+      }
+        @description "Indicates changes to the content of editable blocks while editing."
+        @synonyms "update, modify, edit"
+        @tier "domain"
+      CLOSE
+        @description "Indicates the block editor overlay is being dismissed."
+        @synonyms "dismiss, hide, cancel, close"
+        @tier "domain"
+    }
+
+    config {
+      title : string = "Edit content"
+        @label "Editor heading"
+        @description "Heading shown at the top of the block editor overlay."
+        @tier "presentation"
+      placeholder : string = "Start writing…"
+        @label "Placeholder text"
+        @description "Placeholder shown in the block editor when it is empty."
+        @tier "presentation"
+    }
+  }
+
   page "/documents/edit" as DocumentEditPage -> DocumentEdit
+  page "/documents/block-edit" as BlockEditPage -> BlockEdit
 }

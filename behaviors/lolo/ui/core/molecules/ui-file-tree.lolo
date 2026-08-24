@@ -9,6 +9,12 @@ orbital FileTreeOrbital {
     size : number
     language : string
   }
+  type FileTreeItemsItem = {
+    id : string!
+    label : string!
+    parentId : string
+    icon : string
+  }
 
   entity FileTreeItem [runtime] {
     id : string!
@@ -21,8 +27,10 @@ orbital FileTreeOrbital {
       INIT -> idle
         (render-ui main {
           tree: @config.tree
+          items: @config.items
           selectedPath: @config.selectedPath
           onFileSelect: @config.onFileSelect
+          onNodeSelect: @config.onNodeSelect
           className: @config.className
           indent: @config.indent
           type: file-tree
@@ -38,9 +46,13 @@ orbital FileTreeOrbital {
     }
 
     config {
-      tree : [FileTreeTreeItem] = [{ name: "Name", path: "Path", type: file, children: [], size: 1, language: "Language" }, { name: "Name 2", path: "Path 2", type: dir, children: [], size: 2, language: "Language 2" }]
+      tree : [FileTreeTreeItem] = []
         @label "Tree"
-        @description "The tree data"
+        @description "The tree data (pre-nested). Ignored when `items` is provided."
+        @tier "presentation"
+      items : [FileTreeItemsItem] = []
+        @label "Items"
+        @description "Flat node list, nested by `parentId` at render time — takes precedence over `tree` when provided. A `parentId` with no matching row renders that node as a root rather than dropping it."
         @tier "presentation"
       selectedPath : string
         @label "Selected Path"
@@ -49,6 +61,10 @@ orbital FileTreeOrbital {
       onFileSelect : string = "FILE_SELECT"
         @label "On File Select"
         @description "Called when a file is clicked"
+        @tier "presentation"
+      onNodeSelect : string = ""
+        @label "On Node Select"
+        @description "Called when a node is clicked, in flat `items` mode; carries the selected node's id. Presence-gated: binding this prop is what turns on the click-to-select affordance, mirroring Badge's `onRemove`."
         @tier "presentation"
       className : string
         @label "Class Name"

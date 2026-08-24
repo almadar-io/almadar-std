@@ -196,6 +196,88 @@
         "effectEntityRefs": [
           "Document"
         ]
+      },
+      {
+        "name": "BlockEdit",
+        "emittedEvents": [
+          "BLOCKS_SAVED",
+          "CLOSE",
+          "BLOCKS_CHANGE"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "BLOCKS_SAVED",
+            "direction": "emit",
+            "description": "Signals a row's block content is ready to persist. This atom never persists — the composing organism routes BLOCKS_SAVED into its own persistor's update event.",
+            "synonyms": "saved, persist, update, commit",
+            "tier": "domain"
+          },
+          {
+            "name": "CLOSE",
+            "direction": "emit",
+            "description": "Indicates the block editor overlay is being dismissed.",
+            "synonyms": "dismiss, hide, cancel, close",
+            "tier": "domain"
+          },
+          {
+            "name": "BLOCKS_CHANGE",
+            "direction": "emit",
+            "description": "Signals that the content of a block has been modified while editing.",
+            "synonyms": "update, modify, changed, edit",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "OPEN",
+            "direction": "listen",
+            "description": "Requests the block editor overlay open for the given row. The caller supplies the row's id and current blocks — this trait never fetches them itself.",
+            "synonyms": "show, launch, reveal, edit",
+            "tier": "domain"
+          },
+          {
+            "name": "SAVE",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "placeholder",
+            "type": "string",
+            "default": "Start writing…",
+            "label": "Placeholder text",
+            "description": "Placeholder shown in the block editor when it is empty.",
+            "tier": "presentation"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Edit content",
+            "label": "Editor heading",
+            "description": "Heading shown at the top of the block editor overlay.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "Document",
+        "transitionEvents": [
+          "BLOCKS_CHANGE",
+          "BLOCKS_SAVED",
+          "CLOSE",
+          "INIT",
+          "OPEN",
+          "SAVE"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "blocksJson"
+          ]
+        }
       }
     ],
     "pages": [
@@ -203,10 +285,17 @@
         "name": "DocumentEditPage",
         "defaultPath": "/documents/edit",
         "primaryEntity": "Document"
+      },
+      {
+        "name": "BlockEditPage",
+        "defaultPath": "/documents/block-edit",
+        "primaryEntity": "Document"
       }
     ],
     "emittedEvents": [
       "BLOCKS_CHANGE",
+      "BLOCKS_SAVED",
+      "CLOSE",
       "CLOSE_VIEW",
       "DocumentLoadFailed",
       "DocumentLoaded",

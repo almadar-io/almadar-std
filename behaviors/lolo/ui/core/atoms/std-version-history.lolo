@@ -1,5 +1,5 @@
 app std-version-history "1.0.0"
-"std-version-history — wiki/CMS revision history with diff + rollback. Browses revisions; opens detail in `viewing_single`; compares two revisions in `comparing` with intrinsic version-diff; persists rollback."
+"std-version-history — wiki/CMS revision history with diff + rollback. Browses revisions; opens detail in `viewing_single`; compares two revisions in `comparing` with intrinsic version-diff; persists rollback. `RevisionManage` is a rebindable single-entity trait: a consumer rebinds it to its own entity via `linkedEntity`. `config.scopeField` names the Revision field holding the parent document id; a page-mounted `{id}` route param scopes INIT's own fetch, and a consumer forwards SHOW_HISTORY { key } (via a `listens` override) to rescope the feed to one document — empty scopeField (default) or no id keeps today's unfiltered global feed. Rollback and retry refetches stay scoped."
 orbital RevisionOrbital {
     type RevisionLoaded = Event { data : [Revision] } "Fired when the revision collection finishes loading"
 
@@ -20,14 +20,17 @@ orbital RevisionOrbital {
     summary : string @description "A brief explanation of the revision's changes." @synonyms "description, note, comment, explanation"
     searchTerm : string @description "The current search query the user submitted." @synonyms "query, term, q" = ""
     createdAt : string
+    scopeKey : string @intrinsic @description "The parent document id the feed is currently scoped to, set by SHOW_HISTORY. Empty when browsing the unfiltered global feed." @synonyms "scope, filter key, document scope" = ""
   }
 
-  trait RevisionManage -> Revision [interaction, collection] {
+  trait RevisionManage -> @rebindable Revision [interaction, collection] {
     initial: loading
 
     state loading {
       INIT -> loading
+        (set @entity.scopeKey (str/default ?id ""))
         (fetch Revision {
+          filter: (or ["=", @config.scopeField, ""] ["=", (str/default ?id ""), ""] ["=", (object/get @entity @config.scopeField), ?id])
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
         })
         (render-ui main {
@@ -95,7 +98,9 @@ orbital RevisionOrbital {
           type: stack
         })
       RevisionRolledBack -> loading
+        (set @entity.scopeKey (object/get ?row @config.scopeField ""))
         (fetch Revision {
+          filter: (or ["=", @config.scopeField, ""] ["=", (object/get ?row @config.scopeField ""), ""] ["=", (object/get @entity @config.scopeField), (object/get ?row @config.scopeField "")])
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
         })
       RevisionRollbackFailed -> error
@@ -110,11 +115,32 @@ orbital RevisionOrbital {
           type: alert
           variant: error
         })
+      SHOW_HISTORY -> loading
+        (set @entity.scopeKey ?key)
+        (fetch Revision {
+          filter: ["=", (object/get @entity @config.scopeField), ?key]
+          emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading version history…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
     }
 
     state browsing {
       INIT -> loading
+        (set @entity.scopeKey (str/default ?id ""))
         (fetch Revision {
+          filter: (or ["=", @config.scopeField, ""] ["=", (str/default ?id ""), ""] ["=", (object/get @entity @config.scopeField), ?id])
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
         })
         (render-ui main {
@@ -270,6 +296,25 @@ orbital RevisionOrbital {
           gap: md
           type: stack
         })
+      SHOW_HISTORY -> loading
+        (set @entity.scopeKey ?key)
+        (fetch Revision {
+          filter: ["=", (object/get @entity @config.scopeField), ?key]
+          emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading version history…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
     }
 
     state viewing_single {
@@ -350,6 +395,25 @@ orbital RevisionOrbital {
           gap: md
           type: stack
         })
+      SHOW_HISTORY -> loading
+        (set @entity.scopeKey ?key)
+        (fetch Revision {
+          filter: ["=", (object/get @entity @config.scopeField), ?key]
+          emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading version history…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
     }
 
     state comparing {
@@ -388,11 +452,39 @@ orbital RevisionOrbital {
           gap: md
           type: stack
         })
+      SHOW_HISTORY -> loading
+        (set @entity.scopeKey ?key)
+        (fetch Revision {
+          filter: ["=", (object/get @entity @config.scopeField), ?key]
+          emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading version history…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
     }
 
     state error {
       INIT -> loading
+        (set @entity.scopeKey (str/default ?id ""))
         (fetch Revision {
+          filter: (or ["=", @config.scopeField, ""] ["=", (str/default ?id ""), ""] ["=", (object/get @entity @config.scopeField), ?id])
+          emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
+        })
+        (render-ui main { size: sm, type: spinner })
+      SHOW_HISTORY -> loading
+        (set @entity.scopeKey ?key)
+        (fetch Revision {
+          filter: ["=", (object/get @entity @config.scopeField), ?key]
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
         })
         (render-ui main { size: sm, type: spinner })
@@ -454,6 +546,12 @@ orbital RevisionOrbital {
     }
 
     listens {
+      INIT {
+        id : string
+      }
+        @description "Optional route param delivered on mount (e.g. an :id page segment); scopes INIT's own fetch to rows whose scopeField equals id. Absent id or empty scopeField config keeps the unfiltered global feed."
+        @synonyms "route id, deep link, initial scope"
+        @tier "domain"
       OPEN_REVISION {
         id : string!
         row : Revision
@@ -506,6 +604,12 @@ orbital RevisionOrbital {
         @description "Indicates that a revision rollback operation has failed."
         @synonyms "rollback error, revert failure, undo failed"
         @tier "internal"
+      SHOW_HISTORY {
+        key : string!
+      }
+        @description "Requests the revision feed scoped to one parent document; stores the key and refetches filtered by config.scopeField."
+        @synonyms "view history, doc history, filter revisions"
+        @tier "domain"
     }
 
     config {
@@ -521,6 +625,10 @@ orbital RevisionOrbital {
         @label "Stat display look"
         @description "Layer 2 visual treatment for stat / KPI cards."
         @tier "presentation"
+      scopeField : string = ""
+        @label "Scope field"
+        @description "Revision entity field holding the parent document's id. When set, a page-mounted {id} route param scopes INIT's fetch, and a SHOW_HISTORY { key } event rescopes the feed, to rows whose scopeField equals the id/key; rollback and retry refetches stay scoped too. Empty (default) or no id = unfiltered global feed, unchanged from prior behavior."
+        @tier "domain"
     }
   }
 

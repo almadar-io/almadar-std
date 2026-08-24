@@ -501,6 +501,9 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
                       'values': [
                         'one',
                         'many',
+                        'one-to-many',
+                        'many-to-one',
+                        'many-to-many',
                       ],
                     },
                     'displayField': {
@@ -807,6 +810,9 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
                             'values': [
                               'one',
                               'many',
+                              'one-to-many',
+                              'many-to-one',
+                              'many-to-many',
                             ],
                           },
                           'displayField': {

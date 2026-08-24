@@ -1,5 +1,5 @@
 {
-  "description": "std-tag-taxonomy — hierarchical category tag tree (parent/child). TagBrowse fetches Tag rows on INIT, renders the active level via data-grid, and on SELECT_TAG drills into a tag's children by binding @entity.id to the chosen parent.",
+  "description": "std-tag-taxonomy — hierarchical category tag tree (parent/child). TagBrowse fetches root-level Tag rows (parentId = \"\") on INIT and renders the active level via data-grid; SELECT_TAG drills into the chosen tag's children by fetching rows whose parentId matches it, binding @entity.id to that parent so the level is remembered; SHOW_ROOT resets back to the root level, surfaced as a back affordance while drilled in. Flat taxonomies (all parentId \"\") render exactly one level, unchanged. TagSelected is emitted on selection for consumers to filter content by tag.",
   "ledger": {
     "entries": {
       "ent_01KXG04HRHW51AZ78TFSWQSK7M": {
@@ -55,6 +55,15 @@
         "parent": "trt_01KXG04HRH1T6RA6R9NY1XQC4J",
         "renames": []
       },
+      "evt_01M0RY2KBJYXCAKZQKFM8SPMTN": {
+        "bakedName": "SHOW_ROOT",
+        "curName": "SHOW_ROOT",
+        "id": "evt_01M0RY2KBJYXCAKZQKFM8SPMTN",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04HRH1T6RA6R9NY1XQC4J",
+        "renames": []
+      },
       "orb_01KXG04HRHG7GH6G42W4QW139F": {
         "bakedName": "TagTaxonomyOrbital",
         "curName": "TagTaxonomyOrbital",
@@ -101,10 +110,15 @@
             "type": "string"
           },
           {
-            "description": "Reference to the parent tag in the hierarchy.",
+            "description": "Reference to the parent tag in the hierarchy; empty marks a root.",
             "name": "parentId",
+            "relation": {
+              "cardinality": "one",
+              "entity": "Tag",
+              "entityId": "ent_01KXG04HRHW51AZ78TFSWQSK7M"
+            },
             "synonyms": "parent, superior, ancestor",
-            "type": "string"
+            "type": "relation"
           },
           {
             "description": "A unique, URL-friendly identifier.",
@@ -305,6 +319,11 @@
                 "tier": "domain"
               },
               {
+                "id": "evt_01M0RY2KBJYXCAKZQKFM8SPMTN",
+                "key": "SHOW_ROOT",
+                "name": "Show Root"
+              },
+              {
                 "description": "Signals a tag has been chosen for further exploration.",
                 "id": "evt_01KXG04HRKGA5B1JAYP300FR4C",
                 "key": "TagSelected",
@@ -339,13 +358,32 @@
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.id",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.parentId",
+                    ""
+                  ],
+                  [
                     "fetch",
                     "Tag",
                     {
                       "emit": {
                         "failure": "TagLoadFailed",
                         "success": "TagLoaded"
-                      }
+                      },
+                      "filter": [
+                        "=",
+                        [
+                          "object/get",
+                          "@entity",
+                          "parentId"
+                        ],
+                        ""
+                      ]
                     }
                   ],
                   [
@@ -383,6 +421,24 @@
                     "main",
                     {
                       "children": [
+                        {
+                          "action": "SHOW_ROOT",
+                          "disabled": [
+                            "if",
+                            [
+                              "!=",
+                              "@entity.id",
+                              ""
+                            ],
+                            false,
+                            true
+                          ],
+                          "icon": "arrow-left",
+                          "label": "All categories",
+                          "size": "sm",
+                          "type": "button",
+                          "variant": "ghost"
+                        },
                         {
                           "content": "@config.title",
                           "type": "typography",
@@ -494,13 +550,32 @@
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.id",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.parentId",
+                    ""
+                  ],
+                  [
                     "fetch",
                     "Tag",
                     {
                       "emit": {
                         "failure": "TagLoadFailed",
                         "success": "TagLoaded"
-                      }
+                      },
+                      "filter": [
+                        "=",
+                        [
+                          "object/get",
+                          "@entity",
+                          "parentId"
+                        ],
+                        ""
+                      ]
                     }
                   ],
                   [
@@ -539,6 +614,11 @@
                     "@payload.tagId"
                   ],
                   [
+                    "set",
+                    "@entity.parentId",
+                    "@payload.tagId"
+                  ],
+                  [
                     "emit",
                     "TagSelected",
                     {
@@ -552,7 +632,16 @@
                       "emit": {
                         "failure": "TagLoadFailed",
                         "success": "TagLoaded"
-                      }
+                      },
+                      "filter": [
+                        "=",
+                        [
+                          "object/get",
+                          "@entity",
+                          "parentId"
+                        ],
+                        "@payload.tagId"
+                      ]
                     }
                   ],
                   [
@@ -586,10 +675,87 @@
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.id",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.parentId",
+                    ""
+                  ],
+                  [
+                    "fetch",
+                    "Tag",
+                    {
+                      "emit": {
+                        "failure": "TagLoadFailed",
+                        "success": "TagLoaded"
+                      },
+                      "filter": [
+                        "=",
+                        [
+                          "object/get",
+                          "@entity",
+                          "parentId"
+                        ],
+                        ""
+                      ]
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Loading categories…",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ],
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "SHOW_ROOT",
+                "eventId": "evt_01M0RY2KBJYXCAKZQKFM8SPMTN",
+                "from": "browsing",
+                "to": "loading"
+              },
+              {
+                "effects": [
+                  [
                     "render-ui",
                     "main",
                     {
                       "children": [
+                        {
+                          "action": "SHOW_ROOT",
+                          "disabled": [
+                            "if",
+                            [
+                              "!=",
+                              "@entity.id",
+                              ""
+                            ],
+                            false,
+                            true
+                          ],
+                          "icon": "arrow-left",
+                          "label": "All categories",
+                          "size": "sm",
+                          "type": "button",
+                          "variant": "ghost"
+                        },
                         {
                           "content": "@config.title",
                           "type": "typography",
@@ -701,13 +867,32 @@
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.id",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.parentId",
+                    ""
+                  ],
+                  [
                     "fetch",
                     "Tag",
                     {
                       "emit": {
                         "failure": "TagLoadFailed",
                         "success": "TagLoaded"
-                      }
+                      },
+                      "filter": [
+                        "=",
+                        [
+                          "object/get",
+                          "@entity",
+                          "parentId"
+                        ],
+                        ""
+                      ]
                     }
                   ],
                   [
@@ -746,6 +931,11 @@
                     "@payload.tagId"
                   ],
                   [
+                    "set",
+                    "@entity.parentId",
+                    "@payload.tagId"
+                  ],
+                  [
                     "emit",
                     "TagSelected",
                     {
@@ -764,6 +954,11 @@
                     "set",
                     "@entity.id",
                     "@payload.tagId"
+                  ],
+                  [
+                    "set",
+                    "@entity.parentId",
+                    "@payload.tagId"
                   ]
                 ],
                 "event": "TagSelected",
@@ -778,6 +973,24 @@
                     "main",
                     {
                       "children": [
+                        {
+                          "action": "SHOW_ROOT",
+                          "disabled": [
+                            "if",
+                            [
+                              "!=",
+                              "@entity.id",
+                              ""
+                            ],
+                            false,
+                            true
+                          ],
+                          "icon": "arrow-left",
+                          "label": "All categories",
+                          "size": "sm",
+                          "type": "button",
+                          "variant": "ghost"
+                        },
                         {
                           "content": "@config.title",
                           "type": "typography",
@@ -889,13 +1102,32 @@
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.id",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.parentId",
+                    ""
+                  ],
+                  [
                     "fetch",
                     "Tag",
                     {
                       "emit": {
                         "failure": "TagLoadFailed",
                         "success": "TagLoaded"
-                      }
+                      },
+                      "filter": [
+                        "=",
+                        [
+                          "object/get",
+                          "@entity",
+                          "parentId"
+                        ],
+                        ""
+                      ]
                     }
                   ],
                   [

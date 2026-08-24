@@ -1,17 +1,23 @@
-app std-related "1.0.0"
+app std-related "1.1.0"
 "std-related as a Function"
 ;;
-;; Relation-rendering atom. Assumes the linked entity's relation field has
-;; already been hydrated by an upstream fetch with include; this atom only
-;; owns the rendering of the related children.
+;; Relation-rendering atom. INIT loads the full RelatedItem collection
+;; unfiltered (unchanged default). A consumer that wants the list scoped to
+;; one parent document sets `relationField` (the RelatedItem column that
+;; holds the parent key) and redirects its own "document opened" signal to
+;; SHOW_RELATED { key } in a `listens` override — the atom then fetches only
+;; rows whose relationField equals key. Each row is clickable: it emits
+;; SELECT_RELATED { id, name } for a parent molecule (e.g.
+;; std-related-master-detail) to drive a detail panel.
 ;;
 ;; Paired with std-browse via @trait.X this gives a one-line master-detail
-;; layout: hstack [ @trait.ParentList, @trait.ParentRelated ]. The molecule
-;; std-related-master-detail is the canonical showcase.
+;; layout: hstack [ @trait.ParentList, @trait.ParentRelated ].
 orbital RelatedItemOrbital {
     type RelatedItemLoaded = Event { data : [RelatedItem] } "Fired when RelatedItem finishes loading; payload.data holds the list"
 
     type RelatedItemLoadFailed = Event { error : string, code : string } "Fired when RelatedItem fails to load"
+
+    type ShowRelated = Event { key : string! } "Fired to scope the related fetch to rows whose relationField equals key"
 
   entity RelatedItem [persistent: relateditems] {
     id : string!
@@ -39,12 +45,30 @@ orbital RelatedItemOrbital {
           gap: sm
           type: stack
         })
+      SHOW_RELATED -> loading
+        (fetch RelatedItem {
+          emit: { failure: RelatedItemLoadFailed, success: RelatedItemLoaded }
+          filter: (or ["=", @config.relationField, ""] ["=", (object/get @entity @config.relationField), ?key])
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading related…"
+            type: typography
+            variant: caption
+          }]
+          className: py-8
+          direction: vertical
+          gap: sm
+          type: stack
+        })
       RelatedItemLoaded -> loaded
         (render-ui main {
           children: [{
             align: center
             children: [{ name: link, type: icon }, {
-              content: Related
+              content: @config.title
               type: typography
               variant: h3
             }]
@@ -56,13 +80,23 @@ orbital RelatedItemOrbital {
             fields: []
             look: @config.tableLook
             renderItem: (fn item {
+              align: center
               children: [{
                 content: @item.name
                 type: typography
                 variant: body
+              }, {
+                action: SELECT_RELATED
+                actionPayload: { id: @item.id, name: @item.name }
+                icon: chevron-right
+                label: Open
+                size: sm
+                type: button
+                variant: ghost
               }]
-              direction: vertical
+              direction: horizontal
               gap: xs
+              justify: between
               type: stack
             })
             type: data-list
@@ -107,6 +141,14 @@ orbital RelatedItemOrbital {
           emit: { failure: RelatedItemLoadFailed, success: RelatedItemLoaded }
         })
         (render-ui main { type: spinner })
+      SELECT_RELATED -> loaded
+        (set @entity.id ?id)
+      SHOW_RELATED -> loading
+        (fetch RelatedItem {
+          emit: { failure: RelatedItemLoadFailed, success: RelatedItemLoaded }
+          filter: (or ["=", @config.relationField, ""] ["=", (object/get @entity @config.relationField), ?key])
+        })
+        (render-ui main { type: spinner })
     }
 
     state error {
@@ -122,6 +164,12 @@ orbital RelatedItemOrbital {
           emit: { failure: RelatedItemLoadFailed, success: RelatedItemLoaded }
         })
         (render-ui main { type: spinner })
+      SHOW_RELATED -> loading
+        (fetch RelatedItem {
+          emit: { failure: RelatedItemLoadFailed, success: RelatedItemLoaded }
+          filter: (or ["=", @config.relationField, ""] ["=", (object/get @entity @config.relationField), ?key])
+        })
+        (render-ui main { type: spinner })
     }
 
     emits {
@@ -133,9 +181,23 @@ orbital RelatedItemOrbital {
         @description "Indicates failure to load related items."
         @synonyms "error, failure, problem, unsuccessful"
         @tier "internal"
+      SELECT_RELATED -> external {
+        id : string!
+        name : string
+      }
+        @description "Signals a related item was selected to drive a detail view."
+        @synonyms "select, choose, open, view"
+        @tier "domain"
     }
 
     listens {
+      SELECT_RELATED {
+        id : string!
+        name : string
+      }
+        @description "A related item was selected; the atom records it as the active row."
+        @synonyms "select, choose, open, view"
+        @tier "domain"
       RelatedItemLoadFailed {
         error : string
         code : string
@@ -143,9 +205,23 @@ orbital RelatedItemOrbital {
         @description "Indicates failure to load related items."
         @synonyms "error, failure, problem, unsuccessful"
         @tier "internal"
+      SHOW_RELATED {
+        key : string!
+      }
+        @description "Scopes the related fetch to rows whose relationField equals key."
+        @synonyms "scope, filter, focus, target"
+        @tier "domain"
     }
 
     config {
+      title : string = Related
+        @label "Section title"
+        @description "Heading shown above the related list."
+        @tier "presentation"
+      relationField : string = ""
+        @label "Relation field"
+        @description "RelatedItem field compared against SHOW_RELATED's key to scope the fetch to one parent document; empty renders the full unfiltered collection (default)."
+        @tier "domain"
       tableLook : "dense" | "spacious" | "striped" | "borderless" | "card-rows" = dense
         @label "Table look"
         @description "Layer 2 visual treatment for the data table rendered by this atom."
@@ -153,6 +229,7 @@ orbital RelatedItemOrbital {
     }
   }
 
-  ;; consumer: parent molecule (e.g. std-related-master-detail) listens for SELECT_RELATED to drive a detail panel
+  ;; consumer: parent molecule (e.g. std-related-master-detail) listens for SELECT_RELATED to drive a detail panel; a
+  ;; per-document scope forwards its "opened" event to SHOW_RELATED { key } via a listens override on relationField
   page "/related" as Related -> RelatedItemList
 }

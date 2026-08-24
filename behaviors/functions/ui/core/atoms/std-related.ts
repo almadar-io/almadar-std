@@ -30,7 +30,7 @@ const ALIAS = 'Related';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdRelatedEventKey = 'INIT' | 'RETRY' | 'RelatedItemLoadFailed' | 'RelatedItemLoaded';
+export type StdRelatedEventKey = 'INIT' | 'RETRY' | 'RelatedItemLoadFailed' | 'RelatedItemLoaded' | 'SELECT_RELATED' | 'SHOW_RELATED';
 
 /**
  * Payload shape for the `RelatedItemLoaded` event.
@@ -48,14 +48,26 @@ export interface StdRelatedRelatedItemLoadFailedPayload {
 }
 
 /**
+ * Payload shape for the `SELECT_RELATED` event.
+ */
+export interface StdRelatedSelectRelatedPayload {
+  id: string;
+  name?: string;
+}
+
+/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
  * without modifying its state-machine topology.
  */
 export interface StdRelatedConfig {
+  /** Default: `""` */
+  relationField?: string;
   /** Default: `"dense"` */
   tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  /** Default: `"Related"` */
+  title?: string;
 }
 
 /**
@@ -219,6 +231,13 @@ export function stdRelatedRelatedItemOrbital(params: StdRelatedRelatedItemOrbita
       {
         'category': 'interaction',
         'config': {
+          'relationField': {
+            'default': '',
+            'description': 'RelatedItem field compared against SHOW_RELATED\'s key to scope the fetch to one parent document; empty renders the full unfiltered collection (default).',
+            'label': 'Relation field',
+            'tier': 'domain',
+            'type': 'string',
+          },
           'tableLook': {
             'default': 'dense',
             'description': 'Layer 2 visual treatment for the data table rendered by this atom.',
@@ -232,6 +251,13 @@ export function stdRelatedRelatedItemOrbital(params: StdRelatedRelatedItemOrbita
               'borderless',
               'card-rows',
             ],
+          },
+          'title': {
+            'default': 'Related',
+            'description': 'Heading shown above the related list.',
+            'label': 'Section title',
+            'tier': 'presentation',
+            'type': 'string',
           },
         },
         'emits': [
@@ -265,6 +291,24 @@ export function stdRelatedRelatedItemOrbital(params: StdRelatedRelatedItemOrbita
             'synonyms': 'error, failure, problem, unsuccessful',
             'tier': 'internal',
           },
+          {
+            'description': 'Signals a related item was selected to drive a detail view.',
+            'event': 'SELECT_RELATED',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'name',
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
+            'synonyms': 'select, choose, open, view',
+            'tier': 'domain',
+          },
         ],
         'entityContract': {
           'provides': [],
@@ -279,6 +323,20 @@ export function stdRelatedRelatedItemOrbital(params: StdRelatedRelatedItemOrbita
             {
               'key': 'INIT',
               'name': 'Initialize',
+            },
+            {
+              'description': 'Scopes the related fetch to rows whose relationField equals key.',
+              'key': 'SHOW_RELATED',
+              'name': 'Show Related',
+              'payloadSchema': [
+                {
+                  'name': 'key',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'scope, filter, focus, target',
+              'tier': 'domain',
             },
             {
               'description': 'Signals that related items have been successfully loaded.',
@@ -309,6 +367,24 @@ export function stdRelatedRelatedItemOrbital(params: StdRelatedRelatedItemOrbita
               ],
               'synonyms': 'error, failure, problem, unsuccessful',
               'tier': 'internal',
+            },
+            {
+              'description': 'Signals a related item was selected to drive a detail view.',
+              'key': 'SELECT_RELATED',
+              'name': 'Select Related',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'name',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'select, choose, open, view',
+              'tier': 'domain',
             },
             {
               'key': 'RETRY',
@@ -370,6 +446,62 @@ export function stdRelatedRelatedItemOrbital(params: StdRelatedRelatedItemOrbita
             {
               'effects': [
                 [
+                  'fetch',
+                  ('RelatedItem' satisfies _StdRelatedEntityName),
+                  {
+                    'emit': {
+                      'failure': 'RelatedItemLoadFailed',
+                      'success': 'RelatedItemLoaded',
+                    },
+                    'filter': [
+                      'or',
+                      [
+                        '=',
+                        '@config.relationField',
+                        '',
+                      ],
+                      [
+                        '=',
+                        [
+                          'object/get',
+                          '@entity',
+                          '@config.relationField',
+                        ],
+                        '@payload.key',
+                      ],
+                    ],
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Loading related…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-8',
+                    'direction': 'vertical',
+                    'gap': 'sm',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'SHOW_RELATED',
+              'from': 'loading',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
                   'render-ui',
                   'main',
                   {
@@ -382,7 +514,7 @@ export function stdRelatedRelatedItemOrbital(params: StdRelatedRelatedItemOrbita
                             'type': 'icon',
                           },
                           {
-                            'content': 'Related',
+                            'content': '@config.title',
                             'type': 'typography',
                             'variant': 'h3',
                           },
@@ -402,15 +534,29 @@ export function stdRelatedRelatedItemOrbital(params: StdRelatedRelatedItemOrbita
                           'fn',
                           'item',
                           {
+                            'align': 'center',
                             'children': [
                               {
                                 'content': '@item.name',
                                 'type': 'typography',
                                 'variant': 'body',
                               },
+                              {
+                                'action': 'SELECT_RELATED',
+                                'actionPayload': {
+                                  'id': '@item.id',
+                                  'name': '@item.name',
+                                },
+                                'icon': 'chevron-right',
+                                'label': 'Open',
+                                'size': 'sm',
+                                'type': 'button',
+                                'variant': 'ghost',
+                              },
                             ],
-                            'direction': 'vertical',
+                            'direction': 'horizontal',
                             'gap': 'xs',
+                            'justify': 'between',
                             'type': 'stack',
                           },
                         ],
@@ -497,6 +643,59 @@ export function stdRelatedRelatedItemOrbital(params: StdRelatedRelatedItemOrbita
             {
               'effects': [
                 [
+                  'set',
+                  '@entity.id',
+                  '@payload.id',
+                ],
+              ],
+              'event': 'SELECT_RELATED',
+              'from': 'loaded',
+              'to': 'loaded',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('RelatedItem' satisfies _StdRelatedEntityName),
+                  {
+                    'emit': {
+                      'failure': 'RelatedItemLoadFailed',
+                      'success': 'RelatedItemLoaded',
+                    },
+                    'filter': [
+                      'or',
+                      [
+                        '=',
+                        '@config.relationField',
+                        '',
+                      ],
+                      [
+                        '=',
+                        [
+                          'object/get',
+                          '@entity',
+                          '@config.relationField',
+                        ],
+                        '@payload.key',
+                      ],
+                    ],
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'spinner',
+                  },
+                ],
+              ],
+              'event': 'SHOW_RELATED',
+              'from': 'loaded',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
                   'fetch',
                   ('RelatedItem' satisfies _StdRelatedEntityName),
                   {
@@ -539,6 +738,47 @@ export function stdRelatedRelatedItemOrbital(params: StdRelatedRelatedItemOrbita
                 ],
               ],
               'event': 'RETRY',
+              'from': 'error',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('RelatedItem' satisfies _StdRelatedEntityName),
+                  {
+                    'emit': {
+                      'failure': 'RelatedItemLoadFailed',
+                      'success': 'RelatedItemLoaded',
+                    },
+                    'filter': [
+                      'or',
+                      [
+                        '=',
+                        '@config.relationField',
+                        '',
+                      ],
+                      [
+                        '=',
+                        [
+                          'object/get',
+                          '@entity',
+                          '@config.relationField',
+                        ],
+                        '@payload.key',
+                      ],
+                    ],
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'spinner',
+                  },
+                ],
+              ],
+              'event': 'SHOW_RELATED',
               'from': 'error',
               'to': 'loading',
             },

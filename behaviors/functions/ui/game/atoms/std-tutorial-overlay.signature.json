@@ -24,6 +24,23 @@
     ],
     "traits": [
       {
+        "name": "TutorialEmptyPreview",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [],
+        "capabilities": [],
+        "linkedEntity": "TutorialState",
+        "transitionEvents": [
+          "INIT"
+        ]
+      },
+      {
         "name": "TutorialOverlay",
         "emittedEvents": [
           "TUT_AUTO",
@@ -31,7 +48,9 @@
           "TUT_BACK",
           "TUT_DISMISS",
           "SHOW",
-          "TUTORIAL_DONE"
+          "TUTORIAL_DONE",
+          "TUTORIAL_DEMO_START",
+          "TUTORIAL_DEMO_STOP"
         ],
         "listenedEvents": [],
         "events": [
@@ -72,6 +91,18 @@
             "tier": "domain"
           },
           {
+            "name": "TUTORIAL_DEMO_START",
+            "direction": "emit",
+            "description": "Emitted when a tutorial step carrying a demoId is shown; the composed std-tutorial-autodemo atom plays that scripted demo.",
+            "tier": "domain"
+          },
+          {
+            "name": "TUTORIAL_DEMO_STOP",
+            "direction": "emit",
+            "description": "Emitted when the tutorial leaves a demo step (next/back) or is dismissed/finished; the autodemo atom stops and releases control.",
+            "tier": "domain"
+          },
+          {
             "name": "INIT",
             "direction": "listen"
           }
@@ -86,11 +117,19 @@
             "tier": "domain"
           },
           {
+            "key": "previewTrait",
+            "type": "trait",
+            "default": "@trait.TutorialEmptyPreview",
+            "label": "Preview trait",
+            "description": "Trait rendered in the media position of the modal — the live, demo-driven preview of the mechanic (a bare game canvas, no shell chrome). '@trait.TutorialEmptyPreview' leaves the slot blank. Override with '@trait.<TraitName>' to show a board's live frame.",
+            "tier": "presentation"
+          },
+          {
             "key": "steps",
             "type": "[TutorialStep]",
             "default": [],
             "label": "Steps",
-            "description": "One row per tutorial page: title, one line of body copy, and media — the URL of an animated GIF/clip showing exactly how the mechanic is performed (recorded from real gameplay).",
+            "description": "One row per tutorial page: title, one line of body copy, and an optional demoId that plays a scripted live demo (std-tutorial-autodemo) for the mechanic being taught.",
             "tier": "presentation",
             "items": {
               "properties": {
@@ -99,19 +138,14 @@
                   "required": false,
                   "type": "string"
                 },
+                "demoId": {
+                  "name": "demoId",
+                  "required": false,
+                  "type": "string"
+                },
                 "id": {
                   "name": "id",
                   "required": true,
-                  "type": "string"
-                },
-                "media": {
-                  "name": "media",
-                  "required": false,
-                  "type": "string"
-                },
-                "mediaAlt": {
-                  "name": "mediaAlt",
-                  "required": false,
                   "type": "string"
                 },
                 "title": {
@@ -153,6 +187,8 @@
     ],
     "emittedEvents": [
       "SHOW",
+      "TUTORIAL_DEMO_START",
+      "TUTORIAL_DEMO_STOP",
       "TUTORIAL_DONE",
       "TUT_AUTO",
       "TUT_BACK",
