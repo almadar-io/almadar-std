@@ -216,7 +216,7 @@
           {
             "name": "CLOSE",
             "direction": "emit",
-            "description": "Indicates the block editor overlay is being dismissed.",
+            "description": "Leaves the editor without saving; the body returns to its read-only render.",
             "synonyms": "dismiss, hide, cancel, close",
             "tier": "domain"
           },
@@ -234,16 +234,59 @@
           {
             "name": "OPEN",
             "direction": "listen",
-            "description": "Requests the block editor overlay open for the given row. The caller supplies the row's id and current blocks — this trait never fetches them itself.",
+            "description": "Hands the editor the row whose body it renders — the caller supplies the row's id and current blocks, since this trait never fetches them itself. Re-firing it repaints the body (e.g. after the host refetches a saved row).",
             "synonyms": "show, launch, reveal, edit",
             "tier": "domain"
           },
           {
-            "name": "SAVE",
+            "name": "OPEN_DRAFT",
+            "direction": "listen",
+            "description": "Hands the editor a row that was just created as a blank draft: same payload as OPEN, but the body opens straight in the authoring editor instead of the read-only render, so a document-first 'New page' lands the author on a cursor rather than an empty state.",
+            "synonyms": "new document, start writing, blank draft, compose",
+            "tier": "domain"
+          },
+          {
+            "name": "EDIT_BLOCKS",
+            "direction": "listen"
+          },
+          {
+            "name": "SAVE_BLOCKS",
             "direction": "listen"
           }
         ],
         "overridableConfigKeys": [
+          {
+            "key": "editLabel",
+            "type": "string",
+            "default": "Edit content",
+            "label": "Edit button label",
+            "description": "Label of the button above the read-only body that opens the editor.",
+            "tier": "presentation"
+          },
+          {
+            "key": "emptyActionLabel",
+            "type": "string",
+            "default": "Start writing",
+            "label": "Empty action label",
+            "description": "Label of the button that opens the editor from the empty body state.",
+            "tier": "presentation"
+          },
+          {
+            "key": "emptyDescription",
+            "type": "string",
+            "default": "This page has no content yet. Start writing to fill it in.",
+            "label": "Empty description",
+            "description": "Supporting line shown with the empty body state.",
+            "tier": "presentation"
+          },
+          {
+            "key": "emptyTitle",
+            "type": "string",
+            "default": "Nothing written yet",
+            "label": "Empty heading",
+            "description": "Heading shown in place of the body when the row has no blocks yet.",
+            "tier": "presentation"
+          },
           {
             "key": "placeholder",
             "type": "string",
@@ -257,7 +300,7 @@
             "type": "string",
             "default": "Edit content",
             "label": "Editor heading",
-            "description": "Heading shown at the top of the block editor overlay.",
+            "description": "Heading shown above the editor while the body is being edited.",
             "tier": "presentation"
           }
         ],
@@ -267,9 +310,11 @@
           "BLOCKS_CHANGE",
           "BLOCKS_SAVED",
           "CLOSE",
+          "EDIT_BLOCKS",
           "INIT",
           "OPEN",
-          "SAVE"
+          "OPEN_DRAFT",
+          "SAVE_BLOCKS"
         ],
         "entityRebindable": true,
         "entityContract": {

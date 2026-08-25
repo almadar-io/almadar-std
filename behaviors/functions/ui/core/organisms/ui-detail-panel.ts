@@ -66,6 +66,8 @@ export interface StdUiDetailPanelConfig {
   /** Default: `2` */
   maxInlineActions?: number;
   mode?: string;
+  /** Default: `""` */
+  onTitleCommit?: string;
   pageProp?: number;
   pageSize?: number;
   /** Default: `"left"` */
@@ -426,6 +428,13 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
             'tier': 'presentation',
             'type': 'string',
           },
+          'onTitleCommit': {
+            'default': '',
+            'description': 'When bound, the title becomes editable in place: clicking it swaps the heading for an input, Enter or blur commits, Escape reverts. Receives the committed title and the record\'s id so the host can persist a partial update. Unbound, the title stays a plain heading.',
+            'label': 'On Title Commit',
+            'tier': 'presentation',
+            'type': 'string',
+          },
           'pageProp': {
             'description': 'Current page number',
             'label': 'Page',
@@ -709,6 +718,7 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                     'isLoading': '@config.isLoading',
                     'maxInlineActions': '@config.maxInlineActions',
                     'mode': '@config.mode',
+                    'onTitleCommit': '@config.onTitleCommit',
                     'page': '@config.pageProp',
                     'pageSize': '@config.pageSize',
                     'position': '@config.position',
@@ -754,6 +764,7 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                     'isLoading': '@config.isLoading',
                     'maxInlineActions': '@config.maxInlineActions',
                     'mode': '@config.mode',
+                    'onTitleCommit': '@config.onTitleCommit',
                     'page': '@config.pageProp',
                     'pageSize': '@config.pageSize',
                     'position': '@config.position',

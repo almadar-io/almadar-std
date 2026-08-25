@@ -1,5 +1,5 @@
 app std-rich-editor "1.0.0"
-"std-rich-editor — wiki/CMS Notion-style block editor. Browses documents in `browsing`; opens the rich-block-editor on a selected row; persists block edits + publish status. `BlockEdit` is a rebindable single-row overlay editor: an organism rebinds it to its own entity (WikiPage, Note, …), passes the row's id + blocksJson via OPEN, and routes the emitted BLOCKS_SAVED into its own persistor — this atom never fetches or persists."
+"std-rich-editor — wiki/CMS Notion-style block editor. Browses documents in `browsing`; opens the rich-block-editor on a selected row; persists block edits + publish status. `BlockEdit` is a rebindable single-row IN-PLACE body editor: an organism embeds it where the content belongs, rebinds it to its own entity (WikiPage, Note, …), hands it the row's id + blocksJson via OPEN, and routes the emitted BLOCKS_SAVED into its own persistor — this atom never fetches or persists. The read-only body is itself the edit affordance; an empty row paints an empty state that starts the first block; and OPEN_DRAFT opens straight into the authoring editor for a row that was just minted blank (document-first creation)."
 ;; @capabilities "notes app, note-taking, journal, personal journal entries, document editor, write and organize notes"
 type BlockSpec = { type : string!, content : string, id : string }
 type ObjectSpec = { id : string, label : string, value : string }
@@ -419,35 +419,88 @@ orbital DocumentOrbital {
     }
   }
 
+  ;; In-place body editor for one row. The composing organism embeds this
+  ;; trait where the content belongs (`<trait.X />` inside its detail
+  ;; render) and feeds it the loaded row through OPEN; the body paints
+  ;; read-only AND is its own edit affordance — clicking it enters editing
+  ;; with the authoring toolbar, and a row with no blocks yet paints an
+  ;; empty state whose button starts the first one. OPEN_DRAFT is the
+  ;; document-first entry: same payload, but it lands in the editor. SAVE
+  ;; emits BLOCKS_SAVED for the host's persistor; this atom never fetches or
+  ;; persists.
   trait BlockEdit -> @rebindable Document [interaction, instance] {
     initial: idle
 
     state idle {
       INIT -> idle
-      OPEN -> editing
+      OPEN -> viewing when [">", (array/len ?blocksJson), 0]
         (set @entity.id ?id)
         (set @entity.blocksJson ?blocksJson)
-        (render-ui modal {
+        (render-ui main {
+          children: [{
+            children: [{
+              action: EDIT_BLOCKS
+              icon: edit
+              label: @config.editLabel
+              type: button
+              variant: secondary
+            }]
+            direction: horizontal
+            gap: sm
+            justify: end
+            type: stack
+          }, {
+            action: EDIT_BLOCKS
+            children: [{
+              initialBlocks: @entity.blocksJson
+              readOnly: true
+              type: rich-block-editor
+            }]
+            className: "cursor-text rounded-md transition-colors hover:bg-muted/40"
+            type: box
+          }]
+          direction: vertical
+          gap: sm
+          type: stack
+        })
+      OPEN -> viewing when ["=", (array/len ?blocksJson), 0]
+        (set @entity.id ?id)
+        (set @entity.blocksJson ?blocksJson)
+        (render-ui main {
+          actionEvent: EDIT_BLOCKS
+          actionLabel: @config.emptyActionLabel
+          description: @config.emptyDescription
+          icon: file-text
+          title: @config.emptyTitle
+          type: empty-state
+        })
+      ;; Document-first entry: the row was just minted as a blank draft, so
+      ;; the body opens ALREADY authoring instead of painting an empty state
+      ;; the author has to click through. A distinct trigger, not a flag on
+      ;; OPEN — the guard surface stays decidable.
+      OPEN_DRAFT -> editing
+        (set @entity.id ?id)
+        (set @entity.blocksJson ?blocksJson)
+        (render-ui main {
           children: [{
             align: center
             children: [{ name: file-text, type: icon }, {
               content: @config.title
               type: typography
-              variant: h3
+              variant: h4
             }]
             direction: horizontal
             gap: sm
             type: stack
-          }, { type: divider }, {
+          }, {
             changeEvent: BLOCKS_CHANGE
             initialBlocks: @entity.blocksJson
             placeholder: @config.placeholder
             showToolbar: true
             type: rich-block-editor
           }, {
-            align: center
             children: [{
-              action: SAVE
+              action: SAVE_BLOCKS
               label: Save
               type: button
               variant: primary
@@ -459,6 +512,7 @@ orbital DocumentOrbital {
             }]
             direction: horizontal
             gap: sm
+            justify: end
             type: stack
           }]
           direction: vertical
@@ -470,14 +524,190 @@ orbital DocumentOrbital {
       BLOCKS_SAVED -> idle
     }
 
+    state viewing {
+      OPEN_DRAFT -> editing
+        (set @entity.id ?id)
+        (set @entity.blocksJson ?blocksJson)
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: file-text, type: icon }, {
+              content: @config.title
+              type: typography
+              variant: h4
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, {
+            changeEvent: BLOCKS_CHANGE
+            initialBlocks: @entity.blocksJson
+            placeholder: @config.placeholder
+            showToolbar: true
+            type: rich-block-editor
+          }, {
+            children: [{
+              action: SAVE_BLOCKS
+              label: Save
+              type: button
+              variant: primary
+            }, {
+              action: CLOSE
+              label: Cancel
+              type: button
+              variant: ghost
+            }]
+            direction: horizontal
+            gap: sm
+            justify: end
+            type: stack
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      OPEN -> viewing when [">", (array/len ?blocksJson), 0]
+        (set @entity.id ?id)
+        (set @entity.blocksJson ?blocksJson)
+        (render-ui main {
+          children: [{
+            children: [{
+              action: EDIT_BLOCKS
+              icon: edit
+              label: @config.editLabel
+              type: button
+              variant: secondary
+            }]
+            direction: horizontal
+            gap: sm
+            justify: end
+            type: stack
+          }, {
+            action: EDIT_BLOCKS
+            children: [{
+              initialBlocks: @entity.blocksJson
+              readOnly: true
+              type: rich-block-editor
+            }]
+            className: "cursor-text rounded-md transition-colors hover:bg-muted/40"
+            type: box
+          }]
+          direction: vertical
+          gap: sm
+          type: stack
+        })
+      OPEN -> viewing when ["=", (array/len ?blocksJson), 0]
+        (set @entity.id ?id)
+        (set @entity.blocksJson ?blocksJson)
+        (render-ui main {
+          actionEvent: EDIT_BLOCKS
+          actionLabel: @config.emptyActionLabel
+          description: @config.emptyDescription
+          icon: file-text
+          title: @config.emptyTitle
+          type: empty-state
+        })
+      EDIT_BLOCKS -> editing
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: file-text, type: icon }, {
+              content: @config.title
+              type: typography
+              variant: h4
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, {
+            changeEvent: BLOCKS_CHANGE
+            initialBlocks: @entity.blocksJson
+            placeholder: @config.placeholder
+            showToolbar: true
+            type: rich-block-editor
+          }, {
+            children: [{
+              action: SAVE_BLOCKS
+              label: Save
+              type: button
+              variant: primary
+            }, {
+              action: CLOSE
+              label: Cancel
+              type: button
+              variant: ghost
+            }]
+            direction: horizontal
+            gap: sm
+            justify: end
+            type: stack
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+    }
+
     state editing {
       BLOCKS_CHANGE -> editing
         (set @entity.blocksJson ?blocks)
-      SAVE -> idle
-        (render-ui modal null)
+      SAVE_BLOCKS -> viewing
         (emit BLOCKS_SAVED { id: @entity.id, blocksJson: @entity.blocksJson })
-      CLOSE -> idle
-        (render-ui modal null)
+        (render-ui main {
+          children: [{
+            children: [{
+              action: EDIT_BLOCKS
+              icon: edit
+              label: @config.editLabel
+              type: button
+              variant: secondary
+            }]
+            direction: horizontal
+            gap: sm
+            justify: end
+            type: stack
+          }, {
+            action: EDIT_BLOCKS
+            children: [{
+              initialBlocks: @entity.blocksJson
+              readOnly: true
+              type: rich-block-editor
+            }]
+            className: "cursor-text rounded-md transition-colors hover:bg-muted/40"
+            type: box
+          }]
+          direction: vertical
+          gap: sm
+          type: stack
+        })
+      CLOSE -> viewing
+        (render-ui main {
+          children: [{
+            children: [{
+              action: EDIT_BLOCKS
+              icon: edit
+              label: @config.editLabel
+              type: button
+              variant: secondary
+            }]
+            direction: horizontal
+            gap: sm
+            justify: end
+            type: stack
+          }, {
+            action: EDIT_BLOCKS
+            children: [{
+              initialBlocks: @entity.blocksJson
+              readOnly: true
+              type: rich-block-editor
+            }]
+            className: "cursor-text rounded-md transition-colors hover:bg-muted/40"
+            type: box
+          }]
+          direction: vertical
+          gap: sm
+          type: stack
+        })
     }
 
     emits {
@@ -489,7 +719,7 @@ orbital DocumentOrbital {
         @synonyms "saved, persist, update, commit"
         @tier "domain"
       CLOSE
-        @description "Indicates the block editor overlay is being dismissed."
+        @description "Leaves the editor without saving; the body returns to its read-only render."
         @synonyms "dismiss, hide, cancel, close"
         @tier "domain"
       BLOCKS_CHANGE {
@@ -505,8 +735,15 @@ orbital DocumentOrbital {
         id : string!
         blocksJson : [BlockSpec]
       }
-        @description "Requests the block editor overlay open for the given row. The caller supplies the row's id and current blocks — this trait never fetches them itself."
+        @description "Hands the editor the row whose body it renders — the caller supplies the row's id and current blocks, since this trait never fetches them itself. Re-firing it repaints the body (e.g. after the host refetches a saved row)."
         @synonyms "show, launch, reveal, edit"
+        @tier "domain"
+      OPEN_DRAFT {
+        id : string!
+        blocksJson : [BlockSpec]
+      }
+        @description "Hands the editor a row that was just created as a blank draft: same payload as OPEN, but the body opens straight in the authoring editor instead of the read-only render, so a document-first 'New page' lands the author on a cursor rather than an empty state."
+        @synonyms "new document, start writing, blank draft, compose"
         @tier "domain"
       BLOCKS_CHANGE {
         blocks : [BlockSpec]
@@ -515,7 +752,7 @@ orbital DocumentOrbital {
         @synonyms "update, modify, edit"
         @tier "domain"
       CLOSE
-        @description "Indicates the block editor overlay is being dismissed."
+        @description "Leaves the editor without saving; the body returns to its read-only render."
         @synonyms "dismiss, hide, cancel, close"
         @tier "domain"
     }
@@ -523,11 +760,27 @@ orbital DocumentOrbital {
     config {
       title : string = "Edit content"
         @label "Editor heading"
-        @description "Heading shown at the top of the block editor overlay."
+        @description "Heading shown above the editor while the body is being edited."
         @tier "presentation"
       placeholder : string = "Start writing…"
         @label "Placeholder text"
         @description "Placeholder shown in the block editor when it is empty."
+        @tier "presentation"
+      editLabel : string = "Edit content"
+        @label "Edit button label"
+        @description "Label of the button above the read-only body that opens the editor."
+        @tier "presentation"
+      emptyTitle : string = "Nothing written yet"
+        @label "Empty heading"
+        @description "Heading shown in place of the body when the row has no blocks yet."
+        @tier "presentation"
+      emptyDescription : string = "This page has no content yet. Start writing to fill it in."
+        @label "Empty description"
+        @description "Supporting line shown with the empty body state."
+        @tier "presentation"
+      emptyActionLabel : string = "Start writing"
+        @label "Empty action label"
+        @description "Label of the button that opens the editor from the empty body state."
         @tier "presentation"
     }
   }

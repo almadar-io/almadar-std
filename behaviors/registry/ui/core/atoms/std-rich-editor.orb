@@ -1,5 +1,5 @@
 {
-  "description": "std-rich-editor — wiki/CMS Notion-style block editor. Browses documents in `browsing`; opens the rich-block-editor on a selected row; persists block edits + publish status. `BlockEdit` is a rebindable single-row overlay editor: an organism rebinds it to its own entity (WikiPage, Note, …), passes the row's id + blocksJson via OPEN, and routes the emitted BLOCKS_SAVED into its own persistor — this atom never fetches or persists.",
+  "description": "std-rich-editor — wiki/CMS Notion-style block editor. Browses documents in `browsing`; opens the rich-block-editor on a selected row; persists block edits + publish status. `BlockEdit` is a rebindable single-row IN-PLACE body editor: an organism embeds it where the content belongs, rebinds it to its own entity (WikiPage, Note, …), hands it the row's id + blocksJson via OPEN, and routes the emitted BLOCKS_SAVED into its own persistor — this atom never fetches or persists. The read-only body is itself the edit affordance; an empty row paints an empty state that starts the first block; and OPEN_DRAFT opens straight into the authoring editor for a row that was just minted blank (document-first creation).",
   "ledger": {
     "entries": {
       "ent_01KXG04HCHD37BD2KK5VJQ26G1": {
@@ -127,15 +127,6 @@
         "parent": "trt_01M0RYEW8QSSSVWKSKDCHC5JK9",
         "renames": []
       },
-      "evt_01M0RYEW8QH8R91C7A42HE28ZY": {
-        "bakedName": "SAVE",
-        "curName": "SAVE",
-        "id": "evt_01M0RYEW8QH8R91C7A42HE28ZY",
-        "kind": "event",
-        "owner": "workspace",
-        "parent": "trt_01M0RYEW8QSSSVWKSKDCHC5JK9",
-        "renames": []
-      },
       "evt_01M0RYEW8QHNPNYEJB0CW9SVGB": {
         "bakedName": "CLOSE",
         "curName": "CLOSE",
@@ -158,6 +149,33 @@
         "bakedName": "INIT",
         "curName": "INIT",
         "id": "evt_01M0RYEW8QVYV5E4942Q3VFZZK",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M0RYEW8QSSSVWKSKDCHC5JK9",
+        "renames": []
+      },
+      "evt_01M0V2EXDYMNYYSF51ZJG4T56K": {
+        "bakedName": "EDIT_BLOCKS",
+        "curName": "EDIT_BLOCKS",
+        "id": "evt_01M0V2EXDYMNYYSF51ZJG4T56K",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M0RYEW8QSSSVWKSKDCHC5JK9",
+        "renames": []
+      },
+      "evt_01M0V36GMN3AF9D7285EPV2XNJ": {
+        "bakedName": "SAVE_BLOCKS",
+        "curName": "SAVE_BLOCKS",
+        "id": "evt_01M0V36GMN3AF9D7285EPV2XNJ",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M0RYEW8QSSSVWKSKDCHC5JK9",
+        "renames": []
+      },
+      "evt_01M0V8PKKCFSDSHTNFP08BMS5M": {
+        "bakedName": "OPEN_DRAFT",
+        "curName": "OPEN_DRAFT",
+        "id": "evt_01M0V8PKKCFSDSHTNFP08BMS5M",
         "kind": "event",
         "owner": "workspace",
         "parent": "trt_01M0RYEW8QSSSVWKSKDCHC5JK9",
@@ -1404,6 +1422,34 @@
         {
           "category": "interaction",
           "config": {
+            "editLabel": {
+              "default": "Edit content",
+              "description": "Label of the button above the read-only body that opens the editor.",
+              "label": "Edit button label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "emptyActionLabel": {
+              "default": "Start writing",
+              "description": "Label of the button that opens the editor from the empty body state.",
+              "label": "Empty action label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "emptyDescription": {
+              "default": "This page has no content yet. Start writing to fill it in.",
+              "description": "Supporting line shown with the empty body state.",
+              "label": "Empty description",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "emptyTitle": {
+              "default": "Nothing written yet",
+              "description": "Heading shown in place of the body when the row has no blocks yet.",
+              "label": "Empty heading",
+              "tier": "presentation",
+              "type": "string"
+            },
             "placeholder": {
               "default": "Start writing…",
               "description": "Placeholder shown in the block editor when it is empty.",
@@ -1413,7 +1459,7 @@
             },
             "title": {
               "default": "Edit content",
-              "description": "Heading shown at the top of the block editor overlay.",
+              "description": "Heading shown above the editor while the body is being edited.",
               "label": "Editor heading",
               "tier": "presentation",
               "type": "string"
@@ -1440,7 +1486,7 @@
               "tier": "domain"
             },
             {
-              "description": "Indicates the block editor overlay is being dismissed.",
+              "description": "Leaves the editor without saving; the body returns to its read-only render.",
               "event": "CLOSE",
               "eventId": "evt_01M0RYEW8QHNPNYEJB0CW9SVGB",
               "synonyms": "dismiss, hide, cancel, close",
@@ -1483,7 +1529,7 @@
                 "name": "Initialize"
               },
               {
-                "description": "Requests the block editor overlay open for the given row. The caller supplies the row's id and current blocks — this trait never fetches them itself.",
+                "description": "Hands the editor the row whose body it renders — the caller supplies the row's id and current blocks, since this trait never fetches them itself. Re-firing it repaints the body (e.g. after the host refetches a saved row).",
                 "id": "evt_01M0RYEW8Q7JPMVH9BJQ274WXR",
                 "key": "OPEN",
                 "name": "Open",
@@ -1517,6 +1563,40 @@
                 "tier": "domain"
               },
               {
+                "description": "Hands the editor a row that was just created as a blank draft: same payload as OPEN, but the body opens straight in the authoring editor instead of the read-only render, so a document-first 'New page' lands the author on a cursor rather than an empty state.",
+                "id": "evt_01M0V8PKKCFSDSHTNFP08BMS5M",
+                "key": "OPEN_DRAFT",
+                "name": "Open Draft",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "blocksJson",
+                    "properties": [
+                      {
+                        "name": "type",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "content",
+                        "type": "string"
+                      },
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ],
+                    "type": "[object]"
+                  }
+                ],
+                "synonyms": "new document, start writing, blank draft, compose",
+                "tier": "domain"
+              },
+              {
                 "description": "Signals a row's block content is ready to persist. This atom never persists — the composing organism routes BLOCKS_SAVED into its own persistor's update event.",
                 "id": "evt_01M0RYEW8QQG4WCT9ZCQR5B7ME",
                 "key": "BLOCKS_SAVED",
@@ -1534,6 +1614,11 @@
                 ],
                 "synonyms": "saved, persist, update, commit",
                 "tier": "domain"
+              },
+              {
+                "id": "evt_01M0V2EXDYMNYYSF51ZJG4T56K",
+                "key": "EDIT_BLOCKS",
+                "name": "Edit Blocks"
               },
               {
                 "description": "Signals that the content of a block has been modified while editing.",
@@ -1565,12 +1650,12 @@
                 "tier": "domain"
               },
               {
-                "id": "evt_01M0RYEW8QH8R91C7A42HE28ZY",
-                "key": "SAVE",
-                "name": "Save"
+                "id": "evt_01M0V36GMN3AF9D7285EPV2XNJ",
+                "key": "SAVE_BLOCKS",
+                "name": "Save Blocks"
               },
               {
-                "description": "Indicates the block editor overlay is being dismissed.",
+                "description": "Leaves the editor without saving; the body returns to its read-only render.",
                 "id": "evt_01M0RYEW8QHNPNYEJB0CW9SVGB",
                 "key": "CLOSE",
                 "name": "Close",
@@ -1582,6 +1667,9 @@
               {
                 "isInitial": true,
                 "name": "idle"
+              },
+              {
+                "name": "viewing"
               },
               {
                 "name": "editing"
@@ -1608,7 +1696,109 @@
                   ],
                   [
                     "render-ui",
-                    "modal",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "action": "EDIT_BLOCKS",
+                              "icon": "edit",
+                              "label": "@config.editLabel",
+                              "type": "button",
+                              "variant": "secondary"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "end",
+                          "type": "stack"
+                        },
+                        {
+                          "action": "EDIT_BLOCKS",
+                          "children": [
+                            {
+                              "initialBlocks": "@entity.blocksJson",
+                              "readOnly": true,
+                              "type": "rich-block-editor"
+                            }
+                          ],
+                          "className": "cursor-text rounded-md transition-colors hover:bg-muted/40",
+                          "type": "box"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "sm",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "OPEN",
+                "eventId": "evt_01M0RYEW8Q7JPMVH9BJQ274WXR",
+                "from": "idle",
+                "guard": [
+                  ">",
+                  [
+                    "array/len",
+                    "@payload.blocksJson"
+                  ],
+                  0.0
+                ],
+                "to": "viewing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.blocksJson",
+                    "@payload.blocksJson"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "actionEvent": "EDIT_BLOCKS",
+                      "actionLabel": "@config.emptyActionLabel",
+                      "description": "@config.emptyDescription",
+                      "icon": "file-text",
+                      "title": "@config.emptyTitle",
+                      "type": "empty-state"
+                    }
+                  ]
+                ],
+                "event": "OPEN",
+                "eventId": "evt_01M0RYEW8Q7JPMVH9BJQ274WXR",
+                "from": "idle",
+                "guard": [
+                  "=",
+                  [
+                    "array/len",
+                    "@payload.blocksJson"
+                  ],
+                  0.0
+                ],
+                "to": "viewing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.blocksJson",
+                    "@payload.blocksJson"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
                     {
                       "children": [
                         {
@@ -1621,15 +1811,12 @@
                             {
                               "content": "@config.title",
                               "type": "typography",
-                              "variant": "h3"
+                              "variant": "h4"
                             }
                           ],
                           "direction": "horizontal",
                           "gap": "sm",
                           "type": "stack"
-                        },
-                        {
-                          "type": "divider"
                         },
                         {
                           "changeEvent": "BLOCKS_CHANGE",
@@ -1639,10 +1826,9 @@
                           "type": "rich-block-editor"
                         },
                         {
-                          "align": "center",
                           "children": [
                             {
-                              "action": "SAVE",
+                              "action": "SAVE_BLOCKS",
                               "label": "Save",
                               "type": "button",
                               "variant": "primary"
@@ -1656,6 +1842,7 @@
                           ],
                           "direction": "horizontal",
                           "gap": "sm",
+                          "justify": "end",
                           "type": "stack"
                         }
                       ],
@@ -1665,8 +1852,8 @@
                     }
                   ]
                 ],
-                "event": "OPEN",
-                "eventId": "evt_01M0RYEW8Q7JPMVH9BJQ274WXR",
+                "event": "OPEN_DRAFT",
+                "eventId": "evt_01M0V8PKKCFSDSHTNFP08BMS5M",
                 "from": "idle",
                 "to": "editing"
               },
@@ -1675,6 +1862,244 @@
                 "eventId": "evt_01M0RYEW8QQG4WCT9ZCQR5B7ME",
                 "from": "idle",
                 "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.blocksJson",
+                    "@payload.blocksJson"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "name": "file-text",
+                              "type": "icon"
+                            },
+                            {
+                              "content": "@config.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
+                        },
+                        {
+                          "changeEvent": "BLOCKS_CHANGE",
+                          "initialBlocks": "@entity.blocksJson",
+                          "placeholder": "@config.placeholder",
+                          "showToolbar": true,
+                          "type": "rich-block-editor"
+                        },
+                        {
+                          "children": [
+                            {
+                              "action": "SAVE_BLOCKS",
+                              "label": "Save",
+                              "type": "button",
+                              "variant": "primary"
+                            },
+                            {
+                              "action": "CLOSE",
+                              "label": "Cancel",
+                              "type": "button",
+                              "variant": "ghost"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "end",
+                          "type": "stack"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "OPEN_DRAFT",
+                "eventId": "evt_01M0V8PKKCFSDSHTNFP08BMS5M",
+                "from": "viewing",
+                "to": "editing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.blocksJson",
+                    "@payload.blocksJson"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "action": "EDIT_BLOCKS",
+                              "icon": "edit",
+                              "label": "@config.editLabel",
+                              "type": "button",
+                              "variant": "secondary"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "end",
+                          "type": "stack"
+                        },
+                        {
+                          "action": "EDIT_BLOCKS",
+                          "children": [
+                            {
+                              "initialBlocks": "@entity.blocksJson",
+                              "readOnly": true,
+                              "type": "rich-block-editor"
+                            }
+                          ],
+                          "className": "cursor-text rounded-md transition-colors hover:bg-muted/40",
+                          "type": "box"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "sm",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "OPEN",
+                "eventId": "evt_01M0RYEW8Q7JPMVH9BJQ274WXR",
+                "from": "viewing",
+                "guard": [
+                  ">",
+                  [
+                    "array/len",
+                    "@payload.blocksJson"
+                  ],
+                  0.0
+                ],
+                "to": "viewing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.blocksJson",
+                    "@payload.blocksJson"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "actionEvent": "EDIT_BLOCKS",
+                      "actionLabel": "@config.emptyActionLabel",
+                      "description": "@config.emptyDescription",
+                      "icon": "file-text",
+                      "title": "@config.emptyTitle",
+                      "type": "empty-state"
+                    }
+                  ]
+                ],
+                "event": "OPEN",
+                "eventId": "evt_01M0RYEW8Q7JPMVH9BJQ274WXR",
+                "from": "viewing",
+                "guard": [
+                  "=",
+                  [
+                    "array/len",
+                    "@payload.blocksJson"
+                  ],
+                  0.0
+                ],
+                "to": "viewing"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "name": "file-text",
+                              "type": "icon"
+                            },
+                            {
+                              "content": "@config.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
+                        },
+                        {
+                          "changeEvent": "BLOCKS_CHANGE",
+                          "initialBlocks": "@entity.blocksJson",
+                          "placeholder": "@config.placeholder",
+                          "showToolbar": true,
+                          "type": "rich-block-editor"
+                        },
+                        {
+                          "children": [
+                            {
+                              "action": "SAVE_BLOCKS",
+                              "label": "Save",
+                              "type": "button",
+                              "variant": "primary"
+                            },
+                            {
+                              "action": "CLOSE",
+                              "label": "Cancel",
+                              "type": "button",
+                              "variant": "ghost"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "end",
+                          "type": "stack"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "EDIT_BLOCKS",
+                "eventId": "evt_01M0V2EXDYMNYYSF51ZJG4T56K",
+                "from": "viewing",
+                "to": "editing"
               },
               {
                 "effects": [
@@ -1692,36 +2117,102 @@
               {
                 "effects": [
                   [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
                     "emit",
                     "BLOCKS_SAVED",
                     {
                       "blocksJson": "@entity.blocksJson",
                       "id": "@entity.id"
                     }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "action": "EDIT_BLOCKS",
+                              "icon": "edit",
+                              "label": "@config.editLabel",
+                              "type": "button",
+                              "variant": "secondary"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "end",
+                          "type": "stack"
+                        },
+                        {
+                          "action": "EDIT_BLOCKS",
+                          "children": [
+                            {
+                              "initialBlocks": "@entity.blocksJson",
+                              "readOnly": true,
+                              "type": "rich-block-editor"
+                            }
+                          ],
+                          "className": "cursor-text rounded-md transition-colors hover:bg-muted/40",
+                          "type": "box"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "sm",
+                      "type": "stack"
+                    }
                   ]
                 ],
-                "event": "SAVE",
-                "eventId": "evt_01M0RYEW8QH8R91C7A42HE28ZY",
+                "event": "SAVE_BLOCKS",
+                "eventId": "evt_01M0V36GMN3AF9D7285EPV2XNJ",
                 "from": "editing",
-                "to": "idle"
+                "to": "viewing"
               },
               {
                 "effects": [
                   [
                     "render-ui",
-                    "modal",
-                    null
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "action": "EDIT_BLOCKS",
+                              "icon": "edit",
+                              "label": "@config.editLabel",
+                              "type": "button",
+                              "variant": "secondary"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "end",
+                          "type": "stack"
+                        },
+                        {
+                          "action": "EDIT_BLOCKS",
+                          "children": [
+                            {
+                              "initialBlocks": "@entity.blocksJson",
+                              "readOnly": true,
+                              "type": "rich-block-editor"
+                            }
+                          ],
+                          "className": "cursor-text rounded-md transition-colors hover:bg-muted/40",
+                          "type": "box"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "sm",
+                      "type": "stack"
+                    }
                   ]
                 ],
                 "event": "CLOSE",
                 "eventId": "evt_01M0RYEW8QHNPNYEJB0CW9SVGB",
                 "from": "editing",
-                "to": "idle"
+                "to": "viewing"
               }
             ]
           }
