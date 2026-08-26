@@ -412,6 +412,7 @@ export * from './ui/game/organisms/std-survival-board-3d.js';
 export * from './ui/game/organisms/std-tactics-board-2d.js';
 export * from './ui/game/organisms/std-tactics-board-3d.js';
 export * from './ui/game/organisms/std-worldmap-board-2d.js';
+export * from './ui/core/organisms/todo-list-app.js';
 export * from './ui/marketing/organisms/ui-book-chapter-view.js';
 export * from './ui/marketing/organisms/ui-book-cover-page.js';
 export * from './ui/marketing/organisms/ui-book-nav-bar.js';
