@@ -412,7 +412,6 @@ export * from './ui/game/organisms/std-survival-board-3d.js';
 export * from './ui/game/organisms/std-tactics-board-2d.js';
 export * from './ui/game/organisms/std-tactics-board-3d.js';
 export * from './ui/game/organisms/std-worldmap-board-2d.js';
-export * from './ui/core/organisms/todo-list-app.js';
 export * from './ui/marketing/organisms/ui-book-chapter-view.js';
 export * from './ui/marketing/organisms/ui-book-cover-page.js';
 export * from './ui/marketing/organisms/ui-book-nav-bar.js';
@@ -449,7 +448,6 @@ export * from './ui/core/organisms/ui-tabbed-container.js';
 export * from './ui/marketing/organisms/ui-team-organism.js';
 export * from './ui/core/organisms/ui-timeline.js';
 export * from './ui/core/organisms/ui-toast-slot.js';
-export * from './ui/core/organisms/ui-ui-slot-renderer.js';
 
 // Re-export shared builder helpers for convenience.
 export { connect, compose, pipe, makeEntity, makePage, makeOrbital, makeSchema, mergeOrbitals, wire, extractTrait, ensureIdField, plural } from '@almadar/core/builders';

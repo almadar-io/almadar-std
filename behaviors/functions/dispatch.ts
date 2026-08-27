@@ -505,11 +505,6 @@ import {
   isStdWorldmapBoard2dWorldMapBoard2DOrbitalParams,
 } from './ui/game/organisms/std-worldmap-board-2d.js';
 import {
-  stdTodoListAppTodoListAppOrbital,
-  StdTodoListAppTodoListAppOrbitalManifest,
-  isStdTodoListAppTodoListAppOrbitalParams,
-} from './ui/core/organisms/todo-list-app.js';
-import {
   stdUiBookChapterViewBookChapterViewOrbital,
   StdUiBookChapterViewBookChapterViewOrbitalManifest,
   isStdUiBookChapterViewBookChapterViewOrbitalParams,
@@ -694,11 +689,6 @@ import {
   StdUiToastSlotToastSlotOrbitalManifest,
   isStdUiToastSlotToastSlotOrbitalParams,
 } from './ui/core/organisms/ui-toast-slot.js';
-import {
-  stdUiUiSlotRendererUiSlotRendererOrbital,
-  StdUiUiSlotRendererUiSlotRendererOrbitalManifest,
-  isStdUiUiSlotRendererUiSlotRendererOrbitalParams,
-} from './ui/core/organisms/ui-ui-slot-renderer.js';
 
 export type { OrbitalParamsManifest, ParamFieldDescriptor };
 
@@ -1590,15 +1580,6 @@ REGISTRY_MUT.set('std-worldmap-board-2d::WorldMapBoard2DOrbital', {
   },
   manifest: StdWorldmapBoard2dWorldMapBoard2DOrbitalManifest,
 });
-REGISTRY_MUT.set('todo-list-app::TodoListAppOrbital', {
-  factory: (p: object): OrbitalDefinition => {
-    if (!isStdTodoListAppTodoListAppOrbitalParams(p)) {
-      throw new TypeError('Invalid params for todo-list-app::TodoListAppOrbital');
-    }
-    return stdTodoListAppTodoListAppOrbital(p);
-  },
-  manifest: StdTodoListAppTodoListAppOrbitalManifest,
-});
 REGISTRY_MUT.set('ui-book-chapter-view::BookChapterViewOrbital', {
   factory: (p: object): OrbitalDefinition => {
     if (!isStdUiBookChapterViewBookChapterViewOrbitalParams(p)) {
@@ -1931,15 +1912,6 @@ REGISTRY_MUT.set('ui-toast-slot::ToastSlotOrbital', {
     return stdUiToastSlotToastSlotOrbital(p);
   },
   manifest: StdUiToastSlotToastSlotOrbitalManifest,
-});
-REGISTRY_MUT.set('ui-ui-slot-renderer::UiSlotRendererOrbital', {
-  factory: (p: object): OrbitalDefinition => {
-    if (!isStdUiUiSlotRendererUiSlotRendererOrbitalParams(p)) {
-      throw new TypeError('Invalid params for ui-ui-slot-renderer::UiSlotRendererOrbital');
-    }
-    return stdUiUiSlotRendererUiSlotRendererOrbital(p);
-  },
-  manifest: StdUiUiSlotRendererUiSlotRendererOrbitalManifest,
 });
 const REGISTRY: ReadonlyMap<string, DispatchEntry> = REGISTRY_MUT;
 
