@@ -474,6 +474,60 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
       {
         'category': 'interaction',
         'config': {
+          'bodySearch': {
+            'default': false,
+            'description': 'Embeds a search box above the gallery grid. Set false (the default) when the page already provides a search affordance (a toolbar Search molecule), so the surface shows one search box instead of two.',
+            'label': 'Show the gallery\'s own search box?',
+            'synonyms': 'inline search, list search, built-in search, show search, duplicate search',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'filterBarLook': {
+            'default': 'toolbar',
+            'description': 'Visual treatment for the embedded filter bar, mirroring std-filter\'s own enum. Only applies when `filters` is non-empty.',
+            'label': 'Filter bar look',
+            'synonyms': 'filter bar style, facet style, chips, pills',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'toolbar',
+              'chips',
+              'pills',
+              'popover-trigger',
+              'inline-column-header',
+            ],
+          },
+          'filters': {
+            'default': [],
+            'description': 'Dropdown filter facets by field, rendered as an embedded filter bar above the grid; each selection fires REFETCH_FILTER on this trait. Empty (the default) = no filter bar, which is the right setting whenever the page already composes std-filter beside this gallery and routes `XFilter.FILTER -> REFETCH_FILTER` — that is the wired owner and remains the primary path. Use this knob only for a standalone gallery with no page-level filter affordance.',
+            'items': {
+              'properties': {
+                'field': {
+                  'name': 'field',
+                  'required': true,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': false,
+                  'type': 'string',
+                },
+                'options': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'options',
+                  'required': false,
+                  'type': 'array',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Which filters should appear above the gallery?',
+            'synonyms': 'filter bar, faceted filters, field filters, dropdowns',
+            'tier': 'presentation',
+            'type': '[FilterSpec]',
+          },
           'imageField': {
             'default': 'imageUrl',
             'description': 'Entity field holding the image URL shown in the lightbox for the selected item',
@@ -487,6 +541,22 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
             'description': 'Entity field providing the lightbox alt text and caption for the selected item',
             'label': 'Name field',
             'synonyms': 'title field, label field',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'pageSize': {
+            'default': 20,
+            'description': 'Records fetched from the server when REFETCH_PAGE fires (a composed std-pagination driving this trait). The initial load and revisit fetches stay unpaged (whole collection), unchanged from before this knob existed.',
+            'label': 'How many images to fetch per page?',
+            'synonyms': 'fetch limit, records per page, batch size, page limit',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+          'searchPlaceholder': {
+            'default': 'Search…',
+            'description': 'Hint text inside the gallery search box (e.g. \'Search photos…\').',
+            'label': 'Search box placeholder text',
+            'synonyms': 'search hint, placeholder, search box text, search label',
             'tier': 'presentation',
             'type': 'string',
           },
@@ -619,6 +689,53 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
               'tier': 'internal',
             },
             {
+              'description': 'Triggers a gallery refresh based on the current search query.',
+              'key': 'REFETCH_QUERY',
+              'name': 'Refetch Query',
+              'payloadSchema': [
+                {
+                  'name': 'searchTerm',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'refresh, reload, update, re-query',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Triggers a gallery refresh based on current filter criteria.',
+              'key': 'REFETCH_FILTER',
+              'name': 'Refetch Filter',
+              'payloadSchema': [
+                {
+                  'name': 'field',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'value',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'refresh, filter, update, reload',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Triggers a gallery page refresh.',
+              'key': 'REFETCH_PAGE',
+              'name': 'Refetch Page',
+              'payloadSchema': [
+                {
+                  'name': 'page',
+                  'required': true,
+                  'type': 'number',
+                },
+              ],
+              'synonyms': 'reload, refresh, update, paginate',
+              'tier': 'domain',
+            },
+            {
               'description': 'Signals an item has been selected for viewing.',
               'key': 'VIEW',
               'name': 'View',
@@ -714,6 +831,59 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
                         'type': 'stack',
                       },
                       '@trait.TitleDivider',
+                      [
+                        'if',
+                        '@config.bodySearch',
+                        {
+                          'children': [
+                            {
+                              'className': 'w-full max-w-md',
+                              'clearable': true,
+                              'event': 'REFETCH_QUERY',
+                              'placeholder': '@config.searchPlaceholder',
+                              'type': 'search-input',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                        {
+                          'children': [],
+                          'gap': 'none',
+                          'type': 'stack',
+                        },
+                      ],
+                      [
+                        'if',
+                        [
+                          '>',
+                          [
+                            'array/len',
+                            '@config.filters',
+                          ],
+                          0,
+                        ],
+                        {
+                          'children': [
+                            {
+                              'entity': 'GalleryItem',
+                              'event': 'REFETCH_FILTER',
+                              'filters': '@config.filters',
+                              'look': '@config.filterBarLook',
+                              'type': 'filter-group',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                        {
+                          'children': [],
+                          'gap': 'none',
+                          'type': 'stack',
+                        },
+                      ],
                       '@trait.MediaGalleryGrid',
                     ],
                     'direction': 'vertical',
@@ -759,6 +929,192 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
               'event': 'INIT',
               'from': 'browsing',
               'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('GalleryItem' satisfies _StdGalleryEntityName),
+                  {
+                    'emit': {
+                      'failure': 'GalleryItemLoadFailed',
+                      'success': 'GalleryItemLoaded',
+                    },
+                    'filter': [
+                      'or',
+                      [
+                        '=',
+                        '@payload.searchTerm',
+                        '',
+                      ],
+                      [
+                        'str/includes',
+                        [
+                          'object/get',
+                          '@entity',
+                          'name',
+                        ],
+                        '@payload.searchTerm',
+                      ],
+                    ],
+                    'limit': '@config.pageSize',
+                    'offset': 0,
+                  },
+                ],
+              ],
+              'event': 'REFETCH_QUERY',
+              'from': 'browsing',
+              'to': 'browsing',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('GalleryItem' satisfies _StdGalleryEntityName),
+                  {
+                    'emit': {
+                      'failure': 'GalleryItemLoadFailed',
+                      'success': 'GalleryItemLoaded',
+                    },
+                    'filter': [
+                      'or',
+                      [
+                        '=',
+                        '@payload.value',
+                        '',
+                      ],
+                      [
+                        '=',
+                        [
+                          'object/get',
+                          '@entity',
+                          '@payload.field',
+                        ],
+                        '@payload.value',
+                      ],
+                    ],
+                    'limit': '@config.pageSize',
+                    'offset': 0,
+                  },
+                ],
+              ],
+              'event': 'REFETCH_FILTER',
+              'from': 'browsing',
+              'to': 'browsing',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('GalleryItem' satisfies _StdGalleryEntityName),
+                  {
+                    'emit': {
+                      'failure': 'GalleryItemLoadFailed',
+                      'success': 'GalleryItemLoaded',
+                    },
+                    'limit': '@config.pageSize',
+                    'offset': [
+                      '*',
+                      [
+                        '-',
+                        '@payload.page',
+                        1,
+                      ],
+                      '@config.pageSize',
+                    ],
+                  },
+                ],
+              ],
+              'event': 'REFETCH_PAGE',
+              'from': 'browsing',
+              'to': 'browsing',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          '@trait.GalleryIcon',
+                          {
+                            'content': '@config.title',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                      '@trait.TitleDivider',
+                      [
+                        'if',
+                        '@config.bodySearch',
+                        {
+                          'children': [
+                            {
+                              'className': 'w-full max-w-md',
+                              'clearable': true,
+                              'event': 'REFETCH_QUERY',
+                              'placeholder': '@config.searchPlaceholder',
+                              'type': 'search-input',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                        {
+                          'children': [],
+                          'gap': 'none',
+                          'type': 'stack',
+                        },
+                      ],
+                      [
+                        'if',
+                        [
+                          '>',
+                          [
+                            'array/len',
+                            '@config.filters',
+                          ],
+                          0,
+                        ],
+                        {
+                          'children': [
+                            {
+                              'entity': 'GalleryItem',
+                              'event': 'REFETCH_FILTER',
+                              'filters': '@config.filters',
+                              'look': '@config.filterBarLook',
+                              'type': 'filter-group',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                        {
+                          'children': [],
+                          'gap': 'none',
+                          'type': 'stack',
+                        },
+                      ],
+                      '@trait.MediaGalleryGrid',
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'GalleryItemLoaded',
+              'from': 'browsing',
+              'to': 'browsing',
             },
             {
               'effects': [

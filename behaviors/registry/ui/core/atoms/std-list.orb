@@ -136,6 +136,33 @@
         "parent": "trt_01KXG04GRMJ7J1JZZS36V7QP45",
         "renames": []
       },
+      "evt_01M11H5NGB5118T8DNXTX8AQAS": {
+        "bakedName": "REFETCH_PAGE",
+        "curName": "REFETCH_PAGE",
+        "id": "evt_01M11H5NGB5118T8DNXTX8AQAS",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04GRMJ7J1JZZS36V7QP45",
+        "renames": []
+      },
+      "evt_01M11H5NGBD1AW48VWAQRK1CXS": {
+        "bakedName": "REFETCH_QUERY",
+        "curName": "REFETCH_QUERY",
+        "id": "evt_01M11H5NGBD1AW48VWAQRK1CXS",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04GRMJ7J1JZZS36V7QP45",
+        "renames": []
+      },
+      "evt_01M11H5NGBW953ZPSZR6G9G59R": {
+        "bakedName": "REFETCH_FILTER",
+        "curName": "REFETCH_FILTER",
+        "id": "evt_01M11H5NGBW953ZPSZR6G9G59R",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04GRMJ7J1JZZS36V7QP45",
+        "renames": []
+      },
       "orb_01KXG04GRMFV2N5D00GQN2CRT6": {
         "bakedName": "ListItemOrbital",
         "curName": "ListItemOrbital",
@@ -281,6 +308,86 @@
       "traits": [
         {
           "category": "interaction",
+          "config": {
+            "bodySearch": {
+              "default": false,
+              "description": "Embeds a search box above the grid. Set true only when the page has no other search affordance (e.g. no page-level std-search), so the surface shows one search box instead of two. False is the default — this atom has never had a search box (0 consumers today).",
+              "label": "Show the list's own search box?",
+              "synonyms": "inline search, list search, built-in search, show search",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "displayPageSize": {
+              "default": 20.0,
+              "description": "Rows visible per page before the data-grid's own pagination control appears — 20 matches the CRUD-list density sweet spot (Miller's law, 10-25 rows).",
+              "label": "How many rows to show at once?",
+              "synonyms": "visible rows, items per page, display limit, show per page",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "filterBarLook": {
+              "default": "toolbar",
+              "description": "Visual treatment for the embedded filter bar, mirroring std-filter's own enum. Only applies when `filters` is non-empty.",
+              "label": "Filter bar look",
+              "synonyms": "filter bar style, facet style, chips, pills",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "toolbar",
+                "chips",
+                "pills",
+                "popover-trigger",
+                "inline-column-header"
+              ]
+            },
+            "filters": {
+              "default": [],
+              "description": "Dropdown filter facets by field, rendered as an embedded filter bar above the rows; each selection fires REFETCH_FILTER on this trait. Empty (the default) = no filter bar, the right setting whenever the page already composes std-filter beside this list and routes XFilter.FILTER -> REFETCH_FILTER — that is the wired owner and remains the primary path. Use this knob only for a standalone list with no page-level filter affordance.",
+              "items": {
+                "properties": {
+                  "field": {
+                    "name": "field",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "options": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "name": "options",
+                    "required": false,
+                    "type": "array"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Which filters should appear above the grid?",
+              "synonyms": "filter bar, faceted filters, field filters, dropdowns",
+              "tier": "presentation",
+              "type": "[FilterSpec]"
+            },
+            "pageSize": {
+              "default": 20.0,
+              "description": "Records fetched from the server per REFETCH_PAGE request. The initial load and search/filter refetches remain unpaginated (load everything that matches) unless a consumer wires REFETCH_PAGE, so the default list surface is unchanged.",
+              "label": "How many rows per page when paging?",
+              "synonyms": "fetch limit, records per page, page limit",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "searchPlaceholder": {
+              "default": "Search…",
+              "description": "Hint text inside the list search box.",
+              "label": "Search box placeholder text",
+              "synonyms": "search hint, placeholder, search box text",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
           "emits": [
             {
               "description": "Signals a new item has been successfully created.",
@@ -490,6 +597,56 @@
                 "tier": "internal"
               },
               {
+                "description": "Triggers a list refresh based on the current search term.",
+                "id": "evt_01M11H5NGBD1AW48VWAQRK1CXS",
+                "key": "REFETCH_QUERY",
+                "name": "Refetch Query",
+                "payloadSchema": [
+                  {
+                    "name": "searchTerm",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "refresh, reload, update, re-query, search",
+                "tier": "domain"
+              },
+              {
+                "description": "Triggers a list refresh based on current filter criteria.",
+                "id": "evt_01M11H5NGBW953ZPSZR6G9G59R",
+                "key": "REFETCH_FILTER",
+                "name": "Refetch Filter",
+                "payloadSchema": [
+                  {
+                    "name": "field",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "value",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "refresh, filter, update, reload",
+                "tier": "domain"
+              },
+              {
+                "description": "Triggers a list page refresh.",
+                "id": "evt_01M11H5NGB5118T8DNXTX8AQAS",
+                "key": "REFETCH_PAGE",
+                "name": "Refetch Page",
+                "payloadSchema": [
+                  {
+                    "name": "page",
+                    "required": true,
+                    "type": "number"
+                  }
+                ],
+                "synonyms": "reload, refresh, update, paginate",
+                "tier": "domain"
+              },
+              {
                 "id": "evt_01KYXKHAR210J771VGPVXZVQF9",
                 "key": "RETRY",
                 "name": "Retry"
@@ -677,6 +834,59 @@
                         {
                           "type": "divider"
                         },
+                        [
+                          "if",
+                          "@config.bodySearch",
+                          {
+                            "children": [
+                              {
+                                "className": "w-full max-w-md",
+                                "clearable": true,
+                                "event": "REFETCH_QUERY",
+                                "placeholder": "@config.searchPlaceholder",
+                                "type": "search-input"
+                              }
+                            ],
+                            "direction": "horizontal",
+                            "gap": "sm",
+                            "type": "stack"
+                          },
+                          {
+                            "children": [],
+                            "gap": "none",
+                            "type": "stack"
+                          }
+                        ],
+                        [
+                          "if",
+                          [
+                            ">",
+                            [
+                              "array/len",
+                              "@config.filters"
+                            ],
+                            0.0
+                          ],
+                          {
+                            "children": [
+                              {
+                                "entity": "ListItem",
+                                "event": "REFETCH_FILTER",
+                                "filters": "@config.filters",
+                                "look": "@config.filterBarLook",
+                                "type": "filter-group"
+                              }
+                            ],
+                            "direction": "horizontal",
+                            "gap": "sm",
+                            "type": "stack"
+                          },
+                          {
+                            "children": [],
+                            "gap": "none",
+                            "type": "stack"
+                          }
+                        ],
                         {
                           "entity": "@payload.data",
                           "fields": [
@@ -709,6 +919,7 @@
                               "variant": "danger"
                             }
                           ],
+                          "pageSize": "@config.displayPageSize",
                           "type": "data-grid"
                         }
                       ],
@@ -792,6 +1003,246 @@
                 "eventId": "evt_01KXG04GRMTCDJ94FS3AXEZ45Z",
                 "from": "browsing",
                 "to": "loading"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "ListItem",
+                    {
+                      "emit": {
+                        "failure": "ListItemLoadFailed",
+                        "success": "ListItemLoaded"
+                      },
+                      "filter": [
+                        "or",
+                        [
+                          "=",
+                          "@payload.searchTerm",
+                          ""
+                        ],
+                        [
+                          "str/includes",
+                          [
+                            "object/get",
+                            "@entity",
+                            "name"
+                          ],
+                          "@payload.searchTerm"
+                        ]
+                      ]
+                    }
+                  ]
+                ],
+                "event": "REFETCH_QUERY",
+                "eventId": "evt_01M11H5NGBD1AW48VWAQRK1CXS",
+                "from": "browsing",
+                "to": "browsing"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "ListItem",
+                    {
+                      "emit": {
+                        "failure": "ListItemLoadFailed",
+                        "success": "ListItemLoaded"
+                      },
+                      "filter": [
+                        "or",
+                        [
+                          "=",
+                          "@payload.value",
+                          ""
+                        ],
+                        [
+                          "=",
+                          [
+                            "object/get",
+                            "@entity",
+                            "@payload.field"
+                          ],
+                          "@payload.value"
+                        ]
+                      ]
+                    }
+                  ]
+                ],
+                "event": "REFETCH_FILTER",
+                "eventId": "evt_01M11H5NGBW953ZPSZR6G9G59R",
+                "from": "browsing",
+                "to": "browsing"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "ListItem",
+                    {
+                      "emit": {
+                        "failure": "ListItemLoadFailed",
+                        "success": "ListItemLoaded"
+                      },
+                      "limit": "@config.pageSize",
+                      "offset": [
+                        "*",
+                        [
+                          "-",
+                          "@payload.page",
+                          1.0
+                        ],
+                        "@config.pageSize"
+                      ]
+                    }
+                  ]
+                ],
+                "event": "REFETCH_PAGE",
+                "eventId": "evt_01M11H5NGB5118T8DNXTX8AQAS",
+                "from": "browsing",
+                "to": "browsing"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "name": "list",
+                                  "type": "icon"
+                                },
+                                {
+                                  "content": "ListItems",
+                                  "type": "typography",
+                                  "variant": "h2"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack"
+                            },
+                            {
+                              "action": "CREATE",
+                              "icon": "plus",
+                              "label": "Create",
+                              "type": "button",
+                              "variant": "primary"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "between",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        [
+                          "if",
+                          "@config.bodySearch",
+                          {
+                            "children": [
+                              {
+                                "className": "w-full max-w-md",
+                                "clearable": true,
+                                "event": "REFETCH_QUERY",
+                                "placeholder": "@config.searchPlaceholder",
+                                "type": "search-input"
+                              }
+                            ],
+                            "direction": "horizontal",
+                            "gap": "sm",
+                            "type": "stack"
+                          },
+                          {
+                            "children": [],
+                            "gap": "none",
+                            "type": "stack"
+                          }
+                        ],
+                        [
+                          "if",
+                          [
+                            ">",
+                            [
+                              "array/len",
+                              "@config.filters"
+                            ],
+                            0.0
+                          ],
+                          {
+                            "children": [
+                              {
+                                "entity": "ListItem",
+                                "event": "REFETCH_FILTER",
+                                "filters": "@config.filters",
+                                "look": "@config.filterBarLook",
+                                "type": "filter-group"
+                              }
+                            ],
+                            "direction": "horizontal",
+                            "gap": "sm",
+                            "type": "stack"
+                          },
+                          {
+                            "children": [],
+                            "gap": "none",
+                            "type": "stack"
+                          }
+                        ],
+                        {
+                          "entity": "@payload.data",
+                          "fields": [
+                            {
+                              "icon": "list",
+                              "label": "Name",
+                              "name": "name",
+                              "variant": "h4"
+                            },
+                            {
+                              "label": "Description",
+                              "name": "description",
+                              "variant": "caption"
+                            },
+                            {
+                              "label": "Status",
+                              "name": "status",
+                              "variant": "badge"
+                            }
+                          ],
+                          "itemActions": [
+                            {
+                              "event": "EDIT",
+                              "label": "Edit",
+                              "variant": "ghost"
+                            },
+                            {
+                              "event": "DELETE",
+                              "label": "Delete",
+                              "variant": "danger"
+                            }
+                          ],
+                          "pageSize": "@config.displayPageSize",
+                          "type": "data-grid"
+                        }
+                      ],
+                      "className": "max-w-5xl mx-auto w-full",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "ListItemLoaded",
+                "eventId": "evt_01KXG04GRMNWNQDDEX1S5EDA2F",
+                "from": "browsing",
+                "to": "browsing"
               },
               {
                 "effects": [

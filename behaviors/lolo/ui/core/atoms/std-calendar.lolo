@@ -1,6 +1,7 @@
 app std-calendar "1.4.0"
 "std-calendar as a Function — owns the fetch + SELECT_DAY state machine; default bodyContent renders the month-grid + upcoming-events tree. `config.calendarLook` switches the body between the default month-grid ('month'), a day-grouped agenda list ('agenda-list'), and a 7-column week timeline ('week-timeline') while inheriting the same trait, state machine, emits, and listens."
 type ItemAction = { label : string!, event : string, navigatesTo : string, variant : primary | secondary | ghost | danger, icon : string }
+type FilterSpec = { field : string!, label : string, options : [string] }
 orbital CalendarEventOrbital {
     type CalendarEventLoaded = Event { data : [CalendarEvent] } "Fired when CalendarEvent finishes loading; payload.data holds the events"
 
@@ -101,6 +102,20 @@ orbital CalendarEventOrbital {
         (fetch CalendarEvent {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
         })
+      ;; Same no-render-ui shape as SELECT_DAY/CALENDAR_*_WEEK above: transition
+      ;; to `loading` without repainting, so the current grid/agenda/timeline
+      ;; stays mounted until CalendarEventLoaded's own render-ui fires — a
+      ;; repaint here would flicker the toolbar's search-input every keystroke.
+      REFETCH_QUERY -> loading
+        (fetch CalendarEvent {
+          emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
+          filter: (or ["=", ?searchTerm, ""] (str/includes (object/get @entity name) ?searchTerm))
+        })
+      REFETCH_FILTER -> loading
+        (fetch CalendarEvent {
+          emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
+          filter: (or ["=", ?value, ""] ["=", (object/get @entity ?field), ?value])
+        })
     }
 
     state error {
@@ -162,6 +177,19 @@ orbital CalendarEventOrbital {
         @description "Move the week timeline one week later."
         @synonyms "next week, forward a week, later week, following week"
         @tier "domain"
+      REFETCH_QUERY {
+        searchTerm : string!
+      }
+        @description "Triggers a data refresh based on the current query."
+        @synonyms "refresh, reload, update, re-query"
+        @tier "domain"
+      REFETCH_FILTER {
+        field : string!
+        value : string!
+      }
+        @description "Triggers a data refresh based on current filter criteria."
+        @synonyms "refresh, filter, update, reload"
+        @tier "domain"
     }
 
     config {
@@ -213,6 +241,26 @@ orbital CalendarEventOrbital {
         @description "Row field the agenda list groups its day sections by. Rebound hosts point this at their own timestamp column (e.g. startTime, scheduledAt)."
         @synonyms "group field, section field, day field"
         @tier "presentation"
+      bodySearch : boolean = false
+        @label "Show the calendar's own search box?"
+        @description "Embeds a title search box in the toolbar above the calendar body (all three calendarLook trees). Defaults false: std-calendar has never had a search box, so an untouched consumer's surface is unchanged; the primary path is composing std-search beside this atom and wiring XSearch.SEARCH -> REFETCH_QUERY. Set true only for a standalone calendar with no page-level search affordance."
+        @synonyms "inline search, calendar search, built-in search, show search, duplicate search"
+        @tier "presentation"
+      searchPlaceholder : string = "Search…"
+        @label "Search box placeholder text"
+        @description "Hint text inside the calendar's search box (e.g. 'Search events…')."
+        @synonyms "search hint, placeholder, search box text, search label"
+        @tier "presentation"
+      filters : [FilterSpec] = []
+        @label "Which filters should appear above the calendar?"
+        @description "Dropdown filter facets by field, rendered as an embedded filter bar above the calendar body (all three calendarLook trees); each selection fires REFETCH_FILTER on this trait. Empty (the default) = no filter bar, which is the right setting whenever the page already composes std-filter beside this calendar and routes XFilter.FILTER -> REFETCH_FILTER — that is the wired owner and remains the primary path. Use this knob only for a standalone calendar with no page-level filter affordance."
+        @synonyms "filter bar, faceted filters, field filters, dropdowns"
+        @tier "presentation"
+      filterBarLook : "toolbar" | "chips" | "pills" | "popover-trigger" | "inline-column-header" = toolbar
+        @label "Filter bar look"
+        @description "Visual treatment for the embedded filter bar, mirroring std-filter's own enum. Only applies when `filters` is non-empty."
+        @synonyms "filter bar style, facet style, chips, pills"
+        @tier "presentation"
       bodyContent : render-ui = {
         children: [{
           align: center
@@ -235,7 +283,37 @@ orbital CalendarEventOrbital {
           gap: md
           justify: between
           type: stack
-        }, { type: divider }, {
+        }, (if @config.bodySearch {
+          children: [{
+            className: "w-full max-w-md"
+            clearable: true
+            event: REFETCH_QUERY
+            placeholder: @config.searchPlaceholder
+            type: search-input
+          }]
+          direction: horizontal
+          gap: sm
+          type: stack
+        } {
+          children: []
+          gap: none
+          type: stack
+        }), (if [">", (array/len @config.filters), 0] {
+          children: [{
+            entity: CalendarEvent
+            event: REFETCH_FILTER
+            filters: @config.filters
+            look: @config.filterBarLook
+            type: filter-group
+          }]
+          direction: horizontal
+          gap: sm
+          type: stack
+        } {
+          children: []
+          gap: none
+          type: stack
+        }), { type: divider }, {
           events: ?data
           onEventClick: @config.onEventClick
           renderItem: (fn item {
@@ -307,7 +385,37 @@ orbital CalendarEventOrbital {
           gap: md
           justify: between
           type: stack
-        }, { type: divider }, {
+        }, (if @config.bodySearch {
+          children: [{
+            className: "w-full max-w-md"
+            clearable: true
+            event: REFETCH_QUERY
+            placeholder: @config.searchPlaceholder
+            type: search-input
+          }]
+          direction: horizontal
+          gap: sm
+          type: stack
+        } {
+          children: []
+          gap: none
+          type: stack
+        }), (if [">", (array/len @config.filters), 0] {
+          children: [{
+            entity: CalendarEvent
+            event: REFETCH_FILTER
+            filters: @config.filters
+            look: @config.filterBarLook
+            type: filter-group
+          }]
+          direction: horizontal
+          gap: sm
+          type: stack
+        } {
+          children: []
+          gap: none
+          type: stack
+        }), { type: divider }, {
           entity: ?data
           fields: []
           gap: md
@@ -429,7 +537,37 @@ orbital CalendarEventOrbital {
           gap: md
           justify: between
           type: stack
-        }, { type: divider }, {
+        }, (if @config.bodySearch {
+          children: [{
+            className: "w-full max-w-md"
+            clearable: true
+            event: REFETCH_QUERY
+            placeholder: @config.searchPlaceholder
+            type: search-input
+          }]
+          direction: horizontal
+          gap: sm
+          type: stack
+        } {
+          children: []
+          gap: none
+          type: stack
+        }), (if [">", (array/len @config.filters), 0] {
+          children: [{
+            entity: CalendarEvent
+            event: REFETCH_FILTER
+            filters: @config.filters
+            look: @config.filterBarLook
+            type: filter-group
+          }]
+          direction: horizontal
+          gap: sm
+          type: stack
+        } {
+          children: []
+          gap: none
+          type: stack
+        }), { type: divider }, {
           className: w-full
           dayWindow: 7
           events: ?data

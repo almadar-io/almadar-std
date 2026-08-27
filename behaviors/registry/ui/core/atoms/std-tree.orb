@@ -1,5 +1,5 @@
 {
-  "description": "std-tree — generic hierarchical node browser. Fetches a flat TreeNode collection and renders it through file-tree's flat `items` mode (parentId-nested at render time by the component, not the .lolo); OPEN_NODE is the external handoff for a selected node's id. Rebindable: pass `fields` at the call site to retarget it at any parent-pointer entity (categories, org units, comment threads).",
+  "description": "std-tree — generic hierarchical node browser. Fetches a flat TreeNode collection and renders it through file-tree's flat `items` mode (parentId-nested at render time by the component, not the .lolo); OPEN_NODE is the external handoff for a selected node's id. Rebindable: pass `fields` at the call site to retarget it at any parent-pointer entity (categories, org units, comment threads). Search/filter are wired (REFETCH_QUERY/REFETCH_FILTER re-fetch the flat node set server-side); pagination is deliberately NOT offered — a hierarchy is not a paged list, and paging a flat node set would sever children from parents that fell on another page.",
   "ledger": {
     "entries": {
       "ent_01M0RYHNM1NXR2J5S0HK2WFDS3": {
@@ -50,6 +50,24 @@
         "bakedName": "RETRY",
         "curName": "RETRY",
         "id": "evt_01M0RYHNM5HX05GFM20W62NCPC",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M0RYHNM11N15TSY0QWVC2GH5",
+        "renames": []
+      },
+      "evt_01M11H00X42VFQ0VXEXV7ES6F9": {
+        "bakedName": "REFETCH_QUERY",
+        "curName": "REFETCH_QUERY",
+        "id": "evt_01M11H00X42VFQ0VXEXV7ES6F9",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M0RYHNM11N15TSY0QWVC2GH5",
+        "renames": []
+      },
+      "evt_01M11H00X4BMW519Q3CSP735Z8": {
+        "bakedName": "REFETCH_FILTER",
+        "curName": "REFETCH_FILTER",
+        "id": "evt_01M11H00X4BMW519Q3CSP735Z8",
         "kind": "event",
         "owner": "workspace",
         "parent": "trt_01M0RYHNM11N15TSY0QWVC2GH5",
@@ -142,6 +160,68 @@
         {
           "category": "interaction",
           "config": {
+            "bodySearch": {
+              "default": false,
+              "description": "Embeds a search box above the tree that re-fetches the flat node set server-side. Set false (the default) when the page already provides a search affordance (a toolbar Search molecule), so the surface shows one search box instead of two.",
+              "label": "Show the tree's own search box?",
+              "synonyms": "inline search, list search, built-in search, show search, duplicate search",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "filterBarLook": {
+              "default": "toolbar",
+              "description": "Visual treatment for the embedded filter bar, mirroring std-filter's own enum. Only applies when `filters` is non-empty.",
+              "label": "Filter bar look",
+              "synonyms": "filter bar style, facet style, chips, pills",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "toolbar",
+                "chips",
+                "pills",
+                "popover-trigger",
+                "inline-column-header"
+              ]
+            },
+            "filters": {
+              "default": [],
+              "description": "Dropdown filter facets by field, rendered as an embedded filter bar above the tree; each selection fires REFETCH_FILTER on this trait, re-fetching the flat node set. Empty (the default) = no filter bar, which is the right setting whenever the page already composes std-filter beside this tree and routes `XFilter.FILTER -> REFETCH_FILTER` — that is the wired owner and remains the primary path.",
+              "items": {
+                "properties": {
+                  "field": {
+                    "name": "field",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "options": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "name": "options",
+                    "required": false,
+                    "type": "array"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Which filters should appear above the tree?",
+              "synonyms": "filter bar, faceted filters, field filters, dropdowns",
+              "tier": "presentation",
+              "type": "[FilterSpec]"
+            },
+            "searchPlaceholder": {
+              "default": "Search…",
+              "description": "Hint text inside the tree search box (e.g. 'Search nodes…').",
+              "label": "Search box placeholder text",
+              "synonyms": "search hint, placeholder, search box text, search label",
+              "tier": "presentation",
+              "type": "string"
+            },
             "title": {
               "default": "Tree",
               "description": "Heading shown above the tree",
@@ -247,6 +327,41 @@
                 ],
                 "synonyms": "error, failed, problem, unsuccessful",
                 "tier": "internal"
+              },
+              {
+                "description": "Triggers a tree refresh based on the current search query.",
+                "id": "evt_01M11H00X42VFQ0VXEXV7ES6F9",
+                "key": "REFETCH_QUERY",
+                "name": "Refetch Query",
+                "payloadSchema": [
+                  {
+                    "name": "searchTerm",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "refresh, reload, update, re-query",
+                "tier": "domain"
+              },
+              {
+                "description": "Triggers a tree refresh based on current filter criteria.",
+                "id": "evt_01M11H00X4BMW519Q3CSP735Z8",
+                "key": "REFETCH_FILTER",
+                "name": "Refetch Filter",
+                "payloadSchema": [
+                  {
+                    "name": "field",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "value",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "refresh, filter, update, reload",
+                "tier": "domain"
               },
               {
                 "description": "Signals a tree node has been selected for external handoff.",
@@ -358,6 +473,59 @@
                         {
                           "type": "divider"
                         },
+                        [
+                          "if",
+                          "@config.bodySearch",
+                          {
+                            "children": [
+                              {
+                                "className": "w-full max-w-md",
+                                "clearable": true,
+                                "event": "REFETCH_QUERY",
+                                "placeholder": "@config.searchPlaceholder",
+                                "type": "search-input"
+                              }
+                            ],
+                            "direction": "horizontal",
+                            "gap": "sm",
+                            "type": "stack"
+                          },
+                          {
+                            "children": [],
+                            "gap": "none",
+                            "type": "stack"
+                          }
+                        ],
+                        [
+                          "if",
+                          [
+                            ">",
+                            [
+                              "array/len",
+                              "@config.filters"
+                            ],
+                            0.0
+                          ],
+                          {
+                            "children": [
+                              {
+                                "entity": "TreeNode",
+                                "event": "REFETCH_FILTER",
+                                "filters": "@config.filters",
+                                "look": "@config.filterBarLook",
+                                "type": "filter-group"
+                              }
+                            ],
+                            "direction": "horizontal",
+                            "gap": "sm",
+                            "type": "stack"
+                          },
+                          {
+                            "children": [],
+                            "gap": "none",
+                            "type": "stack"
+                          }
+                        ],
                         {
                           "items": [
                             "array/map",
@@ -475,6 +643,76 @@
               {
                 "effects": [
                   [
+                    "fetch",
+                    "TreeNode",
+                    {
+                      "emit": {
+                        "failure": "TreeNodeLoadFailed",
+                        "success": "TreeNodeLoaded"
+                      },
+                      "filter": [
+                        "or",
+                        [
+                          "=",
+                          "@payload.searchTerm",
+                          ""
+                        ],
+                        [
+                          "str/includes",
+                          [
+                            "object/get",
+                            "@entity",
+                            "name"
+                          ],
+                          "@payload.searchTerm"
+                        ]
+                      ]
+                    }
+                  ]
+                ],
+                "event": "REFETCH_QUERY",
+                "eventId": "evt_01M11H00X42VFQ0VXEXV7ES6F9",
+                "from": "browsing",
+                "to": "browsing"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "TreeNode",
+                    {
+                      "emit": {
+                        "failure": "TreeNodeLoadFailed",
+                        "success": "TreeNodeLoaded"
+                      },
+                      "filter": [
+                        "or",
+                        [
+                          "=",
+                          "@payload.value",
+                          ""
+                        ],
+                        [
+                          "=",
+                          [
+                            "object/get",
+                            "@entity",
+                            "@payload.field"
+                          ],
+                          "@payload.value"
+                        ]
+                      ]
+                    }
+                  ]
+                ],
+                "event": "REFETCH_FILTER",
+                "eventId": "evt_01M11H00X4BMW519Q3CSP735Z8",
+                "from": "browsing",
+                "to": "browsing"
+              },
+              {
+                "effects": [
+                  [
                     "set",
                     "@entity.id",
                     "@payload.id"
@@ -521,6 +759,59 @@
                         {
                           "type": "divider"
                         },
+                        [
+                          "if",
+                          "@config.bodySearch",
+                          {
+                            "children": [
+                              {
+                                "className": "w-full max-w-md",
+                                "clearable": true,
+                                "event": "REFETCH_QUERY",
+                                "placeholder": "@config.searchPlaceholder",
+                                "type": "search-input"
+                              }
+                            ],
+                            "direction": "horizontal",
+                            "gap": "sm",
+                            "type": "stack"
+                          },
+                          {
+                            "children": [],
+                            "gap": "none",
+                            "type": "stack"
+                          }
+                        ],
+                        [
+                          "if",
+                          [
+                            ">",
+                            [
+                              "array/len",
+                              "@config.filters"
+                            ],
+                            0.0
+                          ],
+                          {
+                            "children": [
+                              {
+                                "entity": "TreeNode",
+                                "event": "REFETCH_FILTER",
+                                "filters": "@config.filters",
+                                "look": "@config.filterBarLook",
+                                "type": "filter-group"
+                              }
+                            ],
+                            "direction": "horizontal",
+                            "gap": "sm",
+                            "type": "stack"
+                          },
+                          {
+                            "children": [],
+                            "gap": "none",
+                            "type": "stack"
+                          }
+                        ],
                         {
                           "items": [
                             "array/map",

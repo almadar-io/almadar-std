@@ -1,0 +1,329 @@
+app std-record-detail "1.0.0"
+"std-record-detail — single primitive: detail-panel. Owns the fetch-one-record state machine (loading → viewing → error, with RETRY), the record counterpart to std-browse's collection machine. Consumers configure fields/sections/actions and the title/subtitle/status bindings; the atom fetches by the id carried on INIT and renders the panel. `detailLook` (panel default / slide-over / page) selects one of three render bodies. Pair with std-detail-layout for the back + breadcrumb chrome — that atom owns navigation, this one owns the record — exactly as a list page pairs std-browse with std-app-layout."
+;; @capabilities "record detail, single record view, entity detail panel, drill-down record, show one record, record profile, detail page, view details"
+orbital RecordItemOrbital {
+  type RecordAction = { label : string!, event : string!, icon : string, variant : primary | secondary | ghost | danger }
+  type RecordFieldSpec = { key : string!, header : string, format : date | currency | number | boolean | percent }
+  type RecordSection = { title : string!, fields : [string] }
+
+  type RecordItemLoaded = Event { data : RecordItem, totalCount : number } "Fired when the single record finishes loading; payload.data holds the record. totalCount is accepted so a fetch emitter shared with collection atoms still validates."
+
+  type RecordItemLoadFailed = Event { error : string, code : string } "Fired when the record fails to load; drives the error state so a failed load shows an alert with a retry instead of an empty page."
+
+  entity RecordItem [runtime] {
+    id : string!
+    name : string! @description "The record's title or identifier." @synonyms "title, label, heading"
+    description : string @description "A textual explanation or summary of the record." @synonyms "summary, details, notes"
+    status : "active" | "inactive" | "pending" @description "The record's current state." @synonyms "state, condition, stage" = active
+    createdAt : string
+  }
+
+  trait RecordItemDetail -> @rebindable RecordItem [interaction, instance] {
+    ;; One machine, two shapes. A page detail (`openOn: init`, the default)
+    ;; falls straight through idle on INIT and behaves exactly as before. An
+    ;; overlay (`openOn: event`) stays blank until a row-click OPEN_VIEW hands
+    ;; it an id, which is the topology 23 hand-authored viewer traits use and
+    ;; the reason they could not compose an `initial: loading` atom: mounting
+    ;; one on a list page would fetch a record it has no id for.
+    initial: idle
+
+    state idle {
+      INIT -> loading when ["=", @config.openOn, "init"]
+        (set @entity.id ?id)
+        (fetch RecordItem {
+          emit: { failure: RecordItemLoadFailed, success: RecordItemLoaded }
+          id: ?id
+          include: @config.include
+        })
+        (render-ui main { rows: 4, type: skeleton })
+      ;; ONE unguarded arm on purpose. This briefly carried a second,
+      ;; `when @config.preloaded`-guarded arm that rendered the OPEN_VIEW row
+      ;; directly to skip a round-trip. Both execution paths mishandled it:
+      ;; the live runtime PASSED the guard with `preloaded: false`
+      ;; (StateMachineCore's permissive mode turns an unresolved config guard
+      ;; into true), so overlays rendered from `?row` and never fetched —
+      ;; silently skipping `include` relation hydration; and the canonical
+      ;; evaluator FAILED the guard and then did not fall through to this arm,
+      ;; reporting the event as not firing at all. A guarded arm is not
+      ;; currently a trustworthy correctness boundary, so the atom no longer
+      ;; depends on one. Zero consumers had opted into the skip.
+      OPEN_VIEW -> loading
+        (set @entity.id ?id)
+        (fetch RecordItem {
+          emit: { failure: RecordItemLoadFailed, success: RecordItemLoaded }
+          id: ?id
+          include: @config.include
+        })
+        (render-ui main { rows: 4, type: skeleton })
+    }
+
+    state loading {
+      INIT -> loading
+        (set @entity.id ?id)
+        (fetch RecordItem {
+          emit: { failure: RecordItemLoadFailed, success: RecordItemLoaded }
+          id: ?id
+          include: @config.include
+        })
+        ;; Skeleton, not a blank frame: the hand-authored detail traits this
+        ;; atom replaces rendered nothing until the record arrived.
+        (render-ui main { rows: 4, type: skeleton })
+      RecordItemLoaded -> viewing
+        (set @entity.name (object/get ?data @config.titleField))
+        (set @entity.description (object/get ?data @config.subtitleField))
+        (if ["=", @config.detailLook, slide-over]
+          (render-ui main @config.slideOverBodyContent)
+          (if ["=", @config.detailLook, page]
+            (render-ui main @config.pageBodyContent)
+            (render-ui main @config.bodyContent)))
+      RecordItemLoadFailed -> error
+        (render-ui main { message: ?error, title: "Couldn't load this record", type: alert, variant: error })
+    }
+
+    state viewing {
+      ;; No skeleton on re-entry: from a populated panel a skeleton unmounts the
+      ;; record and flickers. First mount is unaffected — `initial: loading` and
+      ;; `state loading`'s own INIT still paint it.
+      INIT -> loading
+        (set @entity.id ?id)
+        (fetch RecordItem {
+          emit: { failure: RecordItemLoadFailed, success: RecordItemLoaded }
+          id: ?id
+          include: @config.include
+        })
+      RecordItemLoaded -> viewing
+        (set @entity.name (object/get ?data @config.titleField))
+        (set @entity.description (object/get ?data @config.subtitleField))
+        (if ["=", @config.detailLook, slide-over]
+          (render-ui main @config.slideOverBodyContent)
+          (if ["=", @config.detailLook, page]
+            (render-ui main @config.pageBodyContent)
+            (render-ui main @config.bodyContent)))
+      RecordItemLoadFailed -> error
+        (render-ui main { message: ?error, title: "Couldn't load this record", type: alert, variant: error })
+      CLOSE_VIEW -> idle
+        (render-ui main null)
+    }
+
+    state error {
+      INIT -> loading
+        (set @entity.id ?id)
+        (fetch RecordItem {
+          emit: { failure: RecordItemLoadFailed, success: RecordItemLoaded }
+          id: ?id
+          include: @config.include
+        })
+        (render-ui main { rows: 4, type: skeleton })
+      ;; The hand-authored traits sent a failed load back to `loading` with no
+      ;; effect, so the page stayed blank forever with no way out. RETRY is the
+      ;; way out.
+      RETRY -> loading
+        (fetch RecordItem {
+          emit: { failure: RecordItemLoadFailed, success: RecordItemLoaded }
+          id: @entity.id
+          include: @config.include
+        })
+        (render-ui main { rows: 4, type: skeleton })
+    }
+
+    emits {
+      RecordItemLoaded
+        @description "Signals that the record has been successfully loaded."
+        @synonyms "loaded, received, ready, fetched"
+        @tier "domain"
+      RecordItemLoadFailed
+        @description "Indicates a failure to load the record."
+        @synonyms "error, failed, problem, unsuccessful"
+        @tier "internal"
+      EDIT -> external {
+        id : string!
+        row : RecordItem
+      }
+        @description "Signals a request to edit the record being viewed."
+        @synonyms "modify, update, change"
+        @tier "domain"
+      DELETE -> external {
+        id : string!
+        row : RecordItem
+      }
+        @description "Signals a request to remove the record being viewed."
+        @synonyms "remove, discard, delete, archive"
+        @tier "domain"
+    }
+
+    listens {
+      INIT {
+        id : string
+      }
+        @description "Opens the detail surface for the record with this id."
+        @synonyms "open record, view record, show details, drill in"
+        @tier "domain"
+      OPEN_VIEW {
+        id : string!
+        row : RecordItem
+      }
+        @description "A row was opened from a list; shows that record in this surface."
+        @synonyms "open record, view row, show details, drill in, expand"
+        @tier "domain"
+      CLOSE_VIEW
+        @description "Closes the record surface and returns it to blank."
+        @synonyms "close, dismiss, back to list"
+        @tier "domain"
+      RETRY
+        @description "Re-runs the fetch after a failed load."
+        @synonyms "try again, reload, refresh"
+        @tier "domain"
+      RecordItemLoadFailed {
+        error : string
+        code : string
+      }
+        @description "Indicates a failure to load the record."
+        @synonyms "error, failure, problem, unsuccessful"
+        @tier "internal"
+    }
+
+    config {
+      fields : [RecordFieldSpec] = [{
+        header: Name
+        key: name
+      }, {
+        header: Description
+        key: description
+      }, {
+        header: Status
+        key: status
+      }, {
+        format: date
+        header: Created
+        key: createdAt
+      }]
+        @label "Which fields appear in the record panel?"
+        @description "Each entry maps one entity field to a labelled row in the panel. Unlike a list row, a detail panel SHOULD label every field — the value stands alone here with no column header or repeated row position to name it."
+        @synonyms "detail fields, record fields, panel fields, shown fields"
+        @tier "presentation"
+      sections : [RecordSection] = []
+        @label "How should the fields be grouped?"
+        @description "Optional titled groups over `fields`, e.g. [{title: Contact, fields: [email, phone]}]. Group into sections of 3-5 once a record carries more than about seven fields — a flat list past that is the cognitive-load problem Almadar_UX.md §1.4 (Miller) describes. Empty = one ungrouped list, the default."
+        @synonyms "field groups, grouped fields, panel sections, fieldsets"
+        @tier "presentation"
+      actions : [RecordAction] = [{
+        event: EDIT
+        label: Edit
+        variant: secondary
+      }, {
+        event: DELETE
+        label: Delete
+        variant: danger
+      }]
+        @label "What actions can users take on this record?"
+        @description "Buttons on the panel header. One primary at most; the rest collapse past maxInlineActions."
+        @synonyms "record actions, detail actions, panel buttons"
+        @tier "presentation"
+      maxInlineActions : number = 3
+        @label "How many actions before collapsing?"
+        @description "Actions beyond this count collapse into a '⋯' overflow menu."
+        @synonyms "inline actions limit, overflow threshold"
+        @tier "presentation"
+      showActions : boolean = true
+        @label "Show the action buttons?"
+        @description "Set false for a read-only record view; a panel with actions nothing listens to is a dead affordance."
+        @synonyms "read only, hide actions, view only"
+        @tier "presentation"
+      ;; Field NAMES, not binding paths. A path knob (`subtitleBinding:
+      ;; @entity.company`) makes the consumer responsible for an @entity field
+      ;; this atom never sets — an ORB_BINDING_ENTITY_FIELD_NEVER_SET and an
+      ;; empty subtitle, which is exactly what the first migration of std-crm
+      ;; ContactDetail hit. Naming the source field instead lets the atom do the
+      ;; (set) itself off the payload, so the trap cannot be reintroduced.
+      titleField : string = name
+        @label "Which field is the record's title?"
+        @description "Name of the field on the loaded record shown as the panel title (e.g. contactName, subject, title)."
+        @synonyms "title field, heading field, name field, label field"
+        @tier "presentation"
+      subtitleField : string = description
+        @label "Which field is the subtitle?"
+        @description "Name of the field shown under the title (e.g. company, category). Leave at the default when the record has no meaningful second line."
+        @synonyms "subtitle field, secondary field, subheading"
+        @tier "presentation"
+      include : [string] = []
+        @label "Which relation fields to hydrate?"
+        @description "Entity relation field names to hydrate on fetch, so panel fields can use dot-paths like owner.name. Empty = no hydration, the default."
+        @synonyms "relation hydration, populate relations, joined fields"
+        @tier "internal"
+      openOn : "init" | "event" = init
+        @label "When does this surface load?"
+        @description "init = a routed detail page; the record loads as soon as the page mounts (the default). event = an overlay that stays blank until a row-click OPEN_VIEW hands it an id, which is what a list-embedded slide-over needs — mounting an init-loading surface on a list page would fetch a record it has no id for."
+        @synonyms "open on click, slide over, row click, blank until opened, list embedded"
+        @tier "policy"
+      detailLook : "panel" | "slide-over" | "page" = panel
+        @label "Detail look"
+        @description "Visual treatment for the record surface. panel = an inline detail-panel in the page flow (bodyContent); slide-over = the same panel as a right-hand drawer over the list behind it (slideOverBodyContent); page = a full-width record page with roomier spacing (pageBodyContent). Selecting a non-panel look swaps which body tree renders after the record loads; any body may still be overridden directly at the call site."
+        @synonyms "detail style, drawer, slide over, full page"
+        @tier "presentation"
+      bodyContent : render-ui = {
+        children: [{
+          actions: @config.actions
+          entity: ?data
+          fields: @config.fields
+          initialData: ?data
+          maxInlineActions: @config.maxInlineActions
+          sections: @config.sections
+          showActions: @config.showActions
+          subtitle: @entity.description
+          title: @entity.name
+          type: detail-panel
+        }]
+        direction: vertical
+        gap: lg
+        type: stack
+      }
+        @label "Body content tree"
+        @description "Render-ui SExpr rendered after the record loads when detailLook = panel (the default). See slideOverBodyContent/pageBodyContent for the other looks; any may be overridden directly while inheriting the same trait, state machine, emits, and listens."
+        @tier "internal"
+      slideOverBodyContent : render-ui = {
+        children: [{
+          actions: @config.actions
+          entity: ?data
+          fields: @config.fields
+          initialData: ?data
+          maxInlineActions: @config.maxInlineActions
+          sections: @config.sections
+          showActions: @config.showActions
+          slideOver: true
+          subtitle: @entity.description
+          title: @entity.name
+          type: detail-panel
+        }]
+        direction: vertical
+        gap: none
+        type: stack
+      }
+        @label "Slide-over look body"
+        @description "Render-ui SExpr rendered after the record loads when detailLook = slide-over: the same panel as a right-hand drawer, so the list behind stays in place. Use when the record is a glance, not a workspace."
+        @tier "internal"
+      pageBodyContent : render-ui = {
+        children: [{
+          actions: @config.actions
+          entity: ?data
+          fields: @config.fields
+          initialData: ?data
+          maxInlineActions: @config.maxInlineActions
+          sections: @config.sections
+          showActions: @config.showActions
+          subtitle: @entity.description
+          title: @entity.name
+          type: detail-panel
+        }]
+        className: "w-full max-w-4xl"
+        direction: vertical
+        gap: lg
+        type: stack
+      }
+        @label "Page look body"
+        @description "Render-ui SExpr rendered after the record loads when detailLook = page: a full record page, width-capped so field rows do not stretch past a readable measure (Almadar_UI_Beauty.md §3)."
+        @tier "internal"
+    }
+  }
+
+  page "/recorditems" as RecordItemDetailPage -> RecordItemDetail
+}

@@ -1,5 +1,5 @@
 app std-patrol-hazard "1.0.0"
-"Headless patrol-hazard mechanic for side-view boards: moves each configured patrol back and forth along its [x0, x1] beat at its own speed (33ms tick, ping-pong with clamped turnarounds), tracks the player position off the body authority's BODY_MOVED, and emits PATROL_HIT once per contact — a per-patrol hit flag re-arms only after the player separates, so damage rules stay sparse (when two patrols connect on the same tick the first reports; the other reports on the next tick). Patrols live on a [runtime, shared] entity for the render layer (boards draw them as markers/sprites); damage, lives, and respawn stay downstream (std-lives) — this atom simulates, it never judges. Renders nothing."
+"Headless patrol-hazard mechanic for side-view boards: moves each configured patrol back and forth along its [x0, x1] beat at its own speed (33ms tick, ping-pong with clamped turnarounds; a patrol declaring waveAmp/wavePeriod also bobs vertically — cy = y + waveAmp·sin(2πt/wavePeriod from a per-row time accumulator — and the hit test and render read cy, so a waveAmp of 0 keeps the flat beat), tracks the player position off the body authority's BODY_MOVED, and emits PATROL_HIT once per contact — a per-patrol hit flag re-arms only after the player separates, so damage rules stay sparse (when two patrols connect on the same tick the first reports; the other reports on the next tick). Patrols live on a [runtime, shared] entity for the render layer (boards draw them as markers/sprites); damage, lives, and respawn stay downstream (std-lives) — this atom simulates, it never judges. Renders nothing."
 orbital PatrolHazardOrbital {
   type Patrol = {
     id : string!
@@ -7,8 +7,12 @@ orbital PatrolHazardOrbital {
     x1 : number!
     y : number!
     speed : number!
+    waveAmp : number
+    wavePeriod : number
     x : number
     dir : number
+    t : number
+    cy : number
     touching : boolean
     hit : boolean
   }
@@ -25,7 +29,7 @@ orbital PatrolHazardOrbital {
 
     state active {
       INIT -> active
-        (set @entity.patrols (array/map @config.patrols (fn p (object/merge @p { x: (object/get @p x0), dir: 1, touching: false, hit: false }))))
+        (set @entity.patrols (array/map @config.patrols (fn p (object/merge @p { x: (object/get @p x0), dir: 1, t: 0, cy: (object/get @p y), touching: false, hit: false }))))
         (set @entity.px @config.playerSpawnX)
         (set @entity.py @config.playerSpawnY)
 
@@ -34,7 +38,7 @@ orbital PatrolHazardOrbital {
         (set @entity.py @payload.y)
 
       RESTART -> active
-        (set @entity.patrols (array/map @config.patrols (fn p (object/merge @p { x: (object/get @p x0), dir: 1, touching: false, hit: false }))))
+        (set @entity.patrols (array/map @config.patrols (fn p (object/merge @p { x: (object/get @p x0), dir: 1, t: 0, cy: (object/get @p y), touching: false, hit: false }))))
     }
 
     ticks {
@@ -45,11 +49,14 @@ orbital PatrolHazardOrbital {
           (let ((overshoot (> @nx (object/get @p x1))) (undershoot (< @nx (object/get @p x0))))
           (let ((cx (if @overshoot (object/get @p x1) (if @undershoot (object/get @p x0) @nx)))
                 (cdir (if @overshoot -1 (if @undershoot 1 (object/get @p dir)))))
-          (let ((near (and (<= (math/abs (- @entity.px @cx)) @config.hitRadius) (<= (math/abs (- @entity.py (object/get @p y))) @config.hitRadius))))
-            (object/merge @p { x: @cx, dir: @cdir, hit: (and @near (== (object/get @p touching) false)), touching: @near }))))))))
+          (let ((nt (+ (object/get @p t) 0.033)))
+          (let ((amp (if (== (object/get @p waveAmp) null) 0 (object/get @p waveAmp))) (period (if (== (object/get @p wavePeriod) null) 3 (object/get @p wavePeriod))))
+          (let ((cy (+ (object/get @p y) (* @amp (math/sin (/ (* 6.283185307179586 @nt) @period))))))
+          (let ((near (and (<= (math/abs (- @entity.px @cx)) @config.hitRadius) (<= (math/abs (- @entity.py @cy)) @config.hitRadius))))
+            (object/merge @p { x: @cx, dir: @cdir, t: @nt, cy: @cy, hit: (and @near (== (object/get @p touching) false)), touching: @near })))))))))))
         (let ((hits (array/filter @entity.patrols (fn p (== (object/get @p hit) true)))))
         (if (> (array/len @hits) 0)
-          (emit PATROL_HIT { id: (object/get (array/first @hits) id), x: (object/get (array/first @hits) x), y: (object/get (array/first @hits) y) })
+          (emit PATROL_HIT { id: (object/get (array/first @hits) id), x: (object/get (array/first @hits) x), y: (object/get (array/first @hits) cy) })
           null))
     }
 
@@ -75,7 +82,7 @@ orbital PatrolHazardOrbital {
         @tier "domain"
       patrols : [Patrol] = []
         @label "Patrols"
-        @description "One row per patroller: id, the [x0, x1] beat it walks, its fixed y, and its speed in units/s. Current x/dir/touching/hit are stamped at runtime."
+        @description "One row per patroller: id, the [x0, x1] beat it walks, its base y, its speed in units/s, and optionally waveAmp/wavePeriod for a vertical sine bob (waveAmp 0 = flat ping-pong). Current x/dir/t/cy/touching/hit are stamped at runtime."
         @tier "domain"
       hitRadius : number = 0.7
         @label "Hit Radius"

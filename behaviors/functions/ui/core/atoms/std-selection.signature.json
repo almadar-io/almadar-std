@@ -61,6 +61,27 @@
             "direction": "listen"
           },
           {
+            "name": "REFETCH_QUERY",
+            "direction": "listen",
+            "description": "Triggers a pick-list refresh based on the current search term.",
+            "synonyms": "refresh, reload, update, re-query, search",
+            "tier": "domain"
+          },
+          {
+            "name": "REFETCH_FILTER",
+            "direction": "listen",
+            "description": "Triggers a pick-list refresh based on current filter criteria.",
+            "synonyms": "refresh, filter, update, reload",
+            "tier": "domain"
+          },
+          {
+            "name": "REFETCH_PAGE",
+            "direction": "listen",
+            "description": "Triggers a pick-list page refresh.",
+            "synonyms": "reload, refresh, update, paginate",
+            "tier": "domain"
+          },
+          {
             "name": "SELECT",
             "direction": "listen",
             "description": "Indicates an item has been chosen.",
@@ -85,6 +106,90 @@
         ],
         "overridableConfigKeys": [
           {
+            "key": "bodySearch",
+            "type": "boolean",
+            "default": false,
+            "label": "Show the pick-list's own search box?",
+            "description": "Embeds a search box above the pick-list. Set true only when the page has no other search affordance (e.g. no page-level std-search), so the surface shows one search box instead of two. False is the default — this atom has never had a search box (0 consumers today).",
+            "synonyms": "inline search, list search, built-in search, show search",
+            "tier": "presentation"
+          },
+          {
+            "key": "displayPageSize",
+            "type": "number",
+            "default": 20,
+            "label": "How many candidates to show at once?",
+            "description": "Rows visible per page before the data-grid's own pagination control appears — 20 matches the pick-list density sweet spot (Miller's law, 10-25 rows).",
+            "synonyms": "visible rows, items per page, display limit, show per page",
+            "tier": "presentation"
+          },
+          {
+            "key": "filterBarLook",
+            "type": "string",
+            "default": "toolbar",
+            "label": "Filter bar look",
+            "description": "Visual treatment for the embedded filter bar, mirroring std-filter's own enum. Only applies when `filters` is non-empty.",
+            "synonyms": "filter bar style, facet style, chips, pills",
+            "tier": "presentation",
+            "enumValues": [
+              "toolbar",
+              "chips",
+              "pills",
+              "popover-trigger",
+              "inline-column-header"
+            ]
+          },
+          {
+            "key": "filters",
+            "type": "[FilterSpec]",
+            "default": [],
+            "label": "Which filters should appear above the pick-list?",
+            "description": "Dropdown filter facets by field, rendered as an embedded filter bar above the rows; each selection fires REFETCH_FILTER on this trait. Empty (the default) = no filter bar, the right setting whenever the page already composes std-filter beside this list and routes XFilter.FILTER -> REFETCH_FILTER — that is the wired owner and remains the primary path. Use this knob only for a standalone pick-list with no page-level filter affordance.",
+            "synonyms": "filter bar, faceted filters, field filters, dropdowns",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "field": {
+                  "name": "field",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "options": {
+                  "name": "options",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "pageSize",
+            "type": "number",
+            "default": 20,
+            "label": "How many candidates per page when paging?",
+            "description": "Records fetched from the server per REFETCH_PAGE request. The initial load and search/filter refetches remain unpaginated (load every candidate) unless a consumer wires REFETCH_PAGE, so the default pick-list surface is unchanged. Safe to page: this atom's selection is a single transient id (never an accumulated array), so no already-picked item can be stranded on another page.",
+            "synonyms": "fetch limit, records per page, page limit",
+            "tier": "presentation"
+          },
+          {
+            "key": "searchPlaceholder",
+            "type": "string",
+            "default": "Search…",
+            "label": "Search box placeholder text",
+            "description": "Hint text inside the pick-list search box.",
+            "synonyms": "search hint, placeholder, search box text",
+            "tier": "presentation"
+          },
+          {
             "key": "tableLook",
             "type": "string",
             "default": "dense",
@@ -106,6 +211,9 @@
           "CLEAR",
           "CONFIRM_SELECTION",
           "INIT",
+          "REFETCH_FILTER",
+          "REFETCH_PAGE",
+          "REFETCH_QUERY",
           "RETRY",
           "SELECT",
           "SelectableItemLoadFailed",

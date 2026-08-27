@@ -1,0 +1,93 @@
+app std-pad-lock "1.0.0"
+"Headless pad-lock mechanic: floor pads that light when the player steps on them, completing a set when every pad is lit. Listens BODY_MOVED and lights any unlit live pad the player's rect touches (|dx| <= reachX, |dy| <= reachY of the pad center); a lit pad stays lit. Pads may carry a group number (grp 0 = ungrouped, always live): when groups are used, only pads of the lowest uncompleted group are live — pads of later groups refuse to light until the current group finishes, so one sum must be finished before the next. When a group completes the trait emits PAD_GROUP_COMPLETED once for it (first newly completed group reports; the shared entity carries the rest); when every pad in the set is lit it stamps completed and emits PAD_SET_COMPLETED once. RESTART unlights every pad and resets the set. Renders nothing; boards draw the pads and read lit from the shared entity (the render authority)."
+orbital PadLockOrbital {
+  type PadLock = {
+    id : string!
+    x : number!
+    y : number!
+    grp : number!
+    lit : boolean
+  }
+
+  entity PadLockData [runtime, shared] {
+    id : string!
+    pads : [PadLock] = []
+    groupsDone : [number] = []
+    completed : boolean = false
+  }
+
+  trait PadLock -> @rebindable PadLockData [lifecycle] {
+    initial: active
+
+    state active {
+      INIT -> active
+        (set @entity.pads (array/map @config.pads (fn p (object/merge @p { lit: false }))))
+        (set @entity.groupsDone [])
+        (set @entity.completed false)
+
+      BODY_MOVED -> active when @config.running
+        (let ((grpIds (array/reduce (array/map (array/filter @entity.pads (fn p (> (object/get @p grp) 0))) (fn p (object/get @p grp))) [] (fn acc g (if (> (array/len (array/filter @acc (fn x (== @x @g)))) 0) @acc (array/append @acc @g))))))
+        (let ((openGrps (array/filter @grpIds (fn g (< (array/len (array/filter @entity.pads (fn p (and (== (object/get @p grp) @g) (== (object/get @p lit) true))))) (array/len (array/filter @entity.pads (fn p (== (object/get @p grp) @g)))))))))
+        (let ((currentGrp (array/reduce @openGrps 9999 (fn acc g (math/min @acc @g)))))
+        (let ((newPads (array/map @entity.pads (fn p
+          (object/merge @p { lit: (or (object/get @p lit) (and (or (== (object/get @p grp) 0) (== (object/get @p grp) @currentGrp)) (and (<= (math/abs (- @payload.x (object/get @p x))) @config.reachX) (<= (math/abs (- @payload.y (object/get @p y))) @config.reachY)))) })))))
+        (let ((doneNow (array/filter @grpIds (fn g (== (array/len (array/filter @newPads (fn p (and (== (object/get @p grp) @g) (== (object/get @p lit) true))))) (array/len (array/filter @newPads (fn p (== (object/get @p grp) @g)))))))))
+        (let ((newlyGrp (array/filter @doneNow (fn g (== (array/len (array/filter @entity.groupsDone (fn d (== @d @g)))) 0)))))
+        (do
+          (set @entity.pads @newPads)
+          (if (> (array/len @newlyGrp) 0)
+            (do
+              (set @entity.groupsDone @doneNow)
+              (emit PAD_GROUP_COMPLETED { grp: (array/first @newlyGrp) }))
+            null)
+          (if (and (== @entity.completed false) (== (array/len (array/filter @newPads (fn p (== (object/get @p lit) false)))) 0))
+            (do
+              (set @entity.completed true)
+              (emit PAD_SET_COMPLETED {}))
+            null))))))))
+
+      RESTART -> active
+        (set @entity.pads (array/map @config.pads (fn p (object/merge @p { lit: false }))))
+        (set @entity.groupsDone [])
+        (set @entity.completed false)
+    }
+
+    emits {
+      PAD_GROUP_COMPLETED -> external {
+        grp : number!
+      }
+        @description "Every pad of one group is lit; fires once per group, in group order — later groups stay dead until the lowest uncompleted group finishes. Boards layer a small fx and unlock the next group's pads."
+        @tier "domain"
+      PAD_SET_COMPLETED -> external {
+      }
+        @description "Every pad in the set is lit; fires once per run. Boards layer the treasure fx and spill the bonus reward."
+        @tier "domain"
+    }
+
+    listens {
+      BODY_MOVED { x : number!, y : number!, vx : number!, vy : number!, grounded : boolean!, skating : boolean!, speed : number! }
+      RESTART { id : string }
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true, BODY_MOVED lights touched live pads and reports group/set completion; toggle to freeze every pad as-is."
+        @tier "domain"
+      pads : [PadLock] = []
+        @label "Pads"
+        @description "One row per floor pad: id, center (x, y in world units), and grp (0 = ungrouped, always live; N = live only while it is the lowest uncompleted group). lit is stamped at runtime."
+        @tier "domain"
+      reachX : number = 0.7
+        @label "Reach X"
+        @description "Horizontal tolerance (world units) around a pad's center when testing player contact (approximates the body's half-width plus a step)."
+        @tier "domain"
+      reachY : number = 1.2
+        @label "Reach Y"
+        @description "Vertical tolerance (world units) around a pad's center when testing player contact (covers skating over the surface the pad sits on)."
+        @tier "domain"
+    }
+  }
+
+  page "/pad-lock" as PadLockPage -> PadLock
+}

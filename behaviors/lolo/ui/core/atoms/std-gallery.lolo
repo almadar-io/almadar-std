@@ -1,5 +1,6 @@
 app std-gallery "1.0.0"
 "std-gallery — image gallery primitive. Browses GalleryItems in a media-gallery grid; opens a lightbox modal for full-size viewing."
+type FilterSpec = { field : string!, label : string, options : [string] }
 orbital GalleryItemOrbital {
   uses Spinner from "std/behaviors/ui-spinner"
   uses Typography from "std/behaviors/ui-typography"
@@ -103,7 +104,37 @@ orbital GalleryItemOrbital {
             direction: horizontal
             gap: sm
             type: stack
-          }, @trait.TitleDivider, @trait.MediaGalleryGrid]
+          }, @trait.TitleDivider, (if @config.bodySearch {
+            children: [{
+              className: "w-full max-w-md"
+              clearable: true
+              event: REFETCH_QUERY
+              placeholder: @config.searchPlaceholder
+              type: search-input
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          } {
+            children: []
+            gap: none
+            type: stack
+          }), (if [">", (array/len @config.filters), 0] {
+            children: [{
+              entity: GalleryItem
+              event: REFETCH_FILTER
+              filters: @config.filters
+              look: @config.filterBarLook
+              type: filter-group
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          } {
+            children: []
+            gap: none
+            type: stack
+          }), @trait.MediaGalleryGrid]
           direction: vertical
           gap: md
           type: stack
@@ -120,6 +151,78 @@ orbital GalleryItemOrbital {
       INIT -> loading
         (fetch GalleryItem {
           emit: { failure: GalleryItemLoadFailed, success: GalleryItemLoaded }
+        })
+      ;; REFETCH_* stays in `browsing` and DOES NOT replace the gallery grid
+      ;; with a spinner — search-as-you-type would otherwise unmount the
+      ;; media-gallery every keystroke and flicker. The fetch fires in the
+      ;; background; when GalleryItemLoaded arrives below, React reconciles
+      ;; the grid in place instead of unmounting it.
+      REFETCH_QUERY -> browsing
+        (fetch GalleryItem {
+          emit: { failure: GalleryItemLoadFailed, success: GalleryItemLoaded }
+          filter: (or ["=", ?searchTerm, ""] (str/includes (object/get @entity name) ?searchTerm))
+          limit: @config.pageSize
+          offset: 0
+        })
+      REFETCH_FILTER -> browsing
+        (fetch GalleryItem {
+          emit: { failure: GalleryItemLoadFailed, success: GalleryItemLoaded }
+          filter: (or ["=", ?value, ""] ["=", (object/get @entity ?field), ?value])
+          limit: @config.pageSize
+          offset: 0
+        })
+      REFETCH_PAGE -> browsing
+        (fetch GalleryItem {
+          emit: { failure: GalleryItemLoadFailed, success: GalleryItemLoaded }
+          limit: @config.pageSize
+          offset: ["*", ["-", ?page, 1], @config.pageSize]
+        })
+      GalleryItemLoaded -> browsing
+        (render-ui main {
+          children: [{
+            align: center
+            children: [@trait.GalleryIcon, {
+              content: @config.title
+              type: typography
+              variant: h3
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, @trait.TitleDivider, (if @config.bodySearch {
+            children: [{
+              className: "w-full max-w-md"
+              clearable: true
+              event: REFETCH_QUERY
+              placeholder: @config.searchPlaceholder
+              type: search-input
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          } {
+            children: []
+            gap: none
+            type: stack
+          }), (if [">", (array/len @config.filters), 0] {
+            children: [{
+              entity: GalleryItem
+              event: REFETCH_FILTER
+              filters: @config.filters
+              look: @config.filterBarLook
+              type: filter-group
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          } {
+            children: []
+            gap: none
+            type: stack
+          }), @trait.MediaGalleryGrid]
+          direction: vertical
+          gap: md
+          type: stack
         })
       VIEW -> viewing
         (set @entity.id ?id)
@@ -195,6 +298,25 @@ orbital GalleryItemOrbital {
     }
 
     listens {
+      REFETCH_QUERY {
+        searchTerm : string!
+      }
+        @description "Triggers a gallery refresh based on the current search query."
+        @synonyms "refresh, reload, update, re-query"
+        @tier "domain"
+      REFETCH_FILTER {
+        field : string!
+        value : string!
+      }
+        @description "Triggers a gallery refresh based on current filter criteria."
+        @synonyms "refresh, filter, update, reload"
+        @tier "domain"
+      REFETCH_PAGE {
+        page : number!
+      }
+        @description "Triggers a gallery page refresh."
+        @synonyms "reload, refresh, update, paginate"
+        @tier "domain"
       VIEW {
         id : string!
         row : GalleryItem
@@ -235,6 +357,31 @@ orbital GalleryItemOrbital {
         @label "Image field"
         @description "Entity field holding the image URL shown in the lightbox for the selected item"
         @synonyms "image url field, thumbnail field, src field"
+        @tier "presentation"
+      bodySearch : boolean = false
+        @label "Show the gallery's own search box?"
+        @description "Embeds a search box above the gallery grid. Set false (the default) when the page already provides a search affordance (a toolbar Search molecule), so the surface shows one search box instead of two."
+        @synonyms "inline search, list search, built-in search, show search, duplicate search"
+        @tier "presentation"
+      searchPlaceholder : string = "Search…"
+        @label "Search box placeholder text"
+        @description "Hint text inside the gallery search box (e.g. 'Search photos…')."
+        @synonyms "search hint, placeholder, search box text, search label"
+        @tier "presentation"
+      filters : [FilterSpec] = []
+        @label "Which filters should appear above the gallery?"
+        @description "Dropdown filter facets by field, rendered as an embedded filter bar above the grid; each selection fires REFETCH_FILTER on this trait. Empty (the default) = no filter bar, which is the right setting whenever the page already composes std-filter beside this gallery and routes `XFilter.FILTER -> REFETCH_FILTER` — that is the wired owner and remains the primary path. Use this knob only for a standalone gallery with no page-level filter affordance."
+        @synonyms "filter bar, faceted filters, field filters, dropdowns"
+        @tier "presentation"
+      filterBarLook : "toolbar" | "chips" | "pills" | "popover-trigger" | "inline-column-header" = toolbar
+        @label "Filter bar look"
+        @description "Visual treatment for the embedded filter bar, mirroring std-filter's own enum. Only applies when `filters` is non-empty."
+        @synonyms "filter bar style, facet style, chips, pills"
+        @tier "presentation"
+      pageSize : number = 20
+        @label "How many images to fetch per page?"
+        @description "Records fetched from the server when REFETCH_PAGE fires (a composed std-pagination driving this trait). The initial load and revisit fetches stay unpaged (whole collection), unchanged from before this knob existed."
+        @synonyms "fetch limit, records per page, batch size, page limit"
         @tier "presentation"
     }
   }

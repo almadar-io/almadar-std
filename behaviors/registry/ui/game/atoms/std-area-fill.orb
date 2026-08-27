@@ -1,0 +1,955 @@
+{
+  "description": "Headless area-fill mechanic: the player paints area under a curve by moving through a fill region. Listens BODY_MOVED and, per fill, accumulates height(x) × |dx| while the player is inside the fill's x-range (the per-tick step is clamped to 0.5 world units — the physical per-tick maximum — so teleports and respawns paint nothing) — height is linear interpolation of the config curve samples above the fill's baseline (the platformer body's leftSamp/rightSamp idiom). rateMode picks the rate: \"area\" (height × |dx|, default — fills fastest where the curve is tallest), \"speed\" (|dx| only, flat rate), or \"ride\" (|dx| only while the move reports skating — walking the same distance paints nothing). When a fill's filled reaches its target it flips reported and emits AREA_FILLED once (the shared entity carries the rest); each fill also stamps a frontier (x0 + span × min(1, filled/target)) so boards can shade the painted region left-to-right as the gauge grows. RESTART resets every fill. Renders nothing; boards shade the painted region and read filled/frontier from the shared entity (the render authority).",
+  "ledger": {
+    "entries": {
+      "ent_01M11YTBT97CN5A2TMP33YQY1Q": {
+        "bakedName": "AreaFillData",
+        "curName": "AreaFillData",
+        "id": "ent_01M11YTBT97CN5A2TMP33YQY1Q",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "evt_01M11YTBT9PGK372101AFZTYVZ": {
+        "bakedName": "RESTART",
+        "curName": "RESTART",
+        "id": "evt_01M11YTBT9PGK372101AFZTYVZ",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M11YTBT93WB5MVA0SQR2ZMPR",
+        "renames": []
+      },
+      "evt_01M11YTBT9QMZES8B24W46FK85": {
+        "bakedName": "AREA_FILLED",
+        "curName": "AREA_FILLED",
+        "id": "evt_01M11YTBT9QMZES8B24W46FK85",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M11YTBT93WB5MVA0SQR2ZMPR",
+        "renames": []
+      },
+      "evt_01M11YTBT9RQY0RWBP60CWAEP8": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01M11YTBT9RQY0RWBP60CWAEP8",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M11YTBT93WB5MVA0SQR2ZMPR",
+        "renames": []
+      },
+      "evt_01M11YTBT9YEJHGSHNR1P4SRPV": {
+        "bakedName": "BODY_MOVED",
+        "curName": "BODY_MOVED",
+        "id": "evt_01M11YTBT9YEJHGSHNR1P4SRPV",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M11YTBT93WB5MVA0SQR2ZMPR",
+        "renames": []
+      },
+      "orb_01M11YTBT9H0PJZPA7FTJSEK3E": {
+        "bakedName": "AreaFillOrbital",
+        "curName": "AreaFillOrbital",
+        "id": "orb_01M11YTBT9H0PJZPA7FTJSEK3E",
+        "kind": "orbital",
+        "owner": "workspace",
+        "renames": []
+      },
+      "pag_01M11YTBT9632GJKNK1ZK8B7DA": {
+        "bakedName": "AreaFillPage",
+        "curName": "AreaFillPage",
+        "id": "pag_01M11YTBT9632GJKNK1ZK8B7DA",
+        "kind": "page",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M11YTBT93WB5MVA0SQR2ZMPR": {
+        "bakedName": "AreaFill",
+        "curName": "AreaFill",
+        "id": "trt_01M11YTBT93WB5MVA0SQR2ZMPR",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      }
+    },
+    "schemaVersion": 1
+  },
+  "name": "std-area-fill",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "baseline": {
+                  "name": "baseline",
+                  "required": true,
+                  "type": "number"
+                },
+                "filled": {
+                  "name": "filled",
+                  "required": false,
+                  "type": "number"
+                },
+                "frontier": {
+                  "name": "frontier",
+                  "required": false,
+                  "type": "number"
+                },
+                "hint": {
+                  "name": "hint",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "rateMode": {
+                  "name": "rateMode",
+                  "required": false,
+                  "type": "string"
+                },
+                "reported": {
+                  "name": "reported",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "samples": {
+                  "items": {
+                    "properties": {
+                      "x": {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "y": {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "name": "samples",
+                  "required": true,
+                  "type": "array"
+                },
+                "target": {
+                  "name": "target",
+                  "required": true,
+                  "type": "number"
+                },
+                "x0": {
+                  "name": "x0",
+                  "required": true,
+                  "type": "number"
+                },
+                "x1": {
+                  "name": "x1",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "fills",
+            "type": "array"
+          },
+          {
+            "default": 0.0,
+            "name": "lastX",
+            "type": "number"
+          }
+        ],
+        "id": "ent_01M11YTBT97CN5A2TMP33YQY1Q",
+        "name": "AreaFillData",
+        "persistence": "runtime",
+        "shared": true
+      },
+      "id": "orb_01M11YTBT9H0PJZPA7FTJSEK3E",
+      "name": "AreaFillOrbital",
+      "pages": [
+        {
+          "id": "pag_01M11YTBT9632GJKNK1ZK8B7DA",
+          "name": "AreaFillPage",
+          "path": "/area-fill",
+          "traits": [
+            {
+              "ref": "AreaFill",
+              "refId": "trt_01M11YTBT93WB5MVA0SQR2ZMPR"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "lifecycle",
+          "config": {
+            "fills": {
+              "default": [],
+              "description": "One row per fill region: id, x-range (x0..x1 in world units), baseline the height is measured from, target area, rateMode (area | speed | ride — default area), optional hint, and the curve samples to interpolate. filled/frontier/reported are stamped at runtime.",
+              "items": {
+                "properties": {
+                  "baseline": {
+                    "name": "baseline",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "filled": {
+                    "name": "filled",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "frontier": {
+                    "name": "frontier",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "hint": {
+                    "name": "hint",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "rateMode": {
+                    "name": "rateMode",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "reported": {
+                    "name": "reported",
+                    "required": false,
+                    "type": "boolean"
+                  },
+                  "samples": {
+                    "items": {
+                      "properties": {
+                        "x": {
+                          "name": "x",
+                          "required": true,
+                          "type": "number"
+                        },
+                        "y": {
+                          "name": "y",
+                          "required": true,
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "name": "samples",
+                    "required": true,
+                    "type": "array"
+                  },
+                  "target": {
+                    "name": "target",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "x0": {
+                    "name": "x0",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "x1": {
+                    "name": "x1",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Fills",
+              "tier": "domain",
+              "type": "[AreaFill]"
+            },
+            "running": {
+              "default": true,
+              "description": "When true, BODY_MOVED paints every fill the player moves through; toggle to freeze every fill as-is.",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            }
+          },
+          "emits": [
+            {
+              "description": "A fill's painted area reached its target (x, y = the player's position at completion, for burst placement). When several fills complete on one move, the first reports and the shared entity carries the rest.",
+              "event": "AREA_FILLED",
+              "eventId": "evt_01M11YTBT9QMZES8B24W46FK85",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "fills",
+              "lastX"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "entityRefIds": {
+            "AreaFillData": "ent_01M11YTBT97CN5A2TMP33YQY1Q"
+          },
+          "id": "trt_01M11YTBT93WB5MVA0SQR2ZMPR",
+          "linkedEntity": "AreaFillData",
+          "linkedEntityId": "ent_01M11YTBT97CN5A2TMP33YQY1Q",
+          "name": "AreaFill",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "id": "evt_01M11YTBT9RQY0RWBP60CWAEP8",
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "id": "evt_01M11YTBT9YEJHGSHNR1P4SRPV",
+                "key": "BODY_MOVED",
+                "name": "Body Moved",
+                "payloadSchema": [
+                  {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "vx",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "vy",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "grounded",
+                    "required": true,
+                    "type": "boolean"
+                  },
+                  {
+                    "name": "skating",
+                    "required": true,
+                    "type": "boolean"
+                  },
+                  {
+                    "name": "speed",
+                    "required": true,
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "id": "evt_01M11YTBT9PGK372101AFZTYVZ",
+                "key": "RESTART",
+                "name": "Restart",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "description": "A fill's painted area reached its target (x, y = the player's position at completion, for burst placement). When several fills complete on one move, the first reports and the shared entity carries the rest.",
+                "id": "evt_01M11YTBT9QMZES8B24W46FK85",
+                "key": "AREA_FILLED",
+                "name": "Area Filled",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                ],
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "active"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.fills",
+                    [
+                      "array/map",
+                      "@config.fills",
+                      [
+                        "fn",
+                        "f",
+                        [
+                          "object/merge",
+                          "@f",
+                          {
+                            "filled": 0.0,
+                            "frontier": [
+                              "object/get",
+                              "@f",
+                              "x0"
+                            ],
+                            "reported": false
+                          }
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.lastX",
+                    0.0
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01M11YTBT9RQY0RWBP60CWAEP8",
+                "from": "active",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "let",
+                    [
+                      [
+                        "adx",
+                        [
+                          "math/abs",
+                          [
+                            "-",
+                            "@payload.x",
+                            "@entity.lastX"
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "set",
+                      "@entity.fills",
+                      [
+                        "array/map",
+                        "@entity.fills",
+                        [
+                          "fn",
+                          "f",
+                          [
+                            "let",
+                            [
+                              [
+                                "inside",
+                                [
+                                  "and",
+                                  [
+                                    ">=",
+                                    "@payload.x",
+                                    [
+                                      "object/get",
+                                      "@f",
+                                      "x0"
+                                    ]
+                                  ],
+                                  [
+                                    "<=",
+                                    "@payload.x",
+                                    [
+                                      "object/get",
+                                      "@f",
+                                      "x1"
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ],
+                            [
+                              "let",
+                              [
+                                [
+                                  "leftSamp",
+                                  [
+                                    "array/last",
+                                    [
+                                      "array/filter",
+                                      [
+                                        "object/get",
+                                        "@f",
+                                        "samples"
+                                      ],
+                                      [
+                                        "fn",
+                                        "s",
+                                        [
+                                          "<=",
+                                          [
+                                            "object/get",
+                                            "@s",
+                                            "x"
+                                          ],
+                                          "@payload.x"
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              [
+                                "let",
+                                [
+                                  [
+                                    "rightSamp",
+                                    [
+                                      "array/first",
+                                      [
+                                        "array/filter",
+                                        [
+                                          "object/get",
+                                          "@f",
+                                          "samples"
+                                        ],
+                                        [
+                                          "fn",
+                                          "s",
+                                          [
+                                            ">",
+                                            [
+                                              "object/get",
+                                              "@s",
+                                              "x"
+                                            ],
+                                            "@payload.x"
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "let",
+                                  [
+                                    [
+                                      "h",
+                                      [
+                                        "if",
+                                        [
+                                          "or",
+                                          [
+                                            "==",
+                                            "@leftSamp",
+                                            null
+                                          ],
+                                          [
+                                            "==",
+                                            "@rightSamp",
+                                            null
+                                          ]
+                                        ],
+                                        0.0,
+                                        [
+                                          "-",
+                                          [
+                                            "+",
+                                            [
+                                              "object/get",
+                                              "@leftSamp",
+                                              "y"
+                                            ],
+                                            [
+                                              "*",
+                                              [
+                                                "/",
+                                                [
+                                                  "-",
+                                                  [
+                                                    "object/get",
+                                                    "@rightSamp",
+                                                    "y"
+                                                  ],
+                                                  [
+                                                    "object/get",
+                                                    "@leftSamp",
+                                                    "y"
+                                                  ]
+                                                ],
+                                                [
+                                                  "-",
+                                                  [
+                                                    "object/get",
+                                                    "@rightSamp",
+                                                    "x"
+                                                  ],
+                                                  [
+                                                    "object/get",
+                                                    "@leftSamp",
+                                                    "x"
+                                                  ]
+                                                ]
+                                              ],
+                                              [
+                                                "-",
+                                                "@payload.x",
+                                                [
+                                                  "object/get",
+                                                  "@leftSamp",
+                                                  "x"
+                                                ]
+                                              ]
+                                            ]
+                                          ],
+                                          [
+                                            "object/get",
+                                            "@f",
+                                            "baseline"
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "let",
+                                    [
+                                      [
+                                        "step",
+                                        [
+                                          "math/min",
+                                          "@adx",
+                                          0.5
+                                        ]
+                                      ]
+                                    ],
+                                    [
+                                      "let",
+                                      [
+                                        [
+                                          "rate",
+                                          [
+                                            "if",
+                                            "@inside",
+                                            [
+                                              "if",
+                                              [
+                                                "==",
+                                                [
+                                                  "object/get",
+                                                  "@f",
+                                                  "rateMode"
+                                                ],
+                                                "ride"
+                                              ],
+                                              [
+                                                "if",
+                                                "@payload.skating",
+                                                "@step",
+                                                0.0
+                                              ],
+                                              [
+                                                "if",
+                                                [
+                                                  "==",
+                                                  [
+                                                    "object/get",
+                                                    "@f",
+                                                    "rateMode"
+                                                  ],
+                                                  "speed"
+                                                ],
+                                                "@step",
+                                                [
+                                                  "*",
+                                                  "@step",
+                                                  "@h"
+                                                ]
+                                              ]
+                                            ],
+                                            0.0
+                                          ]
+                                        ]
+                                      ],
+                                      [
+                                        "let",
+                                        [
+                                          [
+                                            "newFilled",
+                                            [
+                                              "+",
+                                              [
+                                                "object/get",
+                                                "@f",
+                                                "filled"
+                                              ],
+                                              "@rate"
+                                            ]
+                                          ]
+                                        ],
+                                        [
+                                          "object/merge",
+                                          "@f",
+                                          {
+                                            "filled": "@newFilled",
+                                            "frontier": [
+                                              "+",
+                                              [
+                                                "object/get",
+                                                "@f",
+                                                "x0"
+                                              ],
+                                              [
+                                                "*",
+                                                [
+                                                  "-",
+                                                  [
+                                                    "object/get",
+                                                    "@f",
+                                                    "x1"
+                                                  ],
+                                                  [
+                                                    "object/get",
+                                                    "@f",
+                                                    "x0"
+                                                  ]
+                                                ],
+                                                [
+                                                  "math/min",
+                                                  1.0,
+                                                  [
+                                                    "/",
+                                                    "@newFilled",
+                                                    [
+                                                      "object/get",
+                                                      "@f",
+                                                      "target"
+                                                    ]
+                                                  ]
+                                                ]
+                                              ]
+                                            ]
+                                          }
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.lastX",
+                    "@payload.x"
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "newly",
+                        [
+                          "array/filter",
+                          "@entity.fills",
+                          [
+                            "fn",
+                            "f",
+                            [
+                              "and",
+                              [
+                                ">=",
+                                [
+                                  "object/get",
+                                  "@f",
+                                  "filled"
+                                ],
+                                [
+                                  "object/get",
+                                  "@f",
+                                  "target"
+                                ]
+                              ],
+                              [
+                                "==",
+                                [
+                                  "object/get",
+                                  "@f",
+                                  "reported"
+                                ],
+                                false
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "if",
+                      [
+                        ">",
+                        [
+                          "array/len",
+                          "@newly"
+                        ],
+                        0.0
+                      ],
+                      [
+                        "do",
+                        [
+                          "set",
+                          "@entity.fills",
+                          [
+                            "array/map",
+                            "@entity.fills",
+                            [
+                              "fn",
+                              "f",
+                              [
+                                "if",
+                                [
+                                  "==",
+                                  [
+                                    "object/get",
+                                    "@f",
+                                    "id"
+                                  ],
+                                  [
+                                    "object/get",
+                                    [
+                                      "array/first",
+                                      "@newly"
+                                    ],
+                                    "id"
+                                  ]
+                                ],
+                                [
+                                  "object/merge",
+                                  "@f",
+                                  {
+                                    "reported": true
+                                  }
+                                ],
+                                "@f"
+                              ]
+                            ]
+                          ]
+                        ],
+                        [
+                          "emit",
+                          "AREA_FILLED",
+                          {
+                            "id": [
+                              "object/get",
+                              [
+                                "array/first",
+                                "@newly"
+                              ],
+                              "id"
+                            ],
+                            "x": "@payload.x",
+                            "y": "@payload.y"
+                          }
+                        ]
+                      ],
+                      null
+                    ]
+                  ]
+                ],
+                "event": "BODY_MOVED",
+                "eventId": "evt_01M11YTBT9YEJHGSHNR1P4SRPV",
+                "from": "active",
+                "guard": "@config.running",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.fills",
+                    [
+                      "array/map",
+                      "@config.fills",
+                      [
+                        "fn",
+                        "f",
+                        [
+                          "object/merge",
+                          "@f",
+                          {
+                            "filled": 0.0,
+                            "frontier": [
+                              "object/get",
+                              "@f",
+                              "x0"
+                            ],
+                            "reported": false
+                          }
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.lastX",
+                    0.0
+                  ]
+                ],
+                "event": "RESTART",
+                "eventId": "evt_01M11YTBT9PGK372101AFZTYVZ",
+                "from": "active",
+                "to": "active"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 1,
+  "version": "1.0.0"
+}

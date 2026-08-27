@@ -359,7 +359,7 @@ orbital BrowseItemOrbital {
         @tier "internal"
       filters : [FilterSpec] = []
         @label "Which filters should appear above the list?"
-        @description "Dropdown filter facets by field. Each fires a refetch when the user changes the selection. Empty = no filter bar."
+        @description "Dropdown filter facets by field, rendered as an embedded filter bar above the rows; each selection fires REFETCH_FILTER on this trait. Empty (the default) = no filter bar, which is the right setting whenever the page already composes std-filter beside this list and routes `XFilter.FILTER -> REFETCH_FILTER` — that is the wired owner and remains the primary path. Use this knob only for a standalone list with no page-level filter affordance, so the surface shows one filter bar instead of two."
         @synonyms "filter bar, faceted filters, field filters, column filters, dropdowns"
         @tier "presentation"
       maxInlineActions : number = 3
@@ -402,6 +402,11 @@ orbital BrowseItemOrbital {
         @description "Hint text inside the list search box (e.g. 'Search orders…')."
         @synonyms "search hint, placeholder, search box text, search label"
         @tier "presentation"
+      filterBarLook : "toolbar" | "chips" | "pills" | "popover-trigger" | "inline-column-header" = toolbar
+        @label "Filter bar look"
+        @description "Visual treatment for the embedded filter bar, mirroring std-filter's own enum. Only applies when `filters` is non-empty."
+        @synonyms "filter bar style, facet style, chips, pills"
+        @tier "presentation"
       viewPattern : pattern = data-grid
         @label "Render pattern"
         @description "UI pattern used to render the collection. Used by the default bodyContent tree; Layer 3 variants override bodyContent directly instead and may ignore this knob."
@@ -421,12 +426,43 @@ orbital BrowseItemOrbital {
         @synonyms "record actions, detail actions, pane actions"
         @tier "presentation"
       bodyContent : render-ui = {
-        children: [@trait.DataGrid1]
+        children: [(if @config.bodySearch {
+          children: [{
+            className: "w-full max-w-md"
+            clearable: true
+            event: REFETCH_QUERY
+            placeholder: @config.searchPlaceholder
+            type: search-input
+          }]
+          direction: horizontal
+          gap: sm
+          type: stack
+        } {
+          children: []
+          gap: none
+          type: stack
+        }), (if [">", (array/len @config.filters), 0] {
+          children: [{
+            entity: BrowseItem
+            event: REFETCH_FILTER
+            filters: @config.filters
+            look: @config.filterBarLook
+            type: filter-group
+          }]
+          direction: horizontal
+          gap: sm
+          type: stack
+        } {
+          children: []
+          gap: none
+          type: stack
+        }), @trait.DataGrid1]
         direction: vertical
+        gap: md
         type: stack
       }
         @label "Body content tree"
-        @description "Render-ui SExpr rendered after rows load when browseLook = table (the default). Composes the canonical data-grid call wrapped in a stack. See denseBodyContent/feedBodyContent/galleryBodyContent for the other browseLook bodies; any may be overridden directly while inheriting the same trait, state machine, emits, and listens."
+        @description "Render-ui SExpr rendered after rows load when browseLook = table (the default). Toolbar (search when bodySearch, filter bar when filters is non-empty) above the canonical data-grid call. Until 2026-08-27 this was the only one of the six looks with no search affordance at all. See denseBodyContent/feedBodyContent/galleryBodyContent for the other browseLook bodies; any may be overridden directly while inheriting the same trait, state machine, emits, and listens."
         @tier "internal"
       denseBodyContent : render-ui = {
         children: [(if @config.bodySearch {
@@ -436,6 +472,22 @@ orbital BrowseItemOrbital {
             event: REFETCH_QUERY
             placeholder: @config.searchPlaceholder
             type: search-input
+          }]
+          className: "px-card-md py-card-sm border-b border-[var(--color-border)]"
+          direction: horizontal
+          gap: sm
+          type: stack
+        } {
+          children: []
+          gap: none
+          type: stack
+        }), (if [">", (array/len @config.filters), 0] {
+          children: [{
+            entity: BrowseItem
+            event: REFETCH_FILTER
+            filters: @config.filters
+            look: @config.filterBarLook
+            type: filter-group
           }]
           className: "px-card-md py-card-sm border-b border-[var(--color-border)]"
           direction: horizontal
@@ -469,6 +521,22 @@ orbital BrowseItemOrbital {
             event: REFETCH_QUERY
             placeholder: @config.searchPlaceholder
             type: search-input
+          }]
+          className: w-full
+          direction: horizontal
+          gap: sm
+          type: stack
+        } {
+          children: []
+          gap: none
+          type: stack
+        }), (if [">", (array/len @config.filters), 0] {
+          children: [{
+            entity: BrowseItem
+            event: REFETCH_FILTER
+            filters: @config.filters
+            look: @config.filterBarLook
+            type: filter-group
           }]
           className: w-full
           direction: horizontal
@@ -579,6 +647,22 @@ orbital BrowseItemOrbital {
           children: []
           gap: none
           type: stack
+        }), (if [">", (array/len @config.filters), 0] {
+          children: [{
+            entity: BrowseItem
+            event: REFETCH_FILTER
+            filters: @config.filters
+            look: @config.filterBarLook
+            type: filter-group
+          }]
+          className: w-full
+          direction: horizontal
+          gap: sm
+          type: stack
+        } {
+          children: []
+          gap: none
+          type: stack
         }), {
           className: w-full
           entity: ?data
@@ -615,6 +699,22 @@ orbital BrowseItemOrbital {
           children: []
           gap: none
           type: stack
+        }), (if [">", (array/len @config.filters), 0] {
+          children: [{
+            entity: BrowseItem
+            event: REFETCH_FILTER
+            filters: @config.filters
+            look: @config.filterBarLook
+            type: filter-group
+          }]
+          className: "px-card-md py-card-sm border-b border-[var(--color-border)]"
+          direction: horizontal
+          gap: sm
+          type: stack
+        } {
+          children: []
+          gap: none
+          type: stack
         }), {
           children: [{
             entity: ?data
@@ -638,7 +738,7 @@ orbital BrowseItemOrbital {
         @description "Render-ui SExpr rendered after rows load when browseLook = triage. Inbox-register queue: one surface with a toolbar search and compact list rows (title + badges + inline meta) built for keyboard-pace queue work; row actions collapse per maxInlineActions. Composes fields/itemActions/searchPlaceholder/bodySearch."
         @tier "internal"
       masterDetailBodyContent : render-ui = {
-        children: [{
+        children: [(if @config.bodySearch {
           children: [{
             className: "w-full max-w-md"
             clearable: true
@@ -650,7 +750,27 @@ orbital BrowseItemOrbital {
           direction: horizontal
           gap: sm
           type: stack
-        }, {
+        } {
+          children: []
+          gap: none
+          type: stack
+        }), (if [">", (array/len @config.filters), 0] {
+          children: [{
+            entity: BrowseItem
+            event: REFETCH_FILTER
+            filters: @config.filters
+            look: @config.filterBarLook
+            type: filter-group
+          }]
+          className: "px-card-md py-card-sm border-b border-[var(--color-border)]"
+          direction: horizontal
+          gap: sm
+          type: stack
+        } {
+          children: []
+          gap: none
+          type: stack
+        }), {
           detail: {
             children: []
             gap: none
@@ -678,10 +798,10 @@ orbital BrowseItemOrbital {
         type: stack
       }
         @label "Master-detail look body (no selection)"
-        @description "Render-ui SExpr rendered after rows load when browseLook = master-detail: record-work split view — toolbar search, dense list left, empty-state pane right until a row is opened. Opening a row renders masterDetailRecordBodyContent. The toolbar is always present in this look (bodySearch does not apply)."
+        @description "Render-ui SExpr rendered after rows load when browseLook = master-detail: record-work split view — toolbar, dense list left, empty-state pane right until a row is opened. Opening a row renders masterDetailRecordBodyContent. The toolbar honours bodySearch and filters like every other look; it used to render its search box unconditionally, which put a second search box on any page that already composed std-search (observed in std-crm ContactOrbital)."
         @tier "internal"
       masterDetailRecordBodyContent : render-ui = {
-        children: [{
+        children: [(if @config.bodySearch {
           children: [{
             className: "w-full max-w-md"
             clearable: true
@@ -693,7 +813,27 @@ orbital BrowseItemOrbital {
           direction: horizontal
           gap: sm
           type: stack
-        }, {
+        } {
+          children: []
+          gap: none
+          type: stack
+        }), (if [">", (array/len @config.filters), 0] {
+          children: [{
+            entity: BrowseItem
+            event: REFETCH_FILTER
+            filters: @config.filters
+            look: @config.filterBarLook
+            type: filter-group
+          }]
+          className: "px-card-md py-card-sm border-b border-[var(--color-border)]"
+          direction: horizontal
+          gap: sm
+          type: stack
+        } {
+          children: []
+          gap: none
+          type: stack
+        }), {
           detail: {
             actions: @config.detailActions
             fieldNames: @config.detailFields

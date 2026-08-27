@@ -1,5 +1,5 @@
 app std-platformer-body "1.0.0"
-"Headless run/jump platformer-physics authority: the SOLE writer of body + fell + hazardId + goalId on side-view boards. Where std-motion-body owns free 2D drift (no collision), this atom owns the platformer contract: every 33ms physics tick it integrates gravity into the body's vertical velocity, steps position in per-second units, and collides the body rect against the config platforms with one-way semantics — a body moving in the gravity direction that overlaps a ground/platform tile lands on its anti-gravity face (vy zeroed, grounded set), while a body moving against gravity passes through, so jumping up through a platform and walking up a staircase both just work. The sign of gravity IS the vertical convention: positive pulls toward +y (screen boards, y down — sprite canvases), negative toward −y (math canvases, y up); jumps always fire against it. Intents: STEER sets horizontal velocity (dir −1/0/1 × moveSpeed, hold-to-run: keydown steers, keyup steers 0), JUMP kicks vertical velocity when grounded, PLACE teleports (spawns, hazard respawns), RESTART reseeds. Emits BODY_MOVED every tick for the render layer (boards that don't subscribe pay nothing), plus the sparse rule signals a board needs to score: BODY_JUMPED, BODY_LANDED (with impact speed), BODY_HAZARD (once per hazard entry, re-arms on exit), BODY_GOAL (same arming), BODY_FELL (once per fall past killY, re-armed by PLACE/RESTART). Curve skating: when config.skate is on and the grounded body comes within skateSnap of the config.skateCurve surface, the body rides the curve — y snaps to the interpolated surface and tangential gravity (g·slope/(1+slope²)) accelerates vx, so the body slides downhill along the graph itself and launches ballistically off its ends; jumping kicks free. Sparse BODY_SKATE_START/BODY_SKATE_END signals fire on engage/disengage so boards can layer fx. Lives, score, and win/lose stay downstream — this atom simulates, it never judges. Renders nothing."
+"Headless run/jump platformer-physics authority: the SOLE writer of body + fell + hazardId + goalId on side-view boards. Where std-motion-body owns free 2D drift (no collision), this atom owns the platformer contract: every 33ms physics tick it integrates gravity into the body's vertical velocity, steps position in per-second units, and collides the body rect against the config platforms with one-way semantics — a body moving in the gravity direction that overlaps a ground/platform tile lands on its anti-gravity face (vy zeroed, grounded set), while a body moving against gravity passes through, so jumping up through a platform and walking up a staircase both just work. The sign of gravity IS the vertical convention: positive pulls toward +y (screen boards, y down — sprite canvases), negative toward −y (math canvases, y up); jumps always fire against it. Intents: STEER sets horizontal velocity (dir −1/0/1 × moveSpeed, hold-to-run: keydown steers, keyup steers 0), JUMP kicks vertical velocity when grounded, PLACE teleports (spawns, hazard respawns), RESTART reseeds. Emits BODY_MOVED every tick for the render layer (boards that don't subscribe pay nothing), plus the sparse rule signals a board needs to score: BODY_JUMPED, BODY_LANDED (with impact speed), BODY_HAZARD (once per hazard entry, re-arms on exit), BODY_GOAL (same arming), BODY_FELL (once per fall past killY, re-armed by PLACE/RESTART). Drift regions: config.driftRegions lists axis-aligned rects each carrying a constant acceleration (ax, ay) applied with the same 0.033s dt whenever the body's center is inside (empty list = zero behavior change). Curve skating: when config.skate is on and the grounded body comes within skateSnap of the config.skateCurve surface, the body rides the curve — y snaps to the interpolated surface and tangential gravity (g·slope/(1+slope²)) accelerates vx, so the body slides downhill along the graph itself and launches ballistically off its ends; jumping kicks free. Sparse BODY_SKATE_START/BODY_SKATE_END signals fire on engage/disengage so boards can layer fx. Lives, score, and win/lose stay downstream — this atom simulates, it never judges. Renders nothing."
 orbital PlatformerBodyOrbital {
   type PlatformerBody = {
     x : number!
@@ -22,6 +22,15 @@ orbital PlatformerBodyOrbital {
   type PlatformerCurveSample = {
     x : number!
     y : number!
+  }
+  type BodyDriftRegion = {
+    id : string!
+    x0 : number!
+    x1 : number!
+    y0 : number!
+    y1 : number!
+    ax : number!
+    ay : number!
   }
 
   entity PlatformerBodyData [runtime, shared] {
@@ -69,7 +78,10 @@ orbital PlatformerBodyOrbital {
       physicsTick every 33ms
         when (and @config.running (> @entity.body.width 0))
         (let ((gdir (if (> @config.gravity 0) 1 -1)))
-        (let ((vy1 (math/clamp (+ @entity.body.vy (* @config.gravity 0.033)) (- 0 @config.maxFallSpeed) @config.maxFallSpeed)))
+        (let ((bcx (+ (object/get @entity.body x) (/ (object/get @entity.body width) 2))) (bcy (+ (object/get @entity.body y) (/ (object/get @entity.body height) 2))))
+        (let ((drift (array/find @config.driftRegions (fn r (and (>= @bcx (object/get @r x0)) (and (<= @bcx (object/get @r x1)) (and (>= @bcy (object/get @r y0)) (<= @bcy (object/get @r y1)))))))))
+        (let ((dax (if (== @drift null) 0 (object/get @drift ax))) (day (if (== @drift null) 0 (object/get @drift ay))))
+        (let ((vy1 (math/clamp (+ @entity.body.vy (* (+ @config.gravity @day) 0.033)) (- 0 @config.maxFallSpeed) @config.maxFallSpeed)))
         (let ((bw (object/get @entity.body width)) (bh (object/get @entity.body height)))
         (let ((nx (math/clamp (+ @entity.body.x (* @entity.body.vx 0.033)) @config.xMin @config.xMax)))
         (let ((ny (+ @entity.body.y (* @vy1 0.033))))
@@ -86,12 +98,13 @@ orbital PlatformerBodyOrbital {
         (let ((movingUp (< (* @vy1 @gdir) -0.01)))
         (let ((skateNow (and @inRange (and (<= (math/abs (- @ny2 @curveY)) @config.skateSnap) (and (or @landed @entity.skating) (or @entity.body.grounded (not @movingUp)))))))
         (let ((vx2 (if @skateNow (math/clamp (+ @entity.body.vx (* (/ (* @config.gravity @slope) (+ 1 (* @slope @slope))) 0.033)) (- 0 @config.maxFallSpeed) @config.maxFallSpeed) @entity.body.vx)))
+        (let ((vx3 (if (== @drift null) @vx2 (math/clamp (+ @vx2 (* @dax 0.033)) (- 0 @config.maxFallSpeed) @config.maxFallSpeed))))
         (let ((fy (if @skateNow @curveY @ny2)) (fvy (if @skateNow (* @slope @vx2) @vy2)) (fgrounded (or @landed @skateNow)))
         (let ((hazardHit (array/find @config.platforms (fn p (and (== (object/get @p type) "hazard") (geo/aabb-overlap @rect { x: @p.x, y: @p.y, w: @p.width, h: @p.height }))))))
         (let ((goalHit (array/find @config.platforms (fn p (and (== (object/get @p type) "goal") (geo/aabb-overlap @rect { x: @p.x, y: @p.y, w: @p.width, h: @p.height }))))))
         (let ((fellNow (if (> @gdir 0) (> @fy @config.killY) (< @fy @config.killY))))
           (do
-            (set @entity.body (object/merge @entity.body { x: @nx, y: @fy, vx: (if (or (== @nx @config.xMin) (== @nx @config.xMax)) 0 @vx2), vy: @fvy, grounded: @fgrounded }))
+            (set @entity.body (object/merge @entity.body { x: @nx, y: @fy, vx: (if (or (== @nx @config.xMin) (== @nx @config.xMax)) 0 @vx3), vy: @fvy, grounded: @fgrounded }))
             (set @entity.skating @skateNow)
             (if (and @skateNow (== @entity.skating false))
               (emit BODY_SKATE_START { x: @nx, y: @fy, slope: @slope })
@@ -121,7 +134,7 @@ orbital PlatformerBodyOrbital {
                 (set @entity.fell true)
                 (emit BODY_FELL { x: @nx, y: @fy }))
               null)
-            (emit BODY_MOVED { x: @nx, y: @fy, vx: @entity.body.vx, vy: @fvy, grounded: @fgrounded, skating: @skateNow, speed: (math/hypot @entity.body.vx @fvy) }))))))))))))))))))))))))
+            (emit BODY_MOVED { x: @nx, y: @fy, vx: @entity.body.vx, vy: @fvy, grounded: @fgrounded, skating: @skateNow, speed: (math/hypot @entity.body.vx @fvy) }))))))))))))))))))))))))))))
     }
 
     emits {
@@ -243,6 +256,10 @@ orbital PlatformerBodyOrbital {
       skateSnap : number = 0.75
         @label "Skate Snap"
         @description "Max vertical gap (world units) between the body's min corner and the curve surface for skating to engage or stay engaged; larger values grab earlier on landing, smaller values release sooner on bumps"
+        @tier "domain"
+      driftRegions : [BodyDriftRegion] = []
+        @label "Drift Regions"
+        @description "Axis-aligned rects (x0..x1, y0..y1 in world units) each carrying a constant acceleration (ax, ay in units/s²) applied with the physics dt whenever the body's center is inside — winds, currents, gradient pushes. Empty list = zero behavior change."
         @tier "domain"
     }
   }

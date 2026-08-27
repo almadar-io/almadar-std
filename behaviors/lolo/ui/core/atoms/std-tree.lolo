@@ -1,5 +1,6 @@
 app std-tree "1.0.0"
-"std-tree — generic hierarchical node browser. Fetches a flat TreeNode collection and renders it through file-tree's flat `items` mode (parentId-nested at render time by the component, not the .lolo); OPEN_NODE is the external handoff for a selected node's id. Rebindable: pass `fields` at the call site to retarget it at any parent-pointer entity (categories, org units, comment threads)."
+"std-tree — generic hierarchical node browser. Fetches a flat TreeNode collection and renders it through file-tree's flat `items` mode (parentId-nested at render time by the component, not the .lolo); OPEN_NODE is the external handoff for a selected node's id. Rebindable: pass `fields` at the call site to retarget it at any parent-pointer entity (categories, org units, comment threads). Search/filter are wired (REFETCH_QUERY/REFETCH_FILTER re-fetch the flat node set server-side); pagination is deliberately NOT offered — a hierarchy is not a paged list, and paging a flat node set would sever children from parents that fell on another page."
+type FilterSpec = { field : string!, label : string, options : [string] }
 orbital TreeNodeOrbital {
     type TreeNodeLoaded = Event { data : [TreeNode] } "Fired when the tree node collection finishes loading"
 
@@ -51,7 +52,37 @@ orbital TreeNodeOrbital {
             direction: horizontal
             gap: sm
             type: stack
-          }, { type: divider }, {
+          }, { type: divider }, (if @config.bodySearch {
+            children: [{
+              className: "w-full max-w-md"
+              clearable: true
+              event: REFETCH_QUERY
+              placeholder: @config.searchPlaceholder
+              type: search-input
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          } {
+            children: []
+            gap: none
+            type: stack
+          }), (if [">", (array/len @config.filters), 0] {
+            children: [{
+              entity: TreeNode
+              event: REFETCH_FILTER
+              filters: @config.filters
+              look: @config.filterBarLook
+              type: filter-group
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          } {
+            children: []
+            gap: none
+            type: stack
+          }), {
             items: (array/map ?data (fn row {
               icon: @row.icon
               id: @row.id
@@ -113,6 +144,22 @@ orbital TreeNodeOrbital {
           gap: md
           type: stack
         })
+      ;; REFETCH_* stays in `browsing` and DOES NOT replace the tree with a
+      ;; spinner — search-as-you-type would otherwise unmount file-tree every
+      ;; keystroke and flicker. The fetch fires in the background; when
+      ;; TreeNodeLoaded arrives (handler below) React reconciles the tree in
+      ;; place. No REFETCH_PAGE: a hierarchy is not a paged list — paging the
+      ;; flat node set would sever children from parents on another page.
+      REFETCH_QUERY -> browsing
+        (fetch TreeNode {
+          emit: { failure: TreeNodeLoadFailed, success: TreeNodeLoaded }
+          filter: (or ["=", ?searchTerm, ""] (str/includes (object/get @entity name) ?searchTerm))
+        })
+      REFETCH_FILTER -> browsing
+        (fetch TreeNode {
+          emit: { failure: TreeNodeLoadFailed, success: TreeNodeLoaded }
+          filter: (or ["=", ?value, ""] ["=", (object/get @entity ?field), ?value])
+        })
       OPEN_NODE -> browsing
         (set @entity.id ?id)
       TreeNodeLoaded -> browsing
@@ -132,7 +179,37 @@ orbital TreeNodeOrbital {
             direction: horizontal
             gap: sm
             type: stack
-          }, { type: divider }, {
+          }, { type: divider }, (if @config.bodySearch {
+            children: [{
+              className: "w-full max-w-md"
+              clearable: true
+              event: REFETCH_QUERY
+              placeholder: @config.searchPlaceholder
+              type: search-input
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          } {
+            children: []
+            gap: none
+            type: stack
+          }), (if [">", (array/len @config.filters), 0] {
+            children: [{
+              entity: TreeNode
+              event: REFETCH_FILTER
+              filters: @config.filters
+              look: @config.filterBarLook
+              type: filter-group
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          } {
+            children: []
+            gap: none
+            type: stack
+          }), {
             items: (array/map ?data (fn row {
               icon: @row.icon
               id: @row.id
@@ -214,6 +291,19 @@ orbital TreeNodeOrbital {
     }
 
     listens {
+      REFETCH_QUERY {
+        searchTerm : string!
+      }
+        @description "Triggers a tree refresh based on the current search query."
+        @synonyms "refresh, reload, update, re-query"
+        @tier "domain"
+      REFETCH_FILTER {
+        field : string!
+        value : string!
+      }
+        @description "Triggers a tree refresh based on current filter criteria."
+        @synonyms "refresh, filter, update, reload"
+        @tier "domain"
       OPEN_NODE {
         id : string!
       }
@@ -239,6 +329,26 @@ orbital TreeNodeOrbital {
       title : string = Tree
         @label "Section title"
         @description "Heading shown above the tree"
+        @tier "presentation"
+      bodySearch : boolean = false
+        @label "Show the tree's own search box?"
+        @description "Embeds a search box above the tree that re-fetches the flat node set server-side. Set false (the default) when the page already provides a search affordance (a toolbar Search molecule), so the surface shows one search box instead of two."
+        @synonyms "inline search, list search, built-in search, show search, duplicate search"
+        @tier "presentation"
+      searchPlaceholder : string = "Search…"
+        @label "Search box placeholder text"
+        @description "Hint text inside the tree search box (e.g. 'Search nodes…')."
+        @synonyms "search hint, placeholder, search box text, search label"
+        @tier "presentation"
+      filters : [FilterSpec] = []
+        @label "Which filters should appear above the tree?"
+        @description "Dropdown filter facets by field, rendered as an embedded filter bar above the tree; each selection fires REFETCH_FILTER on this trait, re-fetching the flat node set. Empty (the default) = no filter bar, which is the right setting whenever the page already composes std-filter beside this tree and routes `XFilter.FILTER -> REFETCH_FILTER` — that is the wired owner and remains the primary path."
+        @synonyms "filter bar, faceted filters, field filters, dropdowns"
+        @tier "presentation"
+      filterBarLook : "toolbar" | "chips" | "pills" | "popover-trigger" | "inline-column-header" = toolbar
+        @label "Filter bar look"
+        @description "Visual treatment for the embedded filter bar, mirroring std-filter's own enum. Only applies when `filters` is non-empty."
+        @synonyms "filter bar style, facet style, chips, pills"
         @tier "presentation"
     }
   }

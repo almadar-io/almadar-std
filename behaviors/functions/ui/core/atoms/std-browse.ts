@@ -443,12 +443,66 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
           'bodyContent': {
             'default': {
               'children': [
+                [
+                  'if',
+                  '@config.bodySearch',
+                  {
+                    'children': [
+                      {
+                        'className': 'w-full max-w-md',
+                        'clearable': true,
+                        'event': 'REFETCH_QUERY',
+                        'placeholder': '@config.searchPlaceholder',
+                        'type': 'search-input',
+                      },
+                    ],
+                    'direction': 'horizontal',
+                    'gap': 'sm',
+                    'type': 'stack',
+                  },
+                  {
+                    'children': [],
+                    'gap': 'none',
+                    'type': 'stack',
+                  },
+                ],
+                [
+                  'if',
+                  [
+                    '>',
+                    [
+                      'array/len',
+                      '@config.filters',
+                    ],
+                    0,
+                  ],
+                  {
+                    'children': [
+                      {
+                        'entity': 'BrowseItem',
+                        'event': 'REFETCH_FILTER',
+                        'filters': '@config.filters',
+                        'look': '@config.filterBarLook',
+                        'type': 'filter-group',
+                      },
+                    ],
+                    'direction': 'horizontal',
+                    'gap': 'sm',
+                    'type': 'stack',
+                  },
+                  {
+                    'children': [],
+                    'gap': 'none',
+                    'type': 'stack',
+                  },
+                ],
                 '@trait.DataGrid1',
               ],
               'direction': 'vertical',
+              'gap': 'md',
               'type': 'stack',
             },
-            'description': 'Render-ui SExpr rendered after rows load when browseLook = table (the default). Composes the canonical data-grid call wrapped in a stack. See denseBodyContent/feedBodyContent/galleryBodyContent for the other browseLook bodies; any may be overridden directly while inheriting the same trait, state machine, emits, and listens.',
+            'description': 'Render-ui SExpr rendered after rows load when browseLook = table (the default). Toolbar (search when bodySearch, filter bar when filters is non-empty) above the canonical data-grid call. Until 2026-08-27 this was the only one of the six looks with no search affordance at all. See denseBodyContent/feedBodyContent/galleryBodyContent for the other browseLook bodies; any may be overridden directly while inheriting the same trait, state machine, emits, and listens.',
             'label': 'Body content tree',
             'tier': 'internal',
             'type': 'render-ui',
@@ -614,6 +668,37 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                     'type': 'stack',
                   },
                 ],
+                [
+                  'if',
+                  [
+                    '>',
+                    [
+                      'array/len',
+                      '@config.filters',
+                    ],
+                    0,
+                  ],
+                  {
+                    'children': [
+                      {
+                        'entity': 'BrowseItem',
+                        'event': 'REFETCH_FILTER',
+                        'filters': '@config.filters',
+                        'look': '@config.filterBarLook',
+                        'type': 'filter-group',
+                      },
+                    ],
+                    'className': 'px-card-md py-card-sm border-b border-[var(--color-border)]',
+                    'direction': 'horizontal',
+                    'gap': 'sm',
+                    'type': 'stack',
+                  },
+                  {
+                    'children': [],
+                    'gap': 'none',
+                    'type': 'stack',
+                  },
+                ],
                 {
                   'children': [
                     '@trait.DenseTableView',
@@ -718,6 +803,37 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                         'event': 'REFETCH_QUERY',
                         'placeholder': '@config.searchPlaceholder',
                         'type': 'search-input',
+                      },
+                    ],
+                    'className': 'w-full',
+                    'direction': 'horizontal',
+                    'gap': 'sm',
+                    'type': 'stack',
+                  },
+                  {
+                    'children': [],
+                    'gap': 'none',
+                    'type': 'stack',
+                  },
+                ],
+                [
+                  'if',
+                  [
+                    '>',
+                    [
+                      'array/len',
+                      '@config.filters',
+                    ],
+                    0,
+                  ],
+                  {
+                    'children': [
+                      {
+                        'entity': 'BrowseItem',
+                        'event': 'REFETCH_FILTER',
+                        'filters': '@config.filters',
+                        'look': '@config.filterBarLook',
+                        'type': 'filter-group',
                       },
                     ],
                     'className': 'w-full',
@@ -916,9 +1032,24 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
             'tier': 'presentation',
             'type': '[FieldSpec]',
           },
+          'filterBarLook': {
+            'default': 'toolbar',
+            'description': 'Visual treatment for the embedded filter bar, mirroring std-filter\'s own enum. Only applies when `filters` is non-empty.',
+            'label': 'Filter bar look',
+            'synonyms': 'filter bar style, facet style, chips, pills',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'toolbar',
+              'chips',
+              'pills',
+              'popover-trigger',
+              'inline-column-header',
+            ],
+          },
           'filters': {
             'default': [],
-            'description': 'Dropdown filter facets by field. Each fires a refetch when the user changes the selection. Empty = no filter bar.',
+            'description': 'Dropdown filter facets by field, rendered as an embedded filter bar above the rows; each selection fires REFETCH_FILTER on this trait. Empty (the default) = no filter bar, which is the right setting whenever the page already composes std-filter beside this list and routes `XFilter.FILTER -> REFETCH_FILTER` — that is the wired owner and remains the primary path. Use this knob only for a standalone list with no page-level filter affordance, so the surface shows one filter bar instead of two.',
             'items': {
               'properties': {
                 'field': {
@@ -965,6 +1096,37 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                       },
                     ],
                     'className': 'sticky top-0 z-10 py-3 bg-[var(--color-surface)]/95 backdrop-blur',
+                    'direction': 'horizontal',
+                    'gap': 'sm',
+                    'type': 'stack',
+                  },
+                  {
+                    'children': [],
+                    'gap': 'none',
+                    'type': 'stack',
+                  },
+                ],
+                [
+                  'if',
+                  [
+                    '>',
+                    [
+                      'array/len',
+                      '@config.filters',
+                    ],
+                    0,
+                  ],
+                  {
+                    'children': [
+                      {
+                        'entity': 'BrowseItem',
+                        'event': 'REFETCH_FILTER',
+                        'filters': '@config.filters',
+                        'look': '@config.filterBarLook',
+                        'type': 'filter-group',
+                      },
+                    ],
+                    'className': 'w-full',
                     'direction': 'horizontal',
                     'gap': 'sm',
                     'type': 'stack',
@@ -1102,21 +1264,61 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
           'masterDetailBodyContent': {
             'default': {
               'children': [
-                {
-                  'children': [
-                    {
-                      'className': 'w-full max-w-md',
-                      'clearable': true,
-                      'event': 'REFETCH_QUERY',
-                      'placeholder': '@config.searchPlaceholder',
-                      'type': 'search-input',
-                    },
+                [
+                  'if',
+                  '@config.bodySearch',
+                  {
+                    'children': [
+                      {
+                        'className': 'w-full max-w-md',
+                        'clearable': true,
+                        'event': 'REFETCH_QUERY',
+                        'placeholder': '@config.searchPlaceholder',
+                        'type': 'search-input',
+                      },
+                    ],
+                    'className': 'px-card-md py-card-sm border-b border-[var(--color-border)]',
+                    'direction': 'horizontal',
+                    'gap': 'sm',
+                    'type': 'stack',
+                  },
+                  {
+                    'children': [],
+                    'gap': 'none',
+                    'type': 'stack',
+                  },
+                ],
+                [
+                  'if',
+                  [
+                    '>',
+                    [
+                      'array/len',
+                      '@config.filters',
+                    ],
+                    0,
                   ],
-                  'className': 'px-card-md py-card-sm border-b border-[var(--color-border)]',
-                  'direction': 'horizontal',
-                  'gap': 'sm',
-                  'type': 'stack',
-                },
+                  {
+                    'children': [
+                      {
+                        'entity': 'BrowseItem',
+                        'event': 'REFETCH_FILTER',
+                        'filters': '@config.filters',
+                        'look': '@config.filterBarLook',
+                        'type': 'filter-group',
+                      },
+                    ],
+                    'className': 'px-card-md py-card-sm border-b border-[var(--color-border)]',
+                    'direction': 'horizontal',
+                    'gap': 'sm',
+                    'type': 'stack',
+                  },
+                  {
+                    'children': [],
+                    'gap': 'none',
+                    'type': 'stack',
+                  },
+                ],
                 {
                   'detail': {
                     'children': [],
@@ -1147,7 +1349,7 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
               'gap': 'none',
               'type': 'stack',
             },
-            'description': 'Render-ui SExpr rendered after rows load when browseLook = master-detail: record-work split view — toolbar search, dense list left, empty-state pane right until a row is opened. Opening a row renders masterDetailRecordBodyContent. The toolbar is always present in this look (bodySearch does not apply).',
+            'description': 'Render-ui SExpr rendered after rows load when browseLook = master-detail: record-work split view — toolbar, dense list left, empty-state pane right until a row is opened. Opening a row renders masterDetailRecordBodyContent. The toolbar honours bodySearch and filters like every other look; it used to render its search box unconditionally, which put a second search box on any page that already composed std-search (observed in std-crm ContactOrbital).',
             'label': 'Master-detail look body (no selection)',
             'tier': 'internal',
             'type': 'render-ui',
@@ -1155,21 +1357,61 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
           'masterDetailRecordBodyContent': {
             'default': {
               'children': [
-                {
-                  'children': [
-                    {
-                      'className': 'w-full max-w-md',
-                      'clearable': true,
-                      'event': 'REFETCH_QUERY',
-                      'placeholder': '@config.searchPlaceholder',
-                      'type': 'search-input',
-                    },
+                [
+                  'if',
+                  '@config.bodySearch',
+                  {
+                    'children': [
+                      {
+                        'className': 'w-full max-w-md',
+                        'clearable': true,
+                        'event': 'REFETCH_QUERY',
+                        'placeholder': '@config.searchPlaceholder',
+                        'type': 'search-input',
+                      },
+                    ],
+                    'className': 'px-card-md py-card-sm border-b border-[var(--color-border)]',
+                    'direction': 'horizontal',
+                    'gap': 'sm',
+                    'type': 'stack',
+                  },
+                  {
+                    'children': [],
+                    'gap': 'none',
+                    'type': 'stack',
+                  },
+                ],
+                [
+                  'if',
+                  [
+                    '>',
+                    [
+                      'array/len',
+                      '@config.filters',
+                    ],
+                    0,
                   ],
-                  'className': 'px-card-md py-card-sm border-b border-[var(--color-border)]',
-                  'direction': 'horizontal',
-                  'gap': 'sm',
-                  'type': 'stack',
-                },
+                  {
+                    'children': [
+                      {
+                        'entity': 'BrowseItem',
+                        'event': 'REFETCH_FILTER',
+                        'filters': '@config.filters',
+                        'look': '@config.filterBarLook',
+                        'type': 'filter-group',
+                      },
+                    ],
+                    'className': 'px-card-md py-card-sm border-b border-[var(--color-border)]',
+                    'direction': 'horizontal',
+                    'gap': 'sm',
+                    'type': 'stack',
+                  },
+                  {
+                    'children': [],
+                    'gap': 'none',
+                    'type': 'stack',
+                  },
+                ],
                 {
                   'detail': {
                     'actions': '@config.detailActions',
@@ -1297,6 +1539,37 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                         'event': 'REFETCH_QUERY',
                         'placeholder': '@config.searchPlaceholder',
                         'type': 'search-input',
+                      },
+                    ],
+                    'className': 'px-card-md py-card-sm border-b border-[var(--color-border)]',
+                    'direction': 'horizontal',
+                    'gap': 'sm',
+                    'type': 'stack',
+                  },
+                  {
+                    'children': [],
+                    'gap': 'none',
+                    'type': 'stack',
+                  },
+                ],
+                [
+                  'if',
+                  [
+                    '>',
+                    [
+                      'array/len',
+                      '@config.filters',
+                    ],
+                    0,
+                  ],
+                  {
+                    'children': [
+                      {
+                        'entity': 'BrowseItem',
+                        'event': 'REFETCH_FILTER',
+                        'filters': '@config.filters',
+                        'look': '@config.filterBarLook',
+                        'type': 'filter-group',
                       },
                     ],
                     'className': 'px-card-md py-card-sm border-b border-[var(--color-border)]',

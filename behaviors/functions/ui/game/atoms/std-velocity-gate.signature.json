@@ -1,0 +1,192 @@
+[
+  {
+    "organism": "std-velocity-gate",
+    "orbital": "VelocityGateOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/game/atoms/std-velocity-gate.ts",
+    "entities": [
+      {
+        "name": "VelocityGateData",
+        "fields": [
+          {
+            "name": "gates",
+            "type": "array",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "VelocityGate",
+        "emittedEvents": [
+          "VELOCITY_GATE_OPENED",
+          "VELOCITY_GATE_DENIED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "VELOCITY_GATE_OPENED",
+            "direction": "emit",
+            "description": "A gate's speed band was satisfied (instantly, or held for its dwell) and it flipped open; boards layer treasure fx and rewards. When several gates open on one move, the first reports and the shared entity carries the rest.",
+            "tier": "domain"
+          },
+          {
+            "name": "VELOCITY_GATE_DENIED",
+            "direction": "emit",
+            "description": "The player entered a closed gate outside its speed band or against its direction; fires once per approach and re-arms after they step out. Boards answer with a PLACE back plus a hint fx.",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "BODY_MOVED",
+            "direction": "listen"
+          },
+          {
+            "name": "RESTART",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "gates",
+            "type": "[VelocityGate]",
+            "default": [],
+            "label": "Gates",
+            "description": "One row per velocity gate: id, min-corner rect (x, y, width, height in world units), the speed band [minSpeed, maxSpeed] that opens it, the hold required (dwellMs 0 = instant), the horizontal direction required (dir -1/0/+1), and an optional hint shown when denied. open/touching/denied/held/reported are stamped at runtime.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "denied": {
+                  "name": "denied",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "dir": {
+                  "name": "dir",
+                  "required": true,
+                  "type": "number"
+                },
+                "dwellMs": {
+                  "name": "dwellMs",
+                  "required": true,
+                  "type": "number"
+                },
+                "height": {
+                  "name": "height",
+                  "required": true,
+                  "type": "number"
+                },
+                "held": {
+                  "name": "held",
+                  "required": false,
+                  "type": "number"
+                },
+                "hint": {
+                  "name": "hint",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "maxSpeed": {
+                  "name": "maxSpeed",
+                  "required": true,
+                  "type": "number"
+                },
+                "minSpeed": {
+                  "name": "minSpeed",
+                  "required": true,
+                  "type": "number"
+                },
+                "open": {
+                  "name": "open",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "reported": {
+                  "name": "reported",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "touching": {
+                  "name": "touching",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "width": {
+                  "name": "width",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "reachMargin",
+            "type": "number",
+            "default": 0.6,
+            "label": "Reach Margin",
+            "description": "Extra world units padded around a closed gate's rect when testing player contact (approximates the body's size).",
+            "tier": "domain"
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true, BODY_MOVED tests every gate's band and opens/denies; toggle to freeze every gate as-is.",
+            "tier": "domain"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "VelocityGateData",
+        "transitionEvents": [
+          "BODY_MOVED",
+          "INIT",
+          "RESTART"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "gates"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "VelocityGatePage",
+        "defaultPath": "/velocity-gate",
+        "primaryEntity": "VelocityGateData"
+      }
+    ],
+    "emittedEvents": [
+      "VELOCITY_GATE_DENIED",
+      "VELOCITY_GATE_OPENED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

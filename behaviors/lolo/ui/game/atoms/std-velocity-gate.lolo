@@ -1,0 +1,101 @@
+app std-velocity-gate "1.0.0"
+"Headless velocity-gate mechanic: gates that open only when the player crosses them inside a speed band, optionally in a required direction, optionally sustained for a dwell. Listens BODY_MOVED and, per closed gate, tests the player's rect (padded by reachMargin), their speed against [minSpeed, maxSpeed], and their horizontal direction against dir (0 = either). Instant gates (dwellMs 0) open on the first passing cross; dwell gates (dwellMs > 0) accumulate ~33ms per passing move and open once held reaches dwellMs — a failing move resets the hold. The first newly opened gate emits VELOCITY_GATE_OPENED (the shared entity carries the rest). Entering a closed INSTANT gate while NOT passing emits VELOCITY_GATE_DENIED once per approach — re-arming only after the player steps out — so the board can answer with a PLACE back and a hint fx; dwell gates never deny (a hot entry is fine — coming to rest inside is the point), a failed hold simply resets. RESTART re-closes every gate. Renders nothing; boards draw the gate band/chest and read open/held from the shared entity (the render authority)."
+orbital VelocityGateOrbital {
+  type VelocityGate = {
+    id : string!
+    x : number!
+    y : number!
+    width : number!
+    height : number!
+    minSpeed : number!
+    maxSpeed : number!
+    dwellMs : number!
+    dir : number!
+    hint : string
+    open : boolean
+    touching : boolean
+    denied : boolean
+    held : number
+    reported : boolean
+  }
+
+  entity VelocityGateData [runtime, shared] {
+    id : string!
+    gates : [VelocityGate] = []
+  }
+
+  trait VelocityGate -> @rebindable VelocityGateData [lifecycle] {
+    initial: active
+
+    state active {
+      INIT -> active
+        (set @entity.gates (array/map @config.gates (fn g (object/merge @g { open: false, touching: false, denied: false, held: 0, reported: false }))))
+
+      BODY_MOVED -> active when @config.running
+        (set @entity.gates (array/map @entity.gates (fn g
+          (let ((inside (and (== (object/get @g open) false)
+                             (and (>= @payload.x (- (object/get @g x) @config.reachMargin))
+                                  (and (<= @payload.x (+ (object/get @g x) (object/get @g width) @config.reachMargin))
+                                       (and (>= @payload.y (- (object/get @g y) @config.reachMargin))
+                                            (<= @payload.y (+ (object/get @g y) (object/get @g height) @config.reachMargin))))))))
+          (let ((dirOk (or (== (object/get @g dir) 0) (== (math/sign @payload.vx) (object/get @g dir)))))
+          (let ((pass (and @inside (and (>= @payload.speed (object/get @g minSpeed)) (and (<= @payload.speed (object/get @g maxSpeed)) @dirOk)))))
+          (let ((held (if @pass (+ (object/get @g held) 33) 0)))
+          (let ((openNow (or (object/get @g open) (if (> (object/get @g dwellMs) 0) (>= @held (object/get @g dwellMs)) @pass))))
+            (object/merge @g { touching: @inside, held: @held, open: @openNow, denied: (and (== (object/get @g dwellMs) 0) (and @inside (and (== @pass false) (== (object/get @g touching) false)))) })))))))))
+        (let ((newly (array/filter @entity.gates (fn g (and (== (object/get @g open) true) (== (object/get @g reported) false))))))
+        (if (> (array/len @newly) 0)
+          (do
+            (set @entity.gates (array/map @entity.gates (fn g (if (== (object/get @g id) (object/get (array/first @newly) id)) (object/merge @g { reported: true }) @g))))
+            (emit VELOCITY_GATE_OPENED { id: (object/get (array/first @newly) id), x: (object/get (array/first @newly) x), y: (object/get (array/first @newly) y) }))
+          null))
+        (let ((denied (array/filter @entity.gates (fn g (== (object/get @g denied) true)))))
+        (if (> (array/len @denied) 0)
+          (emit VELOCITY_GATE_DENIED { id: (object/get (array/first @denied) id), x: (object/get (array/first @denied) x), y: (object/get (array/first @denied) y), speed: @payload.speed })
+          null))
+
+      RESTART -> active
+        (set @entity.gates (array/map @config.gates (fn g (object/merge @g { open: false, touching: false, denied: false, held: 0, reported: false }))))
+    }
+
+    emits {
+      VELOCITY_GATE_OPENED -> external {
+        id : string!
+        x : number!
+        y : number!
+      }
+        @description "A gate's speed band was satisfied (instantly, or held for its dwell) and it flipped open; boards layer treasure fx and rewards. When several gates open on one move, the first reports and the shared entity carries the rest."
+        @tier "domain"
+      VELOCITY_GATE_DENIED -> external {
+        id : string!
+        x : number!
+        y : number!
+        speed : number!
+      }
+        @description "The player entered a closed gate outside its speed band or against its direction; fires once per approach and re-arms after they step out. Boards answer with a PLACE back plus a hint fx."
+        @tier "domain"
+    }
+
+    listens {
+      BODY_MOVED { x : number!, y : number!, vx : number!, vy : number!, grounded : boolean!, skating : boolean!, speed : number! }
+      RESTART { id : string }
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true, BODY_MOVED tests every gate's band and opens/denies; toggle to freeze every gate as-is."
+        @tier "domain"
+      gates : [VelocityGate] = []
+        @label "Gates"
+        @description "One row per velocity gate: id, min-corner rect (x, y, width, height in world units), the speed band [minSpeed, maxSpeed] that opens it, the hold required (dwellMs 0 = instant), the horizontal direction required (dir -1/0/+1), and an optional hint shown when denied. open/touching/denied/held/reported are stamped at runtime."
+        @tier "domain"
+      reachMargin : number = 0.6
+        @label "Reach Margin"
+        @description "Extra world units padded around a closed gate's rect when testing player contact (approximates the body's size)."
+        @tier "domain"
+    }
+  }
+
+  page "/velocity-gate" as VelocityGatePage -> VelocityGate
+}

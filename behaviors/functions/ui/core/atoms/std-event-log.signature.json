@@ -177,9 +177,39 @@
           {
             "name": "INIT",
             "direction": "listen"
+          },
+          {
+            "name": "REFETCH_QUERY",
+            "direction": "listen",
+            "description": "Triggers an activity feed refresh based on the current search term.",
+            "synonyms": "refresh, reload, update, re-query, search",
+            "tier": "domain"
+          },
+          {
+            "name": "REFETCH_FILTER",
+            "direction": "listen",
+            "description": "Triggers an activity feed refresh based on a field/value filter, in addition to the built-in kind tabs.",
+            "synonyms": "refresh, filter, update, reload",
+            "tier": "domain"
+          },
+          {
+            "name": "REFETCH_PAGE",
+            "direction": "listen",
+            "description": "Triggers an activity feed page refresh.",
+            "synonyms": "reload, refresh, update, paginate",
+            "tier": "domain"
           }
         ],
         "overridableConfigKeys": [
+          {
+            "key": "bodySearch",
+            "type": "boolean",
+            "default": false,
+            "label": "Show the log's own search box?",
+            "description": "Embeds a search box above the activity feed. Set true only when the page has no other search affordance (e.g. no page-level std-search), so the surface shows one search box instead of two. False is the default — no consumer of this atom has ever had a search box.",
+            "synonyms": "inline search, log search, built-in search, show search",
+            "tier": "presentation"
+          },
           {
             "key": "cardLook",
             "type": "string",
@@ -196,6 +226,63 @@
               "chip",
               "tile-image-first"
             ]
+          },
+          {
+            "key": "displayPageSize",
+            "type": "number",
+            "default": 20,
+            "label": "How many entries per page should a pager show?",
+            "description": "Page size a consumer-composed std-pagination control should use to compute total pages (e.g. from totalCount). This atom's own timeline pattern has no built-in pager UI, so this knob is informational for the composed control, not consumed by the timeline itself.",
+            "synonyms": "visible rows, items per page, display limit",
+            "tier": "presentation"
+          },
+          {
+            "key": "filterBarLook",
+            "type": "string",
+            "default": "toolbar",
+            "label": "Filter bar look",
+            "description": "Visual treatment for the embedded filter bar, mirroring std-filter's own enum. Only applies when `filters` is non-empty.",
+            "synonyms": "filter bar style, facet style, chips, pills",
+            "tier": "presentation",
+            "enumValues": [
+              "toolbar",
+              "chips",
+              "pills",
+              "popover-trigger",
+              "inline-column-header"
+            ]
+          },
+          {
+            "key": "filters",
+            "type": "[FilterSpec]",
+            "default": [],
+            "label": "Which filters should appear above the feed?",
+            "description": "Dropdown filter facets by field, rendered as an embedded filter bar above the timeline; each selection fires REFETCH_FILTER on this trait, ANDed with the current kind tab. Empty (the default) = no filter bar — the right setting whenever the page already composes std-filter beside this atom and routes XFilter.FILTER -> REFETCH_FILTER, or relies solely on the built-in kind-filter chips (driven by kindOptions, which this knob does not duplicate or replace). Use this knob only for an extra facet beyond kind (e.g. actor, priority).",
+            "synonyms": "filter bar, faceted filters, field filters, dropdowns",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "field": {
+                  "name": "field",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "options": {
+                  "name": "options",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "type": "object"
+            }
           },
           {
             "key": "formFields",
@@ -278,6 +365,24 @@
             }
           },
           {
+            "key": "pageSize",
+            "type": "number",
+            "default": 20,
+            "label": "How many entries per page when paging?",
+            "description": "Records fetched from the server per REFETCH_PAGE request. The initial load and every search/kind/filter refetch stay unpaginated (load everything that matches) so the default unlimited activity feed is unchanged; only an explicit REFETCH_PAGE from a composed std-pagination control applies this limit.",
+            "synonyms": "fetch limit, records per page, page limit",
+            "tier": "presentation"
+          },
+          {
+            "key": "searchPlaceholder",
+            "type": "string",
+            "default": "Search activity…",
+            "label": "Search box placeholder text",
+            "description": "Hint text inside the log's search box.",
+            "synonyms": "search hint, placeholder, search box text",
+            "tier": "presentation"
+          },
+          {
             "key": "timelineLook",
             "type": "string",
             "default": "vertical-spacious",
@@ -311,6 +416,9 @@
           "EventLogSaved",
           "INIT",
           "OPEN_BACKFILL",
+          "REFETCH_FILTER",
+          "REFETCH_PAGE",
+          "REFETCH_QUERY",
           "SAVE_BACKFILL"
         ],
         "entityRebindable": true,

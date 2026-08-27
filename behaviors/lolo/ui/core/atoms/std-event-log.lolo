@@ -2,6 +2,7 @@ app std-event-log "2.1.0"
 "std-event-log — generic chronological event feed (Stripe activity log / GitHub PR timeline / Linear event feed style). Renders a vertical `timeline` with type-coded dots, a single horizontal chip-bar of kind filters (All + per-kind), reverse-chronological sort, and an inline form for logging events that weren't auto-captured. `config.kindOptions` maps each kind → status/icon/label so consuming molecules/organisms get type-coded visuals without re-implementing topology. Topology = loading / viewing / backfilling / error."
 type ObjectSpec = { id : string, label : string, value : string }
 type KindOption = { label : string!, value : string! }
+type FilterSpec = { field : string!, label : string, options : [string] }
 orbital EventLogOrbital {
     type LogEntry = { id : string!, title : string!, description : string, date : string, status : "complete" | "active" | "pending" | "error", kind : "created" | "updated" | "approved" | "rejected" }
 
@@ -89,7 +90,37 @@ orbital EventLogOrbital {
             direction: horizontal
             gap: sm
             type: stack
-          }, {
+          }, (if @config.bodySearch {
+            children: [{
+              className: "w-full max-w-md"
+              clearable: true
+              event: REFETCH_QUERY
+              placeholder: @config.searchPlaceholder
+              type: search-input
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          } {
+            children: []
+            gap: none
+            type: stack
+          }), (if [">", (array/len @config.filters), 0] {
+            children: [{
+              entity: EventLogView
+              event: REFETCH_FILTER
+              filters: @config.filters
+              look: @config.filterBarLook
+              type: filter-group
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          } {
+            children: []
+            gap: none
+            type: stack
+          }), {
             activeTab: @entity.filterKind
             tabChangeEvent: APPLY_FILTER
             tabs: @entity.filterChips
@@ -155,7 +186,150 @@ orbital EventLogOrbital {
             direction: horizontal
             gap: sm
             type: stack
+          }, (if @config.bodySearch {
+            children: [{
+              className: "w-full max-w-md"
+              clearable: true
+              event: REFETCH_QUERY
+              placeholder: @config.searchPlaceholder
+              type: search-input
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          } {
+            children: []
+            gap: none
+            type: stack
+          }), (if [">", (array/len @config.filters), 0] {
+            children: [{
+              entity: EventLogView
+              event: REFETCH_FILTER
+              filters: @config.filters
+              look: @config.filterBarLook
+              type: filter-group
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          } {
+            children: []
+            gap: none
+            type: stack
+          }), {
+            activeTab: @entity.filterKind
+            tabChangeEvent: APPLY_FILTER
+            tabs: @entity.filterChips
+            type: tabs
           }, {
+            entity: @entity.entries
+            fields: (title description date status)
+            look: @config.timelineLook
+            type: timeline
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      ;; REFETCH_* stays in `viewing` and DOES NOT replace the timeline with a
+      ;; skeleton — same reasoning as std-browse's REFETCH_* arms: a skeleton
+      ;; on refetch unmounts the timeline and flickers every keystroke. The
+      ;; fetch fires in the background; the EventLogLoaded arm below re-renders
+      ;; in place once it lands. Each refetch also honours the current kind
+      ;; tab (@entity.filterKind) so search/generic-filter compound with it
+      ;; instead of resetting it.
+      REFETCH_QUERY -> viewing
+        (fetch EventLogView {
+          emit: { failure: EventLogLoadFailed, success: EventLogLoaded }
+          filter: (and (or ["=", @entity.filterKind, ""] ["=", (object/get @entity kind), @entity.filterKind]) (or ["=", ?searchTerm, ""] (str/includes (object/get @entity title) ?searchTerm)))
+        })
+      REFETCH_FILTER -> viewing
+        (fetch EventLogView {
+          emit: { failure: EventLogLoadFailed, success: EventLogLoaded }
+          filter: (and (or ["=", @entity.filterKind, ""] ["=", (object/get @entity kind), @entity.filterKind]) (or ["=", ?value, ""] ["=", (object/get @entity ?field), ?value]))
+        })
+      ;; No filter carried over on REFETCH_PAGE, mirroring std-browse exactly —
+      ;; the reference page arm does not preserve query/filter either.
+      REFETCH_PAGE -> viewing
+        (fetch EventLogView {
+          emit: { failure: EventLogLoadFailed, success: EventLogLoaded }
+          limit: @config.pageSize
+          offset: ["*", ["-", ?page, 1], @config.pageSize]
+        })
+      EventLogLoaded -> viewing
+        (set @entity.filterChips (array/prepend (array/map @config.kindOptions (fn k {
+          icon: (object/get @k icon circle)
+          id: (object/get @k key)
+          label: (object/get @k label)
+        })) {
+          icon: list
+          id: ""
+          label: All
+        }))
+        (set @entity.allEntries (array/sort (array/map ?data (fn row {
+          date: (object/get @row createdAt (object/get @row date ""))
+          description: (object/get @row description "")
+          id: (object/get @row id "")
+          kind: (object/get @row kind "")
+          status: (object/get (or (array/find @config.kindOptions (fn k ["=", (object/get @k key), (object/get @row kind "")])) {}) status pending)
+          title: (object/get @row title "")
+        })) date desc))
+        (set @entity.entries (array/sort (array/map ?data (fn row {
+          date: (object/get @row createdAt (object/get @row date ""))
+          description: (object/get @row description "")
+          id: (object/get @row id "")
+          kind: (object/get @row kind "")
+          status: (object/get (or (array/find @config.kindOptions (fn k ["=", (object/get @k key), (object/get @row kind "")])) {}) status pending)
+          title: (object/get @row title "")
+        })) date desc))
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: history, type: icon }, {
+              content: @config.title
+              type: typography
+              variant: h3
+            }, {
+              action: OPEN_BACKFILL
+              icon: plus
+              label: "Log event"
+              type: button
+              variant: primary
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, (if @config.bodySearch {
+            children: [{
+              className: "w-full max-w-md"
+              clearable: true
+              event: REFETCH_QUERY
+              placeholder: @config.searchPlaceholder
+              type: search-input
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          } {
+            children: []
+            gap: none
+            type: stack
+          }), (if [">", (array/len @config.filters), 0] {
+            children: [{
+              entity: EventLogView
+              event: REFETCH_FILTER
+              filters: @config.filters
+              look: @config.filterBarLook
+              type: filter-group
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          } {
+            children: []
+            gap: none
+            type: stack
+          }), {
             activeTab: @entity.filterKind
             tabChangeEvent: APPLY_FILTER
             tabs: @entity.filterChips
@@ -237,7 +411,37 @@ orbital EventLogOrbital {
             direction: horizontal
             gap: sm
             type: stack
-          }, {
+          }, (if @config.bodySearch {
+            children: [{
+              className: "w-full max-w-md"
+              clearable: true
+              event: REFETCH_QUERY
+              placeholder: @config.searchPlaceholder
+              type: search-input
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          } {
+            children: []
+            gap: none
+            type: stack
+          }), (if [">", (array/len @config.filters), 0] {
+            children: [{
+              entity: EventLogView
+              event: REFETCH_FILTER
+              filters: @config.filters
+              look: @config.filterBarLook
+              type: filter-group
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          } {
+            children: []
+            gap: none
+            type: stack
+          }), {
             activeTab: @entity.filterKind
             tabChangeEvent: APPLY_FILTER
             tabs: @entity.filterChips
@@ -354,6 +558,25 @@ orbital EventLogOrbital {
         @description "Indicates an attempt to save an event failed."
         @synonyms "error, failure, save failed"
         @tier "internal"
+      REFETCH_QUERY {
+        searchTerm : string!
+      }
+        @description "Triggers an activity feed refresh based on the current search term."
+        @synonyms "refresh, reload, update, re-query, search"
+        @tier "domain"
+      REFETCH_FILTER {
+        field : string!
+        value : string!
+      }
+        @description "Triggers an activity feed refresh based on a field/value filter, in addition to the built-in kind tabs."
+        @synonyms "refresh, filter, update, reload"
+        @tier "domain"
+      REFETCH_PAGE {
+        page : number!
+      }
+        @description "Triggers an activity feed page refresh."
+        @synonyms "reload, refresh, update, paginate"
+        @tier "domain"
     }
 
     config {
@@ -396,6 +619,36 @@ orbital EventLogOrbital {
       timelineLook : "vertical-compact" | "vertical-spacious" | "horizontal" | "swimlane" = vertical-spacious
         @label "Timeline look"
         @description "Layer 2 visual treatment for the timeline."
+        @tier "presentation"
+      bodySearch : boolean = false
+        @label "Show the log's own search box?"
+        @description "Embeds a search box above the activity feed. Set true only when the page has no other search affordance (e.g. no page-level std-search), so the surface shows one search box instead of two. False is the default — no consumer of this atom has ever had a search box."
+        @synonyms "inline search, log search, built-in search, show search"
+        @tier "presentation"
+      searchPlaceholder : string = "Search activity…"
+        @label "Search box placeholder text"
+        @description "Hint text inside the log's search box."
+        @synonyms "search hint, placeholder, search box text"
+        @tier "presentation"
+      filters : [FilterSpec] = []
+        @label "Which filters should appear above the feed?"
+        @description "Dropdown filter facets by field, rendered as an embedded filter bar above the timeline; each selection fires REFETCH_FILTER on this trait, ANDed with the current kind tab. Empty (the default) = no filter bar — the right setting whenever the page already composes std-filter beside this atom and routes XFilter.FILTER -> REFETCH_FILTER, or relies solely on the built-in kind-filter chips (driven by kindOptions, which this knob does not duplicate or replace). Use this knob only for an extra facet beyond kind (e.g. actor, priority)."
+        @synonyms "filter bar, faceted filters, field filters, dropdowns"
+        @tier "presentation"
+      filterBarLook : "toolbar" | "chips" | "pills" | "popover-trigger" | "inline-column-header" = toolbar
+        @label "Filter bar look"
+        @description "Visual treatment for the embedded filter bar, mirroring std-filter's own enum. Only applies when `filters` is non-empty."
+        @synonyms "filter bar style, facet style, chips, pills"
+        @tier "presentation"
+      pageSize : number = 20
+        @label "How many entries per page when paging?"
+        @description "Records fetched from the server per REFETCH_PAGE request. The initial load and every search/kind/filter refetch stay unpaginated (load everything that matches) so the default unlimited activity feed is unchanged; only an explicit REFETCH_PAGE from a composed std-pagination control applies this limit."
+        @synonyms "fetch limit, records per page, page limit"
+        @tier "presentation"
+      displayPageSize : number = 20
+        @label "How many entries per page should a pager show?"
+        @description "Page size a consumer-composed std-pagination control should use to compute total pages (e.g. from totalCount). This atom's own timeline pattern has no built-in pager UI, so this knob is informational for the composed control, not consumed by the timeline itself."
+        @synonyms "visible rows, items per page, display limit"
         @tier "presentation"
     }
   }

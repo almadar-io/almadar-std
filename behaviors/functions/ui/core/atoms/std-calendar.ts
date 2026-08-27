@@ -30,7 +30,7 @@ const ALIAS = 'Calendar';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdCalendarEventKey = '' | 'CALENDAR_NEXT_WEEK' | 'CALENDAR_PREV_WEEK' | 'CalendarEventLoadFailed' | 'CalendarEventLoaded' | 'INIT' | 'RETRY' | 'SELECT_DAY' | 'SELECT_SLOT';
+export type StdCalendarEventKey = '' | 'CALENDAR_NEXT_WEEK' | 'CALENDAR_PREV_WEEK' | 'CalendarEventLoadFailed' | 'CalendarEventLoaded' | 'INIT' | 'REFETCH_FILTER' | 'REFETCH_QUERY' | 'RETRY' | 'SELECT_DAY' | 'SELECT_SLOT';
 
 /**
  * Payload shape for the `CalendarEventLoaded` event.
@@ -65,18 +65,26 @@ export interface StdCalendarConfig {
   agendaGroupBy?: string;
   /** Default: `[{"event":"SELECT_DAY","icon":"eye","label":"View"}]` */
   agendaItemActions?: EntityRow[];
-  /** Default: `{"children":[{"align":"center","children":[{"align":"center","children":[{"name":"list","type":"icon"},{"content":"Agenda","type":"typography","variant":"h2"}],"direction":"horizontal","gap":"sm","type":"stack"},{"onSelect":"SELECT_DAY","selected":"@entity.selectedRange","type":"date-range-selector"}],"direction":"horizontal","gap":"md","justify":"between","type":"stack"},{"type":"divider"},{"entity":"@payload.data","fields":[],"gap":"md","groupBy":"@config.agendaGroupBy","itemActions":"@config.agendaItemActions","renderItem":["fn","item",{"children":[{"align":"start","children":[{"align":"center","children":[{"color":"muted","content":"@config.timeBinding","format":"time","type":"typography","variant":"overline"},{"color":"muted","name":"clock","size":"sm","type":"icon"}],"className":"w-16 shrink-0","direction":"vertical","gap":"xs","type":"stack"},{"orientation":"vertical","type":"divider"},{"children":[{"align":"center","children":[{"className":"truncate","content":"@config.titleBinding","type":"typography","variant":"h4","weight":"medium"},{"label":"@config.badgeBinding","size":"sm","type":"badge","variant":"default"}],"direction":"horizontal","gap":"sm","justify":"between","type":"stack"},{"className":"truncate","color":"muted","content":"@config.descriptionBinding","type":"typography","variant":"body2"}],"className":"flex-1 min-w-0","direction":"vertical","gap":"xs","type":"stack"}],"direction":"horizontal","gap":"md","type":"stack"}],"look":"flat-bordered","padding":"md","type":"card"}],"type":"data-list","variant":"default"}],"className":"w-full p-card-md","direction":"vertical","gap":"lg","type":"stack"}` */
+  /** Default: `{"children":[{"align":"center","children":[{"align":"center","children":[{"name":"list","type":"icon"},{"content":"Agenda","type":"typography","variant":"h2"}],"direction":"horizontal","gap":"sm","type":"stack"},{"onSelect":"SELECT_DAY","selected":"@entity.selectedRange","type":"date-range-selector"}],"direction":"horizontal","gap":"md","justify":"between","type":"stack"},["if","@config.bodySearch",{"children":[{"className":"w-full max-w-md","clearable":true,"event":"REFETCH_QUERY","placeholder":"@config.searchPlaceholder","type":"search-input"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if",[">",["array/len","@config.filters"],0],{"children":[{"entity":"CalendarEvent","event":"REFETCH_FILTER","filters":"@config.filters","look":"@config.filterBarLook","type":"filter-group"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],{"type":"divider"},{"entity":"@payload.data","fields":[],"gap":"md","groupBy":"@config.agendaGroupBy","itemActions":"@config.agendaItemActions","renderItem":["fn","item",{"children":[{"align":"start","children":[{"align":"center","children":[{"color":"muted","content":"@config.timeBinding","format":"time","type":"typography","variant":"overline"},{"color":"muted","name":"clock","size":"sm","type":"icon"}],"className":"w-16 shrink-0","direction":"vertical","gap":"xs","type":"stack"},{"orientation":"vertical","type":"divider"},{"children":[{"align":"center","children":[{"className":"truncate","content":"@config.titleBinding","type":"typography","variant":"h4","weight":"medium"},{"label":"@config.badgeBinding","size":"sm","type":"badge","variant":"default"}],"direction":"horizontal","gap":"sm","justify":"between","type":"stack"},{"className":"truncate","color":"muted","content":"@config.descriptionBinding","type":"typography","variant":"body2"}],"className":"flex-1 min-w-0","direction":"vertical","gap":"xs","type":"stack"}],"direction":"horizontal","gap":"md","type":"stack"}],"look":"flat-bordered","padding":"md","type":"card"}],"type":"data-list","variant":"default"}],"className":"w-full p-card-md","direction":"vertical","gap":"lg","type":"stack"}` */
   agendaListBodyContent?: unknown;
   /** Default: `"@item.status"` */
   badgeBinding?: string;
-  /** Default: `{"children":[{"align":"center","children":[{"align":"center","children":[{"name":"calendar","type":"icon"},{"content":"@config.title","type":"typography","variant":"h2"}],"direction":"horizontal","gap":"sm","type":"stack"},{"onSelect":"SELECT_DAY","selected":"@entity.selectedRange","type":"date-range-selector"}],"direction":"horizontal","gap":"md","justify":"between","type":"stack"},{"type":"divider"},{"events":"@payload.data","onEventClick":"@config.onEventClick","renderItem":["fn","item",{"content":"@config.titleBinding","type":"typography","variant":"small"}],"startField":"@config.startField","type":"calendar-grid"},{"type":"divider"},{"content":"Upcoming Events","type":"typography","variant":"h4"},{"entity":"@payload.data","fields":[{"icon":"calendar","label":"Event","name":"name","variant":"h4"},{"label":"Time","name":"time","variant":"badge"},{"format":"date","label":"Date","name":"date","variant":"caption"},{"label":"Status","name":"status","variant":"badge"}],"itemActions":[{"event":"SELECT_DAY","icon":"eye","label":"View"}],"look":"@config.tableLook","type":"data-list"}],"direction":"vertical","gap":"lg","type":"stack"}` */
+  /** Default: `{"children":[{"align":"center","children":[{"align":"center","children":[{"name":"calendar","type":"icon"},{"content":"@config.title","type":"typography","variant":"h2"}],"direction":"horizontal","gap":"sm","type":"stack"},{"onSelect":"SELECT_DAY","selected":"@entity.selectedRange","type":"date-range-selector"}],"direction":"horizontal","gap":"md","justify":"between","type":"stack"},["if","@config.bodySearch",{"children":[{"className":"w-full max-w-md","clearable":true,"event":"REFETCH_QUERY","placeholder":"@config.searchPlaceholder","type":"search-input"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if",[">",["array/len","@config.filters"],0],{"children":[{"entity":"CalendarEvent","event":"REFETCH_FILTER","filters":"@config.filters","look":"@config.filterBarLook","type":"filter-group"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],{"type":"divider"},{"events":"@payload.data","onEventClick":"@config.onEventClick","renderItem":["fn","item",{"content":"@config.titleBinding","type":"typography","variant":"small"}],"startField":"@config.startField","type":"calendar-grid"},{"type":"divider"},{"content":"Upcoming Events","type":"typography","variant":"h4"},{"entity":"@payload.data","fields":[{"icon":"calendar","label":"Event","name":"name","variant":"h4"},{"label":"Time","name":"time","variant":"badge"},{"format":"date","label":"Date","name":"date","variant":"caption"},{"label":"Status","name":"status","variant":"badge"}],"itemActions":[{"event":"SELECT_DAY","icon":"eye","label":"View"}],"look":"@config.tableLook","type":"data-list"}],"direction":"vertical","gap":"lg","type":"stack"}` */
   bodyContent?: unknown;
+  /** Default: `false` */
+  bodySearch?: boolean;
   /** Default: `"month"` */
   calendarLook?: 'month' | 'agenda-list' | 'week-timeline';
   /** Default: `"@item.description"` */
   descriptionBinding?: string;
+  /** Default: `"toolbar"` */
+  filterBarLook?: 'toolbar' | 'chips' | 'pills' | 'popover-trigger' | 'inline-column-header';
+  /** Default: `[]` */
+  filters?: EntityRow[];
   /** Default: `""` */
   onEventClick?: string;
+  /** Default: `"Search…"` */
+  searchPlaceholder?: string;
   /** Default: `"date"` */
   startField?: string;
   /** Default: `"dense"` */
@@ -87,7 +95,7 @@ export interface StdCalendarConfig {
   title?: string;
   /** Default: `"@item.name"` */
   titleBinding?: string;
-  /** Default: `{"children":[{"align":"center","children":[{"align":"center","children":[{"name":"calendar","type":"icon"},{"content":"Week","type":"typography","variant":"h2"}],"direction":"horizontal","gap":"sm","type":"stack"},{"align":"center","children":[{"action":"CALENDAR_PREV_WEEK","icon":"chevron-left","label":"Previous week","type":"button","variant":"ghost"},{"color":"muted","content":["time/format","@entity.weekAnchor","MMM D, YYYY"],"type":"typography","variant":"caption"},{"action":"CALENDAR_NEXT_WEEK","icon":"chevron-right","label":"Next week","type":"button","variant":"ghost"}],"direction":"horizontal","gap":"xs","type":"stack"},{"onSelect":"SELECT_DAY","selected":"@entity.selectedRange","type":"date-range-selector"}],"direction":"horizontal","gap":"md","justify":"between","type":"stack"},{"type":"divider"},{"className":"w-full","dayWindow":7,"events":"@payload.data","onEventClick":"@config.onEventClick","renderItem":["fn","item",{"content":"@config.titleBinding","type":"typography","variant":"small"}],"startField":"@config.startField","swipeLeftEvent":"CALENDAR_NEXT_WEEK","swipeRightEvent":"CALENDAR_PREV_WEEK","type":"calendar-grid","weekStart":"@entity.weekAnchor"}],"direction":"vertical","gap":"md","type":"stack"}` */
+  /** Default: `{"children":[{"align":"center","children":[{"align":"center","children":[{"name":"calendar","type":"icon"},{"content":"Week","type":"typography","variant":"h2"}],"direction":"horizontal","gap":"sm","type":"stack"},{"align":"center","children":[{"action":"CALENDAR_PREV_WEEK","icon":"chevron-left","label":"Previous week","type":"button","variant":"ghost"},{"color":"muted","content":["time/format","@entity.weekAnchor","MMM D, YYYY"],"type":"typography","variant":"caption"},{"action":"CALENDAR_NEXT_WEEK","icon":"chevron-right","label":"Next week","type":"button","variant":"ghost"}],"direction":"horizontal","gap":"xs","type":"stack"},{"onSelect":"SELECT_DAY","selected":"@entity.selectedRange","type":"date-range-selector"}],"direction":"horizontal","gap":"md","justify":"between","type":"stack"},["if","@config.bodySearch",{"children":[{"className":"w-full max-w-md","clearable":true,"event":"REFETCH_QUERY","placeholder":"@config.searchPlaceholder","type":"search-input"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if",[">",["array/len","@config.filters"],0],{"children":[{"entity":"CalendarEvent","event":"REFETCH_FILTER","filters":"@config.filters","look":"@config.filterBarLook","type":"filter-group"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],{"type":"divider"},{"className":"w-full","dayWindow":7,"events":"@payload.data","onEventClick":"@config.onEventClick","renderItem":["fn","item",{"content":"@config.titleBinding","type":"typography","variant":"small"}],"startField":"@config.startField","swipeLeftEvent":"CALENDAR_NEXT_WEEK","swipeRightEvent":"CALENDAR_PREV_WEEK","type":"calendar-grid","weekStart":"@entity.weekAnchor"}],"direction":"vertical","gap":"md","type":"stack"}` */
   weekTimelineBodyContent?: unknown;
 }
 
@@ -384,6 +392,59 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                   'justify': 'between',
                   'type': 'stack',
                 },
+                [
+                  'if',
+                  '@config.bodySearch',
+                  {
+                    'children': [
+                      {
+                        'className': 'w-full max-w-md',
+                        'clearable': true,
+                        'event': 'REFETCH_QUERY',
+                        'placeholder': '@config.searchPlaceholder',
+                        'type': 'search-input',
+                      },
+                    ],
+                    'direction': 'horizontal',
+                    'gap': 'sm',
+                    'type': 'stack',
+                  },
+                  {
+                    'children': [],
+                    'gap': 'none',
+                    'type': 'stack',
+                  },
+                ],
+                [
+                  'if',
+                  [
+                    '>',
+                    [
+                      'array/len',
+                      '@config.filters',
+                    ],
+                    0,
+                  ],
+                  {
+                    'children': [
+                      {
+                        'entity': 'CalendarEvent',
+                        'event': 'REFETCH_FILTER',
+                        'filters': '@config.filters',
+                        'look': '@config.filterBarLook',
+                        'type': 'filter-group',
+                      },
+                    ],
+                    'direction': 'horizontal',
+                    'gap': 'sm',
+                    'type': 'stack',
+                  },
+                  {
+                    'children': [],
+                    'gap': 'none',
+                    'type': 'stack',
+                  },
+                ],
                 {
                   'type': 'divider',
                 },
@@ -530,6 +591,59 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                   'justify': 'between',
                   'type': 'stack',
                 },
+                [
+                  'if',
+                  '@config.bodySearch',
+                  {
+                    'children': [
+                      {
+                        'className': 'w-full max-w-md',
+                        'clearable': true,
+                        'event': 'REFETCH_QUERY',
+                        'placeholder': '@config.searchPlaceholder',
+                        'type': 'search-input',
+                      },
+                    ],
+                    'direction': 'horizontal',
+                    'gap': 'sm',
+                    'type': 'stack',
+                  },
+                  {
+                    'children': [],
+                    'gap': 'none',
+                    'type': 'stack',
+                  },
+                ],
+                [
+                  'if',
+                  [
+                    '>',
+                    [
+                      'array/len',
+                      '@config.filters',
+                    ],
+                    0,
+                  ],
+                  {
+                    'children': [
+                      {
+                        'entity': 'CalendarEvent',
+                        'event': 'REFETCH_FILTER',
+                        'filters': '@config.filters',
+                        'look': '@config.filterBarLook',
+                        'type': 'filter-group',
+                      },
+                    ],
+                    'direction': 'horizontal',
+                    'gap': 'sm',
+                    'type': 'stack',
+                  },
+                  {
+                    'children': [],
+                    'gap': 'none',
+                    'type': 'stack',
+                  },
+                ],
                 {
                   'type': 'divider',
                 },
@@ -602,6 +716,14 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
             'tier': 'internal',
             'type': 'render-ui',
           },
+          'bodySearch': {
+            'default': false,
+            'description': 'Embeds a title search box in the toolbar above the calendar body (all three calendarLook trees). Defaults false: std-calendar has never had a search box, so an untouched consumer\'s surface is unchanged; the primary path is composing std-search beside this atom and wiring XSearch.SEARCH -> REFETCH_QUERY. Set true only for a standalone calendar with no page-level search affordance.',
+            'label': 'Show the calendar\'s own search box?',
+            'synonyms': 'inline search, calendar search, built-in search, show search, duplicate search',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
           'calendarLook': {
             'default': 'month',
             'description': 'Layer 3 body layout: default month-grid + upcoming-events list (\'month\'), day-grouped agenda list (\'agenda-list\'), or 7-column week timeline (\'week-timeline\').',
@@ -621,11 +743,65 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
             'tier': 'presentation',
             'type': 'string',
           },
+          'filterBarLook': {
+            'default': 'toolbar',
+            'description': 'Visual treatment for the embedded filter bar, mirroring std-filter\'s own enum. Only applies when `filters` is non-empty.',
+            'label': 'Filter bar look',
+            'synonyms': 'filter bar style, facet style, chips, pills',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'toolbar',
+              'chips',
+              'pills',
+              'popover-trigger',
+              'inline-column-header',
+            ],
+          },
+          'filters': {
+            'default': [],
+            'description': 'Dropdown filter facets by field, rendered as an embedded filter bar above the calendar body (all three calendarLook trees); each selection fires REFETCH_FILTER on this trait. Empty (the default) = no filter bar, which is the right setting whenever the page already composes std-filter beside this calendar and routes XFilter.FILTER -> REFETCH_FILTER — that is the wired owner and remains the primary path. Use this knob only for a standalone calendar with no page-level filter affordance.',
+            'items': {
+              'properties': {
+                'field': {
+                  'name': 'field',
+                  'required': true,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': false,
+                  'type': 'string',
+                },
+                'options': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'options',
+                  'required': false,
+                  'type': 'array',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Which filters should appear above the calendar?',
+            'synonyms': 'filter bar, faceted filters, field filters, dropdowns',
+            'tier': 'presentation',
+            'type': '[FilterSpec]',
+          },
           'onEventClick': {
             'default': '',
             'description': 'Event emitted when a calendar chip is clicked: UI:{onEventClick} with { event } carrying the clicked row. Empty means chips are not clickable.',
             'label': 'On Event Click',
             'synonyms': 'open event, event click, select event, chip click',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'searchPlaceholder': {
+            'default': 'Search…',
+            'description': 'Hint text inside the calendar\'s search box (e.g. \'Search events…\').',
+            'label': 'Search box placeholder text',
+            'synonyms': 'search hint, placeholder, search box text, search label',
             'tier': 'presentation',
             'type': 'string',
           },
@@ -738,6 +914,59 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                   'justify': 'between',
                   'type': 'stack',
                 },
+                [
+                  'if',
+                  '@config.bodySearch',
+                  {
+                    'children': [
+                      {
+                        'className': 'w-full max-w-md',
+                        'clearable': true,
+                        'event': 'REFETCH_QUERY',
+                        'placeholder': '@config.searchPlaceholder',
+                        'type': 'search-input',
+                      },
+                    ],
+                    'direction': 'horizontal',
+                    'gap': 'sm',
+                    'type': 'stack',
+                  },
+                  {
+                    'children': [],
+                    'gap': 'none',
+                    'type': 'stack',
+                  },
+                ],
+                [
+                  'if',
+                  [
+                    '>',
+                    [
+                      'array/len',
+                      '@config.filters',
+                    ],
+                    0,
+                  ],
+                  {
+                    'children': [
+                      {
+                        'entity': 'CalendarEvent',
+                        'event': 'REFETCH_FILTER',
+                        'filters': '@config.filters',
+                        'look': '@config.filterBarLook',
+                        'type': 'filter-group',
+                      },
+                    ],
+                    'direction': 'horizontal',
+                    'gap': 'sm',
+                    'type': 'stack',
+                  },
+                  {
+                    'children': [],
+                    'gap': 'none',
+                    'type': 'stack',
+                  },
+                ],
                 {
                   'type': 'divider',
                 },
@@ -889,6 +1118,39 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
               'key': 'CALENDAR_NEXT_WEEK',
               'name': 'Calendar Next Week',
               'synonyms': 'next week, forward a week, later week, following week',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Triggers a data refresh based on the current query.',
+              'key': 'REFETCH_QUERY',
+              'name': 'Refetch Query',
+              'payloadSchema': [
+                {
+                  'name': 'searchTerm',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'refresh, reload, update, re-query',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Triggers a data refresh based on current filter criteria.',
+              'key': 'REFETCH_FILTER',
+              'name': 'Refetch Filter',
+              'payloadSchema': [
+                {
+                  'name': 'field',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'value',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'refresh, filter, update, reload',
               'tier': 'domain',
             },
             {
@@ -1226,6 +1488,74 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                 ],
               ],
               'event': 'CALENDAR_NEXT_WEEK',
+              'from': 'month-view',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('CalendarEvent' satisfies _StdCalendarEntityName),
+                  {
+                    'emit': {
+                      'failure': 'CalendarEventLoadFailed',
+                      'success': 'CalendarEventLoaded',
+                    },
+                    'filter': [
+                      'or',
+                      [
+                        '=',
+                        '@payload.searchTerm',
+                        '',
+                      ],
+                      [
+                        'str/includes',
+                        [
+                          'object/get',
+                          '@entity',
+                          'name',
+                        ],
+                        '@payload.searchTerm',
+                      ],
+                    ],
+                  },
+                ],
+              ],
+              'event': 'REFETCH_QUERY',
+              'from': 'month-view',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('CalendarEvent' satisfies _StdCalendarEntityName),
+                  {
+                    'emit': {
+                      'failure': 'CalendarEventLoadFailed',
+                      'success': 'CalendarEventLoaded',
+                    },
+                    'filter': [
+                      'or',
+                      [
+                        '=',
+                        '@payload.value',
+                        '',
+                      ],
+                      [
+                        '=',
+                        [
+                          'object/get',
+                          '@entity',
+                          '@payload.field',
+                        ],
+                        '@payload.value',
+                      ],
+                    ],
+                  },
+                ],
+              ],
+              'event': 'REFETCH_FILTER',
               'from': 'month-view',
               'to': 'loading',
             },

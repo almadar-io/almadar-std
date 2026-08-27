@@ -120,6 +120,20 @@
             "tier": "domain"
           },
           {
+            "name": "REFETCH_QUERY",
+            "direction": "listen",
+            "description": "Triggers a data refresh based on the current query.",
+            "synonyms": "refresh, reload, update, re-query",
+            "tier": "domain"
+          },
+          {
+            "name": "REFETCH_FILTER",
+            "direction": "listen",
+            "description": "Triggers a data refresh based on current filter criteria.",
+            "synonyms": "refresh, filter, update, reload",
+            "tier": "domain"
+          },
+          {
             "name": "RETRY",
             "direction": "listen"
           },
@@ -228,6 +242,59 @@
                   "justify": "between",
                   "type": "stack"
                 },
+                [
+                  "if",
+                  "@config.bodySearch",
+                  {
+                    "children": [
+                      {
+                        "className": "w-full max-w-md",
+                        "clearable": true,
+                        "event": "REFETCH_QUERY",
+                        "placeholder": "@config.searchPlaceholder",
+                        "type": "search-input"
+                      }
+                    ],
+                    "direction": "horizontal",
+                    "gap": "sm",
+                    "type": "stack"
+                  },
+                  {
+                    "children": [],
+                    "gap": "none",
+                    "type": "stack"
+                  }
+                ],
+                [
+                  "if",
+                  [
+                    ">",
+                    [
+                      "array/len",
+                      "@config.filters"
+                    ],
+                    0
+                  ],
+                  {
+                    "children": [
+                      {
+                        "entity": "CalendarEvent",
+                        "event": "REFETCH_FILTER",
+                        "filters": "@config.filters",
+                        "look": "@config.filterBarLook",
+                        "type": "filter-group"
+                      }
+                    ],
+                    "direction": "horizontal",
+                    "gap": "sm",
+                    "type": "stack"
+                  },
+                  {
+                    "children": [],
+                    "gap": "none",
+                    "type": "stack"
+                  }
+                ],
                 {
                   "type": "divider"
                 },
@@ -376,6 +443,59 @@
                   "justify": "between",
                   "type": "stack"
                 },
+                [
+                  "if",
+                  "@config.bodySearch",
+                  {
+                    "children": [
+                      {
+                        "className": "w-full max-w-md",
+                        "clearable": true,
+                        "event": "REFETCH_QUERY",
+                        "placeholder": "@config.searchPlaceholder",
+                        "type": "search-input"
+                      }
+                    ],
+                    "direction": "horizontal",
+                    "gap": "sm",
+                    "type": "stack"
+                  },
+                  {
+                    "children": [],
+                    "gap": "none",
+                    "type": "stack"
+                  }
+                ],
+                [
+                  "if",
+                  [
+                    ">",
+                    [
+                      "array/len",
+                      "@config.filters"
+                    ],
+                    0
+                  ],
+                  {
+                    "children": [
+                      {
+                        "entity": "CalendarEvent",
+                        "event": "REFETCH_FILTER",
+                        "filters": "@config.filters",
+                        "look": "@config.filterBarLook",
+                        "type": "filter-group"
+                      }
+                    ],
+                    "direction": "horizontal",
+                    "gap": "sm",
+                    "type": "stack"
+                  },
+                  {
+                    "children": [],
+                    "gap": "none",
+                    "type": "stack"
+                  }
+                ],
                 {
                   "type": "divider"
                 },
@@ -448,6 +568,15 @@
             "tier": "internal"
           },
           {
+            "key": "bodySearch",
+            "type": "boolean",
+            "default": false,
+            "label": "Show the calendar's own search box?",
+            "description": "Embeds a title search box in the toolbar above the calendar body (all three calendarLook trees). Defaults false: std-calendar has never had a search box, so an untouched consumer's surface is unchanged; the primary path is composing std-search beside this atom and wiring XSearch.SEARCH -> REFETCH_QUERY. Set true only for a standalone calendar with no page-level search affordance.",
+            "synonyms": "inline search, calendar search, built-in search, show search, duplicate search",
+            "tier": "presentation"
+          },
+          {
             "key": "calendarLook",
             "type": "string",
             "default": "month",
@@ -469,12 +598,69 @@
             "tier": "presentation"
           },
           {
+            "key": "filterBarLook",
+            "type": "string",
+            "default": "toolbar",
+            "label": "Filter bar look",
+            "description": "Visual treatment for the embedded filter bar, mirroring std-filter's own enum. Only applies when `filters` is non-empty.",
+            "synonyms": "filter bar style, facet style, chips, pills",
+            "tier": "presentation",
+            "enumValues": [
+              "toolbar",
+              "chips",
+              "pills",
+              "popover-trigger",
+              "inline-column-header"
+            ]
+          },
+          {
+            "key": "filters",
+            "type": "[FilterSpec]",
+            "default": [],
+            "label": "Which filters should appear above the calendar?",
+            "description": "Dropdown filter facets by field, rendered as an embedded filter bar above the calendar body (all three calendarLook trees); each selection fires REFETCH_FILTER on this trait. Empty (the default) = no filter bar, which is the right setting whenever the page already composes std-filter beside this calendar and routes XFilter.FILTER -> REFETCH_FILTER — that is the wired owner and remains the primary path. Use this knob only for a standalone calendar with no page-level filter affordance.",
+            "synonyms": "filter bar, faceted filters, field filters, dropdowns",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "field": {
+                  "name": "field",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "options": {
+                  "name": "options",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
             "key": "onEventClick",
             "type": "string",
             "default": "",
             "label": "On Event Click",
             "description": "Event emitted when a calendar chip is clicked: UI:{onEventClick} with { event } carrying the clicked row. Empty means chips are not clickable.",
             "synonyms": "open event, event click, select event, chip click",
+            "tier": "presentation"
+          },
+          {
+            "key": "searchPlaceholder",
+            "type": "string",
+            "default": "Search…",
+            "label": "Search box placeholder text",
+            "description": "Hint text inside the calendar's search box (e.g. 'Search events…').",
+            "synonyms": "search hint, placeholder, search box text, search label",
             "tier": "presentation"
           },
           {
@@ -593,6 +779,59 @@
                   "justify": "between",
                   "type": "stack"
                 },
+                [
+                  "if",
+                  "@config.bodySearch",
+                  {
+                    "children": [
+                      {
+                        "className": "w-full max-w-md",
+                        "clearable": true,
+                        "event": "REFETCH_QUERY",
+                        "placeholder": "@config.searchPlaceholder",
+                        "type": "search-input"
+                      }
+                    ],
+                    "direction": "horizontal",
+                    "gap": "sm",
+                    "type": "stack"
+                  },
+                  {
+                    "children": [],
+                    "gap": "none",
+                    "type": "stack"
+                  }
+                ],
+                [
+                  "if",
+                  [
+                    ">",
+                    [
+                      "array/len",
+                      "@config.filters"
+                    ],
+                    0
+                  ],
+                  {
+                    "children": [
+                      {
+                        "entity": "CalendarEvent",
+                        "event": "REFETCH_FILTER",
+                        "filters": "@config.filters",
+                        "look": "@config.filterBarLook",
+                        "type": "filter-group"
+                      }
+                    ],
+                    "direction": "horizontal",
+                    "gap": "sm",
+                    "type": "stack"
+                  },
+                  {
+                    "children": [],
+                    "gap": "none",
+                    "type": "stack"
+                  }
+                ],
                 {
                   "type": "divider"
                 },
@@ -634,6 +873,8 @@
           "CalendarEventLoadFailed",
           "CalendarEventLoaded",
           "INIT",
+          "REFETCH_FILTER",
+          "REFETCH_QUERY",
           "RETRY",
           "SELECT_DAY"
         ],

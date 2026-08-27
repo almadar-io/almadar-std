@@ -1,5 +1,6 @@
 app std-selection "1.0.0"
 "std-selection as a Function"
+type FilterSpec = { field : string!, label : string, options : [string] }
 orbital SelectableItemOrbital {
     type SelectableItemLoaded = Event { data : [SelectableItem] } "Fired when SelectableItem finishes loading; payload.data holds the list"
 
@@ -46,7 +47,37 @@ orbital SelectableItemOrbital {
             direction: horizontal
             gap: sm
             type: stack
-          }, { type: divider }, {
+          }, (if @config.bodySearch {
+            children: [{
+              className: "w-full max-w-md"
+              clearable: true
+              event: REFETCH_QUERY
+              placeholder: @config.searchPlaceholder
+              type: search-input
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          } {
+            children: []
+            gap: none
+            type: stack
+          }), (if [">", (array/len @config.filters), 0] {
+            children: [{
+              entity: SelectableItem
+              event: REFETCH_FILTER
+              filters: @config.filters
+              look: @config.filterBarLook
+              type: filter-group
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          } {
+            children: []
+            gap: none
+            type: stack
+          }), { type: divider }, {
             color: muted
             content: "Choose a selectableitem to continue."
             type: typography
@@ -61,6 +92,7 @@ orbital SelectableItemOrbital {
               label: Select
             }]
             look: @config.tableLook
+            pageSize: @config.displayPageSize
             renderItem: (fn item {
               align: center
               children: [{ label: @item.name, type: checkbox }]
@@ -105,6 +137,106 @@ orbital SelectableItemOrbital {
     }
 
     state idle {
+      ;; REFETCH_* stays in `idle` and DOES NOT replace the pick-list with a
+      ;; spinner — same reasoning as std-browse's REFETCH_* arms: a skeleton
+      ;; on refetch unmounts the list and flickers every keystroke. The fetch
+      ;; fires in the background; the SelectableItemLoaded arm below
+      ;; re-renders in place once it lands.
+      REFETCH_QUERY -> idle
+        (fetch SelectableItem {
+          emit: { failure: SelectableItemLoadFailed, success: SelectableItemLoaded }
+          filter: (or ["=", ?searchTerm, ""] (str/includes (object/get @entity name) ?searchTerm))
+        })
+      REFETCH_FILTER -> idle
+        (fetch SelectableItem {
+          emit: { failure: SelectableItemLoadFailed, success: SelectableItemLoaded }
+          filter: (or ["=", ?value, ""] ["=", (object/get @entity ?field), ?value])
+        })
+      ;; No filter carried over on REFETCH_PAGE, mirroring std-browse exactly.
+      ;; Paging is safe here: this atom's selection is a single transient id
+      ;; carried only in the SELECT/CONFIRM_SELECTION payload (`?id`), never
+      ;; accumulated into a persisted @entity array, so turning a page cannot
+      ;; strand an "already selected" item — there is no multi-item selection
+      ;; state to strand. A future multi-select variant that DOES accumulate
+      ;; picks into an @entity field would need to carry that array across
+      ;; REFETCH_PAGE explicitly; this single-pick atom does not need to.
+      REFETCH_PAGE -> idle
+        (fetch SelectableItem {
+          emit: { failure: SelectableItemLoadFailed, success: SelectableItemLoaded }
+          limit: @config.pageSize
+          offset: ["*", ["-", ?page, 1], @config.pageSize]
+        })
+      SelectableItemLoaded -> idle
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: check-square, type: icon }, {
+              content: SelectableItems
+              type: typography
+              variant: h2
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, (if @config.bodySearch {
+            children: [{
+              className: "w-full max-w-md"
+              clearable: true
+              event: REFETCH_QUERY
+              placeholder: @config.searchPlaceholder
+              type: search-input
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          } {
+            children: []
+            gap: none
+            type: stack
+          }), (if [">", (array/len @config.filters), 0] {
+            children: [{
+              entity: SelectableItem
+              event: REFETCH_FILTER
+              filters: @config.filters
+              look: @config.filterBarLook
+              type: filter-group
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          } {
+            children: []
+            gap: none
+            type: stack
+          }), { type: divider }, {
+            color: muted
+            content: "Choose a selectableitem to continue."
+            type: typography
+            variant: caption
+          }, {
+            className: "transition-shadow hover:shadow-md cursor-pointer"
+            entity: ?data
+            fields: []
+            itemActions: [{
+              event: SELECT
+              icon: check
+              label: Select
+            }]
+            look: @config.tableLook
+            pageSize: @config.displayPageSize
+            renderItem: (fn item {
+              align: center
+              children: [{ label: @item.name, type: checkbox }]
+              direction: horizontal
+              gap: sm
+              type: stack
+            })
+            type: data-grid
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       SELECT -> selecting
         (render-ui main {
           children: [{
@@ -269,12 +401,61 @@ orbital SelectableItemOrbital {
         @description "Indicates a selectable item failed to load."
         @synonyms "error, failure, problem, load error"
         @tier "internal"
+      REFETCH_QUERY {
+        searchTerm : string!
+      }
+        @description "Triggers a pick-list refresh based on the current search term."
+        @synonyms "refresh, reload, update, re-query, search"
+        @tier "domain"
+      REFETCH_FILTER {
+        field : string!
+        value : string!
+      }
+        @description "Triggers a pick-list refresh based on current filter criteria."
+        @synonyms "refresh, filter, update, reload"
+        @tier "domain"
+      REFETCH_PAGE {
+        page : number!
+      }
+        @description "Triggers a pick-list page refresh."
+        @synonyms "reload, refresh, update, paginate"
+        @tier "domain"
     }
 
     config {
       tableLook : "dense" | "spacious" | "striped" | "borderless" | "card-rows" = dense
         @label "Table look"
         @description "Layer 2 visual treatment for the data table rendered by this atom."
+        @tier "presentation"
+      bodySearch : boolean = false
+        @label "Show the pick-list's own search box?"
+        @description "Embeds a search box above the pick-list. Set true only when the page has no other search affordance (e.g. no page-level std-search), so the surface shows one search box instead of two. False is the default — this atom has never had a search box (0 consumers today)."
+        @synonyms "inline search, list search, built-in search, show search"
+        @tier "presentation"
+      searchPlaceholder : string = "Search…"
+        @label "Search box placeholder text"
+        @description "Hint text inside the pick-list search box."
+        @synonyms "search hint, placeholder, search box text"
+        @tier "presentation"
+      filters : [FilterSpec] = []
+        @label "Which filters should appear above the pick-list?"
+        @description "Dropdown filter facets by field, rendered as an embedded filter bar above the rows; each selection fires REFETCH_FILTER on this trait. Empty (the default) = no filter bar, the right setting whenever the page already composes std-filter beside this list and routes XFilter.FILTER -> REFETCH_FILTER — that is the wired owner and remains the primary path. Use this knob only for a standalone pick-list with no page-level filter affordance."
+        @synonyms "filter bar, faceted filters, field filters, dropdowns"
+        @tier "presentation"
+      filterBarLook : "toolbar" | "chips" | "pills" | "popover-trigger" | "inline-column-header" = toolbar
+        @label "Filter bar look"
+        @description "Visual treatment for the embedded filter bar, mirroring std-filter's own enum. Only applies when `filters` is non-empty."
+        @synonyms "filter bar style, facet style, chips, pills"
+        @tier "presentation"
+      pageSize : number = 20
+        @label "How many candidates per page when paging?"
+        @description "Records fetched from the server per REFETCH_PAGE request. The initial load and search/filter refetches remain unpaginated (load every candidate) unless a consumer wires REFETCH_PAGE, so the default pick-list surface is unchanged. Safe to page: this atom's selection is a single transient id (never an accumulated array), so no already-picked item can be stranded on another page."
+        @synonyms "fetch limit, records per page, page limit"
+        @tier "presentation"
+      displayPageSize : number = 20
+        @label "How many candidates to show at once?"
+        @description "Rows visible per page before the data-grid's own pagination control appears — 20 matches the pick-list density sweet spot (Miller's law, 10-25 rows)."
+        @synonyms "visible rows, items per page, display limit, show per page"
         @tier "presentation"
     }
   }

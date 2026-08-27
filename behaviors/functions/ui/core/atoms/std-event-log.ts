@@ -30,7 +30,7 @@ const ALIAS = 'EventLog';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdEventLogEventKey = 'APPLY_FILTER' | 'CANCEL_BACKFILL' | 'EventLogLoadFailed' | 'EventLogLoaded' | 'EventLogSaveFailed' | 'EventLogSaved' | 'INIT' | 'OPEN_BACKFILL' | 'SAVE_BACKFILL';
+export type StdEventLogEventKey = 'APPLY_FILTER' | 'CANCEL_BACKFILL' | 'EventLogLoadFailed' | 'EventLogLoaded' | 'EventLogSaveFailed' | 'EventLogSaved' | 'INIT' | 'OPEN_BACKFILL' | 'REFETCH_FILTER' | 'REFETCH_PAGE' | 'REFETCH_QUERY' | 'SAVE_BACKFILL';
 
 /**
  * Payload shape for the `APPLY_FILTER` event.
@@ -83,12 +83,24 @@ export interface StdEventLogEventLogSaveFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdEventLogConfig {
+  /** Default: `false` */
+  bodySearch?: boolean;
   /** Default: `"elevated"` */
   cardLook?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
+  /** Default: `20` */
+  displayPageSize?: number;
+  /** Default: `"toolbar"` */
+  filterBarLook?: 'toolbar' | 'chips' | 'pills' | 'popover-trigger' | 'inline-column-header';
+  /** Default: `[]` */
+  filters?: EntityRow[];
   /** Default: `["backfillTitle","backfillDescription","backfillKind","backfillDate"]` */
   formFields?: string[];
   /** Default: `[{"icon":"plus-circle","key":"created","label":"Created","status":"active"},{"icon":"edit-3","key":"updated","label":"Updated","status":"pending"},{"icon":"check-circle","key":"approved","label":"Approved","status":"complete"},{"icon":"x-circle","key":"rejected","label":"Rejected","status":"error"}]` */
   kindOptions?: EntityRow[];
+  /** Default: `20` */
+  pageSize?: number;
+  /** Default: `"Search activity…"` */
+  searchPlaceholder?: string;
   /** Default: `"vertical-spacious"` */
   timelineLook?: 'vertical-compact' | 'vertical-spacious' | 'horizontal' | 'swimlane';
   /** Default: `"Activity"` */
@@ -447,6 +459,14 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
       {
         'category': 'interaction',
         'config': {
+          'bodySearch': {
+            'default': false,
+            'description': 'Embeds a search box above the activity feed. Set true only when the page has no other search affordance (e.g. no page-level std-search), so the surface shows one search box instead of two. False is the default — no consumer of this atom has ever had a search box.',
+            'label': 'Show the log\'s own search box?',
+            'synonyms': 'inline search, log search, built-in search, show search',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
           'cardLook': {
             'default': 'elevated',
             'description': 'Layer 2 visual treatment for cards rendered by this atom.',
@@ -462,6 +482,60 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
               'chip',
               'tile-image-first',
             ],
+          },
+          'displayPageSize': {
+            'default': 20,
+            'description': 'Page size a consumer-composed std-pagination control should use to compute total pages (e.g. from totalCount). This atom\'s own timeline pattern has no built-in pager UI, so this knob is informational for the composed control, not consumed by the timeline itself.',
+            'label': 'How many entries per page should a pager show?',
+            'synonyms': 'visible rows, items per page, display limit',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+          'filterBarLook': {
+            'default': 'toolbar',
+            'description': 'Visual treatment for the embedded filter bar, mirroring std-filter\'s own enum. Only applies when `filters` is non-empty.',
+            'label': 'Filter bar look',
+            'synonyms': 'filter bar style, facet style, chips, pills',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'toolbar',
+              'chips',
+              'pills',
+              'popover-trigger',
+              'inline-column-header',
+            ],
+          },
+          'filters': {
+            'default': [],
+            'description': 'Dropdown filter facets by field, rendered as an embedded filter bar above the timeline; each selection fires REFETCH_FILTER on this trait, ANDed with the current kind tab. Empty (the default) = no filter bar — the right setting whenever the page already composes std-filter beside this atom and routes XFilter.FILTER -> REFETCH_FILTER, or relies solely on the built-in kind-filter chips (driven by kindOptions, which this knob does not duplicate or replace). Use this knob only for an extra facet beyond kind (e.g. actor, priority).',
+            'items': {
+              'properties': {
+                'field': {
+                  'name': 'field',
+                  'required': true,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': false,
+                  'type': 'string',
+                },
+                'options': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'options',
+                  'required': false,
+                  'type': 'array',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Which filters should appear above the feed?',
+            'synonyms': 'filter bar, faceted filters, field filters, dropdowns',
+            'tier': 'presentation',
+            'type': '[FilterSpec]',
           },
           'formFields': {
             'default': [
@@ -540,6 +614,22 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
             'label': 'Event kinds',
             'tier': 'presentation',
             'type': '[KindOption]',
+          },
+          'pageSize': {
+            'default': 20,
+            'description': 'Records fetched from the server per REFETCH_PAGE request. The initial load and every search/kind/filter refetch stay unpaginated (load everything that matches) so the default unlimited activity feed is unchanged; only an explicit REFETCH_PAGE from a composed std-pagination control applies this limit.',
+            'label': 'How many entries per page when paging?',
+            'synonyms': 'fetch limit, records per page, page limit',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+          'searchPlaceholder': {
+            'default': 'Search activity…',
+            'description': 'Hint text inside the log\'s search box.',
+            'label': 'Search box placeholder text',
+            'synonyms': 'search hint, placeholder, search box text',
+            'tier': 'presentation',
+            'type': 'string',
           },
           'timelineLook': {
             'default': 'vertical-spacious',
@@ -766,6 +856,53 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
               ],
               'synonyms': 'filter, refine, narrow, update',
               'tier': 'presentation',
+            },
+            {
+              'description': 'Triggers an activity feed refresh based on the current search term.',
+              'key': 'REFETCH_QUERY',
+              'name': 'Refetch Query',
+              'payloadSchema': [
+                {
+                  'name': 'searchTerm',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'refresh, reload, update, re-query, search',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Triggers an activity feed refresh based on a field/value filter, in addition to the built-in kind tabs.',
+              'key': 'REFETCH_FILTER',
+              'name': 'Refetch Filter',
+              'payloadSchema': [
+                {
+                  'name': 'field',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'value',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'refresh, filter, update, reload',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Triggers an activity feed page refresh.',
+              'key': 'REFETCH_PAGE',
+              'name': 'Refetch Page',
+              'payloadSchema': [
+                {
+                  'name': 'page',
+                  'required': true,
+                  'type': 'number',
+                },
+              ],
+              'synonyms': 'reload, refresh, update, paginate',
+              'tier': 'domain',
             },
             {
               'description': 'Initiates a backfill operation to retrieve historical events.',
@@ -1075,6 +1212,59 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                         'gap': 'sm',
                         'type': 'stack',
                       },
+                      [
+                        'if',
+                        '@config.bodySearch',
+                        {
+                          'children': [
+                            {
+                              'className': 'w-full max-w-md',
+                              'clearable': true,
+                              'event': 'REFETCH_QUERY',
+                              'placeholder': '@config.searchPlaceholder',
+                              'type': 'search-input',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                        {
+                          'children': [],
+                          'gap': 'none',
+                          'type': 'stack',
+                        },
+                      ],
+                      [
+                        'if',
+                        [
+                          '>',
+                          [
+                            'array/len',
+                            '@config.filters',
+                          ],
+                          0,
+                        ],
+                        {
+                          'children': [
+                            {
+                              'entity': 'EventLogView',
+                              'event': 'REFETCH_FILTER',
+                              'filters': '@config.filters',
+                              'look': '@config.filterBarLook',
+                              'type': 'filter-group',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                        {
+                          'children': [],
+                          'gap': 'none',
+                          'type': 'stack',
+                        },
+                      ],
                       {
                         'activeTab': '@entity.filterKind',
                         'tabChangeEvent': 'APPLY_FILTER',
@@ -1252,6 +1442,59 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                         'gap': 'sm',
                         'type': 'stack',
                       },
+                      [
+                        'if',
+                        '@config.bodySearch',
+                        {
+                          'children': [
+                            {
+                              'className': 'w-full max-w-md',
+                              'clearable': true,
+                              'event': 'REFETCH_QUERY',
+                              'placeholder': '@config.searchPlaceholder',
+                              'type': 'search-input',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                        {
+                          'children': [],
+                          'gap': 'none',
+                          'type': 'stack',
+                        },
+                      ],
+                      [
+                        'if',
+                        [
+                          '>',
+                          [
+                            'array/len',
+                            '@config.filters',
+                          ],
+                          0,
+                        ],
+                        {
+                          'children': [
+                            {
+                              'entity': 'EventLogView',
+                              'event': 'REFETCH_FILTER',
+                              'filters': '@config.filters',
+                              'look': '@config.filterBarLook',
+                              'type': 'filter-group',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                        {
+                          'children': [],
+                          'gap': 'none',
+                          'type': 'stack',
+                        },
+                      ],
                       {
                         'activeTab': '@entity.filterKind',
                         'tabChangeEvent': 'APPLY_FILTER',
@@ -1277,6 +1520,461 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                 ],
               ],
               'event': 'APPLY_FILTER',
+              'from': 'viewing',
+              'to': 'viewing',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('EventLogView' satisfies _StdEventLogEntityName),
+                  {
+                    'emit': {
+                      'failure': 'EventLogLoadFailed',
+                      'success': 'EventLogLoaded',
+                    },
+                    'filter': [
+                      'and',
+                      [
+                        'or',
+                        [
+                          '=',
+                          '@entity.filterKind',
+                          '',
+                        ],
+                        [
+                          '=',
+                          [
+                            'object/get',
+                            '@entity',
+                            'kind',
+                          ],
+                          '@entity.filterKind',
+                        ],
+                      ],
+                      [
+                        'or',
+                        [
+                          '=',
+                          '@payload.searchTerm',
+                          '',
+                        ],
+                        [
+                          'str/includes',
+                          [
+                            'object/get',
+                            '@entity',
+                            'title',
+                          ],
+                          '@payload.searchTerm',
+                        ],
+                      ],
+                    ],
+                  },
+                ],
+              ],
+              'event': 'REFETCH_QUERY',
+              'from': 'viewing',
+              'to': 'viewing',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('EventLogView' satisfies _StdEventLogEntityName),
+                  {
+                    'emit': {
+                      'failure': 'EventLogLoadFailed',
+                      'success': 'EventLogLoaded',
+                    },
+                    'filter': [
+                      'and',
+                      [
+                        'or',
+                        [
+                          '=',
+                          '@entity.filterKind',
+                          '',
+                        ],
+                        [
+                          '=',
+                          [
+                            'object/get',
+                            '@entity',
+                            'kind',
+                          ],
+                          '@entity.filterKind',
+                        ],
+                      ],
+                      [
+                        'or',
+                        [
+                          '=',
+                          '@payload.value',
+                          '',
+                        ],
+                        [
+                          '=',
+                          [
+                            'object/get',
+                            '@entity',
+                            '@payload.field',
+                          ],
+                          '@payload.value',
+                        ],
+                      ],
+                    ],
+                  },
+                ],
+              ],
+              'event': 'REFETCH_FILTER',
+              'from': 'viewing',
+              'to': 'viewing',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('EventLogView' satisfies _StdEventLogEntityName),
+                  {
+                    'emit': {
+                      'failure': 'EventLogLoadFailed',
+                      'success': 'EventLogLoaded',
+                    },
+                    'limit': '@config.pageSize',
+                    'offset': [
+                      '*',
+                      [
+                        '-',
+                        '@payload.page',
+                        1,
+                      ],
+                      '@config.pageSize',
+                    ],
+                  },
+                ],
+              ],
+              'event': 'REFETCH_PAGE',
+              'from': 'viewing',
+              'to': 'viewing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.filterChips',
+                  [
+                    'array/prepend',
+                    [
+                      'array/map',
+                      '@config.kindOptions',
+                      [
+                        'fn',
+                        'k',
+                        {
+                          'icon': [
+                            'object/get',
+                            '@k',
+                            'icon',
+                            'circle',
+                          ],
+                          'id': [
+                            'object/get',
+                            '@k',
+                            'key',
+                          ],
+                          'label': [
+                            'object/get',
+                            '@k',
+                            'label',
+                          ],
+                        },
+                      ],
+                    ],
+                    {
+                      'icon': 'list',
+                      'id': '',
+                      'label': 'All',
+                    },
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.allEntries',
+                  [
+                    'array/sort',
+                    [
+                      'array/map',
+                      '@payload.data',
+                      [
+                        'fn',
+                        'row',
+                        {
+                          'date': [
+                            'object/get',
+                            '@row',
+                            'createdAt',
+                            [
+                              'object/get',
+                              '@row',
+                              'date',
+                              '',
+                            ],
+                          ],
+                          'description': [
+                            'object/get',
+                            '@row',
+                            'description',
+                            '',
+                          ],
+                          'id': [
+                            'object/get',
+                            '@row',
+                            'id',
+                            '',
+                          ],
+                          'kind': [
+                            'object/get',
+                            '@row',
+                            'kind',
+                            '',
+                          ],
+                          'status': [
+                            'object/get',
+                            [
+                              'or',
+                              [
+                                'array/find',
+                                '@config.kindOptions',
+                                [
+                                  'fn',
+                                  'k',
+                                  [
+                                    '=',
+                                    [
+                                      'object/get',
+                                      '@k',
+                                      'key',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@row',
+                                      'kind',
+                                      '',
+                                    ],
+                                  ],
+                                ],
+                              ],
+                              {},
+                            ],
+                            'status',
+                            'pending',
+                          ],
+                          'title': [
+                            'object/get',
+                            '@row',
+                            'title',
+                            '',
+                          ],
+                        },
+                      ],
+                    ],
+                    'date',
+                    'desc',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.entries',
+                  [
+                    'array/sort',
+                    [
+                      'array/map',
+                      '@payload.data',
+                      [
+                        'fn',
+                        'row',
+                        {
+                          'date': [
+                            'object/get',
+                            '@row',
+                            'createdAt',
+                            [
+                              'object/get',
+                              '@row',
+                              'date',
+                              '',
+                            ],
+                          ],
+                          'description': [
+                            'object/get',
+                            '@row',
+                            'description',
+                            '',
+                          ],
+                          'id': [
+                            'object/get',
+                            '@row',
+                            'id',
+                            '',
+                          ],
+                          'kind': [
+                            'object/get',
+                            '@row',
+                            'kind',
+                            '',
+                          ],
+                          'status': [
+                            'object/get',
+                            [
+                              'or',
+                              [
+                                'array/find',
+                                '@config.kindOptions',
+                                [
+                                  'fn',
+                                  'k',
+                                  [
+                                    '=',
+                                    [
+                                      'object/get',
+                                      '@k',
+                                      'key',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@row',
+                                      'kind',
+                                      '',
+                                    ],
+                                  ],
+                                ],
+                              ],
+                              {},
+                            ],
+                            'status',
+                            'pending',
+                          ],
+                          'title': [
+                            'object/get',
+                            '@row',
+                            'title',
+                            '',
+                          ],
+                        },
+                      ],
+                    ],
+                    'date',
+                    'desc',
+                  ],
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'name': 'history',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': '@config.title',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                          {
+                            'action': 'OPEN_BACKFILL',
+                            'icon': 'plus',
+                            'label': 'Log event',
+                            'type': 'button',
+                            'variant': 'primary',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                      [
+                        'if',
+                        '@config.bodySearch',
+                        {
+                          'children': [
+                            {
+                              'className': 'w-full max-w-md',
+                              'clearable': true,
+                              'event': 'REFETCH_QUERY',
+                              'placeholder': '@config.searchPlaceholder',
+                              'type': 'search-input',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                        {
+                          'children': [],
+                          'gap': 'none',
+                          'type': 'stack',
+                        },
+                      ],
+                      [
+                        'if',
+                        [
+                          '>',
+                          [
+                            'array/len',
+                            '@config.filters',
+                          ],
+                          0,
+                        ],
+                        {
+                          'children': [
+                            {
+                              'entity': 'EventLogView',
+                              'event': 'REFETCH_FILTER',
+                              'filters': '@config.filters',
+                              'look': '@config.filterBarLook',
+                              'type': 'filter-group',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                        {
+                          'children': [],
+                          'gap': 'none',
+                          'type': 'stack',
+                        },
+                      ],
+                      {
+                        'activeTab': '@entity.filterKind',
+                        'tabChangeEvent': 'APPLY_FILTER',
+                        'tabs': '@entity.filterChips',
+                        'type': 'tabs',
+                      },
+                      {
+                        'entity': '@entity.entries',
+                        'fields': [
+                          'title',
+                          'description',
+                          'date',
+                          'status',
+                        ],
+                        'look': '@config.timelineLook',
+                        'type': 'timeline',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'EventLogLoaded',
               'from': 'viewing',
               'to': 'viewing',
             },
@@ -1417,6 +2115,59 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                         'gap': 'sm',
                         'type': 'stack',
                       },
+                      [
+                        'if',
+                        '@config.bodySearch',
+                        {
+                          'children': [
+                            {
+                              'className': 'w-full max-w-md',
+                              'clearable': true,
+                              'event': 'REFETCH_QUERY',
+                              'placeholder': '@config.searchPlaceholder',
+                              'type': 'search-input',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                        {
+                          'children': [],
+                          'gap': 'none',
+                          'type': 'stack',
+                        },
+                      ],
+                      [
+                        'if',
+                        [
+                          '>',
+                          [
+                            'array/len',
+                            '@config.filters',
+                          ],
+                          0,
+                        ],
+                        {
+                          'children': [
+                            {
+                              'entity': 'EventLogView',
+                              'event': 'REFETCH_FILTER',
+                              'filters': '@config.filters',
+                              'look': '@config.filterBarLook',
+                              'type': 'filter-group',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                        {
+                          'children': [],
+                          'gap': 'none',
+                          'type': 'stack',
+                        },
+                      ],
                       {
                         'activeTab': '@entity.filterKind',
                         'tabChangeEvent': 'APPLY_FILTER',

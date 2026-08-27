@@ -1,0 +1,79 @@
+app std-loop-lock "1.0.0"
+"Headless winding-lock mechanic: locks that open only after the player travels a full revolution around their anchor. Listens BODY_MOVED and, while the player stays within a radial band of a lock's ring, accumulates the wrapped angular delta of their position into swept (radians, signed — either direction counts); when |swept| reaches turns × 2π the lock flips unlocked and emits LOOP_UNLOCKED once. Entering the band reseeds the angle so leaving and returning never jumps the sweep; progress is kept across exits, so a revolution can be completed in stages. RESTART re-locks every lock. Renders nothing; boards draw the ring/chest and read swept from the shared entity (the render authority)."
+orbital LoopLockOrbital {
+  type LoopLock = {
+    id : string!
+    x : number!
+    y : number!
+    radius : number!
+    band : number!
+    turns : number!
+    swept : number
+    lastAngle : number
+    inside : boolean
+    unlocked : boolean
+    reported : boolean
+  }
+
+  entity LoopLockData [runtime, shared] {
+    id : string!
+    locks : [LoopLock] = []
+  }
+
+  trait LoopLock -> @rebindable LoopLockData [lifecycle] {
+    initial: active
+
+    state active {
+      INIT -> active
+        (set @entity.locks (array/map @config.locks (fn l (object/merge @l { swept: 0, lastAngle: 0, inside: false, unlocked: false, reported: false }))))
+
+      BODY_MOVED -> active when @config.running
+        (set @entity.locks (array/map @entity.locks (fn l
+          (let ((dx (- @payload.x (object/get @l x))) (dy (- @payload.y (object/get @l y))))
+          (let ((dist (math/hypot @dx @dy)) (ang (math/atan2 @dy @dx)))
+          (let ((in (<= (math/abs (- @dist (object/get @l radius))) (object/get @l band))))
+          (let ((d (if (and @in (== (object/get @l inside) true))
+                     (math/atan2 (math/sin (- @ang (object/get @l lastAngle))) (math/cos (- @ang (object/get @l lastAngle))))
+                     0)))
+          (let ((swept (+ (object/get @l swept) @d)))
+            (object/merge @l { inside: @in, lastAngle: (if @in @ang (object/get @l lastAngle)), swept: @swept, unlocked: (or (object/get @l unlocked) (>= (math/abs @swept) (* (object/get @l turns) 6.283185307179586))) })))))))))
+        (let ((newly (array/filter @entity.locks (fn l (and (== (object/get @l unlocked) true) (== (object/get @l reported) false))))))
+        (if (> (array/len @newly) 0)
+          (do
+            (set @entity.locks (array/map @entity.locks (fn l (if (== (object/get @l id) (object/get (array/first @newly) id)) (object/merge @l { reported: true }) @l))))
+            (emit LOOP_UNLOCKED { id: (object/get (array/first @newly) id), x: (object/get (array/first @newly) x), y: (object/get (array/first @newly) y) }))
+          null))
+
+      RESTART -> active
+        (set @entity.locks (array/map @config.locks (fn l (object/merge @l { swept: 0, lastAngle: 0, inside: false, unlocked: false, reported: false }))))
+    }
+
+    emits {
+      LOOP_UNLOCKED -> external {
+        id : string!
+        x : number!
+        y : number!
+      }
+        @description "A lock's angular sweep reached turns × 2π and it flipped unlocked; boards layer treasure fx and rewards. When several locks open on one move, the first reports and the shared entity carries the rest."
+        @tier "domain"
+    }
+
+    listens {
+      BODY_MOVED { x : number!, y : number!, vx : number!, vy : number!, grounded : boolean!, skating : boolean!, speed : number! }
+      RESTART { id : string }
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true, BODY_MOVED accumulates angular sweep and unlocks locks; toggle to freeze every lock as-is."
+        @tier "domain"
+      locks : [LoopLock] = []
+        @label "Locks"
+        @description "One row per winding lock: id, anchor (x, y in world units), ring radius, radial tolerance band, and revolutions required. swept/inside/unlocked are stamped at runtime."
+        @tier "domain"
+    }
+  }
+
+  page "/loop-lock" as LoopLockPage -> LoopLock
+}

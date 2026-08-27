@@ -69,11 +69,91 @@
             "direction": "listen"
           },
           {
+            "name": "REFETCH_QUERY",
+            "direction": "listen",
+            "description": "Triggers a tree refresh based on the current search query.",
+            "synonyms": "refresh, reload, update, re-query",
+            "tier": "domain"
+          },
+          {
+            "name": "REFETCH_FILTER",
+            "direction": "listen",
+            "description": "Triggers a tree refresh based on current filter criteria.",
+            "synonyms": "refresh, filter, update, reload",
+            "tier": "domain"
+          },
+          {
             "name": "RETRY",
             "direction": "listen"
           }
         ],
         "overridableConfigKeys": [
+          {
+            "key": "bodySearch",
+            "type": "boolean",
+            "default": false,
+            "label": "Show the tree's own search box?",
+            "description": "Embeds a search box above the tree that re-fetches the flat node set server-side. Set false (the default) when the page already provides a search affordance (a toolbar Search molecule), so the surface shows one search box instead of two.",
+            "synonyms": "inline search, list search, built-in search, show search, duplicate search",
+            "tier": "presentation"
+          },
+          {
+            "key": "filterBarLook",
+            "type": "string",
+            "default": "toolbar",
+            "label": "Filter bar look",
+            "description": "Visual treatment for the embedded filter bar, mirroring std-filter's own enum. Only applies when `filters` is non-empty.",
+            "synonyms": "filter bar style, facet style, chips, pills",
+            "tier": "presentation",
+            "enumValues": [
+              "toolbar",
+              "chips",
+              "pills",
+              "popover-trigger",
+              "inline-column-header"
+            ]
+          },
+          {
+            "key": "filters",
+            "type": "[FilterSpec]",
+            "default": [],
+            "label": "Which filters should appear above the tree?",
+            "description": "Dropdown filter facets by field, rendered as an embedded filter bar above the tree; each selection fires REFETCH_FILTER on this trait, re-fetching the flat node set. Empty (the default) = no filter bar, which is the right setting whenever the page already composes std-filter beside this tree and routes `XFilter.FILTER -> REFETCH_FILTER` — that is the wired owner and remains the primary path.",
+            "synonyms": "filter bar, faceted filters, field filters, dropdowns",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "field": {
+                  "name": "field",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "options": {
+                  "name": "options",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "searchPlaceholder",
+            "type": "string",
+            "default": "Search…",
+            "label": "Search box placeholder text",
+            "description": "Hint text inside the tree search box (e.g. 'Search nodes…').",
+            "synonyms": "search hint, placeholder, search box text, search label",
+            "tier": "presentation"
+          },
           {
             "key": "title",
             "type": "string",
@@ -88,6 +168,8 @@
         "transitionEvents": [
           "INIT",
           "OPEN_NODE",
+          "REFETCH_FILTER",
+          "REFETCH_QUERY",
           "RETRY",
           "TreeNodeLoadFailed",
           "TreeNodeLoaded"

@@ -1,5 +1,6 @@
 app std-list "1.0.0"
 "std-list as a Function"
+type FilterSpec = { field : string!, label : string, options : [string] }
 ;;
 ;; Daisy-chain composition showcase: no `on EVENT { ... }` trait-ref overrides.
 ;; Modal + Confirmation trait refs are configured via `config: { ... }` at the
@@ -71,7 +72,37 @@ orbital ListItemOrbital {
             gap: md
             justify: between
             type: stack
-          }, { type: divider }, {
+          }, { type: divider }, (if @config.bodySearch {
+            children: [{
+              className: "w-full max-w-md"
+              clearable: true
+              event: REFETCH_QUERY
+              placeholder: @config.searchPlaceholder
+              type: search-input
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          } {
+            children: []
+            gap: none
+            type: stack
+          }), (if [">", (array/len @config.filters), 0] {
+            children: [{
+              entity: ListItem
+              event: REFETCH_FILTER
+              filters: @config.filters
+              look: @config.filterBarLook
+              type: filter-group
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          } {
+            children: []
+            gap: none
+            type: stack
+          }), {
             entity: ?data
             fields: [{
               icon: list
@@ -96,6 +127,7 @@ orbital ListItemOrbital {
               label: Delete
               variant: danger
             }]
+            pageSize: @config.displayPageSize
             type: data-grid
           }]
           className: "max-w-5xl mx-auto w-full"
@@ -139,6 +171,114 @@ orbital ListItemOrbital {
           emit: { failure: ListItemLoadFailed, success: ListItemLoaded }
         })
         (render-ui main { type: spinner })
+      ;; REFETCH_* stays in `browsing` and DOES NOT replace the grid with a
+      ;; spinner — same reasoning as std-browse's REFETCH_* arms: a skeleton
+      ;; on refetch unmounts the grid and flickers every keystroke. The fetch
+      ;; fires in the background; the ListItemLoaded arm below re-renders in
+      ;; place once it lands.
+      REFETCH_QUERY -> browsing
+        (fetch ListItem {
+          emit: { failure: ListItemLoadFailed, success: ListItemLoaded }
+          filter: (or ["=", ?searchTerm, ""] (str/includes (object/get @entity name) ?searchTerm))
+        })
+      REFETCH_FILTER -> browsing
+        (fetch ListItem {
+          emit: { failure: ListItemLoadFailed, success: ListItemLoaded }
+          filter: (or ["=", ?value, ""] ["=", (object/get @entity ?field), ?value])
+        })
+      ;; No filter carried over on REFETCH_PAGE, mirroring std-browse exactly.
+      REFETCH_PAGE -> browsing
+        (fetch ListItem {
+          emit: { failure: ListItemLoadFailed, success: ListItemLoaded }
+          limit: @config.pageSize
+          offset: ["*", ["-", ?page, 1], @config.pageSize]
+        })
+      ListItemLoaded -> browsing
+        (render-ui main {
+          children: [{
+            children: [{
+              children: [{ name: list, type: icon }, {
+                content: ListItems
+                type: typography
+                variant: h2
+              }]
+              direction: horizontal
+              gap: md
+              type: stack
+            }, {
+              action: CREATE
+              icon: plus
+              label: Create
+              type: button
+              variant: primary
+            }]
+            direction: horizontal
+            gap: md
+            justify: between
+            type: stack
+          }, { type: divider }, (if @config.bodySearch {
+            children: [{
+              className: "w-full max-w-md"
+              clearable: true
+              event: REFETCH_QUERY
+              placeholder: @config.searchPlaceholder
+              type: search-input
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          } {
+            children: []
+            gap: none
+            type: stack
+          }), (if [">", (array/len @config.filters), 0] {
+            children: [{
+              entity: ListItem
+              event: REFETCH_FILTER
+              filters: @config.filters
+              look: @config.filterBarLook
+              type: filter-group
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          } {
+            children: []
+            gap: none
+            type: stack
+          }), {
+            entity: ?data
+            fields: [{
+              icon: list
+              label: Name
+              name: name
+              variant: h4
+            }, {
+              label: Description
+              name: description
+              variant: caption
+            }, {
+              label: Status
+              name: status
+              variant: badge
+            }]
+            itemActions: [{
+              event: EDIT
+              label: Edit
+              variant: ghost
+            }, {
+              event: DELETE
+              label: Delete
+              variant: danger
+            }]
+            pageSize: @config.displayPageSize
+            type: data-grid
+          }]
+          className: "max-w-5xl mx-auto w-full"
+          direction: vertical
+          gap: lg
+          type: stack
+        })
     }
 
     state error {
@@ -190,6 +330,58 @@ orbital ListItemOrbital {
       ListItemPersistor.ITEM_CREATED -> INIT
       ListItemPersistor.ITEM_UPDATED -> INIT
       ListItemPersistor.ITEM_DELETED -> INIT
+      REFETCH_QUERY {
+        searchTerm : string!
+      }
+        @description "Triggers a list refresh based on the current search term."
+        @synonyms "refresh, reload, update, re-query, search"
+        @tier "domain"
+      REFETCH_FILTER {
+        field : string!
+        value : string!
+      }
+        @description "Triggers a list refresh based on current filter criteria."
+        @synonyms "refresh, filter, update, reload"
+        @tier "domain"
+      REFETCH_PAGE {
+        page : number!
+      }
+        @description "Triggers a list page refresh."
+        @synonyms "reload, refresh, update, paginate"
+        @tier "domain"
+    }
+
+    config {
+      bodySearch : boolean = false
+        @label "Show the list's own search box?"
+        @description "Embeds a search box above the grid. Set true only when the page has no other search affordance (e.g. no page-level std-search), so the surface shows one search box instead of two. False is the default — this atom has never had a search box (0 consumers today)."
+        @synonyms "inline search, list search, built-in search, show search"
+        @tier "presentation"
+      searchPlaceholder : string = "Search…"
+        @label "Search box placeholder text"
+        @description "Hint text inside the list search box."
+        @synonyms "search hint, placeholder, search box text"
+        @tier "presentation"
+      filters : [FilterSpec] = []
+        @label "Which filters should appear above the grid?"
+        @description "Dropdown filter facets by field, rendered as an embedded filter bar above the rows; each selection fires REFETCH_FILTER on this trait. Empty (the default) = no filter bar, the right setting whenever the page already composes std-filter beside this list and routes XFilter.FILTER -> REFETCH_FILTER — that is the wired owner and remains the primary path. Use this knob only for a standalone list with no page-level filter affordance."
+        @synonyms "filter bar, faceted filters, field filters, dropdowns"
+        @tier "presentation"
+      filterBarLook : "toolbar" | "chips" | "pills" | "popover-trigger" | "inline-column-header" = toolbar
+        @label "Filter bar look"
+        @description "Visual treatment for the embedded filter bar, mirroring std-filter's own enum. Only applies when `filters` is non-empty."
+        @synonyms "filter bar style, facet style, chips, pills"
+        @tier "presentation"
+      pageSize : number = 20
+        @label "How many rows per page when paging?"
+        @description "Records fetched from the server per REFETCH_PAGE request. The initial load and search/filter refetches remain unpaginated (load everything that matches) unless a consumer wires REFETCH_PAGE, so the default list surface is unchanged."
+        @synonyms "fetch limit, records per page, page limit"
+        @tier "presentation"
+      displayPageSize : number = 20
+        @label "How many rows to show at once?"
+        @description "Rows visible per page before the data-grid's own pagination control appears — 20 matches the CRUD-list density sweet spot (Miller's law, 10-25 rows)."
+        @synonyms "visible rows, items per page, display limit, show per page"
+        @tier "presentation"
     }
   }
 

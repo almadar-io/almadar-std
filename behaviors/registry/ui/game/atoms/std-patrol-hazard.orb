@@ -1,5 +1,5 @@
 {
-  "description": "Headless patrol-hazard mechanic for side-view boards: moves each configured patrol back and forth along its [x0, x1] beat at its own speed (33ms tick, ping-pong with clamped turnarounds), tracks the player position off the body authority's BODY_MOVED, and emits PATROL_HIT once per contact — a per-patrol hit flag re-arms only after the player separates, so damage rules stay sparse (when two patrols connect on the same tick the first reports; the other reports on the next tick). Patrols live on a [runtime, shared] entity for the render layer (boards draw them as markers/sprites); damage, lives, and respawn stay downstream (std-lives) — this atom simulates, it never judges. Renders nothing.",
+  "description": "Headless patrol-hazard mechanic for side-view boards: moves each configured patrol back and forth along its [x0, x1] beat at its own speed (33ms tick, ping-pong with clamped turnarounds; a patrol declaring waveAmp/wavePeriod also bobs vertically — cy = y + waveAmp·sin(2πt/wavePeriod from a per-row time accumulator — and the hit test and render read cy, so a waveAmp of 0 keeps the flat beat), tracks the player position off the body authority's BODY_MOVED, and emits PATROL_HIT once per contact — a per-patrol hit flag re-arms only after the player separates, so damage rules stay sparse (when two patrols connect on the same tick the first reports; the other reports on the next tick). Patrols live on a [runtime, shared] entity for the render layer (boards draw them as markers/sprites); damage, lives, and respawn stay downstream (std-lives) — this atom simulates, it never judges. Renders nothing.",
   "ledger": {
     "entries": {
       "ent_01M0PCAKKXX0TFABTMPC8BNH64": {
@@ -87,6 +87,11 @@
             "default": [],
             "items": {
               "properties": {
+                "cy": {
+                  "name": "cy",
+                  "required": false,
+                  "type": "number"
+                },
                 "dir": {
                   "name": "dir",
                   "required": false,
@@ -107,10 +112,25 @@
                   "required": true,
                   "type": "number"
                 },
+                "t": {
+                  "name": "t",
+                  "required": false,
+                  "type": "number"
+                },
                 "touching": {
                   "name": "touching",
                   "required": false,
                   "type": "boolean"
+                },
+                "waveAmp": {
+                  "name": "waveAmp",
+                  "required": false,
+                  "type": "number"
+                },
+                "wavePeriod": {
+                  "name": "wavePeriod",
+                  "required": false,
+                  "type": "number"
                 },
                 "x": {
                   "name": "x",
@@ -182,9 +202,14 @@
             },
             "patrols": {
               "default": [],
-              "description": "One row per patroller: id, the [x0, x1] beat it walks, its fixed y, and its speed in units/s. Current x/dir/touching/hit are stamped at runtime.",
+              "description": "One row per patroller: id, the [x0, x1] beat it walks, its base y, its speed in units/s, and optionally waveAmp/wavePeriod for a vertical sine bob (waveAmp 0 = flat ping-pong). Current x/dir/t/cy/touching/hit are stamped at runtime.",
               "items": {
                 "properties": {
+                  "cy": {
+                    "name": "cy",
+                    "required": false,
+                    "type": "number"
+                  },
                   "dir": {
                     "name": "dir",
                     "required": false,
@@ -205,10 +230,25 @@
                     "required": true,
                     "type": "number"
                   },
+                  "t": {
+                    "name": "t",
+                    "required": false,
+                    "type": "number"
+                  },
                   "touching": {
                     "name": "touching",
                     "required": false,
                     "type": "boolean"
+                  },
+                  "waveAmp": {
+                    "name": "waveAmp",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "wavePeriod": {
+                    "name": "wavePeriod",
+                    "required": false,
+                    "type": "number"
                   },
                   "x": {
                     "name": "x",
@@ -409,8 +449,14 @@
                           "object/merge",
                           "@p",
                           {
+                            "cy": [
+                              "object/get",
+                              "@p",
+                              "y"
+                            ],
                             "dir": 1.0,
                             "hit": false,
+                            "t": 0.0,
                             "touching": false,
                             "x": [
                               "object/get",
@@ -471,8 +517,14 @@
                           "object/merge",
                           "@p",
                           {
+                            "cy": [
+                              "object/get",
+                              "@p",
+                              "y"
+                            ],
                             "dir": 1.0,
                             "hit": false,
+                            "t": 0.0,
                             "touching": false,
                             "x": [
                               "object/get",
@@ -612,61 +664,155 @@
                               "let",
                               [
                                 [
-                                  "near",
+                                  "nt",
                                   [
-                                    "and",
+                                    "+",
                                     [
-                                      "<=",
-                                      [
-                                        "math/abs",
-                                        [
-                                          "-",
-                                          "@entity.px",
-                                          "@cx"
-                                        ]
-                                      ],
-                                      "@config.hitRadius"
+                                      "object/get",
+                                      "@p",
+                                      "t"
                                     ],
-                                    [
-                                      "<=",
-                                      [
-                                        "math/abs",
-                                        [
-                                          "-",
-                                          "@entity.py",
-                                          [
-                                            "object/get",
-                                            "@p",
-                                            "y"
-                                          ]
-                                        ]
-                                      ],
-                                      "@config.hitRadius"
-                                    ]
+                                    0.033
                                   ]
                                 ]
                               ],
                               [
-                                "object/merge",
-                                "@p",
-                                {
-                                  "dir": "@cdir",
-                                  "hit": [
-                                    "and",
-                                    "@near",
+                                "let",
+                                [
+                                  [
+                                    "amp",
                                     [
-                                      "==",
+                                      "if",
+                                      [
+                                        "==",
+                                        [
+                                          "object/get",
+                                          "@p",
+                                          "waveAmp"
+                                        ],
+                                        null
+                                      ],
+                                      0.0,
                                       [
                                         "object/get",
                                         "@p",
-                                        "touching"
-                                      ],
-                                      false
+                                        "waveAmp"
+                                      ]
                                     ]
                                   ],
-                                  "touching": "@near",
-                                  "x": "@cx"
-                                }
+                                  [
+                                    "period",
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        [
+                                          "object/get",
+                                          "@p",
+                                          "wavePeriod"
+                                        ],
+                                        null
+                                      ],
+                                      3.0,
+                                      [
+                                        "object/get",
+                                        "@p",
+                                        "wavePeriod"
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "let",
+                                  [
+                                    [
+                                      "cy",
+                                      [
+                                        "+",
+                                        [
+                                          "object/get",
+                                          "@p",
+                                          "y"
+                                        ],
+                                        [
+                                          "*",
+                                          "@amp",
+                                          [
+                                            "math/sin",
+                                            [
+                                              "/",
+                                              [
+                                                "*",
+                                                6.283185307179586,
+                                                "@nt"
+                                              ],
+                                              "@period"
+                                            ]
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "let",
+                                    [
+                                      [
+                                        "near",
+                                        [
+                                          "and",
+                                          [
+                                            "<=",
+                                            [
+                                              "math/abs",
+                                              [
+                                                "-",
+                                                "@entity.px",
+                                                "@cx"
+                                              ]
+                                            ],
+                                            "@config.hitRadius"
+                                          ],
+                                          [
+                                            "<=",
+                                            [
+                                              "math/abs",
+                                              [
+                                                "-",
+                                                "@entity.py",
+                                                "@cy"
+                                              ]
+                                            ],
+                                            "@config.hitRadius"
+                                          ]
+                                        ]
+                                      ]
+                                    ],
+                                    [
+                                      "object/merge",
+                                      "@p",
+                                      {
+                                        "cy": "@cy",
+                                        "dir": "@cdir",
+                                        "hit": [
+                                          "and",
+                                          "@near",
+                                          [
+                                            "==",
+                                            [
+                                              "object/get",
+                                              "@p",
+                                              "touching"
+                                            ],
+                                            false
+                                          ]
+                                        ],
+                                        "t": "@nt",
+                                        "touching": "@near",
+                                        "x": "@cx"
+                                      }
+                                    ]
+                                  ]
+                                ]
                               ]
                             ]
                           ]
@@ -735,7 +881,7 @@
                             "array/first",
                             "@hits"
                           ],
-                          "y"
+                          "cy"
                         ]
                       }
                     ],

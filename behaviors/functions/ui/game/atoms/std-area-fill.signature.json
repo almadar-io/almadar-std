@@ -1,0 +1,177 @@
+[
+  {
+    "organism": "std-area-fill",
+    "orbital": "AreaFillOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/game/atoms/std-area-fill.ts",
+    "entities": [
+      {
+        "name": "AreaFillData",
+        "fields": [
+          {
+            "name": "fills",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "lastX",
+            "type": "number",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "AreaFill",
+        "emittedEvents": [
+          "AREA_FILLED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "AREA_FILLED",
+            "direction": "emit",
+            "description": "A fill's painted area reached its target (x, y = the player's position at completion, for burst placement). When several fills complete on one move, the first reports and the shared entity carries the rest.",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "BODY_MOVED",
+            "direction": "listen"
+          },
+          {
+            "name": "RESTART",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "fills",
+            "type": "[AreaFill]",
+            "default": [],
+            "label": "Fills",
+            "description": "One row per fill region: id, x-range (x0..x1 in world units), baseline the height is measured from, target area, rateMode (area | speed | ride — default area), optional hint, and the curve samples to interpolate. filled/frontier/reported are stamped at runtime.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "baseline": {
+                  "name": "baseline",
+                  "required": true,
+                  "type": "number"
+                },
+                "filled": {
+                  "name": "filled",
+                  "required": false,
+                  "type": "number"
+                },
+                "frontier": {
+                  "name": "frontier",
+                  "required": false,
+                  "type": "number"
+                },
+                "hint": {
+                  "name": "hint",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "rateMode": {
+                  "name": "rateMode",
+                  "required": false,
+                  "type": "string"
+                },
+                "reported": {
+                  "name": "reported",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "samples": {
+                  "name": "samples",
+                  "required": true,
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "x": {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "y": {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "target": {
+                  "name": "target",
+                  "required": true,
+                  "type": "number"
+                },
+                "x0": {
+                  "name": "x0",
+                  "required": true,
+                  "type": "number"
+                },
+                "x1": {
+                  "name": "x1",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true, BODY_MOVED paints every fill the player moves through; toggle to freeze every fill as-is.",
+            "tier": "domain"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "AreaFillData",
+        "transitionEvents": [
+          "BODY_MOVED",
+          "INIT",
+          "RESTART"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "fills",
+            "lastX"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "AreaFillPage",
+        "defaultPath": "/area-fill",
+        "primaryEntity": "AreaFillData"
+      }
+    ],
+    "emittedEvents": [
+      "AREA_FILLED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

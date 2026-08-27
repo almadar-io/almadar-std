@@ -1,0 +1,93 @@
+app std-area-fill "1.0.0"
+"Headless area-fill mechanic: the player paints area under a curve by moving through a fill region. Listens BODY_MOVED and, per fill, accumulates height(x) × |dx| while the player is inside the fill's x-range (the per-tick step is clamped to 0.5 world units — the physical per-tick maximum — so teleports and respawns paint nothing) — height is linear interpolation of the config curve samples above the fill's baseline (the platformer body's leftSamp/rightSamp idiom). rateMode picks the rate: \"area\" (height × |dx|, default — fills fastest where the curve is tallest), \"speed\" (|dx| only, flat rate), or \"ride\" (|dx| only while the move reports skating — walking the same distance paints nothing). When a fill's filled reaches its target it flips reported and emits AREA_FILLED once (the shared entity carries the rest); each fill also stamps a frontier (x0 + span × min(1, filled/target)) so boards can shade the painted region left-to-right as the gauge grows. RESTART resets every fill. Renders nothing; boards shade the painted region and read filled/frontier from the shared entity (the render authority)."
+orbital AreaFillOrbital {
+  type AreaFillSample = {
+    x : number!
+    y : number!
+  }
+  type AreaFill = {
+    id : string!
+    x0 : number!
+    x1 : number!
+    baseline : number!
+    target : number!
+    rateMode : string
+    hint : string
+    samples : [AreaFillSample]!
+    filled : number
+    frontier : number
+    reported : boolean
+  }
+
+  entity AreaFillData [runtime, shared] {
+    id : string!
+    fills : [AreaFill] = []
+    lastX : number = 0
+  }
+
+  trait AreaFill -> @rebindable AreaFillData [lifecycle] {
+    initial: active
+
+    state active {
+      INIT -> active
+        (set @entity.fills (array/map @config.fills (fn f (object/merge @f { filled: 0, frontier: (object/get @f x0), reported: false }))))
+        (set @entity.lastX 0)
+
+      BODY_MOVED -> active when @config.running
+        (let ((adx (math/abs (- @payload.x @entity.lastX))))
+        (set @entity.fills (array/map @entity.fills (fn f
+          (let ((inside (and (>= @payload.x (object/get @f x0)) (<= @payload.x (object/get @f x1)))))
+          (let ((leftSamp (array/last (array/filter (object/get @f samples) (fn s (<= (object/get @s x) @payload.x))))))
+          (let ((rightSamp (array/first (array/filter (object/get @f samples) (fn s (> (object/get @s x) @payload.x))))))
+          (let ((h (if (or (== @leftSamp null) (== @rightSamp null)) 0
+                     (- (+ (object/get @leftSamp y) (* (/ (- (object/get @rightSamp y) (object/get @leftSamp y)) (- (object/get @rightSamp x) (object/get @leftSamp x))) (- @payload.x (object/get @leftSamp x)))) (object/get @f baseline)))))
+          (let ((step (math/min @adx 0.5)))
+          (let ((rate (if @inside
+                        (if (== (object/get @f rateMode) "ride") (if @payload.skating @step 0)
+                          (if (== (object/get @f rateMode) "speed") @step
+                            (* @step @h)))
+                        0)))
+          (let ((newFilled (+ (object/get @f filled) @rate)))
+            (object/merge @f { filled: @newFilled, frontier: (+ (object/get @f x0) (* (- (object/get @f x1) (object/get @f x0)) (math/min 1 (/ @newFilled (object/get @f target))))) }))))))))))))
+        (set @entity.lastX @payload.x)
+        (let ((newly (array/filter @entity.fills (fn f (and (>= (object/get @f filled) (object/get @f target)) (== (object/get @f reported) false))))))
+        (if (> (array/len @newly) 0)
+          (do
+            (set @entity.fills (array/map @entity.fills (fn f (if (== (object/get @f id) (object/get (array/first @newly) id)) (object/merge @f { reported: true }) @f))))
+            (emit AREA_FILLED { id: (object/get (array/first @newly) id), x: @payload.x, y: @payload.y }))
+          null))
+
+      RESTART -> active
+        (set @entity.fills (array/map @config.fills (fn f (object/merge @f { filled: 0, frontier: (object/get @f x0), reported: false }))))
+        (set @entity.lastX 0)
+    }
+
+    emits {
+      AREA_FILLED -> external {
+        id : string!
+        x : number!
+        y : number!
+      }
+        @description "A fill's painted area reached its target (x, y = the player's position at completion, for burst placement). When several fills complete on one move, the first reports and the shared entity carries the rest."
+        @tier "domain"
+    }
+
+    listens {
+      BODY_MOVED { x : number!, y : number!, vx : number!, vy : number!, grounded : boolean!, skating : boolean!, speed : number! }
+      RESTART { id : string }
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true, BODY_MOVED paints every fill the player moves through; toggle to freeze every fill as-is."
+        @tier "domain"
+      fills : [AreaFill] = []
+        @label "Fills"
+        @description "One row per fill region: id, x-range (x0..x1 in world units), baseline the height is measured from, target area, rateMode (area | speed | ride — default area), optional hint, and the curve samples to interpolate. filled/frontier/reported are stamped at runtime."
+        @tier "domain"
+    }
+  }
+
+  page "/area-fill" as AreaFillPage -> AreaFill
+}

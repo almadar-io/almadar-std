@@ -1,7 +1,8 @@
-app std-board "1.2.0"
-"std-board — generic N-column board primitive. `config.columns` is an array of column definitions ({ key, label, icon, variant }); the trait `array/map`s them on `BoardItemsLoaded` into `@entity.boards` where each board carries its filtered items + a count. The render is a `data-grid` over `@entity.boards` (one card per column) whose `renderItem` lambda nests a `data-list` over `@col.items` (the cards in that stage). N is config-driven — pass any number of columns; the outer `data-grid`'s `cols` is bound to `@config.gridCols` so the grid wraps if you exceed it. Topology = loading / viewing_board / viewing_card / adding / error — distinct from the cookie-cutter `loading/browsing/viewing_single/error` CRUD shape. App-level atoms (e.g. std-pipeline) compose std-board via `uses` and add a sibling persistor + extended source entity. `config.boardLook` switches the board body between the default N-column grid ('columns') and a Trello-style wide-column kanban ('kanban-classic')."
+app std-board "1.3.0"
+"std-board — generic N-column board primitive. `config.columns` is an array of column definitions ({ key, label, icon, variant }); the trait `array/map`s them on `BoardItemsLoaded` into `@entity.boards` where each board carries its filtered items + a count. The render is a `data-grid` over `@entity.boards` (one card per column) whose `renderItem` lambda nests a `data-list` over `@col.items` (the cards in that stage). N is config-driven — pass any number of columns; the outer `data-grid`'s `cols` is bound to `@config.gridCols` so the grid wraps if you exceed it. Topology = loading / viewing_board / viewing_card / adding / error — distinct from the cookie-cutter `loading/browsing/viewing_single/error` CRUD shape. App-level atoms (e.g. std-pipeline) compose std-board via `uses` and add a sibling persistor + extended source entity. `config.boardLook` switches the board body between the default N-column grid ('columns') and a Trello-style wide-column kanban ('kanban-classic'). `viewing_board` listens for REFETCH_QUERY/REFETCH_FILTER/REFETCH_PAGE (the std-search/std-filter/std-pagination wiring targets, no render on refetch — @entity.boards is bound reactively) and can optionally render its own search box (config.bodySearch, default false) and filter bar (config.filters, default []); no pagination control is rendered — a board's columns are not a paged list."
 type ObjectSpec = { id : string, label : string, value : string }
 type ColumnSpec = { key : string!, label : string!, icon : string, variant : string }
+type FilterSpec = { field : string!, label : string, options : [string] }
 orbital BoardOrbital {
     type BoardItem = { id : string!, title : string, description : string, stage : string, notes : string, position : number }
 
@@ -219,6 +220,33 @@ orbital BoardOrbital {
         (fetch BoardView {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
         })
+      ;; REFETCH_* stay in viewing_board and issue no render-ui, matching
+      ;; std-browse's REFETCH_QUERY/REFETCH_FILTER/REFETCH_PAGE: a render here
+      ;; would swap the whole board tree on every keystroke. The fetch runs in
+      ;; the background; the BoardItemsLoaded arm below already recomputes
+      ;; @entity.boards, which the mounted data-grid is bound to, so the grid
+      ;; updates in place with no unmount/flicker.
+      REFETCH_QUERY -> viewing_board
+        (fetch BoardView {
+          emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
+          filter: (or ["=", ?searchTerm, ""] (str/includes (object/get @entity title) ?searchTerm))
+        })
+      REFETCH_FILTER -> viewing_board
+        (fetch BoardView {
+          emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
+          filter: (or ["=", ?value, ""] ["=", (object/get @entity ?field), ?value])
+        })
+      ;; A board's columns are not a paged list — paging the underlying fetch
+      ;; would show only one page's worth of items spread across all columns,
+      ;; which is wrong kanban UX. This arm exists so a consumer CAN wire
+      ;; std-pagination if they have a reason to; std-board itself never
+      ;; renders a pagination control (see bodyContent/kanbanClassicBodyContent).
+      REFETCH_PAGE -> viewing_board
+        (fetch BoardView {
+          emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
+          limit: @config.pageSize
+          offset: ["*", ["-", ?page, 1], @config.pageSize]
+        })
       BoardItemsLoaded -> viewing_board
         (set @entity.boards (array/map @config.columns (fn col {
           count: (array/len (array/filter ?data (fn item ["=", (object/get @item @config.groupByField), (object/get @col key)])))
@@ -422,6 +450,25 @@ orbital BoardOrbital {
         @description "Indicates a board card has been removed."
         @synonyms "remove, discard, delete"
         @tier "presentation"
+      REFETCH_QUERY {
+        searchTerm : string!
+      }
+        @description "Triggers a board refresh based on the current search query."
+        @synonyms "refresh, reload, update, re-query"
+        @tier "domain"
+      REFETCH_FILTER {
+        field : string!
+        value : string!
+      }
+        @description "Triggers a board refresh based on current filter criteria."
+        @synonyms "refresh, filter, update, reload"
+        @tier "domain"
+      REFETCH_PAGE {
+        page : number!
+      }
+        @description "Triggers a board refresh for a given page. std-board itself renders no pagination control; this exists so a composed std-pagination can drive one."
+        @synonyms "reload, refresh, update, paginate"
+        @tier "domain"
       BoardItemsLoaded {
         data : [ObjectSpec]
       }
@@ -508,6 +555,31 @@ orbital BoardOrbital {
         @label "Board look"
         @description "Layer 3 body layout: default N-column data-grid ('columns'), or a Trello-style wide-column kanban with sticky column headers ('kanban-classic')."
         @tier "presentation"
+      bodySearch : boolean = false
+        @label "Show the board's own search box?"
+        @description "Renders an inline search box above the columns. Defaults false: unlike std-browse, std-board has never had a search box, so defaulting this true would silently add one to every existing consumer. The wired path — composing std-search beside the board and routing its FILTER/SEARCH event to REFETCH_QUERY — works regardless of this knob; set true only for a standalone board with no page-level search affordance."
+        @synonyms "inline search, board search, built-in search, show search, duplicate search"
+        @tier "presentation"
+      searchPlaceholder : string = "Search…"
+        @label "Search box placeholder text"
+        @description "Hint text inside the board's embedded search box (e.g. 'Search cards…'). Only shown when bodySearch is true."
+        @synonyms "search hint, placeholder, search box text, search label"
+        @tier "presentation"
+      filters : [FilterSpec] = []
+        @label "Which filters should appear above the board?"
+        @description "Dropdown filter facets by field, rendered as an embedded filter bar above the columns; each selection fires REFETCH_FILTER on this trait. Empty (the default) = no filter bar, which is the right setting whenever the page already composes std-filter beside this board and routes its FILTER event to REFETCH_FILTER — that is the wired owner and remains the primary path. Use this knob only for a standalone board with no page-level filter affordance."
+        @synonyms "filter bar, faceted filters, field filters, column filters, dropdowns"
+        @tier "presentation"
+      filterBarLook : "toolbar" | "chips" | "pills" | "popover-trigger" | "inline-column-header" = toolbar
+        @label "Filter bar look"
+        @description "Visual treatment for the embedded filter bar, mirroring std-filter's own enum. Only applies when `filters` is non-empty."
+        @synonyms "filter bar style, facet style, chips, pills"
+        @tier "presentation"
+      pageSize : number = 10
+        @label "Fetch page size"
+        @description "Records fetched per REFETCH_PAGE request. std-board renders no pagination control itself — this only feeds the fetch limit/offset when a consumer wires a composed std-pagination to REFETCH_PAGE."
+        @synonyms "fetch limit, records per page, batch size, page limit"
+        @tier "presentation"
       cardActionsContent : render-ui = {
         align: center
         children: [{
@@ -536,7 +608,37 @@ orbital BoardOrbital {
           direction: horizontal
           gap: sm
           type: stack
-        }, { type: divider }, {
+        }, { type: divider }, (if @config.bodySearch {
+          children: [{
+            className: "w-full max-w-md"
+            clearable: true
+            event: REFETCH_QUERY
+            placeholder: @config.searchPlaceholder
+            type: search-input
+          }]
+          direction: horizontal
+          gap: sm
+          type: stack
+        } {
+          children: []
+          gap: none
+          type: stack
+        }), (if [">", (array/len @config.filters), 0] {
+          children: [{
+            entity: BoardView
+            event: REFETCH_FILTER
+            filters: @config.filters
+            look: @config.filterBarLook
+            type: filter-group
+          }]
+          direction: horizontal
+          gap: sm
+          type: stack
+        } {
+          children: []
+          gap: none
+          type: stack
+        }), {
           cols: @config.gridCols
           dndRoot: true
           entity: @entity.boards
@@ -636,7 +738,39 @@ orbital BoardOrbital {
           direction: horizontal
           gap: sm
           type: stack
-        }, { type: divider }, {
+        }, { type: divider }, (if @config.bodySearch {
+          children: [{
+            className: "w-full max-w-md"
+            clearable: true
+            event: REFETCH_QUERY
+            placeholder: @config.searchPlaceholder
+            type: search-input
+          }]
+          className: px-card-md
+          direction: horizontal
+          gap: sm
+          type: stack
+        } {
+          children: []
+          gap: none
+          type: stack
+        }), (if [">", (array/len @config.filters), 0] {
+          children: [{
+            entity: BoardView
+            event: REFETCH_FILTER
+            filters: @config.filters
+            look: @config.filterBarLook
+            type: filter-group
+          }]
+          className: px-card-md
+          direction: horizontal
+          gap: sm
+          type: stack
+        } {
+          children: []
+          gap: none
+          type: stack
+        }), {
           className: "w-full pb-2"
           dndRoot: true
           entity: @entity.boards

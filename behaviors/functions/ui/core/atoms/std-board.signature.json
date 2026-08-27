@@ -216,6 +216,27 @@
             "description": "Indicates a change in the order of items within a column.",
             "synonyms": "sort, rearrange, reposition",
             "tier": "presentation"
+          },
+          {
+            "name": "REFETCH_QUERY",
+            "direction": "listen",
+            "description": "Triggers a board refresh based on the current search query.",
+            "synonyms": "refresh, reload, update, re-query",
+            "tier": "domain"
+          },
+          {
+            "name": "REFETCH_FILTER",
+            "direction": "listen",
+            "description": "Triggers a board refresh based on current filter criteria.",
+            "synonyms": "refresh, filter, update, reload",
+            "tier": "domain"
+          },
+          {
+            "name": "REFETCH_PAGE",
+            "direction": "listen",
+            "description": "Triggers a board refresh for a given page. std-board itself renders no pagination control; this exists so a composed std-pagination can drive one.",
+            "synonyms": "reload, refresh, update, paginate",
+            "tier": "domain"
           }
         ],
         "overridableConfigKeys": [
@@ -256,6 +277,59 @@
                 {
                   "type": "divider"
                 },
+                [
+                  "if",
+                  "@config.bodySearch",
+                  {
+                    "children": [
+                      {
+                        "className": "w-full max-w-md",
+                        "clearable": true,
+                        "event": "REFETCH_QUERY",
+                        "placeholder": "@config.searchPlaceholder",
+                        "type": "search-input"
+                      }
+                    ],
+                    "direction": "horizontal",
+                    "gap": "sm",
+                    "type": "stack"
+                  },
+                  {
+                    "children": [],
+                    "gap": "none",
+                    "type": "stack"
+                  }
+                ],
+                [
+                  "if",
+                  [
+                    ">",
+                    [
+                      "array/len",
+                      "@config.filters"
+                    ],
+                    0
+                  ],
+                  {
+                    "children": [
+                      {
+                        "entity": "BoardView",
+                        "event": "REFETCH_FILTER",
+                        "filters": "@config.filters",
+                        "look": "@config.filterBarLook",
+                        "type": "filter-group"
+                      }
+                    ],
+                    "direction": "horizontal",
+                    "gap": "sm",
+                    "type": "stack"
+                  },
+                  {
+                    "children": [],
+                    "gap": "none",
+                    "type": "stack"
+                  }
+                ],
                 {
                   "cols": "@config.gridCols",
                   "dndRoot": true,
@@ -380,6 +454,15 @@
             "label": "Body content tree",
             "description": "Render-ui SExpr rendered after the board loads for boardLook='columns' — the canonical column data-grid with nested per-column data-lists. boardLook='kanban-classic' renders kanbanClassicBodyContent instead; both share this trait's state machine, emits, and listens.",
             "tier": "internal"
+          },
+          {
+            "key": "bodySearch",
+            "type": "boolean",
+            "default": false,
+            "label": "Show the board's own search box?",
+            "description": "Renders an inline search box above the columns. Defaults false: unlike std-browse, std-board has never had a search box, so defaulting this true would silently add one to every existing consumer. The wired path — composing std-search beside the board and routing its FILTER/SEARCH event to REFETCH_QUERY — works regardless of this knob; set true only for a standalone board with no page-level search affordance.",
+            "synonyms": "inline search, board search, built-in search, show search, duplicate search",
+            "tier": "presentation"
           },
           {
             "key": "cardActionsContent",
@@ -508,6 +591,54 @@
             }
           },
           {
+            "key": "filterBarLook",
+            "type": "string",
+            "default": "toolbar",
+            "label": "Filter bar look",
+            "description": "Visual treatment for the embedded filter bar, mirroring std-filter's own enum. Only applies when `filters` is non-empty.",
+            "synonyms": "filter bar style, facet style, chips, pills",
+            "tier": "presentation",
+            "enumValues": [
+              "toolbar",
+              "chips",
+              "pills",
+              "popover-trigger",
+              "inline-column-header"
+            ]
+          },
+          {
+            "key": "filters",
+            "type": "[FilterSpec]",
+            "default": [],
+            "label": "Which filters should appear above the board?",
+            "description": "Dropdown filter facets by field, rendered as an embedded filter bar above the columns; each selection fires REFETCH_FILTER on this trait. Empty (the default) = no filter bar, which is the right setting whenever the page already composes std-filter beside this board and routes its FILTER event to REFETCH_FILTER — that is the wired owner and remains the primary path. Use this knob only for a standalone board with no page-level filter affordance.",
+            "synonyms": "filter bar, faceted filters, field filters, column filters, dropdowns",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "field": {
+                  "name": "field",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "options": {
+                  "name": "options",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
             "key": "formFields",
             "type": "[string]",
             "default": [
@@ -565,6 +696,61 @@
                 {
                   "type": "divider"
                 },
+                [
+                  "if",
+                  "@config.bodySearch",
+                  {
+                    "children": [
+                      {
+                        "className": "w-full max-w-md",
+                        "clearable": true,
+                        "event": "REFETCH_QUERY",
+                        "placeholder": "@config.searchPlaceholder",
+                        "type": "search-input"
+                      }
+                    ],
+                    "className": "px-card-md",
+                    "direction": "horizontal",
+                    "gap": "sm",
+                    "type": "stack"
+                  },
+                  {
+                    "children": [],
+                    "gap": "none",
+                    "type": "stack"
+                  }
+                ],
+                [
+                  "if",
+                  [
+                    ">",
+                    [
+                      "array/len",
+                      "@config.filters"
+                    ],
+                    0
+                  ],
+                  {
+                    "children": [
+                      {
+                        "entity": "BoardView",
+                        "event": "REFETCH_FILTER",
+                        "filters": "@config.filters",
+                        "look": "@config.filterBarLook",
+                        "type": "filter-group"
+                      }
+                    ],
+                    "className": "px-card-md",
+                    "direction": "horizontal",
+                    "gap": "sm",
+                    "type": "stack"
+                  },
+                  {
+                    "children": [],
+                    "gap": "none",
+                    "type": "stack"
+                  }
+                ],
                 {
                   "className": "w-full pb-2",
                   "dndRoot": true,
@@ -713,6 +899,24 @@
             "tier": "internal"
           },
           {
+            "key": "pageSize",
+            "type": "number",
+            "default": 10,
+            "label": "Fetch page size",
+            "description": "Records fetched per REFETCH_PAGE request. std-board renders no pagination control itself — this only feeds the fetch limit/offset when a consumer wires a composed std-pagination to REFETCH_PAGE.",
+            "synonyms": "fetch limit, records per page, batch size, page limit",
+            "tier": "presentation"
+          },
+          {
+            "key": "searchPlaceholder",
+            "type": "string",
+            "default": "Search…",
+            "label": "Search box placeholder text",
+            "description": "Hint text inside the board's embedded search box (e.g. 'Search cards…'). Only shown when bodySearch is true.",
+            "synonyms": "search hint, placeholder, search box text, search label",
+            "tier": "presentation"
+          },
+          {
             "key": "title",
             "type": "string",
             "default": "Board",
@@ -735,6 +939,9 @@
           "INIT",
           "MOVE_CARD",
           "OPEN_CARD",
+          "REFETCH_FILTER",
+          "REFETCH_PAGE",
+          "REFETCH_QUERY",
           "REORDER_CARD",
           "REORDER_POSITION",
           "SAVE_CARD"

@@ -1,0 +1,156 @@
+[
+  {
+    "organism": "std-loop-lock",
+    "orbital": "LoopLockOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/game/atoms/std-loop-lock.ts",
+    "entities": [
+      {
+        "name": "LoopLockData",
+        "fields": [
+          {
+            "name": "locks",
+            "type": "array",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "LoopLock",
+        "emittedEvents": [
+          "LOOP_UNLOCKED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "LOOP_UNLOCKED",
+            "direction": "emit",
+            "description": "A lock's angular sweep reached turns × 2π and it flipped unlocked; boards layer treasure fx and rewards. When several locks open on one move, the first reports and the shared entity carries the rest.",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "BODY_MOVED",
+            "direction": "listen"
+          },
+          {
+            "name": "RESTART",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "locks",
+            "type": "[LoopLock]",
+            "default": [],
+            "label": "Locks",
+            "description": "One row per winding lock: id, anchor (x, y in world units), ring radius, radial tolerance band, and revolutions required. swept/inside/unlocked are stamped at runtime.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "band": {
+                  "name": "band",
+                  "required": true,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "inside": {
+                  "name": "inside",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "lastAngle": {
+                  "name": "lastAngle",
+                  "required": false,
+                  "type": "number"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": true,
+                  "type": "number"
+                },
+                "reported": {
+                  "name": "reported",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "swept": {
+                  "name": "swept",
+                  "required": false,
+                  "type": "number"
+                },
+                "turns": {
+                  "name": "turns",
+                  "required": true,
+                  "type": "number"
+                },
+                "unlocked": {
+                  "name": "unlocked",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true, BODY_MOVED accumulates angular sweep and unlocks locks; toggle to freeze every lock as-is.",
+            "tier": "domain"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "LoopLockData",
+        "transitionEvents": [
+          "BODY_MOVED",
+          "INIT",
+          "RESTART"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "locks"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "LoopLockPage",
+        "defaultPath": "/loop-lock",
+        "primaryEntity": "LoopLockData"
+      }
+    ],
+    "emittedEvents": [
+      "LOOP_UNLOCKED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

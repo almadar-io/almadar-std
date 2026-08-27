@@ -218,6 +218,27 @@
             "direction": "listen"
           },
           {
+            "name": "REFETCH_QUERY",
+            "direction": "listen",
+            "description": "Triggers a gallery refresh based on the current search query.",
+            "synonyms": "refresh, reload, update, re-query",
+            "tier": "domain"
+          },
+          {
+            "name": "REFETCH_FILTER",
+            "direction": "listen",
+            "description": "Triggers a gallery refresh based on current filter criteria.",
+            "synonyms": "refresh, filter, update, reload",
+            "tier": "domain"
+          },
+          {
+            "name": "REFETCH_PAGE",
+            "direction": "listen",
+            "description": "Triggers a gallery page refresh.",
+            "synonyms": "reload, refresh, update, paginate",
+            "tier": "domain"
+          },
+          {
             "name": "CLOSE",
             "direction": "listen",
             "description": "Indicates the gallery or lightbox has been dismissed.",
@@ -226,6 +247,63 @@
           }
         ],
         "overridableConfigKeys": [
+          {
+            "key": "bodySearch",
+            "type": "boolean",
+            "default": false,
+            "label": "Show the gallery's own search box?",
+            "description": "Embeds a search box above the gallery grid. Set false (the default) when the page already provides a search affordance (a toolbar Search molecule), so the surface shows one search box instead of two.",
+            "synonyms": "inline search, list search, built-in search, show search, duplicate search",
+            "tier": "presentation"
+          },
+          {
+            "key": "filterBarLook",
+            "type": "string",
+            "default": "toolbar",
+            "label": "Filter bar look",
+            "description": "Visual treatment for the embedded filter bar, mirroring std-filter's own enum. Only applies when `filters` is non-empty.",
+            "synonyms": "filter bar style, facet style, chips, pills",
+            "tier": "presentation",
+            "enumValues": [
+              "toolbar",
+              "chips",
+              "pills",
+              "popover-trigger",
+              "inline-column-header"
+            ]
+          },
+          {
+            "key": "filters",
+            "type": "[FilterSpec]",
+            "default": [],
+            "label": "Which filters should appear above the gallery?",
+            "description": "Dropdown filter facets by field, rendered as an embedded filter bar above the grid; each selection fires REFETCH_FILTER on this trait. Empty (the default) = no filter bar, which is the right setting whenever the page already composes std-filter beside this gallery and routes `XFilter.FILTER -> REFETCH_FILTER` — that is the wired owner and remains the primary path. Use this knob only for a standalone gallery with no page-level filter affordance.",
+            "synonyms": "filter bar, faceted filters, field filters, dropdowns",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "field": {
+                  "name": "field",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "options": {
+                  "name": "options",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "type": "object"
+            }
+          },
           {
             "key": "imageField",
             "type": "string",
@@ -245,6 +323,24 @@
             "tier": "presentation"
           },
           {
+            "key": "pageSize",
+            "type": "number",
+            "default": 20,
+            "label": "How many images to fetch per page?",
+            "description": "Records fetched from the server when REFETCH_PAGE fires (a composed std-pagination driving this trait). The initial load and revisit fetches stay unpaged (whole collection), unchanged from before this knob existed.",
+            "synonyms": "fetch limit, records per page, batch size, page limit",
+            "tier": "presentation"
+          },
+          {
+            "key": "searchPlaceholder",
+            "type": "string",
+            "default": "Search…",
+            "label": "Search box placeholder text",
+            "description": "Hint text inside the gallery search box (e.g. 'Search photos…').",
+            "synonyms": "search hint, placeholder, search box text, search label",
+            "tier": "presentation"
+          },
+          {
             "key": "title",
             "type": "string",
             "default": "Gallery",
@@ -260,6 +356,9 @@
           "GalleryItemLoadFailed",
           "GalleryItemLoaded",
           "INIT",
+          "REFETCH_FILTER",
+          "REFETCH_PAGE",
+          "REFETCH_QUERY",
           "VIEW"
         ],
         "entityRebindable": true,

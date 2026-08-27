@@ -1,0 +1,162 @@
+[
+  {
+    "organism": "std-pad-lock",
+    "orbital": "PadLockOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/game/atoms/std-pad-lock.ts",
+    "entities": [
+      {
+        "name": "PadLockData",
+        "fields": [
+          {
+            "name": "pads",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "groupsDone",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "completed",
+            "type": "boolean",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "PadLock",
+        "emittedEvents": [
+          "PAD_GROUP_COMPLETED",
+          "PAD_SET_COMPLETED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "PAD_GROUP_COMPLETED",
+            "direction": "emit",
+            "description": "Every pad of one group is lit; fires once per group, in group order — later groups stay dead until the lowest uncompleted group finishes. Boards layer a small fx and unlock the next group's pads.",
+            "tier": "domain"
+          },
+          {
+            "name": "PAD_SET_COMPLETED",
+            "direction": "emit",
+            "description": "Every pad in the set is lit; fires once per run. Boards layer the treasure fx and spill the bonus reward.",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "BODY_MOVED",
+            "direction": "listen"
+          },
+          {
+            "name": "RESTART",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "pads",
+            "type": "[PadLock]",
+            "default": [],
+            "label": "Pads",
+            "description": "One row per floor pad: id, center (x, y in world units), and grp (0 = ungrouped, always live; N = live only while it is the lowest uncompleted group). lit is stamped at runtime.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "grp": {
+                  "name": "grp",
+                  "required": true,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "lit": {
+                  "name": "lit",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "reachX",
+            "type": "number",
+            "default": 0.7,
+            "label": "Reach X",
+            "description": "Horizontal tolerance (world units) around a pad's center when testing player contact (approximates the body's half-width plus a step).",
+            "tier": "domain"
+          },
+          {
+            "key": "reachY",
+            "type": "number",
+            "default": 1.2,
+            "label": "Reach Y",
+            "description": "Vertical tolerance (world units) around a pad's center when testing player contact (covers skating over the surface the pad sits on).",
+            "tier": "domain"
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true, BODY_MOVED lights touched live pads and reports group/set completion; toggle to freeze every pad as-is.",
+            "tier": "domain"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "PadLockData",
+        "transitionEvents": [
+          "BODY_MOVED",
+          "INIT",
+          "RESTART"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "completed",
+            "groupsDone",
+            "pads"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "PadLockPage",
+        "defaultPath": "/pad-lock",
+        "primaryEntity": "PadLockData"
+      }
+    ],
+    "emittedEvents": [
+      "PAD_GROUP_COMPLETED",
+      "PAD_SET_COMPLETED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]
