@@ -1,0 +1,106 @@
+[
+  {
+    "organism": "std-curve-fog",
+    "orbital": "CurveFogOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/game/atoms/std-curve-fog.ts",
+    "entities": [
+      {
+        "name": "CurveFogData",
+        "fields": [
+          {
+            "name": "fogX",
+            "type": "number",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "CurveFog",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "BODY_MOVED",
+            "direction": "listen"
+          },
+          {
+            "name": "RESTART",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "regions",
+            "type": "[CurveFogRegion]",
+            "default": [],
+            "label": "Fog Regions",
+            "description": "One row per fogged world span: x-range (x0..x1) and lookAhead — how far past the player the road stays revealed while inside. Small values force prediction (blowups), large values suit slow tail lessons. Empty list = no fog anywhere.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "lookAhead": {
+                  "name": "lookAhead",
+                  "required": true,
+                  "type": "number"
+                },
+                "x0": {
+                  "name": "x0",
+                  "required": true,
+                  "type": "number"
+                },
+                "x1": {
+                  "name": "x1",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true, BODY_MOVED tracks the reveal horizon; toggle to freeze the fog where it is.",
+            "tier": "domain"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "CurveFogData",
+        "transitionEvents": [
+          "BODY_MOVED",
+          "INIT",
+          "RESTART"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "fogX"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "CurveFogPage",
+        "defaultPath": "/curve-fog",
+        "primaryEntity": "CurveFogData"
+      }
+    ],
+    "emittedEvents": [],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

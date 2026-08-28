@@ -1,0 +1,95 @@
+app std-zone-card "1.0.0"
+"Headless zone-guidance mechanic for side-view boards: tracks which band of the world the player is in and holds up that zone's card — name, concept, objective — for a while after every crossing. Listens BODY_MOVED and, when the player's x crosses into a different config zone, stamps the shared entity (zoneId, card, enteredAt) and emits ZONE_CHANGED carrying the card fields; the card self-clears ttlTicks BODY_MOVED ticks later (a per-move tick counter on the entity, so pauses at speed zero still age it out) and boards clear it early via CARD_DISMISS (renamed to a board-scoped progress event) on any mechanic completion. RESTART clears the card and the clock. Renders nothing; boards draw the card from the shared entity (the render authority)."
+orbital ZoneCardOrbital {
+  type ZoneCard = {
+    name : string!
+    concept : string
+    objective : string
+  }
+  type ZoneCardZone = {
+    id : string!
+    name : string!
+    concept : string
+    objective : string
+    x0 : number!
+    x1 : number!
+  }
+
+  entity ZoneCardData [runtime, shared] {
+    id : string!
+    zoneId : string = ""
+    card : ZoneCard
+    enteredAt : number = 0
+    ticks : number = 0
+  }
+
+  trait ZoneCard -> @rebindable ZoneCardData [lifecycle] {
+    initial: active
+
+    state active {
+      INIT -> active
+        (set @entity.zoneId "")
+        (set @entity.card null)
+        (set @entity.enteredAt 0)
+        (set @entity.ticks 0)
+
+      BODY_MOVED -> active when @config.running
+        (set @entity.ticks (+ @entity.ticks 1))
+        (let ((zmatch (array/filter @config.zones (fn z (and (>= @payload.x (object/get @z x0)) (< @payload.x (object/get @z x1)))))))
+        (do
+          (if (and (> (array/len @zmatch) 0) (!= @entity.zoneId (object/get (array/first @zmatch) id)))
+            (do
+              (set @entity.zoneId (object/get (array/first @zmatch) id))
+              (set @entity.card { name: (object/get (array/first @zmatch) name), concept: (object/get (array/first @zmatch) concept), objective: (object/get (array/first @zmatch) objective) })
+              (set @entity.enteredAt @entity.ticks)
+              (emit ZONE_CHANGED { id: (object/get (array/first @zmatch) id), name: (object/get (array/first @zmatch) name), concept: (object/get (array/first @zmatch) concept), objective: (object/get (array/first @zmatch) objective) }))
+            null)
+          (if (and (!= @entity.card null) (> (- @entity.ticks @entity.enteredAt) @config.ttlTicks))
+            (set @entity.card null)
+            null)))
+
+      CARD_DISMISS -> active
+        (set @entity.card null)
+
+      RESTART -> active
+        (set @entity.zoneId "")
+        (set @entity.card null)
+        (set @entity.enteredAt 0)
+        (set @entity.ticks 0)
+    }
+
+    emits {
+      ZONE_CHANGED -> external {
+        id : string!
+        name : string!
+        concept : string
+        objective : string
+      }
+        @description "The player crossed into a different zone; carries the zone's card fields (name, concept, objective) so boards can swap banners/guides and hold the card up. Fires once per crossing."
+        @tier "domain"
+    }
+
+    listens {
+      BODY_MOVED { x : number!, y : number!, vx : number!, vy : number!, grounded : boolean!, skating : boolean!, speed : number! }
+      CARD_DISMISS { id : string }
+      RESTART { id : string }
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true, BODY_MOVED tracks the current zone and ages the card; toggle to freeze the card as-is."
+        @tier "domain"
+      zones : [ZoneCardZone] = []
+        @label "Zones"
+        @description "One row per world band: id, display name, the one-line concept, the zone's objective text, and the x-range (x0..x1) the band covers."
+        @tier "domain"
+      ttlTicks : number = 120
+        @label "TTL Ticks"
+        @description "BODY_MOVED ticks the card stays up after a zone crossing (≈ 4s at 30 moves/s) before it clears itself."
+        @tier "domain"
+    }
+  }
+
+  page "/zone-card" as ZoneCardPage -> ZoneCard
+}

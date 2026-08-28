@@ -282,7 +282,7 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
             'type': 'string',
           },
           {
-            'description': 'The textual data of the revision.',
+            'description': 'The snapshotted body of the revision — plain text or the rich-text HTML a document-look record carries. Rollback hands the whole row back to the host, which restores content onto the source document.',
             'name': 'content',
             'synonyms': 'text, body, data, value',
             'type': 'string',

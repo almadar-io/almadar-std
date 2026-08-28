@@ -1,0 +1,114 @@
+app std-coef-pad "1.0.0"
+"Headless coefficient-pad mechanic for graph-riding boards: floor pads that reshape the road the player is riding (y = a·f(x−h) + k). Listens BODY_MOVED and, when the player stands grounded on an unapplied pad (|dx| <= reachX, |dy| <= reachY of the pad center — the pad-lock touch pattern), stamps the pad applied on the shared entity and emits COEF_PAD_APPLIED carrying the pad position AND its mod (x0, x1, a, h, k), so the board can append the mod to the body authority's curveMods (std-platformer-body with curveModsEnabled) and hop the player onto the reshaped surface. When every pad is applied it emits COEF_PAD_SET_COMPLETED once. RESTART un-applies every pad (the board clears curveMods alongside — the pad reports, the board owns the road). Renders nothing; boards draw the pads and read applied from the shared entity (the render authority)."
+orbital CoefPadOrbital {
+  type CoefMod = {
+    x0 : number!
+    x1 : number!
+    a : number!
+    h : number!
+    k : number!
+  }
+  type CoefModSample = {
+    x : number!
+    y : number!
+  }
+  type CoefPad = {
+    id : string!
+    x : number!
+    y : number!
+    mod : CoefMod!
+    glyph : string
+    hint : string
+    hop : boolean
+    samples : [CoefModSample]
+    applied : boolean
+  }
+
+  entity CoefPadData [runtime, shared] {
+    id : string!
+    coefPads : [CoefPad] = []
+    coefCompleted : boolean = false
+  }
+
+  trait CoefPadLock -> @rebindable CoefPadData [lifecycle] {
+    initial: active
+
+    state active {
+      INIT -> active
+        (set @entity.coefPads (array/map @config.coefPads (fn p (object/merge @p { applied: false }))))
+        (set @entity.coefCompleted false)
+
+      BODY_MOVED -> active when @config.running
+        (let ((touch (array/filter @entity.coefPads (fn p
+          (and (== (object/get @p applied) false)
+            (and (== @payload.grounded true)
+              (and (<= (math/abs (- @payload.x (object/get @p x))) @config.reachX)
+                (<= (math/abs (- @payload.y (object/get @p y))) @config.reachY))))))))
+        (if (> (array/len @touch) 0)
+          (let ((p (array/first @touch)))
+          (let ((m (object/get @p mod)))
+          (let ((remaining (array/len (array/filter @entity.coefPads (fn c (and (== (object/get @c applied) false) (!= (object/get @c id) (object/get @p id))))))))
+          (do
+            (set @entity.coefPads (array/map @entity.coefPads (fn c (if (== (object/get @c id) (object/get @p id)) (object/merge @c { applied: true }) @c))))
+            (emit COEF_PAD_APPLIED { id: (object/get @p id), x: (object/get @p x), y: (object/get @p y), x0: (object/get @m x0), x1: (object/get @m x1), a: (object/get @m a), h: (object/get @m h), k: (object/get @m k), hint: (object/get @p hint), hop: (object/get @p hop), samples: (object/get @p samples) })
+            (if (and (== @entity.coefCompleted false) (== @remaining 0))
+              (do
+                (set @entity.coefCompleted true)
+                (emit COEF_PAD_SET_COMPLETED {}))
+              null)))))
+          null))
+
+      RESTART -> active
+        (set @entity.coefPads (array/map @config.coefPads (fn p (object/merge @p { applied: false }))))
+        (set @entity.coefCompleted false)
+    }
+
+    emits {
+      COEF_PAD_APPLIED -> external {
+        id : string!
+        x : number!
+        y : number!
+        x0 : number!
+        x1 : number!
+        a : number!
+        h : number!
+        k : number!
+        hint : string
+        hop : boolean
+        samples : [CoefModSample]
+      }
+        @description "The player stood on an unapplied coefficient pad; carries the pad position and the full mod (x0, x1, a, h, k) so the board appends it to the body authority's curveMods and hops the player onto the reshaped road. Fires once per pad per run."
+        @tier "domain"
+      COEF_PAD_SET_COMPLETED -> external {
+      }
+        @description "Every coefficient pad in the set is applied; fires once per run. Boards layer the completion fx and dismiss the zone card."
+        @tier "domain"
+    }
+
+    listens {
+      BODY_MOVED { x : number!, y : number!, vx : number!, vy : number!, grounded : boolean!, skating : boolean!, speed : number! }
+      RESTART { id : string }
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true, BODY_MOVED applies touched pads; toggle to freeze every pad as-is."
+        @tier "domain"
+      coefPads : [CoefPad] = []
+        @label "Coefficient Pads"
+        @description "One row per pad: id, center (x, y in world units), the mod applied to the road while inside x0..x1 (a scales slope+height, h shifts horizontally, k lifts), and the hint floated on apply, and hop (true = the board teleports the player onto the reshaped surface — use when the mod steps the road far from the pad; false = the skate snap carries the player, preserving speed). applied is stamped at runtime."
+        @tier "domain"
+      reachX : number = 0.7
+        @label "Reach X"
+        @description "Horizontal tolerance (world units) around a pad's center when testing player contact (approximates the body's half-width plus a step)."
+        @tier "domain"
+      reachY : number = 1.2
+        @label "Reach Y"
+        @description "Vertical tolerance (world units) around a pad's center when testing player contact (covers riding the surface the pad sits on)."
+        @tier "domain"
+    }
+  }
+
+  page "/coef-pad" as CoefPadPage -> CoefPadLock
+}

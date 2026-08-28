@@ -1,0 +1,185 @@
+[
+  {
+    "organism": "std-choice-gate",
+    "orbital": "ChoiceGateOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/game/atoms/std-choice-gate.ts",
+    "entities": [
+      {
+        "name": "ChoiceGateData",
+        "fields": [
+          {
+            "name": "choices",
+            "type": "array",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "ChoiceGate",
+        "emittedEvents": [
+          "CHOICE_CORRECT",
+          "CHOICE_WRONG"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "CHOICE_CORRECT",
+            "direction": "emit",
+            "description": "The player landed grounded on the gate's correct option; fires once per gate (solved gates stop judging). Carries the gate center so boards can burst the unlock there.",
+            "tier": "domain"
+          },
+          {
+            "name": "CHOICE_WRONG",
+            "direction": "emit",
+            "description": "The player landed grounded on a wrong option; carries the gate id, the chosen optionId, and the option's world position so boards can bounce the player back to the approach and float the gate's hint.",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "BODY_MOVED",
+            "direction": "listen"
+          },
+          {
+            "name": "RESTART",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "gates",
+            "type": "[ChoiceGate]",
+            "default": [],
+            "label": "Choice Gates",
+            "description": "One row per gate: id, gate center (x, y — y is the option-platform surface the judge tests against), the hint floated on a wrong answer, and the options: id, dx offset from the gate center, the label drawn above the platform, and correct. solved/chosen are stamped at runtime.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "chosen": {
+                  "name": "chosen",
+                  "required": false,
+                  "type": "string"
+                },
+                "hint": {
+                  "name": "hint",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "options": {
+                  "name": "options",
+                  "required": true,
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "correct": {
+                        "name": "correct",
+                        "required": true,
+                        "type": "boolean"
+                      },
+                      "dx": {
+                        "name": "dx",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "id": {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "label": {
+                        "name": "label",
+                        "required": true,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "solved": {
+                  "name": "solved",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "reachX",
+            "type": "number",
+            "default": 0.7,
+            "label": "Reach X",
+            "description": "Horizontal tolerance (world units) around an option platform's center when testing a landing (approximates the body's half-width plus a step).",
+            "tier": "domain"
+          },
+          {
+            "key": "reachY",
+            "type": "number",
+            "default": 1.2,
+            "label": "Reach Y",
+            "description": "Vertical tolerance (world units) around the gate's option plane when testing a landing (covers small hops onto the platform surface).",
+            "tier": "domain"
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true, BODY_MOVED judges option landings; toggle to freeze every gate as-is.",
+            "tier": "domain"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "ChoiceGateData",
+        "transitionEvents": [
+          "BODY_MOVED",
+          "INIT",
+          "RESTART"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "choices"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "ChoiceGatePage",
+        "defaultPath": "/choice-gate",
+        "primaryEntity": "ChoiceGateData"
+      }
+    ],
+    "emittedEvents": [
+      "CHOICE_CORRECT",
+      "CHOICE_WRONG"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

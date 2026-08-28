@@ -1,22 +1,27 @@
 [
   {
-    "organism": "ui-rich-block-editor",
-    "orbital": "RichBlockEditorOrbital",
+    "organism": "ui-rich-text-editor",
+    "orbital": "RichTextEditorOrbital",
     "tier": "molecules",
-    "factoryPath": "behaviors/functions/ui/core/molecules/ui-rich-block-editor.ts",
+    "factoryPath": "behaviors/functions/ui/core/molecules/ui-rich-text-editor.ts",
     "entities": [
       {
-        "name": "RichBlockEditorItem",
-        "fields": [],
+        "name": "RichTextEditorItem",
+        "fields": [
+          {
+            "name": "value",
+            "type": "string",
+            "required": false
+          }
+        ],
         "persistence": "runtime"
       }
     ],
     "traits": [
       {
-        "name": "RichBlockEditorRender",
+        "name": "RichTextEditorRender",
         "emittedEvents": [
-          "CHANGE",
-          "RichBlockEditorLoaded"
+          "CHANGE"
         ],
         "listenedEvents": [],
         "events": [
@@ -24,13 +29,6 @@
             "name": "CHANGE",
             "direction": "emit",
             "description": "onChange prop",
-            "tier": "essential"
-          },
-          {
-            "name": "RichBlockEditorLoaded",
-            "direction": "emit",
-            "description": "RichBlockEditor rows finished loading; payload.data holds the collection.",
-            "synonyms": "loaded, fetched, retrieved",
             "tier": "essential"
           },
           {
@@ -52,14 +50,6 @@
             "type": "string",
             "label": "Class Name",
             "description": "className prop",
-            "tier": "presentation"
-          },
-          {
-            "key": "enableBlocks",
-            "type": "boolean",
-            "default": true,
-            "label": "Enable Blocks",
-            "description": "Opt-in to the Notion-style block authoring chrome (insert toolbar, per-row +/menu gutter, turn-into menu). Off by default: the editor renders as a plain rich text surface that edits block content inline without any add-block affordances.",
             "tier": "presentation"
           },
           {
@@ -92,34 +82,39 @@
             "label": "Show Toolbar",
             "description": "showToolbar prop",
             "tier": "presentation"
+          },
+          {
+            "key": "value",
+            "type": "string",
+            "label": "Value",
+            "description": "The rich text content as HTML. Sanitized before rendering and on every change.",
+            "tier": "presentation"
           }
         ],
         "capabilities": [],
-        "linkedEntity": "RichBlockEditorItem",
+        "linkedEntity": "RichTextEditorItem",
         "transitionEvents": [
-          "INIT",
-          "RichBlockEditorLoaded"
+          "CHANGE",
+          "INIT"
         ],
         "entityRebindable": true,
         "entityContract": {
           "requires": [],
-          "provides": []
-        },
-        "effectEntityRefs": [
-          "RichBlockEditorItem"
-        ]
+          "provides": [
+            "value"
+          ]
+        }
       }
     ],
     "pages": [
       {
-        "name": "RichBlockEditorPage",
-        "defaultPath": "/rich-block-editor",
-        "primaryEntity": "RichBlockEditorItem"
+        "name": "RichTextEditorPage",
+        "defaultPath": "/rich-text-editor",
+        "primaryEntity": "RichTextEditorItem"
       }
     ],
     "emittedEvents": [
-      "CHANGE",
-      "RichBlockEditorLoaded"
+      "CHANGE"
     ],
     "listenedEvents": [],
     "exposure": "palette",

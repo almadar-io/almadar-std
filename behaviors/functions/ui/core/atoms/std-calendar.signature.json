@@ -91,7 +91,7 @@
           {
             "name": "",
             "direction": "emit",
-            "description": "Emitted when a calendar chip is clicked: UI:{onEventClick} with { event } carrying the clicked row.",
+            "description": "Emitted when a calendar chip is clicked ({ event } carries the clicked row) or an agenda/upcoming row action fires ({ id, row }). Consumers routing it should read the row from ?event or ?row, whichever the payload carries.",
             "tier": "presentation"
           },
           {
@@ -158,13 +158,7 @@
           {
             "key": "agendaItemActions",
             "type": "[ItemAction]",
-            "default": [
-              {
-                "event": "SELECT_DAY",
-                "icon": "eye",
-                "label": "View"
-              }
-            ],
+            "default": [],
             "label": "Agenda item actions",
             "description": "Per-item action buttons on agenda-list rows — data-list itemActions descriptors (label/event/icon/variant). Consumers override to wire their own row actions (View/Edit/Delete) so agenda hosts never need a second table for actions.",
             "synonyms": "agenda actions, row actions, event actions, list actions",
@@ -548,13 +542,7 @@
                       "variant": "badge"
                     }
                   ],
-                  "itemActions": [
-                    {
-                      "event": "SELECT_DAY",
-                      "icon": "eye",
-                      "label": "View"
-                    }
-                  ],
+                  "itemActions": "@config.agendaItemActions",
                   "look": "@config.tableLook",
                   "type": "data-list"
                 }
@@ -643,6 +631,18 @@
                 }
               },
               "type": "object"
+            }
+          },
+          {
+            "key": "include",
+            "type": "[string]",
+            "default": [],
+            "label": "Which relation fields to hydrate?",
+            "description": "Entity relation field names to hydrate on fetch (e.g. a `category : Category` field named `category`), so chip bindings can use dot-paths like @item.category.name. Empty = no hydration, the default.",
+            "synonyms": "relation hydration, populate relations, joined fields, hydrate relations",
+            "tier": "internal",
+            "items": {
+              "type": "string"
             }
           },
           {

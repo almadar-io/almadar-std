@@ -1,0 +1,258 @@
+[
+  {
+    "organism": "ui-document-panel",
+    "orbital": "DocumentPanelOrbital",
+    "tier": "molecules",
+    "factoryPath": "behaviors/functions/ui/core/molecules/ui-document-panel.ts",
+    "entities": [
+      {
+        "name": "DocumentPanelItem",
+        "fields": [
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "value",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "DocumentPanelRender",
+        "emittedEvents": [
+          "TITLE_COMMIT",
+          "CONTENT_CHANGE",
+          "EDIT",
+          "DONE",
+          "DocumentPanelLoaded"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "TITLE_COMMIT",
+            "direction": "emit",
+            "description": "Emitted when the title commits: { title, id }",
+            "tier": "essential"
+          },
+          {
+            "name": "CONTENT_CHANGE",
+            "direction": "emit",
+            "description": "Forwarded to the embedded RichTextEditor's autosave stream: { value }",
+            "tier": "essential"
+          },
+          {
+            "name": "EDIT",
+            "direction": "emit",
+            "description": "Emitted by the header Edit affordance and a click on the read body: { id }",
+            "tier": "essential"
+          },
+          {
+            "name": "DONE",
+            "direction": "emit",
+            "description": "Emitted by the Done button that ends the editing session: { id }",
+            "tier": "essential"
+          },
+          {
+            "name": "DocumentPanelLoaded",
+            "direction": "emit",
+            "description": "DocumentPanel rows finished loading; payload.data holds the collection.",
+            "synonyms": "loaded, fetched, retrieved",
+            "tier": "essential"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "actions",
+            "type": "[DocumentPanelActionsItem]",
+            "default": [],
+            "label": "Actions",
+            "description": "Header actions (settings, history, …). At most one explicit primary stays inline; the rest live under a single '⋯' menu — the title owns its row.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "event": {
+                  "name": "event",
+                  "required": false,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "primary",
+                    "secondary",
+                    "ghost",
+                    "danger"
+                  ]
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "autosaveHint",
+            "type": "string",
+            "label": "Autosave Hint",
+            "description": "Muted caption beside Done telling the author work persists on its own",
+            "tier": "presentation"
+          },
+          {
+            "key": "className",
+            "type": "string",
+            "label": "Class Name",
+            "description": "className prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "contentChangeEvent",
+            "type": "string",
+            "default": "CONTENT_CHANGE",
+            "label": "Content Change Event",
+            "description": "Forwarded to the embedded RichTextEditor's autosave stream: { value }",
+            "tier": "presentation"
+          },
+          {
+            "key": "doneEvent",
+            "type": "string",
+            "default": "DONE",
+            "label": "Done Event",
+            "description": "Emitted by the Done button that ends the editing session: { id }",
+            "tier": "presentation"
+          },
+          {
+            "key": "doneLabel",
+            "type": "string",
+            "label": "Done Label",
+            "description": "doneLabel prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "editEvent",
+            "type": "string",
+            "default": "EDIT",
+            "label": "Edit Event",
+            "description": "Emitted by the header Edit affordance and a click on the read body: { id }",
+            "tier": "presentation"
+          },
+          {
+            "key": "editLabel",
+            "type": "string",
+            "label": "Edit Label",
+            "description": "editLabel prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "editing",
+            "type": "boolean",
+            "default": false,
+            "label": "Editing",
+            "description": "false = read surface with click-to-edit body; true = live editor",
+            "tier": "presentation"
+          },
+          {
+            "key": "maxInlineActions",
+            "type": "number",
+            "label": "Max Inline Actions",
+            "description": "0 collapses even the primary action into the menu",
+            "tier": "presentation"
+          },
+          {
+            "key": "placeholder",
+            "type": "string",
+            "label": "Placeholder",
+            "description": "Placeholder for an empty body",
+            "tier": "presentation"
+          },
+          {
+            "key": "subtitle",
+            "type": "string",
+            "label": "Subtitle",
+            "description": "Muted byline under the title; hidden when empty",
+            "tier": "presentation"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "label": "Title",
+            "description": "Document title (falls back to 'Untitled' for a blank draft)",
+            "tier": "presentation"
+          },
+          {
+            "key": "titleCommitEvent",
+            "type": "string",
+            "default": "TITLE_COMMIT",
+            "label": "Title Commit Event",
+            "description": "Emitted when the title commits: { title, id }",
+            "tier": "presentation"
+          },
+          {
+            "key": "value",
+            "type": "string",
+            "label": "Value",
+            "description": "The document body as rich-text HTML",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "DocumentPanelItem",
+        "transitionEvents": [
+          "CONTENT_CHANGE",
+          "DocumentPanelLoaded",
+          "INIT",
+          "TITLE_COMMIT"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "title",
+            "value"
+          ]
+        },
+        "effectEntityRefs": [
+          "DocumentPanelItem"
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "name": "DocumentPanelPage",
+        "defaultPath": "/document-panel",
+        "primaryEntity": "DocumentPanelItem"
+      }
+    ],
+    "emittedEvents": [
+      "CONTENT_CHANGE",
+      "DONE",
+      "DocumentPanelLoaded",
+      "EDIT",
+      "TITLE_COMMIT"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "capabilities": "document page, note editor, wiki page, article editor, writing surface, rich text document, content editing canvas",
+    "sourceValid": true
+  }
+]

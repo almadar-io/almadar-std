@@ -76,7 +76,7 @@ orbital RelatedItemOrbital {
             gap: sm
             type: stack
           }, { type: divider }, {
-            entity: ?data
+            entity: (array/map ?data (fn row { id: @row.id, name: (object/get @row @config.labelField) }))
             fields: []
             look: @config.tableLook
             renderItem: (fn item {
@@ -217,6 +217,10 @@ orbital RelatedItemOrbital {
       title : string = Related
         @label "Section title"
         @description "Heading shown above the related list."
+        @tier "presentation"
+      labelField : string = name
+        @label "Which field labels each related row?"
+        @description "Name of the field on the (rebound) related row rendered as the row label and carried as SELECT_RELATED's name — set it to `title` (etc.) whenever the bound entity labels rows differently. The rows are mapped through this at render time, because a trait-level `fields {}` rename is declaration-only on the runtime path and every populated row used to render a blank label."
         @tier "presentation"
       relationField : string = ""
         @label "Relation field"

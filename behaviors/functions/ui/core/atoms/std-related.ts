@@ -62,6 +62,8 @@ export interface StdRelatedSelectRelatedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdRelatedConfig {
+  /** Default: `"name"` */
+  labelField?: string;
   /** Default: `""` */
   relationField?: string;
   /** Default: `"dense"` */
@@ -231,6 +233,13 @@ export function stdRelatedRelatedItemOrbital(params: StdRelatedRelatedItemOrbita
       {
         'category': 'interaction',
         'config': {
+          'labelField': {
+            'default': 'name',
+            'description': 'Name of the field on the (rebound) related row rendered as the row label and carried as SELECT_RELATED\'s name — set it to `title` (etc.) whenever the bound entity labels rows differently. The rows are mapped through this at render time, because a trait-level `fields {}` rename is declaration-only on the runtime path and every populated row used to render a blank label.',
+            'label': 'Which field labels each related row?',
+            'tier': 'presentation',
+            'type': 'string',
+          },
           'relationField': {
             'default': '',
             'description': 'RelatedItem field compared against SHOW_RELATED\'s key to scope the fetch to one parent document; empty renders the full unfiltered collection (default).',
@@ -527,7 +536,22 @@ export function stdRelatedRelatedItemOrbital(params: StdRelatedRelatedItemOrbita
                         'type': 'divider',
                       },
                       {
-                        'entity': '@payload.data',
+                        'entity': [
+                          'array/map',
+                          '@payload.data',
+                          [
+                            'fn',
+                            'row',
+                            {
+                              'id': '@row.id',
+                              'name': [
+                                'object/get',
+                                '@row',
+                                '@config.labelField',
+                              ],
+                            },
+                          ],
+                        ],
                         'fields': [],
                         'look': '@config.tableLook',
                         'renderItem': [

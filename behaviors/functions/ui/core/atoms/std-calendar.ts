@@ -51,7 +51,9 @@ export interface StdCalendarCalendarEventLoadFailedPayload {
  * Payload shape for the `` event.
  */
 export interface StdCalendarPayload {
-  event?: EntityRow;
+  event?: unknown;
+  id?: string;
+  row?: unknown;
 }
 
 /**
@@ -63,13 +65,13 @@ export interface StdCalendarPayload {
 export interface StdCalendarConfig {
   /** Default: `"date"` */
   agendaGroupBy?: string;
-  /** Default: `[{"event":"SELECT_DAY","icon":"eye","label":"View"}]` */
+  /** Default: `[]` */
   agendaItemActions?: EntityRow[];
   /** Default: `{"children":[{"align":"center","children":[{"align":"center","children":[{"name":"list","type":"icon"},{"content":"Agenda","type":"typography","variant":"h2"}],"direction":"horizontal","gap":"sm","type":"stack"},{"onSelect":"SELECT_DAY","selected":"@entity.selectedRange","type":"date-range-selector"}],"direction":"horizontal","gap":"md","justify":"between","type":"stack"},["if","@config.bodySearch",{"children":[{"className":"w-full max-w-md","clearable":true,"event":"REFETCH_QUERY","placeholder":"@config.searchPlaceholder","type":"search-input"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if",[">",["array/len","@config.filters"],0],{"children":[{"entity":"CalendarEvent","event":"REFETCH_FILTER","filters":"@config.filters","look":"@config.filterBarLook","type":"filter-group"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],{"type":"divider"},{"entity":"@payload.data","fields":[],"gap":"md","groupBy":"@config.agendaGroupBy","itemActions":"@config.agendaItemActions","renderItem":["fn","item",{"children":[{"align":"start","children":[{"align":"center","children":[{"color":"muted","content":"@config.timeBinding","format":"time","type":"typography","variant":"overline"},{"color":"muted","name":"clock","size":"sm","type":"icon"}],"className":"w-16 shrink-0","direction":"vertical","gap":"xs","type":"stack"},{"orientation":"vertical","type":"divider"},{"children":[{"align":"center","children":[{"className":"truncate","content":"@config.titleBinding","type":"typography","variant":"h4","weight":"medium"},{"label":"@config.badgeBinding","size":"sm","type":"badge","variant":"default"}],"direction":"horizontal","gap":"sm","justify":"between","type":"stack"},{"className":"truncate","color":"muted","content":"@config.descriptionBinding","type":"typography","variant":"body2"}],"className":"flex-1 min-w-0","direction":"vertical","gap":"xs","type":"stack"}],"direction":"horizontal","gap":"md","type":"stack"}],"look":"flat-bordered","padding":"md","type":"card"}],"type":"data-list","variant":"default"}],"className":"w-full p-card-md","direction":"vertical","gap":"lg","type":"stack"}` */
   agendaListBodyContent?: unknown;
   /** Default: `"@item.status"` */
   badgeBinding?: string;
-  /** Default: `{"children":[{"align":"center","children":[{"align":"center","children":[{"name":"calendar","type":"icon"},{"content":"@config.title","type":"typography","variant":"h2"}],"direction":"horizontal","gap":"sm","type":"stack"},{"onSelect":"SELECT_DAY","selected":"@entity.selectedRange","type":"date-range-selector"}],"direction":"horizontal","gap":"md","justify":"between","type":"stack"},["if","@config.bodySearch",{"children":[{"className":"w-full max-w-md","clearable":true,"event":"REFETCH_QUERY","placeholder":"@config.searchPlaceholder","type":"search-input"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if",[">",["array/len","@config.filters"],0],{"children":[{"entity":"CalendarEvent","event":"REFETCH_FILTER","filters":"@config.filters","look":"@config.filterBarLook","type":"filter-group"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],{"type":"divider"},{"events":"@payload.data","onEventClick":"@config.onEventClick","renderItem":["fn","item",{"content":"@config.titleBinding","type":"typography","variant":"small"}],"startField":"@config.startField","type":"calendar-grid"},{"type":"divider"},{"content":"Upcoming Events","type":"typography","variant":"h4"},{"entity":"@payload.data","fields":[{"icon":"calendar","label":"Event","name":"name","variant":"h4"},{"label":"Time","name":"time","variant":"badge"},{"format":"date","label":"Date","name":"date","variant":"caption"},{"label":"Status","name":"status","variant":"badge"}],"itemActions":[{"event":"SELECT_DAY","icon":"eye","label":"View"}],"look":"@config.tableLook","type":"data-list"}],"direction":"vertical","gap":"lg","type":"stack"}` */
+  /** Default: `{"children":[{"align":"center","children":[{"align":"center","children":[{"name":"calendar","type":"icon"},{"content":"@config.title","type":"typography","variant":"h2"}],"direction":"horizontal","gap":"sm","type":"stack"},{"onSelect":"SELECT_DAY","selected":"@entity.selectedRange","type":"date-range-selector"}],"direction":"horizontal","gap":"md","justify":"between","type":"stack"},["if","@config.bodySearch",{"children":[{"className":"w-full max-w-md","clearable":true,"event":"REFETCH_QUERY","placeholder":"@config.searchPlaceholder","type":"search-input"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if",[">",["array/len","@config.filters"],0],{"children":[{"entity":"CalendarEvent","event":"REFETCH_FILTER","filters":"@config.filters","look":"@config.filterBarLook","type":"filter-group"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],{"type":"divider"},{"events":"@payload.data","onEventClick":"@config.onEventClick","renderItem":["fn","item",{"content":"@config.titleBinding","type":"typography","variant":"small"}],"startField":"@config.startField","type":"calendar-grid"},{"type":"divider"},{"content":"Upcoming Events","type":"typography","variant":"h4"},{"entity":"@payload.data","fields":[{"icon":"calendar","label":"Event","name":"name","variant":"h4"},{"label":"Time","name":"time","variant":"badge"},{"format":"date","label":"Date","name":"date","variant":"caption"},{"label":"Status","name":"status","variant":"badge"}],"itemActions":"@config.agendaItemActions","look":"@config.tableLook","type":"data-list"}],"direction":"vertical","gap":"lg","type":"stack"}` */
   bodyContent?: unknown;
   /** Default: `false` */
   bodySearch?: boolean;
@@ -81,6 +83,8 @@ export interface StdCalendarConfig {
   filterBarLook?: 'toolbar' | 'chips' | 'pills' | 'popover-trigger' | 'inline-column-header';
   /** Default: `[]` */
   filters?: EntityRow[];
+  /** Default: `[]` */
+  include?: string[];
   /** Default: `""` */
   onEventClick?: string;
   /** Default: `"Search…"` */
@@ -309,13 +313,7 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
             'type': 'string',
           },
           'agendaItemActions': {
-            'default': [
-              {
-                'event': 'SELECT_DAY',
-                'icon': 'eye',
-                'label': 'View',
-              },
-            ],
+            'default': [],
             'description': 'Per-item action buttons on agenda-list rows — data-list itemActions descriptors (label/event/icon/variant). Consumers override to wire their own row actions (View/Edit/Delete) so agenda hosts never need a second table for actions.',
             'items': {
               'properties': {
@@ -696,13 +694,7 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                       'variant': 'badge',
                     },
                   ],
-                  'itemActions': [
-                    {
-                      'event': 'SELECT_DAY',
-                      'icon': 'eye',
-                      'label': 'View',
-                    },
-                  ],
+                  'itemActions': '@config.agendaItemActions',
                   'look': '@config.tableLook',
                   'type': 'data-list',
                 },
@@ -788,6 +780,17 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
             'synonyms': 'filter bar, faceted filters, field filters, dropdowns',
             'tier': 'presentation',
             'type': '[FilterSpec]',
+          },
+          'include': {
+            'default': [],
+            'description': 'Entity relation field names to hydrate on fetch (e.g. a `category : Category` field named `category`), so chip bindings can use dot-paths like @item.category.name. Empty = no hydration, the default.',
+            'items': {
+              'type': 'string',
+            },
+            'label': 'Which relation fields to hydrate?',
+            'synonyms': 'relation hydration, populate relations, joined fields, hydrate relations',
+            'tier': 'internal',
+            'type': '[string]',
           },
           'onEventClick': {
             'default': '',
@@ -1033,12 +1036,20 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
             'tier': 'internal',
           },
           {
-            'description': 'Emitted when a calendar chip is clicked: UI:{onEventClick} with { event } carrying the clicked row.',
+            'description': 'Emitted when a calendar chip is clicked ({ event } carries the clicked row) or an agenda/upcoming row action fires ({ id, row }). Consumers routing it should read the row from ?event or ?row, whichever the payload carries.',
             'event': '@config.onEventClick',
             'payloadSchema': [
               {
                 'name': 'event',
-                'type': 'object',
+                'type': '@entity',
+              },
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+              {
+                'name': 'row',
+                'type': '@entity',
               },
             ],
             'scope': 'external',
@@ -1158,13 +1169,21 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
               'name': 'Retry',
             },
             {
-              'description': 'Emitted when a calendar chip is clicked: UI:{onEventClick} with { event } carrying the clicked row.',
+              'description': 'Emitted when a calendar chip is clicked ({ event } carries the clicked row) or an agenda/upcoming row action fires ({ id, row }). Consumers routing it should read the row from ?event or ?row, whichever the payload carries.',
               'key': '@config.onEventClick',
               'name': '@config.on event click',
               'payloadSchema': [
                 {
                   'name': 'event',
-                  'type': 'object',
+                  'type': '@entity',
+                },
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row',
+                  'type': '@entity',
                 },
               ],
               'tier': 'presentation',
@@ -1214,6 +1233,7 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                       'failure': 'CalendarEventLoadFailed',
                       'success': 'CalendarEventLoaded',
                     },
+                    'include': '@config.include',
                   },
                 ],
                 [
@@ -1334,6 +1354,7 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                       'failure': 'CalendarEventLoadFailed',
                       'success': 'CalendarEventLoaded',
                     },
+                    'include': '@config.include',
                   },
                 ],
                 [
@@ -1430,6 +1451,7 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                         ],
                       ],
                     ],
+                    'include': '@config.include',
                   },
                 ],
               ],
@@ -1457,6 +1479,7 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                       'failure': 'CalendarEventLoadFailed',
                       'success': 'CalendarEventLoaded',
                     },
+                    'include': '@config.include',
                   },
                 ],
               ],
@@ -1484,6 +1507,7 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                       'failure': 'CalendarEventLoadFailed',
                       'success': 'CalendarEventLoaded',
                     },
+                    'include': '@config.include',
                   },
                 ],
               ],
@@ -1518,6 +1542,7 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                         '@payload.searchTerm',
                       ],
                     ],
+                    'include': '@config.include',
                   },
                 ],
               ],
@@ -1552,6 +1577,7 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                         '@payload.value',
                       ],
                     ],
+                    'include': '@config.include',
                   },
                 ],
               ],
@@ -1569,6 +1595,7 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                       'failure': 'CalendarEventLoadFailed',
                       'success': 'CalendarEventLoaded',
                     },
+                    'include': '@config.include',
                   },
                 ],
                 [
@@ -1593,6 +1620,7 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                       'failure': 'CalendarEventLoadFailed',
                       'success': 'CalendarEventLoaded',
                     },
+                    'include': '@config.include',
                   },
                 ],
                 [

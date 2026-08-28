@@ -390,11 +390,6 @@ import {
   isStdReminderSchedulerReminderSchedulerOrbitalParams,
 } from './infra/atoms/std-reminder-scheduler.js';
 import {
-  stdRichEditorDocumentOrbital,
-  StdRichEditorDocumentOrbitalManifest,
-  isStdRichEditorDocumentOrbitalParams,
-} from './ui/core/atoms/std-rich-editor.js';
-import {
   stdRowAccessControlRowAccessControlOrbital,
   StdRowAccessControlRowAccessControlOrbitalManifest,
   isStdRowAccessControlRowAccessControlOrbitalParams,
@@ -1377,15 +1372,6 @@ REGISTRY_MUT.set('std-reminder-scheduler::ReminderSchedulerOrbital', {
     return stdReminderSchedulerReminderSchedulerOrbital(p);
   },
   manifest: StdReminderSchedulerReminderSchedulerOrbitalManifest,
-});
-REGISTRY_MUT.set('std-rich-editor::DocumentOrbital', {
-  factory: (p: object): OrbitalDefinition => {
-    if (!isStdRichEditorDocumentOrbitalParams(p)) {
-      throw new TypeError('Invalid params for std-rich-editor::DocumentOrbital');
-    }
-    return stdRichEditorDocumentOrbital(p);
-  },
-  manifest: StdRichEditorDocumentOrbitalManifest,
 });
 REGISTRY_MUT.set('std-row-access-control::RowAccessControlOrbital', {
   factory: (p: object): OrbitalDefinition => {

@@ -1,0 +1,218 @@
+[
+  {
+    "organism": "std-coef-pad",
+    "orbital": "CoefPadOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/game/atoms/std-coef-pad.ts",
+    "entities": [
+      {
+        "name": "CoefPadData",
+        "fields": [
+          {
+            "name": "coefPads",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "coefCompleted",
+            "type": "boolean",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "CoefPadLock",
+        "emittedEvents": [
+          "COEF_PAD_APPLIED",
+          "COEF_PAD_SET_COMPLETED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "COEF_PAD_APPLIED",
+            "direction": "emit",
+            "description": "The player stood on an unapplied coefficient pad; carries the pad position and the full mod (x0, x1, a, h, k) so the board appends it to the body authority's curveMods and hops the player onto the reshaped road. Fires once per pad per run.",
+            "tier": "domain"
+          },
+          {
+            "name": "COEF_PAD_SET_COMPLETED",
+            "direction": "emit",
+            "description": "Every coefficient pad in the set is applied; fires once per run. Boards layer the completion fx and dismiss the zone card.",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "BODY_MOVED",
+            "direction": "listen"
+          },
+          {
+            "name": "RESTART",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "coefPads",
+            "type": "[CoefPad]",
+            "default": [],
+            "label": "Coefficient Pads",
+            "description": "One row per pad: id, center (x, y in world units), the mod applied to the road while inside x0..x1 (a scales slope+height, h shifts horizontally, k lifts), and the hint floated on apply, and hop (true = the board teleports the player onto the reshaped surface — use when the mod steps the road far from the pad; false = the skate snap carries the player, preserving speed). applied is stamped at runtime.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "applied": {
+                  "name": "applied",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "glyph": {
+                  "name": "glyph",
+                  "required": false,
+                  "type": "string"
+                },
+                "hint": {
+                  "name": "hint",
+                  "required": false,
+                  "type": "string"
+                },
+                "hop": {
+                  "name": "hop",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "mod": {
+                  "name": "mod",
+                  "required": true,
+                  "properties": {
+                    "a": {
+                      "name": "a",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "h": {
+                      "name": "h",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "k": {
+                      "name": "k",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "x0": {
+                      "name": "x0",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "x1": {
+                      "name": "x1",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
+                },
+                "samples": {
+                  "name": "samples",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "x": {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "y": {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "reachX",
+            "type": "number",
+            "default": 0.7,
+            "label": "Reach X",
+            "description": "Horizontal tolerance (world units) around a pad's center when testing player contact (approximates the body's half-width plus a step).",
+            "tier": "domain"
+          },
+          {
+            "key": "reachY",
+            "type": "number",
+            "default": 1.2,
+            "label": "Reach Y",
+            "description": "Vertical tolerance (world units) around a pad's center when testing player contact (covers riding the surface the pad sits on).",
+            "tier": "domain"
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true, BODY_MOVED applies touched pads; toggle to freeze every pad as-is.",
+            "tier": "domain"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "CoefPadData",
+        "transitionEvents": [
+          "BODY_MOVED",
+          "INIT",
+          "RESTART"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "coefCompleted",
+            "coefPads"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "CoefPadPage",
+        "defaultPath": "/coef-pad",
+        "primaryEntity": "CoefPadData"
+      }
+    ],
+    "emittedEvents": [
+      "COEF_PAD_APPLIED",
+      "COEF_PAD_SET_COMPLETED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

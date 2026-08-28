@@ -237,13 +237,7 @@
               "type": "string"
             },
             "agendaItemActions": {
-              "default": [
-                {
-                  "event": "SELECT_DAY",
-                  "icon": "eye",
-                  "label": "View"
-                }
-              ],
+              "default": [],
               "description": "Per-item action buttons on agenda-list rows — data-list itemActions descriptors (label/event/icon/variant). Consumers override to wire their own row actions (View/Edit/Delete) so agenda hosts never need a second table for actions.",
               "items": {
                 "properties": {
@@ -624,13 +618,7 @@
                         "variant": "badge"
                       }
                     ],
-                    "itemActions": [
-                      {
-                        "event": "SELECT_DAY",
-                        "icon": "eye",
-                        "label": "View"
-                      }
-                    ],
+                    "itemActions": "@config.agendaItemActions",
                     "look": "@config.tableLook",
                     "type": "data-list"
                   }
@@ -716,6 +704,17 @@
               "synonyms": "filter bar, faceted filters, field filters, dropdowns",
               "tier": "presentation",
               "type": "[FilterSpec]"
+            },
+            "include": {
+              "default": [],
+              "description": "Entity relation field names to hydrate on fetch (e.g. a `category : Category` field named `category`), so chip bindings can use dot-paths like @item.category.name. Empty = no hydration, the default.",
+              "items": {
+                "type": "string"
+              },
+              "label": "Which relation fields to hydrate?",
+              "synonyms": "relation hydration, populate relations, joined fields, hydrate relations",
+              "tier": "internal",
+              "type": "[string]"
             },
             "onEventClick": {
               "default": "",
@@ -963,13 +962,21 @@
               "tier": "internal"
             },
             {
-              "description": "Emitted when a calendar chip is clicked: UI:{onEventClick} with { event } carrying the clicked row.",
+              "description": "Emitted when a calendar chip is clicked ({ event } carries the clicked row) or an agenda/upcoming row action fires ({ id, row }). Consumers routing it should read the row from ?event or ?row, whichever the payload carries.",
               "event": "@config.onEventClick",
               "eventId": "evt_01KYBV098PMR56F9NQ5CWWPX36",
               "payloadSchema": [
                 {
                   "name": "event",
-                  "type": "object"
+                  "type": "@entity"
+                },
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "row",
+                  "type": "@entity"
                 }
               ],
               "scope": "external",
@@ -1103,14 +1110,22 @@
                 "name": "Retry"
               },
               {
-                "description": "Emitted when a calendar chip is clicked: UI:{onEventClick} with { event } carrying the clicked row.",
+                "description": "Emitted when a calendar chip is clicked ({ event } carries the clicked row) or an agenda/upcoming row action fires ({ id, row }). Consumers routing it should read the row from ?event or ?row, whichever the payload carries.",
                 "id": "evt_01KYBV098PMR56F9NQ5CWWPX36",
                 "key": "@config.onEventClick",
                 "name": "@config.on event click",
                 "payloadSchema": [
                   {
                     "name": "event",
-                    "type": "object"
+                    "type": "@entity"
+                  },
+                  {
+                    "name": "id",
+                    "type": "string"
+                  },
+                  {
+                    "name": "row",
+                    "type": "@entity"
                   }
                 ],
                 "tier": "presentation"
@@ -1160,7 +1175,8 @@
                       "emit": {
                         "failure": "CalendarEventLoadFailed",
                         "success": "CalendarEventLoaded"
-                      }
+                      },
+                      "include": "@config.include"
                     }
                   ],
                   [
@@ -1283,7 +1299,8 @@
                       "emit": {
                         "failure": "CalendarEventLoadFailed",
                         "success": "CalendarEventLoaded"
-                      }
+                      },
+                      "include": "@config.include"
                     }
                   ],
                   [
@@ -1380,7 +1397,8 @@
                             ]
                           ]
                         ]
-                      ]
+                      ],
+                      "include": "@config.include"
                     }
                   ]
                 ],
@@ -1408,7 +1426,8 @@
                       "emit": {
                         "failure": "CalendarEventLoadFailed",
                         "success": "CalendarEventLoaded"
-                      }
+                      },
+                      "include": "@config.include"
                     }
                   ]
                 ],
@@ -1436,7 +1455,8 @@
                       "emit": {
                         "failure": "CalendarEventLoadFailed",
                         "success": "CalendarEventLoaded"
-                      }
+                      },
+                      "include": "@config.include"
                     }
                   ]
                 ],
@@ -1471,7 +1491,8 @@
                           ],
                           "@payload.searchTerm"
                         ]
-                      ]
+                      ],
+                      "include": "@config.include"
                     }
                   ]
                 ],
@@ -1506,7 +1527,8 @@
                           ],
                           "@payload.value"
                         ]
-                      ]
+                      ],
+                      "include": "@config.include"
                     }
                   ]
                 ],
@@ -1524,7 +1546,8 @@
                       "emit": {
                         "failure": "CalendarEventLoadFailed",
                         "success": "CalendarEventLoaded"
-                      }
+                      },
+                      "include": "@config.include"
                     }
                   ],
                   [
@@ -1549,7 +1572,8 @@
                       "emit": {
                         "failure": "CalendarEventLoadFailed",
                         "success": "CalendarEventLoaded"
-                      }
+                      },
+                      "include": "@config.include"
                     }
                   ],
                   [

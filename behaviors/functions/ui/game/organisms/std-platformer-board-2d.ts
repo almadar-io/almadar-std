@@ -207,6 +207,41 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
             'default': [],
             'items': {
               'properties': {
+                'a': {
+                  'name': 'a',
+                  'required': true,
+                  'type': 'number',
+                },
+                'h': {
+                  'name': 'h',
+                  'required': true,
+                  'type': 'number',
+                },
+                'k': {
+                  'name': 'k',
+                  'required': true,
+                  'type': 'number',
+                },
+                'x0': {
+                  'name': 'x0',
+                  'required': true,
+                  'type': 'number',
+                },
+                'x1': {
+                  'name': 'x1',
+                  'required': true,
+                  'type': 'number',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'curveMods',
+            'type': 'array',
+          },
+          {
+            'default': [],
+            'items': {
+              'properties': {
                 'bornAt': {
                   'name': 'bornAt',
                   'required': false,

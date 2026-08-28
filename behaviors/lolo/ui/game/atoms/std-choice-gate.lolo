@@ -1,0 +1,100 @@
+app std-choice-gate "1.0.0"
+"Headless choice-gate mechanic for side-view boards: a gate of N labeled option platforms where progress stops until the player commits to an answer. Listens BODY_MOVED and judges a gate when the player stands grounded on one of its option platforms (|dx| <= reachX of the option center, |dy| <= reachY of the gate's option plane — the pad-lock touch pattern): the correct option stamps the gate solved + chosen on the shared entity and emits CHOICE_CORRECT once (a solved gate never judges again, so the path stays open); a wrong option emits CHOICE_WRONG carrying the gate id, the chosen optionId, and the option's world position, so the board can bounce the player back and float the gate's hint (the board owns the bounce — the atom only reports). RESTART unsolves every gate. Renders nothing; boards draw the option platforms and labels from the shared entity (the render authority)."
+orbital ChoiceGateOrbital {
+  type ChoiceOption = {
+    id : string!
+    dx : number!
+    label : string!
+    correct : boolean!
+  }
+  type ChoiceGate = {
+    id : string!
+    x : number!
+    y : number!
+    hint : string
+    options : [ChoiceOption]!
+    solved : boolean
+    chosen : string
+  }
+
+  entity ChoiceGateData [runtime, shared] {
+    id : string!
+    choices : [ChoiceGate] = []
+  }
+
+  trait ChoiceGate -> @rebindable ChoiceGateData [lifecycle] {
+    initial: active
+
+    state active {
+      INIT -> active
+        (set @entity.choices (array/map @config.gates (fn g (object/merge @g { solved: false, chosen: "" }))))
+
+      BODY_MOVED -> active when @config.running
+        (let ((touch (array/filter @entity.choices (fn g
+          (and (== (object/get @g solved) false)
+            (> (array/len (array/filter (object/get @g options) (fn o
+              (and (== @payload.grounded true)
+                (and (<= (math/abs (- @payload.x (+ (object/get @g x) (object/get @o dx)))) @config.reachX)
+                  (<= (math/abs (- @payload.y (object/get @g y))) @config.reachY)))))) 0))))))
+        (if (> (array/len @touch) 0)
+          (let ((g (array/first @touch)))
+          (let ((o (array/first (array/filter (object/get @g options) (fn oo
+            (and (== @payload.grounded true)
+              (and (<= (math/abs (- @payload.x (+ (object/get @g x) (object/get @oo dx)))) @config.reachX)
+                (<= (math/abs (- @payload.y (object/get @g y))) @config.reachY))))))))
+          (if (== (object/get @o correct) true)
+            (do
+              (set @entity.choices (array/map @entity.choices (fn c (if (== (object/get @c id) (object/get @g id)) (object/merge @c { solved: true, chosen: (object/get @o id) }) @c))))
+              (emit CHOICE_CORRECT { id: (object/get @g id), x: (object/get @g x), y: (object/get @g y) }))
+            (emit CHOICE_WRONG { id: (object/get @g id), optionId: (object/get @o id), x: (+ (object/get @g x) (object/get @o dx)), y: (object/get @g y) }))))
+          null))
+
+      RESTART -> active
+        (set @entity.choices (array/map @config.gates (fn g (object/merge @g { solved: false, chosen: "" }))))
+    }
+
+    emits {
+      CHOICE_CORRECT -> external {
+        id : string!
+        x : number!
+        y : number!
+      }
+        @description "The player landed grounded on the gate's correct option; fires once per gate (solved gates stop judging). Carries the gate center so boards can burst the unlock there."
+        @tier "domain"
+      CHOICE_WRONG -> external {
+        id : string!
+        optionId : string!
+        x : number!
+        y : number!
+      }
+        @description "The player landed grounded on a wrong option; carries the gate id, the chosen optionId, and the option's world position so boards can bounce the player back to the approach and float the gate's hint."
+        @tier "domain"
+    }
+
+    listens {
+      BODY_MOVED { x : number!, y : number!, vx : number!, vy : number!, grounded : boolean!, skating : boolean!, speed : number! }
+      RESTART { id : string }
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true, BODY_MOVED judges option landings; toggle to freeze every gate as-is."
+        @tier "domain"
+      gates : [ChoiceGate] = []
+        @label "Choice Gates"
+        @description "One row per gate: id, gate center (x, y — y is the option-platform surface the judge tests against), the hint floated on a wrong answer, and the options: id, dx offset from the gate center, the label drawn above the platform, and correct. solved/chosen are stamped at runtime."
+        @tier "domain"
+      reachX : number = 0.7
+        @label "Reach X"
+        @description "Horizontal tolerance (world units) around an option platform's center when testing a landing (approximates the body's half-width plus a step)."
+        @tier "domain"
+      reachY : number = 1.2
+        @label "Reach Y"
+        @description "Vertical tolerance (world units) around the gate's option plane when testing a landing (covers small hops onto the platform surface)."
+        @tier "domain"
+    }
+  }
+
+  page "/choice-gate" as ChoiceGatePage -> ChoiceGate
+}

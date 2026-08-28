@@ -1,0 +1,162 @@
+[
+  {
+    "organism": "std-zone-card",
+    "orbital": "ZoneCardOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/game/atoms/std-zone-card.ts",
+    "entities": [
+      {
+        "name": "ZoneCardData",
+        "fields": [
+          {
+            "name": "zoneId",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "card",
+            "type": "object",
+            "required": false
+          },
+          {
+            "name": "enteredAt",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "ticks",
+            "type": "number",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "ZoneCard",
+        "emittedEvents": [
+          "ZONE_CHANGED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "ZONE_CHANGED",
+            "direction": "emit",
+            "description": "The player crossed into a different zone; carries the zone's card fields (name, concept, objective) so boards can swap banners/guides and hold the card up. Fires once per crossing.",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "BODY_MOVED",
+            "direction": "listen"
+          },
+          {
+            "name": "CARD_DISMISS",
+            "direction": "listen"
+          },
+          {
+            "name": "RESTART",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true, BODY_MOVED tracks the current zone and ages the card; toggle to freeze the card as-is.",
+            "tier": "domain"
+          },
+          {
+            "key": "ttlTicks",
+            "type": "number",
+            "default": 120,
+            "label": "TTL Ticks",
+            "description": "BODY_MOVED ticks the card stays up after a zone crossing (≈ 4s at 30 moves/s) before it clears itself.",
+            "tier": "domain"
+          },
+          {
+            "key": "zones",
+            "type": "[ZoneCardZone]",
+            "default": [],
+            "label": "Zones",
+            "description": "One row per world band: id, display name, the one-line concept, the zone's objective text, and the x-range (x0..x1) the band covers.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "concept": {
+                  "name": "concept",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
+                "objective": {
+                  "name": "objective",
+                  "required": false,
+                  "type": "string"
+                },
+                "x0": {
+                  "name": "x0",
+                  "required": true,
+                  "type": "number"
+                },
+                "x1": {
+                  "name": "x1",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "ZoneCardData",
+        "transitionEvents": [
+          "BODY_MOVED",
+          "CARD_DISMISS",
+          "INIT",
+          "RESTART"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "card",
+            "enteredAt",
+            "ticks",
+            "zoneId"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "ZoneCardPage",
+        "defaultPath": "/zone-card",
+        "primaryEntity": "ZoneCardData"
+      }
+    ],
+    "emittedEvents": [
+      "ZONE_CHANGED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

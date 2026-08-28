@@ -24,6 +24,11 @@
             "required": false
           },
           {
+            "name": "curveMods",
+            "type": "array",
+            "required": false
+          },
+          {
             "name": "goalId",
             "type": "string",
             "required": false
@@ -117,11 +122,23 @@
             "direction": "listen"
           },
           {
+            "name": "CURVE_MOD_ADD",
+            "direction": "listen"
+          },
+          {
             "name": "RESTART",
             "direction": "listen"
           }
         ],
         "overridableConfigKeys": [
+          {
+            "key": "curveModsEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Curve Mods Enabled",
+            "description": "When true, entity.curveMods reshape the skate surface inside each mod's x-range: the road samples the base curve at (x − h) and applies a·y + k (slope scales by a) — coefficient pads lift/tilt the segment the player is riding. Default off: boards without coef pads pay nothing.",
+            "tier": "domain"
+          },
           {
             "key": "driftRegions",
             "type": "[BodyDriftRegion]",
@@ -385,6 +402,7 @@
         "capabilities": [],
         "linkedEntity": "PlatformerBodyData",
         "transitionEvents": [
+          "CURVE_MOD_ADD",
           "INIT",
           "JUMP",
           "PLACE",
@@ -396,6 +414,7 @@
           "requires": [],
           "provides": [
             "body",
+            "curveMods",
             "fell",
             "goalId",
             "hazardId",

@@ -1,56 +1,60 @@
-app ui-rich-block-editor "1.0.0"
-"RichBlockEditor — UI factory (1:1 with the @almadar/ui rich-block-editor pattern)."
-orbital RichBlockEditorOrbital {
-    type RichBlockEditorLoaded = Event { data : [RichBlockEditorItem] } "RichBlockEditor rows finished loading; payload.data holds the collection"
-
-  entity RichBlockEditorItem [runtime] {
+app ui-rich-text-editor "1.0.0"
+"RichTextEditor — UI factory (1:1 with the @almadar/ui rich-text-editor pattern)."
+orbital RichTextEditorOrbital {
+  entity RichTextEditorItem [runtime] {
     id : string!
+    value : string
   }
 
-  trait RichBlockEditorRender -> @rebindable RichBlockEditorItem [interaction, instance] {
+  trait RichTextEditorRender -> @rebindable RichTextEditorItem [interaction, instance] {
     initial: idle
 
     state idle {
       INIT -> idle
-        (fetch RichBlockEditorItem { emit: { success: RichBlockEditorLoaded } })
+        (set @entity.value @config.value)
         (render-ui main {
-          initialBlocks: @entity
+          value: @entity.value
           onChange: @config.onChange
           changeEvent: @config.changeEvent
           readOnly: @config.readOnly
           placeholder: @config.placeholder
-          enableBlocks: @config.enableBlocks
           showToolbar: @config.showToolbar
           className: @config.className
-          type: rich-block-editor
+          type: rich-text-editor
         })
-      RichBlockEditorLoaded -> idle
+      CHANGE -> idle
+        (set @entity.value ?value)
         (render-ui main {
-          initialBlocks: @payload.data
+          value: @entity.value
           onChange: @config.onChange
           changeEvent: @config.changeEvent
           readOnly: @config.readOnly
           placeholder: @config.placeholder
-          enableBlocks: @config.enableBlocks
           showToolbar: @config.showToolbar
           className: @config.className
-          type: rich-block-editor
+          type: rich-text-editor
         })
     }
 
     emits {
       @config.onChange -> external {
-        blocks : [object]
+        value : string
       }
         @description "onChange prop"
         @tier "essential"
-      RichBlockEditorLoaded
-        @description "RichBlockEditor rows finished loading; payload.data holds the collection."
-        @synonyms "loaded, fetched, retrieved"
-        @tier "essential"
+    }
+
+    listens {
+      CHANGE {
+        value : string
+      }
     }
 
     config {
+      value : string
+        @label "Value"
+        @description "The rich text content as HTML. Sanitized before rendering and on every change."
+        @tier "presentation"
       onChange : string = "CHANGE"
         @label "On Change"
         @description "onChange prop"
@@ -67,10 +71,6 @@ orbital RichBlockEditorOrbital {
         @label "Placeholder"
         @description "placeholder prop"
         @tier "presentation"
-      enableBlocks : boolean = true
-        @label "Enable Blocks"
-        @description "Opt-in to the Notion-style block authoring chrome (insert toolbar, per-row +/menu gutter, turn-into menu). Off by default: the editor renders as a plain rich text surface that edits block content inline without any add-block affordances."
-        @tier "presentation"
       showToolbar : boolean = true
         @label "Show Toolbar"
         @description "showToolbar prop"
@@ -82,5 +82,5 @@ orbital RichBlockEditorOrbital {
     }
   }
 
-  page "/rich-block-editor" as RichBlockEditorPage -> RichBlockEditorRender
+  page "/rich-text-editor" as RichTextEditorPage -> RichTextEditorRender
 }

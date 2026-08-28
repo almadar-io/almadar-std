@@ -28,6 +28,7 @@ orbital CalendarEventOrbital {
         (set @entity.weekAnchor (time/now))
         (fetch CalendarEvent {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
+          include: @config.include
         })
         (render-ui main {
           align: center
@@ -82,6 +83,7 @@ orbital CalendarEventOrbital {
       INIT -> loading
         (fetch CalendarEvent {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
+          include: @config.include
         })
         (render-ui main { type: spinner })
       SELECT_DAY -> loading
@@ -90,17 +92,20 @@ orbital CalendarEventOrbital {
         ;; hardcoded `date`, which retargeted consumers (startField=startTime) lack
         (fetch CalendarEvent {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
+          include: @config.include
           filter: (time/isAfter (time/parse (object/get @entity @config.startField)) (if ["=", ?value, week] (time/subtract (time/now) 1 week) (if ["=", ?value, "3months"] (time/subtract (time/now) 3 month) (if ["=", ?value, year] (time/subtract (time/now) 1 year) (time/subtract (time/now) 1 month)))))
         })
       CALENDAR_PREV_WEEK -> loading
         (set @entity.weekAnchor (time/subtract @entity.weekAnchor 1 week))
         (fetch CalendarEvent {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
+          include: @config.include
         })
       CALENDAR_NEXT_WEEK -> loading
         (set @entity.weekAnchor (time/add @entity.weekAnchor 1 week))
         (fetch CalendarEvent {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
+          include: @config.include
         })
       ;; Same no-render-ui shape as SELECT_DAY/CALENDAR_*_WEEK above: transition
       ;; to `loading` without repainting, so the current grid/agenda/timeline
@@ -109,11 +114,13 @@ orbital CalendarEventOrbital {
       REFETCH_QUERY -> loading
         (fetch CalendarEvent {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
+          include: @config.include
           filter: (or ["=", ?searchTerm, ""] (str/includes (object/get @entity name) ?searchTerm))
         })
       REFETCH_FILTER -> loading
         (fetch CalendarEvent {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
+          include: @config.include
           filter: (or ["=", ?value, ""] ["=", (object/get @entity ?field), ?value])
         })
     }
@@ -122,6 +129,7 @@ orbital CalendarEventOrbital {
       INIT -> loading
         (fetch CalendarEvent {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
+          include: @config.include
         })
         (render-ui main { type: spinner })
       ;; the error screen's Retry button: INIT is lifecycle-only and the bus never
@@ -129,6 +137,7 @@ orbital CalendarEventOrbital {
       RETRY -> loading
         (fetch CalendarEvent {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
+          include: @config.include
         })
         (render-ui main { type: spinner })
     }
@@ -143,9 +152,11 @@ orbital CalendarEventOrbital {
         @synonyms "error, failed, problem, loading issue"
         @tier "internal"
       @config.onEventClick -> external {
-        event : object
+        event : @entity
+        id : string
+        row : @entity
       }
-        @description "Emitted when a calendar chip is clicked: UI:{onEventClick} with { event } carrying the clicked row."
+        @description "Emitted when a calendar chip is clicked ({ event } carries the clicked row) or an agenda/upcoming row action fires ({ id, row }). Consumers routing it should read the row from ?event or ?row, whichever the payload carries."
         @tier "presentation"
     }
 
@@ -213,6 +224,11 @@ orbital CalendarEventOrbital {
         @label "Description binding"
         @description "Per-row binding for the event description slot."
         @tier "presentation"
+      include : [string] = []
+        @label "Which relation fields to hydrate?"
+        @description "Entity relation field names to hydrate on fetch (e.g. a `category : Category` field named `category`), so chip bindings can use dot-paths like @item.category.name. Empty = no hydration, the default."
+        @synonyms "relation hydration, populate relations, joined fields, hydrate relations"
+        @tier "internal"
       startField : string = "date"
         @label "Start field"
         @description "Row column holding the timestamp the calendar grid places each chip by. Rebound hosts point this at their own column (e.g. startTime, startsAt, dueAt); the chip's LABEL comes from titleBinding, not from here."
@@ -231,7 +247,7 @@ orbital CalendarEventOrbital {
         @label "Title"
         @description "Header text shown above the calendar body."
         @tier "presentation"
-      agendaItemActions : [ItemAction] = [{ event: SELECT_DAY, icon: eye, label: View }]
+      agendaItemActions : [ItemAction] = []
         @label "Agenda item actions"
         @description "Per-item action buttons on agenda-list rows — data-list itemActions descriptors (label/event/icon/variant). Consumers override to wire their own row actions (View/Edit/Delete) so agenda hosts never need a second table for actions."
         @synonyms "agenda actions, row actions, event actions, list actions"
@@ -348,11 +364,7 @@ orbital CalendarEventOrbital {
             name: status
             variant: badge
           }]
-          itemActions: [{
-            event: SELECT_DAY
-            icon: eye
-            label: View
-          }]
+          itemActions: @config.agendaItemActions
           look: @config.tableLook
           type: data-list
         }]

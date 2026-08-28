@@ -1,0 +1,80 @@
+app ui-document-details "1.0.0"
+"DocumentDetails — the document's metadata as a compact settings card for the rail beside a DocumentPanel, each property committing in place. — UI factory (1:1 with the @almadar/ui document-details pattern)."
+;; @capabilities "document settings, page details, post settings sidebar, metadata panel, document properties, publish settings"
+orbital DocumentDetailsOrbital {
+    type DocumentDetailsLoaded = Event { data : [DocumentDetailsItem] } "DocumentDetails rows finished loading; payload.data holds the collection"
+  type DocumentDetailsFieldsItem = {
+    name : string
+    key : string
+    label : string
+    header : string
+    icon : icon
+    kind : "text" | "boolean" | "select" | "readonly"
+    options : [string]
+    format : "date" | "currency" | "number" | "boolean" | "percent"
+  }
+
+  entity DocumentDetailsItem [runtime] {
+    id : string!
+  }
+
+  trait DocumentDetailsRender -> @rebindable DocumentDetailsItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch DocumentDetailsItem { emit: { success: DocumentDetailsLoaded } })
+        (render-ui main {
+          entity: @entity
+          fields: @config.fields
+          metaCommitEvent: @config.metaCommitEvent
+          title: @config.title
+          className: @config.className
+          type: document-details
+        })
+      DocumentDetailsLoaded -> idle
+        (render-ui main {
+          entity: @payload.data
+          fields: @config.fields
+          metaCommitEvent: @config.metaCommitEvent
+          title: @config.title
+          className: @config.className
+          type: document-details
+        })
+    }
+
+    emits {
+      @config.metaCommitEvent -> external {
+        id : string!
+        patch : object!
+      }
+        @description "Emitted when a property commits: { id, patch } — patch carries the id plus the one changed field, ready for a partial persist update."
+        @tier "essential"
+      DocumentDetailsLoaded
+        @description "DocumentDetails rows finished loading; payload.data holds the collection."
+        @synonyms "loaded, fetched, retrieved"
+        @tier "essential"
+    }
+
+    config {
+      fields : [DocumentDetailsFieldsItem] = []
+        @label "Fields"
+        @description "The properties shown; empty renders nothing."
+        @tier "presentation"
+      metaCommitEvent : string = "META_COMMIT"
+        @label "Meta Commit Event"
+        @description "Emitted when a property commits: { id, patch } — patch carries the id plus the one changed field, ready for a partial persist update."
+        @tier "presentation"
+      title : string
+        @label "Title"
+        @description "Card heading (defaults to the localized 'Details')"
+        @tier "presentation"
+      className : string
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/document-details" as DocumentDetailsPage -> DocumentDetailsRender
+}
