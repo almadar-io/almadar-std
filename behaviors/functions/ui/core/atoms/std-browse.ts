@@ -51,6 +51,8 @@ export interface StdBrowseConfig {
   maxInlineActions?: unknown;
   /** Default: `"@config.displayPageSize"` */
   pageSize?: unknown;
+  /** Default: `false` */
+  selfFetch?: unknown;
 }
 
 /**
@@ -322,6 +324,10 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
             'default': '@config.displayPageSize',
             'type': 'unknown',
           },
+          'selfFetch': {
+            'default': false,
+            'type': 'unknown',
+          },
         },
         'linkedEntity': 'BrowseItem',
         'listens': [
@@ -371,6 +377,10 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
             'default': '@config.selectable',
             'type': 'unknown',
           },
+          'selfFetch': {
+            'default': false,
+            'type': 'unknown',
+          },
         },
         'linkedEntity': 'BrowseItem',
         'listens': [
@@ -402,6 +412,10 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
           },
           'maxInlineActions': {
             'default': '@config.maxInlineActions',
+            'type': 'unknown',
+          },
+          'selfFetch': {
+            'default': false,
             'type': 'unknown',
           },
           'variant': {

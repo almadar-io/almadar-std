@@ -106,6 +106,8 @@ export interface StdUiCalendarGridConfig {
   onEventClick?: string;
   /** Default: `"SLOT_CLICK"` */
   onSlotClick?: string;
+  /** Default: `true` */
+  selfFetch?: boolean;
   /** Default: `"startTime"` */
   startField?: string;
   /** Default: `"SWIPE_LEFT"` */

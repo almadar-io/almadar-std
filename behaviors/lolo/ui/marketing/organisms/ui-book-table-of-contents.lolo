@@ -11,8 +11,16 @@ orbital BookTableOfContentsOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle
+      INIT -> idle when @config.selfFetch
         (fetch BookTableOfContentsItem { emit: { success: BookTableOfContentsLoaded } })
+        (render-ui main {
+          className: @config.className
+          parts: @entity
+          currentChapterId: @config.currentChapterId
+          direction: @config.direction
+          type: book-table-of-contents
+        })
+      INIT -> idle when (not @config.selfFetch)
         (render-ui main {
           className: @config.className
           parts: @entity
@@ -50,6 +58,10 @@ orbital BookTableOfContentsOrbital {
         @label "Direction"
         @description "direction prop"
         @tier "presentation"
+      selfFetch : boolean = true
+        @label "Fetch its own rows on mount?"
+        @description "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's."
+        @tier "internal"
     }
   }
 

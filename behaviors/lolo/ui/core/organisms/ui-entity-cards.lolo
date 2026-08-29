@@ -37,8 +37,37 @@ orbital EntityCardsOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle
+      INIT -> idle when @config.selfFetch
         (fetch EntityCardsItem { emit: { success: EntityCardsLoaded } })
+        (render-ui main {
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          page: @config.pageProp
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          entity: @entity
+          minCardWidth: @config.minCardWidth
+          maxCols: @config.maxCols
+          gap: @config.gap
+          alignItems: @config.alignItems
+          children: @config.children
+          fields: @config.fields
+          fieldNames: @config.fieldNames
+          columns: @config.columns
+          itemActions: @config.itemActions
+          showTotal: @config.showTotal
+          showAvatar: @config.showAvatar
+          variant: @config.variant
+          imageField: @config.imageField
+          type: entity-cards
+        })
+      INIT -> idle when (not @config.selfFetch)
         (render-ui main {
           className: @config.className
           isLoading: @config.isLoading
@@ -208,6 +237,10 @@ orbital EntityCardsOrbital {
         @label "Image Field"
         @description "Entity field name containing an image URL to display as card thumbnail"
         @tier "presentation"
+      selfFetch : boolean = true
+        @label "Fetch its own rows on mount?"
+        @description "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's."
+        @tier "internal"
     }
   }
 

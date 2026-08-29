@@ -199,6 +199,15 @@
         "parent": "trt_01M13SSYQC6GCVFQK8J7QAS1M7",
         "renames": []
       },
+      "evt_01M1696YX8ZY95Y09Z3XB3MPT0": {
+        "bakedName": "RELATION_OPEN",
+        "curName": "RELATION_OPEN",
+        "id": "evt_01M1696YX8ZY95Y09Z3XB3MPT0",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M13SSYQC6GCVFQK8J7QAS1M7",
+        "renames": []
+      },
       "orb_01M11G7GKT7RY3DH0JWRPW7G7M": {
         "bakedName": "RecordItemOrbital",
         "curName": "RecordItemOrbital",
@@ -281,6 +290,20 @@
             "description": "The record's rich-text body as HTML, edited in place by the document look.",
             "name": "content",
             "synonyms": "body, text, document, article body",
+            "type": "string"
+          },
+          {
+            "default": "",
+            "description": "The document look's cover/hero image URL, stamped from the loaded row's coverField.",
+            "intrinsic": true,
+            "name": "coverUrl",
+            "type": "string"
+          },
+          {
+            "default": "",
+            "description": "The document look's icon name, stamped from the loaded row's iconField.",
+            "intrinsic": true,
+            "name": "iconName",
             "type": "string"
           },
           {
@@ -420,6 +443,14 @@
               "tier": "presentation",
               "type": "string"
             },
+            "coverField": {
+              "default": "",
+              "description": "Name of the image-typed field on the loaded record painted as the document look's full-bleed hero banner (e.g. coverImage, heroImage). Empty = no banner, the default.",
+              "label": "Which field is the cover image?",
+              "synonyms": "cover field, hero image field, banner field",
+              "tier": "presentation",
+              "type": "string"
+            },
             "detailLook": {
               "default": "panel",
               "description": "Visual treatment for the record surface. panel = an inline detail-panel in the page flow (bodyContent); slide-over = the same panel as a right-hand drawer over the list behind it (slideOverBodyContent); page = a full-width record page with roomier spacing (pageBodyContent); document = a wiki-page/note/article surface — big editable title over a rich-text body, no labelled field rows, click-to-edit with autosave (documentBodyContent / documentEditingContent). Selecting a look swaps which body tree renders after the record loads; any body may still be overridden directly at the call site.",
@@ -438,8 +469,10 @@
               "default": {
                 "actions": "@config.actions",
                 "className": "w-full",
+                "coverImage": "@entity.coverUrl",
                 "editEvent": "EDIT_CONTENT",
                 "editLabel": "@config.editLabel",
+                "icon": "@entity.iconName",
                 "id": "@entity.id",
                 "maxInlineActions": "@config.maxInlineActions",
                 "placeholder": "@config.placeholder",
@@ -460,9 +493,11 @@
                 "autosaveHint": "@config.autosaveHint",
                 "className": "w-full",
                 "contentChangeEvent": "CONTENT_CHANGE",
+                "coverImage": "@entity.coverUrl",
                 "doneEvent": "DONE_EDITING",
                 "doneLabel": "@config.doneLabel",
                 "editing": true,
+                "icon": "@entity.iconName",
                 "id": "@entity.id",
                 "maxInlineActions": "@config.maxInlineActions",
                 "placeholder": "@config.placeholder",
@@ -543,6 +578,14 @@
               "synonyms": "detail fields, record fields, panel fields, shown fields",
               "tier": "presentation",
               "type": "[RecordFieldSpec]"
+            },
+            "iconField": {
+              "default": "",
+              "description": "Name of the field on the loaded record whose icon name renders beside the document title (e.g. icon). Empty = no icon, the default.",
+              "label": "Which field is the document icon?",
+              "synonyms": "icon field, glyph field",
+              "tier": "presentation",
+              "type": "string"
             },
             "include": {
               "default": [],
@@ -780,6 +823,14 @@
                       "type": "string"
                     },
                     {
+                      "name": "coverUrl",
+                      "type": "string"
+                    },
+                    {
+                      "name": "iconName",
+                      "type": "string"
+                    },
+                    {
                       "name": "loadedRow",
                       "type": "object"
                     },
@@ -836,6 +887,14 @@
                     },
                     {
                       "name": "content",
+                      "type": "string"
+                    },
+                    {
+                      "name": "coverUrl",
+                      "type": "string"
+                    },
+                    {
+                      "name": "iconName",
                       "type": "string"
                     },
                     {
@@ -932,7 +991,9 @@
           "entityContract": {
             "provides": [
               "content",
+              "coverUrl",
               "description",
+              "iconName",
               "loadedRow",
               "name",
               "openDraft",
@@ -1189,6 +1250,14 @@
                         "type": "string"
                       },
                       {
+                        "name": "coverUrl",
+                        "type": "string"
+                      },
+                      {
+                        "name": "iconName",
+                        "type": "string"
+                      },
+                      {
                         "name": "loadedRow",
                         "type": "object"
                       },
@@ -1245,6 +1314,14 @@
                       },
                       {
                         "name": "content",
+                        "type": "string"
+                      },
+                      {
+                        "name": "coverUrl",
+                        "type": "string"
+                      },
+                      {
+                        "name": "iconName",
                         "type": "string"
                       },
                       {
@@ -1709,6 +1786,32 @@
                     ]
                   ],
                   [
+                    "set",
+                    "@entity.coverUrl",
+                    [
+                      "str/default",
+                      [
+                        "object/get",
+                        "@payload.data",
+                        "@config.coverField"
+                      ],
+                      ""
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.iconName",
+                    [
+                      "str/default",
+                      [
+                        "object/get",
+                        "@payload.data",
+                        "@config.iconField"
+                      ],
+                      ""
+                    ]
+                  ],
+                  [
                     "render-ui",
                     "main",
                     "@config.documentEditingContent"
@@ -1781,6 +1884,32 @@
                       "object/get",
                       "@payload.data",
                       "@config.contentField"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.coverUrl",
+                    [
+                      "str/default",
+                      [
+                        "object/get",
+                        "@payload.data",
+                        "@config.coverField"
+                      ],
+                      ""
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.iconName",
+                    [
+                      "str/default",
+                      [
+                        "object/get",
+                        "@payload.data",
+                        "@config.iconField"
+                      ],
+                      ""
                     ]
                   ],
                   [
@@ -1909,6 +2038,38 @@
                     ]
                   ],
                   [
+                    "set",
+                    "@entity.coverUrl",
+                    [
+                      "str/default",
+                      [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@payload.data"
+                        ],
+                        "@config.coverField"
+                      ],
+                      ""
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.iconName",
+                    [
+                      "str/default",
+                      [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@payload.data"
+                        ],
+                        "@config.iconField"
+                      ],
+                      ""
+                    ]
+                  ],
+                  [
                     "render-ui",
                     "main",
                     "@config.documentEditingContent"
@@ -2003,6 +2164,38 @@
                         "@payload.data"
                       ],
                       "@config.contentField"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.coverUrl",
+                    [
+                      "str/default",
+                      [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@payload.data"
+                        ],
+                        "@config.coverField"
+                      ],
+                      ""
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.iconName",
+                    [
+                      "str/default",
+                      [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@payload.data"
+                        ],
+                        "@config.iconField"
+                      ],
+                      ""
                     ]
                   ],
                   [
@@ -2520,6 +2713,32 @@
                     ]
                   ],
                   [
+                    "set",
+                    "@entity.coverUrl",
+                    [
+                      "str/default",
+                      [
+                        "object/get",
+                        "@payload.data",
+                        "@config.coverField"
+                      ],
+                      ""
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.iconName",
+                    [
+                      "str/default",
+                      [
+                        "object/get",
+                        "@payload.data",
+                        "@config.iconField"
+                      ],
+                      ""
+                    ]
+                  ],
+                  [
                     "if",
                     [
                       "=",
@@ -2629,6 +2848,38 @@
                         "@payload.data"
                       ],
                       "@config.contentField"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.coverUrl",
+                    [
+                      "str/default",
+                      [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@payload.data"
+                        ],
+                        "@config.coverField"
+                      ],
+                      ""
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.iconName",
+                    [
+                      "str/default",
+                      [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@payload.data"
+                        ],
+                        "@config.iconField"
+                      ],
+                      ""
                     ]
                   ],
                   [
@@ -2942,6 +3193,7 @@
               "default": {
                 "entity": "@entity.loadedRow",
                 "fields": "@config.metaFields",
+                "relationEvent": "RELATION_OPEN",
                 "title": "@config.detailsTitle",
                 "type": "document-details"
               },
@@ -3058,6 +3310,14 @@
                       "type": "string"
                     },
                     {
+                      "name": "coverUrl",
+                      "type": "string"
+                    },
+                    {
+                      "name": "iconName",
+                      "type": "string"
+                    },
+                    {
                       "name": "loadedRow",
                       "type": "object"
                     },
@@ -3075,6 +3335,30 @@
               ],
               "scope": "external",
               "synonyms": "property saved, metadata changed, field committed, update property",
+              "tier": "domain"
+            },
+            {
+              "description": "A relation chip in the details drawer was clicked (a tag, the author, the category); id is the linked row's id. Hosts route it to the linked record's own surface — a navigate, a scoped overlay, a filtered list.",
+              "event": "RELATION_OPEN",
+              "eventId": "evt_01M1696YX8ZY95Y09Z3XB3MPT0",
+              "payloadSchema": [
+                {
+                  "name": "field",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "open relation, linked record clicked, tag clicked, chip clicked",
               "tier": "domain"
             }
           ],
@@ -3169,6 +3453,14 @@
                         "type": "string"
                       },
                       {
+                        "name": "coverUrl",
+                        "type": "string"
+                      },
+                      {
+                        "name": "iconName",
+                        "type": "string"
+                      },
+                      {
                         "name": "loadedRow",
                         "type": "object"
                       },
@@ -3217,6 +3509,30 @@
                   }
                 ],
                 "synonyms": "property changed, metadata edited, field committed",
+                "tier": "domain"
+              },
+              {
+                "description": "A relation chip in the details drawer was clicked (a tag, the author, the category); id is the linked row's id. Hosts route it to the linked record's own surface — a navigate, a scoped overlay, a filtered list.",
+                "id": "evt_01M1696YX8ZY95Y09Z3XB3MPT0",
+                "key": "RELATION_OPEN",
+                "name": "Relation Open",
+                "payloadSchema": [
+                  {
+                    "name": "field",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "name",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "open relation, linked record clicked, tag clicked, chip clicked",
                 "tier": "domain"
               }
             ],

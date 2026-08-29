@@ -17,8 +17,24 @@ orbital CounterTemplateOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle
+      INIT -> idle when @config.selfFetch
         (fetch CounterTemplateItem { emit: { success: CounterTemplateLoaded } })
+        (render-ui main {
+          entity: @entity
+          className: @config.className
+          onIncrement: @config.onIncrement
+          onDecrement: @config.onDecrement
+          onReset: @config.onReset
+          incrementEvent: @config.incrementEvent
+          decrementEvent: @config.decrementEvent
+          resetEvent: @config.resetEvent
+          title: @config.title
+          showReset: @config.showReset
+          size: @config.size
+          variant: @config.variant
+          type: counter-template
+        })
+      INIT -> idle when (not @config.selfFetch)
         (render-ui main {
           entity: @entity
           className: @config.className
@@ -119,6 +135,10 @@ orbital CounterTemplateOrbital {
         @label "Variant"
         @description "Template variant"
         @tier "presentation"
+      selfFetch : boolean = true
+        @label "Fetch its own rows on mount?"
+        @description "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's."
+        @tier "internal"
     }
   }
 

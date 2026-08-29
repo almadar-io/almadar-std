@@ -9,9 +9,10 @@ orbital DocumentDetailsOrbital {
     label : string
     header : string
     icon : icon
-    kind : "text" | "boolean" | "select" | "readonly"
+    kind : "text" | "boolean" | "select" | "readonly" | "image"
     options : [string]
     format : "date" | "currency" | "number" | "boolean" | "percent"
+    type : string
   }
 
   entity DocumentDetailsItem [runtime] {
@@ -22,12 +23,23 @@ orbital DocumentDetailsOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle
+      INIT -> idle when @config.selfFetch
         (fetch DocumentDetailsItem { emit: { success: DocumentDetailsLoaded } })
         (render-ui main {
           entity: @entity
           fields: @config.fields
           metaCommitEvent: @config.metaCommitEvent
+          relationEvent: @config.relationEvent
+          title: @config.title
+          className: @config.className
+          type: document-details
+        })
+      INIT -> idle when (not @config.selfFetch)
+        (render-ui main {
+          entity: @entity
+          fields: @config.fields
+          metaCommitEvent: @config.metaCommitEvent
+          relationEvent: @config.relationEvent
           title: @config.title
           className: @config.className
           type: document-details
@@ -37,6 +49,7 @@ orbital DocumentDetailsOrbital {
           entity: @payload.data
           fields: @config.fields
           metaCommitEvent: @config.metaCommitEvent
+          relationEvent: @config.relationEvent
           title: @config.title
           className: @config.className
           type: document-details
@@ -49,6 +62,13 @@ orbital DocumentDetailsOrbital {
         patch : object!
       }
         @description "Emitted when a property commits: { id, patch } — patch carries the id plus the one changed field, ready for a partial persist update."
+        @tier "essential"
+      @config.relationEvent -> external {
+        field : string!
+        id : string!
+        name : string!
+      }
+        @description "Makes relation chips clickable: emitted with { field, id, name } when a hydrated relation value (or one row of a many-relation) is clicked — the host routes it to the linked record's own surface."
         @tier "essential"
       DocumentDetailsLoaded
         @description "DocumentDetails rows finished loading; payload.data holds the collection."
@@ -65,6 +85,10 @@ orbital DocumentDetailsOrbital {
         @label "Meta Commit Event"
         @description "Emitted when a property commits: { id, patch } — patch carries the id plus the one changed field, ready for a partial persist update."
         @tier "presentation"
+      relationEvent : string = "RELATION"
+        @label "Relation Event"
+        @description "Makes relation chips clickable: emitted with { field, id, name } when a hydrated relation value (or one row of a many-relation) is clicked — the host routes it to the linked record's own surface."
+        @tier "presentation"
       title : string
         @label "Title"
         @description "Card heading (defaults to the localized 'Details')"
@@ -73,6 +97,10 @@ orbital DocumentDetailsOrbital {
         @label "Class Name"
         @description "className prop"
         @tier "presentation"
+      selfFetch : boolean = true
+        @label "Fetch its own rows on mount?"
+        @description "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's."
+        @tier "internal"
     }
   }
 

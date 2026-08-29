@@ -47,6 +47,8 @@ export interface StdBillableHourConfig {
   look?: unknown;
   /** Default: `2` */
   maxInlineActions?: unknown;
+  /** Default: `false` */
+  selfFetch?: unknown;
 }
 
 /**
@@ -318,6 +320,10 @@ export function stdBillableHourBillableHourOrbital(params: StdBillableHourBillab
           },
           'maxInlineActions': {
             'default': 2,
+            'type': 'unknown',
+          },
+          'selfFetch': {
+            'default': false,
             'type': 'unknown',
           },
         },

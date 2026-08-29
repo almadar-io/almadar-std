@@ -47,6 +47,8 @@ export interface StdUiPricingPageTemplatePricingPageTemplateLoadedPayload {
  */
 export interface StdUiPricingPageTemplateConfig {
   className?: string;
+  /** Default: `true` */
+  selfFetch?: boolean;
 }
 
 /**

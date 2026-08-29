@@ -19,8 +19,24 @@ orbital ReplyTreeOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle
+      INIT -> idle when @config.selfFetch
         (fetch ReplyTreeItem { emit: { success: ReplyTreeLoaded } })
+        (render-ui main {
+          nodes: @entity
+          maxDepth: @config.maxDepth
+          onVote: @config.onVote
+          onReply: @config.onReply
+          onFlag: @config.onFlag
+          onContinueThread: @config.onContinueThread
+          voteEvent: @config.voteEvent
+          replyEvent: @config.replyEvent
+          flagEvent: @config.flagEvent
+          continueThreadEvent: @config.continueThreadEvent
+          showActions: @config.showActions
+          className: @config.className
+          type: reply-tree
+        })
+      INIT -> idle when (not @config.selfFetch)
         (render-ui main {
           nodes: @entity
           maxDepth: @config.maxDepth
@@ -128,6 +144,10 @@ orbital ReplyTreeOrbital {
         @label "Class Name"
         @description "className prop"
         @tier "presentation"
+      selfFetch : boolean = true
+        @label "Fetch its own rows on mount?"
+        @description "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's."
+        @tier "internal"
     }
   }
 

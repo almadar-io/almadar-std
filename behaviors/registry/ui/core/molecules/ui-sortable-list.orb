@@ -135,6 +135,13 @@
               "label": "Reorder Payload",
               "tier": "presentation",
               "type": "json"
+            },
+            "selfFetch": {
+              "default": true,
+              "description": "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's.",
+              "label": "Fetch its own rows on mount?",
+              "tier": "internal",
+              "type": "boolean"
             }
           },
           "emits": [
@@ -261,6 +268,44 @@
                 "event": "INIT",
                 "eventId": "evt_01KXG04RHS5P5JWNREKWNE5SAQ",
                 "from": "idle",
+                "guard": "@config.selfFetch",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "dragHandlePosition": "@config.dragHandlePosition",
+                      "items": "@entity",
+                      "renderItem": [
+                        "fn",
+                        "item",
+                        {
+                          "content": [
+                            "object/get",
+                            "@item",
+                            "@config.itemLabelField",
+                            ""
+                          ],
+                          "type": "typography"
+                        }
+                      ],
+                      "reorderEvent": "@config.reorderEvent",
+                      "reorderPayload": "@config.reorderPayload",
+                      "type": "sortable-list"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01KXG04RHS5P5JWNREKWNE5SAQ",
+                "from": "idle",
+                "guard": [
+                  "not",
+                  "@config.selfFetch"
+                ],
                 "to": "idle"
               },
               {

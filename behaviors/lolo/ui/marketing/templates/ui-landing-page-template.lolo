@@ -85,8 +85,16 @@ orbital LandingPageTemplateOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle
+      INIT -> idle when @config.selfFetch
         (fetch LandingPageTemplateItem { emit: { success: LandingPageTemplateLoaded } })
+        (render-ui main {
+          entity: @entity
+          className: @config.className
+          variant: @config.variant
+          featureColumns: @config.featureColumns
+          type: landing-page-template
+        })
+      INIT -> idle when (not @config.selfFetch)
         (render-ui main {
           entity: @entity
           className: @config.className
@@ -124,6 +132,10 @@ orbital LandingPageTemplateOrbital {
         @label "Feature Columns"
         @description "featureColumns prop"
         @tier "presentation"
+      selfFetch : boolean = true
+        @label "Fetch its own rows on mount?"
+        @description "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's."
+        @tier "internal"
     }
   }
 

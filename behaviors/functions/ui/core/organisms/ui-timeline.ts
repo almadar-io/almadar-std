@@ -65,6 +65,8 @@ export interface StdUiTimelineConfig {
   items?: EntityRow[];
   /** Default: `"vertical-spacious"` */
   look?: 'vertical-compact' | 'vertical-spacious' | 'horizontal' | 'swimlane';
+  /** Default: `true` */
+  selfFetch?: boolean;
   title?: string;
 }
 
@@ -299,6 +301,13 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
               'swimlane',
             ],
           },
+          'selfFetch': {
+            'default': true,
+            'description': 'true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper\'s own un-hydrated fetch so it cannot race the composer\'s.',
+            'label': 'Fetch its own rows on mount?',
+            'tier': 'internal',
+            'type': 'boolean',
+          },
           'title': {
             'description': 'Timeline title',
             'label': 'Title',
@@ -410,6 +419,34 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
               ],
               'event': 'INIT',
               'from': 'idle',
+              'guard': '@config.selfFetch',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'className': '@config.className',
+                    'entity': '@entity',
+                    'error': '@config.error',
+                    'fields': '@config.fields',
+                    'isLoading': '@config.isLoading',
+                    'itemActions': '@config.itemActions',
+                    'items': '@config.items',
+                    'look': '@config.look',
+                    'title': '@config.title',
+                    'type': 'timeline',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'guard': [
+                'not',
+                '@config.selfFetch',
+              ],
               'to': 'idle',
             },
             {

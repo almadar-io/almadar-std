@@ -477,6 +477,13 @@
               "tier": "presentation",
               "type": "boolean"
             },
+            "selfFetch": {
+              "default": true,
+              "description": "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's.",
+              "label": "Fetch its own rows on mount?",
+              "tier": "internal",
+              "type": "boolean"
+            },
             "senderField": {
               "description": "Field name identifying the sender (used with variant: 'message')",
               "label": "Sender Field",
@@ -905,6 +912,63 @@
                 "event": "INIT",
                 "eventId": "evt_01KXG04N9J3A885VW02NZQMP51",
                 "from": "idle",
+                "guard": "@config.selfFetch",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "accepts": "@config.accepts",
+                      "className": "@config.className",
+                      "columns": "@config.columns",
+                      "currentUser": "@config.currentUser",
+                      "dndItemIdField": "@config.dndItemIdField",
+                      "dndRoot": "@config.dndRoot",
+                      "dragGroup": "@config.dragGroup",
+                      "dropEvent": "@config.dropEvent",
+                      "emptyMessage": "@config.emptyMessage",
+                      "entity": "@entity",
+                      "error": "@config.error",
+                      "fields": "@config.fields",
+                      "gap": "@config.gap",
+                      "groupBy": "@config.groupBy",
+                      "hasMore": "@config.hasMore",
+                      "infiniteScroll": "@config.infiniteScroll",
+                      "isLoading": "@config.isLoading",
+                      "itemActions": "@config.itemActions",
+                      "itemClickEvent": "@config.itemClickEvent",
+                      "loadMoreEvent": "@config.loadMoreEvent",
+                      "longPressEvent": "@config.longPressEvent",
+                      "look": "@config.look",
+                      "maxInlineActions": "@config.maxInlineActions",
+                      "pageSize": "@config.pageSize",
+                      "positionEvent": "@config.positionEvent",
+                      "reorderEvent": "@config.reorderEvent",
+                      "reorderable": "@config.reorderable",
+                      "senderField": "@config.senderField",
+                      "senderLabelField": "@config.senderLabelField",
+                      "sortBy": "@config.sortBy",
+                      "sortDirection": "@config.sortDirection",
+                      "sortable": "@config.sortable",
+                      "swipeLeftActions": "@config.swipeLeftActions",
+                      "swipeLeftEvent": "@config.swipeLeftEvent",
+                      "swipeRightActions": "@config.swipeRightActions",
+                      "swipeRightEvent": "@config.swipeRightEvent",
+                      "type": "data-list",
+                      "variant": "@config.variant"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01KXG04N9J3A885VW02NZQMP51",
+                "from": "idle",
+                "guard": [
+                  "not",
+                  "@config.selfFetch"
+                ],
                 "to": "idle"
               },
               {

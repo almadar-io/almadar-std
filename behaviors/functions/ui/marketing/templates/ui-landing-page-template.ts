@@ -49,6 +49,8 @@ export interface StdUiLandingPageTemplateConfig {
   className?: string;
   /** Default: `3` */
   featureColumns?: number;
+  /** Default: `true` */
+  selfFetch?: boolean;
   /** Default: `"product"` */
   variant?: 'product' | 'service' | 'platform';
 }

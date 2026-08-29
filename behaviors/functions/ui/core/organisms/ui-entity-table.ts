@@ -87,6 +87,8 @@ export interface StdUiEntityTableConfig {
   /** Default: `[]` */
   selectedIds?: string[];
   /** Default: `true` */
+  selfFetch?: boolean;
+  /** Default: `true` */
   showTotal?: boolean;
   sortBy?: string;
   /** Default: `"asc"` */
@@ -558,6 +560,13 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
             'tier': 'presentation',
             'type': '[string]',
           },
+          'selfFetch': {
+            'default': true,
+            'description': 'true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper\'s own un-hydrated fetch so it cannot race the composer\'s.',
+            'label': 'Fetch its own rows on mount?',
+            'tier': 'internal',
+            'type': 'boolean',
+          },
           'showTotal': {
             'default': true,
             'description': 'Show total count in pagination',
@@ -711,6 +720,52 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
               ],
               'event': 'INIT',
               'from': 'idle',
+              'guard': '@config.selfFetch',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'activeFilters': '@config.activeFilters',
+                    'bulkActions': '@config.bulkActions',
+                    'className': '@config.className',
+                    'columns': '@config.columns',
+                    'emptyAction': '@config.emptyAction',
+                    'emptyDescription': '@config.emptyDescription',
+                    'emptyIcon': '@config.emptyIcon',
+                    'emptyTitle': '@config.emptyTitle',
+                    'entity': '@entity',
+                    'error': '@config.error',
+                    'fields': '@config.fields',
+                    'headerActions': '@config.headerActions',
+                    'isLoading': '@config.isLoading',
+                    'itemActions': '@config.itemActions',
+                    'look': '@config.look',
+                    'page': '@config.pageProp',
+                    'pageSize': '@config.pageSize',
+                    'rowActions': '@config.rowActions',
+                    'searchPlaceholder': '@config.searchPlaceholder',
+                    'searchValue': '@config.searchValue',
+                    'searchable': '@config.searchable',
+                    'selectable': '@config.selectable',
+                    'selectedIds': '@config.selectedIds',
+                    'showTotal': '@config.showTotal',
+                    'sortBy': '@config.sortBy',
+                    'sortDirection': '@config.sortDirection',
+                    'totalCount': '@config.totalCount',
+                    'type': 'entity-table',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'guard': [
+                'not',
+                '@config.selfFetch',
+              ],
               'to': 'idle',
             },
             {

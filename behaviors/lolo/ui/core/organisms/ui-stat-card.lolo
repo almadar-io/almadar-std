@@ -29,8 +29,40 @@ orbital StatCardOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle
+      INIT -> idle when @config.selfFetch
         (fetch StatCardItem { emit: { success: StatCardLoaded } })
+        (render-ui main {
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          page: @config.pageProp
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          entity: @entity
+          label: @config.label
+          title: @config.title
+          value: @config.value
+          previousValue: @config.previousValue
+          currentValue: @config.currentValue
+          trend: @config.trend
+          trendDirection: @config.trendDirection
+          invertTrend: @config.invertTrend
+          icon: @config.icon
+          iconBg: @config.iconBg
+          iconColor: @config.iconColor
+          subtitle: @config.subtitle
+          action: @config.action
+          metrics: @config.metrics
+          compact: @config.compact
+          sparklineData: @config.sparklineData
+          type: stat-card
+        })
+      INIT -> idle when (not @config.selfFetch)
         (render-ui main {
           className: @config.className
           isLoading: @config.isLoading
@@ -213,6 +245,10 @@ orbital StatCardOrbital {
         @label "Sparkline Data"
         @description "Sparkline data points for an inline trend chart"
         @tier "presentation"
+      selfFetch : boolean = true
+        @label "Fetch its own rows on mount?"
+        @description "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's."
+        @tier "internal"
     }
   }
 

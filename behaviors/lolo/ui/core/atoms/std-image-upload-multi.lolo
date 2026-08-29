@@ -1,6 +1,10 @@
 app std-image-upload-multi "1.0.0"
 "std-image-upload-multi — multi-image upload with drop zone, gallery preview, and per-batch progress."
 orbital UploadedImageOrbital {
+    type UploadBatchFile = { name : string!, size : number, type : string, content : string }
+
+    type StoredImageItem = { id : string!, key : string, url : string, name : string, sizeBytes : number, mimeType : string }
+
     type UploadedImageLoaded = Event { data : [UploadedImage] } "Fired when the uploaded-image collection finishes loading"
 
     type UploadedImageLoadFailed = Event { error : string, code : string } "Fired when the uploaded-image collection fails to load"
@@ -96,8 +100,13 @@ orbital UploadedImageOrbital {
           type: stack
         })
       UPLOAD -> uploading
-        (persist create UploadedImage ?files {
-          emit: { failure: UploadedImageUploadFailed, success: UploadedImageCreated }
+        (call-service storage uploadMany {
+          acl: public
+          bucket: @config.bucket
+          files: ?files
+          maxSize: @config.maxBytesPerImage
+        } {
+          emit: { failure: UploadedImageUploadFailed, success: UploadedImageStored }
         })
         (render-ui main {
           align: center
@@ -133,6 +142,12 @@ orbital UploadedImageOrbital {
     }
 
     state uploading {
+      ;; The storage service owns the bytes; rows persist only the returned
+      ;; addresses — ?items is shaped for this bulk create (url/name/sizeBytes/mimeType).
+      UploadedImageStored -> uploading
+        (persist create UploadedImage ?items {
+          emit: { failure: UploadedImageUploadFailed, success: UploadedImageCreated }
+        })
       UploadedImageCreated -> loading
         (fetch UploadedImage {
           emit: { failure: UploadedImageLoadFailed, success: UploadedImageLoaded }
@@ -192,7 +207,7 @@ orbital UploadedImageOrbital {
 
     emits {
       UPLOAD {
-        files : object!
+        files : [UploadBatchFile]!
       }
         @description "Signals that an image upload process has begun."
         @synonyms "start, initiate, begin"
@@ -216,6 +231,13 @@ orbital UploadedImageOrbital {
         @description "A new image has been successfully uploaded."
         @synonyms "added, new, received"
         @tier "domain"
+      UploadedImageStored {
+        items : [StoredImageItem]
+        count : number
+      }
+        @description "The storage service accepted the whole batch; items carry each file's stored address and metadata, ready to persist."
+        @synonyms "uploaded, stored, saved to storage"
+        @tier "internal"
       UploadedImageUploadFailed {
         error : string
         code : string
@@ -240,7 +262,7 @@ orbital UploadedImageOrbital {
 
     listens {
       UPLOAD {
-        files : object!
+        files : [UploadBatchFile]!
       }
         @description "Indicates a file upload has begun."
         @synonyms "start, begin, initiate"
@@ -270,6 +292,13 @@ orbital UploadedImageOrbital {
         @description "A new image has been successfully uploaded."
         @synonyms "added, received, new image"
         @tier "domain"
+      UploadedImageStored {
+        items : [StoredImageItem]
+        count : number
+      }
+        @description "The storage service accepted the batch; the items are persisted as uploaded-image rows."
+        @synonyms "uploaded, stored, saved to storage"
+        @tier "internal"
       UploadedImageUploadFailed {
         error : string
         code : string
@@ -308,6 +337,10 @@ orbital UploadedImageOrbital {
       accept : string = "image/*"
         @label "MIME filter"
         @description "Browser accept filter for the file picker"
+        @tier "domain"
+      bucket : string = "images"
+        @label "Storage bucket"
+        @description "Object-storage bucket the batch uploads into"
         @tier "domain"
     }
   }

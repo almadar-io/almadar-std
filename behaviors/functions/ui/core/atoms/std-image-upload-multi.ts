@@ -30,13 +30,13 @@ const ALIAS = 'ImageUploadMulti';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdImageUploadMultiEventKey = 'DELETE' | 'INIT' | 'UPLOAD' | 'UploadedImageCreated' | 'UploadedImageDeleteFailed' | 'UploadedImageDeleted' | 'UploadedImageLoadFailed' | 'UploadedImageLoaded' | 'UploadedImageUploadFailed';
+export type StdImageUploadMultiEventKey = 'DELETE' | 'INIT' | 'UPLOAD' | 'UploadedImageCreated' | 'UploadedImageDeleteFailed' | 'UploadedImageDeleted' | 'UploadedImageLoadFailed' | 'UploadedImageLoaded' | 'UploadedImageStored' | 'UploadedImageUploadFailed';
 
 /**
  * Payload shape for the `UPLOAD` event.
  */
 export interface StdImageUploadMultiUploadPayload {
-  files: EntityRow;
+  files: EntityRow[];
 }
 
 /**
@@ -59,6 +59,14 @@ export interface StdImageUploadMultiUploadedImageLoadFailedPayload {
  */
 export interface StdImageUploadMultiUploadedImageCreatedPayload {
   row?: EntityRow;
+}
+
+/**
+ * Payload shape for the `UploadedImageStored` event.
+ */
+export interface StdImageUploadMultiUploadedImageStoredPayload {
+  items?: EntityRow[];
+  count?: number;
 }
 
 /**
@@ -93,6 +101,8 @@ export interface StdImageUploadMultiUploadedImageDeleteFailedPayload {
 export interface StdImageUploadMultiConfig {
   /** Default: `"image/*"` */
   accept?: string;
+  /** Default: `"images"` */
+  bucket?: string;
   /** Default: `10485760` */
   maxBytesPerImage?: number;
   /** Default: `10` */
@@ -318,6 +328,13 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
             'tier': 'domain',
             'type': 'string',
           },
+          'bucket': {
+            'default': 'images',
+            'description': 'Object-storage bucket the batch uploads into',
+            'label': 'Storage bucket',
+            'tier': 'domain',
+            'type': 'string',
+          },
           'maxBytesPerImage': {
             'default': 10485760,
             'description': 'Per-image upload size cap',
@@ -348,7 +365,7 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
               {
                 'name': 'files',
                 'required': true,
-                'type': 'object',
+                'type': '[UploadBatchFile]',
               },
             ],
             'synonyms': 'start, initiate, begin',
@@ -437,6 +454,22 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
             ],
             'synonyms': 'added, new, received',
             'tier': 'domain',
+          },
+          {
+            'description': 'The storage service accepted the whole batch; items carry each file\'s stored address and metadata, ready to persist.',
+            'event': 'UploadedImageStored',
+            'payloadSchema': [
+              {
+                'name': 'items',
+                'type': '[StoredImageItem]',
+              },
+              {
+                'name': 'count',
+                'type': 'number',
+              },
+            ],
+            'synonyms': 'uploaded, stored, saved to storage',
+            'tier': 'internal',
           },
           {
             'description': 'Indicates a single image upload encountered an error.',
@@ -530,8 +563,27 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
               'payloadSchema': [
                 {
                   'name': 'files',
+                  'properties': [
+                    {
+                      'name': 'name',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'size',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'type',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'content',
+                      'type': 'string',
+                    },
+                  ],
                   'required': true,
-                  'type': 'object',
+                  'type': '[object]',
                 },
               ],
               'synonyms': 'start, initiate, begin',
@@ -580,6 +632,50 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
                 },
               ],
               'synonyms': 'failed delete, deletion error',
+              'tier': 'internal',
+            },
+            {
+              'description': 'The storage service accepted the whole batch; items carry each file\'s stored address and metadata, ready to persist.',
+              'key': 'UploadedImageStored',
+              'name': 'UploadedImage stored',
+              'payloadSchema': [
+                {
+                  'name': 'items',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'key',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'url',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'name',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'sizeBytes',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'mimeType',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': '[object]',
+                },
+                {
+                  'name': 'count',
+                  'type': 'number',
+                },
+              ],
+              'synonyms': 'uploaded, stored, saved to storage',
               'tier': 'internal',
             },
             {
@@ -778,14 +874,19 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
             {
               'effects': [
                 [
-                  'persist',
-                  'create',
-                  ('UploadedImage' satisfies _StdImageUploadMultiEntityName),
-                  '@payload.files',
+                  'call-service',
+                  'storage',
+                  'uploadMany',
+                  {
+                    'acl': 'public',
+                    'bucket': '@config.bucket',
+                    'files': '@payload.files',
+                    'maxSize': '@config.maxBytesPerImage',
+                  },
                   {
                     'emit': {
                       'failure': 'UploadedImageUploadFailed',
-                      'success': 'UploadedImageCreated',
+                      'success': 'UploadedImageStored',
                     },
                   },
                 ],
@@ -869,6 +970,25 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
               'event': 'UploadedImageDeleteFailed',
               'from': 'browsing',
               'to': 'error',
+            },
+            {
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  ('UploadedImage' satisfies _StdImageUploadMultiEntityName),
+                  '@payload.items',
+                  {
+                    'emit': {
+                      'failure': 'UploadedImageUploadFailed',
+                      'success': 'UploadedImageCreated',
+                    },
+                  },
+                ],
+              ],
+              'event': 'UploadedImageStored',
+              'from': 'uploading',
+              'to': 'uploading',
             },
             {
               'effects': [

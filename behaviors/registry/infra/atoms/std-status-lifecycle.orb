@@ -37,6 +37,15 @@
         "parent": "trt_01KXG04FHBK5YSDQ1S4CCJRKYW",
         "renames": []
       },
+      "evt_01M16B4D84NQ48FBP2K2PFGP33": {
+        "bakedName": "StatusPersisted",
+        "curName": "StatusPersisted",
+        "id": "evt_01M16B4D84NQ48FBP2K2PFGP33",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04FHBK5YSDQ1S4CCJRKYW",
+        "renames": []
+      },
       "orb_01KXG04FHBQAS21E3QH0H7VC27": {
         "bakedName": "StatusLifecycleOrbital",
         "curName": "StatusLifecycleOrbital",
@@ -217,6 +226,31 @@
               "scope": "external"
             },
             {
+              "event": "StatusPersisted",
+              "eventId": "evt_01M16B4D84NQ48FBP2K2PFGP33",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "row",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "status",
+                      "type": "string"
+                    }
+                  ],
+                  "type": "object"
+                }
+              ]
+            },
+            {
               "event": "StatusChangeFailed",
               "eventId": "evt_01KXG04FHB2WR4ZY4SV29CFF0D",
               "payloadSchema": [
@@ -228,7 +262,8 @@
                   "name": "code",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "external"
             }
           ],
           "entityContract": {
@@ -262,6 +297,21 @@
                   {
                     "name": "to",
                     "type": "string"
+                  }
+                ]
+              },
+              {
+                "id": "evt_01M16B4D84NQ48FBP2K2PFGP33",
+                "key": "StatusPersisted",
+                "name": "Status persisted",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  },
+                  {
+                    "name": "row",
+                    "type": "StatusRecord"
                   }
                 ]
               },
@@ -320,16 +370,8 @@
                     {
                       "emit": {
                         "failure": "StatusChangeFailed",
-                        "success": "StatusChanged"
+                        "success": "StatusPersisted"
                       }
-                    }
-                  ],
-                  [
-                    "emit",
-                    "StatusChanged",
-                    {
-                      "entityId": "@payload.id",
-                      "status": "@payload.to"
                     }
                   ]
                 ],
@@ -368,6 +410,39 @@
                       ]
                     ]
                   ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "StatusChanged",
+                    {
+                      "entityId": "@payload.id",
+                      "status": [
+                        "str/default",
+                        [
+                          "object/get",
+                          "@payload.row",
+                          "@config.statusField"
+                        ],
+                        ""
+                      ]
+                    }
+                  ]
+                ],
+                "event": "StatusPersisted",
+                "eventId": "evt_01M16B4D84NQ48FBP2K2PFGP33",
+                "from": "idle",
+                "guard": [
+                  "!=",
+                  [
+                    "str/default",
+                    "@payload.id",
+                    ""
+                  ],
+                  ""
                 ],
                 "to": "idle"
               },

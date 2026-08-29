@@ -99,6 +99,8 @@ export interface StdUiTableViewConfig {
   selectable?: boolean;
   /** Default: `[]` */
   selectedIds?: string[];
+  /** Default: `true` */
+  selfFetch?: boolean;
   sortColumn?: string;
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';

@@ -482,6 +482,13 @@
               "tier": "presentation",
               "type": "[string]"
             },
+            "selfFetch": {
+              "default": true,
+              "description": "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's.",
+              "label": "Fetch its own rows on mount?",
+              "tier": "internal",
+              "type": "boolean"
+            },
             "showActions": {
               "default": true,
               "description": "When false, hides the action buttons + overflow menu (and the close ×). Defaults to true.",
@@ -675,6 +682,58 @@
                 "event": "INIT",
                 "eventId": "evt_01KXG04SD94X8KGY16SVTBNF6K",
                 "from": "idle",
+                "guard": "@config.selfFetch",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "actions": "@config.actions",
+                      "activeFilters": "@config.activeFilters",
+                      "avatar": "@config.avatar",
+                      "backAction": "@config.backAction",
+                      "className": "@config.className",
+                      "displayFields": "@config.displayFields",
+                      "entity": "@entity",
+                      "error": "@config.error",
+                      "fieldNames": "@config.fieldNames",
+                      "fields": "@config.fields",
+                      "footer": "@config.footer",
+                      "initialData": "@entity",
+                      "isLoading": "@config.isLoading",
+                      "maxInlineActions": "@config.maxInlineActions",
+                      "mode": "@config.mode",
+                      "onTitleCommit": "@config.onTitleCommit",
+                      "page": "@config.pageProp",
+                      "pageSize": "@config.pageSize",
+                      "position": "@config.position",
+                      "relationsData": "@config.relationsData",
+                      "searchValue": "@config.searchValue",
+                      "sections": "@config.sections",
+                      "selectedIds": "@config.selectedIds",
+                      "showActions": "@config.showActions",
+                      "slideOver": "@config.slideOver",
+                      "sortBy": "@config.sortBy",
+                      "sortDirection": "@config.sortDirection",
+                      "status": "@config.status",
+                      "subtitle": "@config.subtitle",
+                      "title": "@config.title",
+                      "totalCount": "@config.totalCount",
+                      "type": "detail-panel",
+                      "width": "@config.width"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01KXG04SD94X8KGY16SVTBNF6K",
+                "from": "idle",
+                "guard": [
+                  "not",
+                  "@config.selfFetch"
+                ],
                 "to": "idle"
               },
               {

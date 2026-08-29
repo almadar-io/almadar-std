@@ -127,8 +127,42 @@ orbital FormOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle
+      INIT -> idle when @config.selfFetch
         (fetch FormItem { emit: { success: FormLoaded } })
+        (render-ui main {
+          children: @config.children
+          onSubmit: @config.onSubmit
+          onCancel: @config.onCancel
+          layout: @config.layout
+          gap: @config.gap
+          className: @config.className
+          entity: @entity
+          mode: @config.mode
+          fields: @config.fields
+          initialData: @entity
+          isLoading: @config.isLoading
+          error: @config.error
+          submitLabel: @config.submitLabel
+          cancelLabel: @config.cancelLabel
+          showCancel: @config.showCancel
+          showSubmit: @config.showSubmit
+          title: @config.title
+          submitEvent: @config.submitEvent
+          cancelEvent: @config.cancelEvent
+          relationsData: @config.relationsData
+          relationsLoading: @config.relationsLoading
+          fieldOverrides: @config.fieldOverrides
+          conditionalFields: @config.conditionalFields
+          hiddenCalculations: @config.hiddenCalculations
+          violationTriggers: @config.violationTriggers
+          evaluationContext: @config.evaluationContext
+          sections: @config.sections
+          onFieldChange: @config.onFieldChange
+          configPath: @config.configPath
+          repeatable: @config.repeatable
+          type: form
+        })
+      INIT -> idle when (not @config.selfFetch)
         (render-ui main {
           children: @config.children
           onSubmit: @config.onSubmit
@@ -333,6 +367,10 @@ orbital FormOrbital {
         @label "Repeatable"
         @description "Whether the form supports repeatable entries"
         @tier "presentation"
+      selfFetch : boolean = true
+        @label "Fetch its own rows on mount?"
+        @description "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's."
+        @tier "internal"
     }
   }
 

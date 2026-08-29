@@ -50,6 +50,8 @@ export interface StdUiGenericAppTemplateConfig {
   className?: string;
   footer?: PatternValue;
   headerActions?: PatternValue;
+  /** Default: `true` */
+  selfFetch?: boolean;
   subtitle?: string;
   /** Default: `""` */
   title?: string;

@@ -289,6 +289,13 @@
               "label": "Class Name",
               "tier": "presentation",
               "type": "string"
+            },
+            "selfFetch": {
+              "default": true,
+              "description": "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's.",
+              "label": "Fetch its own rows on mount?",
+              "tier": "internal",
+              "type": "boolean"
             }
           },
           "emits": [
@@ -373,6 +380,28 @@
                 "event": "INIT",
                 "eventId": "evt_01KXG055JVZ0NC0HX4JFS214MG",
                 "from": "idle",
+                "guard": "@config.selfFetch",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "entity": "@entity",
+                      "type": "pricing-page-template"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01KXG055JVZ0NC0HX4JFS214MG",
+                "from": "idle",
+                "guard": [
+                  "not",
+                  "@config.selfFetch"
+                ],
                 "to": "idle"
               },
               {

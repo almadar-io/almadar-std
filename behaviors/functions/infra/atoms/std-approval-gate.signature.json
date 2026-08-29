@@ -16,6 +16,34 @@
             "synonyms": "trigger, event, source"
           },
           {
+            "name": "subjectLabel",
+            "type": "string",
+            "required": false,
+            "description": "Human title of the thing being approved (the article's headline, the page's title) — what the reviewer sees in the queue.",
+            "synonyms": "title, subject, what is being approved"
+          },
+          {
+            "name": "subjectId",
+            "type": "string",
+            "required": false,
+            "description": "Id of the record being approved, for a queue row's View click-through to the subject's own surface.",
+            "synonyms": "record id, target id, article id, page id"
+          },
+          {
+            "name": "requestedBy",
+            "type": "string",
+            "required": false,
+            "description": "User id of the submitter.",
+            "synonyms": "submitter, author, requester id"
+          },
+          {
+            "name": "requestedByName",
+            "type": "string",
+            "required": false,
+            "description": "Display name of the submitter shown in the queue.",
+            "synonyms": "submitter name, requester, who asked"
+          },
+          {
             "name": "status",
             "type": "string",
             "required": false,
@@ -54,8 +82,8 @@
             "name": "notes",
             "type": "string",
             "required": false,
-            "description": "Free-form text providing additional context or details.",
-            "synonyms": "comments, remarks, explanation, details"
+            "description": "The reviewer's written reason, captured by the deny step.",
+            "synonyms": "comments, remarks, explanation, reason, details"
           },
           {
             "name": "payload",
@@ -154,6 +182,51 @@
         "linkedEntity": "ApprovalRequest"
       },
       {
+        "name": "DenyReasonTitle",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "content",
+            "type": "unknown",
+            "default": "Deny request"
+          },
+          {
+            "key": "variant",
+            "type": "unknown",
+            "default": "h3"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Typography.traits.TypographyRender",
+        "linkedEntity": "ApprovalRequest"
+      },
+      {
+        "name": "DenyReasonHint",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "color",
+            "type": "unknown",
+            "default": "muted"
+          },
+          {
+            "key": "content",
+            "type": "unknown",
+            "default": "Tell the submitter why — the reason is recorded on the request."
+          },
+          {
+            "key": "variant",
+            "type": "unknown",
+            "default": "caption"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Typography.traits.TypographyRender",
+        "linkedEntity": "ApprovalRequest"
+      },
+      {
         "name": "CloseButton",
         "emittedEvents": [],
         "listenedEvents": [],
@@ -217,6 +290,9 @@
         "emittedEvents": [
           "APPROVE",
           "DENY",
+          "OPEN_SUBJECT",
+          "CONFIRM_DENY",
+          "CANCEL_DENY",
           "CLOSE",
           "ApprovalGranted",
           "ApprovalDenied",
@@ -239,9 +315,30 @@
           {
             "name": "DENY",
             "direction": "emit",
-            "description": "Signals that an approval request has been denied.",
+            "description": "Opens the deny step for a request; the decision commits with the written reason.",
             "synonyms": "reject, decline",
             "tier": "domain"
+          },
+          {
+            "name": "OPEN_SUBJECT",
+            "direction": "emit",
+            "description": "A reviewer clicked View on a queue row. Hosts route subjectId to the subject record's own surface so the reviewer can read what they are approving. Scalars only — the row stays in the queue.",
+            "synonyms": "view subject, open record, inspect request, see the article",
+            "tier": "domain"
+          },
+          {
+            "name": "CONFIRM_DENY",
+            "direction": "emit",
+            "description": "The deny form committed; data carries the request id + the written reason.",
+            "synonyms": "submit denial, confirm rejection",
+            "tier": "internal"
+          },
+          {
+            "name": "CANCEL_DENY",
+            "direction": "emit",
+            "description": "The deny form was dismissed without committing; the queue repaints.",
+            "synonyms": "cancel denial, back to queue",
+            "tier": "internal"
           },
           {
             "name": "CLOSE",
@@ -253,14 +350,14 @@
           {
             "name": "ApprovalGranted",
             "direction": "emit",
-            "description": "Signals that an approval process has been successfully completed; carries the held payload for the downstream listener to replay.",
+            "description": "Signals that an approval process has been successfully completed; carries the held payload for the downstream listener to replay. Contract: if the replay fails (access denial, write failure), the host MUST emit APPROVAL_REPLAY_FAILED back so the request reopens.",
             "synonyms": "approved, authorized, confirmed, validated",
             "tier": "domain"
           },
           {
             "name": "ApprovalDenied",
             "direction": "emit",
-            "description": "Indicates an approval request has been denied.",
+            "description": "Indicates an approval request has been denied, with the reviewer's written reason.",
             "synonyms": "rejected, declined",
             "tier": "domain"
           },
@@ -297,6 +394,13 @@
             "direction": "listen"
           },
           {
+            "name": "APPROVAL_REPLAY_FAILED",
+            "direction": "listen",
+            "description": "The host could not apply the granted action (access denial, failed write). The request reopens as pending so a decision is never silently lost.",
+            "synonyms": "replay failed, apply failed, approval rollback",
+            "tier": "domain"
+          },
+          {
             "name": "OPEN",
             "direction": "listen",
             "description": "Summons the review queue (host nav/affordance requests it).",
@@ -310,7 +414,7 @@
             "type": "[string]",
             "default": [],
             "label": "Who can approve requests?",
-            "description": "Roles eligible to approve. The host application enforces role-gating on the page.",
+            "description": "Roles eligible to decide. ENFORCED by the APPROVE/DENY transition guards: a viewer whose @user.role is not listed cannot fire a decision, from the button or from the bus. Empty = every signed-in viewer may decide (ungated).",
             "synonyms": "approver, reviewer, authorized roles, sign-off roles, who approves",
             "tier": "policy",
             "items": {
@@ -403,22 +507,29 @@
         ],
         "linkedEntity": "ApprovalRequest",
         "transitionEvents": [
+          "APPROVAL_REPLAY_FAILED",
           "APPROVE",
           "ApprovalRequestLoadFailed",
           "ApprovalRequestLoaded",
           "ApprovalRequestReviewFailed",
           "ApprovalRequestReviewed",
+          "CANCEL_DENY",
           "CLOSE",
+          "CONFIRM_DENY",
           "DENY",
           "INIT",
-          "OPEN"
+          "OPEN",
+          "OPEN_SUBJECT"
         ],
         "entityRebindable": true,
         "entityContract": {
           "requires": [],
           "provides": [
+            "decidedAt",
+            "notes",
             "reviewer",
-            "status"
+            "status",
+            "subjectLabel"
           ]
         },
         "effectEntityRefs": [
@@ -441,8 +552,11 @@
       "ApprovalRequestLoaded",
       "ApprovalRequestReviewFailed",
       "ApprovalRequestReviewed",
+      "CANCEL_DENY",
       "CLOSE",
-      "DENY"
+      "CONFIRM_DENY",
+      "DENY",
+      "OPEN_SUBJECT"
     ],
     "listenedEvents": [
       "CLOSE"

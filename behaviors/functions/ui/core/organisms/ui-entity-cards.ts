@@ -81,6 +81,8 @@ export interface StdUiEntityCardsConfig {
   searchValue?: string;
   /** Default: `[]` */
   selectedIds?: string[];
+  /** Default: `true` */
+  selfFetch?: boolean;
   showAvatar?: boolean;
   /** Default: `true` */
   showTotal?: boolean;
@@ -440,6 +442,13 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
             'tier': 'presentation',
             'type': '[string]',
           },
+          'selfFetch': {
+            'default': true,
+            'description': 'true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper\'s own un-hydrated fetch so it cannot race the composer\'s.',
+            'label': 'Fetch its own rows on mount?',
+            'tier': 'internal',
+            'type': 'boolean',
+          },
           'showAvatar': {
             'description': 'Show avatar/image field on cards',
             'label': 'Show Avatar',
@@ -603,6 +612,50 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
               ],
               'event': 'INIT',
               'from': 'idle',
+              'guard': '@config.selfFetch',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'activeFilters': '@config.activeFilters',
+                    'alignItems': '@config.alignItems',
+                    'children': '@config.children',
+                    'className': '@config.className',
+                    'columns': '@config.columns',
+                    'entity': '@entity',
+                    'error': '@config.error',
+                    'fieldNames': '@config.fieldNames',
+                    'fields': '@config.fields',
+                    'gap': '@config.gap',
+                    'imageField': '@config.imageField',
+                    'isLoading': '@config.isLoading',
+                    'itemActions': '@config.itemActions',
+                    'maxCols': '@config.maxCols',
+                    'minCardWidth': '@config.minCardWidth',
+                    'page': '@config.pageProp',
+                    'pageSize': '@config.pageSize',
+                    'searchValue': '@config.searchValue',
+                    'selectedIds': '@config.selectedIds',
+                    'showAvatar': '@config.showAvatar',
+                    'showTotal': '@config.showTotal',
+                    'sortBy': '@config.sortBy',
+                    'sortDirection': '@config.sortDirection',
+                    'totalCount': '@config.totalCount',
+                    'type': 'entity-cards',
+                    'variant': '@config.variant',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'guard': [
+                'not',
+                '@config.selfFetch',
+              ],
               'to': 'idle',
             },
             {

@@ -224,6 +224,13 @@
               "tier": "presentation",
               "type": "string"
             },
+            "selfFetch": {
+              "default": true,
+              "description": "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's.",
+              "label": "Fetch its own rows on mount?",
+              "tier": "internal",
+              "type": "boolean"
+            },
             "startField": {
               "default": "startTime",
               "description": "Row field holding the start timestamp (ISO or epoch). Defaults to `startTime`.",
@@ -540,6 +547,42 @@
                 "event": "INIT",
                 "eventId": "evt_01KXG04MY9M975Q1NST2R49XDA",
                 "from": "idle",
+                "guard": "@config.selfFetch",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "colorField": "@config.colorField",
+                      "dayWindow": "@config.dayWindow",
+                      "endField": "@config.endField",
+                      "events": "@entity",
+                      "longPressEvent": "@config.longPressEvent",
+                      "longPressPayload": "@config.longPressPayload",
+                      "onDayClick": "@config.onDayClick",
+                      "onEventClick": "@config.onEventClick",
+                      "onSlotClick": "@config.onSlotClick",
+                      "startField": "@config.startField",
+                      "swipeLeftEvent": "@config.swipeLeftEvent",
+                      "swipeRightEvent": "@config.swipeRightEvent",
+                      "timeSlots": "@config.timeSlots",
+                      "titleField": "@config.titleField",
+                      "type": "calendar-grid",
+                      "weekStart": "@config.weekStart"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01KXG04MY9M975Q1NST2R49XDA",
+                "from": "idle",
+                "guard": [
+                  "not",
+                  "@config.selfFetch"
+                ],
                 "to": "idle"
               },
               {

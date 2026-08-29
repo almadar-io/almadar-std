@@ -60,8 +60,14 @@ orbital AboutPageTemplateOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle
+      INIT -> idle when @config.selfFetch
         (fetch AboutPageTemplateItem { emit: { success: AboutPageTemplateLoaded } })
+        (render-ui main {
+          entity: @entity
+          className: @config.className
+          type: about-page-template
+        })
+      INIT -> idle when (not @config.selfFetch)
         (render-ui main {
           entity: @entity
           className: @config.className
@@ -87,6 +93,10 @@ orbital AboutPageTemplateOrbital {
         @label "Class Name"
         @description "External styling override"
         @tier "presentation"
+      selfFetch : boolean = true
+        @label "Fetch its own rows on mount?"
+        @description "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's."
+        @tier "internal"
     }
   }
 

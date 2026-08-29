@@ -44,6 +44,20 @@
             "synonyms": "body, text, document, article body"
           },
           {
+            "name": "coverUrl",
+            "type": "string",
+            "required": false,
+            "intrinsic": true,
+            "description": "The document look's cover/hero image URL, stamped from the loaded row's coverField."
+          },
+          {
+            "name": "iconName",
+            "type": "string",
+            "required": false,
+            "intrinsic": true,
+            "description": "The document look's icon name, stamped from the loaded row's iconField."
+          },
+          {
             "name": "loadedRow",
             "type": "object",
             "required": false,
@@ -281,6 +295,15 @@
             "tier": "presentation"
           },
           {
+            "key": "coverField",
+            "type": "string",
+            "default": "",
+            "label": "Which field is the cover image?",
+            "description": "Name of the image-typed field on the loaded record painted as the document look's full-bleed hero banner (e.g. coverImage, heroImage). Empty = no banner, the default.",
+            "synonyms": "cover field, hero image field, banner field",
+            "tier": "presentation"
+          },
+          {
             "key": "detailLook",
             "type": "string",
             "default": "panel",
@@ -301,8 +324,10 @@
             "default": {
               "actions": "@config.actions",
               "className": "w-full",
+              "coverImage": "@entity.coverUrl",
               "editEvent": "EDIT_CONTENT",
               "editLabel": "@config.editLabel",
+              "icon": "@entity.iconName",
               "id": "@entity.id",
               "maxInlineActions": "@config.maxInlineActions",
               "placeholder": "@config.placeholder",
@@ -324,9 +349,11 @@
               "autosaveHint": "@config.autosaveHint",
               "className": "w-full",
               "contentChangeEvent": "CONTENT_CHANGE",
+              "coverImage": "@entity.coverUrl",
               "doneEvent": "DONE_EDITING",
               "doneLabel": "@config.doneLabel",
               "editing": true,
+              "icon": "@entity.iconName",
               "id": "@entity.id",
               "maxInlineActions": "@config.maxInlineActions",
               "placeholder": "@config.placeholder",
@@ -409,6 +436,15 @@
               },
               "type": "object"
             }
+          },
+          {
+            "key": "iconField",
+            "type": "string",
+            "default": "",
+            "label": "Which field is the document icon?",
+            "description": "Name of the field on the loaded record whose icon name renders beside the document title (e.g. icon). Empty = no icon, the default.",
+            "synonyms": "icon field, glyph field",
+            "tier": "presentation"
           },
           {
             "key": "include",
@@ -583,7 +619,9 @@
           "requires": [],
           "provides": [
             "content",
+            "coverUrl",
             "description",
+            "iconName",
             "loadedRow",
             "name",
             "openDraft",
@@ -597,7 +635,8 @@
       {
         "name": "RecordItemDetails",
         "emittedEvents": [
-          "META_SAVED"
+          "META_SAVED",
+          "RELATION_OPEN"
         ],
         "listenedEvents": [],
         "events": [
@@ -606,6 +645,13 @@
             "direction": "emit",
             "description": "A property in the settings rail committed in place; patch carries the row id plus the one changed field, ready to hand straight to a persist update. Quiet contract: the host persists without refetching or repainting the open document.",
             "synonyms": "property saved, metadata changed, field committed, update property",
+            "tier": "domain"
+          },
+          {
+            "name": "RELATION_OPEN",
+            "direction": "emit",
+            "description": "A relation chip in the details drawer was clicked (a tag, the author, the category); id is the linked row's id. Hosts route it to the linked record's own surface — a navigate, a scoped overlay, a filtered list.",
+            "synonyms": "open relation, linked record clicked, tag clicked, chip clicked",
             "tier": "domain"
           },
           {
@@ -648,6 +694,7 @@
             "default": {
               "entity": "@entity.loadedRow",
               "fields": "@config.metaFields",
+              "relationEvent": "RELATION_OPEN",
               "title": "@config.detailsTitle",
               "type": "document-details"
             },
@@ -758,6 +805,7 @@
       "EDIT",
       "EDIT_CONTENT",
       "META_SAVED",
+      "RELATION_OPEN",
       "RecordItemLoadFailed",
       "RecordItemLoaded",
       "RecordItemSlugLoaded",

@@ -16,6 +16,7 @@
         "name": "DocumentDetailsRender",
         "emittedEvents": [
           "META_COMMIT",
+          "RELATION",
           "DocumentDetailsLoaded"
         ],
         "listenedEvents": [],
@@ -24,6 +25,12 @@
             "name": "META_COMMIT",
             "direction": "emit",
             "description": "Emitted when a property commits: { id, patch } — patch carries the id plus the one changed field, ready for a partial persist update.",
+            "tier": "essential"
+          },
+          {
+            "name": "RELATION",
+            "direction": "emit",
+            "description": "Makes relation chips clickable: emitted with { field, id, name } when a hydrated relation value (or one row of a many-relation) is clicked — the host routes it to the linked record's own surface.",
             "tier": "essential"
           },
           {
@@ -90,7 +97,8 @@
                     "text",
                     "boolean",
                     "select",
-                    "readonly"
+                    "readonly",
+                    "image"
                   ]
                 },
                 "label": {
@@ -110,6 +118,11 @@
                   "items": {
                     "type": "string"
                   }
+                },
+                "type": {
+                  "name": "type",
+                  "required": false,
+                  "type": "string"
                 }
               },
               "type": "object"
@@ -122,6 +135,22 @@
             "label": "Meta Commit Event",
             "description": "Emitted when a property commits: { id, patch } — patch carries the id plus the one changed field, ready for a partial persist update.",
             "tier": "presentation"
+          },
+          {
+            "key": "relationEvent",
+            "type": "string",
+            "default": "RELATION",
+            "label": "Relation Event",
+            "description": "Makes relation chips clickable: emitted with { field, id, name } when a hydrated relation value (or one row of a many-relation) is clicked — the host routes it to the linked record's own surface.",
+            "tier": "presentation"
+          },
+          {
+            "key": "selfFetch",
+            "type": "boolean",
+            "default": true,
+            "label": "Fetch its own rows on mount?",
+            "description": "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's.",
+            "tier": "internal"
           },
           {
             "key": "title",
@@ -156,7 +185,8 @@
     ],
     "emittedEvents": [
       "DocumentDetailsLoaded",
-      "META_COMMIT"
+      "META_COMMIT",
+      "RELATION"
     ],
     "listenedEvents": [],
     "exposure": "palette",

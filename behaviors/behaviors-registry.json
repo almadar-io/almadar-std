@@ -1,5 +1,5 @@
 {
-  "$generated": "2026-08-29T00:20:39.138Z",
+  "$generated": "2026-08-29T09:24:14.514Z",
   "$source": "tools/almadar-pattern-sync/behaviors",
   "$package": "@almadar/std",
   "totalBehaviors": 451,
@@ -1774,13 +1774,13 @@
       "topic": "infra",
       "family": "infra",
       "layer": "UI Patterns",
-      "description": "std-approval-gate — generic approval gate / approver workflow. Use when a user voices that an action must be reviewed, approved, signed off, or authorized by a privileged role before it proceeds (admin approval, supervisor sign-off, manager approval, gatekeeper review, editor approval, senior editor approval, reviewer approval, publishing approval, draft approval, content review, submit drafts then editors review and approve or reject, needs approval before going live, requires sign-off before publish). Persists ApprovalRequest rows + surfaces them in a review queue with Approve / Deny / Reject actions, optionally requiring a written rejection reason or feedback comment. On approval emits ApprovalGranted; on denial emits ApprovalDenied. Compose onto any orbital whose action you want to gate: the target orbital emits an external event, an ApprovalRequest row is created, and downstream effects wait on ApprovalGranted. Differs from std-mod-queue, which is content-moderation-specific.",
+      "description": "std-approval-gate — generic approval gate / approver workflow. Use when a user voices that an action must be reviewed, approved, signed off, or authorized by a privileged role before it proceeds (admin approval, supervisor sign-off, manager approval, gatekeeper review, editor approval, senior editor approval, reviewer approval, publishing approval, draft approval, content review, submit drafts then editors review and approve or reject, needs approval before going live, requires sign-off before publish). Persists ApprovalRequest rows + surfaces the PENDING ones in a review queue showing what is being approved and who asked, with Approve / Deny actions — Deny captures a written reason. approverRoles is ENFORCED by the review transitions themselves: an APPROVE/DENY from a viewer whose role is not listed does not fire. On approval emits ApprovalGranted; on denial emits ApprovalDenied (with the reason). Hosts that replay the gated action MUST route a failed replay back via APPROVAL_REPLAY_FAILED so the request reopens instead of being silently consumed. Compose onto any orbital whose action you want to gate: the target orbital emits an external event, an ApprovalRequest row is created (stamp subjectLabel/subjectId/requestedBy so reviewers see what they are judging), and downstream effects wait on ApprovalGranted. Differs from std-mod-queue, which is content-moderation-specific.",
       "defaultOrbitalName": "ApprovalGateOrbital",
-      "statePattern": "error, idle, loading, reviewing",
+      "statePattern": "denying, error, idle, loading, reviewing",
       "complexity": {
-        "states": 4,
-        "events": 11,
-        "transitions": 14
+        "states": 5,
+        "events": 15,
+        "transitions": 22
       },
       "defaultEntity": {
         "name": "ApprovalRequest",
@@ -1793,6 +1793,26 @@
           },
           {
             "name": "gatedEvent",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "subjectLabel",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "subjectId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "requestedBy",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "requestedByName",
             "type": "string",
             "default": ""
           },
@@ -1903,12 +1923,16 @@
       "connectableEvents": [
         "ApprovalRequestLoaded",
         "ApprovalRequestLoadFailed",
+        "APPROVAL_REPLAY_FAILED",
         "OPEN",
         "CLOSE",
         "APPROVE",
         "DENY",
+        "OPEN_SUBJECT",
         "ApprovalRequestReviewed",
         "ApprovalRequestReviewFailed",
+        "CONFIRM_DENY",
+        "CANCEL_DENY",
         "ApprovalGranted",
         "ApprovalDenied"
       ],
@@ -4147,8 +4171,8 @@
       "statePattern": "idle",
       "complexity": {
         "states": 1,
-        "events": 3,
-        "transitions": 2
+        "events": 4,
+        "transitions": 3
       },
       "defaultEntity": {
         "name": "StatusRecord",
@@ -4215,6 +4239,7 @@
       ],
       "connectableEvents": [
         "ChangeStatusRequested",
+        "StatusPersisted",
         "StatusChangeFailed",
         "StatusChanged"
       ],
@@ -12943,8 +12968,8 @@
       "statePattern": "browsing, error, loading, uploading",
       "complexity": {
         "states": 4,
-        "events": 9,
-        "transitions": 11
+        "events": 10,
+        "transitions": 12
       },
       "defaultEntity": {
         "name": "UploadedImage",
@@ -13267,6 +13292,7 @@
         "DELETE",
         "UploadedImageDeleted",
         "UploadedImageDeleteFailed",
+        "UploadedImageStored",
         "UploadedImageCreated",
         "UploadedImageUploadFailed"
       ],
@@ -15821,6 +15847,16 @@
           },
           {
             "name": "content",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "coverUrl",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "iconName",
             "type": "string",
             "default": ""
           },
@@ -19659,11 +19695,11 @@
       "layer": "UI Patterns",
       "description": "std-tag-taxonomy — hierarchical category tag tree (parent/child). TagBrowse fetches root-level Tag rows (parentId = \"\") on INIT and renders the active level via data-grid; SELECT_TAG drills into the chosen tag's children by fetching rows whose parentId matches it, binding @entity.id to that parent so the level is remembered; SHOW_ROOT resets back to the root level, surfaced as a back affordance while drilled in. Flat taxonomies (all parentId \"\") render exactly one level, unchanged. TagSelected is emitted on selection for consumers to filter content by tag.",
       "defaultOrbitalName": "TagTaxonomyOrbital",
-      "statePattern": "browsing, editing, error, loading",
+      "statePattern": "browsing, creating, editing, error, loading",
       "complexity": {
-        "states": 4,
-        "events": 6,
-        "transitions": 14
+        "states": 5,
+        "events": 12,
+        "transitions": 20
       },
       "defaultEntity": {
         "name": "Tag",
@@ -19965,10 +20001,16 @@
         "ui-wizard-progress"
       ],
       "connectableEvents": [
+        "LEVEL_RELOAD",
         "TagLoaded",
         "TagLoadFailed",
         "SELECT_TAG",
         "SHOW_ROOT",
+        "NEW_TAG",
+        "COMMIT_TAG",
+        "CANCEL_TAG",
+        "TagCreated",
+        "TagCreateFailed",
         "TagSelected"
       ],
       "eventPayloads": {},
@@ -40983,7 +41025,7 @@
       "complexity": {
         "states": 1,
         "events": 8,
-        "transitions": 2
+        "transitions": 3
       },
       "defaultEntity": {
         "name": "CalendarGridItem",
@@ -43663,7 +43705,7 @@
       "complexity": {
         "states": 1,
         "events": 5,
-        "transitions": 2
+        "transitions": 3
       },
       "defaultEntity": {
         "name": "DataGridItem",
@@ -43966,7 +44008,7 @@
       "complexity": {
         "states": 1,
         "events": 9,
-        "transitions": 2
+        "transitions": 3
       },
       "defaultEntity": {
         "name": "DataListItem",
@@ -46330,8 +46372,8 @@
       "statePattern": "idle",
       "complexity": {
         "states": 1,
-        "events": 3,
-        "transitions": 2
+        "events": 4,
+        "transitions": 3
       },
       "defaultEntity": {
         "name": "DocumentDetailsItem",
@@ -46608,7 +46650,8 @@
       ],
       "connectableEvents": [
         "DocumentDetailsLoaded",
-        "@config.metaCommitEvent"
+        "@config.metaCommitEvent",
+        "@config.relationEvent"
       ],
       "eventPayloads": {},
       "exposure": "palette",
@@ -60799,7 +60842,7 @@
       "complexity": {
         "states": 1,
         "events": 4,
-        "transitions": 2
+        "transitions": 3
       },
       "defaultEntity": {
         "name": "PositionedCanvasItem",
@@ -63199,7 +63242,7 @@
       "complexity": {
         "states": 1,
         "events": 6,
-        "transitions": 2
+        "transitions": 3
       },
       "defaultEntity": {
         "name": "ReplyTreeItem",
@@ -66500,7 +66543,7 @@
       "complexity": {
         "states": 1,
         "events": 3,
-        "transitions": 2
+        "transitions": 3
       },
       "defaultEntity": {
         "name": "SortableListItem",
@@ -67976,7 +68019,7 @@
       "complexity": {
         "states": 1,
         "events": 5,
-        "transitions": 2
+        "transitions": 3
       },
       "defaultEntity": {
         "name": "TableViewItem",
@@ -72135,7 +72178,7 @@
       "complexity": {
         "states": 1,
         "events": 2,
-        "transitions": 2
+        "transitions": 3
       },
       "defaultEntity": {
         "name": "DetailPanelItem",
@@ -72721,7 +72764,7 @@
       "complexity": {
         "states": 1,
         "events": 3,
-        "transitions": 2
+        "transitions": 3
       },
       "defaultEntity": {
         "name": "EntityCardsItem",
@@ -73021,7 +73064,7 @@
       "complexity": {
         "states": 1,
         "events": 4,
-        "transitions": 2
+        "transitions": 3
       },
       "defaultEntity": {
         "name": "EntityListItem",
@@ -73322,7 +73365,7 @@
       "complexity": {
         "states": 1,
         "events": 3,
-        "transitions": 2
+        "transitions": 3
       },
       "defaultEntity": {
         "name": "EntityTableItem",
@@ -73622,7 +73665,7 @@
       "complexity": {
         "states": 1,
         "events": 5,
-        "transitions": 2
+        "transitions": 3
       },
       "defaultEntity": {
         "name": "FormSectionItem",
@@ -73919,7 +73962,7 @@
       "complexity": {
         "states": 1,
         "events": 5,
-        "transitions": 2
+        "transitions": 3
       },
       "defaultEntity": {
         "name": "FormItem",
@@ -74508,7 +74551,7 @@
       "complexity": {
         "states": 1,
         "events": 2,
-        "transitions": 2
+        "transitions": 3
       },
       "defaultEntity": {
         "name": "MasterDetailItem",
@@ -74802,7 +74845,7 @@
       "complexity": {
         "states": 1,
         "events": 3,
-        "transitions": 2
+        "transitions": 3
       },
       "defaultEntity": {
         "name": "MediaGalleryItem",
@@ -76265,7 +76308,7 @@
       "complexity": {
         "states": 1,
         "events": 2,
-        "transitions": 2
+        "transitions": 3
       },
       "defaultEntity": {
         "name": "StatCardItem",
@@ -77451,7 +77494,7 @@
       "complexity": {
         "states": 1,
         "events": 3,
-        "transitions": 2
+        "transitions": 3
       },
       "defaultEntity": {
         "name": "TimelineItem",
@@ -78044,7 +78087,7 @@
       "complexity": {
         "states": 1,
         "events": 5,
-        "transitions": 2
+        "transitions": 3
       },
       "defaultEntity": {
         "name": "CounterTemplateItem",
@@ -78668,7 +78711,7 @@
       "complexity": {
         "states": 1,
         "events": 2,
-        "transitions": 2
+        "transitions": 3
       },
       "defaultEntity": {
         "name": "GenericAppTemplateItem",
@@ -105570,7 +105613,7 @@
       "complexity": {
         "states": 1,
         "events": 2,
-        "transitions": 2
+        "transitions": 3
       },
       "defaultEntity": {
         "name": "StepSectionItem",
@@ -105686,7 +105729,7 @@
       "complexity": {
         "states": 1,
         "events": 2,
-        "transitions": 2
+        "transitions": 3
       },
       "defaultEntity": {
         "name": "TeamItem",
@@ -108531,7 +108574,7 @@
       "complexity": {
         "states": 1,
         "events": 2,
-        "transitions": 2
+        "transitions": 3
       },
       "defaultEntity": {
         "name": "BookChapterViewItem",
@@ -108860,7 +108903,7 @@
       "complexity": {
         "states": 1,
         "events": 2,
-        "transitions": 2
+        "transitions": 3
       },
       "defaultEntity": {
         "name": "BookTableOfContentsItem",
@@ -108971,7 +109014,7 @@
       "complexity": {
         "states": 1,
         "events": 2,
-        "transitions": 2
+        "transitions": 3
       },
       "defaultEntity": {
         "name": "BookViewerItem",
@@ -109082,7 +109125,7 @@
       "complexity": {
         "states": 1,
         "events": 2,
-        "transitions": 2
+        "transitions": 3
       },
       "defaultEntity": {
         "name": "CaseStudyOrganismItem",
@@ -109223,7 +109266,7 @@
       "complexity": {
         "states": 1,
         "events": 2,
-        "transitions": 2
+        "transitions": 3
       },
       "defaultEntity": {
         "name": "FeatureGridOrganismItem",
@@ -109359,7 +109402,7 @@
       "complexity": {
         "states": 1,
         "events": 2,
-        "transitions": 2
+        "transitions": 3
       },
       "defaultEntity": {
         "name": "HeroOrganismItem",
@@ -109529,7 +109572,7 @@
       "complexity": {
         "states": 1,
         "events": 2,
-        "transitions": 2
+        "transitions": 3
       },
       "defaultEntity": {
         "name": "PricingOrganismItem",
@@ -109683,7 +109726,7 @@
       "complexity": {
         "states": 1,
         "events": 2,
-        "transitions": 2
+        "transitions": 3
       },
       "defaultEntity": {
         "name": "ShowcaseOrganismItem",
@@ -109827,7 +109870,7 @@
       "complexity": {
         "states": 1,
         "events": 2,
-        "transitions": 2
+        "transitions": 3
       },
       "defaultEntity": {
         "name": "StatsOrganismItem",
@@ -109948,7 +109991,7 @@
       "complexity": {
         "states": 1,
         "events": 2,
-        "transitions": 2
+        "transitions": 3
       },
       "defaultEntity": {
         "name": "StepFlowOrganismItem",
@@ -110079,7 +110122,7 @@
       "complexity": {
         "states": 1,
         "events": 2,
-        "transitions": 2
+        "transitions": 3
       },
       "defaultEntity": {
         "name": "TeamOrganismItem",
@@ -110215,7 +110258,7 @@
       "complexity": {
         "states": 1,
         "events": 2,
-        "transitions": 2
+        "transitions": 3
       },
       "defaultEntity": {
         "name": "AboutPageTemplateItem",
@@ -110528,7 +110571,7 @@
       "complexity": {
         "states": 1,
         "events": 2,
-        "transitions": 2
+        "transitions": 3
       },
       "defaultEntity": {
         "name": "FeatureDetailPageTemplateItem",
@@ -110704,7 +110747,7 @@
       "complexity": {
         "states": 1,
         "events": 2,
-        "transitions": 2
+        "transitions": 3
       },
       "defaultEntity": {
         "name": "LandingPageTemplateItem",
@@ -110959,7 +111002,7 @@
       "complexity": {
         "states": 1,
         "events": 2,
-        "transitions": 2
+        "transitions": 3
       },
       "defaultEntity": {
         "name": "PricingPageTemplateItem",

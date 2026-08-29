@@ -477,6 +477,13 @@
               "tier": "presentation",
               "type": "[string]"
             },
+            "selfFetch": {
+              "default": true,
+              "description": "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's.",
+              "label": "Fetch its own rows on mount?",
+              "tier": "internal",
+              "type": "boolean"
+            },
             "sortColumn": {
               "description": "Current sort column (display hint for the active header arrow).",
               "label": "Sort Column",
@@ -693,6 +700,53 @@
                 "event": "INIT",
                 "eventId": "evt_01KXG04RSAE8A8Z0B7VVK4PEPX",
                 "from": "idle",
+                "guard": "@config.selfFetch",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "accepts": "@config.accepts",
+                      "className": "@config.className",
+                      "columns": "@config.columns",
+                      "dndItemIdField": "@config.dndItemIdField",
+                      "dndRoot": "@config.dndRoot",
+                      "dragGroup": "@config.dragGroup",
+                      "dropEvent": "@config.dropEvent",
+                      "emptyMessage": "@config.emptyMessage",
+                      "entity": "@entity",
+                      "error": "@config.error",
+                      "fields": "@config.fields",
+                      "groupBy": "@config.groupBy",
+                      "isLoading": "@config.isLoading",
+                      "itemActions": "@config.itemActions",
+                      "itemClickEvent": "@config.itemClickEvent",
+                      "look": "@config.look",
+                      "maxInlineActions": "@config.maxInlineActions",
+                      "pageSize": "@config.pageSize",
+                      "positionEvent": "@config.positionEvent",
+                      "reorderEvent": "@config.reorderEvent",
+                      "selectEvent": "@config.selectEvent",
+                      "selectable": "@config.selectable",
+                      "selectedIds": "@config.selectedIds",
+                      "sortColumn": "@config.sortColumn",
+                      "sortDirection": "@config.sortDirection",
+                      "sortEvent": "@config.sortEvent",
+                      "sortable": "@config.sortable",
+                      "type": "table-view"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01KXG04RSAE8A8Z0B7VVK4PEPX",
+                "from": "idle",
+                "guard": [
+                  "not",
+                  "@config.selfFetch"
+                ],
                 "to": "idle"
               },
               {

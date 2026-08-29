@@ -58,6 +58,8 @@ export interface StdUiPricingOrganismConfig {
   searchValue?: string;
   /** Default: `[]` */
   selectedIds?: string[];
+  /** Default: `true` */
+  selfFetch?: boolean;
   sortBy?: string;
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
@@ -268,6 +270,13 @@ export function stdUiPricingOrganismPricingOrganismOrbital(params: StdUiPricingO
             'tier': 'presentation',
             'type': '[string]',
           },
+          'selfFetch': {
+            'default': true,
+            'description': 'true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper\'s own un-hydrated fetch so it cannot race the composer\'s.',
+            'label': 'Fetch its own rows on mount?',
+            'tier': 'internal',
+            'type': 'boolean',
+          },
           'sortBy': {
             'description': 'Current sort field',
             'label': 'Sort By',
@@ -383,6 +392,39 @@ export function stdUiPricingOrganismPricingOrganismOrbital(params: StdUiPricingO
               ],
               'event': 'INIT',
               'from': 'idle',
+              'guard': '@config.selfFetch',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'activeFilters': '@config.activeFilters',
+                    'className': '@config.className',
+                    'entity': '@entity',
+                    'error': '@config.error',
+                    'heading': '@config.heading',
+                    'isLoading': '@config.isLoading',
+                    'page': '@config.pageProp',
+                    'pageSize': '@config.pageSize',
+                    'searchValue': '@config.searchValue',
+                    'selectedIds': '@config.selectedIds',
+                    'sortBy': '@config.sortBy',
+                    'sortDirection': '@config.sortDirection',
+                    'subtitle': '@config.subtitle',
+                    'totalCount': '@config.totalCount',
+                    'type': 'pricing-organism',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'guard': [
+                'not',
+                '@config.selfFetch',
+              ],
               'to': 'idle',
             },
             {

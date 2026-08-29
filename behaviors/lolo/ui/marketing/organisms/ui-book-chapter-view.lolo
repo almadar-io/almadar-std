@@ -11,8 +11,15 @@ orbital BookChapterViewOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle
+      INIT -> idle when @config.selfFetch
         (fetch BookChapterViewItem { emit: { success: BookChapterViewLoaded } })
+        (render-ui main {
+          className: @config.className
+          chapter: @entity
+          direction: @config.direction
+          type: book-chapter-view
+        })
+      INIT -> idle when (not @config.selfFetch)
         (render-ui main {
           className: @config.className
           chapter: @entity
@@ -44,6 +51,10 @@ orbital BookChapterViewOrbital {
         @label "Direction"
         @description "direction prop"
         @tier "presentation"
+      selfFetch : boolean = true
+        @label "Fetch its own rows on mount?"
+        @description "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's."
+        @tier "internal"
     }
   }
 

@@ -62,8 +62,44 @@ orbital DetailPanelOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle
+      INIT -> idle when @config.selfFetch
         (fetch DetailPanelItem { emit: { success: DetailPanelLoaded } })
+        (render-ui main {
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          page: @config.pageProp
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          entity: @entity
+          title: @config.title
+          onTitleCommit: @config.onTitleCommit
+          subtitle: @config.subtitle
+          status: @config.status
+          avatar: @config.avatar
+          sections: @config.sections
+          actions: @config.actions
+          maxInlineActions: @config.maxInlineActions
+          backAction: @config.backAction
+          footer: @config.footer
+          slideOver: @config.slideOver
+          fields: @config.fields
+          fieldNames: @config.fieldNames
+          initialData: @entity
+          mode: @config.mode
+          position: @config.position
+          width: @config.width
+          displayFields: @config.displayFields
+          showActions: @config.showActions
+          relationsData: @config.relationsData
+          type: detail-panel
+        })
+      INIT -> idle when (not @config.selfFetch)
         (render-ui main {
           className: @config.className
           isLoading: @config.isLoading
@@ -266,6 +302,10 @@ orbital DetailPanelOrbital {
         @label "Relations Data"
         @description "Relation display data: { fieldName: [{value, label}] } — injected server-side by the runtime (relation-option injection) or bound by compiled codegen; resolves stored foreign ids to display names."
         @tier "presentation"
+      selfFetch : boolean = true
+        @label "Fetch its own rows on mount?"
+        @description "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's."
+        @tier "internal"
     }
   }
 

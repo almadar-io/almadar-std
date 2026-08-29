@@ -81,6 +81,8 @@ export interface StdUiCounterTemplateConfig {
   /** Default: `"RESET"` */
   resetEvent?: string;
   /** Default: `true` */
+  selfFetch?: boolean;
+  /** Default: `true` */
   showReset?: boolean;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';

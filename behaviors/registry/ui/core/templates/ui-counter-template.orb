@@ -194,6 +194,13 @@
               "tier": "presentation",
               "type": "string"
             },
+            "selfFetch": {
+              "default": true,
+              "description": "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's.",
+              "label": "Fetch its own rows on mount?",
+              "tier": "internal",
+              "type": "boolean"
+            },
             "showReset": {
               "default": true,
               "description": "Show reset button",
@@ -403,6 +410,38 @@
                 "event": "INIT",
                 "eventId": "evt_01KXG04TAAZBPQE4K43H6GG762",
                 "from": "idle",
+                "guard": "@config.selfFetch",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "decrementEvent": "@config.decrementEvent",
+                      "entity": "@entity",
+                      "incrementEvent": "@config.incrementEvent",
+                      "onDecrement": "@config.onDecrement",
+                      "onIncrement": "@config.onIncrement",
+                      "onReset": "@config.onReset",
+                      "resetEvent": "@config.resetEvent",
+                      "showReset": "@config.showReset",
+                      "size": "@config.size",
+                      "title": "@config.title",
+                      "type": "counter-template",
+                      "variant": "@config.variant"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01KXG04TAAZBPQE4K43H6GG762",
+                "from": "idle",
+                "guard": [
+                  "not",
+                  "@config.selfFetch"
+                ],
                 "to": "idle"
               },
               {

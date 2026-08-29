@@ -30,7 +30,7 @@ const ALIAS = 'UiDocumentDetails';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiDocumentDetailsEventKey = 'DocumentDetailsLoaded' | 'INIT' | 'META_COMMIT';
+export type StdUiDocumentDetailsEventKey = 'DocumentDetailsLoaded' | 'INIT' | 'META_COMMIT' | 'RELATION';
 
 /**
  * Payload shape for the `META_COMMIT` event.
@@ -38,6 +38,15 @@ export type StdUiDocumentDetailsEventKey = 'DocumentDetailsLoaded' | 'INIT' | 'M
 export interface StdUiDocumentDetailsMetaCommitPayload {
   id: string;
   patch: EntityRow;
+}
+
+/**
+ * Payload shape for the `RELATION` event.
+ */
+export interface StdUiDocumentDetailsRelationPayload {
+  field: string;
+  id: string;
+  name: string;
 }
 
 /**
@@ -59,6 +68,10 @@ export interface StdUiDocumentDetailsConfig {
   fields?: EntityRow[];
   /** Default: `"META_COMMIT"` */
   metaCommitEvent?: string;
+  /** Default: `"RELATION"` */
+  relationEvent?: string;
+  /** Default: `true` */
+  selfFetch?: boolean;
   title?: string;
 }
 

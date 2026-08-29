@@ -74,6 +74,7 @@ export interface StdUiDocumentPanelConfig {
   className?: string;
   /** Default: `"CONTENT_CHANGE"` */
   contentChangeEvent?: string;
+  coverImage?: string;
   /** Default: `"DONE"` */
   doneEvent?: string;
   doneLabel?: string;
@@ -82,6 +83,7 @@ export interface StdUiDocumentPanelConfig {
   editLabel?: string;
   /** Default: `false` */
   editing?: boolean;
+  icon?: unknown;
   maxInlineActions?: number;
   placeholder?: string;
   subtitle?: string;

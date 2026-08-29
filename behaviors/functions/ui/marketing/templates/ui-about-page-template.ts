@@ -47,6 +47,8 @@ export interface StdUiAboutPageTemplateAboutPageTemplateLoadedPayload {
  */
 export interface StdUiAboutPageTemplateConfig {
   className?: string;
+  /** Default: `true` */
+  selfFetch?: boolean;
 }
 
 /**

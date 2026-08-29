@@ -12,8 +12,18 @@ orbital SortableListOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle
+      INIT -> idle when @config.selfFetch
         (fetch SortableListItem { emit: { success: SortableListLoaded } })
+        (render-ui main {
+          items: @entity
+          renderItem: (fn item { content: (object/get @item @config.itemLabelField ""), type: typography })
+          reorderEvent: @config.reorderEvent
+          reorderPayload: @config.reorderPayload
+          dragHandlePosition: @config.dragHandlePosition
+          className: @config.className
+          type: sortable-list
+        })
+      INIT -> idle when (not @config.selfFetch)
         (render-ui main {
           items: @entity
           renderItem: (fn item { content: (object/get @item @config.itemLabelField ""), type: typography })
@@ -68,6 +78,10 @@ orbital SortableListOrbital {
         @label "Class Name"
         @description "className prop"
         @tier "presentation"
+      selfFetch : boolean = true
+        @label "Fetch its own rows on mount?"
+        @description "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's."
+        @tier "internal"
     }
   }
 

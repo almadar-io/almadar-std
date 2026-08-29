@@ -32,8 +32,21 @@ orbital TimelineOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle
+      INIT -> idle when @config.selfFetch
         (fetch TimelineItem { emit: { success: TimelineLoaded } })
+        (render-ui main {
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          entity: @entity
+          title: @config.title
+          items: @config.items
+          fields: @config.fields
+          itemActions: @config.itemActions
+          look: @config.look
+          type: timeline
+        })
+      INIT -> idle when (not @config.selfFetch)
         (render-ui main {
           className: @config.className
           isLoading: @config.isLoading
@@ -106,6 +119,10 @@ orbital TimelineOrbital {
         @label "Look"
         @description "Layer 2 visual treatment."
         @tier "presentation"
+      selfFetch : boolean = true
+        @label "Fetch its own rows on mount?"
+        @description "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's."
+        @tier "internal"
     }
   }
 

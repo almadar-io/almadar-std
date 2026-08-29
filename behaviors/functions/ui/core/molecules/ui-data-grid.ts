@@ -105,6 +105,8 @@ export interface StdUiDataGridConfig {
   selectable?: boolean;
   /** Default: `"SELECTION"` */
   selectionEvent?: string;
+  /** Default: `true` */
+  selfFetch?: boolean;
   sortable?: boolean;
 }
 

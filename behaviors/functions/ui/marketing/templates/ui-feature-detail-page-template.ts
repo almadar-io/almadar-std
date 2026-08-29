@@ -47,6 +47,8 @@ export interface StdUiFeatureDetailPageTemplateFeatureDetailPageTemplateLoadedPa
  */
 export interface StdUiFeatureDetailPageTemplateConfig {
   className?: string;
+  /** Default: `true` */
+  selfFetch?: boolean;
 }
 
 /**

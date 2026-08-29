@@ -102,6 +102,8 @@ export interface StdUiFormConfig {
   repeatable?: boolean;
   /** Default: `[]` */
   sections?: EntityRow[];
+  /** Default: `true` */
+  selfFetch?: boolean;
   showCancel?: boolean;
   /** Default: `true` */
   showSubmit?: boolean;
@@ -886,6 +888,13 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
             'tier': 'presentation',
             'type': '[FormSectionsItem]',
           },
+          'selfFetch': {
+            'default': true,
+            'description': 'true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper\'s own un-hydrated fetch so it cannot race the composer\'s.',
+            'label': 'Fetch its own rows on mount?',
+            'tier': 'internal',
+            'type': 'boolean',
+          },
           'showCancel': {
             'description': 'Show cancel button (defaults to true for schema forms)',
             'label': 'Show Cancel',
@@ -1180,6 +1189,55 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
               ],
               'event': 'INIT',
               'from': 'idle',
+              'guard': '@config.selfFetch',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'cancelEvent': '@config.cancelEvent',
+                    'cancelLabel': '@config.cancelLabel',
+                    'children': '@config.children',
+                    'className': '@config.className',
+                    'conditionalFields': '@config.conditionalFields',
+                    'configPath': '@config.configPath',
+                    'entity': '@entity',
+                    'error': '@config.error',
+                    'evaluationContext': '@config.evaluationContext',
+                    'fieldOverrides': '@config.fieldOverrides',
+                    'fields': '@config.fields',
+                    'gap': '@config.gap',
+                    'hiddenCalculations': '@config.hiddenCalculations',
+                    'initialData': '@entity',
+                    'isLoading': '@config.isLoading',
+                    'layout': '@config.layout',
+                    'mode': '@config.mode',
+                    'onCancel': '@config.onCancel',
+                    'onFieldChange': '@config.onFieldChange',
+                    'onSubmit': '@config.onSubmit',
+                    'relationsData': '@config.relationsData',
+                    'relationsLoading': '@config.relationsLoading',
+                    'repeatable': '@config.repeatable',
+                    'sections': '@config.sections',
+                    'showCancel': '@config.showCancel',
+                    'showSubmit': '@config.showSubmit',
+                    'submitEvent': '@config.submitEvent',
+                    'submitLabel': '@config.submitLabel',
+                    'title': '@config.title',
+                    'type': 'form',
+                    'violationTriggers': '@config.violationTriggers',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'guard': [
+                'not',
+                '@config.selfFetch',
+              ],
               'to': 'idle',
             },
             {

@@ -30,7 +30,7 @@ const ALIAS = 'StatusLifecycle';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdStatusLifecycleEventKey = 'ChangeStatusRequested' | 'StatusChangeFailed' | 'StatusChanged';
+export type StdStatusLifecycleEventKey = 'ChangeStatusRequested' | 'StatusChangeFailed' | 'StatusChanged' | 'StatusPersisted';
 
 /**
  * Payload shape for the `StatusChanged` event.
@@ -38,6 +38,14 @@ export type StdStatusLifecycleEventKey = 'ChangeStatusRequested' | 'StatusChange
 export interface StdStatusLifecycleStatusChangedPayload {
   entityId?: string;
   status?: string;
+}
+
+/**
+ * Payload shape for the `StatusPersisted` event.
+ */
+export interface StdStatusLifecycleStatusPersistedPayload {
+  id?: string;
+  row?: EntityRow;
 }
 
 /**
@@ -340,6 +348,30 @@ export function stdStatusLifecycleStatusLifecycleOrbital(params: StdStatusLifecy
             'scope': 'external',
           },
           {
+            'event': 'StatusPersisted',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+              {
+                'name': 'row',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'status',
+                    'type': 'string',
+                  },
+                ],
+                'type': 'object',
+              },
+            ],
+          },
+          {
             'event': 'StatusChangeFailed',
             'payloadSchema': [
               {
@@ -351,6 +383,7 @@ export function stdStatusLifecycleStatusLifecycleOrbital(params: StdStatusLifecy
                 'type': 'string',
               },
             ],
+            'scope': 'external',
           },
         ],
         'entityContract': {
@@ -378,6 +411,20 @@ export function stdStatusLifecycleStatusLifecycleOrbital(params: StdStatusLifecy
                 {
                   'name': 'to',
                   'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'StatusPersisted',
+              'name': 'Status persisted',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row',
+                  'type': 'StatusRecord',
                 },
               ],
             },
@@ -434,15 +481,8 @@ export function stdStatusLifecycleStatusLifecycleOrbital(params: StdStatusLifecy
                   {
                     'emit': {
                       'failure': 'StatusChangeFailed',
-                      'success': 'StatusChanged',
+                      'success': 'StatusPersisted',
                     },
-                  },
-                ],
-                [
-                  'emit',
-                  'StatusChanged',
-                  {
-                    'status': '@payload.to',
                   },
                 ],
               ],
@@ -480,6 +520,37 @@ export function stdStatusLifecycleStatusLifecycleOrbital(params: StdStatusLifecy
                     ],
                   ],
                 ],
+              ],
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'emit',
+                  'StatusChanged',
+                  {
+                    'status': [
+                      'str/default',
+                      [
+                        'object/get',
+                        '@payload.row',
+                        '@config.statusField',
+                      ],
+                      '',
+                    ],
+                  },
+                ],
+              ],
+              'event': 'StatusPersisted',
+              'from': 'idle',
+              'guard': [
+                '!=',
+                [
+                  'str/default',
+                  '@payload.id',
+                  '',
+                ],
+                '',
               ],
               'to': 'idle',
             },

@@ -50,8 +50,39 @@ orbital TableViewOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle
+      INIT -> idle when @config.selfFetch
         (fetch TableViewItem { emit: { success: TableViewLoaded } })
+        (render-ui main {
+          dragGroup: @config.dragGroup
+          accepts: @config.accepts
+          sortable: @config.sortable
+          dropEvent: @config.dropEvent
+          reorderEvent: @config.reorderEvent
+          positionEvent: @config.positionEvent
+          dndItemIdField: @config.dndItemIdField
+          dndRoot: @config.dndRoot
+          entity: @entity
+          columns: @config.columns
+          fields: @config.fields
+          itemActions: @config.itemActions
+          maxInlineActions: @config.maxInlineActions
+          itemClickEvent: @config.itemClickEvent
+          selectable: @config.selectable
+          selectEvent: @config.selectEvent
+          selectedIds: @config.selectedIds
+          sortEvent: @config.sortEvent
+          sortColumn: @config.sortColumn
+          sortDirection: @config.sortDirection
+          className: @config.className
+          emptyMessage: @config.emptyMessage
+          isLoading: @config.isLoading
+          error: @config.error
+          groupBy: @config.groupBy
+          pageSize: @config.pageSize
+          look: @config.look
+          type: table-view
+        })
+      INIT -> idle when (not @config.selfFetch)
         (render-ui main {
           dragGroup: @config.dragGroup
           accepts: @config.accepts
@@ -242,6 +273,10 @@ orbital TableViewOrbital {
         @label "Look"
         @description "Layer 2 visual treatment — mirrors the data-list / entity-table look enum so authors share one knob name across row renderers."
         @tier "presentation"
+      selfFetch : boolean = true
+        @label "Fetch its own rows on mount?"
+        @description "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's."
+        @tier "internal"
     }
   }
 

@@ -58,8 +58,39 @@ orbital EntityTableOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle
+      INIT -> idle when @config.selfFetch
         (fetch EntityTableItem { emit: { success: EntityTableLoaded } })
+        (render-ui main {
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          page: @config.pageProp
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          entity: @entity
+          fields: @config.fields
+          columns: @config.columns
+          itemActions: @config.itemActions
+          emptyIcon: @config.emptyIcon
+          emptyTitle: @config.emptyTitle
+          emptyDescription: @config.emptyDescription
+          emptyAction: @config.emptyAction
+          selectable: @config.selectable
+          searchable: @config.searchable
+          searchPlaceholder: @config.searchPlaceholder
+          rowActions: @config.rowActions
+          bulkActions: @config.bulkActions
+          headerActions: @config.headerActions
+          showTotal: @config.showTotal
+          look: @config.look
+          type: entity-table
+        })
+      INIT -> idle when (not @config.selfFetch)
         (render-ui main {
           className: @config.className
           isLoading: @config.isLoading
@@ -241,6 +272,10 @@ orbital EntityTableOrbital {
         @label "Look"
         @description "Layer 2 visual treatment — orthogonal to the semantic variant."
         @tier "presentation"
+      selfFetch : boolean = true
+        @label "Fetch its own rows on mount?"
+        @description "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's."
+        @tier "internal"
     }
   }
 

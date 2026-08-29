@@ -49,6 +49,8 @@ export interface StdUiBookChapterViewConfig {
   className?: string;
   /** Default: `"rtl"` */
   direction?: 'rtl' | 'ltr';
+  /** Default: `true` */
+  selfFetch?: boolean;
 }
 
 type _StdUiBookChapterViewEntityName = 'BookChapterViewItem';
@@ -139,6 +141,13 @@ export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChap
               'ltr',
             ],
           },
+          'selfFetch': {
+            'default': true,
+            'description': 'true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper\'s own un-hydrated fetch so it cannot race the composer\'s.',
+            'label': 'Fetch its own rows on mount?',
+            'tier': 'internal',
+            'type': 'boolean',
+          },
         },
         'emits': [
           {
@@ -214,6 +223,28 @@ export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChap
               ],
               'event': 'INIT',
               'from': 'idle',
+              'guard': '@config.selfFetch',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'chapter': '@entity',
+                    'className': '@config.className',
+                    'direction': '@config.direction',
+                    'type': 'book-chapter-view',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'guard': [
+                'not',
+                '@config.selfFetch',
+              ],
               'to': 'idle',
             },
             {

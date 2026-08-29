@@ -82,6 +82,8 @@ export interface StdUiEntityListConfig {
   selectable?: boolean;
   /** Default: `[]` */
   selectedIds?: string[];
+  /** Default: `true` */
+  selfFetch?: boolean;
   showDividers?: boolean;
   sortBy?: string;
   /** Default: `"asc"` */
@@ -335,6 +337,13 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
             'tier': 'presentation',
             'type': '[string]',
           },
+          'selfFetch': {
+            'default': true,
+            'description': 'true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper\'s own un-hydrated fetch so it cannot race the composer\'s.',
+            'label': 'Fetch its own rows on mount?',
+            'tier': 'internal',
+            'type': 'boolean',
+          },
           'showDividers': {
             'description': 'showDividers prop',
             'label': 'Show Dividers',
@@ -516,6 +525,46 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
               ],
               'event': 'INIT',
               'from': 'idle',
+              'guard': '@config.selfFetch',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'activeFilters': '@config.activeFilters',
+                    'children': '@config.children',
+                    'className': '@config.className',
+                    'emptyMessage': '@config.emptyMessage',
+                    'entity': '@entity',
+                    'entityType': '@config.entityType',
+                    'error': '@config.error',
+                    'fieldNames': '@config.fieldNames',
+                    'fields': '@config.fields',
+                    'isLoading': '@config.isLoading',
+                    'itemActions': '@config.itemActions',
+                    'page': '@config.pageProp',
+                    'pageSize': '@config.pageSize',
+                    'searchValue': '@config.searchValue',
+                    'selectable': '@config.selectable',
+                    'selectedIds': '@config.selectedIds',
+                    'showDividers': '@config.showDividers',
+                    'sortBy': '@config.sortBy',
+                    'sortDirection': '@config.sortDirection',
+                    'totalCount': '@config.totalCount',
+                    'type': 'entity-list',
+                    'variant': '@config.variant',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'guard': [
+                'not',
+                '@config.selfFetch',
+              ],
               'to': 'idle',
             },
             {

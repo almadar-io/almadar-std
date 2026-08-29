@@ -1,5 +1,5 @@
-app std-approval-gate "1.0.1"
-"std-approval-gate — generic approval gate / approver workflow. Use when a user voices that an action must be reviewed, approved, signed off, or authorized by a privileged role before it proceeds (admin approval, supervisor sign-off, manager approval, gatekeeper review, editor approval, senior editor approval, reviewer approval, publishing approval, draft approval, content review, submit drafts then editors review and approve or reject, needs approval before going live, requires sign-off before publish). Persists ApprovalRequest rows + surfaces them in a review queue with Approve / Deny / Reject actions, optionally requiring a written rejection reason or feedback comment. On approval emits ApprovalGranted; on denial emits ApprovalDenied. Compose onto any orbital whose action you want to gate: the target orbital emits an external event, an ApprovalRequest row is created, and downstream effects wait on ApprovalGranted. Differs from std-mod-queue, which is content-moderation-specific."
+app std-approval-gate "1.1.0"
+"std-approval-gate — generic approval gate / approver workflow. Use when a user voices that an action must be reviewed, approved, signed off, or authorized by a privileged role before it proceeds (admin approval, supervisor sign-off, manager approval, gatekeeper review, editor approval, senior editor approval, reviewer approval, publishing approval, draft approval, content review, submit drafts then editors review and approve or reject, needs approval before going live, requires sign-off before publish). Persists ApprovalRequest rows + surfaces the PENDING ones in a review queue showing what is being approved and who asked, with Approve / Deny actions — Deny captures a written reason. approverRoles is ENFORCED by the review transitions themselves: an APPROVE/DENY from a viewer whose role is not listed does not fire. On approval emits ApprovalGranted; on denial emits ApprovalDenied (with the reason). Hosts that replay the gated action MUST route a failed replay back via APPROVAL_REPLAY_FAILED so the request reopens instead of being silently consumed. Compose onto any orbital whose action you want to gate: the target orbital emits an external event, an ApprovalRequest row is created (stamp subjectLabel/subjectId/requestedBy so reviewers see what they are judging), and downstream effects wait on ApprovalGranted. Differs from std-mod-queue, which is content-moderation-specific."
 orbital ApprovalGateOrbital {
     uses Spinner from "std/behaviors/ui-spinner"
     uses Typography from "std/behaviors/ui-typography"
@@ -18,17 +18,34 @@ orbital ApprovalGateOrbital {
 
     type ApprovalGranted = Event { requestId : string, payload : object } "Re-emitted on approval; carries the held payload so the downstream listener can replay the gated action without a lookup."
 
-    type ApprovalDenied = Event { requestId : string } "Emitted on denial; downstream listeners can log or notify."
+    type DenyCommit = { id : string!, notes : string }
 
+    type ApprovalDenied = Event { requestId : string, reason : string } "Emitted on denial; carries the reviewer's written reason. Downstream listeners log, notify, or return the subject to its prior state."
+
+  ;; The queue is a shared review surface — every signed-in role may need to
+  ;; SEE what is pending about their own submissions; WHO may decide is the
+  ;; role guard on the APPROVE/DENY transitions (the FSM enforces it on the
+  ;; affordance and on any bus-delivered event alike). Entity-layer access
+  ;; predicates CANNOT live here: a generic atom declares no [identity]
+  ;; entity, and ORB_S_ACCESS_POLICY_REQUIRES_IDENTITY (correctly) rejects a
+  ;; @user-reading directive without a roster — while a host cannot add
+  ;; predicates to a foreign atom's entity. Ledgered
+  ;; (R-APPROVAL-REQUEST-ENTITY-LAYER-UNGATED); the guard layer above is the
+  ;; enforcement both paths carry today.
   entity ApprovalRequest [persistent: approval_requests] {
+    @read none "Shared review surface: submitters watch their requests, approvers work the queue; decision authority is enforced at the transitions, not by hiding rows."
     id : string!
     gatedEvent : string @description "The event that triggered the approval request." @synonyms "trigger, event, source" = ""
+    subjectLabel : string @description "Human title of the thing being approved (the article's headline, the page's title) — what the reviewer sees in the queue." @synonyms "title, subject, what is being approved" = ""
+    subjectId : string @description "Id of the record being approved, for a queue row's View click-through to the subject's own surface." @synonyms "record id, target id, article id, page id" = ""
+    requestedBy : string @description "User id of the submitter." @synonyms "submitter, author, requester id" = ""
+    requestedByName : string @description "Display name of the submitter shown in the queue." @synonyms "submitter name, requester, who asked" = ""
     status : "pending" | "approved" | "denied" | "escalated" @description "Current state of the approval process." @synonyms "approval status, state, condition" = pending
     reviewer : string @description "The user or system responsible for reviewing the request." @synonyms "assignee, owner, approver, responsible party" = ""
     requestedAt : number @description "Timestamp indicating when the approval request was initiated." @synonyms "creation time, request date, submission time" = 0
     decidedAt : number @description "Timestamp indicating when a decision was made on the request." @synonyms "decision time, resolved at, completed at" = 0
     escalatedAt : number @description "Timestamp indicating when the request was escalated." @synonyms "escalation time, escalation timestamp, escalated time" = 0
-    notes : string @description "Free-form text providing additional context or details." @synonyms "comments, remarks, explanation, details" = ""
+    notes : string @description "The reviewer's written reason, captured by the deny step." @synonyms "comments, remarks, explanation, reason, details" = ""
     payload : object @description "The held data of the gated action, replayed by the downstream listener when the request is granted." @synonyms "request data, held payload, pending data, gated data" = {}
   }
 
@@ -63,6 +80,21 @@ orbital ApprovalGateOrbital {
     }
   }
 
+  trait DenyReasonTitle = Typography.traits.TypographyRender -> ApprovalRequest {
+    config {
+      content: "Deny request"
+      variant: h3
+    }
+  }
+
+  trait DenyReasonHint = Typography.traits.TypographyRender -> ApprovalRequest {
+    config {
+      color: muted
+      content: "Tell the submitter why — the reason is recorded on the request."
+      variant: caption
+    }
+  }
+
   trait CloseButton = Button.traits.ButtonRender -> ApprovalRequest {
     config {
       action: CLOSE
@@ -86,15 +118,30 @@ orbital ApprovalGateOrbital {
   trait ApprovalGateReview -> @rebindable ApprovalRequest [interaction, collection, approval] {
     initial: idle
 
+    ;; Every queue fetch is scoped to PENDING rows: a decided row must leave
+    ;; the queue, or its still-live Approve action re-emits ApprovalGranted
+    ;; with the ORIGINAL payload and replays a stale edit over current state.
     state idle {
       INIT -> idle
         (fetch ApprovalRequest {
+          filter: ["=", (object/get @entity status), "pending"]
           emit: { failure: ApprovalRequestLoadFailed, success: ApprovalRequestLoaded }
         })
       ApprovalRequestLoaded -> idle
       ApprovalRequestLoadFailed -> idle
+      ;; A replay failure can also arrive while the queue is closed.
+      APPROVAL_REPLAY_FAILED -> idle
+        (set @entity.id ?requestId)
+        (set @entity.status pending)
+        (set @entity.reviewer "")
+        (set @entity.decidedAt 0)
+        (persist update ApprovalRequest @entity {
+          emit: { failure: ApprovalRequestReviewFailed, success: ApprovalRequestReviewed }
+        })
+        (notify "Approval could not be applied — the request was reopened." error)
       OPEN -> loading when @config.enabled
         (fetch ApprovalRequest {
+          filter: ["=", (object/get @entity status), "pending"]
           emit: { failure: ApprovalRequestLoadFailed, success: ApprovalRequestLoaded }
         })
         (render-ui @config.reviewSlot {
@@ -127,20 +174,29 @@ orbital ApprovalGateOrbital {
             cols: 1
             entity: ?data
             fields: [{
+              label: What
+              name: subjectLabel
+              variant: h4
+            }, {
               label: Action
               name: gatedEvent
               variant: badge
             }, {
+              label: "Requested by"
+              name: requestedByName
+              variant: caption
+            }, {
               label: Requested
               name: requestedAt
               variant: caption
-            }, {
-              label: Status
-              name: status
-              variant: badge
             }]
             gap: sm
             itemActions: [{
+              event: OPEN_SUBJECT
+              icon: eye
+              label: View
+              variant: ghost
+            }, {
               event: APPROVE
               icon: check
               label: Approve
@@ -168,27 +224,92 @@ orbital ApprovalGateOrbital {
     }
 
     state reviewing {
-      APPROVE -> reviewing
+      ;; The role guard IS the enforcement (both execution paths honor
+      ;; transition guards, for the button and for a bus-delivered event
+      ;; alike): empty approverRoles = ungated, otherwise the viewer's role
+      ;; must be listed or the decision does not fire.
+      APPROVE -> reviewing when (or ["=", (array/len @config.approverRoles), 0] (array/includes @config.approverRoles @user.role))
         (set @entity.id ?id)
         (set @entity.status approved)
         (set @entity.reviewer @user.id)
+        (set @entity.decidedAt (time/now))
         (persist update ApprovalRequest @entity {
           emit: { failure: ApprovalRequestReviewFailed, success: ApprovalRequestReviewed }
         })
         (emit ApprovalGranted { payload: ?row.payload, requestId: ?id })
-      DENY -> reviewing
+      ;; Deny is a two-step: capture the written reason first, commit second.
+      DENY -> denying when (or ["=", (array/len @config.approverRoles), 0] (array/includes @config.approverRoles @user.role))
         (set @entity.id ?id)
-        (set @entity.status denied)
-        (set @entity.reviewer @user.id)
-        (persist update ApprovalRequest @entity {
-          emit: { failure: ApprovalRequestReviewFailed, success: ApprovalRequestReviewed }
+        (set @entity.subjectLabel (str/default (object/get ?row subjectLabel) ""))
+        (render-ui @config.reviewSlot {
+          children: [{
+            align: center
+            children: [@trait.DenyReasonTitle, @trait.CloseButton]
+            direction: horizontal
+            gap: sm
+            justify: between
+            type: stack
+          }, @trait.DenyReasonHint, @trait.ApprovalDivider, {
+            cancelEvent: CANCEL_DENY
+            entity: { id: @entity.id }
+            fields: (notes)
+            mode: edit
+            submitEvent: CONFIRM_DENY
+            type: form-section
+          }]
+          direction: vertical
+          gap: md
+          type: stack
         })
-        (emit ApprovalDenied { requestId: ?id })
+      OPEN_SUBJECT -> reviewing
       ApprovalRequestReviewed -> loading
         (fetch ApprovalRequest {
+          filter: ["=", (object/get @entity status), "pending"]
           emit: { failure: ApprovalRequestLoadFailed, success: ApprovalRequestLoaded }
         })
       ApprovalRequestReviewFailed -> reviewing
+        (render-ui @config.reviewSlot {
+          children: [@trait.ErrorAlert]
+          type: stack
+        })
+      ;; A host reports the gated action could not be applied after approval
+      ;; (an entity-access denial, a failed write): reopen the request so it
+      ;; is never silently consumed.
+      APPROVAL_REPLAY_FAILED -> reviewing
+        (set @entity.id ?requestId)
+        (set @entity.status pending)
+        (set @entity.reviewer "")
+        (set @entity.decidedAt 0)
+        (persist update ApprovalRequest @entity {
+          emit: { failure: ApprovalRequestReviewFailed, success: ApprovalRequestReviewed }
+        })
+        (notify "Approval could not be applied — the request was reopened." error)
+      CLOSE -> idle
+        (render-ui @config.reviewSlot null)
+    }
+
+    state denying {
+      CONFIRM_DENY -> reviewing
+        (set @entity.id (object/get ?data id))
+        (set @entity.status denied)
+        (set @entity.reviewer @user.id)
+        (set @entity.decidedAt (time/now))
+        (set @entity.notes (str/default (object/get ?data notes) ""))
+        (persist update ApprovalRequest @entity {
+          emit: { failure: ApprovalRequestReviewFailed, success: ApprovalRequestReviewed }
+        })
+        (emit ApprovalDenied { requestId: (object/get ?data id), reason: (str/default (object/get ?data notes) "") })
+      CANCEL_DENY -> loading
+        (fetch ApprovalRequest {
+          filter: ["=", (object/get @entity status), "pending"]
+          emit: { failure: ApprovalRequestLoadFailed, success: ApprovalRequestLoaded }
+        })
+      ApprovalRequestReviewed -> loading
+        (fetch ApprovalRequest {
+          filter: ["=", (object/get @entity status), "pending"]
+          emit: { failure: ApprovalRequestLoadFailed, success: ApprovalRequestLoaded }
+        })
+      ApprovalRequestReviewFailed -> denying
         (render-ui @config.reviewSlot {
           children: [@trait.ErrorAlert]
           type: stack
@@ -200,6 +321,7 @@ orbital ApprovalGateOrbital {
     state error {
       OPEN -> loading
         (fetch ApprovalRequest {
+          filter: ["=", (object/get @entity status), "pending"]
           emit: { failure: ApprovalRequestLoadFailed, success: ApprovalRequestLoaded }
         })
         (render-ui @config.reviewSlot {
@@ -222,9 +344,27 @@ orbital ApprovalGateOrbital {
         id : string!
         row : ApprovalRequest
       }
-        @description "Signals that an approval request has been denied."
+        @description "Opens the deny step for a request; the decision commits with the written reason."
         @synonyms "reject, decline"
         @tier "domain"
+      OPEN_SUBJECT -> external {
+        id : string!
+        subjectId : string
+        subjectLabel : string
+      }
+        @description "A reviewer clicked View on a queue row. Hosts route subjectId to the subject record's own surface so the reviewer can read what they are approving. Scalars only — the row stays in the queue."
+        @synonyms "view subject, open record, inspect request, see the article"
+        @tier "domain"
+      CONFIRM_DENY {
+        data : DenyCommit
+      }
+        @description "The deny form committed; data carries the request id + the written reason."
+        @synonyms "submit denial, confirm rejection"
+        @tier "internal"
+      CANCEL_DENY
+        @description "The deny form was dismissed without committing; the queue repaints."
+        @synonyms "cancel denial, back to queue"
+        @tier "internal"
       CLOSE
         @description "Dismisses the review queue overlay."
         @synonyms "dismiss, hide, cancel, done"
@@ -233,13 +373,14 @@ orbital ApprovalGateOrbital {
         requestId : string
         payload : object
       }
-        @description "Signals that an approval process has been successfully completed; carries the held payload for the downstream listener to replay."
+        @description "Signals that an approval process has been successfully completed; carries the held payload for the downstream listener to replay. Contract: if the replay fails (access denial, write failure), the host MUST emit APPROVAL_REPLAY_FAILED back so the request reopens."
         @synonyms "approved, authorized, confirmed, validated"
         @tier "domain"
       ApprovalDenied -> external {
         requestId : string
+        reason : string
       }
-        @description "Indicates an approval request has been denied."
+        @description "Indicates an approval request has been denied, with the reviewer's written reason."
         @synonyms "rejected, declined"
         @tier "domain"
       ApprovalRequestLoaded {
@@ -291,8 +432,33 @@ orbital ApprovalGateOrbital {
         id : string!
         row : ApprovalRequest
       }
-        @description "Indicates an approval request has been rejected."
+        @description "Opens the deny step for a request."
         @synonyms "reject, decline, deny"
+        @tier "domain"
+      OPEN_SUBJECT {
+        id : string!
+        subjectId : string
+        subjectLabel : string
+      }
+        @description "A reviewer asked to view the subject of a queue row; the host routes the navigation."
+        @synonyms "view subject, open record, inspect"
+        @tier "domain"
+      CONFIRM_DENY {
+        data : DenyCommit
+      }
+        @description "The deny form committed with the written reason."
+        @synonyms "submit denial, confirm rejection"
+        @tier "internal"
+      CANCEL_DENY
+        @description "The deny form was dismissed; return to the queue."
+        @synonyms "cancel denial, back"
+        @tier "internal"
+      APPROVAL_REPLAY_FAILED {
+        requestId : string!
+        error : string
+      }
+        @description "The host could not apply the granted action (access denial, failed write). The request reopens as pending so a decision is never silently lost."
+        @synonyms "replay failed, apply failed, approval rollback"
         @tier "domain"
       ApprovalRequestLoaded {
         data : [ApprovalRequest]
@@ -330,7 +496,7 @@ orbital ApprovalGateOrbital {
         @tier "policy"
       approverRoles : [string] = []
         @label "Who can approve requests?"
-        @description "Roles eligible to approve. The host application enforces role-gating on the page."
+        @description "Roles eligible to decide. ENFORCED by the APPROVE/DENY transition guards: a viewer whose @user.role is not listed cannot fire a decision, from the button or from the bus. Empty = every signed-in viewer may decide (ungated)."
         @synonyms "approver, reviewer, authorized roles, sign-off roles, who approves"
         @tier "policy"
       threshold : number = 0

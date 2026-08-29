@@ -7,6 +7,8 @@ orbital TagTaxonomyOrbital {
 
     type TagSelected = Event { tagId : string! } "Fired when a tag is selected to drill into its children"
 
+    type TagCommit = { name : string!, parentId : string }
+
   entity Tag [persistent: tags] {
     id : string!
     name : string! @description "The descriptive label for this item." @synonyms "label, title, description"
@@ -21,6 +23,11 @@ orbital TagTaxonomyOrbital {
     initial: loading
 
     state loading {
+      LEVEL_RELOAD -> loading
+        (fetch Tag {
+          filter: ["=", (object/get @entity parentId), (str/default ?tagId "")]
+          emit: { failure: TagLoadFailed, success: TagLoaded }
+        })
       INIT -> loading
         (set @entity.id "")
         (set @entity.parentId "")
@@ -55,7 +62,14 @@ orbital TagTaxonomyOrbital {
             content: @config.title
             type: typography
             variant: h3
-          }, {
+          }, (if @config.allowEdit {
+            action: NEW_TAG
+            icon: plus
+            label: "New category"
+            size: sm
+            type: button
+            variant: secondary
+          } null), {
             entity: ?data
             fields: []
             gap: sm
@@ -200,7 +214,14 @@ orbital TagTaxonomyOrbital {
             content: @config.title
             type: typography
             variant: h3
-          }, {
+          }, (if @config.allowEdit {
+            action: NEW_TAG
+            icon: plus
+            label: "New category"
+            size: sm
+            type: button
+            variant: secondary
+          } null), {
             entity: ?data
             fields: []
             gap: sm
@@ -261,8 +282,86 @@ orbital TagTaxonomyOrbital {
           gap: md
           type: stack
         })
+      NEW_TAG -> creating when @config.allowEdit
+        (render-ui modal {
+          children: [{
+            content: "New category"
+            type: typography
+            variant: h3
+          }, {
+            color: muted
+            content: (if (!= @entity.id "") "Created inside the open category." "Created at the top level.")
+            type: typography
+            variant: caption
+          }, { type: divider }, {
+            cancelEvent: CANCEL_TAG
+            entity: { parentId: @entity.id }
+            fields: (name)
+            mode: create
+            submitEvent: COMMIT_TAG
+            type: form-section
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
       TagLoadFailed -> error
         (render-ui main {
+          message: ?error
+          type: alert
+          variant: error
+        })
+    }
+
+    state creating {
+      COMMIT_TAG -> creating
+        (persist create Tag {
+          name: (object/get ?data name)
+          parentId: (str/default (object/get ?data parentId) "")
+        } {
+          emit: { failure: TagCreateFailed, success: TagCreated }
+        })
+      ;; A filter expression binds @entity to the candidate ROW, so the open
+      ;; level must travel by payload: the arm emits LEVEL_RELOAD carrying the
+      ;; trait's own level id, and loading refetches from it.
+      CANCEL_TAG -> loading
+        (render-ui modal null)
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading categories…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
+        (emit LEVEL_RELOAD { tagId: @entity.id })
+      ;; Refetch the level the new tag landed on — its own parentId names it.
+      TagCreated -> loading
+        (render-ui modal null)
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading categories…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
+        (fetch Tag {
+          filter: ["=", (object/get @entity parentId), (str/default (object/get ?row parentId) "")]
+          emit: { failure: TagLoadFailed, success: TagLoaded }
+        })
+      TagCreateFailed -> creating
+        (render-ui modal {
           message: ?error
           type: alert
           variant: error
@@ -311,7 +410,14 @@ orbital TagTaxonomyOrbital {
             content: @config.title
             type: typography
             variant: h3
-          }, {
+          }, (if @config.allowEdit {
+            action: NEW_TAG
+            icon: plus
+            label: "New category"
+            size: sm
+            type: button
+            variant: secondary
+          } null), {
             entity: ?data
             fields: []
             gap: sm
@@ -429,6 +535,39 @@ orbital TagTaxonomyOrbital {
         @description "Signals a tag has been chosen for further exploration."
         @synonyms "chosen, picked, activated, highlighted"
         @tier "domain"
+      NEW_TAG
+        @description "Opens the new-category form (rendered only when allowEdit is on); the creation lands at the level currently open."
+        @synonyms "add tag, create category, new category"
+        @tier "domain"
+      COMMIT_TAG {
+        data : TagCommit
+      }
+        @description "The new-category form committed; data carries the name and the parent level."
+        @synonyms "save tag, create tag"
+        @tier "internal"
+      CANCEL_TAG
+        @description "The new-category form was dismissed without creating."
+        @synonyms "cancel, back"
+        @tier "internal"
+      LEVEL_RELOAD {
+        tagId : string
+      }
+        @description "Internal hop that refetches the open level after the new-category form closes (a fetch filter cannot read trait state, so the level travels by payload)."
+        @synonyms "reload level, refresh"
+        @tier "internal"
+      TagCreated {
+        row : Tag
+      }
+        @description "A new tag row persisted; the open level refetches to show it."
+        @synonyms "created, added"
+        @tier "internal"
+      TagCreateFailed {
+        error : string
+        code : string
+      }
+        @description "The tag create failed."
+        @synonyms "error, failure"
+        @tier "internal"
     }
 
     listens {
@@ -457,6 +596,39 @@ orbital TagTaxonomyOrbital {
         @description "A tag in the taxonomy has been chosen by the user."
         @synonyms "chosen, picked, activated, selected"
         @tier "domain"
+      NEW_TAG
+        @description "The New-category affordance was clicked."
+        @synonyms "add tag, create category"
+        @tier "domain"
+      COMMIT_TAG {
+        data : TagCommit
+      }
+        @description "The new-category form committed."
+        @synonyms "save tag, create tag"
+        @tier "internal"
+      CANCEL_TAG
+        @description "The new-category form was dismissed."
+        @synonyms "cancel, back"
+        @tier "internal"
+      LEVEL_RELOAD {
+        tagId : string
+      }
+        @description "Refetch the open level."
+        @synonyms "reload level, refresh"
+        @tier "internal"
+      TagCreated {
+        row : Tag
+      }
+        @description "A new tag row persisted."
+        @synonyms "created, added"
+        @tier "internal"
+      TagCreateFailed {
+        error : string
+        code : string
+      }
+        @description "The tag create failed."
+        @synonyms "error, failure"
+        @tier "internal"
     }
 
     config {
@@ -466,7 +638,7 @@ orbital TagTaxonomyOrbital {
         @tier "presentation"
       allowEdit : boolean = false
         @label "Allow editing"
-        @description "Show inline controls to create or rename tags"
+        @description "Render the New-category affordance: creations land at the level currently open (top level, or inside the drilled-into category). Rename is a follow-up (ledgered)."
         @tier "domain"
       tableLook : "dense" | "spacious" | "striped" | "borderless" | "card-rows" = dense
         @label "Table look"

@@ -50,6 +50,8 @@ export interface StdUiBookTableOfContentsConfig {
   currentChapterId?: string;
   /** Default: `"rtl"` */
   direction?: 'rtl' | 'ltr';
+  /** Default: `true` */
+  selfFetch?: boolean;
 }
 
 type _StdUiBookTableOfContentsEntityName = 'BookTableOfContentsItem';
@@ -146,6 +148,13 @@ export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUi
               'ltr',
             ],
           },
+          'selfFetch': {
+            'default': true,
+            'description': 'true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper\'s own un-hydrated fetch so it cannot race the composer\'s.',
+            'label': 'Fetch its own rows on mount?',
+            'tier': 'internal',
+            'type': 'boolean',
+          },
         },
         'emits': [
           {
@@ -222,6 +231,29 @@ export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUi
               ],
               'event': 'INIT',
               'from': 'idle',
+              'guard': '@config.selfFetch',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'className': '@config.className',
+                    'currentChapterId': '@config.currentChapterId',
+                    'direction': '@config.direction',
+                    'parts': '@entity',
+                    'type': 'book-table-of-contents',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'guard': [
+                'not',
+                '@config.selfFetch',
+              ],
               'to': 'idle',
             },
             {

@@ -1311,7 +1311,11 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                             'label': 'Document',
                             'look': '@config.statLook',
                             'type': 'stat-display',
-                            'value': '@entity.documentId',
+                            'value': [
+                              'str/default',
+                              '@entity.summary',
+                              '',
+                            ],
                           },
                           {
                             'icon': 'layers',

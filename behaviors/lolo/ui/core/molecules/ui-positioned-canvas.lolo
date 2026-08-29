@@ -19,8 +19,22 @@ orbital PositionedCanvasOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle
+      INIT -> idle when @config.selfFetch
         (fetch PositionedCanvasItem { emit: { success: PositionedCanvasLoaded } })
+        (render-ui main {
+          items: @entity
+          width: @config.width
+          height: @config.height
+          selectedId: @config.selectedId
+          editable: @config.editable
+          onSelect: @config.onSelect
+          onMove: @config.onMove
+          selectEvent: @config.selectEvent
+          moveEvent: @config.moveEvent
+          className: @config.className
+          type: positioned-canvas
+        })
+      INIT -> idle when (not @config.selfFetch)
         (render-ui main {
           items: @entity
           width: @config.width
@@ -106,6 +120,10 @@ orbital PositionedCanvasOrbital {
         @label "Class Name"
         @description "className prop"
         @tier "presentation"
+      selfFetch : boolean = true
+        @label "Fetch its own rows on mount?"
+        @description "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's."
+        @tier "internal"
     }
   }
 

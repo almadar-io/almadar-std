@@ -111,11 +111,13 @@ export interface StdRecordDetailConfig {
   bodyContent?: unknown;
   /** Default: `"content"` */
   contentField?: string;
+  /** Default: `""` */
+  coverField?: string;
   /** Default: `"panel"` */
   detailLook?: 'panel' | 'slide-over' | 'page' | 'document';
-  /** Default: `{"actions":"@config.actions","className":"w-full","editEvent":"EDIT_CONTENT","editLabel":"@config.editLabel","id":"@entity.id","maxInlineActions":"@config.maxInlineActions","placeholder":"@config.placeholder","subtitle":"@entity.description","title":"@entity.name","titleCommitEvent":"TITLE_COMMITTED","type":"document-panel","value":"@entity.content"}` */
+  /** Default: `{"actions":"@config.actions","className":"w-full","coverImage":"@entity.coverUrl","editEvent":"EDIT_CONTENT","editLabel":"@config.editLabel","icon":"@entity.iconName","id":"@entity.id","maxInlineActions":"@config.maxInlineActions","placeholder":"@config.placeholder","subtitle":"@entity.description","title":"@entity.name","titleCommitEvent":"TITLE_COMMITTED","type":"document-panel","value":"@entity.content"}` */
   documentBodyContent?: unknown;
-  /** Default: `{"actions":"@config.actions","autosaveHint":"@config.autosaveHint","className":"w-full","contentChangeEvent":"CONTENT_CHANGE","doneEvent":"DONE_EDITING","doneLabel":"@config.doneLabel","editing":true,"id":"@entity.id","maxInlineActions":"@config.maxInlineActions","placeholder":"@config.placeholder","subtitle":"@entity.description","title":"@entity.name","titleCommitEvent":"TITLE_COMMITTED","type":"document-panel","value":"@entity.content"}` */
+  /** Default: `{"actions":"@config.actions","autosaveHint":"@config.autosaveHint","className":"w-full","contentChangeEvent":"CONTENT_CHANGE","coverImage":"@entity.coverUrl","doneEvent":"DONE_EDITING","doneLabel":"@config.doneLabel","editing":true,"icon":"@entity.iconName","id":"@entity.id","maxInlineActions":"@config.maxInlineActions","placeholder":"@config.placeholder","subtitle":"@entity.description","title":"@entity.name","titleCommitEvent":"TITLE_COMMITTED","type":"document-panel","value":"@entity.content"}` */
   documentEditingContent?: unknown;
   /** Default: `"Done"` */
   doneLabel?: string;
@@ -123,6 +125,8 @@ export interface StdRecordDetailConfig {
   editLabel?: string;
   /** Default: `[{"header":"Name","key":"name"},{"header":"Description","key":"description"},{"header":"Status","key":"status"},{"format":"date","header":"Created","key":"createdAt"}]` */
   fields?: EntityRow[];
+  /** Default: `""` */
+  iconField?: string;
   /** Default: `[]` */
   include?: string[];
   /** Default: `3` */
@@ -333,6 +337,20 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
             'type': 'string',
           },
           {
+            'default': '',
+            'description': 'The document look\'s cover/hero image URL, stamped from the loaded row\'s coverField.',
+            'intrinsic': true,
+            'name': 'coverUrl',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'description': 'The document look\'s icon name, stamped from the loaded row\'s iconField.',
+            'intrinsic': true,
+            'name': 'iconName',
+            'type': 'string',
+          },
+          {
             'default': {},
             'description': 'The full row exactly as last fetched (relations hydrated when config.include asks). The details drawer binds it, and hosts that need it (e.g. a settings modal) stash it from RecordItemLoaded — the document panel itself takes only scalar props and emits scalar payloads ({ id, title }).',
             'intrinsic': true,
@@ -452,6 +470,14 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
             'tier': 'presentation',
             'type': 'string',
           },
+          'coverField': {
+            'default': '',
+            'description': 'Name of the image-typed field on the loaded record painted as the document look\'s full-bleed hero banner (e.g. coverImage, heroImage). Empty = no banner, the default.',
+            'label': 'Which field is the cover image?',
+            'synonyms': 'cover field, hero image field, banner field',
+            'tier': 'presentation',
+            'type': 'string',
+          },
           'detailLook': {
             'default': 'panel',
             'description': 'Visual treatment for the record surface. panel = an inline detail-panel in the page flow (bodyContent); slide-over = the same panel as a right-hand drawer over the list behind it (slideOverBodyContent); page = a full-width record page with roomier spacing (pageBodyContent); document = a wiki-page/note/article surface — big editable title over a rich-text body, no labelled field rows, click-to-edit with autosave (documentBodyContent / documentEditingContent). Selecting a look swaps which body tree renders after the record loads; any body may still be overridden directly at the call site.',
@@ -470,8 +496,10 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
             'default': {
               'actions': '@config.actions',
               'className': 'w-full',
+              'coverImage': '@entity.coverUrl',
               'editEvent': 'EDIT_CONTENT',
               'editLabel': '@config.editLabel',
+              'icon': '@entity.iconName',
               'id': '@entity.id',
               'maxInlineActions': '@config.maxInlineActions',
               'placeholder': '@config.placeholder',
@@ -492,9 +520,11 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
               'autosaveHint': '@config.autosaveHint',
               'className': 'w-full',
               'contentChangeEvent': 'CONTENT_CHANGE',
+              'coverImage': '@entity.coverUrl',
               'doneEvent': 'DONE_EDITING',
               'doneLabel': '@config.doneLabel',
               'editing': true,
+              'icon': '@entity.iconName',
               'id': '@entity.id',
               'maxInlineActions': '@config.maxInlineActions',
               'placeholder': '@config.placeholder',
@@ -575,6 +605,14 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
             'synonyms': 'detail fields, record fields, panel fields, shown fields',
             'tier': 'presentation',
             'type': '[RecordFieldSpec]',
+          },
+          'iconField': {
+            'default': '',
+            'description': 'Name of the field on the loaded record whose icon name renders beside the document title (e.g. icon). Empty = no icon, the default.',
+            'label': 'Which field is the document icon?',
+            'synonyms': 'icon field, glyph field',
+            'tier': 'presentation',
+            'type': 'string',
           },
           'include': {
             'default': [],
@@ -808,6 +846,14 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                     'type': 'string',
                   },
                   {
+                    'name': 'coverUrl',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'iconName',
+                    'type': 'string',
+                  },
+                  {
                     'name': 'loadedRow',
                     'type': 'object',
                   },
@@ -863,6 +909,14 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                   },
                   {
                     'name': 'content',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'coverUrl',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'iconName',
                     'type': 'string',
                   },
                   {
@@ -954,7 +1008,9 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
         'entityContract': {
           'provides': [
             'content',
+            'coverUrl',
             'description',
+            'iconName',
             'loadedRow',
             'name',
             'openDraft',
@@ -1192,6 +1248,14 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                       'type': 'string',
                     },
                     {
+                      'name': 'coverUrl',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'iconName',
+                      'type': 'string',
+                    },
+                    {
                       'name': 'loadedRow',
                       'type': 'object',
                     },
@@ -1247,6 +1311,14 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                     },
                     {
                       'name': 'content',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'coverUrl',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'iconName',
                       'type': 'string',
                     },
                     {
@@ -1702,6 +1774,32 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                   ],
                 ],
                 [
+                  'set',
+                  '@entity.coverUrl',
+                  [
+                    'str/default',
+                    [
+                      'object/get',
+                      '@payload.data',
+                      '@config.coverField',
+                    ],
+                    '',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.iconName',
+                  [
+                    'str/default',
+                    [
+                      'object/get',
+                      '@payload.data',
+                      '@config.iconField',
+                    ],
+                    '',
+                  ],
+                ],
+                [
                   'render-ui',
                   'main',
                   '@config.documentEditingContent',
@@ -1773,6 +1871,32 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                     'object/get',
                     '@payload.data',
                     '@config.contentField',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.coverUrl',
+                  [
+                    'str/default',
+                    [
+                      'object/get',
+                      '@payload.data',
+                      '@config.coverField',
+                    ],
+                    '',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.iconName',
+                  [
+                    'str/default',
+                    [
+                      'object/get',
+                      '@payload.data',
+                      '@config.iconField',
+                    ],
+                    '',
                   ],
                 ],
                 [
@@ -1900,6 +2024,38 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                   ],
                 ],
                 [
+                  'set',
+                  '@entity.coverUrl',
+                  [
+                    'str/default',
+                    [
+                      'object/get',
+                      [
+                        'array/first',
+                        '@payload.data',
+                      ],
+                      '@config.coverField',
+                    ],
+                    '',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.iconName',
+                  [
+                    'str/default',
+                    [
+                      'object/get',
+                      [
+                        'array/first',
+                        '@payload.data',
+                      ],
+                      '@config.iconField',
+                    ],
+                    '',
+                  ],
+                ],
+                [
                   'render-ui',
                   'main',
                   '@config.documentEditingContent',
@@ -1993,6 +2149,38 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                       '@payload.data',
                     ],
                     '@config.contentField',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.coverUrl',
+                  [
+                    'str/default',
+                    [
+                      'object/get',
+                      [
+                        'array/first',
+                        '@payload.data',
+                      ],
+                      '@config.coverField',
+                    ],
+                    '',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.iconName',
+                  [
+                    'str/default',
+                    [
+                      'object/get',
+                      [
+                        'array/first',
+                        '@payload.data',
+                      ],
+                      '@config.iconField',
+                    ],
+                    '',
                   ],
                 ],
                 [
@@ -2499,6 +2687,32 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                   ],
                 ],
                 [
+                  'set',
+                  '@entity.coverUrl',
+                  [
+                    'str/default',
+                    [
+                      'object/get',
+                      '@payload.data',
+                      '@config.coverField',
+                    ],
+                    '',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.iconName',
+                  [
+                    'str/default',
+                    [
+                      'object/get',
+                      '@payload.data',
+                      '@config.iconField',
+                    ],
+                    '',
+                  ],
+                ],
+                [
                   'if',
                   [
                     '=',
@@ -2607,6 +2821,38 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                       '@payload.data',
                     ],
                     '@config.contentField',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.coverUrl',
+                  [
+                    'str/default',
+                    [
+                      'object/get',
+                      [
+                        'array/first',
+                        '@payload.data',
+                      ],
+                      '@config.coverField',
+                    ],
+                    '',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.iconName',
+                  [
+                    'str/default',
+                    [
+                      'object/get',
+                      [
+                        'array/first',
+                        '@payload.data',
+                      ],
+                      '@config.iconField',
+                    ],
+                    '',
                   ],
                 ],
                 [
@@ -2911,6 +3157,7 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
             'default': {
               'entity': '@entity.loadedRow',
               'fields': '@config.metaFields',
+              'relationEvent': 'RELATION_OPEN',
               'title': '@config.detailsTitle',
               'type': 'document-details',
             },
@@ -3026,6 +3273,14 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                     'type': 'string',
                   },
                   {
+                    'name': 'coverUrl',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'iconName',
+                    'type': 'string',
+                  },
+                  {
                     'name': 'loadedRow',
                     'type': 'object',
                   },
@@ -3043,6 +3298,29 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
             ],
             'scope': 'external',
             'synonyms': 'property saved, metadata changed, field committed, update property',
+            'tier': 'domain',
+          },
+          {
+            'description': 'A relation chip in the details drawer was clicked (a tag, the author, the category); id is the linked row\'s id. Hosts route it to the linked record\'s own surface — a navigate, a scoped overlay, a filtered list.',
+            'event': 'RELATION_OPEN',
+            'payloadSchema': [
+              {
+                'name': 'field',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'name',
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
+            'synonyms': 'open relation, linked record clicked, tag clicked, chip clicked',
             'tier': 'domain',
           },
         ],
@@ -3128,6 +3406,14 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                       'type': 'string',
                     },
                     {
+                      'name': 'coverUrl',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'iconName',
+                      'type': 'string',
+                    },
+                    {
                       'name': 'loadedRow',
                       'type': 'object',
                     },
@@ -3174,6 +3460,29 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                 },
               ],
               'synonyms': 'property changed, metadata edited, field committed',
+              'tier': 'domain',
+            },
+            {
+              'description': 'A relation chip in the details drawer was clicked (a tag, the author, the category); id is the linked row\'s id. Hosts route it to the linked record\'s own surface — a navigate, a scoped overlay, a filtered list.',
+              'key': 'RELATION_OPEN',
+              'name': 'Relation Open',
+              'payloadSchema': [
+                {
+                  'name': 'field',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'name',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'open relation, linked record clicked, tag clicked, chip clicked',
               'tier': 'domain',
             },
           ],

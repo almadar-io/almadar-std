@@ -62,6 +62,8 @@ export interface StdUiSortableListConfig {
   reorderEvent?: string;
   /** Default: `{}` */
   reorderPayload?: unknown;
+  /** Default: `true` */
+  selfFetch?: boolean;
 }
 
 /**

@@ -37,6 +37,15 @@
         "parent": "trt_01M13ZXC5906BVQKXF5JMWBD0E",
         "renames": []
       },
+      "evt_01M1694617Q04F1T085TTM4F8C": {
+        "bakedName": "@config.relationEvent",
+        "curName": "@config.relationEvent",
+        "id": "evt_01M1694617Q04F1T085TTM4F8C",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M13ZXC5906BVQKXF5JMWBD0E",
+        "renames": []
+      },
       "orb_01M13ZXC59HR3466AAAMSKD8MY": {
         "bakedName": "DocumentDetailsOrbital",
         "curName": "DocumentDetailsOrbital",
@@ -144,7 +153,8 @@
                       "text",
                       "boolean",
                       "select",
-                      "readonly"
+                      "readonly",
+                      "image"
                     ]
                   },
                   "label": {
@@ -164,6 +174,11 @@
                     "name": "options",
                     "required": false,
                     "type": "array"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": false,
+                    "type": "string"
                   }
                 },
                 "type": "object"
@@ -178,6 +193,20 @@
               "label": "Meta Commit Event",
               "tier": "presentation",
               "type": "string"
+            },
+            "relationEvent": {
+              "default": "RELATION",
+              "description": "Makes relation chips clickable: emitted with { field, id, name } when a hydrated relation value (or one row of a many-relation) is clicked — the host routes it to the linked record's own surface.",
+              "label": "Relation Event",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "selfFetch": {
+              "default": true,
+              "description": "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's.",
+              "label": "Fetch its own rows on mount?",
+              "tier": "internal",
+              "type": "boolean"
             },
             "title": {
               "description": "Card heading (defaults to the localized 'Details')",
@@ -201,6 +230,30 @@
                   "name": "patch",
                   "required": true,
                   "type": "object"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Makes relation chips clickable: emitted with { field, id, name } when a hydrated relation value (or one row of a many-relation) is clicked — the host routes it to the linked record's own surface.",
+              "event": "@config.relationEvent",
+              "eventId": "evt_01M1694617Q04F1T085TTM4F8C",
+              "payloadSchema": [
+                {
+                  "name": "field",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
                 }
               ],
               "scope": "external",
@@ -273,6 +326,30 @@
                   }
                 ],
                 "tier": "essential"
+              },
+              {
+                "description": "Makes relation chips clickable: emitted with { field, id, name } when a hydrated relation value (or one row of a many-relation) is clicked — the host routes it to the linked record's own surface.",
+                "id": "evt_01M1694617Q04F1T085TTM4F8C",
+                "key": "@config.relationEvent",
+                "name": "@config.relation event",
+                "payloadSchema": [
+                  {
+                    "name": "field",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "name",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
               }
             ],
             "states": [
@@ -301,6 +378,7 @@
                       "entity": "@entity",
                       "fields": "@config.fields",
                       "metaCommitEvent": "@config.metaCommitEvent",
+                      "relationEvent": "@config.relationEvent",
                       "title": "@config.title",
                       "type": "document-details"
                     }
@@ -309,6 +387,32 @@
                 "event": "INIT",
                 "eventId": "evt_01M13ZXC59XKCDATMN4TVFVMZ7",
                 "from": "idle",
+                "guard": "@config.selfFetch",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "entity": "@entity",
+                      "fields": "@config.fields",
+                      "metaCommitEvent": "@config.metaCommitEvent",
+                      "relationEvent": "@config.relationEvent",
+                      "title": "@config.title",
+                      "type": "document-details"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01M13ZXC59XKCDATMN4TVFVMZ7",
+                "from": "idle",
+                "guard": [
+                  "not",
+                  "@config.selfFetch"
+                ],
                 "to": "idle"
               },
               {
@@ -321,6 +425,7 @@
                       "entity": "@payload.data",
                       "fields": "@config.fields",
                       "metaCommitEvent": "@config.metaCommitEvent",
+                      "relationEvent": "@config.relationEvent",
                       "title": "@config.title",
                       "type": "document-details"
                     }

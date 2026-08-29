@@ -70,6 +70,8 @@ export interface StdUiStatCardConfig {
   searchValue?: string;
   /** Default: `[]` */
   selectedIds?: string[];
+  /** Default: `true` */
+  selfFetch?: boolean;
   sortBy?: string;
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
@@ -351,6 +353,13 @@ export function stdUiStatCardStatCardOrbital(params: StdUiStatCardStatCardOrbita
             'tier': 'presentation',
             'type': '[string]',
           },
+          'selfFetch': {
+            'default': true,
+            'description': 'true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper\'s own un-hydrated fetch so it cannot race the composer\'s.',
+            'label': 'Fetch its own rows on mount?',
+            'tier': 'internal',
+            'type': 'boolean',
+          },
           'sortBy': {
             'description': 'Current sort field',
             'label': 'Sort By',
@@ -524,6 +533,53 @@ export function stdUiStatCardStatCardOrbital(params: StdUiStatCardStatCardOrbita
               ],
               'event': 'INIT',
               'from': 'idle',
+              'guard': '@config.selfFetch',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'action': '@config.action',
+                    'activeFilters': '@config.activeFilters',
+                    'className': '@config.className',
+                    'compact': '@config.compact',
+                    'currentValue': '@config.currentValue',
+                    'entity': '@entity',
+                    'error': '@config.error',
+                    'icon': '@config.icon',
+                    'iconBg': '@config.iconBg',
+                    'iconColor': '@config.iconColor',
+                    'invertTrend': '@config.invertTrend',
+                    'isLoading': '@config.isLoading',
+                    'label': '@config.label',
+                    'metrics': '@config.metrics',
+                    'page': '@config.pageProp',
+                    'pageSize': '@config.pageSize',
+                    'previousValue': '@config.previousValue',
+                    'searchValue': '@config.searchValue',
+                    'selectedIds': '@config.selectedIds',
+                    'sortBy': '@config.sortBy',
+                    'sortDirection': '@config.sortDirection',
+                    'sparklineData': '@config.sparklineData',
+                    'subtitle': '@config.subtitle',
+                    'title': '@config.title',
+                    'totalCount': '@config.totalCount',
+                    'trend': '@config.trend',
+                    'trendDirection': '@config.trendDirection',
+                    'type': 'stat-card',
+                    'value': '@config.value',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'guard': [
+                'not',
+                '@config.selfFetch',
+              ],
               'to': 'idle',
             },
             {

@@ -76,6 +76,8 @@ export interface StdUiPositionedCanvasConfig {
   /** Default: `"SELECT"` */
   selectEvent?: string;
   selectedId?: string;
+  /** Default: `true` */
+  selfFetch?: boolean;
   /** Default: `800` */
   width?: number;
 }

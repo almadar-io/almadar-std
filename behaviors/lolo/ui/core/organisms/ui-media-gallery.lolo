@@ -32,8 +32,33 @@ orbital MediaGalleryOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle
+      INIT -> idle when @config.selfFetch
         (fetch MediaGalleryItem { emit: { success: MediaGalleryLoaded } })
+        (render-ui main {
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          page: @config.pageProp
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          entity: @entity
+          title: @config.title
+          items: @config.items
+          columns: @config.columns
+          selectable: @config.selectable
+          selectedItems: @config.selectedItems
+          selectionEvent: @config.selectionEvent
+          showUpload: @config.showUpload
+          actions: @config.actions
+          aspectRatio: @config.aspectRatio
+          type: media-gallery
+        })
+      INIT -> idle when (not @config.selfFetch)
         (render-ui main {
           className: @config.className
           isLoading: @config.isLoading
@@ -179,6 +204,10 @@ orbital MediaGalleryOrbital {
         @label "Aspect Ratio"
         @description "Aspect ratio for thumbnails"
         @tier "presentation"
+      selfFetch : boolean = true
+        @label "Fetch its own rows on mount?"
+        @description "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's."
+        @tier "internal"
     }
   }
 

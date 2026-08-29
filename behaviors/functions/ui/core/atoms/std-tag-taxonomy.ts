@@ -30,7 +30,7 @@ const ALIAS = 'TagTaxonomy';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdTagTaxonomyEventKey = 'INIT' | 'SELECT_TAG' | 'SHOW_ROOT' | 'TagLoadFailed' | 'TagLoaded' | 'TagSelected';
+export type StdTagTaxonomyEventKey = 'CANCEL_TAG' | 'COMMIT_TAG' | 'INIT' | 'LEVEL_RELOAD' | 'NEW_TAG' | 'SELECT_TAG' | 'SHOW_ROOT' | 'TagCreateFailed' | 'TagCreated' | 'TagLoadFailed' | 'TagLoaded' | 'TagSelected';
 
 /**
  * Payload shape for the `SELECT_TAG` event.
@@ -59,6 +59,35 @@ export interface StdTagTaxonomyTagLoadFailedPayload {
  */
 export interface StdTagTaxonomyTagSelectedPayload {
   tagId: string;
+}
+
+/**
+ * Payload shape for the `COMMIT_TAG` event.
+ */
+export interface StdTagTaxonomyCommitTagPayload {
+  data?: EntityRow;
+}
+
+/**
+ * Payload shape for the `LEVEL_RELOAD` event.
+ */
+export interface StdTagTaxonomyLevelReloadPayload {
+  tagId?: string;
+}
+
+/**
+ * Payload shape for the `TagCreated` event.
+ */
+export interface StdTagTaxonomyTagCreatedPayload {
+  row?: EntityRow;
+}
+
+/**
+ * Payload shape for the `TagCreateFailed` event.
+ */
+export interface StdTagTaxonomyTagCreateFailedPayload {
+  error?: string;
+  code?: string;
 }
 
 /**
@@ -273,7 +302,7 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
         'config': {
           'allowEdit': {
             'default': false,
-            'description': 'Show inline controls to create or rename tags',
+            'description': 'Render the New-category affordance: creations land at the level currently open (top level, or inside the drilled-into category). Rename is a follow-up (ledgered).',
             'label': 'Allow editing',
             'tier': 'domain',
             'type': 'boolean',
@@ -355,12 +384,132 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
             'synonyms': 'chosen, picked, activated, highlighted',
             'tier': 'domain',
           },
+          {
+            'description': 'Opens the new-category form (rendered only when allowEdit is on); the creation lands at the level currently open.',
+            'event': 'NEW_TAG',
+            'synonyms': 'add tag, create category, new category',
+            'tier': 'domain',
+          },
+          {
+            'description': 'The new-category form committed; data carries the name and the parent level.',
+            'event': 'COMMIT_TAG',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'properties': [
+                  {
+                    'name': 'name',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'parentId',
+                    'type': 'string',
+                  },
+                ],
+                'type': 'object',
+              },
+            ],
+            'synonyms': 'save tag, create tag',
+            'tier': 'internal',
+          },
+          {
+            'description': 'The new-category form was dismissed without creating.',
+            'event': 'CANCEL_TAG',
+            'synonyms': 'cancel, back',
+            'tier': 'internal',
+          },
+          {
+            'description': 'Internal hop that refetches the open level after the new-category form closes (a fetch filter cannot read trait state, so the level travels by payload).',
+            'event': 'LEVEL_RELOAD',
+            'payloadSchema': [
+              {
+                'name': 'tagId',
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'reload level, refresh',
+            'tier': 'internal',
+          },
+          {
+            'description': 'A new tag row persisted; the open level refetches to show it.',
+            'event': 'TagCreated',
+            'payloadSchema': [
+              {
+                'name': 'row',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'name',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'parentId',
+                    'type': 'Tag',
+                  },
+                  {
+                    'name': 'slug',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'color',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'count',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'createdAt',
+                    'type': 'string',
+                  },
+                ],
+                'type': 'object',
+              },
+            ],
+            'synonyms': 'created, added',
+            'tier': 'internal',
+          },
+          {
+            'description': 'The tag create failed.',
+            'event': 'TagCreateFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+            'synonyms': 'error, failure',
+            'tier': 'internal',
+          },
         ],
         'linkedEntity': 'Tag',
         'name': 'TagBrowse',
         'scope': 'collection',
         'stateMachine': {
           'events': [
+            {
+              'description': 'Internal hop that refetches the open level after the new-category form closes (a fetch filter cannot read trait state, so the level travels by payload).',
+              'key': 'LEVEL_RELOAD',
+              'name': 'Level Reload',
+              'payloadSchema': [
+                {
+                  'name': 'tagId',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'reload level, refresh',
+              'tier': 'internal',
+            },
             {
               'key': 'INIT',
               'name': 'Initialize',
@@ -414,6 +563,74 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
               'name': 'Show Root',
             },
             {
+              'description': 'Opens the new-category form (rendered only when allowEdit is on); the creation lands at the level currently open.',
+              'key': 'NEW_TAG',
+              'name': 'New Tag',
+              'synonyms': 'add tag, create category, new category',
+              'tier': 'domain',
+            },
+            {
+              'description': 'The new-category form committed; data carries the name and the parent level.',
+              'key': 'COMMIT_TAG',
+              'name': 'Commit Tag',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'properties': [
+                    {
+                      'name': 'name',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'parentId',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': 'object',
+                },
+              ],
+              'synonyms': 'save tag, create tag',
+              'tier': 'internal',
+            },
+            {
+              'description': 'The new-category form was dismissed without creating.',
+              'key': 'CANCEL_TAG',
+              'name': 'Cancel Tag',
+              'synonyms': 'cancel, back',
+              'tier': 'internal',
+            },
+            {
+              'description': 'A new tag row persisted; the open level refetches to show it.',
+              'key': 'TagCreated',
+              'name': 'Tag created',
+              'payloadSchema': [
+                {
+                  'name': 'row',
+                  'type': 'Tag',
+                },
+              ],
+              'synonyms': 'created, added',
+              'tier': 'internal',
+            },
+            {
+              'description': 'The tag create failed.',
+              'key': 'TagCreateFailed',
+              'name': 'Tag create failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'error, failure',
+              'tier': 'internal',
+            },
+            {
               'description': 'Signals a tag has been chosen for further exploration.',
               'key': 'TagSelected',
               'name': 'Tag selected',
@@ -437,6 +654,9 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
               'name': 'browsing',
             },
             {
+              'name': 'creating',
+            },
+            {
               'name': 'editing',
             },
             {
@@ -444,6 +664,36 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
             },
           ],
           'transitions': [
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('Tag' satisfies _StdTagTaxonomyEntityName),
+                  {
+                    'emit': {
+                      'failure': 'TagLoadFailed',
+                      'success': 'TagLoaded',
+                    },
+                    'filter': [
+                      '=',
+                      [
+                        'object/get',
+                        '@entity',
+                        'parentId',
+                      ],
+                      [
+                        'str/default',
+                        '@payload.tagId',
+                        '',
+                      ],
+                    ],
+                  },
+                ],
+              ],
+              'event': 'LEVEL_RELOAD',
+              'from': 'loading',
+              'to': 'loading',
+            },
             {
               'effects': [
                 [
@@ -532,6 +782,19 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                         'type': 'typography',
                         'variant': 'h3',
                       },
+                      [
+                        'if',
+                        '@config.allowEdit',
+                        {
+                          'action': 'NEW_TAG',
+                          'icon': 'plus',
+                          'label': 'New category',
+                          'size': 'sm',
+                          'type': 'button',
+                          'variant': 'secondary',
+                        },
+                        null,
+                      ],
                       {
                         'entity': '@payload.data',
                         'fields': [],
@@ -844,6 +1107,19 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                         'type': 'typography',
                         'variant': 'h3',
                       },
+                      [
+                        'if',
+                        '@config.allowEdit',
+                        {
+                          'action': 'NEW_TAG',
+                          'icon': 'plus',
+                          'label': 'New category',
+                          'size': 'sm',
+                          'type': 'button',
+                          'variant': 'secondary',
+                        },
+                        null,
+                      ],
                       {
                         'entity': '@payload.data',
                         'fields': [],
@@ -933,6 +1209,60 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
               'effects': [
                 [
                   'render-ui',
+                  'modal',
+                  {
+                    'children': [
+                      {
+                        'content': 'New category',
+                        'type': 'typography',
+                        'variant': 'h3',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': [
+                          'if',
+                          [
+                            '!=',
+                            '@entity.id',
+                            '',
+                          ],
+                          'Created inside the open category.',
+                          'Created at the top level.',
+                        ],
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'cancelEvent': 'CANCEL_TAG',
+                        'entity': {
+                          'parentId': '@entity.id',
+                        },
+                        'fields': [
+                          'name',
+                        ],
+                        'mode': 'create',
+                        'submitEvent': 'COMMIT_TAG',
+                        'type': 'form-section',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'NEW_TAG',
+              'from': 'browsing',
+              'guard': '@config.allowEdit',
+              'to': 'creating',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
                   'main',
                   {
                     'message': '@payload.error',
@@ -944,6 +1274,158 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
               'event': 'TagLoadFailed',
               'from': 'browsing',
               'to': 'error',
+            },
+            {
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  ('Tag' satisfies _StdTagTaxonomyEntityName),
+                  {
+                    'name': [
+                      'object/get',
+                      '@payload.data',
+                      'name',
+                    ],
+                    'parentId': [
+                      'str/default',
+                      [
+                        'object/get',
+                        '@payload.data',
+                        'parentId',
+                      ],
+                      '',
+                    ],
+                  },
+                  {
+                    'emit': {
+                      'failure': 'TagCreateFailed',
+                      'success': 'TagCreated',
+                    },
+                  },
+                ],
+              ],
+              'event': 'COMMIT_TAG',
+              'from': 'creating',
+              'to': 'creating',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Loading categories…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+                [
+                  'emit',
+                  'LEVEL_RELOAD',
+                  {
+                    'tagId': '@entity.id',
+                  },
+                ],
+              ],
+              'event': 'CANCEL_TAG',
+              'from': 'creating',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Loading categories…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+                [
+                  'fetch',
+                  ('Tag' satisfies _StdTagTaxonomyEntityName),
+                  {
+                    'emit': {
+                      'failure': 'TagLoadFailed',
+                      'success': 'TagLoaded',
+                    },
+                    'filter': [
+                      '=',
+                      [
+                        'object/get',
+                        '@entity',
+                        'parentId',
+                      ],
+                      [
+                        'str/default',
+                        [
+                          'object/get',
+                          '@payload.row',
+                          'parentId',
+                        ],
+                        '',
+                      ],
+                    ],
+                  },
+                ],
+              ],
+              'event': 'TagCreated',
+              'from': 'creating',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  {
+                    'message': '@payload.error',
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
+              'event': 'TagCreateFailed',
+              'from': 'creating',
+              'to': 'creating',
             },
             {
               'effects': [
@@ -1074,6 +1556,19 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                         'type': 'typography',
                         'variant': 'h3',
                       },
+                      [
+                        'if',
+                        '@config.allowEdit',
+                        {
+                          'action': 'NEW_TAG',
+                          'icon': 'plus',
+                          'label': 'New category',
+                          'size': 'sm',
+                          'type': 'button',
+                          'variant': 'secondary',
+                        },
+                        null,
+                      ],
                       {
                         'entity': '@payload.data',
                         'fields': [],

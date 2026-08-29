@@ -23,8 +23,33 @@ orbital EntityListOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle
+      INIT -> idle when @config.selfFetch
         (fetch EntityListItem { emit: { success: EntityListLoaded } })
+        (render-ui main {
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          page: @config.pageProp
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          entity: @entity
+          entityType: @config.entityType
+          selectable: @config.selectable
+          itemActions: @config.itemActions
+          showDividers: @config.showDividers
+          variant: @config.variant
+          emptyMessage: @config.emptyMessage
+          children: @config.children
+          fields: @config.fields
+          fieldNames: @config.fieldNames
+          type: entity-list
+        })
+      INIT -> idle when (not @config.selfFetch)
         (render-ui main {
           className: @config.className
           isLoading: @config.isLoading
@@ -175,6 +200,10 @@ orbital EntityListOrbital {
         @label "Field Names"
         @description "Alias for fields - backwards compatibility"
         @tier "presentation"
+      selfFetch : boolean = true
+        @label "Fetch its own rows on mount?"
+        @description "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's."
+        @tier "internal"
     }
   }
 

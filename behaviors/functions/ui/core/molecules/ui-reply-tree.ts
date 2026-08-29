@@ -94,6 +94,8 @@ export interface StdUiReplyTreeConfig {
   /** Default: `"REPLY"` */
   replyEvent?: string;
   /** Default: `true` */
+  selfFetch?: boolean;
+  /** Default: `true` */
   showActions?: boolean;
   /** Default: `"VOTE"` */
   voteEvent?: string;

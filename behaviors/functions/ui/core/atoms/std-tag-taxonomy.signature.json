@@ -59,7 +59,13 @@
           "SELECT_TAG",
           "TagLoaded",
           "TagLoadFailed",
-          "TagSelected"
+          "TagSelected",
+          "NEW_TAG",
+          "COMMIT_TAG",
+          "CANCEL_TAG",
+          "LEVEL_RELOAD",
+          "TagCreated",
+          "TagCreateFailed"
         ],
         "listenedEvents": [],
         "events": [
@@ -92,6 +98,48 @@
             "tier": "domain"
           },
           {
+            "name": "NEW_TAG",
+            "direction": "emit",
+            "description": "Opens the new-category form (rendered only when allowEdit is on); the creation lands at the level currently open.",
+            "synonyms": "add tag, create category, new category",
+            "tier": "domain"
+          },
+          {
+            "name": "COMMIT_TAG",
+            "direction": "emit",
+            "description": "The new-category form committed; data carries the name and the parent level.",
+            "synonyms": "save tag, create tag",
+            "tier": "internal"
+          },
+          {
+            "name": "CANCEL_TAG",
+            "direction": "emit",
+            "description": "The new-category form was dismissed without creating.",
+            "synonyms": "cancel, back",
+            "tier": "internal"
+          },
+          {
+            "name": "LEVEL_RELOAD",
+            "direction": "emit",
+            "description": "Internal hop that refetches the open level after the new-category form closes (a fetch filter cannot read trait state, so the level travels by payload).",
+            "synonyms": "reload level, refresh",
+            "tier": "internal"
+          },
+          {
+            "name": "TagCreated",
+            "direction": "emit",
+            "description": "A new tag row persisted; the open level refetches to show it.",
+            "synonyms": "created, added",
+            "tier": "internal"
+          },
+          {
+            "name": "TagCreateFailed",
+            "direction": "emit",
+            "description": "The tag create failed.",
+            "synonyms": "error, failure",
+            "tier": "internal"
+          },
+          {
             "name": "INIT",
             "direction": "listen"
           },
@@ -106,7 +154,7 @@
             "type": "boolean",
             "default": false,
             "label": "Allow editing",
-            "description": "Show inline controls to create or rename tags",
+            "description": "Render the New-category affordance: creations land at the level currently open (top level, or inside the drilled-into category). Rename is a follow-up (ledgered).",
             "tier": "domain"
           },
           {
@@ -136,9 +184,15 @@
         "capabilities": [],
         "linkedEntity": "Tag",
         "transitionEvents": [
+          "CANCEL_TAG",
+          "COMMIT_TAG",
           "INIT",
+          "LEVEL_RELOAD",
+          "NEW_TAG",
           "SELECT_TAG",
           "SHOW_ROOT",
+          "TagCreateFailed",
+          "TagCreated",
           "TagLoadFailed",
           "TagLoaded",
           "TagSelected"
@@ -156,7 +210,13 @@
       }
     ],
     "emittedEvents": [
+      "CANCEL_TAG",
+      "COMMIT_TAG",
+      "LEVEL_RELOAD",
+      "NEW_TAG",
       "SELECT_TAG",
+      "TagCreateFailed",
+      "TagCreated",
       "TagLoadFailed",
       "TagLoaded",
       "TagSelected"

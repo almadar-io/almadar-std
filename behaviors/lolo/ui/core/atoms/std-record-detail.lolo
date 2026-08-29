@@ -20,6 +20,8 @@ orbital RecordItemOrbital {
     status : "active" | "inactive" | "pending" @description "The record's current state." @synonyms "state, condition, stage" = active
     slug : string @description "URL-friendly identifier, for records opened by address instead of id." @synonyms "permalink, url key, address" = ""
     content : string @description "The record's rich-text body as HTML, edited in place by the document look." @synonyms "body, text, document, article body" = ""
+    coverUrl : string @intrinsic @description "The document look's cover/hero image URL, stamped from the loaded row's coverField." = ""
+    iconName : string @intrinsic @description "The document look's icon name, stamped from the loaded row's iconField." = ""
     loadedRow : object @intrinsic @description "The full row exactly as last fetched (relations hydrated when config.include asks). The details drawer binds it, and hosts that need it (e.g. a settings modal) stash it from RecordItemLoaded — the document panel itself takes only scalar props and emits scalar payloads ({ id, title })." = {}
     openDraft : string @intrinsic @description "Set from the navigate payload when the surface was opened on a record that was JUST minted blank; read once the row loads to decide whether the document body opens authoring (draft) or read-only. Absent on a refresh or a normal open, so the draft entry never repeats." @synonyms "new document, just created, draft open" = ""
     createdAt : string
@@ -128,6 +130,8 @@ orbital RecordItemOrbital {
         (set @entity.name (object/get ?data @config.titleField))
         (set @entity.description (str/default (object/get ?data @config.subtitleField) ""))
         (set @entity.content (object/get ?data @config.contentField))
+        (set @entity.coverUrl (str/default (object/get ?data @config.coverField) ""))
+        (set @entity.iconName (str/default (object/get ?data @config.iconField) ""))
         (render-ui main @config.documentEditingContent)
       RecordItemLoaded -> viewing when ["!=", (str/default (object/get @entity openDraft) ""), "1"]
         ;; (object/merge … {}) is a type adapter only: type_compat lacks "declared object accepts a named row type" (ledgered)
@@ -136,6 +140,8 @@ orbital RecordItemOrbital {
         (set @entity.name (object/get ?data @config.titleField))
         (set @entity.description (str/default (object/get ?data @config.subtitleField) ""))
         (set @entity.content (object/get ?data @config.contentField))
+        (set @entity.coverUrl (str/default (object/get ?data @config.coverField) ""))
+        (set @entity.iconName (str/default (object/get ?data @config.iconField) ""))
         (if ["=", @config.detailLook, document]
           (render-ui main @config.documentBodyContent)
           (if ["=", @config.detailLook, slide-over]
@@ -149,6 +155,8 @@ orbital RecordItemOrbital {
         (set @entity.name (object/get (array/first ?data) @config.titleField))
         (set @entity.description (str/default (object/get (array/first ?data) @config.subtitleField) ""))
         (set @entity.content (object/get (array/first ?data) @config.contentField))
+        (set @entity.coverUrl (str/default (object/get (array/first ?data) @config.coverField) ""))
+        (set @entity.iconName (str/default (object/get (array/first ?data) @config.iconField) ""))
         (render-ui main @config.documentEditingContent)
       RecordItemSlugLoaded -> viewing when (and [">", (array/len ?data), 0] ["!=", (str/default (object/get @entity openDraft) ""), "1"])
         (set @entity.loadedRow (array/first ?data))
@@ -156,6 +164,8 @@ orbital RecordItemOrbital {
         (set @entity.name (object/get (array/first ?data) @config.titleField))
         (set @entity.description (str/default (object/get (array/first ?data) @config.subtitleField) ""))
         (set @entity.content (object/get (array/first ?data) @config.contentField))
+        (set @entity.coverUrl (str/default (object/get (array/first ?data) @config.coverField) ""))
+        (set @entity.iconName (str/default (object/get (array/first ?data) @config.iconField) ""))
         (if ["=", @config.detailLook, document]
           (render-ui main @config.documentBodyContent)
           (if ["=", @config.detailLook, slide-over]
@@ -245,6 +255,8 @@ orbital RecordItemOrbital {
         (set @entity.name (object/get ?data @config.titleField))
         (set @entity.description (str/default (object/get ?data @config.subtitleField) ""))
         (set @entity.content (object/get ?data @config.contentField))
+        (set @entity.coverUrl (str/default (object/get ?data @config.coverField) ""))
+        (set @entity.iconName (str/default (object/get ?data @config.iconField) ""))
         (if ["=", @config.detailLook, document]
           (render-ui main @config.documentBodyContent)
           (if ["=", @config.detailLook, slide-over]
@@ -258,6 +270,8 @@ orbital RecordItemOrbital {
         (set @entity.name (object/get (array/first ?data) @config.titleField))
         (set @entity.description (str/default (object/get (array/first ?data) @config.subtitleField) ""))
         (set @entity.content (object/get (array/first ?data) @config.contentField))
+        (set @entity.coverUrl (str/default (object/get (array/first ?data) @config.coverField) ""))
+        (set @entity.iconName (str/default (object/get (array/first ?data) @config.iconField) ""))
         (if ["=", @config.detailLook, document]
           (render-ui main @config.documentBodyContent)
           (if ["=", @config.detailLook, slide-over]
@@ -507,6 +521,16 @@ orbital RecordItemOrbital {
         @description "Name of the field on the loaded record that carries the rich-text HTML body the document look renders and edits (e.g. content, body, articleText)."
         @synonyms "body field, content field, document field"
         @tier "presentation"
+      coverField : string = ""
+        @label "Which field is the cover image?"
+        @description "Name of the image-typed field on the loaded record painted as the document look's full-bleed hero banner (e.g. coverImage, heroImage). Empty = no banner, the default."
+        @synonyms "cover field, hero image field, banner field"
+        @tier "presentation"
+      iconField : string = ""
+        @label "Which field is the document icon?"
+        @description "Name of the field on the loaded record whose icon name renders beside the document title (e.g. icon). Empty = no icon, the default."
+        @synonyms "icon field, glyph field"
+        @tier "presentation"
       editLabel : string = "Edit"
         @label "Edit button label"
         @description "Label of the quiet button above the document body that starts an editing session (the body itself is also clickable)."
@@ -587,6 +611,8 @@ orbital RecordItemOrbital {
         @tier "internal"
       documentBodyContent : render-ui = {
         actions: @config.actions
+        coverImage: @entity.coverUrl
+        icon: @entity.iconName
         editEvent: EDIT_CONTENT
         editLabel: @config.editLabel
         id: @entity.id
@@ -604,6 +630,8 @@ orbital RecordItemOrbital {
         @tier "internal"
       documentEditingContent : render-ui = {
         actions: @config.actions
+        coverImage: @entity.coverUrl
+        icon: @entity.iconName
         autosaveHint: @config.autosaveHint
         contentChangeEvent: CONTENT_CHANGE
         doneEvent: DONE_EDITING
@@ -675,6 +703,14 @@ orbital RecordItemOrbital {
         @description "A property in the settings rail committed in place; patch carries the row id plus the one changed field, ready to hand straight to a persist update. Quiet contract: the host persists without refetching or repainting the open document."
         @synonyms "property saved, metadata changed, field committed, update property"
         @tier "domain"
+      RELATION_OPEN -> external {
+        field : string!
+        id : string!
+        name : string
+      }
+        @description "A relation chip in the details drawer was clicked (a tag, the author, the category); id is the linked row's id. Hosts route it to the linked record's own surface — a navigate, a scoped overlay, a filtered list."
+        @synonyms "open relation, linked record clicked, tag clicked, chip clicked"
+        @tier "domain"
     }
 
     listens {
@@ -718,6 +754,7 @@ orbital RecordItemOrbital {
       detailsContent : render-ui = {
         entity: @entity.loadedRow
         fields: @config.metaFields
+        relationEvent: RELATION_OPEN
         title: @config.detailsTitle
         type: document-details
       }

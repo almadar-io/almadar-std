@@ -20,9 +20,14 @@ orbital StatusLifecycleOrbital {
     state idle {
       ChangeStatusRequested -> idle when (and @config.enabled (array/some @config.transitions (fn t (and ["=", (object/get @t from), ?from] ["=", (object/get @t to), ?to]))))
         (persist update @config.targetEntity (object/set { id: ?id } @config.statusField ?to) {
-          emit: { failure: StatusChangeFailed, success: StatusChanged }
+          emit: { failure: StatusChangeFailed, success: StatusPersisted }
         })
-        (emit StatusChanged { entityId: ?id, status: ?to })
+      ;; StatusChanged is re-emitted ONLY off the persist's success (guarded
+      ;; on ?id against the optimistic/authoritative double-fire) — the old
+      ;; synchronous emit fired even when the write failed, so a denied
+      ;; mutation still looked like a completed transition downstream.
+      StatusPersisted -> idle when ["!=", (str/default ?id ""), ""]
+        (emit StatusChanged { entityId: ?id, status: (str/default (object/get ?row @config.statusField) "") })
       StatusChangeFailed -> idle
     }
 
@@ -31,7 +36,11 @@ orbital StatusLifecycleOrbital {
         entityId : string
         status : string
       }
-      StatusChangeFailed {
+      StatusPersisted {
+        id : string
+        row : StatusRecord
+      }
+      StatusChangeFailed -> external {
         error : string
         code : string
       }
@@ -42,6 +51,10 @@ orbital StatusLifecycleOrbital {
         id : string
         from : string
         to : string
+      }
+      StatusPersisted {
+        id : string
+        row : StatusRecord
       }
       StatusChangeFailed {
         error : string

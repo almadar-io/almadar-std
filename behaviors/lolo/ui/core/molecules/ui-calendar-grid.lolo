@@ -15,8 +15,28 @@ orbital CalendarGridOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle
+      INIT -> idle when @config.selfFetch
         (fetch CalendarGridItem { emit: { success: CalendarGridLoaded } })
+        (render-ui main {
+          weekStart: @config.weekStart
+          timeSlots: @config.timeSlots
+          events: @entity
+          onSlotClick: @config.onSlotClick
+          onDayClick: @config.onDayClick
+          onEventClick: @config.onEventClick
+          className: @config.className
+          longPressEvent: @config.longPressEvent
+          longPressPayload: @config.longPressPayload
+          swipeLeftEvent: @config.swipeLeftEvent
+          swipeRightEvent: @config.swipeRightEvent
+          dayWindow: @config.dayWindow
+          titleField: @config.titleField
+          startField: @config.startField
+          endField: @config.endField
+          colorField: @config.colorField
+          type: calendar-grid
+        })
+      INIT -> idle when (not @config.selfFetch)
         (render-ui main {
           weekStart: @config.weekStart
           timeSlots: @config.timeSlots
@@ -158,6 +178,10 @@ orbital CalendarGridOrbital {
         @label "Color Field"
         @description "Row field holding the chip's Tailwind colour class. Defaults to `color`."
         @tier "presentation"
+      selfFetch : boolean = true
+        @label "Fetch its own rows on mount?"
+        @description "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's."
+        @tier "internal"
     }
   }
 

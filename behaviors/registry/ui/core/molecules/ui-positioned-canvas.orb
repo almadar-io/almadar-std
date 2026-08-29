@@ -213,6 +213,13 @@
               "tier": "presentation",
               "type": "string"
             },
+            "selfFetch": {
+              "default": true,
+              "description": "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's.",
+              "label": "Fetch its own rows on mount?",
+              "tier": "internal",
+              "type": "boolean"
+            },
             "width": {
               "default": 800.0,
               "description": "width prop",
@@ -379,6 +386,36 @@
                 "event": "INIT",
                 "eventId": "evt_01KXG04QK8NJ7JNE65YZ899XWA",
                 "from": "idle",
+                "guard": "@config.selfFetch",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "editable": "@config.editable",
+                      "height": "@config.height",
+                      "items": "@entity",
+                      "moveEvent": "@config.moveEvent",
+                      "onMove": "@config.onMove",
+                      "onSelect": "@config.onSelect",
+                      "selectEvent": "@config.selectEvent",
+                      "selectedId": "@config.selectedId",
+                      "type": "positioned-canvas",
+                      "width": "@config.width"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01KXG04QK8NJ7JNE65YZ899XWA",
+                "from": "idle",
+                "guard": [
+                  "not",
+                  "@config.selfFetch"
+                ],
                 "to": "idle"
               },
               {

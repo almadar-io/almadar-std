@@ -41,8 +41,40 @@ orbital DataGridOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle
+      INIT -> idle when @config.selfFetch
         (fetch DataGridItem { emit: { success: DataGridLoaded } })
+        (render-ui main {
+          dragGroup: @config.dragGroup
+          accepts: @config.accepts
+          sortable: @config.sortable
+          dropEvent: @config.dropEvent
+          reorderEvent: @config.reorderEvent
+          positionEvent: @config.positionEvent
+          dndItemIdField: @config.dndItemIdField
+          dndRoot: @config.dndRoot
+          entity: @entity
+          fields: @config.fields
+          columns: @config.columns
+          itemActions: @config.itemActions
+          maxInlineActions: @config.maxInlineActions
+          scrollX: @config.scrollX
+          cols: @config.cols
+          gap: @config.gap
+          minCardWidth: @config.minCardWidth
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          imageField: @config.imageField
+          selectable: @config.selectable
+          selectionEvent: @config.selectionEvent
+          infiniteScroll: @config.infiniteScroll
+          loadMoreEvent: @config.loadMoreEvent
+          hasMore: @config.hasMore
+          pageSize: @config.pageSize
+          look: @config.look
+          type: data-grid
+        })
+      INIT -> idle when (not @config.selfFetch)
         (render-ui main {
           dragGroup: @config.dragGroup
           accepts: @config.accepts
@@ -239,6 +271,10 @@ orbital DataGridOrbital {
         @label "Look"
         @description "Layer 2 visual treatment — mirrors the `entity-table` look enum so data-grid / data-list / entity-table share one knob name from authors."
         @tier "presentation"
+      selfFetch : boolean = true
+        @label "Fetch its own rows on mount?"
+        @description "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's."
+        @tier "internal"
     }
   }
 

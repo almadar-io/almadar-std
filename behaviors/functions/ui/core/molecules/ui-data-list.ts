@@ -132,6 +132,8 @@ export interface StdUiDataListConfig {
   /** Default: `"REORDER"` */
   reorderEvent?: string;
   reorderable?: boolean;
+  /** Default: `true` */
+  selfFetch?: boolean;
   senderField?: string;
   senderLabelField?: string;
   sortBy?: string;

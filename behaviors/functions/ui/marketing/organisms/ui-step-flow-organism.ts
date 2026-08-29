@@ -61,6 +61,8 @@ export interface StdUiStepFlowOrganismConfig {
   /** Default: `[]` */
   selectedIds?: string[];
   /** Default: `true` */
+  selfFetch?: boolean;
+  /** Default: `true` */
   showConnectors?: boolean;
   sortBy?: string;
   /** Default: `"asc"` */
@@ -257,6 +259,13 @@ export function stdUiStepFlowOrganismStepFlowOrganismOrbital(params: StdUiStepFl
             'tier': 'presentation',
             'type': '[string]',
           },
+          'selfFetch': {
+            'default': true,
+            'description': 'true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper\'s own un-hydrated fetch so it cannot race the composer\'s.',
+            'label': 'Fetch its own rows on mount?',
+            'tier': 'internal',
+            'type': 'boolean',
+          },
           'showConnectors': {
             'default': true,
             'description': 'showConnectors prop',
@@ -381,6 +390,41 @@ export function stdUiStepFlowOrganismStepFlowOrganismOrbital(params: StdUiStepFl
               ],
               'event': 'INIT',
               'from': 'idle',
+              'guard': '@config.selfFetch',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'activeFilters': '@config.activeFilters',
+                    'className': '@config.className',
+                    'entity': '@entity',
+                    'error': '@config.error',
+                    'heading': '@config.heading',
+                    'isLoading': '@config.isLoading',
+                    'orientation': '@config.orientation',
+                    'page': '@config.pageProp',
+                    'pageSize': '@config.pageSize',
+                    'searchValue': '@config.searchValue',
+                    'selectedIds': '@config.selectedIds',
+                    'showConnectors': '@config.showConnectors',
+                    'sortBy': '@config.sortBy',
+                    'sortDirection': '@config.sortDirection',
+                    'subtitle': '@config.subtitle',
+                    'totalCount': '@config.totalCount',
+                    'type': 'step-flow-organism',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'guard': [
+                'not',
+                '@config.selfFetch',
+              ],
               'to': 'idle',
             },
             {
