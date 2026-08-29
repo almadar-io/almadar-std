@@ -89,6 +89,7 @@ export interface StdAppLayoutConfig {
   notifications?: EntityRow[];
   /** Default: `"SEARCH"` */
   searchEvent?: string;
+  sidebarTrait?: TraitFieldRef;
   /** Default: `"@currentTheme"` */
   theme?: string;
   /** Default: `[]` */
@@ -384,6 +385,13 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
             'tier': 'internal',
             'type': 'string',
           },
+          'sidebarTrait': {
+            'description': 'Optional trait rendered in the sidebar between the nav links and the footer — the Notion/Confluence-style always-visible page tree; scrolls independently. Unset renders plain nav only.',
+            'label': 'Sidebar trait',
+            'synonyms': 'sidebar tree, nav tree, page tree in sidebar, hierarchy rail',
+            'tier': 'presentation',
+            'type': 'trait',
+          },
           'theme': {
             'default': '@currentTheme',
             'description': 'Data-theme attribute applied to the layout root (e.g. almadar-website-dark).',
@@ -624,6 +632,7 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
                         'notificationClickEvent': '@config.notificationClickEvent',
                         'notifications': '@config.notifications',
                         'searchEvent': '@config.searchEvent',
+                        'sidebarContent': '@config.sidebarTrait',
                         'topBarActions': '@config.topBarActions',
                         'type': '@config.layoutPattern',
                         'user': [

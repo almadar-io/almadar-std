@@ -1,0 +1,226 @@
+[
+  {
+    "organism": "std-tag-strip",
+    "orbital": "TagStripOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/core/atoms/std-tag-strip.ts",
+    "entities": [
+      {
+        "name": "StripTag",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string",
+            "required": true,
+            "description": "The descriptive label for this tag.",
+            "synonyms": "label, title"
+          },
+          {
+            "name": "parentId",
+            "type": "relation",
+            "required": false,
+            "description": "Reference to the parent tag in the hierarchy; empty marks a root.",
+            "synonyms": "parent, ancestor",
+            "relation": {
+              "cardinality": "one",
+              "entity": "StripTag",
+              "entityId": "ent_01M1780JG2X1QJQSR415FHPQ9N"
+            }
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "docId",
+            "type": "string",
+            "required": false,
+            "intrinsic": true,
+            "description": "The open record's id, stashed at SHOW_TAG_STRIP so commits know which row to update.",
+            "synonyms": "record id, scope id"
+          },
+          {
+            "name": "docTagIds",
+            "type": "array",
+            "required": false,
+            "intrinsic": true,
+            "description": "The open record's current tag ids, stashed at SHOW_TAG_STRIP for membership tests.",
+            "synonyms": "attached tags, current tags"
+          },
+          {
+            "name": "pendingTagName",
+            "type": "string",
+            "required": false,
+            "intrinsic": true,
+            "description": "The tag name typed or clicked on add, held across the resolve fetch.",
+            "synonyms": "typed tag, adding tag"
+          },
+          {
+            "name": "pendingNames",
+            "type": "array",
+            "required": false,
+            "intrinsic": true,
+            "description": "The chip names remaining after a remove, held across the resolve fetch.",
+            "synonyms": "remaining tags, kept names"
+          }
+        ],
+        "persistence": "persistent"
+      }
+    ],
+    "traits": [
+      {
+        "name": "TagStrip",
+        "emittedEvents": [
+          "TAGS_CHANGED",
+          "ADD_TAG",
+          "REMOVE_TAG",
+          "TagStripOptions",
+          "TagStripAddOptions",
+          "TagStripRemoveOptions",
+          "TagStripTagCreated",
+          "TagStripLoadFailed"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "TAGS_CHANGED",
+            "direction": "emit",
+            "description": "The record's tag set changed (chip added or removed); the host routes this into its persistor's update so the write and the refetch stay the organism's.",
+            "synonyms": "tags updated, tag set changed, retagged",
+            "tier": "domain"
+          },
+          {
+            "name": "ADD_TAG",
+            "direction": "emit",
+            "description": "A tag name was typed into the strip or an existing tag's suggestion chip was clicked.",
+            "synonyms": "attach tag, add label",
+            "tier": "presentation"
+          },
+          {
+            "name": "REMOVE_TAG",
+            "direction": "emit",
+            "description": "A chip's remove affordance was clicked; value carries the names that remain.",
+            "synonyms": "detach tag, remove label",
+            "tier": "presentation"
+          },
+          {
+            "name": "TagStripOptions",
+            "direction": "emit",
+            "description": "The shared tag store loaded for the display pass.",
+            "tier": "internal"
+          },
+          {
+            "name": "TagStripAddOptions",
+            "direction": "emit",
+            "description": "The shared tag store loaded to resolve a typed name on add.",
+            "tier": "internal"
+          },
+          {
+            "name": "TagStripRemoveOptions",
+            "direction": "emit",
+            "description": "The shared tag store loaded to resolve the remaining names on remove.",
+            "tier": "internal"
+          },
+          {
+            "name": "TagStripTagCreated",
+            "direction": "emit",
+            "description": "A typed name had no existing tag; a fresh row was created in the shared taxonomy.",
+            "tier": "internal"
+          },
+          {
+            "name": "TagStripLoadFailed",
+            "direction": "emit",
+            "description": "The tag store fetch or create failed.",
+            "tier": "internal"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "SHOW_TAG_STRIP",
+            "direction": "listen",
+            "description": "Scope the strip to the open record — routed from the document's load events; carries the record's id and current tag ids (hydrated tag rows are normalized to their ids at stash time, so include-hydrated fetches route straight through).",
+            "synonyms": "load tags, scope tag strip, show tags",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "helperText",
+            "type": "string",
+            "default": "",
+            "label": "Helper text",
+            "description": "Optional helper line under the input",
+            "tier": "presentation"
+          },
+          {
+            "key": "placeholder",
+            "type": "string",
+            "default": "Add a tag…",
+            "label": "Input placeholder",
+            "description": "Placeholder in the type-to-add input",
+            "tier": "presentation"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Tags",
+            "label": "Strip caption",
+            "description": "Small caption above the chips; empty hides it",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "StripTag",
+        "transitionEvents": [
+          "ADD_TAG",
+          "INIT",
+          "REMOVE_TAG",
+          "SHOW_TAG_STRIP",
+          "TagStripAddOptions",
+          "TagStripLoadFailed",
+          "TagStripOptions",
+          "TagStripRemoveOptions",
+          "TagStripTagCreated"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "docId",
+            "docTagIds",
+            "pendingNames",
+            "pendingTagName"
+          ]
+        },
+        "effectEntityRefs": [
+          "StripTag"
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "name": "TagStripDemoPage",
+        "defaultPath": "/tagstrip/demo",
+        "primaryEntity": "StripTag"
+      }
+    ],
+    "emittedEvents": [
+      "ADD_TAG",
+      "REMOVE_TAG",
+      "TAGS_CHANGED",
+      "TagStripAddOptions",
+      "TagStripLoadFailed",
+      "TagStripOptions",
+      "TagStripRemoveOptions",
+      "TagStripTagCreated"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "capabilities": "inline tags, tag chips on a document, add tag from taxonomy, create tag by typing, remove tag chip, tag editing in place",
+    "sourceValid": true
+  }
+]

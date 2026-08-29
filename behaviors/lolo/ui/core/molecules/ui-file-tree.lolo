@@ -29,8 +29,13 @@ orbital FileTreeOrbital {
           tree: @config.tree
           items: @config.items
           selectedPath: @config.selectedPath
+          selectedId: @config.selectedId
+          look: @config.look
           onFileSelect: @config.onFileSelect
           onNodeSelect: @config.onNodeSelect
+          onNodeAction: @config.onNodeAction
+          nodeActionIcon: @config.nodeActionIcon
+          nodeActionLabel: @config.nodeActionLabel
           className: @config.className
           indent: @config.indent
           type: file-tree
@@ -58,6 +63,14 @@ orbital FileTreeOrbital {
         @label "Selected Path"
         @description "Currently selected file path"
         @tier "presentation"
+      selectedId : string
+        @label "Selected Id"
+        @description "Currently selected node id, in flat `items` mode: the row highlights and every ancestor auto-expands so the selection is always visible — the 'you are here' a navigation tree needs."
+        @tier "presentation"
+      look : "files" | "nav" = files
+        @label "Look"
+        @description "Visual treatment for flat `items` mode: `files` (default) keeps the monospace file-browser look; `nav` renders a sidebar navigation tree — regular font, document icons, roomier hit areas."
+        @tier "presentation"
       onFileSelect : string = "FILE_SELECT"
         @label "On File Select"
         @description "Called when a file is clicked"
@@ -65,6 +78,18 @@ orbital FileTreeOrbital {
       onNodeSelect : string = ""
         @label "On Node Select"
         @description "Called when a node is clicked, in flat `items` mode; carries the selected node's id. Presence-gated: binding this prop is what turns on the click-to-select affordance, mirroring Badge's `onRemove`."
+        @tier "presentation"
+      onNodeAction : string = ""
+        @label "On Node Action"
+        @description "Called from the row's hover action button, in flat `items` mode; carries that node's id. Presence-gated: binding it renders the action."
+        @tier "presentation"
+      nodeActionIcon : string
+        @label "Node Action Icon"
+        @description "Icon for the row hover action (default: plus)."
+        @tier "presentation"
+      nodeActionLabel : string
+        @label "Node Action Label"
+        @description "Accessible label/tooltip for the row hover action."
         @tier "presentation"
       className : string
         @label "Class Name"

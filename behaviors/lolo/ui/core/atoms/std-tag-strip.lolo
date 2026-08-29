@@ -1,0 +1,314 @@
+app std-tag-strip "1.0.0"
+"std-tag-strip — inline tag editing ON the document surface: the record's tags render as removable chips with a type-to-add input (a typed name that matches an existing tag attaches it; an unknown name is created in the shared taxonomy first), plus one-click chips for every existing tag not yet attached. Emits TAGS_CHANGED { id, tagIds } — the host organism routes it into its persistor's update; the document's refetch re-scopes the strip. Binds any record carrying a tagIds relation array; the tag store is the shared `tags` collection (std-tag-taxonomy's)."
+;; @capabilities "inline tags, tag chips on a document, add tag from taxonomy, create tag by typing, remove tag chip, tag editing in place"
+orbital TagStripOrbital {
+    type TagStripOptions = Event { data : [StripTag] } "The shared tag store loaded for the strip's display pass"
+
+    type TagStripAddOptions = Event { data : [StripTag] } "The shared tag store loaded to resolve a typed tag name on add"
+
+    type TagStripRemoveOptions = Event { data : [StripTag] } "The shared tag store loaded to resolve the remaining names on remove"
+
+    type TagStripTagCreated = Event { id : string, row : StripTag } "A typed tag name had no existing row; one was created in the shared taxonomy"
+
+    type TagStripLoadFailed = Event { error : string, code : string } "The tag store fetch or create failed"
+
+  entity StripTag [persistent: tags] {
+    id : string!
+    name : string! @description "The descriptive label for this tag." @synonyms "label, title"
+    parentId : StripTag @description "Reference to the parent tag in the hierarchy; empty marks a root." @synonyms "parent, ancestor"
+    createdAt : string = ""
+    pendingId : string = ""
+    docId : string @intrinsic @description "The open record's id, stashed at SHOW_TAG_STRIP so commits know which row to update." @synonyms "record id, scope id" = ""
+    docTagIds : [string] @intrinsic @description "The open record's current tag ids, stashed at SHOW_TAG_STRIP for membership tests." @synonyms "attached tags, current tags"
+    pendingTagName : string @intrinsic @description "The tag name typed or clicked on add, held across the resolve fetch." @synonyms "typed tag, adding tag" = ""
+    pendingNames : [string] @intrinsic @description "The chip names remaining after a remove, held across the resolve fetch." @synonyms "remaining tags, kept names"
+  }
+
+  trait TagStrip -> @rebindable StripTag [interaction, collection] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch StripTag {
+          emit: { failure: TagStripLoadFailed, success: TagStripOptions }
+        })
+      ;; Pre-scope paint: the store is warm but no record is open yet.
+      TagStripOptions -> idle
+      TagStripLoadFailed -> idle
+      SHOW_TAG_STRIP -> loading
+        (set @entity.docId ?id)
+        (set @entity.docTagIds (array/map ?tagIds (fn t (str/default (object/get @t id) @t))))
+        (fetch StripTag {
+          emit: { failure: TagStripLoadFailed, success: TagStripOptions }
+        })
+    }
+
+    state loading {
+      SHOW_TAG_STRIP -> loading
+        (set @entity.docId ?id)
+        (set @entity.docTagIds (array/map ?tagIds (fn t (str/default (object/get @t id) @t))))
+        (fetch StripTag {
+          emit: { failure: TagStripLoadFailed, success: TagStripOptions }
+        })
+      TagStripOptions -> ready
+        (render-ui main {
+          children: [(if ["!=", @config.title, ""] {
+            color: muted
+            content: @config.title
+            type: typography
+            variant: caption
+          } null), {
+            addEvent: ADD_TAG
+            helperText: @config.helperText
+            placeholder: @config.placeholder
+            removeEvent: REMOVE_TAG
+            type: tag-input
+            value: (array/map (array/filter ?data (fn t (array/includes @entity.docTagIds (object/get @t id)))) (fn t (object/get @t name)))
+            variant: secondary
+          }, (if ["=", (array/len (array/filter ?data (fn t (if (array/includes @entity.docTagIds (object/get @t id)) false true)))), 0] null {
+            children: (array/map (array/filter ?data (fn t (if (array/includes @entity.docTagIds (object/get @t id)) false true))) (fn t {
+              action: ADD_TAG
+              actionPayload: { tag: @t.name }
+              icon: tag
+              label: @t.name
+              size: sm
+              type: button
+              variant: ghost
+            }))
+            className: flex-wrap
+            direction: horizontal
+            gap: xs
+            type: stack
+          })]
+          direction: vertical
+          gap: xs
+          type: stack
+        })
+      TagStripLoadFailed -> idle
+        (render-ui main {
+          message: ?error
+          type: alert
+          variant: error
+        })
+    }
+
+    state ready {
+      SHOW_TAG_STRIP -> loading
+        (set @entity.docId ?id)
+        (set @entity.docTagIds (array/map ?tagIds (fn t (str/default (object/get @t id) @t))))
+        (fetch StripTag {
+          emit: { failure: TagStripLoadFailed, success: TagStripOptions }
+        })
+      ADD_TAG -> adding
+        (set @entity.pendingTagName ?tag)
+        (fetch StripTag {
+          emit: { failure: TagStripLoadFailed, success: TagStripAddOptions }
+        })
+        (render-ui main {
+          align: center
+          children: [{ size: sm, type: spinner }]
+          direction: horizontal
+          gap: xs
+          type: stack
+        })
+      REMOVE_TAG -> removing
+        (set @entity.pendingNames ?value)
+        (fetch StripTag {
+          emit: { failure: TagStripLoadFailed, success: TagStripRemoveOptions }
+        })
+        (render-ui main {
+          align: center
+          children: [{ size: sm, type: spinner }]
+          direction: horizontal
+          gap: xs
+          type: stack
+        })
+      TagStripTagCreated -> ready
+    }
+
+    state adding {
+      SHOW_TAG_STRIP -> loading
+        (set @entity.docId ?id)
+        (set @entity.docTagIds (array/map ?tagIds (fn t (str/default (object/get @t id) @t))))
+        (fetch StripTag {
+          emit: { failure: TagStripLoadFailed, success: TagStripOptions }
+        })
+      ;; The typed name matches an existing tag — attach its id.
+      TagStripAddOptions -> ready when (array/includes (array/map ?data (fn t (object/get @t name))) @entity.pendingTagName)
+        (emit TAGS_CHANGED {
+          id: @entity.docId
+          tagIds: (array/append @entity.docTagIds (object/get (array/first (array/filter ?data (fn t ["=", (object/get @t name), @entity.pendingTagName]))) id))
+        })
+      ;; Unknown name — create it in the shared taxonomy, then attach.
+      TagStripAddOptions -> creating
+        (persist create StripTag { name: @entity.pendingTagName } {
+          emit: { failure: TagStripLoadFailed, success: TagStripTagCreated }
+        })
+      TagStripLoadFailed -> idle
+        (render-ui main {
+          message: ?error
+          type: alert
+          variant: error
+        })
+    }
+
+    state creating {
+      SHOW_TAG_STRIP -> loading
+        (set @entity.docId ?id)
+        (set @entity.docTagIds (array/map ?tagIds (fn t (str/default (object/get @t id) @t))))
+        (fetch StripTag {
+          emit: { failure: TagStripLoadFailed, success: TagStripOptions }
+        })
+      TagStripTagCreated -> ready when ["!=", (str/default ?id ""), ""]
+        (emit TAGS_CHANGED {
+          id: @entity.docId
+          tagIds: (array/append @entity.docTagIds ?id)
+        })
+      TagStripLoadFailed -> idle
+        (render-ui main {
+          message: ?error
+          type: alert
+          variant: error
+        })
+    }
+
+    state removing {
+      SHOW_TAG_STRIP -> loading
+        (set @entity.docId ?id)
+        (set @entity.docTagIds (array/map ?tagIds (fn t (str/default (object/get @t id) @t))))
+        (fetch StripTag {
+          emit: { failure: TagStripLoadFailed, success: TagStripOptions }
+        })
+      ;; The remaining chip names map back to ids — every kept name exists
+      ;; by construction (chips only render attached, existing tags).
+      TagStripRemoveOptions -> ready
+        (emit TAGS_CHANGED {
+          id: @entity.docId
+          tagIds: (array/map (array/filter ?data (fn t (array/includes @entity.pendingNames (object/get @t name)))) (fn t (object/get @t id)))
+        })
+      TagStripLoadFailed -> idle
+        (render-ui main {
+          message: ?error
+          type: alert
+          variant: error
+        })
+    }
+
+    emits {
+      TAGS_CHANGED -> external {
+        id : string
+        tagIds : [string]
+      }
+        @description "The record's tag set changed (chip added or removed); the host routes this into its persistor's update so the write and the refetch stay the organism's."
+        @synonyms "tags updated, tag set changed, retagged"
+        @tier "domain"
+      ADD_TAG {
+        tag : string!
+      }
+        @description "A tag name was typed into the strip or an existing tag's suggestion chip was clicked."
+        @synonyms "attach tag, add label"
+        @tier "presentation"
+      REMOVE_TAG {
+        tag : string
+        value : [string]
+      }
+        @description "A chip's remove affordance was clicked; value carries the names that remain."
+        @synonyms "detach tag, remove label"
+        @tier "presentation"
+      TagStripOptions {
+        data : [StripTag]
+      }
+        @description "The shared tag store loaded for the display pass."
+        @tier "internal"
+      TagStripAddOptions {
+        data : [StripTag]
+      }
+        @description "The shared tag store loaded to resolve a typed name on add."
+        @tier "internal"
+      TagStripRemoveOptions {
+        data : [StripTag]
+      }
+        @description "The shared tag store loaded to resolve the remaining names on remove."
+        @tier "internal"
+      TagStripTagCreated {
+        id : string
+        row : StripTag
+      }
+        @description "A typed name had no existing tag; a fresh row was created in the shared taxonomy."
+        @tier "internal"
+      TagStripLoadFailed {
+        error : string
+        code : string
+      }
+        @description "The tag store fetch or create failed."
+        @tier "internal"
+    }
+
+    listens {
+      SHOW_TAG_STRIP {
+        id : string!
+        tagIds : [string]
+      }
+        @description "Scope the strip to the open record — routed from the document's load events; carries the record's id and current tag ids (hydrated tag rows are normalized to their ids at stash time, so include-hydrated fetches route straight through)."
+        @synonyms "load tags, scope tag strip, show tags"
+        @tier "domain"
+      ADD_TAG {
+        tag : string!
+      }
+        @description "Attach a tag by name — typed into the input or clicked from the existing-tag chips."
+        @synonyms "attach tag, add label"
+        @tier "presentation"
+      REMOVE_TAG {
+        tag : string
+        value : [string]
+      }
+        @description "Detach a chip; value carries the names that remain."
+        @synonyms "detach tag, remove label"
+        @tier "presentation"
+      TagStripOptions {
+        data : [StripTag]
+      }
+        @description "Display-pass fetch resolved."
+        @tier "internal"
+      TagStripAddOptions {
+        data : [StripTag]
+      }
+        @description "Add-resolve fetch resolved."
+        @tier "internal"
+      TagStripRemoveOptions {
+        data : [StripTag]
+      }
+        @description "Remove-resolve fetch resolved."
+        @tier "internal"
+      TagStripTagCreated {
+        id : string
+        row : StripTag
+      }
+        @description "The taxonomy row for a typed name persisted; attach its id."
+        @tier "internal"
+      TagStripLoadFailed {
+        error : string
+        code : string
+      }
+        @description "The tag store fetch or create failed."
+        @tier "internal"
+    }
+
+    config {
+      title : string = Tags
+        @label "Strip caption"
+        @description "Small caption above the chips; empty hides it"
+        @tier "presentation"
+      placeholder : string = "Add a tag…"
+        @label "Input placeholder"
+        @description "Placeholder in the type-to-add input"
+        @tier "presentation"
+      helperText : string = ""
+        @label "Helper text"
+        @description "Optional helper line under the input"
+        @tier "presentation"
+    }
+  }
+
+  page "/tagstrip/demo" as TagStripDemoPage -> TagStrip
+}

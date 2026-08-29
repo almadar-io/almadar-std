@@ -99,6 +99,10 @@ export interface StdTagTaxonomyTagCreateFailedPayload {
 export interface StdTagTaxonomyConfig {
   /** Default: `false` */
   allowEdit?: boolean;
+  /** Default: `"New tag"` */
+  createLabel?: string;
+  /** Default: `"All tags"` */
+  rootLabel?: string;
   /** Default: `"dense"` */
   tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
   /** Default: `"Categories"` */
@@ -302,10 +306,26 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
         'config': {
           'allowEdit': {
             'default': false,
-            'description': 'Render the New-category affordance: creations land at the level currently open (top level, or inside the drilled-into category). Rename is a follow-up (ledgered).',
+            'description': 'Render the create-tag affordance: creations land at the level currently open (top level, or inside the drilled-into category). Rename is a follow-up (ledgered).',
             'label': 'Allow editing',
             'tier': 'domain',
             'type': 'boolean',
+          },
+          'createLabel': {
+            'default': 'New tag',
+            'description': 'Label on the create affordance and its form heading — say what this taxonomy calls its entries (New tag, New category, New topic).',
+            'label': 'Create-button label',
+            'synonyms': 'add label, new tag label, create caption',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'rootLabel': {
+            'default': 'All tags',
+            'description': 'Label on the back affordance that returns from a drilled-in level to the root — phrase it in this taxonomy\'s vocabulary (All tags, All categories).',
+            'label': 'Back-to-root label',
+            'synonyms': 'back label, root caption, all label',
+            'tier': 'presentation',
+            'type': 'string',
           },
           'tableLook': {
             'default': 'dense',
@@ -385,7 +405,7 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
             'tier': 'domain',
           },
           {
-            'description': 'Opens the new-category form (rendered only when allowEdit is on); the creation lands at the level currently open.',
+            'description': 'Opens the create-tag form (rendered only when allowEdit is on); the creation lands at the level currently open.',
             'event': 'NEW_TAG',
             'synonyms': 'add tag, create category, new category',
             'tier': 'domain',
@@ -563,7 +583,7 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
               'name': 'Show Root',
             },
             {
-              'description': 'Opens the new-category form (rendered only when allowEdit is on); the creation lands at the level currently open.',
+              'description': 'Opens the create-tag form (rendered only when allowEdit is on); the creation lands at the level currently open.',
               'key': 'NEW_TAG',
               'name': 'New Tag',
               'synonyms': 'add tag, create category, new category',
@@ -736,7 +756,7 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                       },
                       {
                         'color': 'muted',
-                        'content': 'Loading categories…',
+                        'content': 'Loading…',
                         'type': 'typography',
                         'variant': 'caption',
                       },
@@ -772,7 +792,7 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                           true,
                         ],
                         'icon': 'arrow-left',
-                        'label': 'All categories',
+                        'label': '@config.rootLabel',
                         'size': 'sm',
                         'type': 'button',
                         'variant': 'ghost',
@@ -788,7 +808,7 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                         {
                           'action': 'NEW_TAG',
                           'icon': 'plus',
-                          'label': 'New category',
+                          'label': '@config.createLabel',
                           'size': 'sm',
                           'type': 'button',
                           'variant': 'secondary',
@@ -938,7 +958,7 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                       },
                       {
                         'color': 'muted',
-                        'content': 'Loading categories…',
+                        'content': 'Loading…',
                         'type': 'typography',
                         'variant': 'caption',
                       },
@@ -1003,7 +1023,7 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                       },
                       {
                         'color': 'muted',
-                        'content': 'Loading children…',
+                        'content': 'Loading…',
                         'type': 'typography',
                         'variant': 'caption',
                       },
@@ -1061,7 +1081,7 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                       },
                       {
                         'color': 'muted',
-                        'content': 'Loading categories…',
+                        'content': 'Loading…',
                         'type': 'typography',
                         'variant': 'caption',
                       },
@@ -1097,7 +1117,7 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                           true,
                         ],
                         'icon': 'arrow-left',
-                        'label': 'All categories',
+                        'label': '@config.rootLabel',
                         'size': 'sm',
                         'type': 'button',
                         'variant': 'ghost',
@@ -1113,7 +1133,7 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                         {
                           'action': 'NEW_TAG',
                           'icon': 'plus',
-                          'label': 'New category',
+                          'label': '@config.createLabel',
                           'size': 'sm',
                           'type': 'button',
                           'variant': 'secondary',
@@ -1213,7 +1233,7 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                   {
                     'children': [
                       {
-                        'content': 'New category',
+                        'content': '@config.createLabel',
                         'type': 'typography',
                         'variant': 'h3',
                       },
@@ -1327,7 +1347,7 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                       },
                       {
                         'color': 'muted',
-                        'content': 'Loading categories…',
+                        'content': 'Loading…',
                         'type': 'typography',
                         'variant': 'caption',
                       },
@@ -1368,7 +1388,7 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                       },
                       {
                         'color': 'muted',
-                        'content': 'Loading categories…',
+                        'content': 'Loading…',
                         'type': 'typography',
                         'variant': 'caption',
                       },
@@ -1469,7 +1489,7 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                       },
                       {
                         'color': 'muted',
-                        'content': 'Loading categories…',
+                        'content': 'Loading…',
                         'type': 'typography',
                         'variant': 'caption',
                       },
@@ -1546,7 +1566,7 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                           true,
                         ],
                         'icon': 'arrow-left',
-                        'label': 'All categories',
+                        'label': '@config.rootLabel',
                         'size': 'sm',
                         'type': 'button',
                         'variant': 'ghost',
@@ -1562,7 +1582,7 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                         {
                           'action': 'NEW_TAG',
                           'icon': 'plus',
-                          'label': 'New category',
+                          'label': '@config.createLabel',
                           'size': 'sm',
                           'type': 'button',
                           'variant': 'secondary',
@@ -1712,7 +1732,7 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                       },
                       {
                         'color': 'muted',
-                        'content': 'Loading categories…',
+                        'content': 'Loading…',
                         'type': 'typography',
                         'variant': 'caption',
                       },

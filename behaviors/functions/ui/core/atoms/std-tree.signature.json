@@ -38,6 +38,7 @@
         "name": "TreeBrowse",
         "emittedEvents": [
           "OPEN_NODE",
+          "CHILD_REQUESTED",
           "TreeNodeLoaded",
           "TreeNodeLoadFailed"
         ],
@@ -48,6 +49,13 @@
             "direction": "emit",
             "description": "Signals a tree node has been selected for external handoff.",
             "synonyms": "select, choose, open, activate",
+            "tier": "domain"
+          },
+          {
+            "name": "CHILD_REQUESTED",
+            "direction": "emit",
+            "description": "Create a new record under this node — the host routes it into its create-draft writer with parentId stamped.",
+            "synonyms": "new subpage, add child page, create under",
             "tier": "domain"
           },
           {
@@ -63,6 +71,13 @@
             "description": "Indicates a failure to load the tree node collection.",
             "synonyms": "error, failed, problem, unsuccessful",
             "tier": "internal"
+          },
+          {
+            "name": "SET_CURRENT",
+            "direction": "listen",
+            "description": "Mark this record as the open one (routed from the host document's load events); its row highlights and its ancestors auto-expand.",
+            "synonyms": "highlight current, select node, you are here",
+            "tier": "domain"
           },
           {
             "name": "INIT",
@@ -83,6 +98,13 @@
             "tier": "domain"
           },
           {
+            "name": "ADD_CHILD",
+            "direction": "listen",
+            "description": "The row's hover + affordance was clicked.",
+            "synonyms": "add inside, new child",
+            "tier": "presentation"
+          },
+          {
             "name": "RETRY",
             "direction": "listen"
           }
@@ -95,6 +117,23 @@
             "label": "Show the tree's own search box?",
             "description": "Embeds a search box above the tree that re-fetches the flat node set server-side. Set false (the default) when the page already provides a search affordance (a toolbar Search molecule), so the surface shows one search box instead of two.",
             "synonyms": "inline search, list search, built-in search, show search, duplicate search",
+            "tier": "presentation"
+          },
+          {
+            "key": "childAction",
+            "type": "boolean",
+            "default": false,
+            "label": "Row + affordance?",
+            "description": "Render a hover + on every row that emits CHILD_REQUESTED { parentId } — wire it to the host's create-draft writer so new records are born inside the node.",
+            "synonyms": "add inside, new subpage button, plus on rows",
+            "tier": "domain"
+          },
+          {
+            "key": "childActionLabel",
+            "type": "string",
+            "default": "Add inside",
+            "label": "Row + tooltip",
+            "description": "Accessible label on the row's + affordance (e.g. New subpage).",
             "tier": "presentation"
           },
           {
@@ -146,6 +185,46 @@
             }
           },
           {
+            "key": "iconField",
+            "type": "string",
+            "default": "icon",
+            "label": "Icon column",
+            "description": "Entity field holding each node's icon name; point it at a nonexistent field (or empty) to suppress per-node icons.",
+            "synonyms": "glyph field, icon column",
+            "tier": "presentation"
+          },
+          {
+            "key": "labelField",
+            "type": "string",
+            "default": "name",
+            "label": "Label column",
+            "description": "Entity field rendered as each node's label. Config-driven on purpose: the trait-level `fields {}` remap is compiled-path-only (the JS runtime never applies it), so a rebind names its columns here and both execution paths agree.",
+            "synonyms": "title field, name column, display field",
+            "tier": "domain"
+          },
+          {
+            "key": "look",
+            "type": "string",
+            "default": "full",
+            "label": "Tree look",
+            "description": "full = standalone section (heading, count, divider); rail = compact sidebar navigation (slim caption, nav-styled rows) for an app layout's sidebarTrait slot.",
+            "synonyms": "sidebar tree, rail look, nav tree, compact",
+            "tier": "presentation",
+            "enumValues": [
+              "full",
+              "rail"
+            ]
+          },
+          {
+            "key": "parentField",
+            "type": "string",
+            "default": "parentId",
+            "label": "Parent column",
+            "description": "Entity field holding the parent reference the hierarchy nests by.",
+            "synonyms": "parent id field, hierarchy column",
+            "tier": "domain"
+          },
+          {
             "key": "searchPlaceholder",
             "type": "string",
             "default": "Search…",
@@ -166,11 +245,13 @@
         "capabilities": [],
         "linkedEntity": "TreeNode",
         "transitionEvents": [
+          "ADD_CHILD",
           "INIT",
           "OPEN_NODE",
           "REFETCH_FILTER",
           "REFETCH_QUERY",
           "RETRY",
+          "SET_CURRENT",
           "TreeNodeLoadFailed",
           "TreeNodeLoaded"
         ],
@@ -192,6 +273,7 @@
       }
     ],
     "emittedEvents": [
+      "CHILD_REQUESTED",
       "OPEN_NODE",
       "TreeNodeLoadFailed",
       "TreeNodeLoaded"

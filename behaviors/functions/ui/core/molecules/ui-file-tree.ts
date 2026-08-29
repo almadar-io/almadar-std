@@ -51,10 +51,17 @@ export interface StdUiFileTreeConfig {
   indent?: number;
   /** Default: `[]` */
   items?: EntityRow[];
+  /** Default: `"files"` */
+  look?: 'files' | 'nav';
+  nodeActionIcon?: string;
+  nodeActionLabel?: string;
   /** Default: `"FILE_SELECT"` */
   onFileSelect?: string;
   /** Default: `""` */
+  onNodeAction?: string;
+  /** Default: `""` */
   onNodeSelect?: string;
+  selectedId?: string;
   selectedPath?: string;
   /** Default: `[]` */
   tree?: EntityRow[];

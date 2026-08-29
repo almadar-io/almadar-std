@@ -1,5 +1,5 @@
 app std-tree "1.0.0"
-"std-tree — generic hierarchical node browser. Fetches a flat TreeNode collection and renders it through file-tree's flat `items` mode (parentId-nested at render time by the component, not the .lolo); OPEN_NODE is the external handoff for a selected node's id. Rebindable: pass `fields` at the call site to retarget it at any parent-pointer entity (categories, org units, comment threads). Search/filter are wired (REFETCH_QUERY/REFETCH_FILTER re-fetch the flat node set server-side); pagination is deliberately NOT offered — a hierarchy is not a paged list, and paging a flat node set would sever children from parents that fell on another page."
+"std-tree — generic hierarchical node browser. Fetches a flat TreeNode collection and renders it through file-tree's flat `items` mode (parentId-nested at render time by the component, not the .lolo); OPEN_NODE is the external handoff for a selected node's id. Rebindable: pass `fields` at the call site to retarget it at any parent-pointer entity (categories, org units, comment threads). Search/filter are wired (REFETCH_QUERY/REFETCH_FILTER re-fetch the flat node set server-side). `look: rail` renders the compact sidebar-navigation form (slim caption, nav-styled rows) for mounting in an app layout's sidebarTrait; SET_CURRENT marks the open record so the row highlights and its ancestors auto-expand; `childAction: true` renders a hover plus-affordance per row emitting CHILD_REQUESTED { parentId } for the host's create-draft writer; pagination is deliberately NOT offered — a hierarchy is not a paged list, and paging a flat node set would sever children from parents that fell on another page."
 type FilterSpec = { field : string!, label : string, options : [string] }
 orbital TreeNodeOrbital {
     type TreeNodeLoaded = Event { data : [TreeNode] } "Fired when the tree node collection finishes loading"
@@ -18,6 +18,11 @@ orbital TreeNodeOrbital {
     initial: loading
 
     state loading {
+      SET_CURRENT -> loading
+        (set @entity.id ?id)
+        (fetch TreeNode {
+          emit: { failure: TreeNodeLoadFailed, success: TreeNodeLoaded }
+        })
       INIT -> loading
         (fetch TreeNode {
           emit: { failure: TreeNodeLoadFailed, success: TreeNodeLoaded }
@@ -37,7 +42,13 @@ orbital TreeNodeOrbital {
         })
       TreeNodeLoaded -> browsing
         (render-ui main {
-          children: [{
+          children: [(if ["=", @config.look, "rail"] {
+            className: "px-2 pb-1 uppercase tracking-wide"
+            color: muted
+            content: @config.title
+            type: typography
+            variant: caption
+          } {
             align: center
             children: [{ name: list-tree, type: icon }, {
               content: @config.title
@@ -52,7 +63,11 @@ orbital TreeNodeOrbital {
             direction: horizontal
             gap: sm
             type: stack
-          }, { type: divider }, (if @config.bodySearch {
+          }), (if ["=", @config.look, "rail"] {
+            children: []
+            gap: none
+            type: stack
+          } { type: divider }), (if @config.bodySearch {
             children: [{
               className: "w-full max-w-md"
               clearable: true
@@ -84,12 +99,17 @@ orbital TreeNodeOrbital {
             type: stack
           }), {
             items: (array/map ?data (fn row {
-              icon: @row.icon
+              icon: (str/default (object/get @row @config.iconField) "")
               id: @row.id
-              label: @row.name
-              parentId: @row.parentId
+              label: (str/default (object/get @row @config.labelField) "")
+              parentId: (str/default (object/get @row @config.parentField) "")
             }))
+            look: (if ["=", @config.look, "rail"] nav files)
+            nodeActionIcon: plus
+            nodeActionLabel: @config.childActionLabel
+            onNodeAction: (if @config.childAction ADD_CHILD null)
             onNodeSelect: OPEN_NODE
+            selectedId: (str/default (object/get @entity id) "")
             type: file-tree
           }]
           direction: vertical
@@ -153,7 +173,7 @@ orbital TreeNodeOrbital {
       REFETCH_QUERY -> browsing
         (fetch TreeNode {
           emit: { failure: TreeNodeLoadFailed, success: TreeNodeLoaded }
-          filter: (or ["=", ?searchTerm, ""] (str/includes (object/get @entity name) ?searchTerm))
+          filter: (or ["=", ?searchTerm, ""] (str/includes (str/default (object/get @entity @config.labelField) "") ?searchTerm))
         })
       REFETCH_FILTER -> browsing
         (fetch TreeNode {
@@ -162,9 +182,25 @@ orbital TreeNodeOrbital {
         })
       OPEN_NODE -> browsing
         (set @entity.id ?id)
+      ;; The open record changed (routed from the host document's load
+      ;; events): remember it and re-fetch so the re-render highlights the
+      ;; row and unfolds its ancestors.
+      SET_CURRENT -> browsing
+        (set @entity.id ?id)
+        (fetch TreeNode {
+          emit: { failure: TreeNodeLoadFailed, success: TreeNodeLoaded }
+        })
+      ADD_CHILD -> browsing
+        (emit CHILD_REQUESTED { parentId: ?id })
       TreeNodeLoaded -> browsing
         (render-ui main {
-          children: [{
+          children: [(if ["=", @config.look, "rail"] {
+            className: "px-2 pb-1 uppercase tracking-wide"
+            color: muted
+            content: @config.title
+            type: typography
+            variant: caption
+          } {
             align: center
             children: [{ name: list-tree, type: icon }, {
               content: @config.title
@@ -179,7 +215,11 @@ orbital TreeNodeOrbital {
             direction: horizontal
             gap: sm
             type: stack
-          }, { type: divider }, (if @config.bodySearch {
+          }), (if ["=", @config.look, "rail"] {
+            children: []
+            gap: none
+            type: stack
+          } { type: divider }), (if @config.bodySearch {
             children: [{
               className: "w-full max-w-md"
               clearable: true
@@ -211,12 +251,17 @@ orbital TreeNodeOrbital {
             type: stack
           }), {
             items: (array/map ?data (fn row {
-              icon: @row.icon
+              icon: (str/default (object/get @row @config.iconField) "")
               id: @row.id
-              label: @row.name
-              parentId: @row.parentId
+              label: (str/default (object/get @row @config.labelField) "")
+              parentId: (str/default (object/get @row @config.parentField) "")
             }))
+            look: (if ["=", @config.look, "rail"] nav files)
+            nodeActionIcon: plus
+            nodeActionLabel: @config.childActionLabel
+            onNodeAction: (if @config.childAction ADD_CHILD null)
             onNodeSelect: OPEN_NODE
+            selectedId: (str/default (object/get @entity id) "")
             type: file-tree
           }]
           direction: vertical
@@ -275,6 +320,12 @@ orbital TreeNodeOrbital {
         @description "Signals a tree node has been selected for external handoff."
         @synonyms "select, choose, open, activate"
         @tier "domain"
+      CHILD_REQUESTED -> external {
+        parentId : string!
+      }
+        @description "Create a new record under this node — the host routes it into its create-draft writer with parentId stamped."
+        @synonyms "new subpage, add child page, create under"
+        @tier "domain"
       TreeNodeLoaded {
         data : [TreeNode]
       }
@@ -291,6 +342,18 @@ orbital TreeNodeOrbital {
     }
 
     listens {
+      SET_CURRENT {
+        id : string!
+      }
+        @description "Mark this record as the open one (routed from the host document's load events); its row highlights and its ancestors auto-expand."
+        @synonyms "highlight current, select node, you are here"
+        @tier "domain"
+      ADD_CHILD {
+        id : string!
+      }
+        @description "The row's hover + affordance was clicked."
+        @synonyms "add inside, new child"
+        @tier "presentation"
       REFETCH_QUERY {
         searchTerm : string!
       }
@@ -329,6 +392,35 @@ orbital TreeNodeOrbital {
       title : string = Tree
         @label "Section title"
         @description "Heading shown above the tree"
+        @tier "presentation"
+      labelField : string = name
+        @label "Label column"
+        @description "Entity field rendered as each node's label. Config-driven on purpose: the trait-level `fields {}` remap is compiled-path-only (the JS runtime never applies it), so a rebind names its columns here and both execution paths agree."
+        @synonyms "title field, name column, display field"
+        @tier "domain"
+      parentField : string = parentId
+        @label "Parent column"
+        @description "Entity field holding the parent reference the hierarchy nests by."
+        @synonyms "parent id field, hierarchy column"
+        @tier "domain"
+      iconField : string = icon
+        @label "Icon column"
+        @description "Entity field holding each node's icon name; point it at a nonexistent field (or empty) to suppress per-node icons."
+        @synonyms "glyph field, icon column"
+        @tier "presentation"
+      look : "full" | "rail" = full
+        @label "Tree look"
+        @description "full = standalone section (heading, count, divider); rail = compact sidebar navigation (slim caption, nav-styled rows) for an app layout's sidebarTrait slot."
+        @synonyms "sidebar tree, rail look, nav tree, compact"
+        @tier "presentation"
+      childAction : boolean = false
+        @label "Row + affordance?"
+        @description "Render a hover + on every row that emits CHILD_REQUESTED { parentId } — wire it to the host's create-draft writer so new records are born inside the node."
+        @synonyms "add inside, new subpage button, plus on rows"
+        @tier "domain"
+      childActionLabel : string = "Add inside"
+        @label "Row + tooltip"
+        @description "Accessible label on the row's + affordance (e.g. New subpage)."
         @tier "presentation"
       bodySearch : boolean = false
         @label "Show the tree's own search box?"

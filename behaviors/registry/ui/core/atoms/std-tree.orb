@@ -1,5 +1,5 @@
 {
-  "description": "std-tree — generic hierarchical node browser. Fetches a flat TreeNode collection and renders it through file-tree's flat `items` mode (parentId-nested at render time by the component, not the .lolo); OPEN_NODE is the external handoff for a selected node's id. Rebindable: pass `fields` at the call site to retarget it at any parent-pointer entity (categories, org units, comment threads). Search/filter are wired (REFETCH_QUERY/REFETCH_FILTER re-fetch the flat node set server-side); pagination is deliberately NOT offered — a hierarchy is not a paged list, and paging a flat node set would sever children from parents that fell on another page.",
+  "description": "std-tree — generic hierarchical node browser. Fetches a flat TreeNode collection and renders it through file-tree's flat `items` mode (parentId-nested at render time by the component, not the .lolo); OPEN_NODE is the external handoff for a selected node's id. Rebindable: pass `fields` at the call site to retarget it at any parent-pointer entity (categories, org units, comment threads). Search/filter are wired (REFETCH_QUERY/REFETCH_FILTER re-fetch the flat node set server-side). `look: rail` renders the compact sidebar-navigation form (slim caption, nav-styled rows) for mounting in an app layout's sidebarTrait; SET_CURRENT marks the open record so the row highlights and its ancestors auto-expand; `childAction: true` renders a hover plus-affordance per row emitting CHILD_REQUESTED { parentId } for the host's create-draft writer; pagination is deliberately NOT offered — a hierarchy is not a paged list, and paging a flat node set would sever children from parents that fell on another page.",
   "ledger": {
     "entries": {
       "ent_01M0RYHNM1NXR2J5S0HK2WFDS3": {
@@ -68,6 +68,33 @@
         "bakedName": "REFETCH_FILTER",
         "curName": "REFETCH_FILTER",
         "id": "evt_01M11H00X4BMW519Q3CSP735Z8",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M0RYHNM11N15TSY0QWVC2GH5",
+        "renames": []
+      },
+      "evt_01M17BX0J64EZJWZX8502Q7135": {
+        "bakedName": "SET_CURRENT",
+        "curName": "SET_CURRENT",
+        "id": "evt_01M17BX0J64EZJWZX8502Q7135",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M0RYHNM11N15TSY0QWVC2GH5",
+        "renames": []
+      },
+      "evt_01M17BX0J67VGXTSW2C3Y4TREX": {
+        "bakedName": "CHILD_REQUESTED",
+        "curName": "CHILD_REQUESTED",
+        "id": "evt_01M17BX0J67VGXTSW2C3Y4TREX",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M0RYHNM11N15TSY0QWVC2GH5",
+        "renames": []
+      },
+      "evt_01M17BX0J6VTTJYK99BC6RNMVY": {
+        "bakedName": "ADD_CHILD",
+        "curName": "ADD_CHILD",
+        "id": "evt_01M17BX0J6VTTJYK99BC6RNMVY",
         "kind": "event",
         "owner": "workspace",
         "parent": "trt_01M0RYHNM11N15TSY0QWVC2GH5",
@@ -168,6 +195,21 @@
               "tier": "presentation",
               "type": "boolean"
             },
+            "childAction": {
+              "default": false,
+              "description": "Render a hover + on every row that emits CHILD_REQUESTED { parentId } — wire it to the host's create-draft writer so new records are born inside the node.",
+              "label": "Row + affordance?",
+              "synonyms": "add inside, new subpage button, plus on rows",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "childActionLabel": {
+              "default": "Add inside",
+              "description": "Accessible label on the row's + affordance (e.g. New subpage).",
+              "label": "Row + tooltip",
+              "tier": "presentation",
+              "type": "string"
+            },
             "filterBarLook": {
               "default": "toolbar",
               "description": "Visual treatment for the embedded filter bar, mirroring std-filter's own enum. Only applies when `filters` is non-empty.",
@@ -214,6 +256,42 @@
               "tier": "presentation",
               "type": "[FilterSpec]"
             },
+            "iconField": {
+              "default": "icon",
+              "description": "Entity field holding each node's icon name; point it at a nonexistent field (or empty) to suppress per-node icons.",
+              "label": "Icon column",
+              "synonyms": "glyph field, icon column",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "labelField": {
+              "default": "name",
+              "description": "Entity field rendered as each node's label. Config-driven on purpose: the trait-level `fields {}` remap is compiled-path-only (the JS runtime never applies it), so a rebind names its columns here and both execution paths agree.",
+              "label": "Label column",
+              "synonyms": "title field, name column, display field",
+              "tier": "domain",
+              "type": "string"
+            },
+            "look": {
+              "default": "full",
+              "description": "full = standalone section (heading, count, divider); rail = compact sidebar navigation (slim caption, nav-styled rows) for an app layout's sidebarTrait slot.",
+              "label": "Tree look",
+              "synonyms": "sidebar tree, rail look, nav tree, compact",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "full",
+                "rail"
+              ]
+            },
+            "parentField": {
+              "default": "parentId",
+              "description": "Entity field holding the parent reference the hierarchy nests by.",
+              "label": "Parent column",
+              "synonyms": "parent id field, hierarchy column",
+              "tier": "domain",
+              "type": "string"
+            },
             "searchPlaceholder": {
               "default": "Search…",
               "description": "Hint text inside the tree search box (e.g. 'Search nodes…').",
@@ -243,6 +321,21 @@
                 }
               ],
               "synonyms": "select, choose, open, activate",
+              "tier": "domain"
+            },
+            {
+              "description": "Create a new record under this node — the host routes it into its create-draft writer with parentId stamped.",
+              "event": "CHILD_REQUESTED",
+              "eventId": "evt_01M17BX0J67VGXTSW2C3Y4TREX",
+              "payloadSchema": [
+                {
+                  "name": "parentId",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "new subpage, add child page, create under",
               "tier": "domain"
             },
             {
@@ -291,6 +384,21 @@
           "scope": "collection",
           "stateMachine": {
             "events": [
+              {
+                "description": "Mark this record as the open one (routed from the host document's load events); its row highlights and its ancestors auto-expand.",
+                "id": "evt_01M17BX0J64EZJWZX8502Q7135",
+                "key": "SET_CURRENT",
+                "name": "Set Current",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "highlight current, select node, you are here",
+                "tier": "domain"
+              },
               {
                 "id": "evt_01M0RYHNM178W08KQ2SQ8BBXTK",
                 "key": "INIT",
@@ -379,9 +487,39 @@
                 "tier": "domain"
               },
               {
+                "description": "The row's hover + affordance was clicked.",
+                "id": "evt_01M17BX0J6VTTJYK99BC6RNMVY",
+                "key": "ADD_CHILD",
+                "name": "Add Child",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "add inside, new child",
+                "tier": "presentation"
+              },
+              {
                 "id": "evt_01M0RYHNM5HX05GFM20W62NCPC",
                 "key": "RETRY",
                 "name": "Retry"
+              },
+              {
+                "description": "Create a new record under this node — the host routes it into its create-draft writer with parentId stamped.",
+                "id": "evt_01M17BX0J67VGXTSW2C3Y4TREX",
+                "key": "CHILD_REQUESTED",
+                "name": "Child Requested",
+                "payloadSchema": [
+                  {
+                    "name": "parentId",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "new subpage, add child page, create under",
+                "tier": "domain"
               }
             ],
             "states": [
@@ -397,6 +535,29 @@
               }
             ],
             "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "TreeNode",
+                    {
+                      "emit": {
+                        "failure": "TreeNodeLoadFailed",
+                        "success": "TreeNodeLoaded"
+                      }
+                    }
+                  ]
+                ],
+                "event": "SET_CURRENT",
+                "eventId": "evt_01M17BX0J64EZJWZX8502Q7135",
+                "from": "loading",
+                "to": "loading"
+              },
               {
                 "effects": [
                   [
@@ -444,35 +605,63 @@
                     "main",
                     {
                       "children": [
-                        {
-                          "align": "center",
-                          "children": [
-                            {
-                              "name": "list-tree",
-                              "type": "icon"
-                            },
-                            {
-                              "content": "@config.title",
-                              "type": "typography",
-                              "variant": "h3"
-                            },
-                            {
-                              "label": [
-                                "array/len",
-                                "@payload.data"
-                              ],
-                              "size": "sm",
-                              "type": "badge",
-                              "variant": "neutral"
-                            }
+                        [
+                          "if",
+                          [
+                            "=",
+                            "@config.look",
+                            "rail"
                           ],
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "type": "stack"
-                        },
-                        {
-                          "type": "divider"
-                        },
+                          {
+                            "className": "px-2 pb-1 uppercase tracking-wide",
+                            "color": "muted",
+                            "content": "@config.title",
+                            "type": "typography",
+                            "variant": "caption"
+                          },
+                          {
+                            "align": "center",
+                            "children": [
+                              {
+                                "name": "list-tree",
+                                "type": "icon"
+                              },
+                              {
+                                "content": "@config.title",
+                                "type": "typography",
+                                "variant": "h3"
+                              },
+                              {
+                                "label": [
+                                  "array/len",
+                                  "@payload.data"
+                                ],
+                                "size": "sm",
+                                "type": "badge",
+                                "variant": "neutral"
+                              }
+                            ],
+                            "direction": "horizontal",
+                            "gap": "sm",
+                            "type": "stack"
+                          }
+                        ],
+                        [
+                          "if",
+                          [
+                            "=",
+                            "@config.look",
+                            "rail"
+                          ],
+                          {
+                            "children": [],
+                            "gap": "none",
+                            "type": "stack"
+                          },
+                          {
+                            "type": "divider"
+                          }
+                        ],
                         [
                           "if",
                           "@config.bodySearch",
@@ -534,14 +723,65 @@
                               "fn",
                               "row",
                               {
-                                "icon": "@row.icon",
+                                "icon": [
+                                  "str/default",
+                                  [
+                                    "object/get",
+                                    "@row",
+                                    "@config.iconField"
+                                  ],
+                                  ""
+                                ],
                                 "id": "@row.id",
-                                "label": "@row.name",
-                                "parentId": "@row.parentId"
+                                "label": [
+                                  "str/default",
+                                  [
+                                    "object/get",
+                                    "@row",
+                                    "@config.labelField"
+                                  ],
+                                  ""
+                                ],
+                                "parentId": [
+                                  "str/default",
+                                  [
+                                    "object/get",
+                                    "@row",
+                                    "@config.parentField"
+                                  ],
+                                  ""
+                                ]
                               }
                             ]
                           ],
+                          "look": [
+                            "if",
+                            [
+                              "=",
+                              "@config.look",
+                              "rail"
+                            ],
+                            "nav",
+                            "files"
+                          ],
+                          "nodeActionIcon": "plus",
+                          "nodeActionLabel": "@config.childActionLabel",
+                          "onNodeAction": [
+                            "if",
+                            "@config.childAction",
+                            "ADD_CHILD",
+                            null
+                          ],
                           "onNodeSelect": "OPEN_NODE",
+                          "selectedId": [
+                            "str/default",
+                            [
+                              "object/get",
+                              "@entity",
+                              "id"
+                            ],
+                            ""
+                          ],
                           "type": "file-tree"
                         }
                       ],
@@ -660,9 +900,13 @@
                         [
                           "str/includes",
                           [
-                            "object/get",
-                            "@entity",
-                            "name"
+                            "str/default",
+                            [
+                              "object/get",
+                              "@entity",
+                              "@config.labelField"
+                            ],
+                            ""
                           ],
                           "@payload.searchTerm"
                         ]
@@ -726,39 +970,105 @@
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "TreeNode",
+                    {
+                      "emit": {
+                        "failure": "TreeNodeLoadFailed",
+                        "success": "TreeNodeLoaded"
+                      }
+                    }
+                  ]
+                ],
+                "event": "SET_CURRENT",
+                "eventId": "evt_01M17BX0J64EZJWZX8502Q7135",
+                "from": "browsing",
+                "to": "browsing"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "CHILD_REQUESTED",
+                    {
+                      "parentId": "@payload.id"
+                    }
+                  ]
+                ],
+                "event": "ADD_CHILD",
+                "eventId": "evt_01M17BX0J6VTTJYK99BC6RNMVY",
+                "from": "browsing",
+                "to": "browsing"
+              },
+              {
+                "effects": [
+                  [
                     "render-ui",
                     "main",
                     {
                       "children": [
-                        {
-                          "align": "center",
-                          "children": [
-                            {
-                              "name": "list-tree",
-                              "type": "icon"
-                            },
-                            {
-                              "content": "@config.title",
-                              "type": "typography",
-                              "variant": "h3"
-                            },
-                            {
-                              "label": [
-                                "array/len",
-                                "@payload.data"
-                              ],
-                              "size": "sm",
-                              "type": "badge",
-                              "variant": "neutral"
-                            }
+                        [
+                          "if",
+                          [
+                            "=",
+                            "@config.look",
+                            "rail"
                           ],
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "type": "stack"
-                        },
-                        {
-                          "type": "divider"
-                        },
+                          {
+                            "className": "px-2 pb-1 uppercase tracking-wide",
+                            "color": "muted",
+                            "content": "@config.title",
+                            "type": "typography",
+                            "variant": "caption"
+                          },
+                          {
+                            "align": "center",
+                            "children": [
+                              {
+                                "name": "list-tree",
+                                "type": "icon"
+                              },
+                              {
+                                "content": "@config.title",
+                                "type": "typography",
+                                "variant": "h3"
+                              },
+                              {
+                                "label": [
+                                  "array/len",
+                                  "@payload.data"
+                                ],
+                                "size": "sm",
+                                "type": "badge",
+                                "variant": "neutral"
+                              }
+                            ],
+                            "direction": "horizontal",
+                            "gap": "sm",
+                            "type": "stack"
+                          }
+                        ],
+                        [
+                          "if",
+                          [
+                            "=",
+                            "@config.look",
+                            "rail"
+                          ],
+                          {
+                            "children": [],
+                            "gap": "none",
+                            "type": "stack"
+                          },
+                          {
+                            "type": "divider"
+                          }
+                        ],
                         [
                           "if",
                           "@config.bodySearch",
@@ -820,14 +1130,65 @@
                               "fn",
                               "row",
                               {
-                                "icon": "@row.icon",
+                                "icon": [
+                                  "str/default",
+                                  [
+                                    "object/get",
+                                    "@row",
+                                    "@config.iconField"
+                                  ],
+                                  ""
+                                ],
                                 "id": "@row.id",
-                                "label": "@row.name",
-                                "parentId": "@row.parentId"
+                                "label": [
+                                  "str/default",
+                                  [
+                                    "object/get",
+                                    "@row",
+                                    "@config.labelField"
+                                  ],
+                                  ""
+                                ],
+                                "parentId": [
+                                  "str/default",
+                                  [
+                                    "object/get",
+                                    "@row",
+                                    "@config.parentField"
+                                  ],
+                                  ""
+                                ]
                               }
                             ]
                           ],
+                          "look": [
+                            "if",
+                            [
+                              "=",
+                              "@config.look",
+                              "rail"
+                            ],
+                            "nav",
+                            "files"
+                          ],
+                          "nodeActionIcon": "plus",
+                          "nodeActionLabel": "@config.childActionLabel",
+                          "onNodeAction": [
+                            "if",
+                            "@config.childAction",
+                            "ADD_CHILD",
+                            null
+                          ],
                           "onNodeSelect": "OPEN_NODE",
+                          "selectedId": [
+                            "str/default",
+                            [
+                              "object/get",
+                              "@entity",
+                              "id"
+                            ],
+                            ""
+                          ],
                           "type": "file-tree"
                         }
                       ],

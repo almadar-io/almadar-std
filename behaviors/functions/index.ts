@@ -161,6 +161,7 @@ export * from './ui/core/atoms/std-step-flow.js';
 export * from './ui/game/atoms/std-survival-flow.js';
 export * from './ui/game/atoms/std-svg-asset-art.js';
 export * from './ui/core/atoms/std-tabs.js';
+export * from './ui/core/atoms/std-tag-strip.js';
 export * from './ui/core/atoms/std-tag-taxonomy.js';
 export * from './ui/core/atoms/std-thread.js';
 export * from './ml/atoms/std-tokenizer.js';
