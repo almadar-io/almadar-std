@@ -30,7 +30,7 @@ const ALIAS = 'Modal';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdModalEventKey = 'CLOSE' | 'INIT' | 'ModalRecordLoadFailed' | 'ModalRecordLoaded' | 'OPEN' | 'SAVE';
+export type StdModalEventKey = 'CLOSE' | 'INIT' | 'ModalRecordLoadFailed' | 'ModalRecordLoaded' | 'OPEN' | 'SAVE' | 'SEED';
 
 /**
  * Payload shape for the `SAVE` event.
@@ -233,6 +233,17 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
             ],
           },
           {
+            'default': {},
+            'description': 'The row an edit-mode OPEN pre-fills from when its payload carries no row. Stashed by SEED — hosts route the surface\'s loaded event here (e.g. a document look\'s RecordItemLoaded) so scalar-only action events ({ id }) can still open a fully seeded settings form.',
+            'intrinsic': true,
+            'name': 'seedRow',
+            'relation': {
+              'cardinality': 'one',
+              'entity': 'ModalRecord',
+            },
+            'type': 'relation',
+          },
+          {
             'name': 'createdAt',
             'type': 'string',
           },
@@ -382,7 +393,9 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
           },
         ],
         'entityContract': {
-          'provides': [],
+          'provides': [
+            'seedRow',
+          ],
           'requires': [],
         },
         'entityRebindable': true,
@@ -394,6 +407,19 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
             {
               'key': 'INIT',
               'name': 'Initialize',
+            },
+            {
+              'description': 'Stash the row an edit-mode OPEN will pre-fill from. Hosts route the owning surface\'s loaded event here (e.g. RecordItemLoaded from a document look) so an OPEN carrying only { id } still opens a fully seeded form.',
+              'key': 'SEED',
+              'name': 'Seed',
+              'payloadSchema': [
+                {
+                  'name': 'row',
+                  'type': 'ModalRecord',
+                },
+              ],
+              'synonyms': 'preload row, stash record, seed form, prefill',
+              'tier': 'domain',
             },
             {
               'description': 'A request to display the modal window.',
@@ -495,6 +521,22 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
               'effects': [
                 [
                   'set',
+                  '@entity.seedRow',
+                  [
+                    'object/merge',
+                    '@payload.row',
+                    {},
+                  ],
+                ],
+              ],
+              'event': 'SEED',
+              'from': 'closed',
+              'to': 'closed',
+            },
+            {
+              'effects': [
+                [
+                  'set',
                   '@entity.id',
                   '@payload.id',
                 ],
@@ -524,7 +566,15 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
                       },
                       {
                         'cancelEvent': 'CLOSE',
-                        'entity': '@payload.row',
+                        'entity': [
+                          'object/merge',
+                          '@entity.seedRow',
+                          [
+                            'object/merge',
+                            '@payload.row',
+                            {},
+                          ],
+                        ],
                         'fieldOverrides': '@config.fieldOverrides',
                         'fields': '@config.fields',
                         'mode': '@config.mode',
@@ -548,7 +598,36 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
                   'create',
                 ],
                 '@payload.row',
+                [
+                  '!=',
+                  [
+                    'str/default',
+                    [
+                      'object/get',
+                      '@entity.seedRow',
+                      'id',
+                    ],
+                    '',
+                  ],
+                  '',
+                ],
               ],
+              'to': 'open',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.seedRow',
+                  [
+                    'object/merge',
+                    '@payload.row',
+                    {},
+                  ],
+                ],
+              ],
+              'event': 'SEED',
+              'from': 'open',
               'to': 'open',
             },
             {

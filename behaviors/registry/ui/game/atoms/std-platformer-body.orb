@@ -482,6 +482,13 @@
               "tier": "domain",
               "type": "[PlatformerCurveSample]"
             },
+            "skateMaxGap": {
+              "default": 0.0,
+              "description": "Largest x-gap between consecutive skateCurve samples that still counts as surface. 0 = unlimited (sparse two-sample lines skate fine). Dense resampled curves with real gaps between segments (stitched worlds) MUST set this — otherwise the sampler invents a skatable chord across every gap (an invisible line above the bridge/terrain that the body snaps to and glides along).",
+              "label": "Skate Max Gap",
+              "tier": "domain",
+              "type": "number"
+            },
             "skateSnap": {
               "default": 0.75,
               "description": "Max vertical gap (world units) between the body's min corner and the curve surface for skating to engage or stay engaged; larger values grab earlier on landing, smaller values release sooner on bumps",
@@ -1897,44 +1904,31 @@
                                                       "let",
                                                       [
                                                         [
-                                                          "curveMod",
+                                                          "gapBreak",
                                                           [
-                                                            "if",
+                                                            "and",
                                                             [
-                                                              "and",
-                                                              "@config.curveModsEnabled",
-                                                              "@inRange"
+                                                              ">",
+                                                              "@config.skateMaxGap",
+                                                              0.0
                                                             ],
                                                             [
-                                                              "array/find",
-                                                              "@entity.curveMods",
+                                                              ">",
                                                               [
-                                                                "fn",
-                                                                "m",
+                                                                "-",
                                                                 [
-                                                                  "and",
-                                                                  [
-                                                                    ">=",
-                                                                    "@cx",
-                                                                    [
-                                                                      "object/get",
-                                                                      "@m",
-                                                                      "x0"
-                                                                    ]
-                                                                  ],
-                                                                  [
-                                                                    "<=",
-                                                                    "@cx",
-                                                                    [
-                                                                      "object/get",
-                                                                      "@m",
-                                                                      "x1"
-                                                                    ]
-                                                                  ]
+                                                                  "object/get",
+                                                                  "@rightSamp",
+                                                                  "x"
+                                                                ],
+                                                                [
+                                                                  "object/get",
+                                                                  "@leftSamp",
+                                                                  "x"
                                                                 ]
-                                                              ]
-                                                            ],
-                                                            null
+                                                              ],
+                                                              "@config.skateMaxGap"
+                                                            ]
                                                           ]
                                                         ]
                                                       ],
@@ -1942,24 +1936,44 @@
                                                         "let",
                                                         [
                                                           [
-                                                            "modX",
+                                                            "curveMod",
                                                             [
                                                               "if",
                                                               [
-                                                                "==",
-                                                                "@curveMod",
-                                                                null
+                                                                "and",
+                                                                "@config.curveModsEnabled",
+                                                                "@inRange"
                                                               ],
-                                                              "@cx",
                                                               [
-                                                                "-",
-                                                                "@cx",
+                                                                "array/find",
+                                                                "@entity.curveMods",
                                                                 [
-                                                                  "object/get",
-                                                                  "@curveMod",
-                                                                  "h"
+                                                                  "fn",
+                                                                  "m",
+                                                                  [
+                                                                    "and",
+                                                                    [
+                                                                      ">=",
+                                                                      "@cx",
+                                                                      [
+                                                                        "object/get",
+                                                                        "@m",
+                                                                        "x0"
+                                                                      ]
+                                                                    ],
+                                                                    [
+                                                                      "<=",
+                                                                      "@cx",
+                                                                      [
+                                                                        "object/get",
+                                                                        "@m",
+                                                                        "x1"
+                                                                      ]
+                                                                    ]
+                                                                  ]
                                                                 ]
-                                                              ]
+                                                              ],
+                                                              null
                                                             ]
                                                           ]
                                                         ],
@@ -1967,39 +1981,22 @@
                                                           "let",
                                                           [
                                                             [
-                                                              "modInRange",
+                                                              "modX",
                                                               [
-                                                                "and",
+                                                                "if",
                                                                 [
-                                                                  "!=",
+                                                                  "==",
                                                                   "@curveMod",
                                                                   null
                                                                 ],
+                                                                "@cx",
                                                                 [
-                                                                  "and",
+                                                                  "-",
+                                                                  "@cx",
                                                                   [
-                                                                    ">=",
-                                                                    "@modX",
-                                                                    [
-                                                                      "object/get",
-                                                                      [
-                                                                        "array/first",
-                                                                        "@config.skateCurve"
-                                                                      ],
-                                                                      "x"
-                                                                    ]
-                                                                  ],
-                                                                  [
-                                                                    "<",
-                                                                    "@modX",
-                                                                    [
-                                                                      "object/get",
-                                                                      [
-                                                                        "array/last",
-                                                                        "@config.skateCurve"
-                                                                      ],
-                                                                      "x"
-                                                                    ]
+                                                                    "object/get",
+                                                                    "@curveMod",
+                                                                    "h"
                                                                   ]
                                                                 ]
                                                               ]
@@ -2009,31 +2006,41 @@
                                                             "let",
                                                             [
                                                               [
-                                                                "modLeft",
+                                                                "modInRange",
                                                                 [
-                                                                  "if",
-                                                                  "@modInRange",
+                                                                  "and",
                                                                   [
-                                                                    "array/last",
+                                                                    "!=",
+                                                                    "@curveMod",
+                                                                    null
+                                                                  ],
+                                                                  [
+                                                                    "and",
                                                                     [
-                                                                      "array/filter",
-                                                                      "@config.skateCurve",
+                                                                      ">=",
+                                                                      "@modX",
                                                                       [
-                                                                        "fn",
-                                                                        "s",
+                                                                        "object/get",
                                                                         [
-                                                                          "<=",
-                                                                          [
-                                                                            "object/get",
-                                                                            "@s",
-                                                                            "x"
-                                                                          ],
-                                                                          "@modX"
-                                                                        ]
+                                                                          "array/first",
+                                                                          "@config.skateCurve"
+                                                                        ],
+                                                                        "x"
+                                                                      ]
+                                                                    ],
+                                                                    [
+                                                                      "<",
+                                                                      "@modX",
+                                                                      [
+                                                                        "object/get",
+                                                                        [
+                                                                          "array/last",
+                                                                          "@config.skateCurve"
+                                                                        ],
+                                                                        "x"
                                                                       ]
                                                                     ]
-                                                                  ],
-                                                                  "@leftSamp"
+                                                                  ]
                                                                 ]
                                                               ]
                                                             ],
@@ -2041,12 +2048,12 @@
                                                               "let",
                                                               [
                                                                 [
-                                                                  "modRight",
+                                                                  "modLeft",
                                                                   [
                                                                     "if",
                                                                     "@modInRange",
                                                                     [
-                                                                      "array/first",
+                                                                      "array/last",
                                                                       [
                                                                         "array/filter",
                                                                         "@config.skateCurve",
@@ -2054,7 +2061,7 @@
                                                                           "fn",
                                                                           "s",
                                                                           [
-                                                                            ">",
+                                                                            "<=",
                                                                             [
                                                                               "object/get",
                                                                               "@s",
@@ -2065,7 +2072,7 @@
                                                                         ]
                                                                       ]
                                                                     ],
-                                                                    "@rightSamp"
+                                                                    "@leftSamp"
                                                                   ]
                                                                 ]
                                                               ],
@@ -2073,40 +2080,31 @@
                                                                 "let",
                                                                 [
                                                                   [
-                                                                    "modSlope",
+                                                                    "modRight",
                                                                     [
                                                                       "if",
                                                                       "@modInRange",
                                                                       [
-                                                                        "/",
+                                                                        "array/first",
                                                                         [
-                                                                          "-",
+                                                                          "array/filter",
+                                                                          "@config.skateCurve",
                                                                           [
-                                                                            "object/get",
-                                                                            "@modRight",
-                                                                            "y"
-                                                                          ],
-                                                                          [
-                                                                            "object/get",
-                                                                            "@modLeft",
-                                                                            "y"
-                                                                          ]
-                                                                        ],
-                                                                        [
-                                                                          "-",
-                                                                          [
-                                                                            "object/get",
-                                                                            "@modRight",
-                                                                            "x"
-                                                                          ],
-                                                                          [
-                                                                            "object/get",
-                                                                            "@modLeft",
-                                                                            "x"
+                                                                            "fn",
+                                                                            "s",
+                                                                            [
+                                                                              ">",
+                                                                              [
+                                                                                "object/get",
+                                                                                "@s",
+                                                                                "x"
+                                                                              ],
+                                                                              "@modX"
+                                                                            ]
                                                                           ]
                                                                         ]
                                                                       ],
-                                                                      "@slope"
+                                                                      "@rightSamp"
                                                                     ]
                                                                   ]
                                                                 ],
@@ -2114,32 +2112,40 @@
                                                                   "let",
                                                                   [
                                                                     [
-                                                                      "modCurveY",
+                                                                      "modSlope",
                                                                       [
                                                                         "if",
                                                                         "@modInRange",
                                                                         [
-                                                                          "+",
+                                                                          "/",
                                                                           [
-                                                                            "object/get",
-                                                                            "@modLeft",
-                                                                            "y"
+                                                                            "-",
+                                                                            [
+                                                                              "object/get",
+                                                                              "@modRight",
+                                                                              "y"
+                                                                            ],
+                                                                            [
+                                                                              "object/get",
+                                                                              "@modLeft",
+                                                                              "y"
+                                                                            ]
                                                                           ],
                                                                           [
-                                                                            "*",
-                                                                            "@modSlope",
+                                                                            "-",
                                                                             [
-                                                                              "-",
-                                                                              "@modX",
-                                                                              [
-                                                                                "object/get",
-                                                                                "@modLeft",
-                                                                                "x"
-                                                                              ]
+                                                                              "object/get",
+                                                                              "@modRight",
+                                                                              "x"
+                                                                            ],
+                                                                            [
+                                                                              "object/get",
+                                                                              "@modLeft",
+                                                                              "x"
                                                                             ]
                                                                           ]
                                                                         ],
-                                                                        "@curveY"
+                                                                        "@slope"
                                                                       ]
                                                                     ]
                                                                   ],
@@ -2147,24 +2153,32 @@
                                                                     "let",
                                                                     [
                                                                       [
-                                                                        "slope",
+                                                                        "modCurveY",
                                                                         [
                                                                           "if",
+                                                                          "@modInRange",
                                                                           [
-                                                                            "==",
-                                                                            "@curveMod",
-                                                                            null
-                                                                          ],
-                                                                          "@slope",
-                                                                          [
-                                                                            "*",
+                                                                            "+",
                                                                             [
                                                                               "object/get",
-                                                                              "@curveMod",
-                                                                              "a"
+                                                                              "@modLeft",
+                                                                              "y"
                                                                             ],
-                                                                            "@modSlope"
-                                                                          ]
+                                                                            [
+                                                                              "*",
+                                                                              "@modSlope",
+                                                                              [
+                                                                                "-",
+                                                                                "@modX",
+                                                                                [
+                                                                                  "object/get",
+                                                                                  "@modLeft",
+                                                                                  "x"
+                                                                                ]
+                                                                              ]
+                                                                            ]
+                                                                          ],
+                                                                          "@curveY"
                                                                         ]
                                                                       ]
                                                                     ],
@@ -2172,7 +2186,7 @@
                                                                       "let",
                                                                       [
                                                                         [
-                                                                          "curveY",
+                                                                          "slope",
                                                                           [
                                                                             "if",
                                                                             [
@@ -2180,23 +2194,15 @@
                                                                               "@curveMod",
                                                                               null
                                                                             ],
-                                                                            "@curveY",
+                                                                            "@slope",
                                                                             [
-                                                                              "+",
-                                                                              [
-                                                                                "*",
-                                                                                [
-                                                                                  "object/get",
-                                                                                  "@curveMod",
-                                                                                  "a"
-                                                                                ],
-                                                                                "@modCurveY"
-                                                                              ],
+                                                                              "*",
                                                                               [
                                                                                 "object/get",
                                                                                 "@curveMod",
-                                                                                "k"
-                                                                              ]
+                                                                                "a"
+                                                                              ],
+                                                                              "@modSlope"
                                                                             ]
                                                                           ]
                                                                         ]
@@ -2205,15 +2211,32 @@
                                                                         "let",
                                                                         [
                                                                           [
-                                                                            "movingUp",
+                                                                            "curveY",
                                                                             [
-                                                                              "<",
+                                                                              "if",
                                                                               [
-                                                                                "*",
-                                                                                "@vy1",
-                                                                                "@gdir"
+                                                                                "==",
+                                                                                "@curveMod",
+                                                                                null
                                                                               ],
-                                                                              -0.01
+                                                                              "@curveY",
+                                                                              [
+                                                                                "+",
+                                                                                [
+                                                                                  "*",
+                                                                                  [
+                                                                                    "object/get",
+                                                                                    "@curveMod",
+                                                                                    "a"
+                                                                                  ],
+                                                                                  "@modCurveY"
+                                                                                ],
+                                                                                [
+                                                                                  "object/get",
+                                                                                  "@curveMod",
+                                                                                  "k"
+                                                                                ]
+                                                                              ]
                                                                             ]
                                                                           ]
                                                                         ],
@@ -2221,41 +2244,15 @@
                                                                           "let",
                                                                           [
                                                                             [
-                                                                              "skateNow",
+                                                                              "movingUp",
                                                                               [
-                                                                                "and",
-                                                                                "@inRange",
+                                                                                "<",
                                                                                 [
-                                                                                  "and",
-                                                                                  [
-                                                                                    "<=",
-                                                                                    [
-                                                                                      "math/abs",
-                                                                                      [
-                                                                                        "-",
-                                                                                        "@ny2",
-                                                                                        "@curveY"
-                                                                                      ]
-                                                                                    ],
-                                                                                    "@config.skateSnap"
-                                                                                  ],
-                                                                                  [
-                                                                                    "and",
-                                                                                    [
-                                                                                      "or",
-                                                                                      "@landed",
-                                                                                      "@entity.skating"
-                                                                                    ],
-                                                                                    [
-                                                                                      "or",
-                                                                                      "@entity.body.grounded",
-                                                                                      [
-                                                                                        "not",
-                                                                                        "@movingUp"
-                                                                                      ]
-                                                                                    ]
-                                                                                  ]
-                                                                                ]
+                                                                                  "*",
+                                                                                  "@vy1",
+                                                                                  "@gdir"
+                                                                                ],
+                                                                                -0.01
                                                                               ]
                                                                             ]
                                                                           ],
@@ -2263,45 +2260,48 @@
                                                                             "let",
                                                                             [
                                                                               [
-                                                                                "vx2",
+                                                                                "skateNow",
                                                                                 [
-                                                                                  "if",
-                                                                                  "@skateNow",
+                                                                                  "and",
+                                                                                  "@inRange",
                                                                                   [
-                                                                                    "math/clamp",
+                                                                                    "and",
                                                                                     [
-                                                                                      "+",
-                                                                                      "@entity.body.vx",
+                                                                                      "not",
+                                                                                      "@gapBreak"
+                                                                                    ],
+                                                                                    [
+                                                                                      "and",
                                                                                       [
-                                                                                        "*",
+                                                                                        "<=",
                                                                                         [
-                                                                                          "/",
+                                                                                          "math/abs",
                                                                                           [
-                                                                                            "*",
-                                                                                            "@config.gravity",
-                                                                                            "@slope"
-                                                                                          ],
-                                                                                          [
-                                                                                            "+",
-                                                                                            1.0,
-                                                                                            [
-                                                                                              "*",
-                                                                                              "@slope",
-                                                                                              "@slope"
-                                                                                            ]
+                                                                                            "-",
+                                                                                            "@ny2",
+                                                                                            "@curveY"
                                                                                           ]
                                                                                         ],
-                                                                                        0.033
+                                                                                        "@config.skateSnap"
+                                                                                      ],
+                                                                                      [
+                                                                                        "and",
+                                                                                        [
+                                                                                          "or",
+                                                                                          "@landed",
+                                                                                          "@entity.skating"
+                                                                                        ],
+                                                                                        [
+                                                                                          "or",
+                                                                                          "@entity.body.grounded",
+                                                                                          [
+                                                                                            "not",
+                                                                                            "@movingUp"
+                                                                                          ]
+                                                                                        ]
                                                                                       ]
-                                                                                    ],
-                                                                                    [
-                                                                                      "-",
-                                                                                      0.0,
-                                                                                      "@config.maxFallSpeed"
-                                                                                    ],
-                                                                                    "@config.maxFallSpeed"
-                                                                                  ],
-                                                                                  "@entity.body.vx"
+                                                                                    ]
+                                                                                  ]
                                                                                 ]
                                                                               ]
                                                                             ],
@@ -2309,23 +2309,34 @@
                                                                               "let",
                                                                               [
                                                                                 [
-                                                                                  "vx3",
+                                                                                  "vx2",
                                                                                   [
                                                                                     "if",
-                                                                                    [
-                                                                                      "==",
-                                                                                      "@drift",
-                                                                                      null
-                                                                                    ],
-                                                                                    "@vx2",
+                                                                                    "@skateNow",
                                                                                     [
                                                                                       "math/clamp",
                                                                                       [
                                                                                         "+",
-                                                                                        "@vx2",
+                                                                                        "@entity.body.vx",
                                                                                         [
                                                                                           "*",
-                                                                                          "@dax",
+                                                                                          [
+                                                                                            "/",
+                                                                                            [
+                                                                                              "*",
+                                                                                              "@config.gravity",
+                                                                                              "@slope"
+                                                                                            ],
+                                                                                            [
+                                                                                              "+",
+                                                                                              1.0,
+                                                                                              [
+                                                                                                "*",
+                                                                                                "@slope",
+                                                                                                "@slope"
+                                                                                              ]
+                                                                                            ]
+                                                                                          ],
                                                                                           0.033
                                                                                         ]
                                                                                       ],
@@ -2335,7 +2346,8 @@
                                                                                         "@config.maxFallSpeed"
                                                                                       ],
                                                                                       "@config.maxFallSpeed"
-                                                                                    ]
+                                                                                    ],
+                                                                                    "@entity.body.vx"
                                                                                   ]
                                                                                 ]
                                                                               ],
@@ -2343,49 +2355,33 @@
                                                                                 "let",
                                                                                 [
                                                                                   [
-                                                                                    "fy",
+                                                                                    "vx3",
                                                                                     [
                                                                                       "if",
-                                                                                      "@skateNow",
-                                                                                      "@curveY",
-                                                                                      "@ny2"
-                                                                                    ]
-                                                                                  ],
-                                                                                  [
-                                                                                    "fvy",
-                                                                                    [
-                                                                                      "if",
-                                                                                      "@skateNow",
                                                                                       [
-                                                                                        "*",
+                                                                                        "==",
+                                                                                        "@drift",
+                                                                                        null
+                                                                                      ],
+                                                                                      "@vx2",
+                                                                                      [
+                                                                                        "math/clamp",
                                                                                         [
-                                                                                          "*",
+                                                                                          "+",
                                                                                           "@vx2",
                                                                                           [
-                                                                                            "math/cos",
-                                                                                            [
-                                                                                              "math/atan",
-                                                                                              "@slope"
-                                                                                            ]
+                                                                                            "*",
+                                                                                            "@dax",
+                                                                                            0.033
                                                                                           ]
                                                                                         ],
                                                                                         [
-                                                                                          "math/sin",
-                                                                                          [
-                                                                                            "math/atan",
-                                                                                            "@slope"
-                                                                                          ]
-                                                                                        ]
-                                                                                      ],
-                                                                                      "@vy2"
-                                                                                    ]
-                                                                                  ],
-                                                                                  [
-                                                                                    "fgrounded",
-                                                                                    [
-                                                                                      "or",
-                                                                                      "@landed",
-                                                                                      "@skateNow"
+                                                                                          "-",
+                                                                                          0.0,
+                                                                                          "@config.maxFallSpeed"
+                                                                                        ],
+                                                                                        "@config.maxFallSpeed"
+                                                                                      ]
                                                                                     ]
                                                                                   ]
                                                                                 ],
@@ -2393,36 +2389,49 @@
                                                                                   "let",
                                                                                   [
                                                                                     [
-                                                                                      "hazardHit",
+                                                                                      "fy",
                                                                                       [
-                                                                                        "array/find",
-                                                                                        "@config.platforms",
+                                                                                        "if",
+                                                                                        "@skateNow",
+                                                                                        "@curveY",
+                                                                                        "@ny2"
+                                                                                      ]
+                                                                                    ],
+                                                                                    [
+                                                                                      "fvy",
+                                                                                      [
+                                                                                        "if",
+                                                                                        "@skateNow",
                                                                                         [
-                                                                                          "fn",
-                                                                                          "p",
+                                                                                          "*",
                                                                                           [
-                                                                                            "and",
+                                                                                            "*",
+                                                                                            "@vx2",
                                                                                             [
-                                                                                              "==",
+                                                                                              "math/cos",
                                                                                               [
-                                                                                                "object/get",
-                                                                                                "@p",
-                                                                                                "type"
-                                                                                              ],
-                                                                                              "hazard"
-                                                                                            ],
+                                                                                                "math/atan",
+                                                                                                "@slope"
+                                                                                              ]
+                                                                                            ]
+                                                                                          ],
+                                                                                          [
+                                                                                            "math/sin",
                                                                                             [
-                                                                                              "geo/aabb-overlap",
-                                                                                              "@rect",
-                                                                                              {
-                                                                                                "h": "@p.height",
-                                                                                                "w": "@p.width",
-                                                                                                "x": "@p.x",
-                                                                                                "y": "@p.y"
-                                                                                              }
+                                                                                              "math/atan",
+                                                                                              "@slope"
                                                                                             ]
                                                                                           ]
-                                                                                        ]
+                                                                                        ],
+                                                                                        "@vy2"
+                                                                                      ]
+                                                                                    ],
+                                                                                    [
+                                                                                      "fgrounded",
+                                                                                      [
+                                                                                        "or",
+                                                                                        "@landed",
+                                                                                        "@skateNow"
                                                                                       ]
                                                                                     ]
                                                                                   ],
@@ -2430,7 +2439,7 @@
                                                                                     "let",
                                                                                     [
                                                                                       [
-                                                                                        "goalHit",
+                                                                                        "hazardHit",
                                                                                         [
                                                                                           "array/find",
                                                                                           "@config.platforms",
@@ -2446,7 +2455,7 @@
                                                                                                   "@p",
                                                                                                   "type"
                                                                                                 ],
-                                                                                                "goal"
+                                                                                                "hazard"
                                                                                               ],
                                                                                               [
                                                                                                 "geo/aabb-overlap",
@@ -2467,162 +2476,187 @@
                                                                                       "let",
                                                                                       [
                                                                                         [
-                                                                                          "fellNow",
+                                                                                          "goalHit",
                                                                                           [
-                                                                                            "if",
+                                                                                            "array/find",
+                                                                                            "@config.platforms",
                                                                                             [
-                                                                                              ">",
-                                                                                              "@gdir",
-                                                                                              0.0
-                                                                                            ],
-                                                                                            [
-                                                                                              ">",
-                                                                                              "@fy",
-                                                                                              "@config.killY"
-                                                                                            ],
-                                                                                            [
-                                                                                              "<",
-                                                                                              "@fy",
-                                                                                              "@config.killY"
+                                                                                              "fn",
+                                                                                              "p",
+                                                                                              [
+                                                                                                "and",
+                                                                                                [
+                                                                                                  "==",
+                                                                                                  [
+                                                                                                    "object/get",
+                                                                                                    "@p",
+                                                                                                    "type"
+                                                                                                  ],
+                                                                                                  "goal"
+                                                                                                ],
+                                                                                                [
+                                                                                                  "geo/aabb-overlap",
+                                                                                                  "@rect",
+                                                                                                  {
+                                                                                                    "h": "@p.height",
+                                                                                                    "w": "@p.width",
+                                                                                                    "x": "@p.x",
+                                                                                                    "y": "@p.y"
+                                                                                                  }
+                                                                                                ]
+                                                                                              ]
                                                                                             ]
                                                                                           ]
                                                                                         ]
                                                                                       ],
                                                                                       [
-                                                                                        "do",
+                                                                                        "let",
                                                                                         [
-                                                                                          "set",
-                                                                                          "@entity.body",
                                                                                           [
-                                                                                            "object/merge",
-                                                                                            "@entity.body",
-                                                                                            {
-                                                                                              "grounded": "@fgrounded",
-                                                                                              "vx": [
-                                                                                                "if",
-                                                                                                [
-                                                                                                  "or",
-                                                                                                  [
-                                                                                                    "==",
-                                                                                                    "@nx",
-                                                                                                    "@config.xMin"
-                                                                                                  ],
-                                                                                                  [
-                                                                                                    "==",
-                                                                                                    "@nx",
-                                                                                                    "@config.xMax"
-                                                                                                  ]
-                                                                                                ],
-                                                                                                0.0,
-                                                                                                "@vx3"
+                                                                                            "fellNow",
+                                                                                            [
+                                                                                              "if",
+                                                                                              [
+                                                                                                ">",
+                                                                                                "@gdir",
+                                                                                                0.0
                                                                                               ],
-                                                                                              "vy": "@fvy",
-                                                                                              "x": "@nx",
-                                                                                              "y": "@fy"
-                                                                                            }
+                                                                                              [
+                                                                                                ">",
+                                                                                                "@fy",
+                                                                                                "@config.killY"
+                                                                                              ],
+                                                                                              [
+                                                                                                "<",
+                                                                                                "@fy",
+                                                                                                "@config.killY"
+                                                                                              ]
+                                                                                            ]
                                                                                           ]
                                                                                         ],
                                                                                         [
-                                                                                          "set",
-                                                                                          "@entity.skating",
-                                                                                          "@skateNow"
-                                                                                        ],
-                                                                                        [
-                                                                                          "if",
+                                                                                          "do",
                                                                                           [
-                                                                                            "and",
-                                                                                            "@skateNow",
+                                                                                            "set",
+                                                                                            "@entity.body",
                                                                                             [
-                                                                                              "==",
-                                                                                              "@entity.skating",
-                                                                                              false
+                                                                                              "object/merge",
+                                                                                              "@entity.body",
+                                                                                              {
+                                                                                                "grounded": "@fgrounded",
+                                                                                                "vx": [
+                                                                                                  "if",
+                                                                                                  [
+                                                                                                    "or",
+                                                                                                    [
+                                                                                                      "==",
+                                                                                                      "@nx",
+                                                                                                      "@config.xMin"
+                                                                                                    ],
+                                                                                                    [
+                                                                                                      "==",
+                                                                                                      "@nx",
+                                                                                                      "@config.xMax"
+                                                                                                    ]
+                                                                                                  ],
+                                                                                                  0.0,
+                                                                                                  "@vx3"
+                                                                                                ],
+                                                                                                "vy": "@fvy",
+                                                                                                "x": "@nx",
+                                                                                                "y": "@fy"
+                                                                                              }
                                                                                             ]
                                                                                           ],
                                                                                           [
-                                                                                            "emit",
-                                                                                            "BODY_SKATE_START",
-                                                                                            {
-                                                                                              "slope": "@slope",
-                                                                                              "x": "@nx",
-                                                                                              "y": "@fy"
-                                                                                            }
+                                                                                            "set",
+                                                                                            "@entity.skating",
+                                                                                            "@skateNow"
                                                                                           ],
-                                                                                          null
-                                                                                        ],
-                                                                                        [
-                                                                                          "if",
                                                                                           [
-                                                                                            "and",
+                                                                                            "if",
                                                                                             [
-                                                                                              "==",
+                                                                                              "and",
                                                                                               "@skateNow",
-                                                                                              false
+                                                                                              [
+                                                                                                "==",
+                                                                                                "@entity.skating",
+                                                                                                false
+                                                                                              ]
                                                                                             ],
                                                                                             [
-                                                                                              "==",
-                                                                                              "@entity.skating",
-                                                                                              true
-                                                                                            ]
+                                                                                              "emit",
+                                                                                              "BODY_SKATE_START",
+                                                                                              {
+                                                                                                "slope": "@slope",
+                                                                                                "x": "@nx",
+                                                                                                "y": "@fy"
+                                                                                              }
+                                                                                            ],
+                                                                                            null
                                                                                           ],
                                                                                           [
-                                                                                            "emit",
-                                                                                            "BODY_SKATE_END",
-                                                                                            {
-                                                                                              "x": "@nx",
-                                                                                              "y": "@fy"
-                                                                                            }
-                                                                                          ],
-                                                                                          null
-                                                                                        ],
-                                                                                        [
-                                                                                          "if",
-                                                                                          [
-                                                                                            "and",
-                                                                                            "@landed",
+                                                                                            "if",
                                                                                             [
-                                                                                              "==",
-                                                                                              "@entity.body.grounded",
-                                                                                              false
-                                                                                            ]
-                                                                                          ],
-                                                                                          [
-                                                                                            "emit",
-                                                                                            "BODY_LANDED",
-                                                                                            {
-                                                                                              "impact": [
-                                                                                                "*",
-                                                                                                "@vy1",
-                                                                                                "@gdir"
+                                                                                              "and",
+                                                                                              [
+                                                                                                "==",
+                                                                                                "@skateNow",
+                                                                                                false
                                                                                               ],
-                                                                                              "x": "@nx",
-                                                                                              "y": "@fy"
-                                                                                            }
+                                                                                              [
+                                                                                                "==",
+                                                                                                "@entity.skating",
+                                                                                                true
+                                                                                              ]
+                                                                                            ],
+                                                                                            [
+                                                                                              "emit",
+                                                                                              "BODY_SKATE_END",
+                                                                                              {
+                                                                                                "x": "@nx",
+                                                                                                "y": "@fy"
+                                                                                              }
+                                                                                            ],
+                                                                                            null
                                                                                           ],
-                                                                                          null
-                                                                                        ],
-                                                                                        [
-                                                                                          "if",
                                                                                           [
-                                                                                            "!=",
-                                                                                            "@hazardHit",
+                                                                                            "if",
+                                                                                            [
+                                                                                              "and",
+                                                                                              "@landed",
+                                                                                              [
+                                                                                                "==",
+                                                                                                "@entity.body.grounded",
+                                                                                                false
+                                                                                              ]
+                                                                                            ],
+                                                                                            [
+                                                                                              "emit",
+                                                                                              "BODY_LANDED",
+                                                                                              {
+                                                                                                "impact": [
+                                                                                                  "*",
+                                                                                                  "@vy1",
+                                                                                                  "@gdir"
+                                                                                                ],
+                                                                                                "x": "@nx",
+                                                                                                "y": "@fy"
+                                                                                              }
+                                                                                            ],
                                                                                             null
                                                                                           ],
                                                                                           [
                                                                                             "if",
                                                                                             [
                                                                                               "!=",
-                                                                                              "@entity.hazardId",
-                                                                                              [
-                                                                                                "object/get",
-                                                                                                "@hazardHit",
-                                                                                                "id",
-                                                                                                ""
-                                                                                              ]
+                                                                                              "@hazardHit",
+                                                                                              null
                                                                                             ],
                                                                                             [
-                                                                                              "do",
+                                                                                              "if",
                                                                                               [
-                                                                                                "set",
+                                                                                                "!=",
                                                                                                 "@entity.hazardId",
                                                                                                 [
                                                                                                   "object/get",
@@ -2632,51 +2666,51 @@
                                                                                                 ]
                                                                                               ],
                                                                                               [
-                                                                                                "emit",
-                                                                                                "BODY_HAZARD",
-                                                                                                {
-                                                                                                  "id": [
+                                                                                                "do",
+                                                                                                [
+                                                                                                  "set",
+                                                                                                  "@entity.hazardId",
+                                                                                                  [
                                                                                                     "object/get",
                                                                                                     "@hazardHit",
                                                                                                     "id",
                                                                                                     ""
-                                                                                                  ],
-                                                                                                  "x": "@nx",
-                                                                                                  "y": "@fy"
-                                                                                                }
-                                                                                              ]
+                                                                                                  ]
+                                                                                                ],
+                                                                                                [
+                                                                                                  "emit",
+                                                                                                  "BODY_HAZARD",
+                                                                                                  {
+                                                                                                    "id": [
+                                                                                                      "object/get",
+                                                                                                      "@hazardHit",
+                                                                                                      "id",
+                                                                                                      ""
+                                                                                                    ],
+                                                                                                    "x": "@nx",
+                                                                                                    "y": "@fy"
+                                                                                                  }
+                                                                                                ]
+                                                                                              ],
+                                                                                              null
                                                                                             ],
-                                                                                            null
-                                                                                          ],
-                                                                                          [
-                                                                                            "set",
-                                                                                            "@entity.hazardId",
-                                                                                            ""
-                                                                                          ]
-                                                                                        ],
-                                                                                        [
-                                                                                          "if",
-                                                                                          [
-                                                                                            "!=",
-                                                                                            "@goalHit",
-                                                                                            null
+                                                                                            [
+                                                                                              "set",
+                                                                                              "@entity.hazardId",
+                                                                                              ""
+                                                                                            ]
                                                                                           ],
                                                                                           [
                                                                                             "if",
                                                                                             [
                                                                                               "!=",
-                                                                                              "@entity.goalId",
-                                                                                              [
-                                                                                                "object/get",
-                                                                                                "@goalHit",
-                                                                                                "id",
-                                                                                                ""
-                                                                                              ]
+                                                                                              "@goalHit",
+                                                                                              null
                                                                                             ],
                                                                                             [
-                                                                                              "do",
+                                                                                              "if",
                                                                                               [
-                                                                                                "set",
+                                                                                                "!=",
                                                                                                 "@entity.goalId",
                                                                                                 [
                                                                                                   "object/get",
@@ -2686,15 +2720,62 @@
                                                                                                 ]
                                                                                               ],
                                                                                               [
-                                                                                                "emit",
-                                                                                                "BODY_GOAL",
-                                                                                                {
-                                                                                                  "id": [
+                                                                                                "do",
+                                                                                                [
+                                                                                                  "set",
+                                                                                                  "@entity.goalId",
+                                                                                                  [
                                                                                                     "object/get",
                                                                                                     "@goalHit",
                                                                                                     "id",
                                                                                                     ""
-                                                                                                  ],
+                                                                                                  ]
+                                                                                                ],
+                                                                                                [
+                                                                                                  "emit",
+                                                                                                  "BODY_GOAL",
+                                                                                                  {
+                                                                                                    "id": [
+                                                                                                      "object/get",
+                                                                                                      "@goalHit",
+                                                                                                      "id",
+                                                                                                      ""
+                                                                                                    ],
+                                                                                                    "x": "@nx",
+                                                                                                    "y": "@fy"
+                                                                                                  }
+                                                                                                ]
+                                                                                              ],
+                                                                                              null
+                                                                                            ],
+                                                                                            [
+                                                                                              "set",
+                                                                                              "@entity.goalId",
+                                                                                              ""
+                                                                                            ]
+                                                                                          ],
+                                                                                          [
+                                                                                            "if",
+                                                                                            [
+                                                                                              "and",
+                                                                                              "@fellNow",
+                                                                                              [
+                                                                                                "==",
+                                                                                                "@entity.fell",
+                                                                                                false
+                                                                                              ]
+                                                                                            ],
+                                                                                            [
+                                                                                              "do",
+                                                                                              [
+                                                                                                "set",
+                                                                                                "@entity.fell",
+                                                                                                true
+                                                                                              ],
+                                                                                              [
+                                                                                                "emit",
+                                                                                                "BODY_FELL",
+                                                                                                {
                                                                                                   "x": "@nx",
                                                                                                   "y": "@fy"
                                                                                                 }
@@ -2703,56 +2784,22 @@
                                                                                             null
                                                                                           ],
                                                                                           [
-                                                                                            "set",
-                                                                                            "@entity.goalId",
-                                                                                            ""
+                                                                                            "emit",
+                                                                                            "BODY_MOVED",
+                                                                                            {
+                                                                                              "grounded": "@fgrounded",
+                                                                                              "skating": "@skateNow",
+                                                                                              "speed": [
+                                                                                                "math/hypot",
+                                                                                                "@entity.body.vx",
+                                                                                                "@fvy"
+                                                                                              ],
+                                                                                              "vx": "@entity.body.vx",
+                                                                                              "vy": "@fvy",
+                                                                                              "x": "@nx",
+                                                                                              "y": "@fy"
+                                                                                            }
                                                                                           ]
-                                                                                        ],
-                                                                                        [
-                                                                                          "if",
-                                                                                          [
-                                                                                            "and",
-                                                                                            "@fellNow",
-                                                                                            [
-                                                                                              "==",
-                                                                                              "@entity.fell",
-                                                                                              false
-                                                                                            ]
-                                                                                          ],
-                                                                                          [
-                                                                                            "do",
-                                                                                            [
-                                                                                              "set",
-                                                                                              "@entity.fell",
-                                                                                              true
-                                                                                            ],
-                                                                                            [
-                                                                                              "emit",
-                                                                                              "BODY_FELL",
-                                                                                              {
-                                                                                                "x": "@nx",
-                                                                                                "y": "@fy"
-                                                                                              }
-                                                                                            ]
-                                                                                          ],
-                                                                                          null
-                                                                                        ],
-                                                                                        [
-                                                                                          "emit",
-                                                                                          "BODY_MOVED",
-                                                                                          {
-                                                                                            "grounded": "@fgrounded",
-                                                                                            "skating": "@skateNow",
-                                                                                            "speed": [
-                                                                                              "math/hypot",
-                                                                                              "@entity.body.vx",
-                                                                                              "@fvy"
-                                                                                            ],
-                                                                                            "vx": "@entity.body.vx",
-                                                                                            "vy": "@fvy",
-                                                                                            "x": "@nx",
-                                                                                            "y": "@fy"
-                                                                                          }
                                                                                         ]
                                                                                       ]
                                                                                     ]

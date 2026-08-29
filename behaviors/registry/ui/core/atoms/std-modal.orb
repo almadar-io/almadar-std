@@ -64,6 +64,15 @@
         "parent": "trt_01KXG04GVS1W2103BQKJT7KZRZ",
         "renames": []
       },
+      "evt_01M15CRJ6RE1E1ZFKT9Y1PXNZK": {
+        "bakedName": "SEED",
+        "curName": "SEED",
+        "id": "evt_01M15CRJ6RE1E1ZFKT9Y1PXNZK",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04GVS1W2103BQKJT7KZRZ",
+        "renames": []
+      },
       "orb_01KXG04GVS05DXYNB5ZR3H2X72": {
         "bakedName": "ModalRecordOrbital",
         "curName": "ModalRecordOrbital",
@@ -123,6 +132,18 @@
               "inactive",
               "pending"
             ]
+          },
+          {
+            "default": {},
+            "description": "The row an edit-mode OPEN pre-fills from when its payload carries no row. Stashed by SEED — hosts route the surface's loaded event here (e.g. a document look's RecordItemLoaded) so scalar-only action events ({ id }) can still open a fully seeded settings form.",
+            "intrinsic": true,
+            "name": "seedRow",
+            "relation": {
+              "cardinality": "one",
+              "entity": "ModalRecord",
+              "entityId": "ent_01KXG04GVS68RDSK2NDK0G2TT5"
+            },
+            "type": "relation"
           },
           {
             "name": "createdAt",
@@ -291,7 +312,9 @@
             }
           ],
           "entityContract": {
-            "provides": [],
+            "provides": [
+              "seedRow"
+            ],
             "requires": []
           },
           "entityRebindable": true,
@@ -309,6 +332,20 @@
                 "id": "evt_01KXG04GVSS6QBKSCYWMBQWZMS",
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "description": "Stash the row an edit-mode OPEN will pre-fill from. Hosts route the owning surface's loaded event here (e.g. RecordItemLoaded from a document look) so an OPEN carrying only { id } still opens a fully seeded form.",
+                "id": "evt_01M15CRJ6RE1E1ZFKT9Y1PXNZK",
+                "key": "SEED",
+                "name": "Seed",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "ModalRecord"
+                  }
+                ],
+                "synonyms": "preload row, stash record, seed form, prefill",
+                "tier": "domain"
               },
               {
                 "description": "A request to display the modal window.",
@@ -416,6 +453,23 @@
                 "effects": [
                   [
                     "set",
+                    "@entity.seedRow",
+                    [
+                      "object/merge",
+                      "@payload.row",
+                      {}
+                    ]
+                  ]
+                ],
+                "event": "SEED",
+                "eventId": "evt_01M15CRJ6RE1E1ZFKT9Y1PXNZK",
+                "from": "closed",
+                "to": "closed"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
                     "@entity.id",
                     "@payload.id"
                   ],
@@ -445,7 +499,15 @@
                         },
                         {
                           "cancelEvent": "CLOSE",
-                          "entity": "@payload.row",
+                          "entity": [
+                            "object/merge",
+                            "@entity.seedRow",
+                            [
+                              "object/merge",
+                              "@payload.row",
+                              {}
+                            ]
+                          ],
                           "fieldOverrides": "@config.fieldOverrides",
                           "fields": "@config.fields",
                           "mode": "@config.mode",
@@ -469,8 +531,38 @@
                     "@config.mode",
                     "create"
                   ],
-                  "@payload.row"
+                  "@payload.row",
+                  [
+                    "!=",
+                    [
+                      "str/default",
+                      [
+                        "object/get",
+                        "@entity.seedRow",
+                        "id"
+                      ],
+                      ""
+                    ],
+                    ""
+                  ]
                 ],
+                "to": "open"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.seedRow",
+                    [
+                      "object/merge",
+                      "@payload.row",
+                      {}
+                    ]
+                  ]
+                ],
+                "event": "SEED",
+                "eventId": "evt_01M15CRJ6RE1E1ZFKT9Y1PXNZK",
+                "from": "open",
                 "to": "open"
               },
               {

@@ -107,6 +107,7 @@ orbital PlatformerBodyOrbital {
         (let ((rightSamp (if @inRange (array/first (array/filter @config.skateCurve (fn s (> (object/get @s x) @cx)))) { x: 1, y: 0 })))
         (let ((slope (if @inRange (/ (- (object/get @rightSamp y) (object/get @leftSamp y)) (- (object/get @rightSamp x) (object/get @leftSamp x))) 0)))
         (let ((curveY (if @inRange (+ (object/get @leftSamp y) (* @slope (- @cx (object/get @leftSamp x)))) 0)))
+        (let ((gapBreak (and (> @config.skateMaxGap 0) (> (- (object/get @rightSamp x) (object/get @leftSamp x)) @config.skateMaxGap))))
         (let ((curveMod (if (and @config.curveModsEnabled @inRange) (array/find @entity.curveMods (fn m (and (>= @cx (object/get @m x0)) (<= @cx (object/get @m x1))))) null)))
         (let ((modX (if (== @curveMod null) @cx (- @cx (object/get @curveMod h)))))
         (let ((modInRange (and (!= @curveMod null) (and (>= @modX (object/get (array/first @config.skateCurve) x)) (< @modX (object/get (array/last @config.skateCurve) x))))))
@@ -117,7 +118,7 @@ orbital PlatformerBodyOrbital {
         (let ((slope (if (== @curveMod null) @slope (* (object/get @curveMod a) @modSlope))))
         (let ((curveY (if (== @curveMod null) @curveY (+ (* (object/get @curveMod a) @modCurveY) (object/get @curveMod k)))))
         (let ((movingUp (< (* @vy1 @gdir) -0.01)))
-        (let ((skateNow (and @inRange (and (<= (math/abs (- @ny2 @curveY)) @config.skateSnap) (and (or @landed @entity.skating) (or @entity.body.grounded (not @movingUp)))))))
+        (let ((skateNow (and @inRange (and (not @gapBreak) (and (<= (math/abs (- @ny2 @curveY)) @config.skateSnap) (and (or @landed @entity.skating) (or @entity.body.grounded (not @movingUp))))))))
         (let ((vx2 (if @skateNow (math/clamp (+ @entity.body.vx (* (/ (* @config.gravity @slope) (+ 1 (* @slope @slope))) 0.033)) (- 0 @config.maxFallSpeed) @config.maxFallSpeed) @entity.body.vx)))
         (let ((vx3 (if (== @drift null) @vx2 (math/clamp (+ @vx2 (* @dax 0.033)) (- 0 @config.maxFallSpeed) @config.maxFallSpeed))))
         (let ((fy (if @skateNow @curveY @ny2)) (fvy (if @skateNow (* (* @vx2 (math/cos (math/atan @slope))) (math/sin (math/atan @slope))) @vy2)) (fgrounded (or @landed @skateNow)))
@@ -155,7 +156,7 @@ orbital PlatformerBodyOrbital {
                 (set @entity.fell true)
                 (emit BODY_FELL { x: @nx, y: @fy }))
               null)
-            (emit BODY_MOVED { x: @nx, y: @fy, vx: @entity.body.vx, vy: @fvy, grounded: @fgrounded, skating: @skateNow, speed: (math/hypot @entity.body.vx @fvy) })))))))))))))))))))))))))))))))))))))
+            (emit BODY_MOVED { x: @nx, y: @fy, vx: @entity.body.vx, vy: @fvy, grounded: @fgrounded, skating: @skateNow, speed: (math/hypot @entity.body.vx @fvy) }))))))))))))))))))))))))))))))))))))))
     }
 
     emits {
@@ -278,6 +279,10 @@ orbital PlatformerBodyOrbital {
       skateCurve : [PlatformerCurveSample] = []
         @label "Skate Curve"
         @description "Surface samples (x strictly increasing) the body skates when skate is on; y is the surface height for the body's MIN corner, linearly interpolated between bracketing samples — mirror the render-side curve so what you see is what you ride"
+        @tier "domain"
+      skateMaxGap : number = 0
+        @label "Skate Max Gap"
+        @description "Largest x-gap between consecutive skateCurve samples that still counts as surface. 0 = unlimited (sparse two-sample lines skate fine). Dense resampled curves with real gaps between segments (stitched worlds) MUST set this — otherwise the sampler invents a skatable chord across every gap (an invisible line above the bridge/terrain that the body snaps to and glides along)."
         @tier "domain"
       skateSnap : number = 0.75
         @label "Skate Snap"

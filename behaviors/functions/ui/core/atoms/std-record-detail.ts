@@ -113,9 +113,9 @@ export interface StdRecordDetailConfig {
   contentField?: string;
   /** Default: `"panel"` */
   detailLook?: 'panel' | 'slide-over' | 'page' | 'document';
-  /** Default: `{"actions":"@config.actions","className":"w-full","editEvent":"EDIT_CONTENT","editLabel":"@config.editLabel","entity":"@entity.loadedRow","maxInlineActions":"@config.maxInlineActions","placeholder":"@config.placeholder","subtitle":"@entity.description","title":"@entity.name","titleCommitEvent":"TITLE_COMMITTED","type":"document-panel","value":"@entity.content"}` */
+  /** Default: `{"actions":"@config.actions","className":"w-full","editEvent":"EDIT_CONTENT","editLabel":"@config.editLabel","id":"@entity.id","maxInlineActions":"@config.maxInlineActions","placeholder":"@config.placeholder","subtitle":"@entity.description","title":"@entity.name","titleCommitEvent":"TITLE_COMMITTED","type":"document-panel","value":"@entity.content"}` */
   documentBodyContent?: unknown;
-  /** Default: `{"actions":"@config.actions","autosaveHint":"@config.autosaveHint","className":"w-full","contentChangeEvent":"CONTENT_CHANGE","doneEvent":"DONE_EDITING","doneLabel":"@config.doneLabel","editing":true,"entity":"@entity.loadedRow","maxInlineActions":"@config.maxInlineActions","placeholder":"@config.placeholder","subtitle":"@entity.description","title":"@entity.name","titleCommitEvent":"TITLE_COMMITTED","type":"document-panel","value":"@entity.content"}` */
+  /** Default: `{"actions":"@config.actions","autosaveHint":"@config.autosaveHint","className":"w-full","contentChangeEvent":"CONTENT_CHANGE","doneEvent":"DONE_EDITING","doneLabel":"@config.doneLabel","editing":true,"id":"@entity.id","maxInlineActions":"@config.maxInlineActions","placeholder":"@config.placeholder","subtitle":"@entity.description","title":"@entity.name","titleCommitEvent":"TITLE_COMMITTED","type":"document-panel","value":"@entity.content"}` */
   documentEditingContent?: unknown;
   /** Default: `"Done"` */
   doneLabel?: string;
@@ -334,7 +334,7 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
           },
           {
             'default': {},
-            'description': 'The full row exactly as last fetched (relations hydrated when config.include asks). The document look binds it as the panel\'s entity and hands it to header actions as ?row, so a settings modal seeds from the real record instead of the atom\'s four mapped columns.',
+            'description': 'The full row exactly as last fetched (relations hydrated when config.include asks). The details drawer binds it, and hosts that need it (e.g. a settings modal) stash it from RecordItemLoaded — the document panel itself takes only scalar props and emits scalar payloads ({ id, title }).',
             'intrinsic': true,
             'name': 'loadedRow',
             'type': 'object',
@@ -472,7 +472,7 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
               'className': 'w-full',
               'editEvent': 'EDIT_CONTENT',
               'editLabel': '@config.editLabel',
-              'entity': '@entity.loadedRow',
+              'id': '@entity.id',
               'maxInlineActions': '@config.maxInlineActions',
               'placeholder': '@config.placeholder',
               'subtitle': '@entity.description',
@@ -495,7 +495,7 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
               'doneEvent': 'DONE_EDITING',
               'doneLabel': '@config.doneLabel',
               'editing': true,
-              'entity': '@entity.loadedRow',
+              'id': '@entity.id',
               'maxInlineActions': '@config.maxInlineActions',
               'placeholder': '@config.placeholder',
               'subtitle': '@entity.description',

@@ -20,7 +20,7 @@ orbital RecordItemOrbital {
     status : "active" | "inactive" | "pending" @description "The record's current state." @synonyms "state, condition, stage" = active
     slug : string @description "URL-friendly identifier, for records opened by address instead of id." @synonyms "permalink, url key, address" = ""
     content : string @description "The record's rich-text body as HTML, edited in place by the document look." @synonyms "body, text, document, article body" = ""
-    loadedRow : object @intrinsic @description "The full row exactly as last fetched (relations hydrated when config.include asks). The document look binds it as the panel's entity and hands it to header actions as ?row, so a settings modal seeds from the real record instead of the atom's four mapped columns." = {}
+    loadedRow : object @intrinsic @description "The full row exactly as last fetched (relations hydrated when config.include asks). The details drawer binds it, and hosts that need it (e.g. a settings modal) stash it from RecordItemLoaded — the document panel itself takes only scalar props and emits scalar payloads ({ id, title })." = {}
     openDraft : string @intrinsic @description "Set from the navigate payload when the surface was opened on a record that was JUST minted blank; read once the row loads to decide whether the document body opens authoring (draft) or read-only. Absent on a refresh or a normal open, so the draft entry never repeats." @synonyms "new document, just created, draft open" = ""
     createdAt : string
   }
@@ -589,7 +589,7 @@ orbital RecordItemOrbital {
         actions: @config.actions
         editEvent: EDIT_CONTENT
         editLabel: @config.editLabel
-        entity: @entity.loadedRow
+        id: @entity.id
         maxInlineActions: @config.maxInlineActions
         placeholder: @config.placeholder
         subtitle: @entity.description
@@ -609,7 +609,7 @@ orbital RecordItemOrbital {
         doneEvent: DONE_EDITING
         doneLabel: @config.doneLabel
         editing: true
-        entity: @entity.loadedRow
+        id: @entity.id
         maxInlineActions: @config.maxInlineActions
         placeholder: @config.placeholder
         subtitle: @entity.description

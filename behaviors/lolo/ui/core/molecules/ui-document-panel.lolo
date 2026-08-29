@@ -2,7 +2,6 @@ app ui-document-panel "1.0.0"
 "DocumentPanel — a record rendered as one continuous document: editable title over the rich-text body, editing controls tucked into the header corner. — UI factory (1:1 with the @almadar/ui document-panel pattern)."
 ;; @capabilities "document page, note editor, wiki page, article editor, writing surface, rich text document, content editing canvas"
 orbital DocumentPanelOrbital {
-    type DocumentPanelLoaded = Event { data : [DocumentPanelItem] } "DocumentPanel rows finished loading; payload.data holds the collection"
   type DocumentPanelActionsItem = {
     label : string!
     event : string
@@ -21,31 +20,9 @@ orbital DocumentPanelOrbital {
 
     state idle {
       INIT -> idle
-        (fetch DocumentPanelItem { emit: { success: DocumentPanelLoaded } })
         (set @entity.title @config.title)
         (set @entity.value @config.value)
         (render-ui main {
-          entity: @entity
-          title: @entity.title
-          subtitle: @config.subtitle
-          value: @entity.value
-          actions: @config.actions
-          maxInlineActions: @config.maxInlineActions
-          editing: @config.editing
-          titleCommitEvent: @config.titleCommitEvent
-          contentChangeEvent: @config.contentChangeEvent
-          editEvent: @config.editEvent
-          doneEvent: @config.doneEvent
-          editLabel: @config.editLabel
-          doneLabel: @config.doneLabel
-          autosaveHint: @config.autosaveHint
-          placeholder: @config.placeholder
-          className: @config.className
-          type: document-panel
-        })
-      DocumentPanelLoaded -> idle
-        (render-ui main {
-          entity: @payload.data
           title: @entity.title
           subtitle: @config.subtitle
           value: @entity.value
@@ -66,7 +43,6 @@ orbital DocumentPanelOrbital {
       TITLE_COMMIT -> idle
         (set @entity.title ?title)
         (render-ui main {
-          entity: @entity
           title: @entity.title
           subtitle: @config.subtitle
           value: @entity.value
@@ -87,7 +63,6 @@ orbital DocumentPanelOrbital {
       CONTENT_CHANGE -> idle
         (set @entity.value ?value)
         (render-ui main {
-          entity: @entity
           title: @entity.title
           subtitle: @config.subtitle
           value: @entity.value
@@ -128,10 +103,6 @@ orbital DocumentPanelOrbital {
         id : string!
       }
         @description "Emitted by the Done button that ends the editing session: { id }"
-        @tier "essential"
-      DocumentPanelLoaded
-        @description "DocumentPanel rows finished loading; payload.data holds the collection."
-        @synonyms "loaded, fetched, retrieved"
         @tier "essential"
     }
 

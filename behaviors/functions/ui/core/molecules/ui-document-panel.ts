@@ -30,7 +30,7 @@ const ALIAS = 'UiDocumentPanel';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiDocumentPanelEventKey = 'CONTENT_CHANGE' | 'DONE' | 'DocumentPanelLoaded' | 'EDIT' | 'INIT' | 'TITLE_COMMIT';
+export type StdUiDocumentPanelEventKey = 'CONTENT_CHANGE' | 'DONE' | 'EDIT' | 'INIT' | 'TITLE_COMMIT';
 
 /**
  * Payload shape for the `TITLE_COMMIT` event.
@@ -59,13 +59,6 @@ export interface StdUiDocumentPanelEditPayload {
  */
 export interface StdUiDocumentPanelDonePayload {
   id: string;
-}
-
-/**
- * Payload shape for the `DocumentPanelLoaded` event.
- */
-export interface StdUiDocumentPanelDocumentPanelLoadedPayload {
-  data?: EntityRow[];
 }
 
 /**

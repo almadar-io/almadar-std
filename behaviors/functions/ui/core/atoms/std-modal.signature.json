@@ -28,6 +28,18 @@
             "required": false,
             "description": "Current operational state of the record.",
             "synonyms": "state, condition, flag"
+          },
+          {
+            "name": "seedRow",
+            "type": "relation",
+            "required": false,
+            "intrinsic": true,
+            "description": "The row an edit-mode OPEN pre-fills from when its payload carries no row. Stashed by SEED — hosts route the surface's loaded event here (e.g. a document look's RecordItemLoaded) so scalar-only action events ({ id }) can still open a fully seeded settings form.",
+            "relation": {
+              "cardinality": "one",
+              "entity": "ModalRecord",
+              "entityId": "ent_01KXG04GVS68RDSK2NDK0G2TT5"
+            }
           }
         ],
         "persistence": "runtime"
@@ -75,6 +87,13 @@
           {
             "name": "INIT",
             "direction": "listen"
+          },
+          {
+            "name": "SEED",
+            "direction": "listen",
+            "description": "Stash the row an edit-mode OPEN will pre-fill from. Hosts route the owning surface's loaded event here (e.g. RecordItemLoaded from a document look) so an OPEN carrying only { id } still opens a fully seeded form.",
+            "synonyms": "preload row, stash record, seed form, prefill",
+            "tier": "domain"
           },
           {
             "name": "OPEN",
@@ -181,12 +200,15 @@
           "CLOSE",
           "INIT",
           "OPEN",
-          "SAVE"
+          "SAVE",
+          "SEED"
         ],
         "entityRebindable": true,
         "entityContract": {
           "requires": [],
-          "provides": []
+          "provides": [
+            "seedRow"
+          ]
         },
         "effectEntityRefs": [
           "ModalRecord"

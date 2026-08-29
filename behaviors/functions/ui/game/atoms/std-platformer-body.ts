@@ -134,6 +134,8 @@ export interface StdPlatformerBodyConfig {
   skate?: boolean;
   /** Default: `[]` */
   skateCurve?: EntityRow[];
+  /** Default: `0` */
+  skateMaxGap?: number;
   /** Default: `0.75` */
   skateSnap?: number;
   /** Default: `{"facingRight":true,"grounded":false,"height":0.6,"vx":0,"vy":0,"width":0.6,"x":2,"y":8}` */
