@@ -206,7 +206,7 @@ export function stdSearchSearchResultOrbital(params: StdSearchSearchResultOrbita
             'description': 'Event emitted when the user submits a query',
             'label': 'Search event',
             'tier': 'internal',
-            'type': 'string',
+            'type': 'event',
           },
           'placeholder': {
             'default': 'Search…',

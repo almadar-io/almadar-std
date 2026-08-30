@@ -254,7 +254,7 @@ export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSu
             'description': 'Optional dismiss handler.',
             'label': 'On Close',
             'tier': 'presentation',
-            'type': 'string',
+            'type': 'event',
           },
           'open': {
             'default': false,

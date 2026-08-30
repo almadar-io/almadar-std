@@ -105,6 +105,8 @@ export interface StdRecordDetailTitleCommittedPayload {
 export interface StdRecordDetailConfig {
   /** Default: `[{"event":"EDIT","label":"Edit","variant":"secondary"},{"event":"DELETE","label":"Delete","variant":"danger"}]` */
   actions?: EntityRow[];
+  /** Default: `true` */
+  allowEdit?: boolean;
   /** Default: `"Saves as you type"` */
   autosaveHint?: string;
   /** Default: `{"children":[{"actions":"@config.actions","entity":"@payload.data","fields":"@config.fields","initialData":"@payload.data","maxInlineActions":"@config.maxInlineActions","sections":"@config.sections","showActions":"@config.showActions","subtitle":"@entity.description","title":"@entity.name","type":"detail-panel"}],"direction":"vertical","gap":"lg","type":"stack"}` */
@@ -115,7 +117,7 @@ export interface StdRecordDetailConfig {
   coverField?: string;
   /** Default: `"panel"` */
   detailLook?: 'panel' | 'slide-over' | 'page' | 'document';
-  /** Default: `{"actions":"@config.actions","className":"w-full","coverImage":"@entity.coverUrl","editEvent":"EDIT_CONTENT","editLabel":"@config.editLabel","icon":"@entity.iconName","id":"@entity.id","maxInlineActions":"@config.maxInlineActions","placeholder":"@config.placeholder","subtitle":"@entity.description","title":"@entity.name","titleCommitEvent":"TITLE_COMMITTED","type":"document-panel","value":"@entity.content"}` */
+  /** Default: `{"actions":"@config.actions","className":"w-full","coverImage":"@entity.coverUrl","editEvent":["if","@config.allowEdit","EDIT_CONTENT",null],"editLabel":"@config.editLabel","icon":"@entity.iconName","id":"@entity.id","maxInlineActions":"@config.maxInlineActions","placeholder":"@config.placeholder","subtitle":"@entity.description","title":"@entity.name","titleCommitEvent":["if","@config.allowEdit","TITLE_COMMITTED",null],"type":"document-panel","value":"@entity.content"}` */
   documentBodyContent?: unknown;
   /** Default: `{"actions":"@config.actions","autosaveHint":"@config.autosaveHint","className":"w-full","contentChangeEvent":"CONTENT_CHANGE","coverImage":"@entity.coverUrl","doneEvent":"DONE_EDITING","doneLabel":"@config.doneLabel","editing":true,"icon":"@entity.iconName","id":"@entity.id","maxInlineActions":"@config.maxInlineActions","placeholder":"@config.placeholder","subtitle":"@entity.description","title":"@entity.name","titleCommitEvent":"TITLE_COMMITTED","type":"document-panel","value":"@entity.content"}` */
   documentEditingContent?: unknown;
@@ -430,6 +432,14 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
             'tier': 'presentation',
             'type': '[RecordAction]',
           },
+          'allowEdit': {
+            'default': true,
+            'description': 'When false the document look is a pure read surface: no header Edit button, no click-to-edit body, no click-to-rename title. Hosts pass a role condition here so read-only viewers get the page without its authoring affordances; the entity\'s own access predicates stay the enforcement floor.',
+            'label': 'Allow editing the document?',
+            'synonyms': 'read only document, viewer mode, can edit, editing allowed',
+            'tier': 'policy',
+            'type': 'boolean',
+          },
           'autosaveHint': {
             'default': 'Saves as you type',
             'description': 'Muted caption next to the Done button telling the author their work persists on its own.',
@@ -497,7 +507,12 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
               'actions': '@config.actions',
               'className': 'w-full',
               'coverImage': '@entity.coverUrl',
-              'editEvent': 'EDIT_CONTENT',
+              'editEvent': [
+                'if',
+                '@config.allowEdit',
+                'EDIT_CONTENT',
+                null,
+              ],
               'editLabel': '@config.editLabel',
               'icon': '@entity.iconName',
               'id': '@entity.id',
@@ -505,7 +520,12 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
               'placeholder': '@config.placeholder',
               'subtitle': '@entity.description',
               'title': '@entity.name',
-              'titleCommitEvent': 'TITLE_COMMITTED',
+              'titleCommitEvent': [
+                'if',
+                '@config.allowEdit',
+                'TITLE_COMMITTED',
+                null,
+              ],
               'type': 'document-panel',
               'value': '@entity.content',
             },
@@ -1554,6 +1574,23 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                 ],
               ],
               'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  null,
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'guard': [
+                '=',
+                '@config.openOn',
+                'event',
+              ],
+              'to': 'idle',
             },
             {
               'event': 'CONTENT_SAVED',

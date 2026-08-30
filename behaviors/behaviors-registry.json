@@ -1,5 +1,5 @@
 {
-  "$generated": "2026-08-29T18:34:22.509Z",
+  "$generated": "2026-08-30T10:13:23.777Z",
   "$source": "tools/almadar-pattern-sync/behaviors",
   "$package": "@almadar/std",
   "totalBehaviors": 452,
@@ -1774,7 +1774,7 @@
       "topic": "infra",
       "family": "infra",
       "layer": "UI Patterns",
-      "description": "std-approval-gate — generic approval gate / approver workflow. Use when a user voices that an action must be reviewed, approved, signed off, or authorized by a privileged role before it proceeds (admin approval, supervisor sign-off, manager approval, gatekeeper review, editor approval, senior editor approval, reviewer approval, publishing approval, draft approval, content review, submit drafts then editors review and approve or reject, needs approval before going live, requires sign-off before publish). Persists ApprovalRequest rows + surfaces the PENDING ones in a review queue showing what is being approved and who asked, with Approve / Deny actions — Deny captures a written reason. approverRoles is ENFORCED by the review transitions themselves: an APPROVE/DENY from a viewer whose role is not listed does not fire. On approval emits ApprovalGranted; on denial emits ApprovalDenied (with the reason). Hosts that replay the gated action MUST route a failed replay back via APPROVAL_REPLAY_FAILED so the request reopens instead of being silently consumed. Compose onto any orbital whose action you want to gate: the target orbital emits an external event, an ApprovalRequest row is created (stamp subjectLabel/subjectId/requestedBy so reviewers see what they are judging), and downstream effects wait on ApprovalGranted. Differs from std-mod-queue, which is content-moderation-specific.",
+      "description": "std-approval-gate — generic approval gate / approver workflow. Use when a user voices that an action must be reviewed, approved, signed off, or authorized by a privileged role before it proceeds (admin approval, supervisor sign-off, manager approval, gatekeeper review, editor approval, senior editor approval, reviewer approval, publishing approval, draft approval, content review, submit drafts then editors review and approve or reject, needs approval before going live, requires sign-off before publish). Persists ApprovalRequest rows + surfaces the PENDING ones in a review queue showing what is being approved and who asked, with Approve / Deny actions — Deny captures a written reason. approverRoles is ENFORCED by the review transitions themselves: an APPROVE/DENY from a viewer whose role is not listed does not fire. blockSelfApproval additionally stops a reviewer approving their own request (four-eyes) — DENY stays allowed as self-withdrawal. On approval emits ApprovalGranted; on denial emits ApprovalDenied (with the reason). Hosts that replay the gated action MUST route a failed replay back via APPROVAL_REPLAY_FAILED so the request reopens instead of being silently consumed. Compose onto any orbital whose action you want to gate: the target orbital emits an external event, an ApprovalRequest row is created (stamp subjectLabel/subjectId/requestedBy so reviewers see what they are judging), and downstream effects wait on ApprovalGranted. Differs from std-mod-queue, which is content-moderation-specific.",
       "defaultOrbitalName": "ApprovalGateOrbital",
       "statePattern": "denying, error, idle, loading, reviewing",
       "complexity": {
@@ -9581,6 +9581,7 @@
         "std-modifier-group",
         "std-multi-party-flow",
         "std-nonprofit-donations",
+        "std-note",
         "std-notification-panel",
         "std-pagination",
         "std-property-mgmt",
@@ -15843,7 +15844,7 @@
       "complexity": {
         "states": 5,
         "events": 15,
-        "transitions": 33
+        "transitions": 34
       },
       "defaultEntity": {
         "name": "RecordItem",
@@ -20404,13 +20405,13 @@
       "topic": "ui/core",
       "family": "ui/core",
       "layer": "UI Patterns",
-      "description": "std-thread — forum-style nested replies with collapse + flat-mode toggle. Owns ThreadPost (persistent). flat:true covers 1:1 linear inquiry threads; flat:false renders forum-style nested. INIT fetches, scoped by @config.threadRootId when set (blank = every root, the default). REPLY persists a child post under @payload.parentId, stamped with the real @user identity. A consumer that mounts this as page comments forwards its own document-opened signal to SET_THREAD_ROOT { rootId }, which stamps the frame and refetches filtered by the payload; the after-create and after-select refetch arms keep filtering by @config.threadRootId, so a mutation re-widens the panel until the consumer re-fires SET_THREAD_ROOT. Layer 3 variants override `bodyContent` to deliver chat-bubble, email-threaded, or linear-comments UX while inheriting the same trait, state machine, emits, and listens.",
+      "description": "std-thread — forum-style nested replies with collapse + flat-mode toggle. Owns ThreadPost (persistent). flat:true covers 1:1 linear inquiry threads; flat:false renders forum-style nested. INIT fetches, scoped by @config.threadRootId when set (blank = every root, the default). REPLY persists a child post under @payload.parentId, stamped with the real @user identity. A consumer that mounts this as page comments forwards its own document-opened signal to SET_THREAD_ROOT { rootId }, which stamps the frame and refetches filtered by the payload; the after-create and after-select refetch arms keep filtering by @config.threadRootId, so a mutation re-widens the panel until the consumer re-fires SET_THREAD_ROOT. Layer 3 variants override `bodyContent` to deliver chat-bubble, email-threaded, or linear-comments UX while inheriting the same trait, state machine, emits, and listens. A non-empty sectionTitle switches the default bodyContent into titled-comments mode: header + post list + a standalone composer button (without it an empty thread has no REPLY emitter at all — the affordance only existed per-row).",
       "defaultOrbitalName": "ThreadPostOrbital",
       "statePattern": "browsing, error, loading, replying",
       "complexity": {
         "states": 4,
         "events": 11,
-        "transitions": 21
+        "transitions": 24
       },
       "defaultEntity": {
         "name": "ThreadPost",
@@ -20741,10 +20742,10 @@
         "REPLY",
         "ThreadPostCreated",
         "SELECT",
-        "ThreadPostCreateFailed",
         "EDIT_REPLY",
         "SUBMIT_REPLY",
-        "CANCEL_REPLY"
+        "CANCEL_REPLY",
+        "ThreadPostCreateFailed"
       ],
       "eventPayloads": {},
       "exposure": "both",

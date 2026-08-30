@@ -1,5 +1,5 @@
 {
-  "description": "std-thread — forum-style nested replies with collapse + flat-mode toggle. Owns ThreadPost (persistent). flat:true covers 1:1 linear inquiry threads; flat:false renders forum-style nested. INIT fetches, scoped by @config.threadRootId when set (blank = every root, the default). REPLY persists a child post under @payload.parentId, stamped with the real @user identity. A consumer that mounts this as page comments forwards its own document-opened signal to SET_THREAD_ROOT { rootId }, which stamps the frame and refetches filtered by the payload; the after-create and after-select refetch arms keep filtering by @config.threadRootId, so a mutation re-widens the panel until the consumer re-fires SET_THREAD_ROOT. Layer 3 variants override `bodyContent` to deliver chat-bubble, email-threaded, or linear-comments UX while inheriting the same trait, state machine, emits, and listens.",
+  "description": "std-thread — forum-style nested replies with collapse + flat-mode toggle. Owns ThreadPost (persistent). flat:true covers 1:1 linear inquiry threads; flat:false renders forum-style nested. INIT fetches, scoped by @config.threadRootId when set (blank = every root, the default). REPLY persists a child post under @payload.parentId, stamped with the real @user identity. A consumer that mounts this as page comments forwards its own document-opened signal to SET_THREAD_ROOT { rootId }, which stamps the frame and refetches filtered by the payload; the after-create and after-select refetch arms keep filtering by @config.threadRootId, so a mutation re-widens the panel until the consumer re-fires SET_THREAD_ROOT. Layer 3 variants override `bodyContent` to deliver chat-bubble, email-threaded, or linear-comments UX while inheriting the same trait, state machine, emits, and listens. A non-empty sectionTitle switches the default bodyContent into titled-comments mode: header + post list + a standalone composer button (without it an empty thread has no REPLY emitter at all — the affordance only existed per-row).",
   "ledger": {
     "entries": {
       "ent_01KXG04HSZB16HRNNZWKASR1J1": {
@@ -244,6 +244,24 @@
             "bodyContent": {
               "default": {
                 "children": [
+                  [
+                    "if",
+                    [
+                      "!=",
+                      "@config.sectionTitle",
+                      ""
+                    ],
+                    {
+                      "content": "@config.sectionTitle",
+                      "type": "typography",
+                      "variant": "h4"
+                    },
+                    {
+                      "children": [],
+                      "gap": "none",
+                      "type": "stack"
+                    }
+                  ],
                   {
                     "entity": "@payload.data",
                     "fields": [
@@ -274,7 +292,27 @@
                     "look": "@config.tableLook",
                     "type": "data-list",
                     "variant": "card"
-                  }
+                  },
+                  [
+                    "if",
+                    [
+                      "!=",
+                      "@config.sectionTitle",
+                      ""
+                    ],
+                    {
+                      "action": "REPLY",
+                      "icon": "message-square",
+                      "label": "@config.composerLabel",
+                      "type": "button",
+                      "variant": "secondary"
+                    },
+                    {
+                      "children": [],
+                      "gap": "none",
+                      "type": "stack"
+                    }
+                  ]
                 ],
                 "direction": "vertical",
                 "gap": "md",
@@ -284,6 +322,14 @@
               "label": "Body content tree",
               "tier": "internal",
               "type": "render-ui"
+            },
+            "composerLabel": {
+              "default": "Add comment",
+              "description": "Label of the standalone composer button rendered under the post list when sectionTitle is non-empty.",
+              "label": "composerLabel",
+              "synonyms": "reply label, comment button, add comment",
+              "tier": "presentation",
+              "type": "string"
             },
             "detailAuthorBinding": {
               "default": "@entity.focusedRow.authorName",
@@ -391,9 +437,10 @@
               "type": "string"
             },
             "sectionTitle": {
-              "default": "Discussion",
-              "description": "Section header for linear-comment threads.",
+              "default": "",
+              "description": "Section header rendered by the default bodyContent when non-empty, along with a standalone composer button — the only REPLY affordance an empty thread has. Blank (the default) keeps the bare post list for embedded threads that bring their own chrome (chat rails, custom comment sections).",
               "label": "sectionTitle",
+              "synonyms": "header, comments title, discussion title",
               "tier": "presentation",
               "type": "string"
             },
@@ -476,16 +523,9 @@
               "tier": "presentation"
             },
             {
-              "description": "Signals a new reply has been successfully submitted.",
+              "description": "Signals the composed draft should be persisted as a new post — the draft is read from the entity frame (@entity.content), so bare buttons can emit it.",
               "event": "SUBMIT_REPLY",
               "eventId": "evt_01KXG04HT2SVG59Q3330PV094S",
-              "payloadSchema": [
-                {
-                  "name": "data",
-                  "required": true,
-                  "type": "@entity"
-                }
-              ],
               "synonyms": "post, send, add, publish",
               "tier": "domain"
             },
@@ -527,66 +567,61 @@
               "tier": "internal"
             },
             {
-              "description": "A new post has been added to the thread.",
+              "description": "A new post has been added to the thread — payload is the created ThreadPost row itself (flat: ?id, ?threadRootId, ?authorId, ?content, …), not wrapped under a row field.",
               "event": "ThreadPostCreated",
               "eventId": "evt_01KXG04HT2S9KW2Z1Y8QEM91RG",
               "payloadSchema": [
                 {
-                  "name": "row",
-                  "properties": [
-                    {
-                      "name": "id",
-                      "required": true,
-                      "type": "string"
-                    },
-                    {
-                      "name": "parentId",
-                      "type": "string"
-                    },
-                    {
-                      "name": "threadRootId",
-                      "required": true,
-                      "type": "string"
-                    },
-                    {
-                      "name": "authorId",
-                      "required": true,
-                      "type": "string"
-                    },
-                    {
-                      "name": "authorName",
-                      "required": true,
-                      "type": "string"
-                    },
-                    {
-                      "name": "content",
-                      "required": true,
-                      "type": "string"
-                    },
-                    {
-                      "name": "createdAt",
-                      "type": "string"
-                    },
-                    {
-                      "name": "voteCount",
-                      "type": "number"
-                    },
-                    {
-                      "name": "replyCount",
-                      "type": "number"
-                    },
-                    {
-                      "name": "replies",
-                      "type": "[ThreadPost]"
-                    },
-                    {
-                      "name": "focusedRow",
-                      "type": "object"
-                    }
-                  ],
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "parentId",
+                  "type": "string"
+                },
+                {
+                  "name": "threadRootId",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "authorId",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "authorName",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "content",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "string"
+                },
+                {
+                  "name": "voteCount",
+                  "type": "number"
+                },
+                {
+                  "name": "replyCount",
+                  "type": "number"
+                },
+                {
+                  "name": "replies",
+                  "type": "[ThreadPost]"
+                },
+                {
+                  "name": "focusedRow",
                   "type": "object"
                 }
               ],
+              "scope": "internal",
               "synonyms": "new post, added, created",
               "tier": "domain"
             },
@@ -703,14 +738,59 @@
                 "tier": "domain"
               },
               {
-                "description": "A new post has been added to the thread.",
+                "description": "A new post has been added to the thread — payload is the created ThreadPost row itself (flat: ?id, ?threadRootId, ?authorId, ?content, …), not wrapped under a row field.",
                 "id": "evt_01KXG04HT2S9KW2Z1Y8QEM91RG",
                 "key": "ThreadPostCreated",
                 "name": "ThreadPost created",
                 "payloadSchema": [
                   {
-                    "name": "row",
-                    "type": "ThreadPost"
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "parentId",
+                    "type": "string"
+                  },
+                  {
+                    "name": "threadRootId",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "authorId",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "authorName",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "content",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "createdAt",
+                    "type": "string"
+                  },
+                  {
+                    "name": "voteCount",
+                    "type": "number"
+                  },
+                  {
+                    "name": "replyCount",
+                    "type": "number"
+                  },
+                  {
+                    "name": "replies",
+                    "type": "[ThreadPost]"
+                  },
+                  {
+                    "name": "focusedRow",
+                    "type": "object"
                   }
                 ],
                 "synonyms": "new post, added, created",
@@ -736,6 +816,37 @@
                 "tier": "domain"
               },
               {
+                "description": "Indicates a reply has been modified.",
+                "id": "evt_01KXG04HT2GQ7QZ9H7H2CSS4VS",
+                "key": "EDIT_REPLY",
+                "name": "Edit Reply",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "update, change, modify",
+                "tier": "presentation"
+              },
+              {
+                "description": "Signals the composed draft should be persisted as a new post — the draft is read from the entity frame (@entity.content), so bare buttons can emit it.",
+                "id": "evt_01KXG04HT2SVG59Q3330PV094S",
+                "key": "SUBMIT_REPLY",
+                "name": "Submit Reply",
+                "synonyms": "post, send, add, publish",
+                "tier": "domain"
+              },
+              {
+                "description": "Indicates a reply creation was aborted by the user.",
+                "id": "evt_01KXG04HT2KDPZ646GR34VC5CT",
+                "key": "CANCEL_REPLY",
+                "name": "Cancel Reply",
+                "synonyms": "abort, dismiss, undo, cancel",
+                "tier": "presentation"
+              },
+              {
                 "description": "Indicates a failure to create a new thread post.",
                 "id": "evt_01KXG04HT2KXB6ZCGAN1Z58Y51",
                 "key": "ThreadPostCreateFailed",
@@ -752,44 +863,6 @@
                 ],
                 "synonyms": "error, failed, creation failed",
                 "tier": "internal"
-              },
-              {
-                "description": "Indicates a reply has been modified.",
-                "id": "evt_01KXG04HT2GQ7QZ9H7H2CSS4VS",
-                "key": "EDIT_REPLY",
-                "name": "Edit Reply",
-                "payloadSchema": [
-                  {
-                    "name": "value",
-                    "required": true,
-                    "type": "string"
-                  }
-                ],
-                "synonyms": "update, change, modify",
-                "tier": "presentation"
-              },
-              {
-                "description": "Signals a new reply has been successfully submitted.",
-                "id": "evt_01KXG04HT2SVG59Q3330PV094S",
-                "key": "SUBMIT_REPLY",
-                "name": "Submit Reply",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "required": true,
-                    "type": "@entity"
-                  }
-                ],
-                "synonyms": "post, send, add, publish",
-                "tier": "domain"
-              },
-              {
-                "description": "Indicates a reply creation was aborted by the user.",
-                "id": "evt_01KXG04HT2KDPZ646GR34VC5CT",
-                "key": "CANCEL_REPLY",
-                "name": "Cancel Reply",
-                "synonyms": "abort, dismiss, undo, cancel",
-                "tier": "presentation"
               }
             ],
             "states": [
@@ -1087,7 +1160,7 @@
                           "variant": "h4"
                         },
                         {
-                          "action": "EDIT_REPLY",
+                          "onChange": "EDIT_REPLY",
                           "placeholder": "Your reply…",
                           "type": "textarea"
                         },
@@ -1135,6 +1208,16 @@
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.content",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.parentId",
+                    ""
+                  ],
+                  [
                     "fetch",
                     "ThreadPost",
                     {
@@ -1146,7 +1229,7 @@
                         "or",
                         [
                           "=",
-                          "@config.threadRootId",
+                          "@payload.threadRootId",
                           ""
                         ],
                         [
@@ -1156,7 +1239,7 @@
                             "@entity",
                             "threadRootId"
                           ],
-                          "@config.threadRootId"
+                          "@payload.threadRootId"
                         ]
                       ],
                       "include": [
@@ -1189,7 +1272,7 @@
                         "or",
                         [
                           "=",
-                          "@config.threadRootId",
+                          "@payload.row.threadRootId",
                           ""
                         ],
                         [
@@ -1199,7 +1282,7 @@
                             "@entity",
                             "threadRootId"
                           ],
-                          "@config.threadRootId"
+                          "@payload.row.threadRootId"
                         ]
                       ],
                       "include": [
@@ -1212,6 +1295,87 @@
                 "eventId": "evt_01KXG04HT2QW3KRBDS11TZQGTC",
                 "from": "browsing",
                 "to": "loading"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.content",
+                    "@payload.value"
+                  ]
+                ],
+                "event": "EDIT_REPLY",
+                "eventId": "evt_01KXG04HT2GQ7QZ9H7H2CSS4VS",
+                "from": "browsing",
+                "to": "browsing"
+              },
+              {
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "ThreadPost",
+                    {
+                      "authorId": "@user.id",
+                      "authorName": "@user.name",
+                      "content": "@entity.content",
+                      "parentId": [
+                        "str/default",
+                        "@entity.parentId",
+                        ""
+                      ],
+                      "threadRootId": [
+                        "str/default",
+                        "@entity.threadRootId",
+                        [
+                          "str/default",
+                          "@config.threadRootId",
+                          "root"
+                        ]
+                      ]
+                    },
+                    {
+                      "emit": {
+                        "failure": "ThreadPostCreateFailed",
+                        "success": "ThreadPostCreated"
+                      }
+                    }
+                  ]
+                ],
+                "event": "SUBMIT_REPLY",
+                "eventId": "evt_01KXG04HT2SVG59Q3330PV094S",
+                "from": "browsing",
+                "guard": [
+                  "not",
+                  [
+                    "=",
+                    [
+                      "str/default",
+                      "@entity.content",
+                      ""
+                    ],
+                    ""
+                  ]
+                ],
+                "to": "browsing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.content",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.parentId",
+                    ""
+                  ]
+                ],
+                "event": "CANCEL_REPLY",
+                "eventId": "evt_01KXG04HT2KDPZ646GR34VC5CT",
+                "from": "browsing",
+                "to": "browsing"
               },
               {
                 "effects": [
@@ -1317,14 +1481,25 @@
                     "persist",
                     "create",
                     "ThreadPost",
-                    [
-                      "object/merge",
-                      "@payload.data",
-                      {
-                        "authorId": "@user.id",
-                        "authorName": "@user.name"
-                      }
-                    ],
+                    {
+                      "authorId": "@user.id",
+                      "authorName": "@user.name",
+                      "content": "@entity.content",
+                      "parentId": [
+                        "str/default",
+                        "@entity.parentId",
+                        ""
+                      ],
+                      "threadRootId": [
+                        "str/default",
+                        "@entity.threadRootId",
+                        [
+                          "str/default",
+                          "@config.threadRootId",
+                          "root"
+                        ]
+                      ]
+                    },
                     {
                       "emit": {
                         "failure": "ThreadPostCreateFailed",
@@ -1336,6 +1511,18 @@
                 "event": "SUBMIT_REPLY",
                 "eventId": "evt_01KXG04HT2SVG59Q3330PV094S",
                 "from": "replying",
+                "guard": [
+                  "not",
+                  [
+                    "=",
+                    [
+                      "str/default",
+                      "@entity.content",
+                      ""
+                    ],
+                    ""
+                  ]
+                ],
                 "to": "browsing"
               },
               {
@@ -1380,7 +1567,7 @@
                         "or",
                         [
                           "=",
-                          "@config.threadRootId",
+                          "@payload.threadRootId",
                           ""
                         ],
                         [
@@ -1390,7 +1577,7 @@
                             "@entity",
                             "threadRootId"
                           ],
-                          "@config.threadRootId"
+                          "@payload.threadRootId"
                         ]
                       ],
                       "include": [

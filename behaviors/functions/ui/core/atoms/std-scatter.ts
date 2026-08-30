@@ -251,7 +251,7 @@ export function stdScatterScatterItemOrbital(params: StdScatterScatterItemOrbita
             'description': 'Event emitted when the user clicks a data point',
             'label': 'Drill event',
             'tier': 'internal',
-            'type': 'string',
+            'type': 'event',
           },
           'height': {
             'default': 280,

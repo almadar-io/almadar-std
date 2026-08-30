@@ -252,6 +252,15 @@
             }
           },
           {
+            "key": "allowEdit",
+            "type": "boolean",
+            "default": true,
+            "label": "Allow editing the document?",
+            "description": "When false the document look is a pure read surface: no header Edit button, no click-to-edit body, no click-to-rename title. Hosts pass a role condition here so read-only viewers get the page without its authoring affordances; the entity's own access predicates stay the enforcement floor.",
+            "synonyms": "read only document, viewer mode, can edit, editing allowed",
+            "tier": "policy"
+          },
+          {
             "key": "autosaveHint",
             "type": "string",
             "default": "Saves as you type",
@@ -325,7 +334,12 @@
               "actions": "@config.actions",
               "className": "w-full",
               "coverImage": "@entity.coverUrl",
-              "editEvent": "EDIT_CONTENT",
+              "editEvent": [
+                "if",
+                "@config.allowEdit",
+                "EDIT_CONTENT",
+                null
+              ],
               "editLabel": "@config.editLabel",
               "icon": "@entity.iconName",
               "id": "@entity.id",
@@ -333,7 +347,12 @@
               "placeholder": "@config.placeholder",
               "subtitle": "@entity.description",
               "title": "@entity.name",
-              "titleCommitEvent": "TITLE_COMMITTED",
+              "titleCommitEvent": [
+                "if",
+                "@config.allowEdit",
+                "TITLE_COMMITTED",
+                null
+              ],
               "type": "document-panel",
               "value": "@entity.content"
             },
@@ -614,6 +633,7 @@
           "RecordItemSlugLoaded",
           "TITLE_COMMITTED"
         ],
+        "definerKnobs": [],
         "entityRebindable": true,
         "entityContract": {
           "requires": [],
@@ -781,6 +801,7 @@
           "OPEN_DETAILS",
           "SHOW_DETAILS"
         ],
+        "definerKnobs": [],
         "entityRebindable": true,
         "entityContract": {
           "requires": [],

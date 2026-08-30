@@ -1370,7 +1370,7 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
             'description': 'Event name used by an `extraAddons` button\'s `action` literal (e.g. "PRODUCE"). Set this to the same value so the trait\'s own event set declares it.',
             'label': 'Extra Addon Event',
             'tier': 'domain',
-            'type': 'string',
+            'type': 'event',
           },
           'extraAddons': {
             'default': [],

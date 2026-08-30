@@ -1,5 +1,5 @@
 app std-thread "1.3.0"
-"std-thread — forum-style nested replies with collapse + flat-mode toggle. Owns ThreadPost (persistent). flat:true covers 1:1 linear inquiry threads; flat:false renders forum-style nested. INIT fetches, scoped by @config.threadRootId when set (blank = every root, the default). REPLY persists a child post under @payload.parentId, stamped with the real @user identity. A consumer that mounts this as page comments forwards its own document-opened signal to SET_THREAD_ROOT { rootId }, which stamps the frame and refetches filtered by the payload; the after-create and after-select refetch arms keep filtering by @config.threadRootId, so a mutation re-widens the panel until the consumer re-fires SET_THREAD_ROOT. Layer 3 variants override `bodyContent` to deliver chat-bubble, email-threaded, or linear-comments UX while inheriting the same trait, state machine, emits, and listens."
+"std-thread — forum-style nested replies with collapse + flat-mode toggle. Owns ThreadPost (persistent). flat:true covers 1:1 linear inquiry threads; flat:false renders forum-style nested. INIT fetches, scoped by @config.threadRootId when set (blank = every root, the default). REPLY persists a child post under @payload.parentId, stamped with the real @user identity. A consumer that mounts this as page comments forwards its own document-opened signal to SET_THREAD_ROOT { rootId }, which stamps the frame and refetches filtered by the payload; the after-create and after-select refetch arms keep filtering by @config.threadRootId, so a mutation re-widens the panel until the consumer re-fires SET_THREAD_ROOT. Layer 3 variants override `bodyContent` to deliver chat-bubble, email-threaded, or linear-comments UX while inheriting the same trait, state machine, emits, and listens. A non-empty sectionTitle switches the default bodyContent into titled-comments mode: header + post list + a standalone composer button (without it an empty thread has no REPLY emitter at all — the affordance only existed per-row)."
 orbital ThreadPostOrbital {
   ;; Forward relation: array of child ThreadPost IDs whose parentId === this.id.
   ;; Lowers to `type: "relation", cardinality: "many"` (orbital-lolo lower.rs).
@@ -15,7 +15,15 @@ orbital ThreadPostOrbital {
 
     type ThreadPostLoadFailed = Event { error : string, code : string } "Fired when the thread-post collection fails to load"
 
-    type ThreadPostCreated = Event { row : ThreadPost } "Fired after a new thread-post persists successfully"
+    ;; Bare entity alias, not { row: ThreadPost } — `persist create`'s success
+    ;; emit is the created row itself (flat), matching @almadar/runtime's
+    ;; EffectExecutor.ts (`successPayload = persisted ?? data`, emitted
+    ;; directly) AND orbital-core's executor.rs (`executed_with_value(effect,
+    ;; value)`), verified live 2026-08-30: a wrapped declaration validates and
+    ;; compiles clean but silently returns undefined for every `?row.<field>`
+    ;; access — no validator connects a persist-emit's declared shape to what
+    ;; the effect that fires it actually produces.
+    type ThreadPostCreated = Event ThreadPost "Fired after a new thread-post persists successfully"
 
     type ThreadPostCreateFailed = Event { error : string, code : string } "Fired when a new thread-post fails to persist"
 
@@ -97,7 +105,7 @@ orbital ThreadPostOrbital {
             type: typography
             variant: h4
           }, {
-            action: EDIT_REPLY
+            onChange: EDIT_REPLY
             placeholder: "Your reply…"
             type: textarea
           }, {
@@ -121,19 +129,50 @@ orbital ThreadPostOrbital {
           gap: md
           type: stack
         })
+      ;; Scoped to the row just created, not @config.threadRootId — a runtime-
+      ;; scoped consumer (SET_THREAD_ROOT-driven, e.g. std-wiki's WikiComments)
+      ;; never sets config.threadRootId, so that filter was permanently blank/
+      ;; unfiltered here and every document's posts bled together on refetch.
+      ;; ?threadRootId is the FLAT field on ThreadPostCreated's payload (the
+      ;; row's own scope, per the create effect's fallback chain) — NOT
+      ;; ?row.threadRootId; ThreadPostCreated's payload is the created row
+      ;; itself (see the type alias above), no `row` wrapper exists.
       ThreadPostCreated -> browsing
+        (set @entity.content "")
+        (set @entity.parentId "")
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
-          filter: (or ["=", @config.threadRootId, ""] ["=", (object/get @entity threadRootId), @config.threadRootId])
+          filter: (or ["=", ?threadRootId, ""] ["=", (object/get @entity threadRootId), ?threadRootId])
           include: (replies)
         })
+      ;; SELECT's payload IS { id, row } (caller-constructed, unlike the
+      ;; persist-auto-emitted ThreadPostCreated) — ?row.threadRootId is
+      ;; correct here.
       SELECT -> loading
         (set @entity.focusedRow ?row)
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
-          filter: (or ["=", @config.threadRootId, ""] ["=", (object/get @entity threadRootId), @config.threadRootId])
+          filter: (or ["=", ?row.threadRootId, ""] ["=", (object/get @entity threadRootId), ?row.threadRootId])
           include: (replies)
         })
+      ;; Inline composers (bodyContent overrides with their own textarea +
+      ;; submit button) fire the composer triad while the trait sits in
+      ;; browsing — without these arms every such click is swallowed.
+      EDIT_REPLY -> browsing
+        (set @entity.content ?value)
+      SUBMIT_REPLY -> browsing when (not ["=", (str/default @entity.content ""), ""])
+        (persist create ThreadPost {
+          authorId: @user.id
+          authorName: @user.name
+          content: @entity.content
+          parentId: (str/default @entity.parentId "")
+          threadRootId: (str/default @entity.threadRootId (str/default @config.threadRootId root))
+        } {
+          emit: { failure: ThreadPostCreateFailed, success: ThreadPostCreated }
+        })
+      CANCEL_REPLY -> browsing
+        (set @entity.content "")
+        (set @entity.parentId "")
       ;; replying.SUBMIT_REPLY -> browsing lands here before the persist
       ;; resolves; a failure must be caught here too, not just replying's twin arm.
       ThreadPostCreateFailed -> browsing
@@ -163,19 +202,27 @@ orbital ThreadPostOrbital {
     state replying {
       EDIT_REPLY -> replying
         (set @entity.content ?value)
-      SUBMIT_REPLY -> browsing
-        (persist create ThreadPost (object/merge ?data { authorId: @user.id, authorName: @user.name }) {
+      SUBMIT_REPLY -> browsing when (not ["=", (str/default @entity.content ""), ""])
+        (persist create ThreadPost {
+          authorId: @user.id
+          authorName: @user.name
+          content: @entity.content
+          parentId: (str/default @entity.parentId "")
+          threadRootId: (str/default @entity.threadRootId (str/default @config.threadRootId root))
+        } {
           emit: { failure: ThreadPostCreateFailed, success: ThreadPostCreated }
         })
       CANCEL_REPLY -> browsing
         (set @entity.content "")
         (set @entity.parentId "")
+      ;; Scoped to the row just created (?threadRootId, flat) — see the twin
+      ;; arm in `browsing` for why.
       ThreadPostCreated -> browsing
         (set @entity.content "")
         (set @entity.parentId "")
         (fetch ThreadPost {
           emit: { failure: ThreadPostLoadFailed, success: ThreadPostLoaded }
-          filter: (or ["=", @config.threadRootId, ""] ["=", (object/get @entity threadRootId), @config.threadRootId])
+          filter: (or ["=", ?threadRootId, ""] ["=", (object/get @entity threadRootId), ?threadRootId])
           include: (replies)
         })
       ThreadPostCreateFailed -> replying
@@ -234,10 +281,8 @@ orbital ThreadPostOrbital {
         @description "Indicates a reply has been modified."
         @synonyms "update, change, modify"
         @tier "presentation"
-      SUBMIT_REPLY {
-        data : @entity!
-      }
-        @description "Signals a new reply has been successfully submitted."
+      SUBMIT_REPLY
+        @description "Signals the composed draft should be persisted as a new post — the draft is read from the entity frame (@entity.content), so bare buttons can emit it."
         @synonyms "post, send, add, publish"
         @tier "domain"
       CANCEL_REPLY
@@ -257,10 +302,8 @@ orbital ThreadPostOrbital {
         @description "Indicates a failure to load a thread post."
         @synonyms "load error, fetch failed, retrieval failed"
         @tier "internal"
-      ThreadPostCreated {
-        row : ThreadPost
-      }
-        @description "A new post has been added to the thread."
+      ThreadPostCreated
+        @description "A new post has been added to the thread — payload is the created ThreadPost row itself (flat: ?id, ?threadRootId, ?authorId, ?content, …), not wrapped under a row field."
         @synonyms "new post, added, created"
         @tier "domain"
       ThreadPostCreateFailed {
@@ -294,10 +337,8 @@ orbital ThreadPostOrbital {
         @description "A reply is being modified."
         @synonyms "update, change, revise"
         @tier "presentation"
-      SUBMIT_REPLY {
-        data : @entity!
-      }
-        @description "A new reply has been submitted and is awaiting processing."
+      SUBMIT_REPLY
+        @description "A new reply has been submitted and is awaiting processing — the draft is read from the entity frame (@entity.content), no payload required."
         @synonyms "post, send, add, submit"
         @tier "domain"
       CANCEL_REPLY
@@ -317,10 +358,8 @@ orbital ThreadPostOrbital {
         @description "Indicates a failure to load a thread post."
         @synonyms "error, failure, load failed"
         @tier "internal"
-      ThreadPostCreated {
-        row : ThreadPost
-      }
-        @description "A new post has been added to the thread."
+      ThreadPostCreated
+        @description "A new post has been added to the thread — payload is the created ThreadPost row itself (flat: ?id, ?threadRootId, ?authorId, ?content, …), not wrapped under a row field."
         @synonyms "new post, added, created"
         @tier "domain"
       ThreadPostCreateFailed {
@@ -356,9 +395,15 @@ orbital ThreadPostOrbital {
         @label "recipientName"
         @description "Header/recipient label for chat-style threads."
         @tier "presentation"
-      sectionTitle : string = Discussion
+      sectionTitle : string = ""
         @label "sectionTitle"
-        @description "Section header for linear-comment threads."
+        @description "Section header rendered by the default bodyContent when non-empty, along with a standalone composer button — the only REPLY affordance an empty thread has. Blank (the default) keeps the bare post list for embedded threads that bring their own chrome (chat rails, custom comment sections)."
+        @synonyms "header, comments title, discussion title"
+        @tier "presentation"
+      composerLabel : string = "Add comment"
+        @label "composerLabel"
+        @description "Label of the standalone composer button rendered under the post list when sectionTitle is non-empty."
+        @synonyms "reply label, comment button, add comment"
         @tier "presentation"
       emailAuthorBinding : string = @item.authorName
         @label "emailAuthorBinding"
@@ -413,7 +458,15 @@ orbital ThreadPostOrbital {
         @description "Reply binding for the reply body."
         @tier "presentation"
       bodyContent : render-ui = {
-        children: [{
+        children: [(if ["!=", @config.sectionTitle, ""] {
+          content: @config.sectionTitle
+          type: typography
+          variant: h4
+        } {
+          children: []
+          gap: none
+          type: stack
+        }), {
           entity: ?data
           fields: [{
             label: Author
@@ -437,7 +490,17 @@ orbital ThreadPostOrbital {
           look: @config.tableLook
           type: data-list
           variant: card
-        }]
+        }, (if ["!=", @config.sectionTitle, ""] {
+          action: REPLY
+          icon: message-square
+          label: @config.composerLabel
+          type: button
+          variant: secondary
+        } {
+          children: []
+          gap: none
+          type: stack
+        })]
         direction: vertical
         gap: md
         type: stack

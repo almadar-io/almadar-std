@@ -1273,7 +1273,7 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
             'label': 'Which event does clicking a row fire?',
             'synonyms': 'row click event, item click, open event, select event',
             'tier': 'presentation',
-            'type': 'string',
+            'type': 'event',
           },
           'masterDetailBodyContent': {
             'default': {

@@ -151,7 +151,7 @@ export function stdUiTabbedContainerTabbedContainerOrbital(params: StdUiTabbedCo
             'description': 'Callback when tab changes',
             'label': 'On Tab Change',
             'tier': 'presentation',
-            'type': 'string',
+            'type': 'event',
           },
           'position': {
             'default': 'top',

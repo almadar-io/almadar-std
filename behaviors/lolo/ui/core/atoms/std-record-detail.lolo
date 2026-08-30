@@ -70,6 +70,12 @@ orbital RecordItemOrbital {
           include: @config.include
         })
         (render-ui main { rows: 4, type: skeleton })
+      ;; Event-opened overlay (openOn: event): stays blank until OPEN_VIEW,
+      ;; but renders the blank EXPLICITLY — an embedded @trait.X reference to
+      ;; a trait with no indexed content is flagged by the compiled client's
+      ;; render probe (trait_bindings_resolved).
+      INIT -> idle when ["=", @config.openOn, "event"]
+        (render-ui main null)
       ;; self-loops on the external emits so the validator sees in-atom
       ;; listeners — the real consumers are the composing organism's
       ;; persistor (CONTENT_SAVED, TITLE_COMMITTED) and its refetch /
@@ -535,6 +541,11 @@ orbital RecordItemOrbital {
         @label "Edit button label"
         @description "Label of the quiet button above the document body that starts an editing session (the body itself is also clickable)."
         @tier "presentation"
+      allowEdit : boolean = true
+        @label "Allow editing the document?"
+        @description "When false the document look is a pure read surface: no header Edit button, no click-to-edit body, no click-to-rename title. Hosts pass a role condition here so read-only viewers get the page without its authoring affordances; the entity's own access predicates stay the enforcement floor."
+        @synonyms "read only document, viewer mode, can edit, editing allowed"
+        @tier "policy"
       doneLabel : string = "Done"
         @label "Done button label"
         @description "Label of the button that ends the document editing session; work is already autosaved when it is pressed."
@@ -613,14 +624,14 @@ orbital RecordItemOrbital {
         actions: @config.actions
         coverImage: @entity.coverUrl
         icon: @entity.iconName
-        editEvent: EDIT_CONTENT
+        editEvent: (if @config.allowEdit EDIT_CONTENT null)
         editLabel: @config.editLabel
         id: @entity.id
         maxInlineActions: @config.maxInlineActions
         placeholder: @config.placeholder
         subtitle: @entity.description
         title: @entity.name
-        titleCommitEvent: TITLE_COMMITTED
+        titleCommitEvent: (if @config.allowEdit TITLE_COMMITTED null)
         type: document-panel
         value: @entity.content
         className: "w-full"

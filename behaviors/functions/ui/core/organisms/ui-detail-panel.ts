@@ -435,7 +435,7 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
             'description': 'When bound, the title becomes editable in place: clicking it swaps the heading for an input, Enter or blur commits, Escape reverts. Receives the committed title and the record\'s id so the host can persist a partial update. Unbound, the title stays a plain heading.',
             'label': 'On Title Commit',
             'tier': 'presentation',
-            'type': 'string',
+            'type': 'event',
           },
           'pageProp': {
             'description': 'Current page number',

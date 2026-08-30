@@ -224,7 +224,7 @@ export function stdDateRangeDateRangeOrbital(params: StdDateRangeDateRangeOrbita
             'description': 'Event name emitted when the user picks a new range',
             'label': 'Change event',
             'tier': 'internal',
-            'type': 'string',
+            'type': 'event',
           },
           'fromLabel': {
             'default': 'From',

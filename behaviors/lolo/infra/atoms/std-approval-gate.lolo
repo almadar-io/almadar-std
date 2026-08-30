@@ -1,5 +1,5 @@
 app std-approval-gate "1.1.0"
-"std-approval-gate — generic approval gate / approver workflow. Use when a user voices that an action must be reviewed, approved, signed off, or authorized by a privileged role before it proceeds (admin approval, supervisor sign-off, manager approval, gatekeeper review, editor approval, senior editor approval, reviewer approval, publishing approval, draft approval, content review, submit drafts then editors review and approve or reject, needs approval before going live, requires sign-off before publish). Persists ApprovalRequest rows + surfaces the PENDING ones in a review queue showing what is being approved and who asked, with Approve / Deny actions — Deny captures a written reason. approverRoles is ENFORCED by the review transitions themselves: an APPROVE/DENY from a viewer whose role is not listed does not fire. On approval emits ApprovalGranted; on denial emits ApprovalDenied (with the reason). Hosts that replay the gated action MUST route a failed replay back via APPROVAL_REPLAY_FAILED so the request reopens instead of being silently consumed. Compose onto any orbital whose action you want to gate: the target orbital emits an external event, an ApprovalRequest row is created (stamp subjectLabel/subjectId/requestedBy so reviewers see what they are judging), and downstream effects wait on ApprovalGranted. Differs from std-mod-queue, which is content-moderation-specific."
+"std-approval-gate — generic approval gate / approver workflow. Use when a user voices that an action must be reviewed, approved, signed off, or authorized by a privileged role before it proceeds (admin approval, supervisor sign-off, manager approval, gatekeeper review, editor approval, senior editor approval, reviewer approval, publishing approval, draft approval, content review, submit drafts then editors review and approve or reject, needs approval before going live, requires sign-off before publish). Persists ApprovalRequest rows + surfaces the PENDING ones in a review queue showing what is being approved and who asked, with Approve / Deny actions — Deny captures a written reason. approverRoles is ENFORCED by the review transitions themselves: an APPROVE/DENY from a viewer whose role is not listed does not fire. blockSelfApproval additionally stops a reviewer approving their own request (four-eyes) — DENY stays allowed as self-withdrawal. On approval emits ApprovalGranted; on denial emits ApprovalDenied (with the reason). Hosts that replay the gated action MUST route a failed replay back via APPROVAL_REPLAY_FAILED so the request reopens instead of being silently consumed. Compose onto any orbital whose action you want to gate: the target orbital emits an external event, an ApprovalRequest row is created (stamp subjectLabel/subjectId/requestedBy so reviewers see what they are judging), and downstream effects wait on ApprovalGranted. Differs from std-mod-queue, which is content-moderation-specific."
 orbital ApprovalGateOrbital {
     uses Spinner from "std/behaviors/ui-spinner"
     uses Typography from "std/behaviors/ui-typography"
@@ -227,8 +227,9 @@ orbital ApprovalGateOrbital {
       ;; The role guard IS the enforcement (both execution paths honor
       ;; transition guards, for the button and for a bus-delivered event
       ;; alike): empty approverRoles = ungated, otherwise the viewer's role
-      ;; must be listed or the decision does not fire.
-      APPROVE -> reviewing when (or ["=", (array/len @config.approverRoles), 0] (array/includes @config.approverRoles @user.role))
+      ;; must be listed or the decision does not fire. blockSelfApproval
+      ;; additionally blocks APPROVE when ?row.requestedBy is the viewer.
+      APPROVE -> reviewing when (and (or ["=", (array/len @config.approverRoles), 0] (array/includes @config.approverRoles @user.role)) (or ["=", @config.blockSelfApproval, false] ["!=", (object/get ?row requestedBy), @user.id]))
         (set @entity.id ?id)
         (set @entity.status approved)
         (set @entity.reviewer @user.id)
@@ -498,6 +499,11 @@ orbital ApprovalGateOrbital {
         @label "Who can approve requests?"
         @description "Roles eligible to decide. ENFORCED by the APPROVE/DENY transition guards: a viewer whose @user.role is not listed cannot fire a decision, from the button or from the bus. Empty = every signed-in viewer may decide (ungated)."
         @synonyms "approver, reviewer, authorized roles, sign-off roles, who approves"
+        @tier "policy"
+      blockSelfApproval : boolean = false
+        @label "Block approving your own requests?"
+        @description "When on, a reviewer cannot APPROVE a request they submitted themselves (requestedBy = the viewer's id) — enforced by the APPROVE transition guard, from the button or from the bus. Requires hosts to stamp requestedBy at request creation. DENY stays allowed on your own request (denying your own request withdraws it). Off by default."
+        @synonyms "self approval, self-approval, four eyes, four-eyes, separation of duties, cannot approve own, no self sign-off, dual control"
         @tier "policy"
       threshold : number = 0
         @label "Auto-approve below this value"

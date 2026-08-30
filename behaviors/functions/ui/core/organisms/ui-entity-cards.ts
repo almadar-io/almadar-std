@@ -360,7 +360,7 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
                 'event': {
                   'name': 'event',
                   'required': false,
-                  'type': 'string',
+                  'type': 'event',
                 },
                 'label': {
                   'name': 'label',

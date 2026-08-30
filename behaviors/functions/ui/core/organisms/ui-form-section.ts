@@ -191,7 +191,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
             'description': 'Event to dispatch on cancel (defaults to \'CANCEL\')',
             'label': 'Cancel Event',
             'tier': 'presentation',
-            'type': 'string',
+            'type': 'event',
           },
           'cancelLabel': {
             'description': 'Cancel button label (if provided, shows cancel button)',
@@ -645,7 +645,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
             'description': 'Callback when any field value changes',
             'label': 'On Field Change',
             'tier': 'presentation',
-            'type': 'string',
+            'type': 'event',
           },
           'onSubmit': {
             'description': 'Submit event name for trait dispatch (emitted via eventBus as UI:{onSubmit})',
@@ -913,7 +913,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
             'description': 'Event dispatch props (for trait state machine integration)',
             'label': 'Submit Event',
             'tier': 'presentation',
-            'type': 'string',
+            'type': 'event',
           },
           'submitLabel': {
             'description': 'Submit button label',

@@ -215,7 +215,7 @@ export function stdFilterFilterTargetOrbital(params: StdFilterFilterTargetOrbita
             'description': 'Event emitted when the user changes a filter selection',
             'label': 'Filter event',
             'tier': 'internal',
-            'type': 'string',
+            'type': 'event',
           },
           'filterBarLook': {
             'default': 'toolbar',

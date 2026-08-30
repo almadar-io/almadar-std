@@ -348,7 +348,7 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
             'description': 'Event emitted when the user picks a notification',
             'label': 'Notification click event',
             'tier': 'internal',
-            'type': 'string',
+            'type': 'event',
           },
           'notifications': {
             'default': [],
@@ -383,7 +383,7 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
             'description': 'Event emitted when the user runs a global search',
             'label': 'Search event',
             'tier': 'internal',
-            'type': 'string',
+            'type': 'event',
           },
           'sidebarTrait': {
             'description': 'Optional trait rendered in the sidebar between the nav links and the footer — the Notion/Confluence-style always-visible page tree; scrolls independently. Unset renders plain nav only.',

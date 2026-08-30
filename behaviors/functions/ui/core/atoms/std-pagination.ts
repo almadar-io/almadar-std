@@ -221,7 +221,7 @@ export function stdPaginationPagedItemOrbital(params: StdPaginationPagedItemOrbi
             'description': 'Event emitted when the user picks a new page',
             'label': 'Page-change event',
             'tier': 'internal',
-            'type': 'string',
+            'type': 'event',
           },
           'pageSize': {
             'default': 10,

@@ -52,12 +52,12 @@ orbital TagStripOrbital {
         })
       TagStripOptions -> ready
         (render-ui main {
-          children: [(if ["!=", @config.title, ""] {
+          children: [(if (or @config.readOnly ["=", @config.title, ""]) null {
             color: muted
             content: @config.title
             type: typography
             variant: caption
-          } null), {
+          }), (if @config.readOnly null {
             addEvent: ADD_TAG
             helperText: @config.helperText
             placeholder: @config.placeholder
@@ -65,7 +65,7 @@ orbital TagStripOrbital {
             type: tag-input
             value: (array/map (array/filter ?data (fn t (array/includes @entity.docTagIds (object/get @t id)))) (fn t (object/get @t name)))
             variant: secondary
-          }, (if ["=", (array/len (array/filter ?data (fn t (if (array/includes @entity.docTagIds (object/get @t id)) false true)))), 0] null {
+          }), (if (or @config.readOnly ["=", (array/len (array/filter ?data (fn t (if (array/includes @entity.docTagIds (object/get @t id)) false true)))), 0]) null {
             children: (array/map (array/filter ?data (fn t (if (array/includes @entity.docTagIds (object/get @t id)) false true))) (fn t {
               action: ADD_TAG
               actionPayload: { tag: @t.name }
@@ -299,6 +299,11 @@ orbital TagStripOrbital {
         @label "Strip caption"
         @description "Small caption above the chips; empty hides it"
         @tier "presentation"
+      readOnly : boolean = false
+        @label "Read-only?"
+        @description "When true the strip renders nothing — no add input, no remove, no suggestion chips. Hosts pass a role condition here so read-only viewers rely on the record's read-only rails (which keep showing the tags) instead of an editing surface."
+        @synonyms "read only tags, viewer mode, no tag editing, hide tag input"
+        @tier "policy"
       placeholder : string = "Add a tag…"
         @label "Input placeholder"
         @description "Placeholder in the type-to-add input"

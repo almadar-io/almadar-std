@@ -72,7 +72,7 @@ export interface StdModalConfig {
   /** Default: `"layout-panel-top"` */
   icon?: string;
   /** Default: `"create"` */
-  mode?: string;
+  mode?: 'create' | 'edit';
   /** Default: `"Details"` */
   title?: string;
 }
@@ -331,6 +331,10 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
             'synonyms': 'form mode, create or edit, new or update, add or modify',
             'tier': 'internal',
             'type': 'string',
+            'values': [
+              'create',
+              'edit',
+            ],
           },
           'title': {
             'default': 'Details',

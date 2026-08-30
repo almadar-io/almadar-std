@@ -103,6 +103,8 @@ export interface StdTagStripConfig {
   helperText?: string;
   /** Default: `"Add a tag…"` */
   placeholder?: string;
+  /** Default: `false` */
+  readOnly?: boolean;
   /** Default: `"Tags"` */
   title?: string;
 }

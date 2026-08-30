@@ -278,7 +278,7 @@ export function stdGeosearchGeoSearchResultOrbital(params: StdGeosearchGeoSearch
             'description': 'Event emitted when the user runs a geo search',
             'label': 'Search event',
             'tier': 'internal',
-            'type': 'string',
+            'type': 'event',
           },
           'placeholder': {
             'default': 'Search nearby…',

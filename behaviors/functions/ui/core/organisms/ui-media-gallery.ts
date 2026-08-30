@@ -369,7 +369,7 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
             'description': 'Event name emitted when selection changes (emitted as UI:{selectionEvent})',
             'label': 'Selection Event',
             'tier': 'presentation',
-            'type': 'string',
+            'type': 'event',
           },
           'selfFetch': {
             'default': true,

@@ -203,7 +203,7 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
                 'event': {
                   'name': 'event',
                   'required': false,
-                  'type': 'string',
+                  'type': 'event',
                 },
                 'label': {
                   'name': 'label',

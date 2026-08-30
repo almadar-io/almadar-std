@@ -798,7 +798,7 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
             'label': 'On Event Click',
             'synonyms': 'open event, event click, select event, chip click',
             'tier': 'presentation',
-            'type': 'string',
+            'type': 'event',
           },
           'searchPlaceholder': {
             'default': 'Search…',
