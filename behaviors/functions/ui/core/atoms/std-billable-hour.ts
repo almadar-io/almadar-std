@@ -468,7 +468,7 @@ export function stdBillableHourBillableHourOrbital(params: StdBillableHourBillab
                 'event': {
                   'name': 'event',
                   'required': false,
-                  'type': 'string',
+                  'type': 'event',
                 },
                 'icon': {
                   'name': 'icon',
@@ -712,7 +712,56 @@ export function stdBillableHourBillableHourOrbital(params: StdBillableHourBillab
                 },
                 {
                   'name': 'row',
-                  'type': 'BillableHour',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'workerId',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'workerName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'matterId',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'projectId',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'workDate',
+                      'required': true,
+                      'type': 'date',
+                    },
+                    {
+                      'name': 'hours',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'rate',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'description',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'isBillable',
+                      'type': 'boolean',
+                    },
+                    {
+                      'name': 'invoiceStatus',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': 'object',
                 },
               ],
               'synonyms': 'show, display, list',

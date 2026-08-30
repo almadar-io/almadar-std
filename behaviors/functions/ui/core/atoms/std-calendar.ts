@@ -320,7 +320,7 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                 'event': {
                   'name': 'event',
                   'required': false,
-                  'type': 'string',
+                  'type': 'event',
                 },
                 'icon': {
                   'name': 'icon',

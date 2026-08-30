@@ -79,7 +79,16 @@ export interface StdRatingReviewReviewsLoadFailedPayload {
  * Payload shape for the `ReviewSaved` event.
  */
 export interface StdRatingReviewReviewSavedPayload {
-  row?: unknown;
+  id: string;
+  reviews?: EntityRow[];
+  reviewsSource?: EntityRow[];
+  totalReviews?: number;
+  averageRating?: number;
+  starDistribution?: EntityRow[];
+  currentSort?: string;
+  draftRating?: number;
+  draftComment?: string;
+  errorMessage?: string;
 }
 
 /**
@@ -691,10 +700,48 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
             'event': 'ReviewSaved',
             'payloadSchema': [
               {
-                'name': 'row',
-                'type': '@entity',
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'reviews',
+                'type': '[ReviewRow]',
+              },
+              {
+                'name': 'reviewsSource',
+                'type': '[ReviewRow]',
+              },
+              {
+                'name': 'totalReviews',
+                'type': 'number',
+              },
+              {
+                'name': 'averageRating',
+                'type': 'number',
+              },
+              {
+                'name': 'starDistribution',
+                'type': '[StarBar]',
+              },
+              {
+                'name': 'currentSort',
+                'type': 'string',
+              },
+              {
+                'name': 'draftRating',
+                'type': 'number',
+              },
+              {
+                'name': 'draftComment',
+                'type': 'string',
+              },
+              {
+                'name': 'errorMessage',
+                'type': 'string',
               },
             ],
+            'scope': 'internal',
             'synonyms': 'saved, persisted, updated',
             'tier': 'domain',
           },
@@ -774,8 +821,45 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
               'name': 'Review saved',
               'payloadSchema': [
                 {
-                  'name': 'row',
-                  'type': '@entity',
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'reviews',
+                  'type': '[ReviewRow]',
+                },
+                {
+                  'name': 'reviewsSource',
+                  'type': '[ReviewRow]',
+                },
+                {
+                  'name': 'totalReviews',
+                  'type': 'number',
+                },
+                {
+                  'name': 'averageRating',
+                  'type': 'number',
+                },
+                {
+                  'name': 'starDistribution',
+                  'type': '[StarBar]',
+                },
+                {
+                  'name': 'currentSort',
+                  'type': 'string',
+                },
+                {
+                  'name': 'draftRating',
+                  'type': 'number',
+                },
+                {
+                  'name': 'draftComment',
+                  'type': 'string',
+                },
+                {
+                  'name': 'errorMessage',
+                  'type': 'string',
                 },
               ],
               'synonyms': 'saved, persisted, updated',
@@ -2686,10 +2770,48 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
             'event': 'ReviewSaved',
             'payloadSchema': [
               {
-                'name': 'row',
-                'type': '@entity',
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'reviews',
+                'type': '[ReviewRow]',
+              },
+              {
+                'name': 'reviewsSource',
+                'type': '[ReviewRow]',
+              },
+              {
+                'name': 'totalReviews',
+                'type': 'number',
+              },
+              {
+                'name': 'averageRating',
+                'type': 'number',
+              },
+              {
+                'name': 'starDistribution',
+                'type': '[StarBar]',
+              },
+              {
+                'name': 'currentSort',
+                'type': 'string',
+              },
+              {
+                'name': 'draftRating',
+                'type': 'number',
+              },
+              {
+                'name': 'draftComment',
+                'type': 'string',
+              },
+              {
+                'name': 'errorMessage',
+                'type': 'string',
               },
             ],
+            'scope': 'internal',
             'synonyms': 'saved, persisted, updated',
             'tier': 'presentation',
           },
@@ -2758,8 +2880,45 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
               'name': 'Review saved',
               'payloadSchema': [
                 {
-                  'name': 'row',
-                  'type': '@entity',
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'reviews',
+                  'type': '[ReviewRow]',
+                },
+                {
+                  'name': 'reviewsSource',
+                  'type': '[ReviewRow]',
+                },
+                {
+                  'name': 'totalReviews',
+                  'type': 'number',
+                },
+                {
+                  'name': 'averageRating',
+                  'type': 'number',
+                },
+                {
+                  'name': 'starDistribution',
+                  'type': '[StarBar]',
+                },
+                {
+                  'name': 'currentSort',
+                  'type': 'string',
+                },
+                {
+                  'name': 'draftRating',
+                  'type': 'number',
+                },
+                {
+                  'name': 'draftComment',
+                  'type': 'string',
+                },
+                {
+                  'name': 'errorMessage',
+                  'type': 'string',
                 },
               ],
               'synonyms': 'saved, persisted, updated',

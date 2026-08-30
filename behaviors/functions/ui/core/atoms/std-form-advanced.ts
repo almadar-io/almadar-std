@@ -36,17 +36,7 @@ export type StdFormAdvancedEventKey = 'CANCEL' | 'FormEntryLoadFailed' | 'FormEn
  * Payload shape for the `FormEntryLoaded` event.
  */
 export interface StdFormAdvancedFormEntryLoadedPayload {
-  id?: string;
-  name?: string;
-  description?: string;
-  status?: string;
-  createdAt?: string;
-  notes?: string;
-  age?: number;
-  isActive?: boolean;
-  birthDate?: string;
-  priority?: string;
-  categoryId?: string;
+  data?: EntityRow[];
 }
 
 /**
@@ -460,48 +450,8 @@ export function stdFormAdvancedFormEntryOrbital(params: StdFormAdvancedFormEntry
             'event': 'FormEntryLoaded',
             'payloadSchema': [
               {
-                'name': 'id',
-                'type': 'string',
-              },
-              {
-                'name': 'name',
-                'type': 'string',
-              },
-              {
-                'name': 'description',
-                'type': 'string',
-              },
-              {
-                'name': 'status',
-                'type': 'string',
-              },
-              {
-                'name': 'createdAt',
-                'type': 'string',
-              },
-              {
-                'name': 'notes',
-                'type': 'string',
-              },
-              {
-                'name': 'age',
-                'type': 'number',
-              },
-              {
-                'name': 'isActive',
-                'type': 'boolean',
-              },
-              {
-                'name': 'birthDate',
-                'type': 'datetime',
-              },
-              {
-                'name': 'priority',
-                'type': 'string',
-              },
-              {
-                'name': 'categoryId',
-                'type': 'relation',
+                'name': 'data',
+                'type': '[FormEntry]',
               },
             ],
             'scope': 'internal',
@@ -593,48 +543,8 @@ export function stdFormAdvancedFormEntryOrbital(params: StdFormAdvancedFormEntry
               'name': 'FormEntry loaded',
               'payloadSchema': [
                 {
-                  'name': 'id',
-                  'type': 'string',
-                },
-                {
-                  'name': 'name',
-                  'type': 'string',
-                },
-                {
-                  'name': 'description',
-                  'type': 'string',
-                },
-                {
-                  'name': 'status',
-                  'type': 'string',
-                },
-                {
-                  'name': 'createdAt',
-                  'type': 'string',
-                },
-                {
-                  'name': 'notes',
-                  'type': 'string',
-                },
-                {
-                  'name': 'age',
-                  'type': 'number',
-                },
-                {
-                  'name': 'isActive',
-                  'type': 'boolean',
-                },
-                {
-                  'name': 'birthDate',
-                  'type': 'datetime',
-                },
-                {
-                  'name': 'priority',
-                  'type': 'string',
-                },
-                {
-                  'name': 'categoryId',
-                  'type': 'relation',
+                  'name': 'data',
+                  'type': '[FormEntry]',
                 },
               ],
               'synonyms': 'loaded, initialized, populated',

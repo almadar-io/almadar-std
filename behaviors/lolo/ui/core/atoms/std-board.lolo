@@ -12,7 +12,9 @@ orbital BoardOrbital {
 
     type BoardItemsLoadFailed = Event { error : string, code : string } "Fired when the upstream fetch fails"
 
-    type BoardItemsSaved = Event { row : @entity } "Fired when a board item has been persisted"
+    type BoardItemsSaved = Event @entity "Fired when a board item has been persisted"
+
+    type BoardItemDeleted = Event { id : string, deleted : boolean } "Fired when a board item has been deleted — persist delete emits the id and a deleted flag, never the row, so this cannot share BoardItemsSaved's contract"
 
     type BoardItemsSaveFailed = Event { error : string, code : string } "Fired when a persist intent fails"
 
@@ -68,6 +70,16 @@ orbital BoardOrbital {
       ;; states; without this the persist success is dropped and the spinner
       ;; never resolves (only the failure twin below used to recover).
       BoardItemsSaved -> loading
+        (fetch BoardView {
+          emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
+        })
+        (render-ui main {
+          title: "Refreshing board…"
+          type: loading-state
+        })
+      ;; Same refresh, different contract: a delete emits { id, deleted }, not
+      ;; the row, so it cannot ride BoardItemsSaved's payload.
+      BoardItemDeleted -> loading
         (fetch BoardView {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
         })
@@ -277,7 +289,7 @@ orbital BoardOrbital {
         })
       DELETE_CARD -> loading
         (persist delete BoardView ?id {
-          emit: { failure: BoardItemsSaveFailed, success: BoardItemsSaved }
+          emit: { failure: BoardItemsSaveFailed, success: BoardItemDeleted }
         })
         (render-ui main {
           title: "Deleting item…"
@@ -378,9 +390,16 @@ orbital BoardOrbital {
         @description "Indicates a failure to load board items."
         @synonyms "error, failed, problem, loading failure"
         @tier "internal"
-      BoardItemsSaved { row : @entity }
+      BoardItemsSaved
         @description "Signals that board items have been successfully saved."
         @synonyms "saved, persisted, updated"
+        @tier "domain"
+      BoardItemDeleted {
+        id : string
+        deleted : boolean
+      }
+        @description "Signals a board item has been deleted; carries the deleted row's id, not the row."
+        @synonyms "deleted, removed, discarded"
         @tier "domain"
       BoardItemsSaveFailed {
         error : string
@@ -482,9 +501,16 @@ orbital BoardOrbital {
         @description "Indicates a failure to load board items."
         @synonyms "error, failed, problem, loading issue"
         @tier "internal"
-      BoardItemsSaved { row : @entity }
+      BoardItemsSaved
         @description "Indicates board items have been successfully saved."
         @synonyms "saved, updated, persisted"
+        @tier "presentation"
+      BoardItemDeleted {
+        id : string
+        deleted : boolean
+      }
+        @description "Indicates a board item has been deleted; carries the deleted row's id, not the row."
+        @synonyms "deleted, removed, discarded"
         @tier "presentation"
       BoardItemsSaveFailed {
         error : string

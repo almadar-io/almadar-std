@@ -58,7 +58,16 @@ export interface StdImageUploadMultiUploadedImageLoadFailedPayload {
  * Payload shape for the `UploadedImageCreated` event.
  */
 export interface StdImageUploadMultiUploadedImageCreatedPayload {
-  row?: EntityRow;
+  id: string;
+  url: string;
+  name?: string;
+  sizeBytes?: number;
+  mimeType?: string;
+  width?: number;
+  height?: number;
+  parentId?: string;
+  parentType?: string;
+  uploadedAt?: string;
 }
 
 /**
@@ -404,54 +413,49 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
             'event': 'UploadedImageCreated',
             'payloadSchema': [
               {
-                'name': 'row',
-                'properties': [
-                  {
-                    'name': 'id',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'url',
-                    'required': true,
-                    'type': 'url',
-                  },
-                  {
-                    'name': 'name',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'sizeBytes',
-                    'type': 'number',
-                  },
-                  {
-                    'name': 'mimeType',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'width',
-                    'type': 'number',
-                  },
-                  {
-                    'name': 'height',
-                    'type': 'number',
-                  },
-                  {
-                    'name': 'parentId',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'parentType',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'uploadedAt',
-                    'type': 'datetime',
-                  },
-                ],
-                'type': 'object',
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'url',
+                'required': true,
+                'type': 'url',
+              },
+              {
+                'name': 'name',
+                'type': 'string',
+              },
+              {
+                'name': 'sizeBytes',
+                'type': 'number',
+              },
+              {
+                'name': 'mimeType',
+                'type': 'string',
+              },
+              {
+                'name': 'width',
+                'type': 'number',
+              },
+              {
+                'name': 'height',
+                'type': 'number',
+              },
+              {
+                'name': 'parentId',
+                'type': 'string',
+              },
+              {
+                'name': 'parentType',
+                'type': 'string',
+              },
+              {
+                'name': 'uploadedAt',
+                'type': 'datetime',
               },
             ],
+            'scope': 'internal',
             'synonyms': 'added, new, received',
             'tier': 'domain',
           },
@@ -684,8 +688,46 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
               'name': 'UploadedImage created',
               'payloadSchema': [
                 {
-                  'name': 'row',
-                  'type': 'UploadedImage',
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'url',
+                  'required': true,
+                  'type': 'url',
+                },
+                {
+                  'name': 'name',
+                  'type': 'string',
+                },
+                {
+                  'name': 'sizeBytes',
+                  'type': 'number',
+                },
+                {
+                  'name': 'mimeType',
+                  'type': 'string',
+                },
+                {
+                  'name': 'width',
+                  'type': 'number',
+                },
+                {
+                  'name': 'height',
+                  'type': 'number',
+                },
+                {
+                  'name': 'parentId',
+                  'type': 'string',
+                },
+                {
+                  'name': 'parentType',
+                  'type': 'string',
+                },
+                {
+                  'name': 'uploadedAt',
+                  'type': 'datetime',
                 },
               ],
               'synonyms': 'added, new, received',

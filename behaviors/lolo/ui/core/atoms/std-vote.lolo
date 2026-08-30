@@ -5,7 +5,7 @@ orbital VoteOrbital {
 
     type VoteLoadFailed = Event { error : string, code : string } "Fired when the vote collection fails to load"
 
-    type VoteCasted = Event { row : Vote } "Fired after a vote persists successfully"
+    type VoteCasted = Event @entity "Fired after a vote persists successfully"
 
     type VoteCastFailed = Event { error : string, code : string } "Fired when persisting a vote fails"
 
@@ -180,9 +180,7 @@ orbital VoteOrbital {
         @description "Indicates that loading a vote failed."
         @synonyms "load error, failed load, fetch failure"
         @tier "internal"
-      VoteCasted -> external {
-        row : Vote
-      }
+      VoteCasted -> external
         @description "Indicates a vote has been successfully recorded."
         @synonyms "voted, vote-submitted, vote-changed"
         @tier "domain"
@@ -223,9 +221,7 @@ orbital VoteOrbital {
         @description "Indicates a failure to load vote data."
         @synonyms "error, failed, problem, issue"
         @tier "internal"
-      VoteCasted {
-        row : Vote
-      }
+      VoteCasted
         @description "A vote has been successfully recorded."
         @synonyms "voted, tallied, updated"
         @tier "domain"

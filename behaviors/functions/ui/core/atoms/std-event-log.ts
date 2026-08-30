@@ -65,7 +65,7 @@ export interface StdEventLogEventLogLoadFailedPayload {
  * Payload shape for the `EventLogSaved` event.
  */
 export interface StdEventLogEventLogSavedPayload {
-  row?: unknown;
+  value?: unknown;
 }
 
 /**
@@ -722,10 +722,11 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
             'event': 'EventLogSaved',
             'payloadSchema': [
               {
-                'name': 'row',
+                'name': 'value',
                 'type': '@entity',
               },
             ],
+            'scope': 'internal',
             'synonyms': 'saved, added, created, recorded',
             'tier': 'domain',
           },
@@ -820,7 +821,7 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
               'name': 'Event log saved',
               'payloadSchema': [
                 {
-                  'name': 'row',
+                  'name': 'value',
                   'type': '@entity',
                 },
               ],

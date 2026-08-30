@@ -667,49 +667,44 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
             'event': 'ErasureSaved',
             'payloadSchema': [
               {
-                'name': 'row',
-                'properties': [
-                  {
-                    'name': 'id',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'subjectId',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'targetEntity',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'status',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'requestedAt',
-                    'type': 'number',
-                  },
-                  {
-                    'name': 'executesAt',
-                    'type': 'number',
-                  },
-                  {
-                    'name': 'executedAt',
-                    'type': 'number',
-                  },
-                  {
-                    'name': 'cancelledAt',
-                    'type': 'number',
-                  },
-                  {
-                    'name': 'notes',
-                    'type': 'string',
-                  },
-                ],
-                'type': 'object',
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'subjectId',
+                'type': 'string',
+              },
+              {
+                'name': 'targetEntity',
+                'type': 'string',
+              },
+              {
+                'name': 'status',
+                'type': 'string',
+              },
+              {
+                'name': 'requestedAt',
+                'type': 'number',
+              },
+              {
+                'name': 'executesAt',
+                'type': 'number',
+              },
+              {
+                'name': 'executedAt',
+                'type': 'number',
+              },
+              {
+                'name': 'cancelledAt',
+                'type': 'number',
+              },
+              {
+                'name': 'notes',
+                'type': 'string',
               },
             ],
+            'scope': 'internal',
             'synonyms': 'created, added, persisted',
             'tier': 'domain',
           },
@@ -909,7 +904,46 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                 },
                 {
                   'name': 'row',
-                  'type': 'ErasureRequest',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'subjectId',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'targetEntity',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'requestedAt',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'executesAt',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'executedAt',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'cancelledAt',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'notes',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': 'object',
                 },
               ],
               'synonyms': 'abort, revoke, undo, terminate',
@@ -921,8 +955,41 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
               'name': 'Erasure saved',
               'payloadSchema': [
                 {
-                  'name': 'row',
-                  'type': 'ErasureRequest',
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'subjectId',
+                  'type': 'string',
+                },
+                {
+                  'name': 'targetEntity',
+                  'type': 'string',
+                },
+                {
+                  'name': 'status',
+                  'type': 'string',
+                },
+                {
+                  'name': 'requestedAt',
+                  'type': 'number',
+                },
+                {
+                  'name': 'executesAt',
+                  'type': 'number',
+                },
+                {
+                  'name': 'executedAt',
+                  'type': 'number',
+                },
+                {
+                  'name': 'cancelledAt',
+                  'type': 'number',
+                },
+                {
+                  'name': 'notes',
+                  'type': 'string',
                 },
               ],
               'synonyms': 'created, added, persisted',

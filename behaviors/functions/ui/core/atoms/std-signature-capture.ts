@@ -65,7 +65,13 @@ export interface StdSignatureCaptureSignatureLoadFailedPayload {
  * Payload shape for the `SignatureSubmitted` event.
  */
 export interface StdSignatureCaptureSignatureSubmittedPayload {
-  row?: EntityRow;
+  id: string;
+  targetId: string;
+  targetType: string;
+  signerName: string;
+  signatureDataUrl: string;
+  signedAt?: string;
+  ipAddress?: string;
 }
 
 /**
@@ -365,45 +371,40 @@ export function stdSignatureCaptureSignatureCaptureOrbital(params: StdSignatureC
             'event': 'SignatureSubmitted',
             'payloadSchema': [
               {
-                'name': 'row',
-                'properties': [
-                  {
-                    'name': 'id',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'targetId',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'targetType',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'signerName',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'signatureDataUrl',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'signedAt',
-                    'type': 'datetime',
-                  },
-                  {
-                    'name': 'ipAddress',
-                    'type': 'string',
-                  },
-                ],
-                'type': 'object',
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'targetId',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'targetType',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'signerName',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'signatureDataUrl',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'signedAt',
+                'type': 'datetime',
+              },
+              {
+                'name': 'ipAddress',
+                'type': 'string',
               },
             ],
+            'scope': 'internal',
             'synonyms': 'signed, finalized, completed',
             'tier': 'domain',
           },
@@ -504,8 +505,37 @@ export function stdSignatureCaptureSignatureCaptureOrbital(params: StdSignatureC
               'name': 'Signature submitted',
               'payloadSchema': [
                 {
-                  'name': 'row',
-                  'type': 'Signature',
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'targetId',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'targetType',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'signerName',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'signatureDataUrl',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'signedAt',
+                  'type': 'datetime',
+                },
+                {
+                  'name': 'ipAddress',
+                  'type': 'string',
                 },
               ],
               'synonyms': 'signed, finalized, completed',

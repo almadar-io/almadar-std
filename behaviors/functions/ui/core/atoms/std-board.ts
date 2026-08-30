@@ -30,7 +30,7 @@ const ALIAS = 'Board';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdBoardEventKey = 'ADD_CARD' | 'BoardItemsLoadFailed' | 'BoardItemsLoaded' | 'BoardItemsSaveFailed' | 'BoardItemsSaved' | 'CANCEL_ADD' | 'CLOSE_CARD' | 'DELETE_CARD' | 'EDIT_CARD' | 'INIT' | 'MOVE_CARD' | 'OPEN_CARD' | 'REFETCH_FILTER' | 'REFETCH_PAGE' | 'REFETCH_QUERY' | 'REORDER_CARD' | 'REORDER_POSITION' | 'SAVE_CARD';
+export type StdBoardEventKey = 'ADD_CARD' | 'BoardItemDeleted' | 'BoardItemsLoadFailed' | 'BoardItemsLoaded' | 'BoardItemsSaveFailed' | 'BoardItemsSaved' | 'CANCEL_ADD' | 'CLOSE_CARD' | 'DELETE_CARD' | 'EDIT_CARD' | 'INIT' | 'MOVE_CARD' | 'OPEN_CARD' | 'REFETCH_FILTER' | 'REFETCH_PAGE' | 'REFETCH_QUERY' | 'REORDER_CARD' | 'REORDER_POSITION' | 'SAVE_CARD';
 
 /**
  * Payload shape for the `OPEN_CARD` event.
@@ -100,7 +100,15 @@ export interface StdBoardBoardItemsLoadFailedPayload {
  * Payload shape for the `BoardItemsSaved` event.
  */
 export interface StdBoardBoardItemsSavedPayload {
-  row?: unknown;
+  value?: unknown;
+}
+
+/**
+ * Payload shape for the `BoardItemDeleted` event.
+ */
+export interface StdBoardBoardItemDeletedPayload {
+  id?: string;
+  deleted?: boolean;
 }
 
 /**
@@ -1306,11 +1314,28 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
             'event': 'BoardItemsSaved',
             'payloadSchema': [
               {
-                'name': 'row',
+                'name': 'value',
                 'type': '@entity',
               },
             ],
+            'scope': 'internal',
             'synonyms': 'saved, persisted, updated',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Signals a board item has been deleted; carries the deleted row\'s id, not the row.',
+            'event': 'BoardItemDeleted',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+              {
+                'name': 'deleted',
+                'type': 'boolean',
+              },
+            ],
+            'synonyms': 'deleted, removed, discarded',
             'tier': 'domain',
           },
           {
@@ -1403,11 +1428,28 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
               'name': 'Board items saved',
               'payloadSchema': [
                 {
-                  'name': 'row',
+                  'name': 'value',
                   'type': '@entity',
                 },
               ],
               'synonyms': 'saved, persisted, updated',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Signals a board item has been deleted; carries the deleted row\'s id, not the row.',
+              'key': 'BoardItemDeleted',
+              'name': 'Board item deleted',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+                {
+                  'name': 'deleted',
+                  'type': 'boolean',
+                },
+              ],
+              'synonyms': 'deleted, removed, discarded',
               'tier': 'domain',
             },
             {
@@ -1838,6 +1880,31 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                 ],
               ],
               'event': 'BoardItemsSaved',
+              'from': 'loading',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('BoardView' satisfies _StdBoardEntityName),
+                  {
+                    'emit': {
+                      'failure': 'BoardItemsLoadFailed',
+                      'success': 'BoardItemsLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'title': 'Refreshing board…',
+                    'type': 'loading-state',
+                  },
+                ],
+              ],
+              'event': 'BoardItemDeleted',
               'from': 'loading',
               'to': 'loading',
             },
@@ -2433,7 +2500,7 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                   {
                     'emit': {
                       'failure': 'BoardItemsSaveFailed',
-                      'success': 'BoardItemsSaved',
+                      'success': 'BoardItemDeleted',
                     },
                   },
                 ],

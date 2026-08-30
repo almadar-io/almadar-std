@@ -3,7 +3,7 @@ app std-notification-center "1.0.0"
 type NotifRow = { id : string, recipient : string, channel : string, message : string, severity : string, dispatched : boolean, error : string, recordedAt : number }
 type PushCreds = { endpoint : string, p256dh : string, auth : string }
 orbital NotificationCenterOrbital {
-    type PUSH_SUBSCRIBED = Event { result : PushCreds } "browser/push-subscribe resolved — the flat subscription credentials arrive in `result`."
+    type PUSH_SUBSCRIBED = Event { endpoint : string, p256dh : string, auth : string } "browser/push-subscribe resolved — the credentials arrive FLAT on the payload (?endpoint, ?p256dh, ?auth), not wrapped in a `result` field."
 
   entity NotificationPreference [persistent: notificationPreferences] {
     id : string!
@@ -54,10 +54,10 @@ orbital NotificationCenterOrbital {
       PUSH_SUBSCRIBED -> idle
         (set @entity.lastError "")
         (persist create PushSubscription {
-          auth: ?result.auth
+          auth: ?auth
           createdAt: @now
-          endpoint: ?result.endpoint
-          p256dh: ?result.p256dh
+          endpoint: ?endpoint
+          p256dh: ?p256dh
           userId: @user.id
         } { emit: { failure: PUSH_SAVE_FAILED, success: PUSH_SAVED } })
       PUSH_SAVED -> idle
@@ -72,9 +72,11 @@ orbital NotificationCenterOrbital {
 
     emits {
       PUSH_SUBSCRIBED {
-        result : PushCreds
+        endpoint : string
+        p256dh : string
+        auth : string
       }
-        @description "browser/push-subscribe resolved with the flat subscription credentials in `result`"
+        @description "browser/push-subscribe resolved; the subscription credentials arrive flat on the payload"
         @tier "secondary"
       PUSH_SUBSCRIBE_FAILED {
         error : string!

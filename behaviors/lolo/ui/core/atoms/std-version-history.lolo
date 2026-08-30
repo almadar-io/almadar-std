@@ -5,7 +5,7 @@ orbital RevisionOrbital {
 
     type RevisionLoadFailed = Event { error : string, code : string } "Fired when the revision collection fails to load"
 
-    type RevisionRolledBack = Event { row : Revision } "Fired after a rollback persists successfully on the source document"
+    type RevisionRolledBack = Event Revision "Fired after a rollback persists successfully on the source document"
 
     type RevisionRollbackFailed = Event { error : string, code : string } "Fired when a rollback fails to persist"
 
@@ -98,9 +98,9 @@ orbital RevisionOrbital {
           type: stack
         })
       RevisionRolledBack -> loading
-        (set @entity.scopeKey (object/get ?row @config.scopeField ""))
+        (set @entity.scopeKey (object/get @payload @config.scopeField ""))
         (fetch Revision {
-          filter: (or ["=", @config.scopeField, ""] ["=", (object/get ?row @config.scopeField ""), ""] ["=", (object/get @entity @config.scopeField), (object/get ?row @config.scopeField "")])
+          filter: (or ["=", @config.scopeField, ""] ["=", (object/get @payload @config.scopeField ""), ""] ["=", (object/get @entity @config.scopeField), (object/get @payload @config.scopeField "")])
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
         })
       RevisionRollbackFailed -> error
@@ -532,9 +532,7 @@ orbital RevisionOrbital {
         @description "Indicates a failure to load revision data."
         @synonyms "error, fail, problem, unsuccessful"
         @tier "internal"
-      RevisionRolledBack {
-        row : Revision
-      }
+      RevisionRolledBack
         @description "Indicates a revision has been successfully restored to a previous state."
         @synonyms "restored, reverted, undone"
         @tier "presentation"
@@ -593,9 +591,7 @@ orbital RevisionOrbital {
         @description "Indicates a failure to retrieve revision data."
         @synonyms "error, failure, problem, fetch failed"
         @tier "internal"
-      RevisionRolledBack {
-        row : Revision
-      }
+      RevisionRolledBack
         @description "Indicates a revision has been successfully reverted."
         @synonyms "reverted, undone, restored"
         @tier "internal"

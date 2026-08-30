@@ -60,7 +60,7 @@ export interface StdVoteVoteLoadFailedPayload {
  * Payload shape for the `VoteCasted` event.
  */
 export interface StdVoteVoteCastedPayload {
-  row?: EntityRow;
+  value?: unknown;
 }
 
 /**
@@ -331,33 +331,8 @@ export function stdVoteVoteOrbital(params: StdVoteVoteOrbitalParams = {}): Orbit
             'event': 'VoteCasted',
             'payloadSchema': [
               {
-                'name': 'row',
-                'properties': [
-                  {
-                    'name': 'id',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'targetId',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'voterId',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'direction',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'createdAt',
-                    'type': 'string',
-                  },
-                ],
-                'type': 'object',
+                'name': 'value',
+                'type': '@entity',
               },
             ],
             'scope': 'external',
@@ -471,8 +446,8 @@ export function stdVoteVoteOrbital(params: StdVoteVoteOrbitalParams = {}): Orbit
               'name': 'Vote casted',
               'payloadSchema': [
                 {
-                  'name': 'row',
-                  'type': 'Vote',
+                  'name': 'value',
+                  'type': '@entity',
                 },
               ],
               'synonyms': 'voted, vote-submitted, vote-changed',

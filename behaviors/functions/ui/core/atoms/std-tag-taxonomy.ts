@@ -79,7 +79,13 @@ export interface StdTagTaxonomyLevelReloadPayload {
  * Payload shape for the `TagCreated` event.
  */
 export interface StdTagTaxonomyTagCreatedPayload {
-  row?: EntityRow;
+  id: string;
+  name: string;
+  parentId?: EntityRow;
+  slug?: string;
+  color?: string;
+  count?: number;
+  createdAt?: string;
 }
 
 /**
@@ -456,42 +462,37 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
             'event': 'TagCreated',
             'payloadSchema': [
               {
-                'name': 'row',
-                'properties': [
-                  {
-                    'name': 'id',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'name',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'parentId',
-                    'type': 'Tag',
-                  },
-                  {
-                    'name': 'slug',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'color',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'count',
-                    'type': 'number',
-                  },
-                  {
-                    'name': 'createdAt',
-                    'type': 'string',
-                  },
-                ],
-                'type': 'object',
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'name',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'parentId',
+                'type': 'Tag',
+              },
+              {
+                'name': 'slug',
+                'type': 'string',
+              },
+              {
+                'name': 'color',
+                'type': 'string',
+              },
+              {
+                'name': 'count',
+                'type': 'number',
+              },
+              {
+                'name': 'createdAt',
+                'type': 'string',
               },
             ],
+            'scope': 'internal',
             'synonyms': 'created, added',
             'tier': 'internal',
           },
@@ -626,8 +627,34 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
               'name': 'Tag created',
               'payloadSchema': [
                 {
-                  'name': 'row',
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'name',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'parentId',
                   'type': 'Tag',
+                },
+                {
+                  'name': 'slug',
+                  'type': 'string',
+                },
+                {
+                  'name': 'color',
+                  'type': 'string',
+                },
+                {
+                  'name': 'count',
+                  'type': 'number',
+                },
+                {
+                  'name': 'createdAt',
+                  'type': 'string',
                 },
               ],
               'synonyms': 'created, added',
@@ -1416,11 +1443,7 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                       ],
                       [
                         'str/default',
-                        [
-                          'object/get',
-                          '@payload.row',
-                          'parentId',
-                        ],
+                        '@payload.parentId',
                         '',
                       ],
                     ],

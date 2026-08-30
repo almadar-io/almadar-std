@@ -9,9 +9,9 @@ orbital CrossReferenceOrbital {
 
     type FETCH_LINKS_FOR = Event { leftId : string } "Request the link set for a given leftId."
 
-    type LinkCreated = Event { row : @entity } "Fired after a junction row is persisted."
+    type LinkCreated = Event @entity "Fired after a junction row is persisted."
 
-    type LinkRemoved = Event { leftId : string, rightId : string } "Fired after a junction row is deleted."
+    type LinkRemoved = Event { id : string, deleted : boolean } "Fired after a junction row is deleted — persist delete emits the deleted row's id and a deleted flag, not the link's leftId/rightId."
 
     type LinksLoaded = Event { leftId : string, data : [ObjectSpec] } "Fired after junction rows for leftId are fetched."
 
@@ -50,10 +50,10 @@ orbital CrossReferenceOrbital {
     }
 
     emits {
-      LinkCreated -> external { row : @entity }
+      LinkCreated -> external
       LinkRemoved -> external {
-        leftId : string
-        rightId : string
+        id : string
+        deleted : boolean
       }
       LinksLoaded -> external {
         leftId : string

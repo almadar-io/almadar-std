@@ -65,7 +65,7 @@ export interface StdWizardWizardLoadFailedPayload {
  * Payload shape for the `WizardSaved` event.
  */
 export interface StdWizardWizardSavedPayload {
-  row?: unknown;
+  value?: unknown;
 }
 
 /**
@@ -576,10 +576,11 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
             'event': 'WizardSaved',
             'payloadSchema': [
               {
-                'name': 'row',
+                'name': 'value',
                 'type': '@entity',
               },
             ],
+            'scope': 'internal',
             'synonyms': 'saved, submitted, confirmed',
             'tier': 'domain',
           },
@@ -679,7 +680,7 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
               'name': 'Wizard saved',
               'payloadSchema': [
                 {
-                  'name': 'row',
+                  'name': 'value',
                   'type': '@entity',
                 },
               ],

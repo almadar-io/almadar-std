@@ -356,7 +356,33 @@ export function stdConfirmationConfirmActionOrbital(params: StdConfirmationConfi
                 },
                 {
                   'name': 'row',
-                  'type': 'ConfirmAction',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'name',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'description',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'pendingId',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': 'object',
                 },
               ],
               'synonyms': 'prompt, ask, verify',

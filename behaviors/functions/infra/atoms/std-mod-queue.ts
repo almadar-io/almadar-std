@@ -762,51 +762,46 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
             'event': 'ModQueueItemReviewed',
             'payloadSchema': [
               {
-                'name': 'row',
-                'properties': [
-                  {
-                    'name': 'id',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'targetId',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'targetType',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'reason',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'flagCount',
-                    'type': 'number',
-                  },
-                  {
-                    'name': 'status',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'reviewedBy',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'reviewedAt',
-                    'type': 'datetime',
-                  },
-                  {
-                    'name': 'notes',
-                    'type': 'string',
-                  },
-                ],
-                'type': 'object',
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'targetId',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'targetType',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'reason',
+                'type': 'string',
+              },
+              {
+                'name': 'flagCount',
+                'type': 'number',
+              },
+              {
+                'name': 'status',
+                'type': 'string',
+              },
+              {
+                'name': 'reviewedBy',
+                'type': 'string',
+              },
+              {
+                'name': 'reviewedAt',
+                'type': 'datetime',
+              },
+              {
+                'name': 'notes',
+                'type': 'string',
               },
             ],
+            'scope': 'internal',
             'synonyms': 'reviewed, processed, judged, completed',
             'tier': 'domain',
           },
@@ -902,7 +897,48 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                 },
                 {
                   'name': 'row',
-                  'type': 'ModQueueItem',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'targetId',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'targetType',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'reason',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'flagCount',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'reviewedBy',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'reviewedAt',
+                      'type': 'datetime',
+                    },
+                    {
+                      'name': 'notes',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': 'object',
                 },
               ],
               'synonyms': 'accept, confirm, pass',
@@ -920,7 +956,48 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                 },
                 {
                   'name': 'row',
-                  'type': 'ModQueueItem',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'targetId',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'targetType',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'reason',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'flagCount',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'reviewedBy',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'reviewedAt',
+                      'type': 'datetime',
+                    },
+                    {
+                      'name': 'notes',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': 'object',
                 },
               ],
               'synonyms': 'deny, dismiss, decline',
@@ -938,7 +1015,48 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                 },
                 {
                   'name': 'row',
-                  'type': 'ModQueueItem',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'targetId',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'targetType',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'reason',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'flagCount',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'reviewedBy',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'reviewedAt',
+                      'type': 'datetime',
+                    },
+                    {
+                      'name': 'notes',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': 'object',
                 },
               ],
               'synonyms': 'flag, defer, elevate',
@@ -950,8 +1068,43 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
               'name': 'ModQueueItem reviewed',
               'payloadSchema': [
                 {
-                  'name': 'row',
-                  'type': 'ModQueueItem',
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'targetId',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'targetType',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'reason',
+                  'type': 'string',
+                },
+                {
+                  'name': 'flagCount',
+                  'type': 'number',
+                },
+                {
+                  'name': 'status',
+                  'type': 'string',
+                },
+                {
+                  'name': 'reviewedBy',
+                  'type': 'string',
+                },
+                {
+                  'name': 'reviewedAt',
+                  'type': 'datetime',
+                },
+                {
+                  'name': 'notes',
+                  'type': 'string',
                 },
               ],
               'synonyms': 'reviewed, processed, judged, completed',

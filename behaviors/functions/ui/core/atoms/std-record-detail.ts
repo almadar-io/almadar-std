@@ -782,7 +782,55 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
             'payloadSchema': [
               {
                 'name': 'data',
-                'type': 'RecordItem',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'name',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'description',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'status',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'slug',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'content',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'coverUrl',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'iconName',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'loadedRow',
+                    'type': 'object',
+                  },
+                  {
+                    'name': 'openDraft',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'createdAt',
+                    'type': 'string',
+                  },
+                ],
+                'type': 'object',
               },
               {
                 'name': 'totalCount',
@@ -1130,7 +1178,55 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                 },
                 {
                   'name': 'row',
-                  'type': 'RecordItem',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'name',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'description',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'slug',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'content',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'coverUrl',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'iconName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'loadedRow',
+                      'type': 'object',
+                    },
+                    {
+                      'name': 'openDraft',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': 'object',
                 },
               ],
               'synonyms': 'open record, view row, show details, drill in, expand',
@@ -1143,7 +1239,55 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
               'payloadSchema': [
                 {
                   'name': 'data',
-                  'type': 'RecordItem',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'name',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'description',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'slug',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'content',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'coverUrl',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'iconName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'loadedRow',
+                      'type': 'object',
+                    },
+                    {
+                      'name': 'openDraft',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': 'object',
                 },
                 {
                   'name': 'totalCount',
@@ -3384,7 +3528,55 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
               'payloadSchema': [
                 {
                   'name': 'data',
-                  'type': 'RecordItem',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'name',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'description',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'slug',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'content',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'coverUrl',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'iconName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'loadedRow',
+                      'type': 'object',
+                    },
+                    {
+                      'name': 'openDraft',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': 'object',
                 },
               ],
               'synonyms': 'record loaded, show metadata, populate details',
@@ -3493,7 +3685,55 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                 },
                 {
                   'name': 'patch',
-                  'type': 'RecordItem',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'name',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'description',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'slug',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'content',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'coverUrl',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'iconName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'loadedRow',
+                      'type': 'object',
+                    },
+                    {
+                      'name': 'openDraft',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': 'object',
                 },
               ],
               'synonyms': 'property changed, metadata edited, field committed',

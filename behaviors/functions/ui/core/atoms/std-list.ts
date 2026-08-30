@@ -1510,8 +1510,36 @@ export function stdListListItemOrbital(params: StdListListItemOrbitalParams = {}
               'payloadSchema': [
                 {
                   'name': 'data',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'name',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'description',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'pendingId',
+                      'type': 'string',
+                    },
+                  ],
                   'required': true,
-                  'type': 'ListItem',
+                  'type': 'object',
                 },
               ],
               'synonyms': 'add, new, insert',
@@ -1524,8 +1552,36 @@ export function stdListListItemOrbital(params: StdListListItemOrbitalParams = {}
               'payloadSchema': [
                 {
                   'name': 'data',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'name',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'description',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'pendingId',
+                      'type': 'string',
+                    },
+                  ],
                   'required': true,
-                  'type': 'ListItem',
+                  'type': 'object',
                 },
               ],
               'synonyms': 'modified, changed, refreshed',

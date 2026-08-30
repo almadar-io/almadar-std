@@ -831,36 +831,8 @@ export function stdCircuitBreakerServiceNodeOrbital(params: StdCircuitBreakerSer
             'event': 'ServiceNodeLoaded',
             'payloadSchema': [
               {
-                'name': 'id',
-                'type': 'string',
-              },
-              {
-                'name': 'name',
-                'type': 'string',
-              },
-              {
-                'name': 'description',
-                'type': 'string',
-              },
-              {
-                'name': 'status',
-                'type': 'string',
-              },
-              {
-                'name': 'createdAt',
-                'type': 'string',
-              },
-              {
-                'name': 'failureCount',
-                'type': 'number',
-              },
-              {
-                'name': 'successCount',
-                'type': 'number',
-              },
-              {
-                'name': 'threshold',
-                'type': 'number',
+                'name': 'data',
+                'type': '[ServiceNode]',
               },
             ],
             'scope': 'internal',
@@ -922,36 +894,8 @@ export function stdCircuitBreakerServiceNodeOrbital(params: StdCircuitBreakerSer
               'name': 'ServiceNode loaded',
               'payloadSchema': [
                 {
-                  'name': 'id',
-                  'type': 'string',
-                },
-                {
-                  'name': 'name',
-                  'type': 'string',
-                },
-                {
-                  'name': 'description',
-                  'type': 'string',
-                },
-                {
-                  'name': 'status',
-                  'type': 'string',
-                },
-                {
-                  'name': 'createdAt',
-                  'type': 'string',
-                },
-                {
-                  'name': 'failureCount',
-                  'type': 'number',
-                },
-                {
-                  'name': 'successCount',
-                  'type': 'number',
-                },
-                {
-                  'name': 'threshold',
-                  'type': 'number',
+                  'name': 'data',
+                  'type': '[ServiceNode]',
                 },
               ],
               'synonyms': 'loaded, initialized, ready',

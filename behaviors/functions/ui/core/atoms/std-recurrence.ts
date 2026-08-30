@@ -80,7 +80,7 @@ export interface StdRecurrenceRecurrenceLoadFailedPayload {
  * Payload shape for the `RecurrenceSaved` event.
  */
 export interface StdRecurrenceRecurrenceSavedPayload {
-  row?: unknown;
+  value?: unknown;
 }
 
 /**
@@ -581,10 +581,11 @@ export function stdRecurrenceRecurrenceOrbital(params: StdRecurrenceRecurrenceOr
             'event': 'RecurrenceSaved',
             'payloadSchema': [
               {
-                'name': 'row',
+                'name': 'value',
                 'type': '@entity',
               },
             ],
+            'scope': 'internal',
             'synonyms': 'saved, updated, persisted',
             'tier': 'domain',
           },
@@ -681,7 +682,7 @@ export function stdRecurrenceRecurrenceOrbital(params: StdRecurrenceRecurrenceOr
               'name': 'Recurrence saved',
               'payloadSchema': [
                 {
-                  'name': 'row',
+                  'name': 'value',
                   'type': '@entity',
                 },
               ],

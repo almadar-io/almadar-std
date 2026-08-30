@@ -36,7 +36,9 @@ export type StdNotificationCenterEventKey = 'PUSH_SAVED' | 'PUSH_SAVE_FAILED' | 
  * Payload shape for the `PUSH_SUBSCRIBED` event.
  */
 export interface StdNotificationCenterPushSubscribedPayload {
-  result?: EntityRow;
+  endpoint?: string;
+  p256dh?: string;
+  auth?: string;
 }
 
 /**
@@ -485,26 +487,20 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
         'category': 'lifecycle',
         'emits': [
           {
-            'description': 'browser/push-subscribe resolved with the flat subscription credentials in `result`',
+            'description': 'browser/push-subscribe resolved; the subscription credentials arrive flat on the payload',
             'event': 'PUSH_SUBSCRIBED',
             'payloadSchema': [
               {
-                'name': 'result',
-                'properties': [
-                  {
-                    'name': 'endpoint',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'p256dh',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'auth',
-                    'type': 'string',
-                  },
-                ],
-                'type': 'object',
+                'name': 'endpoint',
+                'type': 'string',
+              },
+              {
+                'name': 'p256dh',
+                'type': 'string',
+              },
+              {
+                'name': 'auth',
+                'type': 'string',
               },
             ],
             'tier': 'secondary',
@@ -556,27 +552,21 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
               'name': 'Subscribe Push',
             },
             {
-              'description': 'browser/push-subscribe resolved with the flat subscription credentials in `result`',
+              'description': 'browser/push-subscribe resolved; the subscription credentials arrive flat on the payload',
               'key': 'PUSH_SUBSCRIBED',
               'name': 'Push Subscribed',
               'payloadSchema': [
                 {
-                  'name': 'result',
-                  'properties': [
-                    {
-                      'name': 'endpoint',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'p256dh',
-                      'type': 'string',
-                    },
-                    {
-                      'name': 'auth',
-                      'type': 'string',
-                    },
-                  ],
-                  'type': 'object',
+                  'name': 'endpoint',
+                  'type': 'string',
+                },
+                {
+                  'name': 'p256dh',
+                  'type': 'string',
+                },
+                {
+                  'name': 'auth',
+                  'type': 'string',
                 },
               ],
               'tier': 'secondary',
@@ -656,10 +646,10 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
                   'create',
                   ('PushSubscription' satisfies _StdNotificationCenterEntityName),
                   {
-                    'auth': '@payload.result.auth',
+                    'auth': '@payload.auth',
                     'createdAt': '@now',
-                    'endpoint': '@payload.result.endpoint',
-                    'p256dh': '@payload.result.p256dh',
+                    'endpoint': '@payload.endpoint',
+                    'p256dh': '@payload.p256dh',
                     'userId': '@user.id',
                   },
                   {

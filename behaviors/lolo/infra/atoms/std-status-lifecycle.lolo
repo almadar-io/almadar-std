@@ -7,6 +7,8 @@ orbital StatusLifecycleOrbital {
 
     type StatusChanged = Event { entityId : string, status : string } "Re-emitted per record after a legal transition; rename to wire downstream reactions (notify, audit, archive)."
 
+    type StatusPersisted = Event StatusRecord "Internal: the status write landed; carries the persisted row flat."
+
     type StatusChangeFailed = Event { error : string, code : string } "Internal: persist of the new status failed."
 
   entity StatusRecord [persistent: status_records] {
@@ -27,7 +29,7 @@ orbital StatusLifecycleOrbital {
       ;; synchronous emit fired even when the write failed, so a denied
       ;; mutation still looked like a completed transition downstream.
       StatusPersisted -> idle when ["!=", (str/default ?id ""), ""]
-        (emit StatusChanged { entityId: ?id, status: (str/default (object/get ?row @config.statusField) "") })
+        (emit StatusChanged { entityId: ?id, status: (str/default (object/get @payload @config.statusField) "") })
       StatusChangeFailed -> idle
     }
 
@@ -36,10 +38,7 @@ orbital StatusLifecycleOrbital {
         entityId : string
         status : string
       }
-      StatusPersisted {
-        id : string
-        row : StatusRecord
-      }
+      StatusPersisted
       StatusChangeFailed -> external {
         error : string
         code : string
@@ -52,10 +51,7 @@ orbital StatusLifecycleOrbital {
         from : string
         to : string
       }
-      StatusPersisted {
-        id : string
-        row : StatusRecord
-      }
+      StatusPersisted
       StatusChangeFailed {
         error : string
         code : string

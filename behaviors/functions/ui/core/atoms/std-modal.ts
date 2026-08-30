@@ -419,7 +419,33 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
               'payloadSchema': [
                 {
                   'name': 'row',
-                  'type': 'ModalRecord',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'name',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'description',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'seedRow',
+                      'type': 'ModalRecord',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': 'object',
                 },
               ],
               'synonyms': 'preload row, stash record, seed form, prefill',
@@ -436,7 +462,33 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
                 },
                 {
                   'name': 'row',
-                  'type': 'ModalRecord',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'name',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'description',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'seedRow',
+                      'type': 'ModalRecord',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': 'object',
                 },
               ],
               'synonyms': 'show, display, present, reveal',

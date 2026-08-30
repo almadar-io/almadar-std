@@ -964,65 +964,11 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
             'event': 'ApprovalRequestReviewed',
             'payloadSchema': [
               {
-                'name': 'row',
-                'properties': [
-                  {
-                    'name': 'id',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'gatedEvent',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'subjectLabel',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'subjectId',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'requestedBy',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'requestedByName',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'status',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'reviewer',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'requestedAt',
-                    'type': 'number',
-                  },
-                  {
-                    'name': 'decidedAt',
-                    'type': 'number',
-                  },
-                  {
-                    'name': 'escalatedAt',
-                    'type': 'number',
-                  },
-                  {
-                    'name': 'notes',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'payload',
-                    'type': 'object',
-                  },
-                ],
-                'type': 'object',
+                'name': 'value',
+                'type': '@entity',
               },
             ],
+            'scope': 'internal',
             'synonyms': 'reviewed, processed, examined',
             'tier': 'internal',
           },
@@ -1147,7 +1093,62 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
                 },
                 {
                   'name': 'row',
-                  'type': 'ApprovalRequest',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'gatedEvent',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'subjectLabel',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'subjectId',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'requestedBy',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'requestedByName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'reviewer',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'requestedAt',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'decidedAt',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'escalatedAt',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'notes',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'payload',
+                      'type': 'object',
+                    },
+                  ],
+                  'type': 'object',
                 },
               ],
               'synonyms': 'accept, authorize, confirm, pass',
@@ -1165,7 +1166,62 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
                 },
                 {
                   'name': 'row',
-                  'type': 'ApprovalRequest',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'gatedEvent',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'subjectLabel',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'subjectId',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'requestedBy',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'requestedByName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'reviewer',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'requestedAt',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'decidedAt',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'escalatedAt',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'notes',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'payload',
+                      'type': 'object',
+                    },
+                  ],
+                  'type': 'object',
                 },
               ],
               'synonyms': 'reject, decline',
@@ -1199,8 +1255,8 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
               'name': 'ApprovalRequest reviewed',
               'payloadSchema': [
                 {
-                  'name': 'row',
-                  'type': 'ApprovalRequest',
+                  'name': 'value',
+                  'type': '@entity',
                 },
               ],
               'synonyms': 'reviewed, processed, examined',

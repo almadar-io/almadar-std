@@ -76,7 +76,17 @@ export interface StdVersionHistoryRevisionLoadFailedPayload {
  * Payload shape for the `RevisionRolledBack` event.
  */
 export interface StdVersionHistoryRevisionRolledBackPayload {
-  row?: EntityRow;
+  id: string;
+  documentId: string;
+  documentType: string;
+  versionNumber: number;
+  authorId?: string;
+  authorName?: string;
+  content?: string;
+  summary?: string;
+  searchTerm?: string;
+  createdAt?: string;
+  scopeKey?: string;
 }
 
 /**
@@ -513,60 +523,55 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
             'event': 'RevisionRolledBack',
             'payloadSchema': [
               {
-                'name': 'row',
-                'properties': [
-                  {
-                    'name': 'id',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'documentId',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'documentType',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'versionNumber',
-                    'required': true,
-                    'type': 'number',
-                  },
-                  {
-                    'name': 'authorId',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'authorName',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'content',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'summary',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'searchTerm',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'createdAt',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'scopeKey',
-                    'type': 'string',
-                  },
-                ],
-                'type': 'object',
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'documentId',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'documentType',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'versionNumber',
+                'required': true,
+                'type': 'number',
+              },
+              {
+                'name': 'authorId',
+                'type': 'string',
+              },
+              {
+                'name': 'authorName',
+                'type': 'string',
+              },
+              {
+                'name': 'content',
+                'type': 'string',
+              },
+              {
+                'name': 'summary',
+                'type': 'string',
+              },
+              {
+                'name': 'searchTerm',
+                'type': 'string',
+              },
+              {
+                'name': 'createdAt',
+                'type': 'string',
+              },
+              {
+                'name': 'scopeKey',
+                'type': 'string',
               },
             ],
+            'scope': 'internal',
             'synonyms': 'restored, reverted, undone',
             'tier': 'presentation',
           },
@@ -638,8 +643,52 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
               'name': 'Revision rolled back',
               'payloadSchema': [
                 {
-                  'name': 'row',
-                  'type': 'Revision',
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'documentId',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'documentType',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'versionNumber',
+                  'required': true,
+                  'type': 'number',
+                },
+                {
+                  'name': 'authorId',
+                  'type': 'string',
+                },
+                {
+                  'name': 'authorName',
+                  'type': 'string',
+                },
+                {
+                  'name': 'content',
+                  'type': 'string',
+                },
+                {
+                  'name': 'summary',
+                  'type': 'string',
+                },
+                {
+                  'name': 'searchTerm',
+                  'type': 'string',
+                },
+                {
+                  'name': 'createdAt',
+                  'type': 'string',
+                },
+                {
+                  'name': 'scopeKey',
+                  'type': 'string',
                 },
               ],
               'synonyms': 'restored, reverted, undone',
@@ -705,7 +754,57 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                 },
                 {
                   'name': 'row',
-                  'type': 'Revision',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'documentId',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'documentType',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'versionNumber',
+                      'required': true,
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'authorId',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'authorName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'content',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'summary',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'searchTerm',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'scopeKey',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': 'object',
                 },
               ],
               'synonyms': 'select, choose, display',
@@ -939,7 +1038,7 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                   '@entity.scopeKey',
                   [
                     'object/get',
-                    '@payload.row',
+                    '@payload',
                     '@config.scopeField',
                     '',
                   ],
@@ -963,7 +1062,7 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                         '=',
                         [
                           'object/get',
-                          '@payload.row',
+                          '@payload',
                           '@config.scopeField',
                           '',
                         ],
@@ -978,7 +1077,7 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                         ],
                         [
                           'object/get',
-                          '@payload.row',
+                          '@payload',
                           '@config.scopeField',
                           '',
                         ],

@@ -407,7 +407,7 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
                 'event': {
                   'name': 'event',
                   'required': false,
-                  'type': 'string',
+                  'type': 'event',
                 },
                 'icon': {
                   'name': 'icon',

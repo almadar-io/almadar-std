@@ -36,15 +36,15 @@ export type StdCrossReferenceEventKey = 'FETCH_LINKS_FOR' | 'LinkCreated' | 'Lin
  * Payload shape for the `LinkCreated` event.
  */
 export interface StdCrossReferenceLinkCreatedPayload {
-  row?: unknown;
+  value?: unknown;
 }
 
 /**
  * Payload shape for the `LinkRemoved` event.
  */
 export interface StdCrossReferenceLinkRemovedPayload {
-  leftId?: string;
-  rightId?: string;
+  id?: string;
+  deleted?: boolean;
 }
 
 /**
@@ -272,10 +272,11 @@ export function stdCrossReferenceCrossReferenceOrbital(params: StdCrossReference
         'category': 'lifecycle',
         'emits': [
           {
+            'description': 'Fired after a junction row is persisted.',
             'event': 'LinkCreated',
             'payloadSchema': [
               {
-                'name': 'row',
+                'name': 'value',
                 'type': '@entity',
               },
             ],
@@ -285,12 +286,12 @@ export function stdCrossReferenceCrossReferenceOrbital(params: StdCrossReference
             'event': 'LinkRemoved',
             'payloadSchema': [
               {
-                'name': 'leftId',
+                'name': 'id',
                 'type': 'string',
               },
               {
-                'name': 'rightId',
-                'type': 'string',
+                'name': 'deleted',
+                'type': 'boolean',
               },
             ],
             'scope': 'external',
@@ -414,7 +415,7 @@ export function stdCrossReferenceCrossReferenceOrbital(params: StdCrossReference
               'name': 'Link created',
               'payloadSchema': [
                 {
-                  'name': 'row',
+                  'name': 'value',
                   'type': '@entity',
                 },
               ],
@@ -424,12 +425,12 @@ export function stdCrossReferenceCrossReferenceOrbital(params: StdCrossReference
               'name': 'Link removed',
               'payloadSchema': [
                 {
-                  'name': 'leftId',
+                  'name': 'id',
                   'type': 'string',
                 },
                 {
-                  'name': 'rightId',
-                  'type': 'string',
+                  'name': 'deleted',
+                  'type': 'boolean',
                 },
               ],
             },

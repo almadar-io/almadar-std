@@ -7,6 +7,8 @@ orbital TagTaxonomyOrbital {
 
     type TagSelected = Event { tagId : string! } "Fired when a tag is selected to drill into its children"
 
+    type TagCreated = Event Tag "Fired after a new tag row persists — the payload IS the created row (flat: ?id, ?name, ?parentId)"
+
     type TagCommit = { name : string!, parentId : string }
 
   entity Tag [persistent: tags] {
@@ -357,7 +359,7 @@ orbital TagTaxonomyOrbital {
           type: stack
         })
         (fetch Tag {
-          filter: ["=", (object/get @entity parentId), (str/default (object/get ?row parentId) "")]
+          filter: ["=", (object/get @entity parentId), (str/default ?parentId "")]
           emit: { failure: TagLoadFailed, success: TagLoaded }
         })
       TagCreateFailed -> creating
@@ -555,9 +557,7 @@ orbital TagTaxonomyOrbital {
         @description "Internal hop that refetches the open level after the new-category form closes (a fetch filter cannot read trait state, so the level travels by payload)."
         @synonyms "reload level, refresh"
         @tier "internal"
-      TagCreated {
-        row : Tag
-      }
+      TagCreated
         @description "A new tag row persisted; the open level refetches to show it."
         @synonyms "created, added"
         @tier "internal"
@@ -616,9 +616,7 @@ orbital TagTaxonomyOrbital {
         @description "Refetch the open level."
         @synonyms "reload level, refresh"
         @tier "internal"
-      TagCreated {
-        row : Tag
-      }
+      TagCreated
         @description "A new tag row persisted."
         @synonyms "created, added"
         @tier "internal"

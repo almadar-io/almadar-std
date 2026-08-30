@@ -1601,7 +1601,57 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                 },
                 {
                   'name': 'row',
-                  'type': 'SignatureSession',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'documentId',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'documentName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'recipientName',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'recipientEmail',
+                      'required': true,
+                      'type': 'email',
+                    },
+                    {
+                      'name': 'requesterName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'sentAt',
+                      'type': 'datetime',
+                    },
+                    {
+                      'name': 'signedAt',
+                      'type': 'datetime',
+                    },
+                    {
+                      'name': 'envelopeId',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'pendingId',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': 'object',
                 },
                 {
                   'name': 'file',
@@ -1641,7 +1691,57 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                 },
                 {
                   'name': 'row',
-                  'type': 'SignatureSession',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'documentId',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'documentName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'recipientName',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'recipientEmail',
+                      'required': true,
+                      'type': 'email',
+                    },
+                    {
+                      'name': 'requesterName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'sentAt',
+                      'type': 'datetime',
+                    },
+                    {
+                      'name': 'signedAt',
+                      'type': 'datetime',
+                    },
+                    {
+                      'name': 'envelopeId',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'pendingId',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': 'object',
                 },
               ],
               'synonyms': 'refresh status, check signature, poll envelope',

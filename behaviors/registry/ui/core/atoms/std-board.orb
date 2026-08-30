@@ -172,6 +172,15 @@
         "parent": "trt_01KXG04FS55WPDV86JDDX2KA6Z",
         "renames": []
       },
+      "evt_01M19VP1CDR0S13Y1Z3HPGYJBA": {
+        "bakedName": "BoardItemDeleted",
+        "curName": "BoardItemDeleted",
+        "id": "evt_01M19VP1CDR0S13Y1Z3HPGYJBA",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04FS55WPDV86JDDX2KA6Z",
+        "renames": []
+      },
       "orb_01KXG04FS58SZN66P0EVZEDT70": {
         "bakedName": "BoardOrbital",
         "curName": "BoardOrbital",
@@ -1239,11 +1248,29 @@
               "eventId": "evt_01KXG04FS8ZFPK0V29TASPD99M",
               "payloadSchema": [
                 {
-                  "name": "row",
+                  "name": "value",
                   "type": "@entity"
                 }
               ],
+              "scope": "internal",
               "synonyms": "saved, persisted, updated",
+              "tier": "domain"
+            },
+            {
+              "description": "Signals a board item has been deleted; carries the deleted row's id, not the row.",
+              "event": "BoardItemDeleted",
+              "eventId": "evt_01M19VP1CDR0S13Y1Z3HPGYJBA",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "deleted",
+                  "type": "boolean"
+                }
+              ],
+              "synonyms": "deleted, removed, discarded",
               "tier": "domain"
             },
             {
@@ -1346,11 +1373,29 @@
                 "name": "Board items saved",
                 "payloadSchema": [
                   {
-                    "name": "row",
+                    "name": "value",
                     "type": "@entity"
                   }
                 ],
                 "synonyms": "saved, persisted, updated",
+                "tier": "domain"
+              },
+              {
+                "description": "Signals a board item has been deleted; carries the deleted row's id, not the row.",
+                "id": "evt_01M19VP1CDR0S13Y1Z3HPGYJBA",
+                "key": "BoardItemDeleted",
+                "name": "Board item deleted",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  },
+                  {
+                    "name": "deleted",
+                    "type": "boolean"
+                  }
+                ],
+                "synonyms": "deleted, removed, discarded",
                 "tier": "domain"
               },
               {
@@ -1799,6 +1844,32 @@
                 ],
                 "event": "BoardItemsSaved",
                 "eventId": "evt_01KXG04FS8ZFPK0V29TASPD99M",
+                "from": "loading",
+                "to": "loading"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "BoardView",
+                    {
+                      "emit": {
+                        "failure": "BoardItemsLoadFailed",
+                        "success": "BoardItemsLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "title": "Refreshing board…",
+                      "type": "loading-state"
+                    }
+                  ]
+                ],
+                "event": "BoardItemDeleted",
+                "eventId": "evt_01M19VP1CDR0S13Y1Z3HPGYJBA",
                 "from": "loading",
                 "to": "loading"
               },
@@ -2408,7 +2479,7 @@
                     {
                       "emit": {
                         "failure": "BoardItemsSaveFailed",
-                        "success": "BoardItemsSaved"
+                        "success": "BoardItemDeleted"
                       }
                     }
                   ],

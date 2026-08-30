@@ -1068,7 +1068,39 @@ export function stdCacheAsideCacheEntryOrbital(params: StdCacheAsideCacheEntryOr
               'payloadSchema': [
                 {
                   'name': 'data',
-                  'type': 'CacheEntry',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'name',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'description',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'hitCount',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'cacheAge',
+                      'type': 'number',
+                    },
+                  ],
+                  'type': 'object',
                 },
               ],
               'synonyms': 'hit, found, retrieved',

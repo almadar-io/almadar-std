@@ -747,7 +747,35 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
                 },
                 {
                   'name': 'row',
-                  'type': 'GalleryItem',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'name',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'description',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'imageUrl',
+                      'type': 'image',
+                    },
+                  ],
+                  'type': 'object',
                 },
               ],
               'synonyms': 'select, choose, display',

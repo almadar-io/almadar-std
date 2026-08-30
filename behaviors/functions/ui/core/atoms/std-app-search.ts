@@ -284,7 +284,7 @@ export function stdAppSearchAppSearchOrbital(params: StdAppSearchAppSearchOrbita
                 'event': {
                   'name': 'event',
                   'required': true,
-                  'type': 'string',
+                  'type': 'event',
                 },
                 'hidden': {
                   'name': 'hidden',

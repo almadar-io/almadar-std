@@ -44,8 +44,8 @@ export interface StdStatusLifecycleStatusChangedPayload {
  * Payload shape for the `StatusPersisted` event.
  */
 export interface StdStatusLifecycleStatusPersistedPayload {
-  id?: string;
-  row?: EntityRow;
+  id: string;
+  status?: string;
 }
 
 /**
@@ -348,28 +348,20 @@ export function stdStatusLifecycleStatusLifecycleOrbital(params: StdStatusLifecy
             'scope': 'external',
           },
           {
+            'description': 'Internal: the status write landed; carries the persisted row flat.',
             'event': 'StatusPersisted',
             'payloadSchema': [
               {
                 'name': 'id',
+                'required': true,
                 'type': 'string',
               },
               {
-                'name': 'row',
-                'properties': [
-                  {
-                    'name': 'id',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'status',
-                    'type': 'string',
-                  },
-                ],
-                'type': 'object',
+                'name': 'status',
+                'type': 'string',
               },
             ],
+            'scope': 'internal',
           },
           {
             'event': 'StatusChangeFailed',
@@ -420,11 +412,12 @@ export function stdStatusLifecycleStatusLifecycleOrbital(params: StdStatusLifecy
               'payloadSchema': [
                 {
                   'name': 'id',
+                  'required': true,
                   'type': 'string',
                 },
                 {
-                  'name': 'row',
-                  'type': 'StatusRecord',
+                  'name': 'status',
+                  'type': 'string',
                 },
               ],
             },
@@ -533,7 +526,7 @@ export function stdStatusLifecycleStatusLifecycleOrbital(params: StdStatusLifecy
                       'str/default',
                       [
                         'object/get',
-                        '@payload.row',
+                        '@payload',
                         '@config.statusField',
                       ],
                       '',

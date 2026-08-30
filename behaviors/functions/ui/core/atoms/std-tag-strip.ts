@@ -80,8 +80,15 @@ export interface StdTagStripTagStripRemoveOptionsPayload {
  * Payload shape for the `TagStripTagCreated` event.
  */
 export interface StdTagStripTagStripTagCreatedPayload {
-  id?: string;
-  row?: EntityRow;
+  id: string;
+  name: string;
+  parentId?: EntityRow;
+  createdAt?: string;
+  pendingId?: string;
+  docId?: string;
+  docTagIds?: string[];
+  pendingTagName?: string;
+  pendingNames?: string[];
 }
 
 /**

@@ -87,7 +87,15 @@ export interface StdSavedSearchSavedSearchLoadFailedPayload {
  * Payload shape for the `SavedSearchUpdated` event.
  */
 export interface StdSavedSearchSavedSearchUpdatedPayload {
-  row?: EntityRow;
+  id: string;
+  name: string;
+  query?: string;
+  filters?: EntityRow;
+  alertEnabled?: boolean;
+  alertFrequency?: string;
+  userId?: string;
+  lastNotifiedAt?: string;
+  createdAt?: string;
 }
 
 /**
@@ -457,50 +465,45 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
             'event': 'SavedSearchUpdated',
             'payloadSchema': [
               {
-                'name': 'row',
-                'properties': [
-                  {
-                    'name': 'id',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'name',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'query',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'filters',
-                    'type': 'object',
-                  },
-                  {
-                    'name': 'alertEnabled',
-                    'type': 'boolean',
-                  },
-                  {
-                    'name': 'alertFrequency',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'userId',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'lastNotifiedAt',
-                    'type': 'datetime',
-                  },
-                  {
-                    'name': 'createdAt',
-                    'type': 'string',
-                  },
-                ],
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'name',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'query',
+                'type': 'string',
+              },
+              {
+                'name': 'filters',
                 'type': 'object',
               },
+              {
+                'name': 'alertEnabled',
+                'type': 'boolean',
+              },
+              {
+                'name': 'alertFrequency',
+                'type': 'string',
+              },
+              {
+                'name': 'userId',
+                'type': 'string',
+              },
+              {
+                'name': 'lastNotifiedAt',
+                'type': 'datetime',
+              },
+              {
+                'name': 'createdAt',
+                'type': 'string',
+              },
             ],
+            'scope': 'internal',
             'synonyms': 'modified, changed, updated, persisted',
             'tier': 'presentation',
           },
@@ -610,8 +613,42 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
               'name': 'SavedSearch updated',
               'payloadSchema': [
                 {
-                  'name': 'row',
-                  'type': 'SavedSearch',
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'name',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'query',
+                  'type': 'string',
+                },
+                {
+                  'name': 'filters',
+                  'type': 'object',
+                },
+                {
+                  'name': 'alertEnabled',
+                  'type': 'boolean',
+                },
+                {
+                  'name': 'alertFrequency',
+                  'type': 'string',
+                },
+                {
+                  'name': 'userId',
+                  'type': 'string',
+                },
+                {
+                  'name': 'lastNotifiedAt',
+                  'type': 'datetime',
+                },
+                {
+                  'name': 'createdAt',
+                  'type': 'string',
                 },
               ],
               'synonyms': 'modified, changed, updated, persisted',

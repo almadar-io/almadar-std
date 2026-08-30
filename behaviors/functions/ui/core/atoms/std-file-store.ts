@@ -338,7 +338,7 @@ export function stdFileStoreStoredFileOrbital(params: StdFileStoreStoredFileOrbi
                 'event': {
                   'name': 'event',
                   'required': true,
-                  'type': 'string',
+                  'type': 'event',
                 },
                 'icon': {
                   'name': 'icon',
@@ -484,7 +484,7 @@ export function stdFileStoreStoredFileOrbital(params: StdFileStoreStoredFileOrbi
                 'event': {
                   'name': 'event',
                   'required': true,
-                  'type': 'string',
+                  'type': 'event',
                 },
                 'icon': {
                   'name': 'icon',
@@ -878,7 +878,51 @@ export function stdFileStoreStoredFileOrbital(params: StdFileStoreStoredFileOrbi
                 },
                 {
                   'name': 'row',
-                  'type': 'StoredFile',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'name',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'path',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'mimeType',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'sizeBytes',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'uploaderId',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'uploaderName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'folder',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'uploadedAt',
+                      'type': 'datetime',
+                    },
+                    {
+                      'name': 'isArchived',
+                      'type': 'boolean',
+                    },
+                  ],
+                  'type': 'object',
                 },
               ],
               'synonyms': 'select, choose, activate',
@@ -896,7 +940,51 @@ export function stdFileStoreStoredFileOrbital(params: StdFileStoreStoredFileOrbi
                 },
                 {
                   'name': 'row',
-                  'type': 'StoredFile',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'name',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'path',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'mimeType',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'sizeBytes',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'uploaderId',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'uploaderName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'folder',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'uploadedAt',
+                      'type': 'datetime',
+                    },
+                    {
+                      'name': 'isArchived',
+                      'type': 'boolean',
+                    },
+                  ],
+                  'type': 'object',
                 },
               ],
               'synonyms': 'sort, rearrange, move, change order',
