@@ -352,11 +352,6 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
             'description': 'Actions for each card item (schema-driven)',
             'items': {
               'properties': {
-                'action': {
-                  'name': 'action',
-                  'required': false,
-                  'type': 'string',
-                },
                 'event': {
                   'name': 'event',
                   'required': false,

@@ -401,7 +401,7 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                 'event': {
                   'name': 'event',
                   'required': true,
-                  'type': 'string',
+                  'type': 'event',
                 },
                 'icon': {
                   'name': 'icon',

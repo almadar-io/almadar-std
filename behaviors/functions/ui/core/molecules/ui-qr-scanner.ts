@@ -37,7 +37,9 @@ export type StdUiQrScannerEventKey = 'INIT' | 'SCAN';
  */
 export interface StdUiQrScannerScanPayload {
   result?: EntityRow;
-  _payload?: EntityRow;
+  text: string;
+  format: string;
+  timestamp: number;
 }
 
 /**

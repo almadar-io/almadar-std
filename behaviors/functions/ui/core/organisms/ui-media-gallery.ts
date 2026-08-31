@@ -168,7 +168,7 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
                 'event': {
                   'name': 'event',
                   'required': false,
-                  'type': 'string',
+                  'type': 'event',
                 },
                 'label': {
                   'name': 'label',

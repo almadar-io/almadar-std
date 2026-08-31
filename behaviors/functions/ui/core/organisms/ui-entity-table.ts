@@ -185,7 +185,7 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
                 'event': {
                   'name': 'event',
                   'required': false,
-                  'type': 'string',
+                  'type': 'event',
                 },
                 'icon': {
                   'name': 'icon',
@@ -408,15 +408,10 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
             'description': 'Item actions from generated code - maps to rowActions',
             'items': {
               'properties': {
-                'action': {
-                  'name': 'action',
-                  'required': false,
-                  'type': 'string',
-                },
                 'event': {
                   'name': 'event',
                   'required': false,
-                  'type': 'string',
+                  'type': 'event',
                 },
                 'icon': {
                   'name': 'icon',
@@ -496,7 +491,7 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
                 'event': {
                   'name': 'event',
                   'required': false,
-                  'type': 'string',
+                  'type': 'event',
                 },
                 'icon': {
                   'name': 'icon',

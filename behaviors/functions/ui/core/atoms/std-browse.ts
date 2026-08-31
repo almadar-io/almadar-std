@@ -753,7 +753,7 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                 'event': {
                   'name': 'event',
                   'required': true,
-                  'type': 'string',
+                  'type': 'event',
                 },
                 'icon': {
                   'name': 'icon',
