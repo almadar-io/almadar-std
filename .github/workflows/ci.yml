@@ -21,6 +21,13 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: ${{ matrix.node-version }}
+          # setup-node@v5 turns package-manager-cache ON by default, and this
+          # repo declares `packageManager: pnpm@...`, so it shells out to pnpm
+          # for the cache path — before the step below has installed pnpm. That
+          # failed every CI run from 2026-08-29 onward with
+          # "Unable to locate executable file: pnpm". Publishing was unaffected
+          # (publish.yml installs pnpm first), which is why it went unnoticed.
+          package-manager-cache: false
 
       # pnpm/action-setup@v6 ignores the `version:` spec on some minor
       # versions (observed installing 11.0.0-beta.4-1 when asked for 10.30.3).
