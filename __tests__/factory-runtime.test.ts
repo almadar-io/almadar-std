@@ -198,10 +198,16 @@ describe('factory-runtime', () => {
 
   describe('applyParamsToWholeOrb', () => {
     it('rebuilds every orbital preserving its CANONICAL entity name (rename is post-stamp)', async () => {
-      // learning-chemistry is multi-orbital (3 orbitals: Diffusion/Reaction/
-      // Osmosis) — broadest exercise for the whole-orb path the LLM-loop seam
-      // (`call_behavior`) takes.
-      const orb = await loadOrb('ui/learning', 'organisms', 'learning-chemistry');
+      // Multi-orbital organism — the broadest exercise for the whole-orb path
+      // the LLM-loop seam (`call_behavior`) takes.
+      //
+      // Was `ui/learning/organisms/learning-chemistry`, which does not exist in
+      // this package: learning subjects live in @almadar-io/behaviors, and std
+      // (public, upstream) must never depend on io (private, downstream). The
+      // test had been failing with ENOENT, masked in CI by an earlier pnpm
+      // setup error. std-agent-rabit (2 orbitals) is the broadest multi-orbital
+      // organism std actually owns — every other std organism has exactly one.
+      const orb = await loadOrb('agent', 'organisms', 'std-agent-rabit');
       const manifests = extractManifest(orb);
       const canonicalByOrbital = new Map(
         orb.orbitals.map((o) => [

@@ -21,7 +21,35 @@ import { describe, it, expect } from 'vitest';
 const REGISTRY_PATH = path.resolve(__dirname, '..', 'behaviors', 'behaviors-registry.json');
 const REGISTRY_DIR = path.resolve(__dirname, '..', 'behaviors', 'registry');
 
-const VALID_TOPICS = ['core', 'agent', 'core-variations', 'infra'] as const;
+const TIER_DIRS = ['atoms', 'molecules', 'organisms', 'templates'] as const;
+
+/**
+ * Topics are DERIVED from the registry tree, not hardcoded.
+ *
+ * The previous literal list — ['core', 'agent', 'core-variations', 'infra'] —
+ * went stale when the UI topics moved under `ui/*`. Two things followed, and the
+ * second is the dangerous one: 420 topic assertions failed, and `findOrbPath`
+ * (which iterated the same list) returned null for EVERY behavior, so the
+ * "topic matches the .orb path" assertion below skipped itself every time and
+ * had been passing vacuously. A hardcoded list of things the repo generates is
+ * a guarantee that the test drifts away from the data it checks.
+ */
+function discoverTopics(root: string, prefix = ''): string[] {
+    if (!fs.existsSync(root)) return [];
+    const out: string[] = [];
+    for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
+        if (!entry.isDirectory()) continue;
+        if ((TIER_DIRS as readonly string[]).includes(entry.name)) {
+            if (prefix) out.push(prefix);
+            continue;
+        }
+        const nested = prefix ? `${prefix}/${entry.name}` : entry.name;
+        out.push(...discoverTopics(path.join(root, entry.name), nested));
+    }
+    return [...new Set(out)];
+}
+
+const VALID_TOPICS = discoverTopics(REGISTRY_DIR);
 const VALID_LEVELS = ['atom', 'molecule', 'organism'] as const;
 
 interface RegistryEntry {
@@ -56,8 +84,10 @@ function loadRegistry(): RegistryFile {
 
 function findOrbPath(name: string): string | null {
     for (const topic of VALID_TOPICS) {
-        for (const tier of ['atoms', 'molecules', 'organisms']) {
-            const candidate = path.join(REGISTRY_DIR, topic, tier, `${name}.orb`);
+        for (const tier of TIER_DIRS) {
+            // `topic` may be nested (e.g. "ui/core"), so split it into segments
+            // rather than passing it to path.join as one component.
+            const candidate = path.join(REGISTRY_DIR, ...topic.split('/'), tier, `${name}.orb`);
             if (fs.existsSync(candidate)) return candidate;
         }
     }
@@ -86,9 +116,13 @@ describe('behaviors-registry.json — metadata coverage (Eval F)', () => {
             const orbPath = findOrbPath(entry.name);
             // If the .orb is missing on disk we skip — covered by other tests.
             if (!orbPath) return;
+            // Path shape: .../registry/<topic...>/<tier>/<name>.orb — the topic
+            // can span several segments ("ui/core"), so take everything between
+            // `registry` and the tier directory rather than one segment.
             const segments = orbPath.split(path.sep);
             const registryIdx = segments.indexOf('registry');
-            const onDiskTopic = segments[registryIdx + 1];
+            const tierIdx = segments.length - 2;
+            const onDiskTopic = segments.slice(registryIdx + 1, tierIdx).join('/');
             expect(entry.topic).toBe(onDiskTopic);
         });
 
