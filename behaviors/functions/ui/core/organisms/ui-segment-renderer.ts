@@ -41,8 +41,8 @@ export type StdUiSegmentRendererEventKey = 'INIT';
 export interface StdUiSegmentRendererConfig {
   className?: string;
   containerClassName?: string;
-  /** Default: `[]` */
-  segments?: TraitConfig[];
+  /** Default: `[{"content":"Content","type":"Type"},{"content":"Content 2","type":"Type 2"}]` */
+  segments?: EntityRow[];
   userProgress?: EntityRow;
 }
 
@@ -130,14 +130,35 @@ export function stdUiSegmentRendererSegmentRendererOrbital(params: StdUiSegmentR
             'type': 'string',
           },
           'segments': {
-            'default': [],
+            'default': [
+              {
+                'content': 'Content',
+                'type': 'Type',
+              },
+              {
+                'content': 'Content 2',
+                'type': 'Type 2',
+              },
+            ],
             'description': 'Parsed lesson segments (see `parseLessonSegments`)',
             'items': {
+              'properties': {
+                'content': {
+                  'name': 'content',
+                  'required': true,
+                  'type': 'string',
+                },
+                'type': {
+                  'name': 'type',
+                  'required': true,
+                  'type': 'string',
+                },
+              },
               'type': 'object',
             },
             'label': 'Segments',
             'tier': 'presentation',
-            'type': '[object]',
+            'type': '[SegmentRendererSegmentsItem]',
           },
           'userProgress': {
             'description': 'User progress for restoring activation/reflection state',

@@ -1,6 +1,49 @@
 app ui-physics-canvas "1.0.0"
 "PhysicsCanvas — UI factory (1:1 with the @almadar/ui physics-canvas pattern)."
 orbital PhysicsCanvasOrbital {
+  type PhysicsCanvasLighting = {
+    ambient : PhysicsCanvasLightingAmbient
+    directional : PhysicsCanvasLightingDirectional
+    hemisphere : PhysicsCanvasLightingHemisphere
+    points : [PhysicsCanvasLightingPointsItem]
+    environment : "room" | "none"
+    toneMapping : "aces" | "none"
+  }
+  type PhysicsCanvasLightingAmbient = {
+    intensity : number
+    color : string
+    position : [number]
+  }
+  type PhysicsCanvasLightingDirectional = {
+    intensity : number
+    color : string
+    position : [number]
+  }
+  type PhysicsCanvasLightingHemisphere = {
+    intensity : number
+    color : string
+    groundColor : string
+  }
+  type PhysicsCanvasLightingPointsItem = {
+    intensity : number
+    color : string
+    position : [number]!
+    distance : number
+    decay : number
+  }
+  type PhysicsCanvasPost = {
+    bloom : PhysicsCanvasPostBloom
+    vignette : PhysicsCanvasPostVignette
+  }
+  type PhysicsCanvasPostBloom = {
+    intensity : number
+    threshold : number
+    smoothing : number
+  }
+  type PhysicsCanvasPostVignette = {
+    offset : number
+    darkness : number
+  }
   type PhysicsCanvasBodiesItem = {
     id : string
     x : number!
@@ -330,11 +373,11 @@ orbital PhysicsCanvasOrbital {
         @label "Camera"
         @description "3D only: neutral camera pose ({ mode, zoom, fov, azimuth, target })."
         @tier "presentation"
-      lighting : object = {}
+      lighting : PhysicsCanvasLighting
         @label "Lighting"
         @description "3D only: scene light rig as data."
         @tier "presentation"
-      post : object = {}
+      post : PhysicsCanvasPost
         @label "Post"
         @description "3D only: post-processing stack (bloom/vignette)."
         @tier "presentation"

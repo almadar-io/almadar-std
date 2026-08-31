@@ -84,7 +84,7 @@ export interface StdUiCanvasConfig {
   children?: PatternValue;
   className?: string;
   /** Default: `[]` */
-  drawables?: TraitConfig[];
+  drawables?: PatternValue[];
   /** Default: `"FEATURE_CLICK"` */
   featureClickEvent?: string;
   fit?: boolean;
@@ -95,13 +95,11 @@ export interface StdUiCanvasConfig {
   keyMap?: Record<string, TraitConfig>;
   /** Default: `{"item":"Item"}` */
   keyUpMap?: Record<string, TraitConfig>;
-  /** Default: `{}` */
-  lighting?: TraitConfig;
+  lighting?: EntityRow;
   /** Default: `"2d"` */
   mode?: '2d' | '3d';
   pixelsPerUnit?: number;
-  /** Default: `{}` */
-  post?: TraitConfig;
+  post?: EntityRow;
   /** Default: `"isometric"` */
   projection?: 'isometric' | 'hex' | 'flat' | 'free' | 'side';
   shadows?: boolean;

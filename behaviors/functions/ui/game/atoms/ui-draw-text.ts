@@ -41,8 +41,8 @@ export type StdUiDrawTextEventKey = 'INIT';
 export interface StdUiDrawTextConfig {
   /** Default: `"center"` */
   align?: 'center' | 'end' | 'left' | 'right' | 'start';
-  /** Default: `{}` */
-  anchor?: TraitConfig;
+  /** Default: `"top-left"` */
+  anchor?: 'top-left' | 'ground' | 'center';
   /** Default: `"alphabetic"` */
   baseline?: 'alphabetic' | 'bottom' | 'hanging' | 'ideographic' | 'middle' | 'top';
   /** Default: `""` */

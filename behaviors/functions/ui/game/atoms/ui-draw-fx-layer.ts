@@ -41,7 +41,7 @@ export type StdUiDrawFxLayerEventKey = 'INIT';
 export interface StdUiDrawFxLayerConfig {
   /** Default: `{"item":{}}` */
   art?: Record<string, TraitConfig>;
-  /** Default: `[{"id":"e1","message":"Unit spawned","type":"spawn","x":2,"y":2},{"id":"e2","message":"Attack landed","type":"effect","x":3,"y":1}]` */
+  /** Default: `[{"id":"e1","message":"Unit spawned","ttl":1,"type":"spawn","x":2,"y":2},{"id":"e2","message":"Attack landed","ttl":2,"type":"effect","x":3,"y":1}]` */
   items?: EntityRow[];
   /** Default: `[]` */
   presets?: EntityRow[];

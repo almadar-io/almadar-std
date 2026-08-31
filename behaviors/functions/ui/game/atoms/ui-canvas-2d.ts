@@ -77,7 +77,7 @@ export interface StdUiCanvas2dConfig {
   children?: PatternValue;
   className?: string;
   /** Default: `[]` */
-  drawables?: TraitConfig[];
+  drawables?: PatternValue[];
   error?: EntityRow;
   /** Default: `false` */
   fit?: boolean;

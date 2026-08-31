@@ -1,6 +1,49 @@
 app ui-chemistry-canvas "1.0.0"
 "ChemistryCanvas — UI factory (1:1 with the @almadar/ui chemistry-canvas pattern)."
 orbital ChemistryCanvasOrbital {
+  type ChemistryCanvasLighting = {
+    ambient : ChemistryCanvasLightingAmbient
+    directional : ChemistryCanvasLightingDirectional
+    hemisphere : ChemistryCanvasLightingHemisphere
+    points : [ChemistryCanvasLightingPointsItem]
+    environment : "room" | "none"
+    toneMapping : "aces" | "none"
+  }
+  type ChemistryCanvasLightingAmbient = {
+    intensity : number
+    color : string
+    position : [number]
+  }
+  type ChemistryCanvasLightingDirectional = {
+    intensity : number
+    color : string
+    position : [number]
+  }
+  type ChemistryCanvasLightingHemisphere = {
+    intensity : number
+    color : string
+    groundColor : string
+  }
+  type ChemistryCanvasLightingPointsItem = {
+    intensity : number
+    color : string
+    position : [number]!
+    distance : number
+    decay : number
+  }
+  type ChemistryCanvasPost = {
+    bloom : ChemistryCanvasPostBloom
+    vignette : ChemistryCanvasPostVignette
+  }
+  type ChemistryCanvasPostBloom = {
+    intensity : number
+    threshold : number
+    smoothing : number
+  }
+  type ChemistryCanvasPostVignette = {
+    offset : number
+    darkness : number
+  }
   type ChemistryCanvasAtomsItem = {
     id : string
     x : number!
@@ -275,11 +318,11 @@ orbital ChemistryCanvasOrbital {
         @label "Camera"
         @description "3D only: neutral camera pose ({ mode, zoom, fov, azimuth, target })."
         @tier "presentation"
-      lighting : object = {}
+      lighting : ChemistryCanvasLighting
         @label "Lighting"
         @description "3D only: scene light rig as data."
         @tier "presentation"
-      post : object = {}
+      post : ChemistryCanvasPost
         @label "Post"
         @description "3D only: post-processing stack (bloom/vignette)."
         @tier "presentation"

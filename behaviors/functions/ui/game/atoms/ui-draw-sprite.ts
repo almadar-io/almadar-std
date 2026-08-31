@@ -39,8 +39,8 @@ export type StdUiDrawSpriteEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDrawSpriteConfig {
-  /** Default: `{}` */
-  anchor?: TraitConfig;
+  /** Default: `"top-left"` */
+  anchor?: 'top-left' | 'ground' | 'center';
   animation?: string;
   asset?: EntityRow;
   flipX?: boolean;

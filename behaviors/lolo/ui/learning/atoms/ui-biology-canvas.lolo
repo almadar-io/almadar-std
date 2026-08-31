@@ -1,6 +1,49 @@
 app ui-biology-canvas "1.0.0"
 "BiologyCanvas — UI factory (1:1 with the @almadar/ui biology-canvas pattern)."
 orbital BiologyCanvasOrbital {
+  type BiologyCanvasLighting = {
+    ambient : BiologyCanvasLightingAmbient
+    directional : BiologyCanvasLightingDirectional
+    hemisphere : BiologyCanvasLightingHemisphere
+    points : [BiologyCanvasLightingPointsItem]
+    environment : "room" | "none"
+    toneMapping : "aces" | "none"
+  }
+  type BiologyCanvasLightingAmbient = {
+    intensity : number
+    color : string
+    position : [number]
+  }
+  type BiologyCanvasLightingDirectional = {
+    intensity : number
+    color : string
+    position : [number]
+  }
+  type BiologyCanvasLightingHemisphere = {
+    intensity : number
+    color : string
+    groundColor : string
+  }
+  type BiologyCanvasLightingPointsItem = {
+    intensity : number
+    color : string
+    position : [number]!
+    distance : number
+    decay : number
+  }
+  type BiologyCanvasPost = {
+    bloom : BiologyCanvasPostBloom
+    vignette : BiologyCanvasPostVignette
+  }
+  type BiologyCanvasPostBloom = {
+    intensity : number
+    threshold : number
+    smoothing : number
+  }
+  type BiologyCanvasPostVignette = {
+    offset : number
+    darkness : number
+  }
   type BiologyCanvasNodesItem = {
     id : string
     x : number!
@@ -279,11 +322,11 @@ orbital BiologyCanvasOrbital {
         @label "Camera"
         @description "3D only: neutral camera pose ({ mode, zoom, fov, azimuth, target })."
         @tier "presentation"
-      lighting : object = {}
+      lighting : BiologyCanvasLighting
         @label "Lighting"
         @description "3D only: scene light rig as data."
         @tier "presentation"
-      post : object = {}
+      post : BiologyCanvasPost
         @label "Post"
         @description "3D only: post-processing stack (bloom/vignette)."
         @tier "presentation"

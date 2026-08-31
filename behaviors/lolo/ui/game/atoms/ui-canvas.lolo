@@ -1,6 +1,50 @@
 app ui-canvas "1.0.0"
 "Canvas — UI factory (1:1 with the @almadar/ui canvas pattern)."
 orbital CanvasOrbital {
+  type CanvasLighting = {
+    ambient : CanvasLightingAmbient
+    directional : CanvasLightingDirectional
+    hemisphere : CanvasLightingHemisphere
+    points : [CanvasLightingPointsItem]
+    environment : "room" | "none"
+    toneMapping : "aces" | "none"
+  }
+  type CanvasLightingAmbient = {
+    intensity : number
+    color : string
+    position : [number]
+  }
+  type CanvasLightingDirectional = {
+    intensity : number
+    color : string
+    position : [number]
+  }
+  type CanvasLightingHemisphere = {
+    intensity : number
+    color : string
+    groundColor : string
+  }
+  type CanvasLightingPointsItem = {
+    intensity : number
+    color : string
+    position : [number]!
+    distance : number
+    decay : number
+  }
+  type CanvasPost = {
+    bloom : CanvasPostBloom
+    vignette : CanvasPostVignette
+  }
+  type CanvasPostBloom = {
+    intensity : number
+    threshold : number
+    smoothing : number
+  }
+  type CanvasPostVignette = {
+    offset : number
+    darkness : number
+  }
+
   entity CanvasItem [runtime] {
     id : string!
   }
@@ -81,7 +125,7 @@ orbital CanvasOrbital {
         @label "Mode"
         @description "Painter: 2D sprite/shape/text raster, or 3D mesh. Default '2d'."
         @tier "presentation"
-      drawables : [object] = []
+      drawables : [node] = []
         @label "Drawables"
         @description "Neutral drawable descriptors — the `draw-*` children. Routed to the host's painter."
         @tier "presentation"
@@ -157,11 +201,11 @@ orbital CanvasOrbital {
         @label "Fog Of War"
         @description "fogOfWar prop"
         @tier "presentation"
-      lighting : object = {}
+      lighting : CanvasLighting
         @label "Lighting"
         @description "3D scene light rig as data — ambient/directional/hemisphere/point lights + optional 'room' environment for PBR reflections. Omitted → the standard fixed rig."
         @tier "presentation"
-      post : object = {}
+      post : CanvasPost
         @label "Post"
         @description "3D post-processing stack — bloom (emissive glow / neon) and vignette. Omitted → no post pass."
         @tier "presentation"

@@ -39,8 +39,8 @@ export type StdUiDrawShapeEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDrawShapeConfig {
-  /** Default: `{}` */
-  anchor?: TraitConfig;
+  /** Default: `"top-left"` */
+  anchor?: 'top-left' | 'ground' | 'center';
   animation?: EntityRow;
   /** Default: `"source-over"` */
   blendMode?: 'source-over' | 'lighter' | 'multiply' | 'screen' | 'overlay' | 'darken' | 'lighten' | 'color-dodge' | 'color-burn' | 'hard-light' | 'soft-light' | 'difference' | 'exclusion' | 'hue' | 'saturation' | 'color' | 'luminosity' | 'source-atop' | 'destination-over' | 'destination-out' | 'xor';

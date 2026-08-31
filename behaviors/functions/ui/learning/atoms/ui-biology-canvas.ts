@@ -65,16 +65,14 @@ export interface StdUiBiologyCanvasConfig {
   helix3d?: EntityRow;
   interactive?: boolean;
   isLoading?: boolean;
-  /** Default: `{}` */
-  lighting?: TraitConfig;
+  lighting?: EntityRow;
   /** Default: `"2d"` */
   mode?: '2d' | '3d';
   /** Default: `[]` */
   nodes?: EntityRow[];
   /** Default: `"SHAPE_CLICK"` */
   onShapeClick?: string;
-  /** Default: `{}` */
-  post?: TraitConfig;
+  post?: EntityRow;
   /** Default: `[]` */
   readouts?: EntityRow[];
   shadows?: boolean;

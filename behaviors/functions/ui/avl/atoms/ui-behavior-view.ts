@@ -39,8 +39,8 @@ export type StdUiBehaviorViewEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiBehaviorViewConfig {
-  /** Default: `{}` */
-  data?: TraitConfig;
+  /** Default: `{"entityName":"Entity Name","externalLinks":[],"fields":[],"orbitalName":"Orbital Name","pages":[],"persistence":"Persistence","traitDetails":{},"traits":[]}` */
+  data?: EntityRow;
 }
 
 /**
