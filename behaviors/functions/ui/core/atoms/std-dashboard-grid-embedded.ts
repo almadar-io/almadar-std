@@ -308,11 +308,11 @@ export function stdDashboardGridEmbeddedDashboardGridEmbeddedOrbital(params: Std
             'type': 'trait',
           },
           'minTileWidth': {
-            'default': 320,
-            'description': 'Minimum pixel width per tile before the grid re-flows',
+            'default': '320px',
+            'description': 'Minimum CSS width per tile before the grid re-flows (a CSS length, e.g. "320px" or "20rem")',
             'label': 'Tile min width',
             'tier': 'presentation',
-            'type': 'number',
+            'type': 'string',
           },
           'theme': {
             'default': '',

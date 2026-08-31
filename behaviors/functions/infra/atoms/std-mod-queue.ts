@@ -386,6 +386,17 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
             'synonyms': 'comment, remark, observation, details',
             'type': 'string',
           },
+          {
+            'default': {},
+            'description': 'The row an edit-mode modal pre-fills from when its payload carries no row (a scalar-only action event still opens a fully seeded form).',
+            'intrinsic': true,
+            'name': 'seedRow',
+            'relation': {
+              'cardinality': 'one',
+              'entity': 'ModQueueItem',
+            },
+            'type': 'relation',
+          },
         ];
         const extras = params.fields ?? [];
         if (extras.length === 0) return canonical;
@@ -600,6 +611,10 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                     'name': 'notes',
                     'type': 'string',
                   },
+                  {
+                    'name': 'seedRow',
+                    'type': 'ModQueueItem',
+                  },
                 ],
                 'type': 'object',
               },
@@ -658,6 +673,10 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                     'name': 'notes',
                     'type': 'string',
                   },
+                  {
+                    'name': 'seedRow',
+                    'type': 'ModQueueItem',
+                  },
                 ],
                 'type': 'object',
               },
@@ -715,6 +734,10 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                   {
                     'name': 'notes',
                     'type': 'string',
+                  },
+                  {
+                    'name': 'seedRow',
+                    'type': 'ModQueueItem',
                   },
                 ],
                 'type': 'object',
@@ -799,6 +822,10 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
               {
                 'name': 'notes',
                 'type': 'string',
+              },
+              {
+                'name': 'seedRow',
+                'type': 'ModQueueItem',
               },
             ],
             'scope': 'internal',
@@ -937,6 +964,10 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                       'name': 'notes',
                       'type': 'string',
                     },
+                    {
+                      'name': 'seedRow',
+                      'type': 'ModQueueItem',
+                    },
                   ],
                   'type': 'object',
                 },
@@ -995,6 +1026,10 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                     {
                       'name': 'notes',
                       'type': 'string',
+                    },
+                    {
+                      'name': 'seedRow',
+                      'type': 'ModQueueItem',
                     },
                   ],
                   'type': 'object',
@@ -1055,6 +1090,10 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                       'name': 'notes',
                       'type': 'string',
                     },
+                    {
+                      'name': 'seedRow',
+                      'type': 'ModQueueItem',
+                    },
                   ],
                   'type': 'object',
                 },
@@ -1105,6 +1144,10 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                 {
                   'name': 'notes',
                   'type': 'string',
+                },
+                {
+                  'name': 'seedRow',
+                  'type': 'ModQueueItem',
                 },
               ],
               'synonyms': 'reviewed, processed, judged, completed',
