@@ -33,20 +33,6 @@ const ALIAS = 'UiNotification';
 export type StdUiNotificationEventKey = 'ACTION' | 'DISMISS' | 'INIT';
 
 /**
- * Payload shape for the `DISMISS` event.
- */
-export interface StdUiNotificationDismissPayload {
-  id?: string;
-}
-
-/**
- * Payload shape for the `ACTION` event.
- */
-export interface StdUiNotificationActionPayload {
-  id?: string;
-}
-
-/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait

@@ -22,7 +22,7 @@ orbital RecordItemOrbital {
     content : string @description "The record's rich-text body as HTML, edited in place by the document look." @synonyms "body, text, document, article body" = ""
     coverUrl : string @intrinsic @description "The document look's cover/hero image URL, stamped from the loaded row's coverField." = ""
     iconName : string @intrinsic @description "The document look's icon name, stamped from the loaded row's iconField." = ""
-    loadedRow : object @intrinsic @description "The full row exactly as last fetched (relations hydrated when config.include asks). The details drawer binds it, and hosts that need it (e.g. a settings modal) stash it from RecordItemLoaded — the document panel itself takes only scalar props and emits scalar payloads ({ id, title })." = {}
+    loadedRow : Map string scalar @intrinsic @description "The full row exactly as last fetched (relations hydrated when config.include asks). The details drawer binds it, and hosts that need it (e.g. a settings modal) stash it from RecordItemLoaded — the document panel itself takes only scalar props and emits scalar payloads ({ id, title })." = {}
     openDraft : string @intrinsic @description "Set from the navigate payload when the surface was opened on a record that was JUST minted blank; read once the row loads to decide whether the document body opens authoring (draft) or read-only. Absent on a refresh or a normal open, so the draft entry never repeats." @synonyms "new document, just created, draft open" = ""
     createdAt : string
   }
@@ -347,14 +347,14 @@ orbital RecordItemOrbital {
         @tier "internal"
       EDIT -> external {
         id : string!
-        row : RecordItem
+        row : RecordItem!
       }
         @description "Signals a request to edit the record being viewed."
         @synonyms "modify, update, change"
         @tier "domain"
       DELETE -> external {
         id : string!
-        row : RecordItem
+        row : RecordItem!
       }
         @description "Signals a request to remove the record being viewed."
         @synonyms "remove, discard, delete, archive"
@@ -422,7 +422,7 @@ orbital RecordItemOrbital {
         @tier "domain"
       OPEN_VIEW {
         id : string!
-        row : RecordItem
+        row : RecordItem!
       }
         @description "A row was opened from a list; shows that record in this surface."
         @synonyms "open record, view row, show details, drill in, expand"

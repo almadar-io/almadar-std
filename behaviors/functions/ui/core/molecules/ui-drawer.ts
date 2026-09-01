@@ -33,13 +33,6 @@ const ALIAS = 'UiDrawer';
 export type StdUiDrawerEventKey = 'CLOSE' | 'INIT' | 'OPEN';
 
 /**
- * Payload shape for the `CLOSE` event.
- */
-export interface StdUiDrawerClosePayload {
-  id?: string;
-}
-
-/**
  * Payload shape for the `OPEN` event.
  */
 export interface StdUiDrawerOpenPayload {

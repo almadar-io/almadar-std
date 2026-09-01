@@ -64,6 +64,24 @@
         "parent": "trt_01KXG04MBA3GR6VT51RQ4ESK2Y",
         "renames": []
       },
+      "evt_01M1CHY4JZ8ZZC1JVEZTPVTBBT": {
+        "bakedName": "ACTION",
+        "curName": "ACTION",
+        "id": "evt_01M1CHY4JZ8ZZC1JVEZTPVTBBT",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04MBA3GR6VT51RQ4ESK2Y",
+        "renames": []
+      },
+      "evt_01M1CHY4JZCBZRHNKWX81SCJ9H": {
+        "bakedName": "HOVER",
+        "curName": "HOVER",
+        "id": "evt_01M1CHY4JZCBZRHNKWX81SCJ9H",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04MBA3GR6VT51RQ4ESK2Y",
+        "renames": []
+      },
       "orb_01KXG04MBAAAJZECCVVJV7MDT9": {
         "bakedName": "TextHighlightOrbital",
         "curName": "TextHighlightOrbital",
@@ -99,6 +117,10 @@
           {
             "name": "id",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "annotationId",
             "type": "string"
           }
         ],
@@ -163,7 +185,7 @@
             },
             "hoverEvent": {
               "default": "HOVER",
-              "description": "Declarative hover event — emits UI:{hoverEvent} with { hovered: true/false }",
+              "description": "Declarative hover event — emits UI:{hoverEvent} with { hovered, annotationId }",
               "label": "Hover Event",
               "tier": "presentation",
               "type": "event"
@@ -199,51 +221,37 @@
           },
           "emits": [
             {
+              "definerKnob": "onClick",
               "description": "Callback when highlight is clicked",
               "event": "@config.onClick",
               "eventId": "evt_01KXG04MBCG66XRY0BRBZH9KCS",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ],
               "scope": "external",
               "tier": "essential"
             },
             {
+              "definerKnob": "onMouseEnter",
               "description": "Callback when highlight is hovered",
               "event": "@config.onMouseEnter",
               "eventId": "evt_01KXG04MBCNZ4FV0XPDQR7KXYM",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ],
               "scope": "external",
               "tier": "essential"
             },
             {
+              "definerKnob": "onMouseLeave",
               "description": "Callback when hover ends",
               "event": "@config.onMouseLeave",
               "eventId": "evt_01KXG04MBCDY7PYB5WT6E3WNH8",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ],
               "scope": "external",
               "tier": "essential"
             },
             {
+              "definerKnob": "action",
               "description": "Declarative event name — emits UI:{action} via eventBus on click",
               "event": "@config.action",
               "eventId": "evt_01KXG04MBCBZ0JD0HD6EBRN6ME",
               "payloadSchema": [
                 {
-                  "name": "id",
+                  "name": "annotationId",
                   "type": "string"
                 }
               ],
@@ -251,12 +259,18 @@
               "tier": "essential"
             },
             {
-              "description": "Declarative hover event — emits UI:{hoverEvent} with { hovered: true/false }",
+              "definerKnob": "hoverEvent",
+              "description": "Declarative hover event — emits UI:{hoverEvent} with { hovered, annotationId }",
               "event": "@config.hoverEvent",
               "eventId": "evt_01KXG04MBCKZYBB6A0DV7AYFVM",
               "payloadSchema": [
                 {
-                  "name": "id",
+                  "name": "hovered",
+                  "required": true,
+                  "type": "boolean"
+                },
+                {
+                  "name": "annotationId",
                   "type": "string"
                 }
               ],
@@ -265,7 +279,9 @@
             }
           ],
           "entityContract": {
-            "provides": [],
+            "provides": [
+              "annotationId"
+            ],
             "requires": []
           },
           "entityRebindable": true,
@@ -285,16 +301,37 @@
                 "name": "Initialize"
               },
               {
+                "id": "evt_01M1CHY4JZ8ZZC1JVEZTPVTBBT",
+                "key": "ACTION",
+                "name": "Action",
+                "payloadSchema": [
+                  {
+                    "name": "annotationId",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "id": "evt_01M1CHY4JZCBZRHNKWX81SCJ9H",
+                "key": "HOVER",
+                "name": "Hover",
+                "payloadSchema": [
+                  {
+                    "name": "hovered",
+                    "required": true,
+                    "type": "boolean"
+                  },
+                  {
+                    "name": "annotationId",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
                 "description": "Callback when highlight is clicked",
                 "id": "evt_01KXG04MBCG66XRY0BRBZH9KCS",
                 "key": "@config.onClick",
                 "name": "@config.on click",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ],
                 "tier": "essential"
               },
               {
@@ -302,12 +339,6 @@
                 "id": "evt_01KXG04MBCNZ4FV0XPDQR7KXYM",
                 "key": "@config.onMouseEnter",
                 "name": "@config.on mouse enter",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ],
                 "tier": "essential"
               },
               {
@@ -315,12 +346,6 @@
                 "id": "evt_01KXG04MBCDY7PYB5WT6E3WNH8",
                 "key": "@config.onMouseLeave",
                 "name": "@config.on mouse leave",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ],
                 "tier": "essential"
               },
               {
@@ -330,20 +355,25 @@
                 "name": "@config.action",
                 "payloadSchema": [
                   {
-                    "name": "id",
+                    "name": "annotationId",
                     "type": "string"
                   }
                 ],
                 "tier": "essential"
               },
               {
-                "description": "Declarative hover event — emits UI:{hoverEvent} with { hovered: true/false }",
+                "description": "Declarative hover event — emits UI:{hoverEvent} with { hovered, annotationId }",
                 "id": "evt_01KXG04MBCKZYBB6A0DV7AYFVM",
                 "key": "@config.hoverEvent",
                 "name": "@config.hover event",
                 "payloadSchema": [
                   {
-                    "name": "id",
+                    "name": "hovered",
+                    "required": true,
+                    "type": "boolean"
+                  },
+                  {
+                    "name": "annotationId",
                     "type": "string"
                   }
                 ],
@@ -360,11 +390,16 @@
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.annotationId",
+                    "@config.annotationId"
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
                       "action": "@config.action",
-                      "annotationId": "@config.annotationId",
+                      "annotationId": "@entity.annotationId",
                       "children": "@config.children",
                       "className": "@config.className",
                       "highlightType": "@config.highlightType",
@@ -379,6 +414,66 @@
                 ],
                 "event": "INIT",
                 "eventId": "evt_01KXG04MBAEB6FR4QFASF0P9N5",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.annotationId",
+                    "@payload.annotationId"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "action": "@config.action",
+                      "annotationId": "@entity.annotationId",
+                      "children": "@config.children",
+                      "className": "@config.className",
+                      "highlightType": "@config.highlightType",
+                      "hoverEvent": "@config.hoverEvent",
+                      "isActive": "@config.isActive",
+                      "onClick": "@config.onClick",
+                      "onMouseEnter": "@config.onMouseEnter",
+                      "onMouseLeave": "@config.onMouseLeave",
+                      "type": "text-highlight"
+                    }
+                  ]
+                ],
+                "event": "ACTION",
+                "eventId": "evt_01M1CHY4JZ8ZZC1JVEZTPVTBBT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.annotationId",
+                    "@payload.annotationId"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "action": "@config.action",
+                      "annotationId": "@entity.annotationId",
+                      "children": "@config.children",
+                      "className": "@config.className",
+                      "highlightType": "@config.highlightType",
+                      "hoverEvent": "@config.hoverEvent",
+                      "isActive": "@config.isActive",
+                      "onClick": "@config.onClick",
+                      "onMouseEnter": "@config.onMouseEnter",
+                      "onMouseLeave": "@config.onMouseLeave",
+                      "type": "text-highlight"
+                    }
+                  ]
+                ],
+                "event": "HOVER",
+                "eventId": "evt_01M1CHY4JZCBZRHNKWX81SCJ9H",
                 "from": "idle",
                 "to": "idle"
               }

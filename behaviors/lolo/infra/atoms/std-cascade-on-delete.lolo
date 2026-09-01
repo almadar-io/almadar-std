@@ -1,9 +1,9 @@
 app std-cascade-on-delete "1.1.0"
 "std-cascade-on-delete — relational `owns` cascade. Listens for a parent-deleted sentinel (`ParentDeleted` — rename via traitOverrides.events to the consumer's actual parent-deleted event), then deletes every dependent row whose `foreignKeyField` points at the deleted parent — via a self-driving loop (delete the head of the matching set, re-fetch until none remain). Emits `CascadeRowDeleted` per row and `CascadeCompleted` when done."
 orbital CascadeOnDeleteOrbital {
-    type ParentDeleted = Event { data : object } "Rename via traitOverrides.events to the upstream parent-deleted event (e.g. ContactDeleted). `data.id` carries the parent's primary key."
+    type ParentDeleted = Event { data : @entity @config.parentEntity } "Rename via traitOverrides.events to the upstream parent-deleted event (e.g. ContactDeleted). `data.id` carries the parent's primary key."
 
-    type DepsLoaded = Event { data : [object] } "Internal: dependent rows fetched for the deleted parent."
+    type DepsLoaded = Event { data : [@entity @config.dependentEntity] } "Internal: dependent rows fetched for the deleted parent."
 
     type CascadeStepped = Event { id : string } "Internal: one dependent deleted; drives the next loop pass."
 
@@ -58,7 +58,7 @@ orbital CascadeOnDeleteOrbital {
         parentId : string
       }
       DepsLoaded {
-        data : [object]
+        data : [@entity @config.dependentEntity]
       }
       CascadeStepped {
         id : string
@@ -71,10 +71,10 @@ orbital CascadeOnDeleteOrbital {
 
     listens {
       ParentDeleted {
-        data : object
+        data : @entity @config.parentEntity
       }
       DepsLoaded {
-        data : [object]
+        data : [@entity @config.dependentEntity]
       }
       CascadeStepped {
         id : string

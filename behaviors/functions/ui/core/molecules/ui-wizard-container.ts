@@ -40,24 +40,17 @@ export interface StdUiWizardContainerStepChangePayload {
 }
 
 /**
- * Payload shape for the `COMPLETE` event.
- */
-export interface StdUiWizardContainerCompletePayload {
-  id?: string;
-}
-
-/**
  * Payload shape for the `NEXT` event.
  */
 export interface StdUiWizardContainerNextPayload {
-  id?: string;
+  step: number;
 }
 
 /**
  * Payload shape for the `BACK` event.
  */
 export interface StdUiWizardContainerBackPayload {
-  id?: string;
+  step: number;
 }
 
 /**

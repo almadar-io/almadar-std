@@ -745,8 +745,17 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
           },
           {
             'default': {},
+            'items': {
+              'items': {
+                'items': {
+                  'type': 'node',
+                },
+                'type': 'array',
+              },
+              'type': 'object',
+            },
             'name': 'svgAssetArt',
-            'type': 'string',
+            'type': 'object',
           },
         ];
         const extras = params.fields ?? [];
@@ -1912,6 +1921,7 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
             'tier': 'domain',
           },
           {
+            'definerKnob': 'extraAddonEvent',
             'description': 'Board-declared event name for the `extraAddons` action (e.g. Produce). Registers the call-site literal used inside `extraAddons` button descriptors in this trait\'s own event set.',
             'event': '@config.extraAddonEvent',
             'payloadSchema': [

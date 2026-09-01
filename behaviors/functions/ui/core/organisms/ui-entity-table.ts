@@ -36,7 +36,8 @@ export type StdUiEntityTableEventKey = 'EntityTableLoaded' | 'INIT' | 'VIEW';
  * Payload shape for the `VIEW` event.
  */
 export interface StdUiEntityTableViewPayload {
-  id?: string;
+  id: string;
+  row: unknown;
 }
 
 /**
@@ -600,7 +601,13 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
             'payloadSchema': [
               {
                 'name': 'id',
+                'required': true,
                 'type': 'string',
+              },
+              {
+                'name': 'row',
+                'required': true,
+                'type': '@entity',
               },
             ],
             'scope': 'external',
@@ -654,7 +661,13 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
               'payloadSchema': [
                 {
                   'name': 'id',
+                  'required': true,
                   'type': 'string',
+                },
+                {
+                  'name': 'row',
+                  'required': true,
+                  'type': '@entity',
                 },
               ],
               'tier': 'essential',

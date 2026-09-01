@@ -14,6 +14,13 @@ orbital EntityListOrbital {
     name : string
     label : string
   }
+  type EntityListItemActionsItem = {
+    label : string!
+    event : event
+    navigatesTo : string
+    placement : "row" | "bulk" | "card" | "footer"
+    variant : "primary" | "secondary" | "ghost" | "danger" | "default"
+  }
 
   entity EntityListItem [runtime] {
     id : string!
@@ -102,13 +109,12 @@ orbital EntityListOrbital {
     }
 
     emits {
-      ITEM_ACTIONS -> external {
-        id : string
-      }
+      ITEM_ACTIONS -> external { }
         @description "Item actions - schema-driven or function-based"
         @tier "essential"
       VIEW -> external {
-        id : string
+        id : string!
+        row : @entity!
       }
         @description "User opened a record from the list."
         @tier "essential"
@@ -172,7 +178,7 @@ orbital EntityListOrbital {
         @label "Selectable"
         @description "selectable prop"
         @tier "presentation"
-      itemActions : json = [{ event: VIEW, label: View, variant: ghost }]
+      itemActions : [EntityListItemActionsItem] = [{ event: VIEW, label: View, variant: ghost }]
         @label "Item Actions"
         @description "Item actions - schema-driven or function-based"
         @tier "presentation"

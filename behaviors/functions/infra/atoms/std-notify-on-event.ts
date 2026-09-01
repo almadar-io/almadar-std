@@ -942,7 +942,7 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
               'payloadSchema': [
                 {
                   'name': 'data',
-                  'type': 'object',
+                  'type': 'opaque',
                 },
                 {
                   'name': 'status',

@@ -45,7 +45,7 @@ export interface StdMlLookupKeyHitPayload {
  */
 export interface StdMlLookupKeyMissPayload {
   candidate: unknown;
-  request?: EntityRow;
+  request?: unknown;
 }
 
 /**
@@ -236,12 +236,12 @@ export function stdMlLookupMlLookupOrbital(params: StdMlLookupMlLookupOrbitalPar
               {
                 'name': 'candidate',
                 'required': true,
-                'type': 'any',
+                'type': 'scalar',
               },
               {
                 'name': 'entry',
                 'required': true,
-                'type': 'any',
+                'type': 'opaque',
               },
             ],
             'scope': 'external',
@@ -254,11 +254,11 @@ export function stdMlLookupMlLookupOrbital(params: StdMlLookupMlLookupOrbitalPar
               {
                 'name': 'candidate',
                 'required': true,
-                'type': 'any',
+                'type': 'scalar',
               },
               {
                 'name': 'request',
-                'type': 'object',
+                'type': 'opaque',
               },
             ],
             'scope': 'external',
@@ -281,16 +281,16 @@ export function stdMlLookupMlLookupOrbital(params: StdMlLookupMlLookupOrbitalPar
                 {
                   'name': 'candidate',
                   'required': true,
-                  'type': 'any',
+                  'type': 'scalar',
                 },
                 {
                   'name': 'accepted',
                   'required': true,
-                  'type': '[any]',
+                  'type': '[opaque]',
                 },
                 {
                   'name': 'request',
-                  'type': 'object',
+                  'type': 'opaque',
                 },
               ],
             },
@@ -306,12 +306,12 @@ export function stdMlLookupMlLookupOrbital(params: StdMlLookupMlLookupOrbitalPar
                 {
                   'name': 'candidate',
                   'required': true,
-                  'type': 'any',
+                  'type': 'scalar',
                 },
                 {
                   'name': 'entry',
                   'required': true,
-                  'type': 'any',
+                  'type': 'opaque',
                 },
               ],
               'tier': 'primary',
@@ -324,11 +324,11 @@ export function stdMlLookupMlLookupOrbital(params: StdMlLookupMlLookupOrbitalPar
                 {
                   'name': 'candidate',
                   'required': true,
-                  'type': 'any',
+                  'type': 'scalar',
                 },
                 {
                   'name': 'request',
-                  'type': 'object',
+                  'type': 'opaque',
                 },
               ],
               'tier': 'primary',

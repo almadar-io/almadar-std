@@ -33,20 +33,6 @@ const ALIAS = 'UiAvatar';
 export type StdUiAvatarEventKey = 'ACTION' | 'CLICK' | 'INIT';
 
 /**
- * Payload shape for the `CLICK` event.
- */
-export interface StdUiAvatarClickPayload {
-  id?: string;
-}
-
-/**
- * Payload shape for the `ACTION` event.
- */
-export interface StdUiAvatarActionPayload {
-  id?: string;
-}
-
-/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
@@ -55,7 +41,6 @@ export interface StdUiAvatarActionPayload {
 export interface StdUiAvatarConfig {
   /** Default: `"ACTION"` */
   action?: string;
-  /** Default: `{}` */
   actionPayload?: unknown;
   alt?: string;
   badge?: string;

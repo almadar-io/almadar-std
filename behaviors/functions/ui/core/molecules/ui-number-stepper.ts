@@ -43,7 +43,7 @@ export interface StdUiNumberStepperChangePayload {
  * Payload shape for the `ACTION` event.
  */
 export interface StdUiNumberStepperActionPayload {
-  id?: string;
+  value: number;
 }
 
 /**
@@ -55,7 +55,6 @@ export interface StdUiNumberStepperActionPayload {
 export interface StdUiNumberStepperConfig {
   /** Default: `"ACTION"` */
   action?: string;
-  /** Default: `{}` */
   actionPayload?: unknown;
   className?: string;
   /** Default: `false` */

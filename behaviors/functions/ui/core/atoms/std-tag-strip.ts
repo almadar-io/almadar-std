@@ -45,6 +45,7 @@ export interface StdTagStripTagsChangedPayload {
  */
 export interface StdTagStripAddTagPayload {
   tag: string;
+  value?: string[];
 }
 
 /**
@@ -52,6 +53,7 @@ export interface StdTagStripAddTagPayload {
  */
 export interface StdTagStripRemoveTagPayload {
   tag?: string;
+  index?: number;
   value?: string[];
 }
 

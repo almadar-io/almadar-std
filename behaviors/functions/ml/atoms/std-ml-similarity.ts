@@ -263,6 +263,34 @@ export function stdMlSimilarityMlSimilarityOrbital(params: StdMlSimilarityMlSimi
           {
             'default': {},
             'name': 'request',
+            'properties': {
+              'accepted': {
+                'items': {
+                  'type': 'scalar',
+                },
+                'name': 'accepted',
+                'required': true,
+                'type': 'array',
+              },
+              'candidate': {
+                'name': 'candidate',
+                'required': true,
+                'type': 'scalar',
+              },
+              'categories': {
+                'items': {
+                  'type': 'string',
+                },
+                'name': 'categories',
+                'required': true,
+                'type': 'array',
+              },
+              'key': {
+                'name': 'key',
+                'required': true,
+                'type': 'scalar',
+              },
+            },
             'type': 'object',
           },
           {
@@ -350,6 +378,28 @@ export function stdMlSimilarityMlSimilarityOrbital(params: StdMlSimilarityMlSimi
               },
               {
                 'name': 'request',
+                'properties': [
+                  {
+                    'name': 'candidate',
+                    'required': true,
+                    'type': 'scalar',
+                  },
+                  {
+                    'name': 'key',
+                    'required': true,
+                    'type': 'scalar',
+                  },
+                  {
+                    'name': 'accepted',
+                    'required': true,
+                    'type': '[scalar]',
+                  },
+                  {
+                    'name': 'categories',
+                    'required': true,
+                    'type': '[string]',
+                  },
+                ],
                 'type': 'object',
               },
             ],
@@ -382,6 +432,28 @@ export function stdMlSimilarityMlSimilarityOrbital(params: StdMlSimilarityMlSimi
                 },
                 {
                   'name': 'request',
+                  'properties': [
+                    {
+                      'name': 'candidate',
+                      'required': true,
+                      'type': 'scalar',
+                    },
+                    {
+                      'name': 'key',
+                      'required': true,
+                      'type': 'scalar',
+                    },
+                    {
+                      'name': 'accepted',
+                      'required': true,
+                      'type': '[scalar]',
+                    },
+                    {
+                      'name': 'categories',
+                      'required': true,
+                      'type': '[string]',
+                    },
+                  ],
                   'type': 'object',
                 },
               ],
@@ -437,6 +509,28 @@ export function stdMlSimilarityMlSimilarityOrbital(params: StdMlSimilarityMlSimi
                 },
                 {
                   'name': 'request',
+                  'properties': [
+                    {
+                      'name': 'candidate',
+                      'required': true,
+                      'type': 'scalar',
+                    },
+                    {
+                      'name': 'key',
+                      'required': true,
+                      'type': 'scalar',
+                    },
+                    {
+                      'name': 'accepted',
+                      'required': true,
+                      'type': '[scalar]',
+                    },
+                    {
+                      'name': 'categories',
+                      'required': true,
+                      'type': '[string]',
+                    },
+                  ],
                   'type': 'object',
                 },
               ],

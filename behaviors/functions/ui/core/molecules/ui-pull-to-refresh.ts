@@ -33,13 +33,6 @@ const ALIAS = 'UiPullToRefresh';
 export type StdUiPullToRefreshEventKey = 'INIT' | 'REFRESH';
 
 /**
- * Payload shape for the `REFRESH` event.
- */
-export interface StdUiPullToRefreshRefreshPayload {
-  id?: string;
-}
-
-/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
@@ -50,7 +43,6 @@ export interface StdUiPullToRefreshConfig {
   className?: string;
   /** Default: `"REFRESH"` */
   refreshEvent?: string;
-  /** Default: `{}` */
   refreshPayload?: unknown;
   /** Default: `60` */
   threshold?: number;

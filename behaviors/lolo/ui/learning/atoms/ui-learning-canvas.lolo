@@ -37,6 +37,13 @@ orbital LearningCanvasOrbital {
     x : number!
     y : number!
   }
+  type LearningCanvasProjector = {
+    tileWidth : number!
+    floorHeight : number!
+    diamondTopY : number!
+    squareGrid : boolean!
+    worldPixelDirect : boolean!
+  }
   type LearningCanvasReadoutsItem = {
     label : string!
     value : string!
@@ -95,6 +102,8 @@ orbital LearningCanvasOrbital {
           height: @config.height
           backgroundColor: @config.backgroundColor
           shapes: @config.shapes
+          drawables: @config.drawables
+          projector: @config.projector
           readouts: @config.readouts
           traces: @config.traces
           interactive: @config.interactive
@@ -112,6 +121,8 @@ orbital LearningCanvasOrbital {
           height: @config.height
           backgroundColor: @config.backgroundColor
           shapes: @payload.shapes
+          drawables: @payload.drawables
+          projector: @config.projector
           readouts: @payload.readouts
           traces: @payload.traces
           interactive: @config.interactive
@@ -140,6 +151,7 @@ orbital LearningCanvasOrbital {
     listens {
       UPDATE {
         shapes : [LearningCanvasShapesItem]
+        drawables : [node]
         readouts : [LearningCanvasReadoutsItem]
         traces : [LearningCanvasTracesItem]
       }
@@ -168,6 +180,14 @@ orbital LearningCanvasOrbital {
       shapes : [LearningCanvasShapesItem] = []
         @label "Shapes"
         @description "Declarative shapes to draw."
+        @tier "presentation"
+      drawables : [node] = []
+        @label "Drawables"
+        @description "Neutral game-canvas drawables (e.g. `draw-sprite`, `draw-fx-layer`) painted in world coordinates via the supplied `projector`. This lets the learning canvas reuse the game drawable vocabulary without reimplementing sprites/FX."
+        @tier "presentation"
+      projector : LearningCanvasProjector
+        @label "Projector"
+        @description "World-to-pixel projector for `drawables`. When absent, `drawables` are ignored."
         @tier "presentation"
       readouts : [LearningCanvasReadoutsItem] = []
         @label "Readouts"

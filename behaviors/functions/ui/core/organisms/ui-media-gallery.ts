@@ -36,7 +36,7 @@ export type StdUiMediaGalleryEventKey = 'INIT' | 'MediaGalleryLoaded' | 'SELECTI
  * Payload shape for the `SELECTION` event.
  */
 export interface StdUiMediaGallerySelectionPayload {
-  selection: EntityRow[];
+  selection: string[];
 }
 
 /**
@@ -417,13 +417,14 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
         },
         'emits': [
           {
+            'definerKnob': 'selectionEvent',
             'description': 'Event name emitted when selection changes (emitted as UI:{selectionEvent})',
             'event': '@config.selectionEvent',
             'payloadSchema': [
               {
                 'name': 'selection',
                 'required': true,
-                'type': '[object]',
+                'type': '[string]',
               },
             ],
             'scope': 'external',
@@ -478,7 +479,7 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
                 {
                   'name': 'selection',
                   'required': true,
-                  'type': '[object]',
+                  'type': '[string]',
                 },
               ],
               'tier': 'essential',

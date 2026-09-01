@@ -57,8 +57,7 @@ export interface StdUiChemistryCanvasConfig {
   bondStyle?: 'thick' | 'parallel';
   /** Default: `[]` */
   bonds?: EntityRow[];
-  /** Default: `{}` */
-  camera?: unknown;
+  camera?: EntityRow;
   className?: string;
   /** Default: `[]` */
   containers?: EntityRow[];

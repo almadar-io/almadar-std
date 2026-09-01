@@ -57,6 +57,8 @@ export interface StdUiLearningCanvasConfig {
   animate?: boolean;
   backgroundColor?: string;
   className?: string;
+  /** Default: `[]` */
+  drawables?: PatternValue[];
   error?: EntityRow;
   /** Default: `400` */
   height?: number;
@@ -67,6 +69,7 @@ export interface StdUiLearningCanvasConfig {
   onShapeClick?: string;
   /** Default: `"SHAPE_HOVER"` */
   onShapeHover?: string;
+  projector?: EntityRow;
   /** Default: `[]` */
   readouts?: EntityRow[];
   /** Default: `[]` */

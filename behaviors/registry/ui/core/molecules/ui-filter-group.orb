@@ -55,6 +55,24 @@
         "parent": "trt_01KXG04NWZX79JYS9DQRRJSY6D",
         "renames": []
       },
+      "evt_01M1CHY51TCN1E24KMEX670MQ7": {
+        "bakedName": "CLEAR",
+        "curName": "CLEAR",
+        "id": "evt_01M1CHY51TCN1E24KMEX670MQ7",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04NWZX79JYS9DQRRJSY6D",
+        "renames": []
+      },
+      "evt_01M1CHY51TDX4RV6N36X3M5EAP": {
+        "bakedName": "EVENT",
+        "curName": "EVENT",
+        "id": "evt_01M1CHY51TDX4RV6N36X3M5EAP",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04NWZX79JYS9DQRRJSY6D",
+        "renames": []
+      },
       "orb_01KXG04NWZHMEEFXA8JY1SW36Z": {
         "bakedName": "FilterGroupOrbital",
         "curName": "FilterGroupOrbital",
@@ -90,6 +108,10 @@
           {
             "name": "id",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "query",
             "type": "string"
           }
         ],
@@ -303,6 +325,7 @@
           },
           "emits": [
             {
+              "definerKnob": "onFilterChange",
               "description": "Callback when a filter changes - for EntityStore integration",
               "event": "@config.onFilterChange",
               "eventId": "evt_01KXG04NX201G8CA9JSP9DTETG",
@@ -320,25 +343,36 @@
               "tier": "essential"
             },
             {
+              "definerKnob": "onClearAll",
               "description": "Callback to clear all filters",
               "event": "@config.onClearAll",
               "eventId": "evt_01KXG04NX2E2M6WQ90755C1W1P",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ],
               "scope": "external",
               "tier": "essential"
             },
             {
+              "definerKnob": "event",
               "description": "Declarative filter event — emits UI:{event} via eventBus on filter change (alongside canonical UI:FILTER)",
               "event": "@config.event",
               "eventId": "evt_01KYC06RDGC5AX8D3JVW30MTNT",
               "payloadSchema": [
                 {
-                  "name": "id",
+                  "name": "entity",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "field",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "value",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "query",
                   "type": "string"
                 }
               ],
@@ -346,12 +380,18 @@
               "tier": "essential"
             },
             {
+              "definerKnob": "clearEvent",
               "description": "Declarative clear event — emits UI:{clearEvent} via eventBus on clear-all (alongside canonical UI:CLEAR_FILTERS)",
               "event": "@config.clearEvent",
               "eventId": "evt_01KYC06RDGJEVGWBTWQKHSHA5J",
               "payloadSchema": [
                 {
-                  "name": "id",
+                  "name": "entity",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "query",
                   "type": "string"
                 }
               ],
@@ -360,7 +400,9 @@
             }
           ],
           "entityContract": {
-            "provides": [],
+            "provides": [
+              "query"
+            ],
             "requires": []
           },
           "entityRebindable": true,
@@ -378,6 +420,48 @@
                 "id": "evt_01KXG04NWZ7H3S794N1JVCNZ39",
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "id": "evt_01M1CHY51TDX4RV6N36X3M5EAP",
+                "key": "EVENT",
+                "name": "Event",
+                "payloadSchema": [
+                  {
+                    "name": "entity",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "field",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "value",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "query",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "id": "evt_01M1CHY51TCN1E24KMEX670MQ7",
+                "key": "CLEAR",
+                "name": "Clear",
+                "payloadSchema": [
+                  {
+                    "name": "entity",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "query",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "description": "Callback when a filter changes - for EntityStore integration",
@@ -401,12 +485,6 @@
                 "id": "evt_01KXG04NX2E2M6WQ90755C1W1P",
                 "key": "@config.onClearAll",
                 "name": "@config.on clear all",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ],
                 "tier": "essential"
               },
               {
@@ -416,7 +494,22 @@
                 "name": "@config.event",
                 "payloadSchema": [
                   {
-                    "name": "id",
+                    "name": "entity",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "field",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "value",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "query",
                     "type": "string"
                   }
                 ],
@@ -429,7 +522,12 @@
                 "name": "@config.clear event",
                 "payloadSchema": [
                   {
-                    "name": "id",
+                    "name": "entity",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "query",
                     "type": "string"
                   }
                 ],
@@ -451,6 +549,11 @@
                     {}
                   ],
                   [
+                    "set",
+                    "@entity.query",
+                    "@config.query"
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
@@ -463,7 +566,7 @@
                       "look": "@config.look",
                       "onClearAll": "@config.onClearAll",
                       "onFilterChange": "@config.onFilterChange",
-                      "query": "@config.query",
+                      "query": "@entity.query",
                       "showIcon": "@config.showIcon",
                       "type": "filter-group",
                       "variant": "@config.variant"
@@ -472,6 +575,70 @@
                 ],
                 "event": "INIT",
                 "eventId": "evt_01KXG04NWZ7H3S794N1JVCNZ39",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.query",
+                    "@payload.query"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "clearEvent": "@config.clearEvent",
+                      "entity": "FilterGroupItem",
+                      "event": "@config.event",
+                      "filters": "@config.filters",
+                      "isLoading": "@config.isLoading",
+                      "look": "@config.look",
+                      "onClearAll": "@config.onClearAll",
+                      "onFilterChange": "@config.onFilterChange",
+                      "query": "@entity.query",
+                      "showIcon": "@config.showIcon",
+                      "type": "filter-group",
+                      "variant": "@config.variant"
+                    }
+                  ]
+                ],
+                "event": "EVENT",
+                "eventId": "evt_01M1CHY51TDX4RV6N36X3M5EAP",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.query",
+                    "@payload.query"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "clearEvent": "@config.clearEvent",
+                      "entity": "FilterGroupItem",
+                      "event": "@config.event",
+                      "filters": "@config.filters",
+                      "isLoading": "@config.isLoading",
+                      "look": "@config.look",
+                      "onClearAll": "@config.onClearAll",
+                      "onFilterChange": "@config.onFilterChange",
+                      "query": "@entity.query",
+                      "showIcon": "@config.showIcon",
+                      "type": "filter-group",
+                      "variant": "@config.variant"
+                    }
+                  ]
+                ],
+                "event": "CLEAR",
+                "eventId": "evt_01M1CHY51TCN1E24KMEX670MQ7",
                 "from": "idle",
                 "to": "idle"
               }

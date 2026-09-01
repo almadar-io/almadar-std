@@ -33,13 +33,6 @@ const ALIAS = 'UiLightbox';
 export type StdUiLightboxEventKey = 'CLOSE' | 'INDEX_CHANGE' | 'INIT' | 'OPEN';
 
 /**
- * Payload shape for the `CLOSE` event.
- */
-export interface StdUiLightboxClosePayload {
-  id?: string;
-}
-
-/**
  * Payload shape for the `INDEX_CHANGE` event.
  */
 export interface StdUiLightboxIndexChangePayload {

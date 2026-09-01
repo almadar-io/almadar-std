@@ -36,7 +36,7 @@ export type StdUiOptionConstraintGroupEventKey = 'CHANGE' | 'INIT';
  * Payload shape for the `CHANGE` event.
  */
 export interface StdUiOptionConstraintGroupChangePayload {
-  selected?: EntityRow[];
+  selected?: string[];
 }
 
 /**

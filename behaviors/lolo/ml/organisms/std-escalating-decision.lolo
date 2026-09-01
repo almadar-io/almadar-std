@@ -9,6 +9,22 @@ orbital EscalatingDecisionOrbital {
   uses Rung4 from "std/behaviors/std-ml-infer"
   uses Rung5 from "std/behaviors/std-ml-classify"
 
+  ;; The whole DECIDE payload, echoed untouched down the chain so each rung
+  ;; can project its own inputs out of it (object/get "accepted"/"categories"/"candidate").
+  type DecisionRequest = {
+    candidate  : scalar!
+    key        : scalar!
+    accepted   : [scalar]!
+    categories : [string]!
+  }
+
+  ;; Mirrors @almadar/core's ContractViolation (ml-contract.ts) — the shape
+  ;; contract/violations actually returns for R4's outputContract guard.
+  type ContractShapeMismatch = { type : "shape_mismatch", expected : [int], actual : [int] }
+  type ContractRangeViolation = { type : "range_violation", dim : int, min : number, max : number, actualMin : number, actualMax : number }
+  type ContractNotATensor = { type : "not_a_tensor", actualType : string }
+  type ContractViolation = ContractShapeMismatch | ContractRangeViolation | ContractNotATensor
+
   ;; The entry holds no request data: the whole DECIDE payload travels down
   ;; the chain as `request`, so there is nothing for this trait to remember.
   entity LadderRequest [runtime] {
@@ -48,17 +64,17 @@ orbital EscalatingDecisionOrbital {
     matchScore       : float     = 0
     matchMargin      : float     = 0
     reason           : string    = ""
-    request          : object    = {}
+    request          : DecisionRequest = {}
     status           : "idle" | "embedding" | "resolved" = idle
   }
 
   entity Inference [runtime] {
-    input      : object   = {}
-    output     : [float]  = []
-    confidence : float    = 0
-    violations : [object] = []
-    reason     : string   = ""
-    request    : object   = {}
+    input      : DecisionRequest      = {}
+    output     : [float]              = []
+    confidence : float                = 0
+    violations : [ContractViolation]  = []
+    reason     : string               = ""
+    request    : DecisionRequest      = {}
     status     : "idle" | "inferring" | "resolved" = idle
   }
 
@@ -68,7 +84,7 @@ orbital EscalatingDecisionOrbital {
     confidence   : float    = 0
     reasoning    : string   = ""
     errorMessage : string   = ""
-    request      : object   = {}
+    request      : DecisionRequest = {}
     status       : "idle" | "classifying" | "done" = idle
   }
 
@@ -97,9 +113,9 @@ orbital EscalatingDecisionOrbital {
 
     emits {
       RUN_EXACT {
-        candidate : any!
-        key : any!
-        request : object!
+        candidate : scalar!
+        key : scalar!
+        request : DecisionRequest!
       }
         @description "Starts the ladder at the exact-check rung (R0). request is the whole DECIDE payload, carried down the chain so each rung can project its own inputs."
         @tier "secondary"
@@ -107,9 +123,9 @@ orbital EscalatingDecisionOrbital {
 
     listens {
       DECIDE {
-        candidate  : any!
-        key        : any!
-        accepted   : [any]!
+        candidate  : scalar!
+        key        : scalar!
+        accepted   : [scalar]!
         categories : [string]!
       }
         @description "Public entry point — decide the candidate, falling through the ladder until a rung can prove the answer. accepted is R1's table; categories is R3's comparison set (R5's closed label set is the ClassifyRung categories knob, a design-time decision rather than a per-request one)."
@@ -232,7 +248,7 @@ orbital EscalatingDecisionOrbital {
       DECIDED -> external {
         rung : string!
         confidence : number!
-        matched : any!
+        matched : opaque!
         reasoning : string!
       }
         @description "The ladder proved an answer. rung names which one served it: R0 exact, R1 table, R3 retrieved, R4 learned, R5 generative."
@@ -246,8 +262,8 @@ orbital EscalatingDecisionOrbital {
     }
 
     listens {
-      FROM_EXACT { key : any! }
-      FROM_LOOKUP { entry : any! }
+      FROM_EXACT { key : scalar! }
+      FROM_LOOKUP { entry : scalar! }
       FROM_SIMILARITY { index : int!  score : float! }
       FROM_INFER { output : [float]!  confidence : float! }
       FROM_CLASSIFY { category : string!  confidence : float!  reasoning : string! }

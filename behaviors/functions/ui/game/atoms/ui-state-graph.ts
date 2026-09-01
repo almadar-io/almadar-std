@@ -36,7 +36,7 @@ export type StdUiStateGraphEventKey = 'INIT' | 'NODE_CLICK';
  * Payload shape for the `NODE_CLICK` event.
  */
 export interface StdUiStateGraphNodeClickPayload {
-  id?: string;
+  stateId: string;
 }
 
 /**

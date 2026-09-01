@@ -36,7 +36,8 @@ export type StdUiEntityCardsEventKey = 'EntityCardsLoaded' | 'INIT' | 'VIEW';
  * Payload shape for the `VIEW` event.
  */
 export interface StdUiEntityCardsViewPayload {
-  id?: string;
+  id: string;
+  row: unknown;
 }
 
 /**
@@ -494,7 +495,13 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
             'payloadSchema': [
               {
                 'name': 'id',
+                'required': true,
                 'type': 'string',
+              },
+              {
+                'name': 'row',
+                'required': true,
+                'type': '@entity',
               },
             ],
             'scope': 'external',
@@ -548,7 +555,13 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
               'payloadSchema': [
                 {
                   'name': 'id',
+                  'required': true,
                   'type': 'string',
+                },
+                {
+                  'name': 'row',
+                  'required': true,
+                  'type': '@entity',
                 },
               ],
               'tier': 'essential',

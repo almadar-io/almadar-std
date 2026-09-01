@@ -5,11 +5,12 @@ orbital ImportOrbital {
     uses Menu from "std/behaviors/ui-menu"
 
     type SourceOption = { id : string!, kind : string!, label : string!, event : string }
+    type ImportFileMeta = { name : string!, size : number, type : string, lastModified : number }
 
   entity ImportPanel [runtime] {
     id : string!
-    pendingSource : object = {}
-    pendingFiles : [object] = []
+    pendingSource : SourceOption = {}
+    pendingFiles : [ImportFileMeta] = []
   }
 
   trait Button1 = Button.traits.ButtonRender -> ImportPanel {
@@ -60,8 +61,8 @@ orbital ImportOrbital {
 
     emits {
       IMPORT_REQUESTED -> external {
-        source : object!
-        files : [object]
+        source : SourceOption!
+        files : [ImportFileMeta]
       }
         @description "Requests an import from the picked source. source is the SourceOption descriptor (id/kind/label); files carries picker metadata (name/size/type/lastModified) for file-kind sources, empty otherwise. A sibling std-migration-job listens and drives the run."
         @synonyms "import, upload, migrate, bring in data"
@@ -73,7 +74,7 @@ orbital ImportOrbital {
         @synonyms "import error, picker failed"
         @tier "internal"
       FILES_PICKED {
-        result : object!
+        result : opaque!
       }
         @description "browser/open-file-picker success envelope — result.files holds the picked file metadata"
         @tier "secondary"

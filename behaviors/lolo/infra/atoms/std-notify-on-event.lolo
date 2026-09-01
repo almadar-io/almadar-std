@@ -4,7 +4,7 @@ type PrefRow = { userId : string, eventType : string, mode : string, channel : s
 type AuditRow = { recipient : string, channel : string, dispatched : boolean, recordedAt : number }
 type SubRow = { userId : string, endpoint : string, p256dh : string, auth : string }
 orbital NotifyOnEventOrbital {
-    type EventOccurred = Event { data : object, status : string } "Rename via traitOverrides.events to the upstream event (e.g. ContactSaved). The atom listens on this sentinel and dispatches a notification. The optional `status` field lets `triggerStatus` gate dispatch to a single status-change value."
+    type EventOccurred = Event { data : opaque, status : string } "Rename via traitOverrides.events to the upstream event (e.g. ContactSaved). The atom listens on this sentinel and dispatches a notification. The optional `status` field lets `triggerStatus` gate dispatch to a single status-change value."
 
     type NotificationDispatched = Event { recipient : string, channel : string, message : string, severity : string } "Re-emitted after dispatch; rename to wire downstream observers (e.g. NotificationLogAppended)."
 
@@ -333,7 +333,7 @@ orbital NotifyOnEventOrbital {
 
     listens {
       EventOccurred {
-        data : object
+        data : opaque
         status : string
       }
       NOTIFY_PREFS_LOADED {

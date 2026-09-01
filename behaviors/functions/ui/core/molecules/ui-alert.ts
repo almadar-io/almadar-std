@@ -33,20 +33,6 @@ const ALIAS = 'UiAlert';
 export type StdUiAlertEventKey = 'CLOSE' | 'DISMISS' | 'INIT';
 
 /**
- * Payload shape for the `DISMISS` event.
- */
-export interface StdUiAlertDismissPayload {
-  id?: string;
-}
-
-/**
- * Payload shape for the `CLOSE` event.
- */
-export interface StdUiAlertClosePayload {
-  id?: string;
-}
-
-/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait

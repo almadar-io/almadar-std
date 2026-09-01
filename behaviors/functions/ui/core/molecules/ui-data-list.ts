@@ -33,52 +33,19 @@ const ALIAS = 'UiDataList';
 export type StdUiDataListEventKey = 'DataListLoaded' | 'INIT' | 'ITEM_CLICK' | 'LOAD_MORE' | 'LONG_PRESS' | 'REORDER' | 'SWIPE_LEFT' | 'SWIPE_RIGHT' | 'VIEW';
 
 /**
- * Payload shape for the `REORDER` event.
- */
-export interface StdUiDataListReorderPayload {
-  id?: string;
-}
-
-/**
  * Payload shape for the `ITEM_CLICK` event.
  */
 export interface StdUiDataListItemClickPayload {
-  id?: string;
-}
-
-/**
- * Payload shape for the `SWIPE_LEFT` event.
- */
-export interface StdUiDataListSwipeLeftPayload {
-  id?: string;
-}
-
-/**
- * Payload shape for the `SWIPE_RIGHT` event.
- */
-export interface StdUiDataListSwipeRightPayload {
-  id?: string;
-}
-
-/**
- * Payload shape for the `LONG_PRESS` event.
- */
-export interface StdUiDataListLongPressPayload {
-  id?: string;
-}
-
-/**
- * Payload shape for the `LOAD_MORE` event.
- */
-export interface StdUiDataListLoadMorePayload {
-  id?: string;
+  id: string;
+  row: unknown;
 }
 
 /**
  * Payload shape for the `VIEW` event.
  */
 export interface StdUiDataListViewPayload {
-  id?: string;
+  id: string;
+  row: unknown;
 }
 
 /**

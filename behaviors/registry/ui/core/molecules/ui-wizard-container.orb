@@ -718,7 +718,7 @@
                         },
                         "condition": {
                           "items": {
-                            "type": "object"
+                            "type": "opaque"
                           },
                           "name": "condition",
                           "required": false,
@@ -727,7 +727,7 @@
                         "dataSource": {
                           "name": "dataSource",
                           "required": false,
-                          "type": "string"
+                          "type": "opaque"
                         },
                         "description": {
                           "name": "description",
@@ -740,11 +740,11 @@
                               "calculated": {
                                 "name": "calculated",
                                 "required": false,
-                                "type": "string"
+                                "type": "opaque"
                               },
                               "condition": {
                                 "items": {
-                                  "type": "object"
+                                  "type": "opaque"
                                 },
                                 "name": "condition",
                                 "required": false,
@@ -761,12 +761,12 @@
                               "dataSource": {
                                 "name": "dataSource",
                                 "required": false,
-                                "type": "string"
+                                "type": "opaque"
                               },
                               "defaultValue": {
                                 "name": "defaultValue",
                                 "required": false,
-                                "type": "string"
+                                "type": "opaque"
                               },
                               "displayFields": {
                                 "items": {
@@ -779,7 +779,7 @@
                               "displayTemplate": {
                                 "name": "displayTemplate",
                                 "required": false,
-                                "type": "string"
+                                "type": "opaque"
                               },
                               "entityField": {
                                 "name": "entityField",
@@ -822,7 +822,7 @@
                                     "autoCheck": {
                                       "name": "autoCheck",
                                       "required": false,
-                                      "type": "string"
+                                      "type": "opaque"
                                     },
                                     "id": {
                                       "name": "id",
@@ -849,7 +849,7 @@
                               "lawReference": {
                                 "name": "lawReference",
                                 "required": false,
-                                "type": "string"
+                                "type": "opaque"
                               },
                               "maxLength": {
                                 "name": "maxLength",
@@ -859,7 +859,7 @@
                               "minDate": {
                                 "name": "minDate",
                                 "required": false,
-                                "type": "string"
+                                "type": "opaque"
                               },
                               "minLength": {
                                 "name": "minLength",
@@ -914,12 +914,12 @@
                               "searchConfig": {
                                 "name": "searchConfig",
                                 "required": false,
-                                "type": "string"
+                                "type": "opaque"
                               },
                               "signatureConfig": {
                                 "name": "signatureConfig",
                                 "required": false,
-                                "type": "string"
+                                "type": "opaque"
                               },
                               "stats": {
                                 "items": {
@@ -937,7 +937,7 @@
                                     "value": {
                                       "name": "value",
                                       "required": true,
-                                      "type": "string"
+                                      "type": "opaque"
                                     }
                                   },
                                   "type": "object"
@@ -1005,7 +1005,7 @@
                         },
                         "subsections": {
                           "items": {
-                            "type": "object"
+                            "type": "opaque"
                           },
                           "name": "subsections",
                           "required": false,
@@ -1038,7 +1038,7 @@
                       "properties": {
                         "condition": {
                           "items": {
-                            "type": "object"
+                            "type": "opaque"
                           },
                           "name": "condition",
                           "required": true,
@@ -1066,6 +1066,7 @@
           },
           "emits": [
             {
+              "definerKnob": "onStepChange",
               "description": "Callback when step changes",
               "event": "@config.onStepChange",
               "eventId": "evt_01KXG04S4ZGGE0W02A11V48ZAR",
@@ -1079,39 +1080,38 @@
               "tier": "essential"
             },
             {
+              "definerKnob": "onComplete",
               "description": "Callback when wizard is completed",
               "event": "@config.onComplete",
               "eventId": "evt_01KXG04S4ZNM4X6GTSZ82Z1KQJ",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ],
               "scope": "external",
               "tier": "essential"
             },
             {
+              "definerKnob": "nextEvent",
               "description": "Emits UI:{nextEvent} when advancing to next step",
               "event": "@config.nextEvent",
               "eventId": "evt_01KXG04S4Z2G8AGKRYZW8K2JQ1",
               "payloadSchema": [
                 {
-                  "name": "id",
-                  "type": "string"
+                  "name": "step",
+                  "required": true,
+                  "type": "number"
                 }
               ],
               "scope": "external",
               "tier": "essential"
             },
             {
+              "definerKnob": "backEvent",
               "description": "Emits UI:{backEvent} when going to previous step",
               "event": "@config.backEvent",
               "eventId": "evt_01KXG04S4ZVPN9H4CCTBRDA3XA",
               "payloadSchema": [
                 {
-                  "name": "id",
-                  "type": "string"
+                  "name": "step",
+                  "required": true,
+                  "type": "number"
                 }
               ],
               "scope": "external",
@@ -1156,12 +1156,6 @@
                 "id": "evt_01KXG04S4ZNM4X6GTSZ82Z1KQJ",
                 "key": "@config.onComplete",
                 "name": "@config.on complete",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ],
                 "tier": "essential"
               },
               {
@@ -1171,8 +1165,9 @@
                 "name": "@config.next event",
                 "payloadSchema": [
                   {
-                    "name": "id",
-                    "type": "string"
+                    "name": "step",
+                    "required": true,
+                    "type": "number"
                   }
                 ],
                 "tier": "essential"
@@ -1184,8 +1179,9 @@
                 "name": "@config.back event",
                 "payloadSchema": [
                   {
-                    "name": "id",
-                    "type": "string"
+                    "name": "step",
+                    "required": true,
+                    "type": "number"
                   }
                 ],
                 "tier": "essential"

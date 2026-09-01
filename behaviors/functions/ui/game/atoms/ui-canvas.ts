@@ -36,28 +36,29 @@ export type StdUiCanvasEventKey = 'FEATURE_CLICK' | 'INIT' | 'TILE_CLICK' | 'TIL
  * Payload shape for the `TILE_CLICK` event.
  */
 export interface StdUiCanvasTileClickPayload {
-  _payload?: EntityRow;
+  x?: number;
+  y?: number;
+  tileId?: string;
+  z?: number;
 }
 
 /**
  * Payload shape for the `UNIT_CLICK` event.
  */
 export interface StdUiCanvasUnitClickPayload {
-  _payload?: EntityRow;
+  unitId?: string;
+  x?: number;
+  z?: number;
 }
 
 /**
  * Payload shape for the `TILE_HOVER` event.
  */
 export interface StdUiCanvasTileHoverPayload {
-  _payload?: EntityRow;
-}
-
-/**
- * Payload shape for the `TILE_LEAVE` event.
- */
-export interface StdUiCanvasTileLeavePayload {
-  id?: string;
+  x?: number;
+  y?: number;
+  tileId?: string;
+  z?: number;
 }
 
 /**
@@ -79,8 +80,7 @@ export interface StdUiCanvasFeatureClickPayload {
 export interface StdUiCanvasConfig {
   backgroundColor?: string;
   backgroundImage?: unknown;
-  /** Default: `{}` */
-  camera?: unknown;
+  camera?: EntityRow;
   children?: PatternValue;
   className?: string;
   /** Default: `[]` */

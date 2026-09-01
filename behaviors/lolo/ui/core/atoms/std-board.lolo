@@ -31,7 +31,7 @@ orbital BoardOrbital {
     currentDescription : string @intrinsic = ""
     currentStage : string @intrinsic = ""
     currentNotes : string @intrinsic = ""
-    currentRow : object @intrinsic = {}
+    currentRow : Map string scalar @intrinsic = {}
     errorMessage : string @intrinsic = ""
   }
 
@@ -324,7 +324,7 @@ orbital BoardOrbital {
     emits {
       OPEN_CARD {
         id : string!
-        row : object!
+        row : @entity!
       }
         @description "Indicates a card within the board has been selected."
         @synonyms "select, choose, activate, display"
@@ -372,7 +372,7 @@ orbital BoardOrbital {
         @tier "presentation"
       EDIT_CARD -> external {
         id : string!
-        row : object
+        row : @entity
       }
         @description "Signals a request to edit the currently open card. The board renders no edit form itself — consumers override cardActionsContent with an Edit button and wire this emit to their edit modal/form trait."
         @synonyms "edit, modify, update, change"
@@ -413,7 +413,7 @@ orbital BoardOrbital {
     listens {
       OPEN_CARD {
         id : string!
-        row : object!
+        row : @entity!
         title : string
         description : string
         stage : string
@@ -476,8 +476,10 @@ orbital BoardOrbital {
         @synonyms "refresh, reload, update, re-query"
         @tier "domain"
       REFETCH_FILTER {
+        entity : string!
         field : string!
         value : string!
+        query : string
       }
         @description "Triggers a board refresh based on current filter criteria."
         @synonyms "refresh, filter, update, reload"

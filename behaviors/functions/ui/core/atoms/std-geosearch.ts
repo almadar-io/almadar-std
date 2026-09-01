@@ -40,6 +40,7 @@ export interface StdGeosearchGeoSearchPayload {
   lat: number;
   lng: number;
   radiusKm: number;
+  value?: number;
 }
 
 /**
@@ -313,6 +314,10 @@ export function stdGeosearchGeoSearchResultOrbital(params: StdGeosearchGeoSearch
                 'required': true,
                 'type': 'number',
               },
+              {
+                'name': 'value',
+                'type': 'number',
+              },
             ],
             'synonyms': 'search, locate, find, query',
             'tier': 'domain',
@@ -350,6 +355,10 @@ export function stdGeosearchGeoSearchResultOrbital(params: StdGeosearchGeoSearch
                 {
                   'name': 'radiusKm',
                   'required': true,
+                  'type': 'number',
+                },
+                {
+                  'name': 'value',
                   'type': 'number',
                 },
               ],

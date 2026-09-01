@@ -431,6 +431,11 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
               'name': 'Refetch Filter',
               'payloadSchema': [
                 {
+                  'name': 'entity',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
                   'name': 'field',
                   'required': true,
                   'type': 'string',
@@ -438,6 +443,10 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
                 {
                   'name': 'value',
                   'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'query',
                   'type': 'string',
                 },
               ],

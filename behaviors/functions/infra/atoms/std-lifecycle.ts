@@ -44,7 +44,7 @@ export interface StdLifecycleLifecycleTransitionedPayload {
  * Payload shape for the `ScanRecordsLoaded` event.
  */
 export interface StdLifecycleScanRecordsLoadedPayload {
-  data?: EntityRow[];
+  data?: unknown;
 }
 
 /**
@@ -364,7 +364,7 @@ export function stdLifecycleLifecycleOrbital(params: StdLifecycleLifecycleOrbita
             'payloadSchema': [
               {
                 'name': 'data',
-                'type': '[object]',
+                'type': '[@entity(targetEntity)]',
               },
             ],
           },
@@ -414,7 +414,7 @@ export function stdLifecycleLifecycleOrbital(params: StdLifecycleLifecycleOrbita
               'payloadSchema': [
                 {
                   'name': 'data',
-                  'type': '[object]',
+                  'type': '[@entity(targetEntity)]',
                 },
               ],
             },

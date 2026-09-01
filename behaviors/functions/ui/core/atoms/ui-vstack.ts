@@ -33,13 +33,6 @@ const ALIAS = 'UiVstack';
 export type StdUiVstackEventKey = 'ACTION' | 'INIT';
 
 /**
- * Payload shape for the `ACTION` event.
- */
-export interface StdUiVstackActionPayload {
-  id?: string;
-}
-
-/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
@@ -48,7 +41,6 @@ export interface StdUiVstackActionPayload {
 export interface StdUiVstackConfig {
   /** Default: `"ACTION"` */
   action?: string;
-  /** Default: `{}` */
   actionPayload?: unknown;
   /** Default: `"stretch"` */
   align?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';

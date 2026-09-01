@@ -36,7 +36,7 @@ export type StdWizardEventKey = 'ADVANCE' | 'CANCEL' | 'INIT' | 'RESTART' | 'RET
  * Payload shape for the `ADVANCE` event.
  */
 export interface StdWizardAdvancePayload {
-  data?: EntityRow;
+  data: unknown;
 }
 
 /**
@@ -513,7 +513,8 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
             'payloadSchema': [
               {
                 'name': 'data',
-                'type': 'object',
+                'required': true,
+                'type': '@entity',
               },
             ],
             'synonyms': 'next, proceed, continue',
@@ -711,7 +712,8 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
               'payloadSchema': [
                 {
                   'name': 'data',
-                  'type': 'object',
+                  'required': true,
+                  'type': '@entity',
                 },
               ],
               'synonyms': 'next, proceed, continue',

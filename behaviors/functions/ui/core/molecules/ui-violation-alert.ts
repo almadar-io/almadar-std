@@ -33,13 +33,6 @@ const ALIAS = 'UiViolationAlert';
 export type StdUiViolationAlertEventKey = 'DISMISS' | 'INIT' | 'NAVIGATE_TO_FIELD';
 
 /**
- * Payload shape for the `DISMISS` event.
- */
-export interface StdUiViolationAlertDismissPayload {
-  id?: string;
-}
-
-/**
  * Payload shape for the `NAVIGATE_TO_FIELD` event.
  */
 export interface StdUiViolationAlertNavigateToFieldPayload {

@@ -33,13 +33,6 @@ const ALIAS = 'UiOverlay';
 export type StdUiOverlayEventKey = 'ACTION' | 'INIT';
 
 /**
- * Payload shape for the `ACTION` event.
- */
-export interface StdUiOverlayActionPayload {
-  id?: string;
-}
-
-/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait

@@ -37,7 +37,7 @@ export type StdBoardEventKey = 'ADD_CARD' | 'BoardItemDeleted' | 'BoardItemsLoad
  */
 export interface StdBoardOpenCardPayload {
   id: string;
-  row: EntityRow;
+  row: unknown;
 }
 
 /**
@@ -78,7 +78,7 @@ export interface StdBoardDeleteCardPayload {
  */
 export interface StdBoardEditCardPayload {
   id: string;
-  row?: EntityRow;
+  row?: unknown;
 }
 
 /**
@@ -467,6 +467,9 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
           {
             'default': {},
             'intrinsic': true,
+            'items': {
+              'type': 'scalar',
+            },
             'name': 'currentRow',
             'type': 'object',
           },
@@ -1166,7 +1169,7 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
               {
                 'name': 'row',
                 'required': true,
-                'type': 'object',
+                'type': '@entity',
               },
             ],
             'synonyms': 'select, choose, activate, display',
@@ -1274,7 +1277,7 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
               },
               {
                 'name': 'row',
-                'type': 'object',
+                'type': '@entity',
               },
             ],
             'scope': 'external',
@@ -1482,7 +1485,7 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                 {
                   'name': 'row',
                   'required': true,
-                  'type': 'object',
+                  'type': '@entity',
                 },
                 {
                   'name': 'title',
@@ -1595,6 +1598,11 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
               'name': 'Refetch Filter',
               'payloadSchema': [
                 {
+                  'name': 'entity',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
                   'name': 'field',
                   'required': true,
                   'type': 'string',
@@ -1602,6 +1610,10 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                 {
                   'name': 'value',
                   'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'query',
                   'type': 'string',
                 },
               ],
@@ -1676,7 +1688,7 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                 },
                 {
                   'name': 'row',
-                  'type': 'object',
+                  'type': '@entity',
                 },
               ],
               'synonyms': 'edit, modify, update, change',

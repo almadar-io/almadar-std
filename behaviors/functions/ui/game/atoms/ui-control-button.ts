@@ -33,20 +33,6 @@ const ALIAS = 'UiControlButton';
 export type StdUiControlButtonEventKey = 'INIT' | 'PRESS' | 'RELEASE';
 
 /**
- * Payload shape for the `PRESS` event.
- */
-export interface StdUiControlButtonPressPayload {
-  id?: string;
-}
-
-/**
- * Payload shape for the `RELEASE` event.
- */
-export interface StdUiControlButtonReleasePayload {
-  id?: string;
-}
-
-/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait

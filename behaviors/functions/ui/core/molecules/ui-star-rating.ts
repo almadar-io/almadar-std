@@ -36,7 +36,7 @@ export type StdUiStarRatingEventKey = 'ACTION' | 'CHANGE' | 'INIT';
  * Payload shape for the `ACTION` event.
  */
 export interface StdUiStarRatingActionPayload {
-  id?: string;
+  value: number;
 }
 
 /**
@@ -55,7 +55,6 @@ export interface StdUiStarRatingChangePayload {
 export interface StdUiStarRatingConfig {
   /** Default: `"ACTION"` */
   action?: string;
-  /** Default: `{}` */
   actionPayload?: unknown;
   className?: string;
   label?: string;

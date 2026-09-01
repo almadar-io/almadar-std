@@ -43,7 +43,7 @@ export interface StdEventLogApplyFilterPayload {
  * Payload shape for the `SAVE_BACKFILL` event.
  */
 export interface StdEventLogSaveBackfillPayload {
-  data?: EntityRow;
+  data: unknown;
 }
 
 /**
@@ -677,7 +677,8 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
             'payloadSchema': [
               {
                 'name': 'data',
-                'type': 'object',
+                'required': true,
+                'type': '@entity',
               },
             ],
             'synonyms': 'saved, persisted, committed',
@@ -878,6 +879,11 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
               'name': 'Refetch Filter',
               'payloadSchema': [
                 {
+                  'name': 'entity',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
                   'name': 'field',
                   'required': true,
                   'type': 'string',
@@ -885,6 +891,10 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                 {
                   'name': 'value',
                   'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'query',
                   'type': 'string',
                 },
               ],
@@ -919,7 +929,8 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
               'payloadSchema': [
                 {
                   'name': 'data',
-                  'type': 'object',
+                  'required': true,
+                  'type': '@entity',
                 },
               ],
               'synonyms': 'saved, persisted, committed',

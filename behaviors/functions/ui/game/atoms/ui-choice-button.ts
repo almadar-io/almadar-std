@@ -33,20 +33,6 @@ const ALIAS = 'UiChoiceButton';
 export type StdUiChoiceButtonEventKey = 'ACTION' | 'CLICK' | 'INIT';
 
 /**
- * Payload shape for the `CLICK` event.
- */
-export interface StdUiChoiceButtonClickPayload {
-  id?: string;
-}
-
-/**
- * Payload shape for the `ACTION` event.
- */
-export interface StdUiChoiceButtonActionPayload {
-  id?: string;
-}
-
-/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait

@@ -1,6 +1,13 @@
 app ui-upload-drop-zone "1.0.0"
 "UploadDropZone — UI factory (1:1 with the @almadar/ui upload-drop-zone pattern)."
 orbital UploadDropZoneOrbital {
+  type UploadDropZoneACTIONFilesItem = {
+    name : string!
+    size : number!
+    type : string!
+    content : string!
+  }
+
   entity UploadDropZoneItem [runtime] {
     id : string!
   }
@@ -27,7 +34,7 @@ orbital UploadDropZoneOrbital {
 
     emits {
       @config.action -> external {
-        id : string
+        files : [UploadDropZoneACTIONFilesItem]!
       }
         @description "Declarative event name for file selection"
         @tier "essential"
@@ -66,7 +73,7 @@ orbital UploadDropZoneOrbital {
         @label "Action"
         @description "Declarative event name for file selection"
         @tier "presentation"
-      actionPayload : json = {}
+      actionPayload : @payload @config.action
         @label "Action Payload"
         @description "Payload to include with the action event"
         @tier "presentation"

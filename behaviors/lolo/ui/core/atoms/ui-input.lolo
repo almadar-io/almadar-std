@@ -8,6 +8,7 @@ orbital InputOrbital {
 
   entity InputItem [runtime] {
     id : string!
+    value : string
   }
 
   trait InputRender -> @rebindable InputItem [interaction, instance] {
@@ -15,10 +16,33 @@ orbital InputOrbital {
 
     state idle {
       INIT -> idle
+        (set @entity.value @config.value)
         (render-ui main {
           className: @config.className
           placeholder: @config.placeholder
-          value: @config.value
+          value: @entity.value
+          disabled: @config.disabled
+          action: @config.action
+          inputType: @config.inputType
+          label: @config.label
+          helperText: @config.helperText
+          error: @config.error
+          leftIcon: @config.leftIcon
+          rightIcon: @config.rightIcon
+          icon: @config.icon
+          clearable: @config.clearable
+          onClear: @config.onClear
+          options: @config.options
+          rows: @config.rows
+          onChange: @config.onChange
+          type: input
+        })
+      ACTION -> idle
+        (set @entity.value ?value)
+        (render-ui main {
+          className: @config.className
+          placeholder: @config.placeholder
+          value: @entity.value
           disabled: @config.disabled
           action: @config.action
           inputType: @config.inputType
@@ -39,20 +63,22 @@ orbital InputOrbital {
 
     emits {
       @config.action -> external {
-        id : string
+        value : string!
       }
         @description "Declarative event name for trait dispatch"
         @tier "essential"
-      @config.onClear -> external {
-        id : string
-      }
+      @config.onClear -> external { }
         @description "Callback or declarative event key when clear button is clicked"
         @tier "essential"
-      @config.onChange -> external {
-        id : string
-      }
+      @config.onChange -> external { }
         @description "onChange handler or declarative event key for trait dispatch"
         @tier "essential"
+    }
+
+    listens {
+      ACTION {
+        value : string!
+      }
     }
 
     config {

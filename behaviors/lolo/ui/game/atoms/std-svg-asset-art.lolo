@@ -3,7 +3,7 @@ app std-svg-asset-art "1.0.0"
 orbital StdSvgAssetArtOrbital {
   entity StdSvgAssetArt [runtime, shared] {
     id : string!
-    svgAssetArt : json = {}
+    svgAssetArt : Map string Map string [node] = {}
   }
 
   trait SvgAssetArtCollector -> @rebindable StdSvgAssetArt [lifecycle] {
@@ -29,11 +29,11 @@ orbital StdSvgAssetArtOrbital {
 
     listens {
       SVG_ASSET_SYNC { }
-      SVG_ASSET_PUBLISH { kind : string, states : json }
+      SVG_ASSET_PUBLISH { kind : string, states : Map string opaque }
     }
 
     config {
-      seedArt : json = {}
+      seedArt : Map string opaque = {}
         @label "Seed Art"
         @description "Initial kind → (state → draw-group items) catalog merged under bus-published entries (published entries win). Lets a board ship vector art with zero asset imports."
         @tier "presentation"

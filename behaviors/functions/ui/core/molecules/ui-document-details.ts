@@ -37,7 +37,7 @@ export type StdUiDocumentDetailsEventKey = 'DocumentDetailsLoaded' | 'INIT' | 'M
  */
 export interface StdUiDocumentDetailsMetaCommitPayload {
   id: string;
-  patch: EntityRow;
+  patch: Record<string, EntityRow>;
 }
 
 /**

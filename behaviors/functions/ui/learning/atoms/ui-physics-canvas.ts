@@ -53,8 +53,7 @@ export interface StdUiPhysicsCanvasConfig {
   backgroundColor?: string;
   /** Default: `[]` */
   bodies?: EntityRow[];
-  /** Default: `{}` */
-  camera?: unknown;
+  camera?: EntityRow;
   className?: string;
   /** Default: `[]` */
   constraints?: EntityRow[];

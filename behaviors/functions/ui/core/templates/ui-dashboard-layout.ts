@@ -47,20 +47,6 @@ export interface StdUiDashboardLayoutSearchSubmitPayload {
 }
 
 /**
- * Payload shape for the `NOTIFICATION_CLICK` event.
- */
-export interface StdUiDashboardLayoutNotificationClickPayload {
-  id?: string;
-}
-
-/**
- * Payload shape for the `SIGN_OUT` event.
- */
-export interface StdUiDashboardLayoutSignOutPayload {
-  id?: string;
-}
-
-/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait

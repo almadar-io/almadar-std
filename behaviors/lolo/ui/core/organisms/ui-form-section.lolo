@@ -10,7 +10,7 @@ orbital FormSectionOrbital {
     inputType : string
     placeholder : string
     required : boolean
-    defaultValue : json
+    defaultValue : opaque
     options : [FormSectionFieldsItemOptionsItem]
     values : [string]
     relation : FormSectionFieldsItemRelation
@@ -69,10 +69,10 @@ orbital FormSectionOrbital {
     message : string!
   }
   type FormSectionEvaluationContext = {
-    formValues : Map string object!
-    globalVariables : Map string json!
-    localVariables : Map string json
-    entity : Map string object
+    formValues : Map string opaque!
+    globalVariables : Map string opaque!
+    localVariables : Map string opaque
+    entity : Map string opaque
   }
   type FormSectionSectionsItem = {
     id : string!
@@ -89,7 +89,7 @@ orbital FormSectionOrbital {
     inputType : string
     placeholder : string
     required : boolean
-    defaultValue : json
+    defaultValue : opaque
     options : [FormSectionSectionsItemFieldsItemOptionsItem]
     values : [string]
     relation : FormSectionSectionsItemFieldsItemRelation
@@ -115,8 +115,14 @@ orbital FormSectionOrbital {
   }
   type FormSectionFIELDCHANGEChange = {
     fieldId : string!
-    value : object!
-    formValues : Map string object!
+    value : string | number | boolean | [string] | FormSectionFIELDCHANGEChangeValue!
+    formValues : Map string opaque!
+  }
+  type FormSectionFIELDCHANGEChangeValue = {
+    name : string!
+    url : string!
+    mimeType : string!
+    sizeBytes : number!
   }
 
   entity FormSectionItem [runtime] {
@@ -234,13 +240,11 @@ orbital FormSectionOrbital {
 
     emits {
       @config.submitEvent -> external {
-        id : string
+        data : @entity!
       }
         @description "Event dispatch props (for trait state machine integration)"
         @tier "essential"
-      @config.cancelEvent -> external {
-        id : string
-      }
+      @config.cancelEvent -> external { }
         @description "Event to dispatch on cancel (defaults to 'CANCEL')"
         @tier "essential"
       @config.onFieldChange -> external {

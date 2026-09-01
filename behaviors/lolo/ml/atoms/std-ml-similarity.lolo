@@ -3,6 +3,15 @@ app std-ml-similarity "1.0.0"
 
 orbital MlSimilarityOrbital {
 
+  ;; The caller-supplied request bag, echoed untouched through COMPARE/SIMILARITY_ABSTAINED
+  ;; so a composing ladder (e.g. std-escalating-decision) can project its own inputs out of it.
+  type DecisionRequest = {
+    candidate  : scalar!
+    key        : scalar!
+    accepted   : [scalar]!
+    categories : [string]!
+  }
+
   entity SimilarityComparison [runtime] {
     query            : string    = ""
     candidates       : [string]  = []
@@ -13,7 +22,7 @@ orbital MlSimilarityOrbital {
     matchScore       : float     = 0
     matchMargin      : float     = 0
     reason           : string    = ""
-    request          : object    = {}
+    request          : DecisionRequest = {}
     status           : "idle" | "embedding" | "resolved" = idle
   }
 
@@ -147,7 +156,7 @@ orbital MlSimilarityOrbital {
 
       SIMILARITY_ABSTAINED -> external {
         reason : string!
-        request : object
+        request : DecisionRequest
       }
         @description "No confident match — reason is one of: empty candidate list, below floor, thin margin, embedding unavailable. request echoes the originating request untouched so the next rung can project its own inputs out of it"
         @tier "primary"
@@ -157,7 +166,7 @@ orbital MlSimilarityOrbital {
       COMPARE {
         query : string!
         candidates : [string]!
-        request : object
+        request : DecisionRequest
       }
     }
   }

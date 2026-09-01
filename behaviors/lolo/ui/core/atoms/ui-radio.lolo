@@ -3,6 +3,7 @@ app ui-radio "1.0.0"
 orbital RadioOrbital {
   entity RadioItem [runtime] {
     id : string!
+    value : string
   }
 
   trait RadioRender -> @rebindable RadioItem [interaction, instance] {
@@ -10,10 +11,24 @@ orbital RadioOrbital {
 
     state idle {
       INIT -> idle
+        (set @entity.value @config.value)
         (render-ui main {
           className: @config.className
           options: @config.options
-          value: @config.value
+          value: @entity.value
+          action: @config.action
+          label: @config.label
+          helperText: @config.helperText
+          error: @config.error
+          size: @config.size
+          type: radio
+        })
+      ACTION -> idle
+        (set @entity.value ?value)
+        (render-ui main {
+          className: @config.className
+          options: @config.options
+          value: @entity.value
           action: @config.action
           label: @config.label
           helperText: @config.helperText
@@ -25,10 +40,16 @@ orbital RadioOrbital {
 
     emits {
       @config.action -> external {
-        id : string
+        value : string!
       }
         @description "Declarative event name for trait dispatch"
         @tier "essential"
+    }
+
+    listens {
+      ACTION {
+        value : string!
+      }
     }
 
     config {

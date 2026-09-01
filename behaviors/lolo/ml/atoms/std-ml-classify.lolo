@@ -3,13 +3,22 @@ app std-ml-classify "1.0.0"
 
 orbital MlClassifyOrbital {
 
+  ;; The caller-supplied request bag, echoed untouched through CLASSIFY/CLASSIFIED
+  ;; so a composing ladder (e.g. std-escalating-decision) can project its own inputs out of it.
+  type DecisionRequest = {
+    candidate  : scalar!
+    key        : scalar!
+    accepted   : [scalar]!
+    categories : [string]!
+  }
+
   entity ClassifierVerdict [runtime] {
     text         : string   = ""
     category     : string   = ""
     confidence   : float    = 0
     reasoning    : string   = ""
     errorMessage : string   = ""
-    request      : object   = {}
+    request      : DecisionRequest = {}
     status       : "idle" | "classifying" | "done" = idle
   }
 
@@ -112,7 +121,7 @@ orbital MlClassifyOrbital {
     listens {
       CLASSIFY {
         text : string!
-        request : object
+        request : DecisionRequest
       }
     }
   }

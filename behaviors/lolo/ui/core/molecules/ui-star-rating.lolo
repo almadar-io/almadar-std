@@ -25,6 +25,21 @@ orbital StarRatingOrbital {
           label: @config.label
           type: star-rating
         })
+      ACTION -> idle
+        (set @entity.value ?value)
+        (render-ui main {
+          value: @entity.value
+          max: @config.max
+          readOnly: @config.readOnly
+          precision: @config.precision
+          size: @config.size
+          action: @config.action
+          actionPayload: @config.actionPayload
+          onChange: @config.onChange
+          className: @config.className
+          label: @config.label
+          type: star-rating
+        })
       CHANGE -> idle
         (set @entity.value ?value)
         (render-ui main {
@@ -44,7 +59,7 @@ orbital StarRatingOrbital {
 
     emits {
       @config.action -> external {
-        id : string
+        value : number!
       }
         @description "Declarative event name for rating changes"
         @tier "essential"
@@ -56,6 +71,9 @@ orbital StarRatingOrbital {
     }
 
     listens {
+      ACTION {
+        value : number!
+      }
       CHANGE {
         value : number
       }
@@ -86,7 +104,7 @@ orbital StarRatingOrbital {
         @label "Action"
         @description "Declarative event name for rating changes"
         @tier "presentation"
-      actionPayload : json = {}
+      actionPayload : @payload @config.action
         @label "Action Payload"
         @description "Payload to include with the action event"
         @tier "presentation"

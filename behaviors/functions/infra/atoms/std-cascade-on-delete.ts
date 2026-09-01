@@ -50,7 +50,7 @@ export interface StdCascadeOnDeleteCascadeCompletedPayload {
  * Payload shape for the `DepsLoaded` event.
  */
 export interface StdCascadeOnDeleteDepsLoadedPayload {
-  data?: EntityRow[];
+  data?: unknown;
 }
 
 /**
@@ -327,7 +327,7 @@ export function stdCascadeOnDeleteCascadeOnDeleteOrbital(params: StdCascadeOnDel
             'payloadSchema': [
               {
                 'name': 'data',
-                'type': '[object]',
+                'type': '[@entity(dependentEntity)]',
               },
             ],
           },
@@ -369,7 +369,7 @@ export function stdCascadeOnDeleteCascadeOnDeleteOrbital(params: StdCascadeOnDel
               'payloadSchema': [
                 {
                   'name': 'data',
-                  'type': 'object',
+                  'type': '@entity(parentEntity)',
                 },
               ],
             },
@@ -379,7 +379,7 @@ export function stdCascadeOnDeleteCascadeOnDeleteOrbital(params: StdCascadeOnDel
               'payloadSchema': [
                 {
                   'name': 'data',
-                  'type': '[object]',
+                  'type': '[@entity(dependentEntity)]',
                 },
               ],
             },

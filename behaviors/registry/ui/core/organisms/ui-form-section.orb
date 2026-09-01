@@ -191,7 +191,7 @@
               "properties": {
                 "entity": {
                   "items": {
-                    "type": "object"
+                    "type": "opaque"
                   },
                   "name": "entity",
                   "required": false,
@@ -199,7 +199,7 @@
                 },
                 "formValues": {
                   "items": {
-                    "type": "object"
+                    "type": "opaque"
                   },
                   "name": "formValues",
                   "required": true,
@@ -207,7 +207,7 @@
                 },
                 "globalVariables": {
                   "items": {
-                    "type": "string"
+                    "type": "opaque"
                   },
                   "name": "globalVariables",
                   "required": true,
@@ -215,7 +215,7 @@
                 },
                 "localVariables": {
                   "items": {
-                    "type": "string"
+                    "type": "opaque"
                   },
                   "name": "localVariables",
                   "required": false,
@@ -346,7 +346,7 @@
                   "defaultValue": {
                     "name": "defaultValue",
                     "required": false,
-                    "type": "string"
+                    "type": "opaque"
                   },
                   "disabled": {
                     "name": "disabled",
@@ -655,7 +655,7 @@
                         "defaultValue": {
                           "name": "defaultValue",
                           "required": false,
-                          "type": "string"
+                          "type": "opaque"
                         },
                         "disabled": {
                           "name": "disabled",
@@ -914,32 +914,30 @@
           },
           "emits": [
             {
+              "definerKnob": "submitEvent",
               "description": "Event dispatch props (for trait state machine integration)",
               "event": "@config.submitEvent",
               "eventId": "evt_01KXG04SM2ZFY248KYDK7TMC5J",
               "payloadSchema": [
                 {
-                  "name": "id",
-                  "type": "string"
+                  "name": "data",
+                  "required": true,
+                  "type": "@entity"
                 }
               ],
               "scope": "external",
               "tier": "essential"
             },
             {
+              "definerKnob": "cancelEvent",
               "description": "Event to dispatch on cancel (defaults to 'CANCEL')",
               "event": "@config.cancelEvent",
               "eventId": "evt_01KXG04SM2XDH7XA0BK60F7BAD",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ],
               "scope": "external",
               "tier": "essential"
             },
             {
+              "definerKnob": "onFieldChange",
               "description": "Callback when any field value changes",
               "event": "@config.onFieldChange",
               "eventId": "evt_01KXG04SM2DJX2RVXH6MSEXD6V",
@@ -954,13 +952,57 @@
                     },
                     {
                       "name": "value",
+                      "properties": [
+                        {
+                          "name": "string",
+                          "type": "string"
+                        },
+                        {
+                          "name": "number",
+                          "type": "number"
+                        },
+                        {
+                          "name": "boolean",
+                          "type": "boolean"
+                        },
+                        {
+                          "name": "array",
+                          "type": "[string]"
+                        },
+                        {
+                          "name": "FormSectionFIELDCHANGEChangeValue",
+                          "properties": [
+                            {
+                              "name": "name",
+                              "required": true,
+                              "type": "string"
+                            },
+                            {
+                              "name": "url",
+                              "required": true,
+                              "type": "string"
+                            },
+                            {
+                              "name": "mimeType",
+                              "required": true,
+                              "type": "string"
+                            },
+                            {
+                              "name": "sizeBytes",
+                              "required": true,
+                              "type": "number"
+                            }
+                          ],
+                          "type": "object"
+                        }
+                      ],
                       "required": true,
-                      "type": "object"
+                      "type": "union"
                     },
                     {
                       "name": "formValues",
                       "required": true,
-                      "type": "Map<string,object>"
+                      "type": "Map<string,opaque>"
                     }
                   ],
                   "type": "object"
@@ -1025,8 +1067,9 @@
                 "name": "@config.submit event",
                 "payloadSchema": [
                   {
-                    "name": "id",
-                    "type": "string"
+                    "name": "data",
+                    "required": true,
+                    "type": "@entity"
                   }
                 ],
                 "tier": "essential"
@@ -1036,12 +1079,6 @@
                 "id": "evt_01KXG04SM2XDH7XA0BK60F7BAD",
                 "key": "@config.cancelEvent",
                 "name": "@config.cancel event",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ],
                 "tier": "essential"
               },
               {
@@ -1060,13 +1097,57 @@
                       },
                       {
                         "name": "value",
+                        "properties": [
+                          {
+                            "name": "string",
+                            "type": "string"
+                          },
+                          {
+                            "name": "number",
+                            "type": "number"
+                          },
+                          {
+                            "name": "boolean",
+                            "type": "boolean"
+                          },
+                          {
+                            "name": "array",
+                            "type": "[string]"
+                          },
+                          {
+                            "name": "FormSectionFIELDCHANGEChangeValue",
+                            "properties": [
+                              {
+                                "name": "name",
+                                "required": true,
+                                "type": "string"
+                              },
+                              {
+                                "name": "url",
+                                "required": true,
+                                "type": "string"
+                              },
+                              {
+                                "name": "mimeType",
+                                "required": true,
+                                "type": "string"
+                              },
+                              {
+                                "name": "sizeBytes",
+                                "required": true,
+                                "type": "number"
+                              }
+                            ],
+                            "type": "object"
+                          }
+                        ],
                         "required": true,
-                        "type": "object"
+                        "type": "union"
                       },
                       {
                         "name": "formValues",
                         "required": true,
-                        "type": "Map<string,object>"
+                        "type": "Map<string,opaque>"
                       }
                     ],
                     "type": "object"

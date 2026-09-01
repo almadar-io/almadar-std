@@ -33,17 +33,10 @@ const ALIAS = 'UiBox';
 export type StdUiBoxEventKey = 'ACTION' | 'HOVER' | 'INIT';
 
 /**
- * Payload shape for the `ACTION` event.
- */
-export interface StdUiBoxActionPayload {
-  id?: string;
-}
-
-/**
  * Payload shape for the `HOVER` event.
  */
 export interface StdUiBoxHoverPayload {
-  id?: string;
+  hovered: boolean;
 }
 
 /**
@@ -55,7 +48,6 @@ export interface StdUiBoxHoverPayload {
 export interface StdUiBoxConfig {
   /** Default: `"ACTION"` */
   action?: string;
-  /** Default: `{}` */
   actionPayload?: unknown;
   /** Default: `"transparent"` */
   bg?: 'transparent' | 'primary' | 'secondary' | 'muted' | 'accent' | 'surface' | 'overlay';

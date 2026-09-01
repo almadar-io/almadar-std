@@ -36,14 +36,14 @@ export type StdRecurrenceEventKey = 'CANCEL_RULE' | 'CANCEL_SCHEDULE' | 'CLOSE_E
  * Payload shape for the `SAVE_RULE` event.
  */
 export interface StdRecurrenceSaveRulePayload {
-  data?: EntityRow;
+  data: unknown;
 }
 
 /**
  * Payload shape for the `OPEN_EXCEPTION` event.
  */
 export interface StdRecurrenceOpenExceptionPayload {
-  row: EntityRow;
+  row: unknown;
 }
 
 /**
@@ -477,7 +477,8 @@ export function stdRecurrenceRecurrenceOrbital(params: StdRecurrenceRecurrenceOr
             'payloadSchema': [
               {
                 'name': 'data',
-                'type': 'object',
+                'required': true,
+                'type': '@entity',
               },
             ],
             'synonyms': 'saved, persisted, updated, confirmed',
@@ -496,7 +497,7 @@ export function stdRecurrenceRecurrenceOrbital(params: StdRecurrenceRecurrenceOr
               {
                 'name': 'row',
                 'required': true,
-                'type': 'object',
+                'type': '@entity',
               },
             ],
             'synonyms': 'show, display, reveal, launch',
@@ -721,7 +722,7 @@ export function stdRecurrenceRecurrenceOrbital(params: StdRecurrenceRecurrenceOr
                 {
                   'name': 'row',
                   'required': true,
-                  'type': 'object',
+                  'type': '@entity',
                 },
               ],
               'synonyms': 'show, display, reveal, launch',
@@ -741,7 +742,8 @@ export function stdRecurrenceRecurrenceOrbital(params: StdRecurrenceRecurrenceOr
               'payloadSchema': [
                 {
                   'name': 'data',
-                  'type': 'object',
+                  'required': true,
+                  'type': '@entity',
                 },
               ],
               'synonyms': 'saved, persisted, updated, confirmed',

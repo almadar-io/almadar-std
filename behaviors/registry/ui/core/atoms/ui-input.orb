@@ -46,6 +46,15 @@
         "parent": "trt_01KXG04K5057YVFF1B3PV99GKM",
         "renames": []
       },
+      "evt_01M1CHY499RCNKSQJM41X5JZZM": {
+        "bakedName": "ACTION",
+        "curName": "ACTION",
+        "id": "evt_01M1CHY499RCNKSQJM41X5JZZM",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04K5057YVFF1B3PV99GKM",
+        "renames": []
+      },
       "orb_01KXG04K50WKX8F8BPSCNP5VHK": {
         "bakedName": "InputOrbital",
         "curName": "InputOrbital",
@@ -81,6 +90,10 @@
           {
             "name": "id",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "value",
             "type": "string"
           }
         ],
@@ -248,12 +261,14 @@
           },
           "emits": [
             {
+              "definerKnob": "action",
               "description": "Declarative event name for trait dispatch",
               "event": "@config.action",
               "eventId": "evt_01KXG04K52E0KDCQQZ6PGG6PRA",
               "payloadSchema": [
                 {
-                  "name": "id",
+                  "name": "value",
+                  "required": true,
                   "type": "string"
                 }
               ],
@@ -261,34 +276,26 @@
               "tier": "essential"
             },
             {
+              "definerKnob": "onClear",
               "description": "Callback or declarative event key when clear button is clicked",
               "event": "@config.onClear",
               "eventId": "evt_01KXG04K528QRVY6XAHV9BA39N",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ],
               "scope": "external",
               "tier": "essential"
             },
             {
+              "definerKnob": "onChange",
               "description": "onChange handler or declarative event key for trait dispatch",
               "event": "@config.onChange",
               "eventId": "evt_01KXG04K524DWH5XS9AY8RM020",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ],
               "scope": "external",
               "tier": "essential"
             }
           ],
           "entityContract": {
-            "provides": [],
+            "provides": [
+              "value"
+            ],
             "requires": []
           },
           "entityRebindable": true,
@@ -308,13 +315,26 @@
                 "name": "Initialize"
               },
               {
+                "id": "evt_01M1CHY499RCNKSQJM41X5JZZM",
+                "key": "ACTION",
+                "name": "Action",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "required": true,
+                    "type": "string"
+                  }
+                ]
+              },
+              {
                 "description": "Declarative event name for trait dispatch",
                 "id": "evt_01KXG04K52E0KDCQQZ6PGG6PRA",
                 "key": "@config.action",
                 "name": "@config.action",
                 "payloadSchema": [
                   {
-                    "name": "id",
+                    "name": "value",
+                    "required": true,
                     "type": "string"
                   }
                 ],
@@ -325,12 +345,6 @@
                 "id": "evt_01KXG04K528QRVY6XAHV9BA39N",
                 "key": "@config.onClear",
                 "name": "@config.on clear",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ],
                 "tier": "essential"
               },
               {
@@ -338,12 +352,6 @@
                 "id": "evt_01KXG04K524DWH5XS9AY8RM020",
                 "key": "@config.onChange",
                 "name": "@config.on change",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ],
                 "tier": "essential"
               }
             ],
@@ -356,6 +364,11 @@
             "transitions": [
               {
                 "effects": [
+                  [
+                    "set",
+                    "@entity.value",
+                    "@config.value"
+                  ],
                   [
                     "render-ui",
                     "main",
@@ -377,12 +390,49 @@
                       "rightIcon": "@config.rightIcon",
                       "rows": "@config.rows",
                       "type": "input",
-                      "value": "@config.value"
+                      "value": "@entity.value"
                     }
                   ]
                 ],
                 "event": "INIT",
                 "eventId": "evt_01KXG04K50J83YMA6ZCR56ZMNH",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.value",
+                    "@payload.value"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "action": "@config.action",
+                      "className": "@config.className",
+                      "clearable": "@config.clearable",
+                      "disabled": "@config.disabled",
+                      "error": "@config.error",
+                      "helperText": "@config.helperText",
+                      "icon": "@config.icon",
+                      "inputType": "@config.inputType",
+                      "label": "@config.label",
+                      "leftIcon": "@config.leftIcon",
+                      "onChange": "@config.onChange",
+                      "onClear": "@config.onClear",
+                      "options": "@config.options",
+                      "placeholder": "@config.placeholder",
+                      "rightIcon": "@config.rightIcon",
+                      "rows": "@config.rows",
+                      "type": "input",
+                      "value": "@entity.value"
+                    }
+                  ]
+                ],
+                "event": "ACTION",
+                "eventId": "evt_01M1CHY499RCNKSQJM41X5JZZM",
                 "from": "idle",
                 "to": "idle"
               }

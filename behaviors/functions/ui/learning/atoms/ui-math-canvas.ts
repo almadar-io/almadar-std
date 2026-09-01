@@ -58,6 +58,8 @@ export interface StdUiMathCanvasConfig {
   className?: string;
   /** Default: `[]` */
   curves?: EntityRow[];
+  /** Default: `[]` */
+  drawables?: PatternValue[];
   error?: EntityRow;
   /** Default: `"var(--color-border, #9ca3af)"` */
   gridColor?: string;

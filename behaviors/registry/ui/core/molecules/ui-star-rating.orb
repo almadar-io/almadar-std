@@ -46,6 +46,15 @@
         "parent": "trt_01KXG04RNP6TY9Z342EQ0KX6DS",
         "renames": []
       },
+      "evt_01M1CHY5P4VMNW56C77SFM8ZXD": {
+        "bakedName": "ACTION",
+        "curName": "ACTION",
+        "id": "evt_01M1CHY5P4VMNW56C77SFM8ZXD",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04RNP6TY9Z342EQ0KX6DS",
+        "renames": []
+      },
       "orb_01KXG04RNPQ740XZCK84RTN2HB": {
         "bakedName": "StarRatingOrbital",
         "curName": "StarRatingOrbital",
@@ -120,11 +129,10 @@
               "type": "event"
             },
             "actionPayload": {
-              "default": {},
               "description": "Payload to include with the action event",
               "label": "Action Payload",
               "tier": "presentation",
-              "type": "json"
+              "type": "@payload(action)"
             },
             "className": {
               "description": "Additional CSS classes",
@@ -192,19 +200,22 @@
           },
           "emits": [
             {
+              "definerKnob": "action",
               "description": "Declarative event name for rating changes",
               "event": "@config.action",
               "eventId": "evt_01KXG04RNRA69P9ESERSGGCHK8",
               "payloadSchema": [
                 {
-                  "name": "id",
-                  "type": "string"
+                  "name": "value",
+                  "required": true,
+                  "type": "number"
                 }
               ],
               "scope": "external",
               "tier": "essential"
             },
             {
+              "definerKnob": "onChange",
               "description": "Direct onChange callback",
               "event": "@config.onChange",
               "eventId": "evt_01KXG04RNRNWNNFSPRVE8GP1H7",
@@ -241,6 +252,18 @@
                 "name": "Initialize"
               },
               {
+                "id": "evt_01M1CHY5P4VMNW56C77SFM8ZXD",
+                "key": "ACTION",
+                "name": "Action",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "required": true,
+                    "type": "number"
+                  }
+                ]
+              },
+              {
                 "id": "evt_01KXG04RNRMMVVR7P5K9BHDB51",
                 "key": "CHANGE",
                 "name": "Change",
@@ -258,8 +281,9 @@
                 "name": "@config.action",
                 "payloadSchema": [
                   {
-                    "name": "id",
-                    "type": "string"
+                    "name": "value",
+                    "required": true,
+                    "type": "number"
                   }
                 ],
                 "tier": "essential"
@@ -312,6 +336,36 @@
                 ],
                 "event": "INIT",
                 "eventId": "evt_01KXG04RNPT181Z7K99A8CJ8CQ",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.value",
+                    "@payload.value"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "action": "@config.action",
+                      "actionPayload": "@config.actionPayload",
+                      "className": "@config.className",
+                      "label": "@config.label",
+                      "max": "@config.max",
+                      "onChange": "@config.onChange",
+                      "precision": "@config.precision",
+                      "readOnly": "@config.readOnly",
+                      "size": "@config.size",
+                      "type": "star-rating",
+                      "value": "@entity.value"
+                    }
+                  ]
+                ],
+                "event": "ACTION",
+                "eventId": "evt_01M1CHY5P4VMNW56C77SFM8ZXD",
                 "from": "idle",
                 "to": "idle"
               },

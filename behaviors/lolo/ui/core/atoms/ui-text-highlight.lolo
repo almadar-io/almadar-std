@@ -3,6 +3,7 @@ app ui-text-highlight "1.0.0"
 orbital TextHighlightOrbital {
   entity TextHighlightItem [runtime] {
     id : string!
+    annotationId : string
   }
 
   trait TextHighlightRender -> @rebindable TextHighlightItem [interaction, instance] {
@@ -10,13 +11,44 @@ orbital TextHighlightOrbital {
 
     state idle {
       INIT -> idle
+        (set @entity.annotationId @config.annotationId)
         (render-ui main {
           highlightType: @config.highlightType
           isActive: @config.isActive
           onClick: @config.onClick
           onMouseEnter: @config.onMouseEnter
           onMouseLeave: @config.onMouseLeave
-          annotationId: @config.annotationId
+          annotationId: @entity.annotationId
+          className: @config.className
+          children: @config.children
+          action: @config.action
+          hoverEvent: @config.hoverEvent
+          type: text-highlight
+        })
+      ACTION -> idle
+        (set @entity.annotationId ?annotationId)
+        (render-ui main {
+          highlightType: @config.highlightType
+          isActive: @config.isActive
+          onClick: @config.onClick
+          onMouseEnter: @config.onMouseEnter
+          onMouseLeave: @config.onMouseLeave
+          annotationId: @entity.annotationId
+          className: @config.className
+          children: @config.children
+          action: @config.action
+          hoverEvent: @config.hoverEvent
+          type: text-highlight
+        })
+      HOVER -> idle
+        (set @entity.annotationId ?annotationId)
+        (render-ui main {
+          highlightType: @config.highlightType
+          isActive: @config.isActive
+          onClick: @config.onClick
+          onMouseEnter: @config.onMouseEnter
+          onMouseLeave: @config.onMouseLeave
+          annotationId: @entity.annotationId
           className: @config.className
           children: @config.children
           action: @config.action
@@ -26,31 +58,36 @@ orbital TextHighlightOrbital {
     }
 
     emits {
-      @config.onClick -> external {
-        id : string
-      }
+      @config.onClick -> external { }
         @description "Callback when highlight is clicked"
         @tier "essential"
-      @config.onMouseEnter -> external {
-        id : string
-      }
+      @config.onMouseEnter -> external { }
         @description "Callback when highlight is hovered"
         @tier "essential"
-      @config.onMouseLeave -> external {
-        id : string
-      }
+      @config.onMouseLeave -> external { }
         @description "Callback when hover ends"
         @tier "essential"
       @config.action -> external {
-        id : string
+        annotationId : string
       }
         @description "Declarative event name — emits UI:{action} via eventBus on click"
         @tier "essential"
       @config.hoverEvent -> external {
-        id : string
+        hovered : boolean!
+        annotationId : string
       }
-        @description "Declarative hover event — emits UI:{hoverEvent} with { hovered: true/false }"
+        @description "Declarative hover event — emits UI:{hoverEvent} with { hovered, annotationId }"
         @tier "essential"
+    }
+
+    listens {
+      ACTION {
+        annotationId : string
+      }
+      HOVER {
+        hovered : boolean!
+        annotationId : string
+      }
     }
 
     config {
@@ -92,7 +129,7 @@ orbital TextHighlightOrbital {
         @tier "presentation"
       hoverEvent : event = "HOVER"
         @label "Hover Event"
-        @description "Declarative hover event — emits UI:{hoverEvent} with { hovered: true/false }"
+        @description "Declarative hover event — emits UI:{hoverEvent} with { hovered, annotationId }"
         @tier "presentation"
     }
   }

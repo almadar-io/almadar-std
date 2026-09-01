@@ -40,7 +40,7 @@ export type StdMeshAssetArtEventKey = 'INIT' | 'MESH_ASSET_PUBLISH' | 'MESH_ASSE
  */
 export interface StdMeshAssetArtConfig {
   /** Default: `{}` */
-  seedArt?: unknown;
+  seedArt?: Record<string, TraitConfig>;
 }
 
 /**

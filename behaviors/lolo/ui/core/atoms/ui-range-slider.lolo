@@ -28,6 +28,24 @@ orbital RangeSliderOrbital {
           onChange: @config.onChange
           type: range-slider
         })
+      ACTION -> idle
+        (set @entity.value ?value)
+        (render-ui main {
+          className: @config.className
+          min: @config.min
+          max: @config.max
+          value: @entity.value
+          step: @config.step
+          showTooltip: @config.showTooltip
+          showTicks: @config.showTicks
+          buffered: @config.buffered
+          size: @config.size
+          disabled: @config.disabled
+          action: @config.action
+          actionPayload: @config.actionPayload
+          onChange: @config.onChange
+          type: range-slider
+        })
       CHANGE -> idle
         (set @entity.value ?value)
         (render-ui main {
@@ -50,7 +68,7 @@ orbital RangeSliderOrbital {
 
     emits {
       @config.action -> external {
-        id : string
+        value : number!
       }
         @description "Declarative event name for value changes"
         @tier "essential"
@@ -62,6 +80,9 @@ orbital RangeSliderOrbital {
     }
 
     listens {
+      ACTION {
+        value : number!
+      }
       CHANGE {
         value : number
       }
@@ -112,7 +133,7 @@ orbital RangeSliderOrbital {
         @label "Action"
         @description "Declarative event name for value changes"
         @tier "presentation"
-      actionPayload : json = {}
+      actionPayload : @payload @config.action
         @label "Action Payload"
         @description "Payload to include with the action event"
         @tier "presentation"

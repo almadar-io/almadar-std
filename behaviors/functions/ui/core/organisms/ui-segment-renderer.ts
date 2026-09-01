@@ -41,7 +41,7 @@ export type StdUiSegmentRendererEventKey = 'INIT';
 export interface StdUiSegmentRendererConfig {
   className?: string;
   containerClassName?: string;
-  /** Default: `[{"content":"Content","type":"Type"},{"content":"Content 2","type":"Type 2"}]` */
+  /** Default: `[{"content":"Content","type":"markdown"},{"content":"Content 2","type":"markdown"}]` */
   segments?: EntityRow[];
   userProgress?: EntityRow;
 }
@@ -133,11 +133,11 @@ export function stdUiSegmentRendererSegmentRendererOrbital(params: StdUiSegmentR
             'default': [
               {
                 'content': 'Content',
-                'type': 'Type',
+                'type': 'markdown',
               },
               {
                 'content': 'Content 2',
-                'type': 'Type 2',
+                'type': 'markdown',
               },
             ],
             'description': 'Parsed lesson segments (see `parseLessonSegments`)',
@@ -152,6 +152,9 @@ export function stdUiSegmentRendererSegmentRendererOrbital(params: StdUiSegmentR
                   'name': 'type',
                   'required': true,
                   'type': 'string',
+                  'values': [
+                    'markdown',
+                  ],
                 },
               },
               'type': 'object',

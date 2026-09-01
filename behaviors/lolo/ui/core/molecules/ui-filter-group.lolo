@@ -15,6 +15,7 @@ orbital FilterGroupOrbital {
 
   entity FilterGroupItem [runtime] {
     id : string!
+    query : string
   }
 
   trait FilterGroupRender -> @rebindable FilterGroupItem [interaction, instance] {
@@ -23,6 +24,7 @@ orbital FilterGroupOrbital {
     state idle {
       INIT -> idle
         (fetch FilterGroupItem {})
+        (set @entity.query @config.query)
         (render-ui main {
           entity: FilterGroupItem
           filters: @config.filters
@@ -31,7 +33,41 @@ orbital FilterGroupOrbital {
           className: @config.className
           variant: @config.variant
           showIcon: @config.showIcon
-          query: @config.query
+          query: @entity.query
+          isLoading: @config.isLoading
+          look: @config.look
+          event: @config.event
+          clearEvent: @config.clearEvent
+          type: filter-group
+        })
+      EVENT -> idle
+        (set @entity.query ?query)
+        (render-ui main {
+          entity: FilterGroupItem
+          filters: @config.filters
+          onFilterChange: @config.onFilterChange
+          onClearAll: @config.onClearAll
+          className: @config.className
+          variant: @config.variant
+          showIcon: @config.showIcon
+          query: @entity.query
+          isLoading: @config.isLoading
+          look: @config.look
+          event: @config.event
+          clearEvent: @config.clearEvent
+          type: filter-group
+        })
+      CLEAR -> idle
+        (set @entity.query ?query)
+        (render-ui main {
+          entity: FilterGroupItem
+          filters: @config.filters
+          onFilterChange: @config.onFilterChange
+          onClearAll: @config.onClearAll
+          className: @config.className
+          variant: @config.variant
+          showIcon: @config.showIcon
+          query: @entity.query
           isLoading: @config.isLoading
           look: @config.look
           event: @config.event
@@ -47,21 +83,36 @@ orbital FilterGroupOrbital {
       }
         @description "Callback when a filter changes - for EntityStore integration"
         @tier "essential"
-      @config.onClearAll -> external {
-        id : string
-      }
+      @config.onClearAll -> external { }
         @description "Callback to clear all filters"
         @tier "essential"
       @config.event -> external {
-        id : string
+        entity : string!
+        field : string!
+        value : string!
+        query : string
       }
         @description "Declarative filter event — emits UI:{event} via eventBus on filter change (alongside canonical UI:FILTER)"
         @tier "essential"
       @config.clearEvent -> external {
-        id : string
+        entity : string!
+        query : string
       }
         @description "Declarative clear event — emits UI:{clearEvent} via eventBus on clear-all (alongside canonical UI:CLEAR_FILTERS)"
         @tier "essential"
+    }
+
+    listens {
+      EVENT {
+        entity : string!
+        field : string!
+        value : string!
+        query : string
+      }
+      CLEAR {
+        entity : string!
+        query : string
+      }
     }
 
     config {

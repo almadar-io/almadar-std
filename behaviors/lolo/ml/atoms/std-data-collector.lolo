@@ -3,7 +3,7 @@ app std-data-collector "1.0.0"
 orbital MlDataCollectorOrbital {
 
   entity DataBuffer [runtime] {
-    buffer : [any] @description "Data points accumulated in the current cycle." = []
+    buffer : [opaque] @description "Data points accumulated in the current cycle." = []
     count : int @description "Number of points currently in the buffer." = 0
     status : "idle" | "collecting" = idle
   }
@@ -33,14 +33,14 @@ orbital MlDataCollectorOrbital {
     }
 
     emits {
-      BUFFER_READY -> external { buffer : [any]!, count : int! }
+      BUFFER_READY -> external { buffer : [opaque]!, count : int! }
         @description "Fired when the buffer reaches config.bufferSize; carries the full accumulated buffer and its count, then the buffer resets for the next cycle."
         @tier "primary"
     }
 
     listens {
       COLLECT {
-        point : any!
+        point : opaque!
       }
     }
 

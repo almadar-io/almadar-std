@@ -33,38 +33,18 @@ const ALIAS = 'UiTextHighlight';
 export type StdUiTextHighlightEventKey = 'ACTION' | 'CLICK' | 'HOVER' | 'INIT' | 'MOUSE_ENTER' | 'MOUSE_LEAVE';
 
 /**
- * Payload shape for the `CLICK` event.
- */
-export interface StdUiTextHighlightClickPayload {
-  id?: string;
-}
-
-/**
- * Payload shape for the `MOUSE_ENTER` event.
- */
-export interface StdUiTextHighlightMouseEnterPayload {
-  id?: string;
-}
-
-/**
- * Payload shape for the `MOUSE_LEAVE` event.
- */
-export interface StdUiTextHighlightMouseLeavePayload {
-  id?: string;
-}
-
-/**
  * Payload shape for the `ACTION` event.
  */
 export interface StdUiTextHighlightActionPayload {
-  id?: string;
+  annotationId?: string;
 }
 
 /**
  * Payload shape for the `HOVER` event.
  */
 export interface StdUiTextHighlightHoverPayload {
-  id?: string;
+  hovered: boolean;
+  annotationId?: string;
 }
 
 /**

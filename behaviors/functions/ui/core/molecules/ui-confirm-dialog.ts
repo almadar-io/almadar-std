@@ -33,20 +33,6 @@ const ALIAS = 'UiConfirmDialog';
 export type StdUiConfirmDialogEventKey = 'CLOSE' | 'CONFIRM' | 'INIT' | 'OPEN';
 
 /**
- * Payload shape for the `CLOSE` event.
- */
-export interface StdUiConfirmDialogClosePayload {
-  id?: string;
-}
-
-/**
- * Payload shape for the `CONFIRM` event.
- */
-export interface StdUiConfirmDialogConfirmPayload {
-  id?: string;
-}
-
-/**
  * Payload shape for the `OPEN` event.
  */
 export interface StdUiConfirmDialogOpenPayload {

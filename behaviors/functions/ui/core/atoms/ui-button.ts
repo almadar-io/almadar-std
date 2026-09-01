@@ -33,13 +33,6 @@ const ALIAS = 'UiButton';
 export type StdUiButtonEventKey = 'ACTION' | 'INIT';
 
 /**
- * Payload shape for the `ACTION` event.
- */
-export interface StdUiButtonActionPayload {
-  id?: string;
-}
-
-/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
@@ -48,7 +41,6 @@ export interface StdUiButtonActionPayload {
 export interface StdUiButtonConfig {
   /** Default: `"ACTION"` */
   action?: string;
-  /** Default: `{}` */
   actionPayload?: unknown;
   className?: string;
   disabled?: boolean;

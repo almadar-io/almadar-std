@@ -36,21 +36,7 @@ export type StdUiInputGroupEventKey = 'ACTION' | 'CHANGE' | 'CLEAR' | 'INIT';
  * Payload shape for the `ACTION` event.
  */
 export interface StdUiInputGroupActionPayload {
-  id?: string;
-}
-
-/**
- * Payload shape for the `CLEAR` event.
- */
-export interface StdUiInputGroupClearPayload {
-  id?: string;
-}
-
-/**
- * Payload shape for the `CHANGE` event.
- */
-export interface StdUiInputGroupChangePayload {
-  id?: string;
+  value: string;
 }
 
 /**

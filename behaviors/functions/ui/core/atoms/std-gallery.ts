@@ -608,6 +608,7 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
                     'type': 'image',
                   },
                 ],
+                'required': true,
                 'type': 'object',
               },
             ],
@@ -708,6 +709,11 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
               'name': 'Refetch Filter',
               'payloadSchema': [
                 {
+                  'name': 'entity',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
                   'name': 'field',
                   'required': true,
                   'type': 'string',
@@ -715,6 +721,10 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
                 {
                   'name': 'value',
                   'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'query',
                   'type': 'string',
                 },
               ],
@@ -775,6 +785,7 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
                       'type': 'image',
                     },
                   ],
+                  'required': true,
                   'type': 'object',
                 },
               ],

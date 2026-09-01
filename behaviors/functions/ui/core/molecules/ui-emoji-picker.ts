@@ -36,7 +36,7 @@ export type StdUiEmojiPickerEventKey = 'INIT' | 'PICK';
  * Payload shape for the `PICK` event.
  */
 export interface StdUiEmojiPickerPickPayload {
-  id?: string;
+  emoji: string;
 }
 
 /**

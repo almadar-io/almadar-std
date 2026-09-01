@@ -40,7 +40,7 @@ orbital ThreadPostOrbital {
     voteCount : number @description "The number of votes associated with this item." @synonyms "votes, rating, score" = 0
     replyCount : number @description "The number of replies to this post." @synonyms "count, number of replies, child posts" = 0
     replies : [ThreadPost] @description "A list of child ThreadPost entities." @synonyms "children, descendants, sub-posts"
-    focusedRow : object @description "The currently selected or active row within the thread." @synonyms "selection, active, current" = {}
+    focusedRow : Map string scalar @description "The currently selected or active row within the thread." @synonyms "selection, active, current" = {}
   }
 
   trait ThreadPostBrowse -> @rebindable ThreadPost [interaction, collection] {
@@ -262,7 +262,7 @@ orbital ThreadPostOrbital {
     emits {
       SELECT -> external {
         id : string
-        row : object!
+        row : @entity!
       }
         @description "Indicates a post or reply has been chosen for interaction."
         @synonyms "choose, highlight, focus, activate"
@@ -318,7 +318,7 @@ orbital ThreadPostOrbital {
     listens {
       SELECT {
         id : string
-        row : object!
+        row : @entity!
       }
         @description "A post or reply has been chosen for interaction."
         @synonyms "choose, highlight, focus, activate"

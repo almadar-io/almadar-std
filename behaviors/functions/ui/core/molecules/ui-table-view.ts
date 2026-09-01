@@ -36,21 +36,23 @@ export type StdUiTableViewEventKey = 'INIT' | 'SELECT' | 'SORT' | 'TableViewLoad
  * Payload shape for the `SELECT` event.
  */
 export interface StdUiTableViewSelectPayload {
-  id?: string;
+  selectedIds: string[];
 }
 
 /**
  * Payload shape for the `SORT` event.
  */
 export interface StdUiTableViewSortPayload {
-  id?: string;
+  column: string;
+  direction: string;
 }
 
 /**
  * Payload shape for the `VIEW` event.
  */
 export interface StdUiTableViewViewPayload {
-  id?: string;
+  id: string;
+  row: unknown;
 }
 
 /**

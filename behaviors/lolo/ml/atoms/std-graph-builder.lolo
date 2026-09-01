@@ -2,10 +2,11 @@ app std-graph-builder "1.0.0"
 "Graph construction atom — builds node/edge structures from an entity collection for downstream GNN pipelines; pure array/object transform, no ML compute."
 
 orbital GraphBuilderOrbital {
+    type GraphBuilderEdge = { source : string!, target : string! }
 
   entity GraphStructure [runtime] {
-    nodes     : [object] = []
-    edges     : [object] = []
+    nodes     : [Map string scalar] = []
+    edges     : [GraphBuilderEdge] = []
     nodeCount : int = 0
     edgeCount : int = 0
     status    : "idle" | "built" = idle
@@ -70,8 +71,8 @@ orbital GraphBuilderOrbital {
 
     emits {
       GRAPH_READY -> external {
-        nodes : [object]!
-        edges : [object]!
+        nodes : [Map string scalar]!
+        edges : [GraphBuilderEdge]!
         nodeCount : int!
         edgeCount : int!
       }
@@ -81,7 +82,7 @@ orbital GraphBuilderOrbital {
 
     listens {
       BUILD_GRAPH {
-        entities : [object]!
+        entities : [opaque]!
       }
     }
   }

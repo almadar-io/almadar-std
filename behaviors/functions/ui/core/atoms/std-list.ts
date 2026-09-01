@@ -639,6 +639,11 @@ export function stdListListItemOrbital(params: StdListListItemOrbitalParams = {}
               'name': 'Refetch Filter',
               'payloadSchema': [
                 {
+                  'name': 'entity',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
                   'name': 'field',
                   'required': true,
                   'type': 'string',
@@ -646,6 +651,10 @@ export function stdListListItemOrbital(params: StdListListItemOrbitalParams = {}
                 {
                   'name': 'value',
                   'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'query',
                   'type': 'string',
                 },
               ],

@@ -246,14 +246,14 @@ export function stdAuditCaptureAuditCaptureOrbital(params: StdAuditCaptureAuditC
             'description': 'The state of the entity prior to the modification.',
             'name': 'before',
             'synonyms': 'previous, original, old value',
-            'type': 'object',
+            'type': 'opaque',
           },
           {
             'default': {},
             'description': 'The state of the entity after a modification.',
             'name': 'after',
             'synonyms': 'new, updated, post, subsequent',
-            'type': 'object',
+            'type': 'opaque',
           },
           {
             'default': 0,
@@ -381,7 +381,7 @@ export function stdAuditCaptureAuditCaptureOrbital(params: StdAuditCaptureAuditC
               'payloadSchema': [
                 {
                   'name': 'data',
-                  'type': 'object',
+                  'type': '@entity(captureEntity)',
                 },
               ],
             },

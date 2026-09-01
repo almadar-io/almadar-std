@@ -36,7 +36,7 @@ export type StdUiRadioEventKey = 'ACTION' | 'INIT';
  * Payload shape for the `ACTION` event.
  */
 export interface StdUiRadioActionPayload {
-  id?: string;
+  value: string;
 }
 
 /**

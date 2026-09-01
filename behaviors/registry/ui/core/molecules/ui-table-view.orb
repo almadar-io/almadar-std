@@ -455,7 +455,7 @@
             },
             "selectEvent": {
               "default": "SELECT",
-              "description": "Event emitted on selection change: UI:{selectEvent} with { ids, rows }.",
+              "description": "Event emitted on selection change: UI:{selectEvent} with { selectedIds }.",
               "label": "Select Event",
               "tier": "presentation",
               "type": "event"
@@ -517,25 +517,34 @@
           },
           "emits": [
             {
-              "description": "Event emitted on selection change: UI:{selectEvent} with { ids, rows }.",
+              "definerKnob": "selectEvent",
+              "description": "Event emitted on selection change: UI:{selectEvent} with { selectedIds }.",
               "event": "@config.selectEvent",
               "eventId": "evt_01KXG04RSDTCZQPH74KHHQR5MZ",
               "payloadSchema": [
                 {
-                  "name": "id",
-                  "type": "string"
+                  "name": "selectedIds",
+                  "required": true,
+                  "type": "[string]"
                 }
               ],
               "scope": "external",
               "tier": "essential"
             },
             {
+              "definerKnob": "sortEvent",
               "description": "Event emitted on sortable-header click: UI:{sortEvent} with { column, direction }.",
               "event": "@config.sortEvent",
               "eventId": "evt_01KXG04RSDX3BXZBA0CDEKZV1G",
               "payloadSchema": [
                 {
-                  "name": "id",
+                  "name": "column",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "direction",
+                  "required": true,
                   "type": "string"
                 }
               ],
@@ -549,7 +558,13 @@
               "payloadSchema": [
                 {
                   "name": "id",
+                  "required": true,
                   "type": "string"
+                },
+                {
+                  "name": "row",
+                  "required": true,
+                  "type": "@entity"
                 }
               ],
               "scope": "external",
@@ -605,14 +620,15 @@
                 "tier": "essential"
               },
               {
-                "description": "Event emitted on selection change: UI:{selectEvent} with { ids, rows }.",
+                "description": "Event emitted on selection change: UI:{selectEvent} with { selectedIds }.",
                 "id": "evt_01KXG04RSDTCZQPH74KHHQR5MZ",
                 "key": "@config.selectEvent",
                 "name": "@config.select event",
                 "payloadSchema": [
                   {
-                    "name": "id",
-                    "type": "string"
+                    "name": "selectedIds",
+                    "required": true,
+                    "type": "[string]"
                   }
                 ],
                 "tier": "essential"
@@ -624,7 +640,13 @@
                 "name": "@config.sort event",
                 "payloadSchema": [
                   {
-                    "name": "id",
+                    "name": "column",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "direction",
+                    "required": true,
                     "type": "string"
                   }
                 ],
@@ -638,7 +660,13 @@
                 "payloadSchema": [
                   {
                     "name": "id",
+                    "required": true,
                     "type": "string"
+                  },
+                  {
+                    "name": "row",
+                    "required": true,
+                    "type": "@entity"
                   }
                 ],
                 "tier": "essential"

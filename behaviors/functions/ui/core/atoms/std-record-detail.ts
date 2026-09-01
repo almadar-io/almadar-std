@@ -61,7 +61,7 @@ export interface StdRecordDetailRecordItemLoadFailedPayload {
  */
 export interface StdRecordDetailEditPayload {
   id: string;
-  row?: EntityRow;
+  row: EntityRow;
 }
 
 /**
@@ -69,7 +69,7 @@ export interface StdRecordDetailEditPayload {
  */
 export interface StdRecordDetailDeletePayload {
   id: string;
-  row?: EntityRow;
+  row: EntityRow;
 }
 
 /**
@@ -356,6 +356,9 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
             'default': {},
             'description': 'The full row exactly as last fetched (relations hydrated when config.include asks). The details drawer binds it, and hosts that need it (e.g. a settings modal) stash it from RecordItemLoaded — the document panel itself takes only scalar props and emits scalar payloads ({ id, title }).',
             'intrinsic': true,
+            'items': {
+              'type': 'scalar',
+            },
             'name': 'loadedRow',
             'type': 'object',
           },
@@ -819,7 +822,7 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                   },
                   {
                     'name': 'loadedRow',
-                    'type': 'object',
+                    'type': 'Map<string,scalar>',
                   },
                   {
                     'name': 'openDraft',
@@ -923,7 +926,7 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                   },
                   {
                     'name': 'loadedRow',
-                    'type': 'object',
+                    'type': 'Map<string,scalar>',
                   },
                   {
                     'name': 'openDraft',
@@ -934,6 +937,7 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                     'type': 'string',
                   },
                 ],
+                'required': true,
                 'type': 'object',
               },
             ],
@@ -989,7 +993,7 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                   },
                   {
                     'name': 'loadedRow',
-                    'type': 'object',
+                    'type': 'Map<string,scalar>',
                   },
                   {
                     'name': 'openDraft',
@@ -1000,6 +1004,7 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                     'type': 'string',
                   },
                 ],
+                'required': true,
                 'type': 'object',
               },
             ],
@@ -1215,7 +1220,7 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                     },
                     {
                       'name': 'loadedRow',
-                      'type': 'object',
+                      'type': 'Map<string,scalar>',
                     },
                     {
                       'name': 'openDraft',
@@ -1226,6 +1231,7 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                       'type': 'string',
                     },
                   ],
+                  'required': true,
                   'type': 'object',
                 },
               ],
@@ -1276,7 +1282,7 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                     },
                     {
                       'name': 'loadedRow',
-                      'type': 'object',
+                      'type': 'Map<string,scalar>',
                     },
                     {
                       'name': 'openDraft',
@@ -1421,7 +1427,7 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                     },
                     {
                       'name': 'loadedRow',
-                      'type': 'object',
+                      'type': 'Map<string,scalar>',
                     },
                     {
                       'name': 'openDraft',
@@ -1432,6 +1438,7 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                       'type': 'string',
                     },
                   ],
+                  'required': true,
                   'type': 'object',
                 },
               ],
@@ -1487,7 +1494,7 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                     },
                     {
                       'name': 'loadedRow',
-                      'type': 'object',
+                      'type': 'Map<string,scalar>',
                     },
                     {
                       'name': 'openDraft',
@@ -1498,6 +1505,7 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                       'type': 'string',
                     },
                   ],
+                  'required': true,
                   'type': 'object',
                 },
               ],
@@ -3463,7 +3471,7 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                   },
                   {
                     'name': 'loadedRow',
-                    'type': 'object',
+                    'type': 'Map<string,scalar>',
                   },
                   {
                     'name': 'openDraft',
@@ -3565,7 +3573,7 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                     },
                     {
                       'name': 'loadedRow',
-                      'type': 'object',
+                      'type': 'Map<string,scalar>',
                     },
                     {
                       'name': 'openDraft',
@@ -3644,7 +3652,7 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                     },
                     {
                       'name': 'loadedRow',
-                      'type': 'object',
+                      'type': 'Map<string,scalar>',
                     },
                     {
                       'name': 'openDraft',
@@ -3722,7 +3730,7 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                     },
                     {
                       'name': 'loadedRow',
-                      'type': 'object',
+                      'type': 'Map<string,scalar>',
                     },
                     {
                       'name': 'openDraft',

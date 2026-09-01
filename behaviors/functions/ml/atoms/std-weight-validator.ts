@@ -44,7 +44,7 @@ export interface StdWeightValidatorWeightsAcceptedPayload {
  */
 export interface StdWeightValidatorWeightsRejectedPayload {
   violations: EntityRow[];
-  request?: EntityRow;
+  request?: unknown;
 }
 
 /**
@@ -208,6 +208,23 @@ export function stdWeightValidatorMlWeightValidatorOrbital(params: StdWeightVali
           {
             'default': [],
             'items': {
+              'properties': {
+                'check': {
+                  'name': 'check',
+                  'required': true,
+                  'type': 'string',
+                },
+                'index': {
+                  'name': 'index',
+                  'required': false,
+                  'type': 'number',
+                },
+                'value': {
+                  'name': 'value',
+                  'required': false,
+                  'type': 'number',
+                },
+              },
               'type': 'object',
             },
             'name': 'violations',
@@ -296,11 +313,11 @@ export function stdWeightValidatorMlWeightValidatorOrbital(params: StdWeightVali
               {
                 'name': 'violations',
                 'required': true,
-                'type': '[object]',
+                'type': '[WeightViolation]',
               },
               {
                 'name': 'request',
-                'type': 'object',
+                'type': 'opaque',
               },
             ],
             'scope': 'external',
@@ -331,7 +348,7 @@ export function stdWeightValidatorMlWeightValidatorOrbital(params: StdWeightVali
                 },
                 {
                   'name': 'request',
-                  'type': 'object',
+                  'type': 'opaque',
                 },
               ],
             },
@@ -360,11 +377,11 @@ export function stdWeightValidatorMlWeightValidatorOrbital(params: StdWeightVali
                 {
                   'name': 'violations',
                   'required': true,
-                  'type': '[object]',
+                  'type': '[WeightViolation]',
                 },
                 {
                   'name': 'request',
-                  'type': 'object',
+                  'type': 'opaque',
                 },
               ],
               'tier': 'primary',

@@ -33,13 +33,6 @@ const ALIAS = 'UiPageHeader';
 export type StdUiPageHeaderEventKey = 'BACK' | 'INIT' | 'TAB_CHANGE';
 
 /**
- * Payload shape for the `BACK` event.
- */
-export interface StdUiPageHeaderBackPayload {
-  id?: string;
-}
-
-/**
  * Payload shape for the `TAB_CHANGE` event.
  */
 export interface StdUiPageHeaderTabChangePayload {

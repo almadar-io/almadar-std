@@ -226,6 +226,7 @@ export function stdUiTabbedContainerTabbedContainerOrbital(params: StdUiTabbedCo
         },
         'emits': [
           {
+            'definerKnob': 'onTabChange',
             'description': 'Callback when tab changes',
             'event': '@config.onTabChange',
             'payloadSchema': [

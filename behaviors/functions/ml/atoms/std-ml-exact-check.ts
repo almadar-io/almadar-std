@@ -46,7 +46,7 @@ export interface StdMlExactCheckExactMatchedPayload {
 export interface StdMlExactCheckExactUnmatchedPayload {
   candidate: unknown;
   key: unknown;
-  request?: EntityRow;
+  request?: unknown;
 }
 
 /**
@@ -246,12 +246,12 @@ export function stdMlExactCheckMlExactCheckOrbital(params: StdMlExactCheckMlExac
               {
                 'name': 'candidate',
                 'required': true,
-                'type': 'any',
+                'type': 'scalar',
               },
               {
                 'name': 'key',
                 'required': true,
-                'type': 'any',
+                'type': 'scalar',
               },
             ],
             'scope': 'external',
@@ -264,16 +264,16 @@ export function stdMlExactCheckMlExactCheckOrbital(params: StdMlExactCheckMlExac
               {
                 'name': 'candidate',
                 'required': true,
-                'type': 'any',
+                'type': 'scalar',
               },
               {
                 'name': 'key',
                 'required': true,
-                'type': 'any',
+                'type': 'scalar',
               },
               {
                 'name': 'request',
-                'type': 'object',
+                'type': 'opaque',
               },
             ],
             'scope': 'external',
@@ -296,16 +296,16 @@ export function stdMlExactCheckMlExactCheckOrbital(params: StdMlExactCheckMlExac
                 {
                   'name': 'candidate',
                   'required': true,
-                  'type': 'any',
+                  'type': 'scalar',
                 },
                 {
                   'name': 'key',
                   'required': true,
-                  'type': 'any',
+                  'type': 'scalar',
                 },
                 {
                   'name': 'request',
-                  'type': 'object',
+                  'type': 'opaque',
                 },
               ],
             },
@@ -321,12 +321,12 @@ export function stdMlExactCheckMlExactCheckOrbital(params: StdMlExactCheckMlExac
                 {
                   'name': 'candidate',
                   'required': true,
-                  'type': 'any',
+                  'type': 'scalar',
                 },
                 {
                   'name': 'key',
                   'required': true,
-                  'type': 'any',
+                  'type': 'scalar',
                 },
               ],
               'tier': 'primary',
@@ -339,16 +339,16 @@ export function stdMlExactCheckMlExactCheckOrbital(params: StdMlExactCheckMlExac
                 {
                   'name': 'candidate',
                   'required': true,
-                  'type': 'any',
+                  'type': 'scalar',
                 },
                 {
                   'name': 'key',
                   'required': true,
-                  'type': 'any',
+                  'type': 'scalar',
                 },
                 {
                   'name': 'request',
-                  'type': 'object',
+                  'type': 'opaque',
                 },
               ],
               'tier': 'primary',

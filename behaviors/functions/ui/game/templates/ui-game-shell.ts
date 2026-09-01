@@ -47,7 +47,7 @@ export interface StdUiGameShellConfig {
   children?: PatternValue;
   className?: string;
   controls?: PatternValue;
-  /** Default: `"future"` */
+  /** Default: `""` */
   fontFamily?: string;
   hud?: PatternValue;
   hudBackgroundAsset?: EntityRow;

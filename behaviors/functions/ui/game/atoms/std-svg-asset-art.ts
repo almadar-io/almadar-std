@@ -40,7 +40,7 @@ export type StdSvgAssetArtEventKey = 'INIT' | 'SVG_ASSET_PUBLISH' | 'SVG_ASSET_S
  */
 export interface StdSvgAssetArtConfig {
   /** Default: `{}` */
-  seedArt?: unknown;
+  seedArt?: Record<string, TraitConfig>;
 }
 
 /**

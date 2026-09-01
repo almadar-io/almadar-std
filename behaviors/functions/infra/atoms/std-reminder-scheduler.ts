@@ -45,7 +45,7 @@ export interface StdReminderSchedulerReminderDuePayload {
  * Payload shape for the `ScanRecordsLoaded` event.
  */
 export interface StdReminderSchedulerScanRecordsLoadedPayload {
-  data?: EntityRow[];
+  data?: unknown;
 }
 
 /**
@@ -361,7 +361,7 @@ export function stdReminderSchedulerReminderSchedulerOrbital(params: StdReminder
             'payloadSchema': [
               {
                 'name': 'data',
-                'type': '[object]',
+                'type': '[@entity(targetEntity)]',
               },
             ],
           },
@@ -410,7 +410,7 @@ export function stdReminderSchedulerReminderSchedulerOrbital(params: StdReminder
               'payloadSchema': [
                 {
                   'name': 'data',
-                  'type': '[object]',
+                  'type': '[@entity(targetEntity)]',
                 },
               ],
             },

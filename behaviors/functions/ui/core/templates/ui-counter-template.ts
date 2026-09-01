@@ -33,27 +33,6 @@ const ALIAS = 'UiCounterTemplate';
 export type StdUiCounterTemplateEventKey = 'CounterTemplateLoaded' | 'DECREMENT' | 'INCREMENT' | 'INIT' | 'RESET';
 
 /**
- * Payload shape for the `INCREMENT` event.
- */
-export interface StdUiCounterTemplateIncrementPayload {
-  id?: string;
-}
-
-/**
- * Payload shape for the `DECREMENT` event.
- */
-export interface StdUiCounterTemplateDecrementPayload {
-  id?: string;
-}
-
-/**
- * Payload shape for the `RESET` event.
- */
-export interface StdUiCounterTemplateResetPayload {
-  id?: string;
-}
-
-/**
  * Payload shape for the `CounterTemplateLoaded` event.
  */
 export interface StdUiCounterTemplateCounterTemplateLoadedPayload {

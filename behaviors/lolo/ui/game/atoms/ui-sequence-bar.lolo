@@ -8,7 +8,7 @@ orbital SequenceBarOrbital {
     description : string
     iconEmoji : string
     iconUrl : SequenceBarSlotsItemIconUrl
-    stateMachine : object
+    stateMachine : SequenceBarSlotsItemStateMachine
   }
   type SequenceBarSlotsItemIconUrl = {
     url : asset!
@@ -24,6 +24,19 @@ orbital SequenceBarOrbital {
     name : string
     thumbnailUrl : string
   }
+  type SequenceBarSlotsItemStateMachine = {
+    name : string!
+    states : [string]!
+    currentState : string!
+    transitions : [SequenceBarSlotsItemStateMachineTransitionsItem]!
+    description : string
+  }
+  type SequenceBarSlotsItemStateMachineTransitionsItem = {
+    from : string!
+    to : string!
+    event : string!
+    guardHint : string
+  }
   type SequenceBarCategoryColorsValue = {
     bg : string!
     border : string!
@@ -35,7 +48,7 @@ orbital SequenceBarOrbital {
     description : string
     iconEmoji : string
     iconUrl : SequenceBarSLOTDROPItemIconUrl
-    stateMachine : object
+    stateMachine : SequenceBarSLOTDROPItemStateMachine
   }
   type SequenceBarSLOTDROPItemIconUrl = {
     url : asset!
@@ -50,6 +63,19 @@ orbital SequenceBarOrbital {
     sprite : string
     name : string
     thumbnailUrl : string
+  }
+  type SequenceBarSLOTDROPItemStateMachine = {
+    name : string!
+    states : [string]!
+    currentState : string!
+    transitions : [SequenceBarSLOTDROPItemStateMachineTransitionsItem]!
+    description : string
+  }
+  type SequenceBarSLOTDROPItemStateMachineTransitionsItem = {
+    from : string!
+    to : string!
+    event : string!
+    guardHint : string
   }
 
   entity SequenceBarItem [runtime] {
@@ -96,7 +122,7 @@ orbital SequenceBarOrbital {
     }
 
     config {
-      slots : [SequenceBarSlotsItem] = [{ id: "Id", name: "Name", category: "Category", description: "Description", iconEmoji: "Icon Emoji", iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/ui/star.png", role: "ui", category: "iconUrl", animations: ["static"], style: "pixel", dimension: "2d", aspect: "1:1", name: "iconUrl", thumbnailUrl: "" } }, { id: "Id 2", name: "Name 2", category: "Category 2", description: "Description 2", iconEmoji: "Icon Emoji 2", iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/ui/star.png", role: "ui", category: "iconUrl", animations: ["static"], style: "pixel", dimension: "2d", aspect: "1:1", name: "iconUrl", thumbnailUrl: "" } }]
+      slots : [SequenceBarSlotsItem] = [{ id: "Id", name: "Name", category: "Category", description: "Description", iconEmoji: "Icon Emoji", iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/ui/star.png", role: "ui", category: "iconUrl", animations: ["static"], style: "pixel", dimension: "2d", aspect: "1:1", name: "iconUrl", thumbnailUrl: "" }, stateMachine: { name: "Name", states: ["Item", "Item 2"], currentState: "Current State", transitions: [{ from: "From", to: "To", event: "Event", guardHint: "Guard Hint" }, { from: "From 2", to: "To 2", event: "Event 2", guardHint: "Guard Hint 2" }], description: "Description" } }, { id: "Id 2", name: "Name 2", category: "Category 2", description: "Description 2", iconEmoji: "Icon Emoji 2", iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/ui/star.png", role: "ui", category: "iconUrl", animations: ["static"], style: "pixel", dimension: "2d", aspect: "1:1", name: "iconUrl", thumbnailUrl: "" }, stateMachine: { name: "Name 2", states: ["Item", "Item 2"], currentState: "Current State 2", transitions: [{ from: "From", to: "To", event: "Event", guardHint: "Guard Hint" }, { from: "From 2", to: "To 2", event: "Event 2", guardHint: "Guard Hint 2" }], description: "Description 2" } }]
         @label "Slots"
         @description "The current sequence (sparse — undefined means empty slot)"
         @tier "presentation"

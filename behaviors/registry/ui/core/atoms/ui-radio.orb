@@ -28,6 +28,15 @@
         "parent": "trt_01KXG04KD6KN0MRV02QZD38BJ1",
         "renames": []
       },
+      "evt_01M1CHY4BKBDCF1AJFWTGQG050": {
+        "bakedName": "ACTION",
+        "curName": "ACTION",
+        "id": "evt_01M1CHY4BKBDCF1AJFWTGQG050",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04KD6KN0MRV02QZD38BJ1",
+        "renames": []
+      },
       "orb_01KXG04KD6DTFBEZ1ZVN3Y5FAX": {
         "bakedName": "RadioOrbital",
         "curName": "RadioOrbital",
@@ -63,6 +72,10 @@
           {
             "name": "id",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "value",
             "type": "string"
           }
         ],
@@ -151,12 +164,14 @@
           },
           "emits": [
             {
+              "definerKnob": "action",
               "description": "Declarative event name for trait dispatch",
               "event": "@config.action",
               "eventId": "evt_01KXG04KDBARNZNSFXDM03SCVA",
               "payloadSchema": [
                 {
-                  "name": "id",
+                  "name": "value",
+                  "required": true,
                   "type": "string"
                 }
               ],
@@ -165,7 +180,9 @@
             }
           ],
           "entityContract": {
-            "provides": [],
+            "provides": [
+              "value"
+            ],
             "requires": []
           },
           "entityRebindable": true,
@@ -185,13 +202,26 @@
                 "name": "Initialize"
               },
               {
+                "id": "evt_01M1CHY4BKBDCF1AJFWTGQG050",
+                "key": "ACTION",
+                "name": "Action",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "required": true,
+                    "type": "string"
+                  }
+                ]
+              },
+              {
                 "description": "Declarative event name for trait dispatch",
                 "id": "evt_01KXG04KDBARNZNSFXDM03SCVA",
                 "key": "@config.action",
                 "name": "@config.action",
                 "payloadSchema": [
                   {
-                    "name": "id",
+                    "name": "value",
+                    "required": true,
                     "type": "string"
                   }
                 ],
@@ -208,6 +238,11 @@
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.value",
+                    "@config.value"
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
@@ -219,12 +254,40 @@
                       "options": "@config.options",
                       "size": "@config.size",
                       "type": "radio",
-                      "value": "@config.value"
+                      "value": "@entity.value"
                     }
                   ]
                 ],
                 "event": "INIT",
                 "eventId": "evt_01KXG04KD66PSV3YDN0MB1JRWV",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.value",
+                    "@payload.value"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "action": "@config.action",
+                      "className": "@config.className",
+                      "error": "@config.error",
+                      "helperText": "@config.helperText",
+                      "label": "@config.label",
+                      "options": "@config.options",
+                      "size": "@config.size",
+                      "type": "radio",
+                      "value": "@entity.value"
+                    }
+                  ]
+                ],
+                "event": "ACTION",
+                "eventId": "evt_01M1CHY4BKBDCF1AJFWTGQG050",
                 "from": "idle",
                 "to": "idle"
               }

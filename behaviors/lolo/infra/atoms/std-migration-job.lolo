@@ -2,18 +2,23 @@ app std-migration-job "1.0.0"
 "std-migration-job — one import run of external data into the host system, modeled as a persistent MigrationJob row with a lifecycle state machine: idle → fetching → mapping → reviewing → committing → done | failed. All source access goes through the migration service (call-service \"migration\" listDocuments / fetchDocument / commit) — the atom never talks to a source directly, and the host-injected service handler resolves credentials from the connectionRef knob (a reference, never the secret). Staging/mapping is host work (deterministic pipeline or agent): the atom fetches, the host stages and emits MIGRATION_STAGED with stats and, optionally, the staged units/skipped/validationErrors rows themselves — when the rows are supplied, reviewing renders an ImportPreviewTree so the user can see what will commit before approving. The user approves (MIGRATION_APPROVED) and only then does commit run. Terminal runs persist the job row for provenance. Rebind the entity to a host-owned job entity via linkedEntity; target, connectionRef and reviewSlot are config knobs."
 orbital MigrationJobOrbital {
 
+  type MigrationFile = { name : string, size : number, type : string, lastModified : number }
+  type ImportSourceOption = { id : string!, kind : string!, label : string!, event : string }
+  type ImportUnit = { ref : string!, targetEntity : string!, fields : Map string scalar, parentRef : string }
+  type ImportSkip = { ref : string!, reason : string! }
+
   entity MigrationJob [persistent: migration_jobs] {
     id : string!
-    source : object @description "ImportSource descriptor of the run (kind + options), supplied by the host." = {}
-    files : [object] @description "Client-side file metadata for upload sources (name/size/type/lastModified)." = []
+    source : ImportSourceOption @description "ImportSource descriptor of the run (kind + options), supplied by the host." = {}
+    files : [MigrationFile] @description "Client-side file metadata for upload sources (name/size/type/lastModified)." = []
     target : string @description "Name of the host entity this import writes into." = ""
     status : "idle" | "fetching" | "mapping" | "reviewing" | "committing" | "done" | "failed" @description "Lifecycle position of the run." = idle
-    documents : [object] @description "Document metadata listed from the source." = []
-    document : object @description "Most recently fetched document content." = {}
-    stats : object @description "Staged/committed/failed/skipped counts." = {}
-    units : [object] @description "Staged ImportUnits ready for review (ref/targetEntity/fields/parentRef), when the host stages the full rows rather than aggregate stats only." @synonyms "staged units, preview rows, import rows, staged rows" = []
-    skipped : [object] @description "Source elements skipped during staging with a reason each, when the host stages the full rows rather than aggregate stats only." @synonyms "skipped rows, skipped elements, staging skips" = []
-    validationErrors : [object] @description "Validation errors surfaced during staging, when the host stages the full rows rather than aggregate stats only." @synonyms "staging errors, validation issues, import errors" = []
+    documents : [opaque] @description "Document metadata listed from the source — migration.listDocuments service result, never destructured by the atom." = []
+    document : opaque @description "Most recently fetched document content — migration.fetchDocument service result, never destructured by the atom." = {}
+    stats : opaque @description "Staged/committed/failed/skipped counts — merged from host staging and migration.commit service results, never destructured by the atom." = {}
+    units : [ImportUnit] @description "Staged ImportUnits ready for review (ref/targetEntity/fields/parentRef), when the host stages the full rows rather than aggregate stats only." @synonyms "staged units, preview rows, import rows, staged rows" = []
+    skipped : [ImportSkip] @description "Source elements skipped during staging with a reason each, when the host stages the full rows rather than aggregate stats only." @synonyms "skipped rows, skipped elements, staging skips" = []
+    validationErrors : [opaque] @description "Validation errors surfaced during staging, when the host stages the full rows rather than aggregate stats only." @synonyms "staging errors, validation issues, import errors" = []
     error : string @description "Failure detail when status is failed." = ""
     createdAt : number @description "Run start timestamp." = 0
   }
@@ -195,18 +200,18 @@ orbital MigrationJobOrbital {
 
     emits {
       DOCUMENTS_LISTED {
-        documents : [object]!
+        documents : [opaque]!
       }
         @description "migration.listDocuments service result, flattened onto the payload by the call-service effect executor"
         @tier "secondary"
       DOCUMENT_FETCHED {
-        document : object!
+        document : opaque!
       }
         @description "migration.fetchDocument service result, flattened onto the payload by the call-service effect executor"
         @tier "secondary"
       COMMITTED {
         committed : number!
-        failed : [object]!
+        failed : [opaque]!
       }
         @description "migration.commit service result — committed count plus per-unit failures"
         @tier "secondary"
@@ -216,28 +221,28 @@ orbital MigrationJobOrbital {
         @description "migration service call failure signal — lands the run in failed, never a silent swallow"
         @tier "secondary"
       MIGRATION_FETCHED -> external {
-        documents : [object]!
+        documents : [opaque]!
       }
         @description "Source documents are listed and the run is ready for staging (deterministic pipeline or agent)"
         @synonyms "import fetched, source listed, documents ready"
         @tier "domain"
       MIGRATION_DOCUMENT -> external {
-        document : object!
+        document : opaque!
       }
         @description "A single fetched document's content, for the host staging layer to map into target units"
         @synonyms "document loaded, content fetched"
         @tier "domain"
       MIGRATION_REVIEW_READY -> external {
-        stats : object!
-        units : [object]
-        skipped : [object]
-        validationErrors : [object]
+        stats : opaque!
+        units : [ImportUnit]
+        skipped : [ImportSkip]
+        validationErrors : [opaque]
       }
         @description "Staging is complete; the preview is ready for the approval gate. units/skipped/validationErrors forward the full staged rows when the host staged them, for a review-before-commit UI; stats-only hosts leave them empty."
         @synonyms "preview ready, staging complete, review import"
         @tier "domain"
       MIGRATION_COMPLETED -> external {
-        stats : object!
+        stats : opaque!
       }
         @description "The commit drained through the host sink; stats carry committed and per-unit failed counts"
         @synonyms "import done, migration complete, data imported"
@@ -252,8 +257,8 @@ orbital MigrationJobOrbital {
 
     listens {
       MIGRATION_START {
-        source : object!
-        files : [object]
+        source : ImportSourceOption!
+        files : [MigrationFile]
       }
         @description "Starts an import run. source is the ImportSource descriptor; files carries client file metadata for upload sources. Also reached via a sibling std-import's IMPORT_REQUESTED."
         @synonyms "start import, run migration, import data"
@@ -264,15 +269,15 @@ orbital MigrationJobOrbital {
         @description "Fetch one document's full content from the source during staging"
         @tier "internal"
       MIGRATION_STAGED {
-        stats : object!
-        units : [object]
-        skipped : [object]
-        validationErrors : [object]
+        stats : opaque!
+        units : [ImportUnit]
+        skipped : [ImportSkip]
+        validationErrors : [opaque]
       }
         @description "Host staging finished — units are staged and validated; stats summarize staged/skipped counts for the preview. units/skipped/validationErrors optionally carry the full staged rows (server ImportPreview shape) so reviewing can render an ImportPreviewTree instead of staying headless."
         @tier "internal"
       MIGRATION_APPROVED {
-        units : [object]
+        units : [ImportUnit]
       }
         @description "The user approved the preview; units are the staged ImportUnits to commit through the host sink. Optional — the ImportPreviewTree's onConfirm fires with no payload, so commit falls back to the units already staged on the entity via MIGRATION_STAGED."
         @synonyms "approve import, confirm migration"

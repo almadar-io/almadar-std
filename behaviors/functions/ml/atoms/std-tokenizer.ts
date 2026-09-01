@@ -220,7 +220,7 @@ export function stdTokenizerMlTokenizerOrbital(params: StdTokenizerMlTokenizerOr
           {
             'default': {},
             'name': 'request',
-            'type': 'object',
+            'type': 'opaque',
           },
           {
             'default': 'idle',
@@ -345,7 +345,7 @@ export function stdTokenizerMlTokenizerOrbital(params: StdTokenizerMlTokenizerOr
                 },
                 {
                   'name': 'request',
-                  'type': 'object',
+                  'type': 'opaque',
                 },
               ],
             },

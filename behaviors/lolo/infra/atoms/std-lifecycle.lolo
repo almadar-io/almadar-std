@@ -1,7 +1,7 @@
 app std-lifecycle "1.1.0"
 "std-lifecycle — age-based status lifecycle for a target entity. A periodic tick scans the target for records in `fromStatus` whose `dateField` is older than `ageDays`, and transitions each one to `toStatus` — every matching record, via a self-driving scan loop (process the head of a filtered fetch, persist the status, re-fetch until the set drains). Compose onto any orbital and bind `targetEntity` + the status/date knobs."
 orbital LifecycleOrbital {
-    type ScanRecordsLoaded = Event { data : [object] } "Internal: target records matching the lifecycle filter."
+    type ScanRecordsLoaded = Event { data : [@entity @config.targetEntity] } "Internal: target records matching the lifecycle filter."
 
     type ScanFailed = Event { error : string, code : string } "Internal: scan fetch / persist failed."
 
@@ -59,7 +59,7 @@ orbital LifecycleOrbital {
         status : string
       }
       ScanRecordsLoaded {
-        data : [object]
+        data : [@entity @config.targetEntity]
       }
       ScanFailed {
         error : string
@@ -72,7 +72,7 @@ orbital LifecycleOrbital {
 
     listens {
       ScanRecordsLoaded {
-        data : [object]
+        data : [@entity @config.targetEntity]
       }
       ScanFailed {
         error : string

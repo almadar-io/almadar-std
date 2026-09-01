@@ -46,6 +46,15 @@
         "parent": "trt_01KXG04Q9KZ32AM1MDXW6HP5MV",
         "renames": []
       },
+      "evt_01M1CHY5CKX2B01VX2XY869N6C": {
+        "bakedName": "ACTION",
+        "curName": "ACTION",
+        "id": "evt_01M1CHY5CKX2B01VX2XY869N6C",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04Q9KZ32AM1MDXW6HP5MV",
+        "renames": []
+      },
       "orb_01KXG04Q9KVT6FT3NF29PESSHW": {
         "bakedName": "NumberStepperOrbital",
         "curName": "NumberStepperOrbital",
@@ -120,11 +129,10 @@
               "type": "event"
             },
             "actionPayload": {
-              "default": {},
               "description": "Payload to include with the action event",
               "label": "Action Payload",
               "tier": "presentation",
-              "type": "json"
+              "type": "@payload(action)"
             },
             "className": {
               "description": "Additional CSS classes",
@@ -193,6 +201,7 @@
           },
           "emits": [
             {
+              "definerKnob": "onChange",
               "description": "Direct onChange callback",
               "event": "@config.onChange",
               "eventId": "evt_01KXG04Q9PS73C1D2V4AZ21X70",
@@ -206,13 +215,15 @@
               "tier": "essential"
             },
             {
+              "definerKnob": "action",
               "description": "Declarative event name for value changes",
               "event": "@config.action",
               "eventId": "evt_01KXG04Q9P6S2F71DRRBFWS7YK",
               "payloadSchema": [
                 {
-                  "name": "id",
-                  "type": "string"
+                  "name": "value",
+                  "required": true,
+                  "type": "number"
                 }
               ],
               "scope": "external",
@@ -253,6 +264,18 @@
                 ]
               },
               {
+                "id": "evt_01M1CHY5CKX2B01VX2XY869N6C",
+                "key": "ACTION",
+                "name": "Action",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "required": true,
+                    "type": "number"
+                  }
+                ]
+              },
+              {
                 "description": "Direct onChange callback",
                 "id": "evt_01KXG04Q9PS73C1D2V4AZ21X70",
                 "key": "@config.onChange",
@@ -272,8 +295,9 @@
                 "name": "@config.action",
                 "payloadSchema": [
                   {
-                    "name": "id",
-                    "type": "string"
+                    "name": "value",
+                    "required": true,
+                    "type": "number"
                   }
                 ],
                 "tier": "essential"
@@ -345,6 +369,37 @@
                 ],
                 "event": "CHANGE",
                 "eventId": "evt_01KXG04Q9PZ5MRB0E9FCMCQKE1",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.value",
+                    "@payload.value"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "action": "@config.action",
+                      "actionPayload": "@config.actionPayload",
+                      "className": "@config.className",
+                      "disabled": "@config.disabled",
+                      "label": "@config.label",
+                      "max": "@config.max",
+                      "min": "@config.min",
+                      "onChange": "@config.onChange",
+                      "size": "@config.size",
+                      "step": "@config.step",
+                      "type": "number-stepper",
+                      "value": "@entity.value"
+                    }
+                  ]
+                ],
+                "event": "ACTION",
+                "eventId": "evt_01M1CHY5CKX2B01VX2XY869N6C",
                 "from": "idle",
                 "to": "idle"
               }

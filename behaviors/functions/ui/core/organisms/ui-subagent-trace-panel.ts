@@ -33,13 +33,6 @@ const ALIAS = 'UiSubagentTracePanel';
 export type StdUiSubagentTracePanelEventKey = 'CLOSE' | 'INIT' | 'OPEN';
 
 /**
- * Payload shape for the `CLOSE` event.
- */
-export interface StdUiSubagentTracePanelClosePayload {
-  id?: string;
-}
-
-/**
  * Payload shape for the `OPEN` event.
  */
 export interface StdUiSubagentTracePanelOpenPayload {
@@ -175,21 +168,21 @@ export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSu
             'default': [],
             'description': 'Full coordinator activities (tool calls, results, messages, errors).',
             'items': {
-              'type': 'object',
+              'type': 'opaque',
             },
             'label': 'Coordinator Activities',
             'tier': 'presentation',
-            'type': '[json]',
+            'type': '[opaque]',
           },
           'coordinatorMessages': {
             'default': [],
             'description': 'Canonical Coordinator conversation — same shape live and on reload. When present, takes precedence over `coordinatorActivities` for the Coordinator section.',
             'items': {
-              'type': 'object',
+              'type': 'opaque',
             },
             'label': 'Coordinator Messages',
             'tier': 'presentation',
-            'type': '[json]',
+            'type': '[opaque]',
           },
           'disclosureLevel': {
             'default': 1,
@@ -313,11 +306,11 @@ export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSu
             'default': [],
             'description': 'All known subagents from the runner.',
             'items': {
-              'type': 'object',
+              'type': 'opaque',
             },
             'label': 'Subagents',
             'tier': 'presentation',
-            'type': '[json]',
+            'type': '[opaque]',
           },
           'totalCount': {
             'description': 'Total number of items',
@@ -328,14 +321,9 @@ export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSu
         },
         'emits': [
           {
+            'definerKnob': 'onClose',
             'description': 'Optional dismiss handler.',
             'event': '@config.onClose',
-            'payloadSchema': [
-              {
-                'name': 'id',
-                'type': 'string',
-              },
-            ],
             'scope': 'external',
             'tier': 'essential',
           },
@@ -386,12 +374,6 @@ export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSu
               'description': 'Optional dismiss handler.',
               'key': '@config.onClose',
               'name': '@config.on close',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
               'tier': 'essential',
             },
           ],

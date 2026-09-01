@@ -40,20 +40,6 @@ export interface StdUiSidebarCollapseChangePayload {
 }
 
 /**
- * Payload shape for the `CLOSE` event.
- */
-export interface StdUiSidebarClosePayload {
-  id?: string;
-}
-
-/**
- * Payload shape for the `LOGO_CLICK` event.
- */
-export interface StdUiSidebarLogoClickPayload {
-  id?: string;
-}
-
-/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait

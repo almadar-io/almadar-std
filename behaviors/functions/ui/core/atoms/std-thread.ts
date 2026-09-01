@@ -37,7 +37,7 @@ export type StdThreadEventKey = 'CANCEL_REPLY' | 'EDIT_REPLY' | 'INIT' | 'REPLY'
  */
 export interface StdThreadSelectPayload {
   id?: string;
-  row: EntityRow;
+  row: unknown;
 }
 
 /**
@@ -85,7 +85,7 @@ export interface StdThreadThreadPostCreatedPayload {
   voteCount?: number;
   replyCount?: number;
   replies?: EntityRow[];
-  focusedRow?: EntityRow;
+  focusedRow?: Record<string, EntityRow>;
 }
 
 /**
@@ -359,6 +359,9 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
           {
             'default': {},
             'description': 'The currently selected or active row within the thread.',
+            'items': {
+              'type': 'scalar',
+            },
             'name': 'focusedRow',
             'synonyms': 'selection, active, current',
             'type': 'object',
@@ -612,7 +615,7 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
               {
                 'name': 'row',
                 'required': true,
-                'type': 'object',
+                'type': '@entity',
               },
             ],
             'scope': 'external',
@@ -743,7 +746,7 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
               },
               {
                 'name': 'focusedRow',
-                'type': 'object',
+                'type': 'Map<string,scalar>',
               },
             ],
             'scope': 'internal',
@@ -903,7 +906,7 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                 },
                 {
                   'name': 'focusedRow',
-                  'type': 'object',
+                  'type': 'Map<string,scalar>',
                 },
               ],
               'synonyms': 'new post, added, created',
@@ -921,7 +924,7 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
                 {
                   'name': 'row',
                   'required': true,
-                  'type': 'object',
+                  'type': '@entity',
                 },
               ],
               'synonyms': 'choose, highlight, focus, activate',

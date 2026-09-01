@@ -36,14 +36,7 @@ export type StdUiFormSectionEventKey = 'CANCEL' | 'FIELD_CHANGE' | 'FormSectionL
  * Payload shape for the `SUBMIT` event.
  */
 export interface StdUiFormSectionSubmitPayload {
-  id?: string;
-}
-
-/**
- * Payload shape for the `CANCEL` event.
- */
-export interface StdUiFormSectionCancelPayload {
-  id?: string;
+  data: unknown;
 }
 
 /**
@@ -261,7 +254,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
             'properties': {
               'entity': {
                 'items': {
-                  'type': 'object',
+                  'type': 'opaque',
                 },
                 'name': 'entity',
                 'required': false,
@@ -269,7 +262,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
               },
               'formValues': {
                 'items': {
-                  'type': 'object',
+                  'type': 'opaque',
                 },
                 'name': 'formValues',
                 'required': true,
@@ -277,7 +270,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
               },
               'globalVariables': {
                 'items': {
-                  'type': 'string',
+                  'type': 'opaque',
                 },
                 'name': 'globalVariables',
                 'required': true,
@@ -285,7 +278,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
               },
               'localVariables': {
                 'items': {
-                  'type': 'string',
+                  'type': 'opaque',
                 },
                 'name': 'localVariables',
                 'required': false,
@@ -416,7 +409,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                 'defaultValue': {
                   'name': 'defaultValue',
                   'required': false,
-                  'type': 'string',
+                  'type': 'opaque',
                 },
                 'disabled': {
                   'name': 'disabled',
@@ -725,7 +718,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                       'defaultValue': {
                         'name': 'defaultValue',
                         'required': false,
-                        'type': 'string',
+                        'type': 'opaque',
                       },
                       'disabled': {
                         'name': 'disabled',
@@ -984,30 +977,28 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
         },
         'emits': [
           {
+            'definerKnob': 'submitEvent',
             'description': 'Event dispatch props (for trait state machine integration)',
             'event': '@config.submitEvent',
             'payloadSchema': [
               {
-                'name': 'id',
-                'type': 'string',
+                'name': 'data',
+                'required': true,
+                'type': '@entity',
               },
             ],
             'scope': 'external',
             'tier': 'essential',
           },
           {
+            'definerKnob': 'cancelEvent',
             'description': 'Event to dispatch on cancel (defaults to \'CANCEL\')',
             'event': '@config.cancelEvent',
-            'payloadSchema': [
-              {
-                'name': 'id',
-                'type': 'string',
-              },
-            ],
             'scope': 'external',
             'tier': 'essential',
           },
           {
+            'definerKnob': 'onFieldChange',
             'description': 'Callback when any field value changes',
             'event': '@config.onFieldChange',
             'payloadSchema': [
@@ -1021,13 +1012,57 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                   },
                   {
                     'name': 'value',
+                    'properties': [
+                      {
+                        'name': 'string',
+                        'type': 'string',
+                      },
+                      {
+                        'name': 'number',
+                        'type': 'number',
+                      },
+                      {
+                        'name': 'boolean',
+                        'type': 'boolean',
+                      },
+                      {
+                        'name': 'array',
+                        'type': '[string]',
+                      },
+                      {
+                        'name': 'FormSectionFIELDCHANGEChangeValue',
+                        'properties': [
+                          {
+                            'name': 'name',
+                            'required': true,
+                            'type': 'string',
+                          },
+                          {
+                            'name': 'url',
+                            'required': true,
+                            'type': 'string',
+                          },
+                          {
+                            'name': 'mimeType',
+                            'required': true,
+                            'type': 'string',
+                          },
+                          {
+                            'name': 'sizeBytes',
+                            'required': true,
+                            'type': 'number',
+                          },
+                        ],
+                        'type': 'object',
+                      },
+                    ],
                     'required': true,
-                    'type': 'object',
+                    'type': 'union',
                   },
                   {
                     'name': 'formValues',
                     'required': true,
-                    'type': 'Map<string,object>',
+                    'type': 'Map<string,opaque>',
                   },
                 ],
                 'type': 'object',
@@ -1083,8 +1118,9 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
               'name': '@config.submit event',
               'payloadSchema': [
                 {
-                  'name': 'id',
-                  'type': 'string',
+                  'name': 'data',
+                  'required': true,
+                  'type': '@entity',
                 },
               ],
               'tier': 'essential',
@@ -1093,12 +1129,6 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
               'description': 'Event to dispatch on cancel (defaults to \'CANCEL\')',
               'key': '@config.cancelEvent',
               'name': '@config.cancel event',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
               'tier': 'essential',
             },
             {
@@ -1116,13 +1146,57 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                     },
                     {
                       'name': 'value',
+                      'properties': [
+                        {
+                          'name': 'string',
+                          'type': 'string',
+                        },
+                        {
+                          'name': 'number',
+                          'type': 'number',
+                        },
+                        {
+                          'name': 'boolean',
+                          'type': 'boolean',
+                        },
+                        {
+                          'name': 'array',
+                          'type': '[string]',
+                        },
+                        {
+                          'name': 'FormSectionFIELDCHANGEChangeValue',
+                          'properties': [
+                            {
+                              'name': 'name',
+                              'required': true,
+                              'type': 'string',
+                            },
+                            {
+                              'name': 'url',
+                              'required': true,
+                              'type': 'string',
+                            },
+                            {
+                              'name': 'mimeType',
+                              'required': true,
+                              'type': 'string',
+                            },
+                            {
+                              'name': 'sizeBytes',
+                              'required': true,
+                              'type': 'number',
+                            },
+                          ],
+                          'type': 'object',
+                        },
+                      ],
                       'required': true,
-                      'type': 'object',
+                      'type': 'union',
                     },
                     {
                       'name': 'formValues',
                       'required': true,
-                      'type': 'Map<string,object>',
+                      'type': 'Map<string,opaque>',
                     },
                   ],
                   'type': 'object',

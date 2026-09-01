@@ -214,12 +214,56 @@
             "default": {},
             "description": "ImportSource descriptor of the run (kind + options), supplied by the host.",
             "name": "source",
+            "properties": {
+              "event": {
+                "name": "event",
+                "required": false,
+                "type": "string"
+              },
+              "id": {
+                "name": "id",
+                "required": true,
+                "type": "string"
+              },
+              "kind": {
+                "name": "kind",
+                "required": true,
+                "type": "string"
+              },
+              "label": {
+                "name": "label",
+                "required": true,
+                "type": "string"
+              }
+            },
             "type": "object"
           },
           {
             "default": [],
             "description": "Client-side file metadata for upload sources (name/size/type/lastModified).",
             "items": {
+              "properties": {
+                "lastModified": {
+                  "name": "lastModified",
+                  "required": false,
+                  "type": "number"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "size": {
+                  "name": "size",
+                  "required": false,
+                  "type": "number"
+                },
+                "type": {
+                  "name": "type",
+                  "required": false,
+                  "type": "string"
+                }
+              },
               "type": "object"
             },
             "name": "files",
@@ -248,29 +292,54 @@
           },
           {
             "default": [],
-            "description": "Document metadata listed from the source.",
+            "description": "Document metadata listed from the source — migration.listDocuments service result, never destructured by the atom.",
             "items": {
-              "type": "object"
+              "type": "opaque"
             },
             "name": "documents",
             "type": "array"
           },
           {
             "default": {},
-            "description": "Most recently fetched document content.",
+            "description": "Most recently fetched document content — migration.fetchDocument service result, never destructured by the atom.",
             "name": "document",
-            "type": "object"
+            "type": "opaque"
           },
           {
             "default": {},
-            "description": "Staged/committed/failed/skipped counts.",
+            "description": "Staged/committed/failed/skipped counts — merged from host staging and migration.commit service results, never destructured by the atom.",
             "name": "stats",
-            "type": "object"
+            "type": "opaque"
           },
           {
             "default": [],
             "description": "Staged ImportUnits ready for review (ref/targetEntity/fields/parentRef), when the host stages the full rows rather than aggregate stats only.",
             "items": {
+              "properties": {
+                "fields": {
+                  "items": {
+                    "type": "scalar"
+                  },
+                  "name": "fields",
+                  "required": false,
+                  "type": "object"
+                },
+                "parentRef": {
+                  "name": "parentRef",
+                  "required": false,
+                  "type": "string"
+                },
+                "ref": {
+                  "name": "ref",
+                  "required": true,
+                  "type": "string"
+                },
+                "targetEntity": {
+                  "name": "targetEntity",
+                  "required": true,
+                  "type": "string"
+                }
+              },
               "type": "object"
             },
             "name": "units",
@@ -281,6 +350,18 @@
             "default": [],
             "description": "Source elements skipped during staging with a reason each, when the host stages the full rows rather than aggregate stats only.",
             "items": {
+              "properties": {
+                "reason": {
+                  "name": "reason",
+                  "required": true,
+                  "type": "string"
+                },
+                "ref": {
+                  "name": "ref",
+                  "required": true,
+                  "type": "string"
+                }
+              },
               "type": "object"
             },
             "name": "skipped",
@@ -291,7 +372,7 @@
             "default": [],
             "description": "Validation errors surfaced during staging, when the host stages the full rows rather than aggregate stats only.",
             "items": {
-              "type": "object"
+              "type": "opaque"
             },
             "name": "validationErrors",
             "synonyms": "staging errors, validation issues, import errors",
@@ -367,7 +448,7 @@
                 {
                   "name": "documents",
                   "required": true,
-                  "type": "[object]"
+                  "type": "[opaque]"
                 }
               ],
               "tier": "secondary"
@@ -380,7 +461,7 @@
                 {
                   "name": "document",
                   "required": true,
-                  "type": "object"
+                  "type": "opaque"
                 }
               ],
               "tier": "secondary"
@@ -398,7 +479,7 @@
                 {
                   "name": "failed",
                   "required": true,
-                  "type": "[object]"
+                  "type": "[opaque]"
                 }
               ],
               "tier": "secondary"
@@ -424,7 +505,7 @@
                 {
                   "name": "documents",
                   "required": true,
-                  "type": "[object]"
+                  "type": "[opaque]"
                 }
               ],
               "scope": "external",
@@ -439,7 +520,7 @@
                 {
                   "name": "document",
                   "required": true,
-                  "type": "object"
+                  "type": "opaque"
                 }
               ],
               "scope": "external",
@@ -454,19 +535,19 @@
                 {
                   "name": "stats",
                   "required": true,
-                  "type": "object"
+                  "type": "opaque"
                 },
                 {
                   "name": "units",
-                  "type": "[object]"
+                  "type": "[ImportUnit]"
                 },
                 {
                   "name": "skipped",
-                  "type": "[object]"
+                  "type": "[ImportSkip]"
                 },
                 {
                   "name": "validationErrors",
-                  "type": "[object]"
+                  "type": "[opaque]"
                 }
               ],
               "scope": "external",
@@ -481,7 +562,7 @@
                 {
                   "name": "stats",
                   "required": true,
-                  "type": "object"
+                  "type": "opaque"
                 }
               ],
               "scope": "external",
@@ -544,11 +625,50 @@
                 "payloadSchema": [
                   {
                     "name": "source",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "kind",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "label",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "event",
+                        "type": "string"
+                      }
+                    ],
                     "required": true,
                     "type": "object"
                   },
                   {
                     "name": "files",
+                    "properties": [
+                      {
+                        "name": "name",
+                        "type": "string"
+                      },
+                      {
+                        "name": "size",
+                        "type": "number"
+                      },
+                      {
+                        "name": "type",
+                        "type": "string"
+                      },
+                      {
+                        "name": "lastModified",
+                        "type": "number"
+                      }
+                    ],
                     "type": "[object]"
                   }
                 ],
@@ -564,7 +684,7 @@
                   {
                     "name": "documents",
                     "required": true,
-                    "type": "[object]"
+                    "type": "[opaque]"
                   }
                 ],
                 "tier": "secondary"
@@ -578,7 +698,7 @@
                   {
                     "name": "documents",
                     "required": true,
-                    "type": "[object]"
+                    "type": "[opaque]"
                   }
                 ],
                 "synonyms": "import fetched, source listed, documents ready",
@@ -593,7 +713,7 @@
                   {
                     "name": "document",
                     "required": true,
-                    "type": "object"
+                    "type": "opaque"
                   }
                 ],
                 "synonyms": "document loaded, content fetched",
@@ -636,7 +756,7 @@
                   {
                     "name": "document",
                     "required": true,
-                    "type": "object"
+                    "type": "opaque"
                   }
                 ],
                 "tier": "secondary"
@@ -650,19 +770,51 @@
                   {
                     "name": "stats",
                     "required": true,
-                    "type": "object"
+                    "type": "opaque"
                   },
                   {
                     "name": "units",
+                    "properties": [
+                      {
+                        "name": "ref",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "targetEntity",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "fields",
+                        "type": "Map<string,scalar>"
+                      },
+                      {
+                        "name": "parentRef",
+                        "type": "string"
+                      }
+                    ],
                     "type": "[object]"
                   },
                   {
                     "name": "skipped",
+                    "properties": [
+                      {
+                        "name": "ref",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "reason",
+                        "required": true,
+                        "type": "string"
+                      }
+                    ],
                     "type": "[object]"
                   },
                   {
                     "name": "validationErrors",
-                    "type": "[object]"
+                    "type": "[opaque]"
                   }
                 ],
                 "tier": "internal"
@@ -682,6 +834,26 @@
                 "payloadSchema": [
                   {
                     "name": "units",
+                    "properties": [
+                      {
+                        "name": "ref",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "targetEntity",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "fields",
+                        "type": "Map<string,scalar>"
+                      },
+                      {
+                        "name": "parentRef",
+                        "type": "string"
+                      }
+                    ],
                     "type": "[object]"
                   }
                 ],
@@ -704,19 +876,19 @@
                   {
                     "name": "stats",
                     "required": true,
-                    "type": "object"
+                    "type": "opaque"
                   },
                   {
                     "name": "units",
-                    "type": "[object]"
+                    "type": "[ImportUnit]"
                   },
                   {
                     "name": "skipped",
-                    "type": "[object]"
+                    "type": "[ImportSkip]"
                   },
                   {
                     "name": "validationErrors",
-                    "type": "[object]"
+                    "type": "[opaque]"
                   }
                 ],
                 "synonyms": "preview ready, staging complete, review import",
@@ -736,7 +908,7 @@
                   {
                     "name": "failed",
                     "required": true,
-                    "type": "[object]"
+                    "type": "[opaque]"
                   }
                 ],
                 "tier": "secondary"
@@ -757,7 +929,7 @@
                   {
                     "name": "stats",
                     "required": true,
-                    "type": "object"
+                    "type": "opaque"
                   }
                 ],
                 "synonyms": "import done, migration complete, data imported",

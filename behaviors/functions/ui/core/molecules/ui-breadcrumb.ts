@@ -36,7 +36,9 @@ export type StdUiBreadcrumbEventKey = 'INIT' | 'ITEM';
  * Payload shape for the `ITEM` event.
  */
 export interface StdUiBreadcrumbItemPayload {
-  id?: string;
+  label: string;
+  href?: string;
+  index: number;
 }
 
 /**

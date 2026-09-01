@@ -43,6 +43,7 @@ export interface StdUiDrawSpriteConfig {
   anchor?: 'top-left' | 'ground' | 'center';
   animation?: string;
   asset?: EntityRow;
+  clockMs?: number;
   flipX?: boolean;
   frame?: EntityRow;
   height?: number;

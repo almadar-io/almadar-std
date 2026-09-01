@@ -1036,6 +1036,7 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
             'tier': 'internal',
           },
           {
+            'definerKnob': 'onEventClick',
             'description': 'Emitted when a calendar chip is clicked ({ event } carries the clicked row) or an agenda/upcoming row action fires ({ id, row }). Consumers routing it should read the row from ?event or ?row, whichever the payload carries.',
             'event': '@config.onEventClick',
             'payloadSchema': [
@@ -1151,6 +1152,11 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
               'name': 'Refetch Filter',
               'payloadSchema': [
                 {
+                  'name': 'entity',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
                   'name': 'field',
                   'required': true,
                   'type': 'string',
@@ -1158,6 +1164,10 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                 {
                   'name': 'value',
                   'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'query',
                   'type': 'string',
                 },
               ],

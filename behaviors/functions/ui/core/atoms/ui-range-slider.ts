@@ -36,7 +36,7 @@ export type StdUiRangeSliderEventKey = 'ACTION' | 'CHANGE' | 'INIT';
  * Payload shape for the `ACTION` event.
  */
 export interface StdUiRangeSliderActionPayload {
-  id?: string;
+  value: number;
 }
 
 /**
@@ -55,7 +55,6 @@ export interface StdUiRangeSliderChangePayload {
 export interface StdUiRangeSliderConfig {
   /** Default: `"ACTION"` */
   action?: string;
-  /** Default: `{}` */
   actionPayload?: unknown;
   buffered?: number;
   className?: string;

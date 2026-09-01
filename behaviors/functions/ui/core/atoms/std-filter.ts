@@ -36,8 +36,10 @@ export type StdFilterEventKey = 'CLEAR_FILTERS' | 'FILTER' | 'INIT';
  * Payload shape for the `FILTER` event.
  */
 export interface StdFilterFilterPayload {
+  entity: string;
   field: string;
   value: string;
+  query?: string;
 }
 
 /**
@@ -311,6 +313,11 @@ export function stdFilterFilterTargetOrbital(params: StdFilterFilterTargetOrbita
             'event': 'FILTER',
             'payloadSchema': [
               {
+                'name': 'entity',
+                'required': true,
+                'type': 'string',
+              },
+              {
                 'name': 'field',
                 'required': true,
                 'type': 'string',
@@ -318,6 +325,10 @@ export function stdFilterFilterTargetOrbital(params: StdFilterFilterTargetOrbita
               {
                 'name': 'value',
                 'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'query',
                 'type': 'string',
               },
             ],
@@ -348,6 +359,11 @@ export function stdFilterFilterTargetOrbital(params: StdFilterFilterTargetOrbita
               'name': 'Filter',
               'payloadSchema': [
                 {
+                  'name': 'entity',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
                   'name': 'field',
                   'required': true,
                   'type': 'string',
@@ -355,6 +371,10 @@ export function stdFilterFilterTargetOrbital(params: StdFilterFilterTargetOrbita
                 {
                   'name': 'value',
                   'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'query',
                   'type': 'string',
                 },
               ],
@@ -443,6 +463,7 @@ export function stdFilterFilterTargetOrbital(params: StdFilterFilterTargetOrbita
                   'emit',
                   'FILTER',
                   {
+                    'entity': 'FilterTarget',
                     'field': '',
                     'value': '',
                   },

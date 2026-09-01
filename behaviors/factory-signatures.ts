@@ -17,6 +17,7 @@
  */
 
 import type { FactorySignatureCatalog } from '@almadar/core';
+import { rehydrateKnobDefs } from '@almadar/core';
 import { resolveStdDataDir } from './data-dir.js';
 
 // Promise-memoized: concurrent first callers share ONE in-flight load; a
@@ -46,7 +47,12 @@ async function loadCatalogUncached(): Promise<FactorySignatureCatalog | null> {
     ) {
       return null;
     }
-    return parsed;
+    // Rehydrate BEFORE returning: a deduped catalog stores knobs once in
+    // `knobDefs` and traits reference them by index, so no consumer may see a
+    // signature until `overridableConfigKeys` is populated. Substitutes shared
+    // references, so it cuts heap as well as bytes. No-op for older catalogs
+    // that still carry knobs inline.
+    return rehydrateKnobDefs(parsed);
   } catch {
     return null;
   }

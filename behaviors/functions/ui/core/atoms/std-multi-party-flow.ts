@@ -43,14 +43,14 @@ export interface StdMultiPartyFlowPartyConfirmPayload {
  * Payload shape for the `SUBMIT_DISPUTE` event.
  */
 export interface StdMultiPartyFlowSubmitDisputePayload {
-  data?: EntityRow;
+  data: unknown;
 }
 
 /**
  * Payload shape for the `SUBMIT_CANCEL` event.
  */
 export interface StdMultiPartyFlowSubmitCancelPayload {
-  data?: EntityRow;
+  data: unknown;
 }
 
 /**
@@ -680,7 +680,8 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
             'payloadSchema': [
               {
                 'name': 'data',
-                'type': 'object',
+                'required': true,
+                'type': '@entity',
               },
             ],
             'synonyms': 'dispute, challenge, contest',
@@ -692,7 +693,8 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
             'payloadSchema': [
               {
                 'name': 'data',
-                'type': 'object',
+                'required': true,
+                'type': '@entity',
               },
             ],
             'synonyms': 'request cancel, initiate cancellation, submit termination',
@@ -884,7 +886,8 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
               'payloadSchema': [
                 {
                   'name': 'data',
-                  'type': 'object',
+                  'required': true,
+                  'type': '@entity',
                 },
               ],
               'synonyms': 'dispute, challenge, contest',
@@ -904,7 +907,8 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
               'payloadSchema': [
                 {
                   'name': 'data',
-                  'type': 'object',
+                  'required': true,
+                  'type': '@entity',
                 },
               ],
               'synonyms': 'request cancel, initiate cancellation, submit termination',

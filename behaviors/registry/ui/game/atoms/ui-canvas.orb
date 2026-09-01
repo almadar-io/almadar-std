@@ -138,11 +138,89 @@
               "type": "asset"
             },
             "camera": {
-              "default": {},
               "description": "Neutral camera pose. Mapped to the underlying host's framing + zoom.",
               "label": "Camera",
+              "properties": {
+                "azimuth": {
+                  "name": "azimuth",
+                  "required": false,
+                  "type": "number"
+                },
+                "elevation": {
+                  "name": "elevation",
+                  "required": false,
+                  "type": "number"
+                },
+                "fov": {
+                  "name": "fov",
+                  "required": false,
+                  "type": "number"
+                },
+                "mode": {
+                  "name": "mode",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "isometric",
+                    "perspective",
+                    "top-down",
+                    "front",
+                    "follow",
+                    "chase"
+                  ]
+                },
+                "pos": {
+                  "name": "pos",
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "z": {
+                      "name": "z",
+                      "required": false,
+                      "type": "number"
+                    }
+                  },
+                  "required": false,
+                  "type": "object"
+                },
+                "target": {
+                  "name": "target",
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "z": {
+                      "name": "z",
+                      "required": false,
+                      "type": "number"
+                    }
+                  },
+                  "required": false,
+                  "type": "object"
+                },
+                "zoom": {
+                  "name": "zoom",
+                  "required": false,
+                  "type": "number"
+                }
+              },
               "tier": "presentation",
-              "type": "json"
+              "type": "CanvasCamera"
             },
             "children": {
               "description": "Declarative JSX drawable children (`<DrawShape .../>` composed in paint order). Forwarded to the 2D host, which collects them via drawable registry context.",
@@ -521,58 +599,89 @@
           },
           "emits": [
             {
+              "definerKnob": "tileClickEvent",
               "description": "--- Shared interaction (LOLO-owned). The painter emitted at runtime depends on",
               "event": "@config.tileClickEvent",
               "eventId": "evt_01M055GNZCR3PVXN2JTBH2BJWS",
               "payloadSchema": [
                 {
-                  "name": "_payload",
-                  "type": "object"
+                  "name": "x",
+                  "type": "number"
+                },
+                {
+                  "name": "y",
+                  "type": "number"
+                },
+                {
+                  "name": "tileId",
+                  "type": "string"
+                },
+                {
+                  "name": "z",
+                  "type": "number"
                 }
               ],
               "scope": "external",
               "tier": "essential"
             },
             {
+              "definerKnob": "unitClickEvent",
               "description": "unitClickEvent prop",
               "event": "@config.unitClickEvent",
               "eventId": "evt_01M055GNZCVTB1VRV2AE4NVA02",
               "payloadSchema": [
                 {
-                  "name": "_payload",
-                  "type": "object"
+                  "name": "unitId",
+                  "type": "string"
+                },
+                {
+                  "name": "x",
+                  "type": "number"
+                },
+                {
+                  "name": "z",
+                  "type": "number"
                 }
               ],
               "scope": "external",
               "tier": "essential"
             },
             {
+              "definerKnob": "tileHoverEvent",
               "description": "tileHoverEvent prop",
               "event": "@config.tileHoverEvent",
               "eventId": "evt_01M055GNZCC9MCGDJ727YGQB2D",
               "payloadSchema": [
                 {
-                  "name": "_payload",
-                  "type": "object"
+                  "name": "x",
+                  "type": "number"
+                },
+                {
+                  "name": "y",
+                  "type": "number"
+                },
+                {
+                  "name": "tileId",
+                  "type": "string"
+                },
+                {
+                  "name": "z",
+                  "type": "number"
                 }
               ],
               "scope": "external",
               "tier": "essential"
             },
             {
+              "definerKnob": "tileLeaveEvent",
               "description": "tileLeaveEvent prop",
               "event": "@config.tileLeaveEvent",
               "eventId": "evt_01M055GNZC7GCH1G61XK01CY15",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ],
               "scope": "external",
               "tier": "essential"
             },
             {
+              "definerKnob": "featureClickEvent",
               "description": "Feature-click event (3D only).",
               "event": "@config.featureClickEvent",
               "eventId": "evt_01M055GNZCSJFEP7EY20KER3PF",
@@ -628,8 +737,20 @@
                 "name": "@config.tile click event",
                 "payloadSchema": [
                   {
-                    "name": "_payload",
-                    "type": "object"
+                    "name": "x",
+                    "type": "number"
+                  },
+                  {
+                    "name": "y",
+                    "type": "number"
+                  },
+                  {
+                    "name": "tileId",
+                    "type": "string"
+                  },
+                  {
+                    "name": "z",
+                    "type": "number"
                   }
                 ],
                 "tier": "essential"
@@ -641,8 +762,16 @@
                 "name": "@config.unit click event",
                 "payloadSchema": [
                   {
-                    "name": "_payload",
-                    "type": "object"
+                    "name": "unitId",
+                    "type": "string"
+                  },
+                  {
+                    "name": "x",
+                    "type": "number"
+                  },
+                  {
+                    "name": "z",
+                    "type": "number"
                   }
                 ],
                 "tier": "essential"
@@ -654,8 +783,20 @@
                 "name": "@config.tile hover event",
                 "payloadSchema": [
                   {
-                    "name": "_payload",
-                    "type": "object"
+                    "name": "x",
+                    "type": "number"
+                  },
+                  {
+                    "name": "y",
+                    "type": "number"
+                  },
+                  {
+                    "name": "tileId",
+                    "type": "string"
+                  },
+                  {
+                    "name": "z",
+                    "type": "number"
                   }
                 ],
                 "tier": "essential"
@@ -665,12 +806,6 @@
                 "id": "evt_01M055GNZC7GCH1G61XK01CY15",
                 "key": "@config.tileLeaveEvent",
                 "name": "@config.tile leave event",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ],
                 "tier": "essential"
               },
               {

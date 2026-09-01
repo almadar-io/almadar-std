@@ -51,8 +51,7 @@ export interface StdUiBiologyCanvasConfig {
   backgroundColor?: string;
   /** Default: `[]` */
   bands?: EntityRow[];
-  /** Default: `{}` */
-  camera?: unknown;
+  camera?: EntityRow;
   className?: string;
   /** Default: `[]` */
   compartments?: EntityRow[];

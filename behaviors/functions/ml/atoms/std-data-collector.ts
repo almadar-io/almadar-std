@@ -182,7 +182,7 @@ export function stdDataCollectorMlDataCollectorOrbital(params: StdDataCollectorM
             'default': [],
             'description': 'Data points accumulated in the current cycle.',
             'items': {
-              'type': 'string',
+              'type': 'opaque',
             },
             'name': 'buffer',
             'type': 'array',
@@ -229,7 +229,7 @@ export function stdDataCollectorMlDataCollectorOrbital(params: StdDataCollectorM
               {
                 'name': 'buffer',
                 'required': true,
-                'type': '[any]',
+                'type': '[opaque]',
               },
               {
                 'name': 'count',
@@ -266,7 +266,7 @@ export function stdDataCollectorMlDataCollectorOrbital(params: StdDataCollectorM
                 {
                   'name': 'point',
                   'required': true,
-                  'type': 'any',
+                  'type': 'opaque',
                 },
               ],
             },
@@ -278,7 +278,7 @@ export function stdDataCollectorMlDataCollectorOrbital(params: StdDataCollectorM
                 {
                   'name': 'buffer',
                   'required': true,
-                  'type': '[any]',
+                  'type': '[opaque]',
                 },
                 {
                   'name': 'count',

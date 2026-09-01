@@ -126,6 +126,16 @@
               "tier": "presentation",
               "type": "string"
             },
+            "drawables": {
+              "default": [],
+              "description": "Neutral game-canvas drawables (e.g. `draw-sprite`, `draw-fx-layer`) painted in world coordinates via the supplied `projector`. This lets the learning canvas reuse the game drawable vocabulary without reimplementing sprites/FX.",
+              "items": {
+                "type": "node"
+              },
+              "label": "Drawables",
+              "tier": "presentation",
+              "type": "[node]"
+            },
             "error": {
               "description": "Error state.",
               "label": "Error",
@@ -187,6 +197,39 @@
               "label": "On Shape Hover",
               "tier": "presentation",
               "type": "event"
+            },
+            "projector": {
+              "description": "World-to-pixel projector for `drawables`. When absent, `drawables` are ignored.",
+              "label": "Projector",
+              "properties": {
+                "diamondTopY": {
+                  "name": "diamondTopY",
+                  "required": true,
+                  "type": "number"
+                },
+                "floorHeight": {
+                  "name": "floorHeight",
+                  "required": true,
+                  "type": "number"
+                },
+                "squareGrid": {
+                  "name": "squareGrid",
+                  "required": true,
+                  "type": "boolean"
+                },
+                "tileWidth": {
+                  "name": "tileWidth",
+                  "required": true,
+                  "type": "number"
+                },
+                "worldPixelDirect": {
+                  "name": "worldPixelDirect",
+                  "required": true,
+                  "type": "boolean"
+                }
+              },
+              "tier": "presentation",
+              "type": "LearningCanvasProjector"
             },
             "readouts": {
               "default": [],
@@ -533,6 +576,7 @@
           },
           "emits": [
             {
+              "definerKnob": "onShapeClick",
               "description": "Clicked shape payload: { id?, type?, index }.",
               "event": "@config.onShapeClick",
               "eventId": "evt_01KXG052TZPXV2VEPJJ9J5T8MK",
@@ -561,6 +605,7 @@
               "tier": "essential"
             },
             {
+              "definerKnob": "onShapeHover",
               "description": "Hovered shape payload: { id?, type?, index }.",
               "event": "@config.onShapeHover",
               "eventId": "evt_01KXG052TZ4K38344BSHEHV9H7",
@@ -755,6 +800,10 @@
                     "type": "[object]"
                   },
                   {
+                    "name": "drawables",
+                    "type": "[node]"
+                  },
+                  {
                     "name": "readouts",
                     "properties": [
                       {
@@ -925,12 +974,14 @@
                       "animate": "@config.animate",
                       "backgroundColor": "@config.backgroundColor",
                       "className": "@config.className",
+                      "drawables": "@config.drawables",
                       "error": "@config.error",
                       "height": "@config.height",
                       "interactive": "@config.interactive",
                       "isLoading": "@config.isLoading",
                       "onShapeClick": "@config.onShapeClick",
                       "onShapeHover": "@config.onShapeHover",
+                      "projector": "@config.projector",
                       "readouts": "@config.readouts",
                       "shapes": "@config.shapes",
                       "traces": "@config.traces",
@@ -953,12 +1004,14 @@
                       "animate": "@config.animate",
                       "backgroundColor": "@config.backgroundColor",
                       "className": "@config.className",
+                      "drawables": "@payload.drawables",
                       "error": "@config.error",
                       "height": "@config.height",
                       "interactive": "@config.interactive",
                       "isLoading": "@config.isLoading",
                       "onShapeClick": "@config.onShapeClick",
                       "onShapeHover": "@config.onShapeHover",
+                      "projector": "@config.projector",
                       "readouts": "@payload.readouts",
                       "shapes": "@payload.shapes",
                       "traces": "@payload.traces",

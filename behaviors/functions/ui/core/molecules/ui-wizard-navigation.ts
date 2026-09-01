@@ -57,27 +57,6 @@ export interface StdUiWizardNavigationCompletePayload {
 }
 
 /**
- * Payload shape for the `BACK_CLICK` event.
- */
-export interface StdUiWizardNavigationBackClickPayload {
-  id?: string;
-}
-
-/**
- * Payload shape for the `NEXT_CLICK` event.
- */
-export interface StdUiWizardNavigationNextClickPayload {
-  id?: string;
-}
-
-/**
- * Payload shape for the `COMPLETE_CLICK` event.
- */
-export interface StdUiWizardNavigationCompleteClickPayload {
-  id?: string;
-}
-
-/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait

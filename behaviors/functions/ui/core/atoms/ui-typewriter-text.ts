@@ -33,13 +33,6 @@ const ALIAS = 'UiTypewriterText';
 export type StdUiTypewriterTextEventKey = 'COMPLETE' | 'INIT';
 
 /**
- * Payload shape for the `COMPLETE` event.
- */
-export interface StdUiTypewriterTextCompletePayload {
-  id?: string;
-}
-
-/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait

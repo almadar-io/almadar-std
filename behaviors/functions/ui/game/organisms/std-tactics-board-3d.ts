@@ -681,8 +681,17 @@ export function stdTacticsBoard3dTacticsBoard3DOrbital(params: StdTacticsBoard3d
           },
           {
             'default': {},
+            'items': {
+              'items': {
+                'items': {
+                  'type': 'node',
+                },
+                'type': 'array',
+              },
+              'type': 'object',
+            },
             'name': 'meshAssetArt',
-            'type': 'string',
+            'type': 'object',
           },
         ];
         const extras = params.fields ?? [];

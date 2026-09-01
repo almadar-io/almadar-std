@@ -33,31 +33,10 @@ const ALIAS = 'UiHeader';
 export type StdUiHeaderEventKey = 'INIT' | 'LOGO_CLICK' | 'MENU_TOGGLE' | 'SEARCH' | 'USER_CLICK';
 
 /**
- * Payload shape for the `MENU_TOGGLE` event.
- */
-export interface StdUiHeaderMenuTogglePayload {
-  id?: string;
-}
-
-/**
  * Payload shape for the `SEARCH` event.
  */
 export interface StdUiHeaderSearchPayload {
   value?: string;
-}
-
-/**
- * Payload shape for the `USER_CLICK` event.
- */
-export interface StdUiHeaderUserClickPayload {
-  id?: string;
-}
-
-/**
- * Payload shape for the `LOGO_CLICK` event.
- */
-export interface StdUiHeaderLogoClickPayload {
-  id?: string;
 }
 
 /**

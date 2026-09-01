@@ -36,7 +36,7 @@ export type StdGraphBuilderEventKey = 'BUILD_GRAPH' | 'GRAPH_READY' | 'INIT' | '
  * Payload shape for the `GRAPH_READY` event.
  */
 export interface StdGraphBuilderGraphReadyPayload {
-  nodes: EntityRow[];
+  nodes: unknown;
   edges: EntityRow[];
   nodeCount: number;
   edgeCount: number;
@@ -187,6 +187,9 @@ export function stdGraphBuilderGraphBuilderOrbital(params: StdGraphBuilderGraphB
           {
             'default': [],
             'items': {
+              'items': {
+                'type': 'scalar',
+              },
               'type': 'object',
             },
             'name': 'nodes',
@@ -195,6 +198,18 @@ export function stdGraphBuilderGraphBuilderOrbital(params: StdGraphBuilderGraphB
           {
             'default': [],
             'items': {
+              'properties': {
+                'source': {
+                  'name': 'source',
+                  'required': true,
+                  'type': 'string',
+                },
+                'target': {
+                  'name': 'target',
+                  'required': true,
+                  'type': 'string',
+                },
+              },
               'type': 'object',
             },
             'name': 'edges',
@@ -263,12 +278,12 @@ export function stdGraphBuilderGraphBuilderOrbital(params: StdGraphBuilderGraphB
               {
                 'name': 'nodes',
                 'required': true,
-                'type': '[object]',
+                'type': '[Map<string,scalar>]',
               },
               {
                 'name': 'edges',
                 'required': true,
-                'type': '[object]',
+                'type': '[GraphBuilderEdge]',
               },
               {
                 'name': 'nodeCount',
@@ -301,7 +316,7 @@ export function stdGraphBuilderGraphBuilderOrbital(params: StdGraphBuilderGraphB
                 {
                   'name': 'entities',
                   'required': true,
-                  'type': '[object]',
+                  'type': '[opaque]',
                 },
               ],
             },
@@ -317,12 +332,12 @@ export function stdGraphBuilderGraphBuilderOrbital(params: StdGraphBuilderGraphB
                 {
                   'name': 'nodes',
                   'required': true,
-                  'type': '[object]',
+                  'type': '[Map<string,scalar>]',
                 },
                 {
                   'name': 'edges',
                   'required': true,
-                  'type': '[object]',
+                  'type': '[GraphBuilderEdge]',
                 },
                 {
                   'name': 'nodeCount',

@@ -36,14 +36,14 @@ export type StdRatingReviewEventKey = 'CANCEL_REVIEW' | 'CHANGE_SORT' | 'INIT' |
  * Payload shape for the `RATE_DRAFT` event.
  */
 export interface StdRatingReviewRateDraftPayload {
-  rating?: number;
+  value?: number;
 }
 
 /**
  * Payload shape for the `SUBMIT_REVIEW` event.
  */
 export interface StdRatingReviewSubmitReviewPayload {
-  data?: EntityRow;
+  data: unknown;
 }
 
 /**
@@ -612,7 +612,7 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
             'event': 'RATE_DRAFT',
             'payloadSchema': [
               {
-                'name': 'rating',
+                'name': 'value',
                 'type': 'number',
               },
             ],
@@ -625,7 +625,8 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
             'payloadSchema': [
               {
                 'name': 'data',
-                'type': 'object',
+                'required': true,
+                'type': '@entity',
               },
             ],
             'synonyms': 'saved, posted, sent',
@@ -921,7 +922,7 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
               'name': 'Rate Draft',
               'payloadSchema': [
                 {
-                  'name': 'rating',
+                  'name': 'value',
                   'type': 'number',
                 },
               ],
@@ -935,7 +936,8 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
               'payloadSchema': [
                 {
                   'name': 'data',
-                  'type': 'object',
+                  'required': true,
+                  'type': '@entity',
                 },
               ],
               'synonyms': 'saved, posted, sent',
@@ -2386,7 +2388,7 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
                 [
                   'set',
                   '@entity.draftRating',
-                  '@payload.rating',
+                  '@payload.value',
                 ],
                 [
                   'render-ui',
@@ -2734,7 +2736,7 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
             'event': 'RATE_DRAFT',
             'payloadSchema': [
               {
-                'name': 'rating',
+                'name': 'value',
                 'type': 'number',
               },
             ],
@@ -2747,7 +2749,8 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
             'payloadSchema': [
               {
                 'name': 'data',
-                'type': 'object',
+                'required': true,
+                'type': '@entity',
               },
             ],
             'synonyms': 'saved, posted, sent',
@@ -2847,7 +2850,7 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
               'name': 'Rate Draft',
               'payloadSchema': [
                 {
-                  'name': 'rating',
+                  'name': 'value',
                   'type': 'number',
                 },
               ],
@@ -2861,7 +2864,8 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
               'payloadSchema': [
                 {
                   'name': 'data',
-                  'type': 'object',
+                  'required': true,
+                  'type': '@entity',
                 },
               ],
               'synonyms': 'saved, posted, sent',
@@ -3026,7 +3030,7 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
                 [
                   'set',
                   '@entity.draftRating',
-                  '@payload.rating',
+                  '@payload.value',
                 ],
                 [
                   'render-ui',

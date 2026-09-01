@@ -33,13 +33,6 @@ const ALIAS = 'UiErrorState';
 export type StdUiErrorStateEventKey = 'INIT' | 'RETRY';
 
 /**
- * Payload shape for the `RETRY` event.
- */
-export interface StdUiErrorStateRetryPayload {
-  id?: string;
-}
-
-/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait

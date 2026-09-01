@@ -36,21 +36,24 @@ export type StdUiTagInputEventKey = 'ADD' | 'CHANGE' | 'INIT' | 'REMOVE';
  * Payload shape for the `CHANGE` event.
  */
 export interface StdUiTagInputChangePayload {
-  next?: EntityRow[];
+  next?: string[];
 }
 
 /**
  * Payload shape for the `ADD` event.
  */
 export interface StdUiTagInputAddPayload {
-  id?: string;
+  tag: string;
+  value: string[];
 }
 
 /**
  * Payload shape for the `REMOVE` event.
  */
 export interface StdUiTagInputRemovePayload {
-  id?: string;
+  tag: string;
+  index: number;
+  value: string[];
 }
 
 /**

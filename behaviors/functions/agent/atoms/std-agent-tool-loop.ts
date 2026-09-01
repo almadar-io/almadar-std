@@ -218,7 +218,7 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
                 },
                 'toolCalls': {
                   'items': {
-                    'type': 'object',
+                    'type': 'opaque',
                   },
                   'name': 'toolCalls',
                   'required': false,
@@ -247,7 +247,7 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
                 'schema': {
                   'name': 'schema',
                   'required': false,
-                  'type': 'object',
+                  'type': 'opaque',
                 },
               },
               'type': 'object',
@@ -350,7 +350,7 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
                     },
                     {
                       'name': 'toolCalls',
-                      'type': '[object]',
+                      'type': '[opaque]',
                     },
                     {
                       'name': 'toolCallId',
@@ -375,7 +375,7 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
                     },
                     {
                       'name': 'schema',
-                      'type': 'object',
+                      'type': 'opaque',
                     },
                   ],
                   'required': true,

@@ -449,7 +449,7 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
             'description': 'The held data of the gated action, replayed by the downstream listener when the request is granted.',
             'name': 'payload',
             'synonyms': 'request data, held payload, pending data, gated data',
-            'type': 'object',
+            'type': 'opaque',
           },
         ];
         const extras = params.fields ?? [];
@@ -759,7 +759,7 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
                   },
                   {
                     'name': 'payload',
-                    'type': 'object',
+                    'type': 'opaque',
                   },
                 ],
                 'type': 'object',
@@ -831,7 +831,7 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
                   },
                   {
                     'name': 'payload',
-                    'type': 'object',
+                    'type': 'opaque',
                   },
                 ],
                 'type': 'object',
@@ -907,7 +907,7 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
               },
               {
                 'name': 'payload',
-                'type': 'object',
+                'type': 'opaque',
               },
             ],
             'scope': 'external',
@@ -1145,7 +1145,7 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
                     },
                     {
                       'name': 'payload',
-                      'type': 'object',
+                      'type': 'opaque',
                     },
                   ],
                   'type': 'object',
@@ -1218,7 +1218,7 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
                     },
                     {
                       'name': 'payload',
-                      'type': 'object',
+                      'type': 'opaque',
                     },
                   ],
                   'type': 'object',
@@ -1321,7 +1321,7 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
                 },
                 {
                   'name': 'payload',
-                  'type': 'object',
+                  'type': 'opaque',
                 },
               ],
               'synonyms': 'approved, authorized, confirmed, validated',

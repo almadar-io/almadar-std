@@ -33,13 +33,6 @@ const ALIAS = 'UiFormSectionHeader';
 export type StdUiFormSectionHeaderEventKey = 'INIT' | 'TOGGLE';
 
 /**
- * Payload shape for the `TOGGLE` event.
- */
-export interface StdUiFormSectionHeaderTogglePayload {
-  id?: string;
-}
-
-/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait

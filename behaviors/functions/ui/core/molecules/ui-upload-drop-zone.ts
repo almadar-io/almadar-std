@@ -36,7 +36,7 @@ export type StdUiUploadDropZoneEventKey = 'ACTION' | 'INIT';
  * Payload shape for the `ACTION` event.
  */
 export interface StdUiUploadDropZoneActionPayload {
-  id?: string;
+  files: EntityRow[];
 }
 
 /**
@@ -49,7 +49,6 @@ export interface StdUiUploadDropZoneConfig {
   accept?: string;
   /** Default: `"ACTION"` */
   action?: string;
-  /** Default: `{}` */
   actionPayload?: unknown;
   className?: string;
   description?: string;

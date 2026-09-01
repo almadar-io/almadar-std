@@ -33,17 +33,11 @@ const ALIAS = 'UiEntityList';
 export type StdUiEntityListEventKey = 'EntityListLoaded' | 'INIT' | 'ITEM_ACTIONS' | 'VIEW';
 
 /**
- * Payload shape for the `ITEM_ACTIONS` event.
- */
-export interface StdUiEntityListItemActionsPayload {
-  id?: string;
-}
-
-/**
  * Payload shape for the `VIEW` event.
  */
 export interface StdUiEntityListViewPayload {
-  id?: string;
+  id: string;
+  row: unknown;
 }
 
 /**
@@ -74,7 +68,7 @@ export interface StdUiEntityListConfig {
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `[{"event":"VIEW","label":"View","variant":"ghost"}]` */
-  itemActions?: unknown;
+  itemActions?: EntityRow[];
   pageProp?: number;
   pageSize?: number;
   searchValue?: string;
@@ -297,9 +291,52 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
               },
             ],
             'description': 'Item actions - schema-driven or function-based',
+            'items': {
+              'properties': {
+                'event': {
+                  'name': 'event',
+                  'required': false,
+                  'type': 'event',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': true,
+                  'type': 'string',
+                },
+                'navigatesTo': {
+                  'name': 'navigatesTo',
+                  'required': false,
+                  'type': 'string',
+                },
+                'placement': {
+                  'name': 'placement',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'row',
+                    'bulk',
+                    'card',
+                    'footer',
+                  ],
+                },
+                'variant': {
+                  'name': 'variant',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'primary',
+                    'secondary',
+                    'ghost',
+                    'danger',
+                    'default',
+                  ],
+                },
+              },
+              'type': 'object',
+            },
             'label': 'Item Actions',
             'tier': 'presentation',
-            'type': 'json',
+            'type': '[EntityListItemActionsItem]',
           },
           'pageProp': {
             'description': 'Current page number',
@@ -389,12 +426,6 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
           {
             'description': 'Item actions - schema-driven or function-based',
             'event': 'ITEM_ACTIONS',
-            'payloadSchema': [
-              {
-                'name': 'id',
-                'type': 'string',
-              },
-            ],
             'scope': 'external',
             'tier': 'essential',
           },
@@ -404,7 +435,13 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
             'payloadSchema': [
               {
                 'name': 'id',
+                'required': true,
                 'type': 'string',
+              },
+              {
+                'name': 'row',
+                'required': true,
+                'type': '@entity',
               },
             ],
             'scope': 'external',
@@ -455,12 +492,6 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
               'description': 'Item actions - schema-driven or function-based',
               'key': 'ITEM_ACTIONS',
               'name': 'Item Actions',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
               'tier': 'essential',
             },
             {
@@ -470,7 +501,13 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
               'payloadSchema': [
                 {
                   'name': 'id',
+                  'required': true,
                   'type': 'string',
+                },
+                {
+                  'name': 'row',
+                  'required': true,
+                  'type': '@entity',
                 },
               ],
               'tier': 'essential',

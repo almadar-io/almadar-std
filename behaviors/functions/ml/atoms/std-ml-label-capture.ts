@@ -201,12 +201,12 @@ export function stdMlLabelCaptureMlLabelCaptureOrbital(params: StdMlLabelCapture
           {
             'description': 'The input that was judged.',
             'name': 'input',
-            'type': 'string',
+            'type': 'opaque',
           },
           {
             'description': 'The verdict/output produced by the rung.',
             'name': 'verdict',
-            'type': 'string',
+            'type': 'opaque',
           },
           {
             'default': '',
@@ -217,7 +217,7 @@ export function stdMlLabelCaptureMlLabelCaptureOrbital(params: StdMlLabelCapture
           {
             'description': 'The observed ground-truth outcome, once known.',
             'name': 'outcome',
-            'type': 'string',
+            'type': 'opaque',
           },
           {
             'default': '',
@@ -304,12 +304,12 @@ export function stdMlLabelCaptureMlLabelCaptureOrbital(params: StdMlLabelCapture
                 {
                   'name': 'input',
                   'required': true,
-                  'type': 'json',
+                  'type': 'opaque',
                 },
                 {
                   'name': 'verdict',
                   'required': true,
-                  'type': 'json',
+                  'type': 'opaque',
                 },
                 {
                   'name': 'source',
@@ -318,7 +318,7 @@ export function stdMlLabelCaptureMlLabelCaptureOrbital(params: StdMlLabelCapture
                 },
                 {
                   'name': 'outcome',
-                  'type': 'json',
+                  'type': 'opaque',
                 },
               ],
             },

@@ -365,6 +365,21 @@ export function stdEsignRequestESignRequestOrbital(params: StdEsignRequestESignR
             ],
             'type': 'unknown',
           },
+          'itemActions': {
+            'default': [
+              {
+                'event': 'SEND_REQUEST',
+                'label': 'Send',
+                'variant': 'primary',
+              },
+              {
+                'event': 'REVOKE_REQUEST',
+                'label': 'Revoke',
+                'variant': 'danger',
+              },
+            ],
+            'type': 'unknown',
+          },
           'look': {
             'default': '@config.tableLook',
             'type': 'unknown',

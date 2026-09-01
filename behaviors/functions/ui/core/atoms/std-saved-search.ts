@@ -90,7 +90,7 @@ export interface StdSavedSearchSavedSearchUpdatedPayload {
   id: string;
   name: string;
   query?: string;
-  filters?: EntityRow;
+  filters?: Record<string, EntityRow>;
   alertEnabled?: boolean;
   alertFrequency?: string;
   userId?: string;
@@ -277,6 +277,9 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
           },
           {
             'description': 'Criteria used to define the search.',
+            'items': {
+              'type': 'scalar',
+            },
             'name': 'filters',
             'synonyms': 'criteria, conditions, constraints',
             'type': 'object',
@@ -480,7 +483,7 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
               },
               {
                 'name': 'filters',
-                'type': 'object',
+                'type': 'Map<string,scalar>',
               },
               {
                 'name': 'alertEnabled',
@@ -628,7 +631,7 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
                 },
                 {
                   'name': 'filters',
-                  'type': 'object',
+                  'type': 'Map<string,scalar>',
                 },
                 {
                   'name': 'alertEnabled',

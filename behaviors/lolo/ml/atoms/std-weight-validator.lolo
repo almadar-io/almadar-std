@@ -2,13 +2,14 @@ app std-weight-validator "1.0.0"
 "std-weight-validator — a constraint-checking atom for model weights, applying the same discipline as the zero-warning validator to weights: constrained and checked, not trusted (Almadar_Intelligence_Ladder.md §7.5). Checks a candidate weight tensor against three pure predicate constraints — magnitude bounds (every element's absolute value must clear maxMagnitude), forbidden regions (excluded [min,max] bands no weight may land in even within the magnitude bound), and a regression threshold against a baseline tensor (per-element drift must not exceed regressionThreshold; 0 disables the check) — and reports every violated check with its detail. Emits WEIGHTS_ACCEPTED when all three checks clear, or WEIGHTS_REJECTED carrying the full violations list otherwise. Pure circuit logic: predicates and comparisons only, no ML compute, no model call."
 
 type Range = { min: float!, max: float! }
+type WeightViolation = { check : string!, value : float, index : int }
 
 orbital MlWeightValidatorOrbital {
 
   entity WeightValidation [runtime] {
     weights    : [float]  = []
     baseline   : [float]  = []
-    violations : [object] = []
+    violations : [WeightViolation] = []
     valid      : boolean  = false
     status     : "idle" | "checked" = idle
   }
@@ -86,8 +87,8 @@ orbital MlWeightValidatorOrbital {
         @tier "primary"
 
       WEIGHTS_REJECTED -> external {
-        violations : [object]!
-        request : object
+        violations : [WeightViolation]!
+        request : opaque
       }
         @description "At least one constraint check failed; violations lists every failing check with its detail (magnitude, forbidden-region, or regression). request echoes the originating request untouched so the next rung can project its own inputs out of it"
         @tier "primary"
@@ -97,7 +98,7 @@ orbital MlWeightValidatorOrbital {
       VALIDATE_WEIGHTS {
         weights  : [float]!
         baseline : [float]
-        request  : object
+        request  : opaque
       }
     }
   }

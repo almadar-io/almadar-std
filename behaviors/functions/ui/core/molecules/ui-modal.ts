@@ -33,20 +33,6 @@ const ALIAS = 'UiModal';
 export type StdUiModalEventKey = 'CLOSE' | 'EXITED' | 'INIT' | 'OPEN';
 
 /**
- * Payload shape for the `CLOSE` event.
- */
-export interface StdUiModalClosePayload {
-  id?: string;
-}
-
-/**
- * Payload shape for the `EXITED` event.
- */
-export interface StdUiModalExitedPayload {
-  id?: string;
-}
-
-/**
  * Payload shape for the `OPEN` event.
  */
 export interface StdUiModalOpenPayload {

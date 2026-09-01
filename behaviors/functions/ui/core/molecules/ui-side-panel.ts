@@ -33,13 +33,6 @@ const ALIAS = 'UiSidePanel';
 export type StdUiSidePanelEventKey = 'CLOSE' | 'INIT' | 'OPEN';
 
 /**
- * Payload shape for the `CLOSE` event.
- */
-export interface StdUiSidePanelClosePayload {
-  id?: string;
-}
-
-/**
  * Payload shape for the `OPEN` event.
  */
 export interface StdUiSidePanelOpenPayload {

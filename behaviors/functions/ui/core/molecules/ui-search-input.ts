@@ -43,7 +43,8 @@ export interface StdUiSearchInputSearchPayload {
  * Payload shape for the `EVENT` event.
  */
 export interface StdUiSearchInputEventPayload {
-  id?: string;
+  searchTerm: string;
+  entity?: string;
 }
 
 /**

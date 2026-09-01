@@ -42,6 +42,22 @@ orbital NumberStepperOrbital {
           label: @config.label
           type: number-stepper
         })
+      ACTION -> idle
+        (set @entity.value ?value)
+        (render-ui main {
+          value: @entity.value
+          min: @config.min
+          max: @config.max
+          step: @config.step
+          size: @config.size
+          disabled: @config.disabled
+          onChange: @config.onChange
+          action: @config.action
+          actionPayload: @config.actionPayload
+          className: @config.className
+          label: @config.label
+          type: number-stepper
+        })
     }
 
     emits {
@@ -51,7 +67,7 @@ orbital NumberStepperOrbital {
         @description "Direct onChange callback"
         @tier "essential"
       @config.action -> external {
-        id : string
+        value : number!
       }
         @description "Declarative event name for value changes"
         @tier "essential"
@@ -60,6 +76,9 @@ orbital NumberStepperOrbital {
     listens {
       CHANGE {
         value : number
+      }
+      ACTION {
+        value : number!
       }
     }
 
@@ -96,7 +115,7 @@ orbital NumberStepperOrbital {
         @label "Action"
         @description "Declarative event name for value changes"
         @tier "presentation"
-      actionPayload : json = {}
+      actionPayload : @payload @config.action
         @label "Action Payload"
         @description "Payload to include with the action event"
         @tier "presentation"

@@ -33,13 +33,6 @@ const ALIAS = 'UiFlipContainer';
 export type StdUiFlipContainerEventKey = 'CLICK' | 'INIT';
 
 /**
- * Payload shape for the `CLICK` event.
- */
-export interface StdUiFlipContainerClickPayload {
-  id?: string;
-}
-
-/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait

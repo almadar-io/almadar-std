@@ -1,7 +1,7 @@
 app std-reminder-scheduler "1.1.0"
 "std-reminder-scheduler — deadline reminders for a target entity. A periodic tick scans the target for records whose `dateField` deadline (a ms-epoch number or an ISO datetime string) is within `offsetHours` of now and that have not been reminded yet, and emits `ReminderDue` for each — every matching record, via a self-driving scan loop. Marks each record `remindedAt` so it isn't reminded twice. Compose alongside std-notify-on-event to deliver the reminder."
 orbital ReminderSchedulerOrbital {
-    type ScanRecordsLoaded = Event { data : [object] } "Internal: target records due for a reminder."
+    type ScanRecordsLoaded = Event { data : [@entity @config.targetEntity] } "Internal: target records due for a reminder."
 
     type ScanFailed = Event { error : string, code : string } "Internal: scan fetch / persist failed."
 
@@ -66,7 +66,7 @@ orbital ReminderSchedulerOrbital {
         template : string
       }
       ScanRecordsLoaded {
-        data : [object]
+        data : [@entity @config.targetEntity]
       }
       ScanFailed {
         error : string
@@ -79,7 +79,7 @@ orbital ReminderSchedulerOrbital {
 
     listens {
       ScanRecordsLoaded {
-        data : [object]
+        data : [@entity @config.targetEntity]
       }
       ScanFailed {
         error : string

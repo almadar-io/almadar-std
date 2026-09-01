@@ -51,7 +51,7 @@ export interface StdUiCalendarGridDayClickPayload {
  * Payload shape for the `EVENT_CLICK` event.
  */
 export interface StdUiCalendarGridEventClickPayload {
-  event?: EntityRow;
+  event?: unknown;
 }
 
 /**
@@ -60,20 +60,6 @@ export interface StdUiCalendarGridEventClickPayload {
 export interface StdUiCalendarGridLongPressPayload {
   date: string;
   time?: string;
-}
-
-/**
- * Payload shape for the `SWIPE_LEFT` event.
- */
-export interface StdUiCalendarGridSwipeLeftPayload {
-  id?: string;
-}
-
-/**
- * Payload shape for the `SWIPE_RIGHT` event.
- */
-export interface StdUiCalendarGridSwipeRightPayload {
-  id?: string;
 }
 
 /**
@@ -98,7 +84,6 @@ export interface StdUiCalendarGridConfig {
   endField?: string;
   /** Default: `"LONG_PRESS"` */
   longPressEvent?: string;
-  /** Default: `{}` */
   longPressPayload?: unknown;
   /** Default: `"DAY_CLICK"` */
   onDayClick?: string;

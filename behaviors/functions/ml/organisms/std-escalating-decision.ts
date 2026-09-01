@@ -278,6 +278,34 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
           {
             'default': {},
             'name': 'request',
+            'properties': {
+              'accepted': {
+                'items': {
+                  'type': 'scalar',
+                },
+                'name': 'accepted',
+                'required': true,
+                'type': 'array',
+              },
+              'candidate': {
+                'name': 'candidate',
+                'required': true,
+                'type': 'scalar',
+              },
+              'categories': {
+                'items': {
+                  'type': 'string',
+                },
+                'name': 'categories',
+                'required': true,
+                'type': 'array',
+              },
+              'key': {
+                'name': 'key',
+                'required': true,
+                'type': 'scalar',
+              },
+            },
             'type': 'object',
           },
           {
@@ -299,6 +327,34 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
           {
             'default': {},
             'name': 'input',
+            'properties': {
+              'accepted': {
+                'items': {
+                  'type': 'scalar',
+                },
+                'name': 'accepted',
+                'required': true,
+                'type': 'array',
+              },
+              'candidate': {
+                'name': 'candidate',
+                'required': true,
+                'type': 'scalar',
+              },
+              'categories': {
+                'items': {
+                  'type': 'string',
+                },
+                'name': 'categories',
+                'required': true,
+                'type': 'array',
+              },
+              'key': {
+                'name': 'key',
+                'required': true,
+                'type': 'scalar',
+              },
+            },
             'type': 'object',
           },
           {
@@ -317,7 +373,102 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
           {
             'default': [],
             'items': {
-              'type': 'object',
+              'properties': {
+                'ContractNotATensor': {
+                  'name': 'ContractNotATensor',
+                  'properties': {
+                    'actualType': {
+                      'name': 'actualType',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'type': {
+                      'name': 'type',
+                      'required': false,
+                      'type': 'string',
+                      'values': [
+                        'not_a_tensor',
+                      ],
+                    },
+                  },
+                  'type': 'object',
+                },
+                'ContractRangeViolation': {
+                  'name': 'ContractRangeViolation',
+                  'properties': {
+                    'actualMax': {
+                      'name': 'actualMax',
+                      'required': false,
+                      'type': 'number',
+                    },
+                    'actualMin': {
+                      'name': 'actualMin',
+                      'required': false,
+                      'type': 'number',
+                    },
+                    'dim': {
+                      'name': 'dim',
+                      'required': false,
+                      'type': 'number',
+                    },
+                    'max': {
+                      'name': 'max',
+                      'required': false,
+                      'type': 'number',
+                    },
+                    'min': {
+                      'name': 'min',
+                      'required': false,
+                      'type': 'number',
+                    },
+                    'type': {
+                      'name': 'type',
+                      'required': false,
+                      'type': 'string',
+                      'values': [
+                        'range_violation',
+                      ],
+                    },
+                  },
+                  'type': 'object',
+                },
+                'ContractShapeMismatch': {
+                  'name': 'ContractShapeMismatch',
+                  'properties': {
+                    'actual': {
+                      'items': {
+                        'type': 'number',
+                      },
+                      'name': 'actual',
+                      'required': false,
+                      'type': 'array',
+                    },
+                    'expected': {
+                      'items': {
+                        'type': 'number',
+                      },
+                      'name': 'expected',
+                      'required': false,
+                      'type': 'array',
+                    },
+                    'type': {
+                      'name': 'type',
+                      'required': false,
+                      'type': 'string',
+                      'values': [
+                        'shape_mismatch',
+                      ],
+                    },
+                  },
+                  'type': 'object',
+                },
+              },
+              'type': 'union',
+              'values': [
+                'ContractShapeMismatch',
+                'ContractRangeViolation',
+                'ContractNotATensor',
+              ],
             },
             'name': 'violations',
             'type': 'array',
@@ -330,6 +481,34 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
           {
             'default': {},
             'name': 'request',
+            'properties': {
+              'accepted': {
+                'items': {
+                  'type': 'scalar',
+                },
+                'name': 'accepted',
+                'required': true,
+                'type': 'array',
+              },
+              'candidate': {
+                'name': 'candidate',
+                'required': true,
+                'type': 'scalar',
+              },
+              'categories': {
+                'items': {
+                  'type': 'string',
+                },
+                'name': 'categories',
+                'required': true,
+                'type': 'array',
+              },
+              'key': {
+                'name': 'key',
+                'required': true,
+                'type': 'scalar',
+              },
+            },
             'type': 'object',
           },
           {
@@ -376,6 +555,34 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
           {
             'default': {},
             'name': 'request',
+            'properties': {
+              'accepted': {
+                'items': {
+                  'type': 'scalar',
+                },
+                'name': 'accepted',
+                'required': true,
+                'type': 'array',
+              },
+              'candidate': {
+                'name': 'candidate',
+                'required': true,
+                'type': 'scalar',
+              },
+              'categories': {
+                'items': {
+                  'type': 'string',
+                },
+                'name': 'categories',
+                'required': true,
+                'type': 'array',
+              },
+              'key': {
+                'name': 'key',
+                'required': true,
+                'type': 'scalar',
+              },
+            },
             'type': 'object',
           },
           {
@@ -404,15 +611,37 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
               {
                 'name': 'candidate',
                 'required': true,
-                'type': 'any',
+                'type': 'scalar',
               },
               {
                 'name': 'key',
                 'required': true,
-                'type': 'any',
+                'type': 'scalar',
               },
               {
                 'name': 'request',
+                'properties': [
+                  {
+                    'name': 'candidate',
+                    'required': true,
+                    'type': 'scalar',
+                  },
+                  {
+                    'name': 'key',
+                    'required': true,
+                    'type': 'scalar',
+                  },
+                  {
+                    'name': 'accepted',
+                    'required': true,
+                    'type': '[scalar]',
+                  },
+                  {
+                    'name': 'categories',
+                    'required': true,
+                    'type': '[string]',
+                  },
+                ],
                 'required': true,
                 'type': 'object',
               },
@@ -437,17 +666,17 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
                 {
                   'name': 'candidate',
                   'required': true,
-                  'type': 'any',
+                  'type': 'scalar',
                 },
                 {
                   'name': 'key',
                   'required': true,
-                  'type': 'any',
+                  'type': 'scalar',
                 },
                 {
                   'name': 'accepted',
                   'required': true,
-                  'type': '[any]',
+                  'type': '[scalar]',
                 },
                 {
                   'name': 'categories',
@@ -469,15 +698,37 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
                 {
                   'name': 'candidate',
                   'required': true,
-                  'type': 'any',
+                  'type': 'scalar',
                 },
                 {
                   'name': 'key',
                   'required': true,
-                  'type': 'any',
+                  'type': 'scalar',
                 },
                 {
                   'name': 'request',
+                  'properties': [
+                    {
+                      'name': 'candidate',
+                      'required': true,
+                      'type': 'scalar',
+                    },
+                    {
+                      'name': 'key',
+                      'required': true,
+                      'type': 'scalar',
+                    },
+                    {
+                      'name': 'accepted',
+                      'required': true,
+                      'type': '[scalar]',
+                    },
+                    {
+                      'name': 'categories',
+                      'required': true,
+                      'type': '[string]',
+                    },
+                  ],
                   'required': true,
                   'type': 'object',
                 },
@@ -686,7 +937,7 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
               {
                 'name': 'matched',
                 'required': true,
-                'type': 'any',
+                'type': 'opaque',
               },
               {
                 'name': 'reasoning',
@@ -799,7 +1050,7 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
                 {
                   'name': 'key',
                   'required': true,
-                  'type': 'any',
+                  'type': 'scalar',
                 },
               ],
             },
@@ -810,7 +1061,7 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
                 {
                   'name': 'entry',
                   'required': true,
-                  'type': 'any',
+                  'type': 'scalar',
                 },
               ],
             },
@@ -900,7 +1151,7 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
                 {
                   'name': 'matched',
                   'required': true,
-                  'type': 'any',
+                  'type': 'opaque',
                 },
                 {
                   'name': 'reasoning',

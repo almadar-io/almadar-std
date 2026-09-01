@@ -33,13 +33,6 @@ const ALIAS = 'UiRepeatableFormSection';
 export type StdUiRepeatableFormSectionEventKey = 'ADD' | 'INIT' | 'REMOVE' | 'REORDER';
 
 /**
- * Payload shape for the `ADD` event.
- */
-export interface StdUiRepeatableFormSectionAddPayload {
-  id?: string;
-}
-
-/**
  * Payload shape for the `REMOVE` event.
  */
 export interface StdUiRepeatableFormSectionRemovePayload {

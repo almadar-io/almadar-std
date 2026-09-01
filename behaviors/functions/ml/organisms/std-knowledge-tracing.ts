@@ -49,10 +49,10 @@ export interface StdKnowledgeTracingObservationMadePayload {
  * Payload shape for the `CAPTURE_LABEL` event.
  */
 export interface StdKnowledgeTracingCaptureLabelPayload {
-  input: unknown;
-  verdict: unknown;
+  input: EntityRow;
+  verdict: EntityRow;
   source: string;
-  outcome?: unknown;
+  outcome?: boolean;
 }
 
 type _StdKnowledgeTracingEntityName = 'KnowledgeState' | 'Posterior' | 'LabeledExample';
@@ -173,11 +173,11 @@ export function stdKnowledgeTracingKnowledgeTracingOrbital(params: StdKnowledgeT
           },
           {
             'name': 'input',
-            'type': 'string',
+            'type': 'opaque',
           },
           {
             'name': 'verdict',
-            'type': 'string',
+            'type': 'opaque',
           },
           {
             'default': '',
@@ -186,7 +186,7 @@ export function stdKnowledgeTracingKnowledgeTracingOrbital(params: StdKnowledgeT
           },
           {
             'name': 'outcome',
-            'type': 'string',
+            'type': 'opaque',
           },
           {
             'default': '',
@@ -227,13 +227,42 @@ export function stdKnowledgeTracingKnowledgeTracingOrbital(params: StdKnowledgeT
             'payloadSchema': [
               {
                 'name': 'input',
+                'properties': [
+                  {
+                    'name': 'skillId',
+                    'required': true,
+                    'type': 'string',
+                  },
+                ],
                 'required': true,
-                'type': 'any',
+                'type': 'object',
               },
               {
                 'name': 'verdict',
+                'properties': [
+                  {
+                    'name': 'status',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'mean',
+                    'required': true,
+                    'type': 'float',
+                  },
+                  {
+                    'name': 'intervalLow',
+                    'required': true,
+                    'type': 'float',
+                  },
+                  {
+                    'name': 'intervalHigh',
+                    'required': true,
+                    'type': 'float',
+                  },
+                ],
                 'required': true,
-                'type': 'any',
+                'type': 'object',
               },
               {
                 'name': 'source',
@@ -242,7 +271,7 @@ export function stdKnowledgeTracingKnowledgeTracingOrbital(params: StdKnowledgeT
               },
               {
                 'name': 'outcome',
-                'type': 'any',
+                'type': 'boolean',
               },
             ],
             'tier': 'secondary',
@@ -367,13 +396,42 @@ export function stdKnowledgeTracingKnowledgeTracingOrbital(params: StdKnowledgeT
               'payloadSchema': [
                 {
                   'name': 'input',
+                  'properties': [
+                    {
+                      'name': 'skillId',
+                      'required': true,
+                      'type': 'string',
+                    },
+                  ],
                   'required': true,
-                  'type': 'any',
+                  'type': 'object',
                 },
                 {
                   'name': 'verdict',
+                  'properties': [
+                    {
+                      'name': 'status',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'mean',
+                      'required': true,
+                      'type': 'float',
+                    },
+                    {
+                      'name': 'intervalLow',
+                      'required': true,
+                      'type': 'float',
+                    },
+                    {
+                      'name': 'intervalHigh',
+                      'required': true,
+                      'type': 'float',
+                    },
+                  ],
                   'required': true,
-                  'type': 'any',
+                  'type': 'object',
                 },
                 {
                   'name': 'source',
@@ -382,7 +440,7 @@ export function stdKnowledgeTracingKnowledgeTracingOrbital(params: StdKnowledgeT
                 },
                 {
                   'name': 'outcome',
-                  'type': 'any',
+                  'type': 'boolean',
                 },
               ],
               'tier': 'secondary',

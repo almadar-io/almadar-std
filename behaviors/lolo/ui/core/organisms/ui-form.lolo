@@ -10,7 +10,7 @@ orbital FormOrbital {
     inputType : string
     placeholder : string
     required : boolean
-    defaultValue : json
+    defaultValue : opaque
     options : [FormFieldsItemOptionsItem]
     values : [string]
     relation : FormFieldsItemRelation
@@ -69,10 +69,10 @@ orbital FormOrbital {
     message : string!
   }
   type FormEvaluationContext = {
-    formValues : Map string object!
-    globalVariables : Map string json!
-    localVariables : Map string json
-    entity : Map string object
+    formValues : Map string opaque!
+    globalVariables : Map string opaque!
+    localVariables : Map string opaque
+    entity : Map string opaque
   }
   type FormSectionsItem = {
     id : string!
@@ -89,7 +89,7 @@ orbital FormOrbital {
     inputType : string
     placeholder : string
     required : boolean
-    defaultValue : json
+    defaultValue : opaque
     options : [FormSectionsItemFieldsItemOptionsItem]
     values : [string]
     relation : FormSectionsItemFieldsItemRelation
@@ -115,8 +115,14 @@ orbital FormOrbital {
   }
   type FormFIELDCHANGEChange = {
     fieldId : string!
-    value : object!
-    formValues : Map string object!
+    value : string | number | boolean | [string] | FormFIELDCHANGEChangeValue!
+    formValues : Map string opaque!
+  }
+  type FormFIELDCHANGEChangeValue = {
+    name : string!
+    url : string!
+    mimeType : string!
+    sizeBytes : number!
   }
 
   entity FormItem [runtime] {
@@ -234,13 +240,11 @@ orbital FormOrbital {
 
     emits {
       @config.submitEvent -> external {
-        id : string
+        data : @entity!
       }
         @description "Event dispatch props (for trait state machine integration)"
         @tier "essential"
-      @config.cancelEvent -> external {
-        id : string
-      }
+      @config.cancelEvent -> external { }
         @description "Event to dispatch on cancel (defaults to 'CANCEL')"
         @tier "essential"
       @config.onFieldChange -> external {

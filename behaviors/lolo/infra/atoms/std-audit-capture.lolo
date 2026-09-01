@@ -1,7 +1,7 @@
 app std-audit-capture "1.2.0"
 "std-audit-capture — event-interceptor audit log / audit trail. Use when a user voices that a record's changes must be tracked, logged, or auditable (audit trail, track changes, change history, who edited what, mutation log, record changes, log every edit, edit history, modification log, who did what when, accountability log). Listens for the generic `EntityMutated` sentinel (rename via traitOverrides.events to the real mutation event, e.g. ContactSaved) and persists an AuditEntry row capturing actor, action, entity type/id, before/after snapshots, and timestamp. `captureEventTypes` filters on @payload.data.kind (empty = capture all). Compose with `std-lifecycle` to apply retention. Composable via `extraTraits` to interpose audit logging behind any mutating trait."
 orbital AuditCaptureOrbital {
-    type EntityMutated = Event { data : object } "Rename via traitOverrides.events to the upstream mutation event (e.g. ContactSaved, ContactDeleted)."
+    type EntityMutated = Event { data : @entity @config.captureEntity } "Rename via traitOverrides.events to the upstream mutation event (e.g. ContactSaved, ContactDeleted)."
 
     type AuditRecorded = Event { actor : string, action : string, entityType : string, entityId : string, recordedAt : number } "Re-emitted after the audit row persists; rename to wire downstream listeners (e.g. AuditDashboardAppended)."
 
@@ -11,8 +11,8 @@ orbital AuditCaptureOrbital {
     action : string @description "The specific operation performed on the entity." @synonyms "operation, event, activity, change" = ""
     entityType : string @description "The type of entity that was modified." @synonyms "type, kind, class" = ""
     entityId : string @description "Unique identifier for the entity being audited." @synonyms "entity identifier, record id, item id" = ""
-    before : object @description "The state of the entity prior to the modification." @synonyms "previous, original, old value" = {}
-    after : object @description "The state of the entity after a modification." @synonyms "new, updated, post, subsequent" = {}
+    before : opaque @description "The state of the entity prior to the modification." @synonyms "previous, original, old value" = {}
+    after : opaque @description "The state of the entity after a modification." @synonyms "new, updated, post, subsequent" = {}
     recordedAt : number @description "Timestamp indicating when the audit event was recorded." @synonyms "timestamp, date, time" = 0
   }
 
@@ -50,7 +50,7 @@ orbital AuditCaptureOrbital {
 
     listens {
       EntityMutated {
-        data : object
+        data : @entity @config.captureEntity
       }
     }
 

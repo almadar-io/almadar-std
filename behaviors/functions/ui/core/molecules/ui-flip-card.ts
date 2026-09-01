@@ -33,13 +33,6 @@ const ALIAS = 'UiFlipCard';
 export type StdUiFlipCardEventKey = 'FLIP' | 'INIT';
 
 /**
- * Payload shape for the `FLIP` event.
- */
-export interface StdUiFlipCardFlipPayload {
-  id?: string;
-}
-
-/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait

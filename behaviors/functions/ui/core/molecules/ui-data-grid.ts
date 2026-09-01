@@ -36,21 +36,15 @@ export type StdUiDataGridEventKey = 'DataGridLoaded' | 'INIT' | 'LOAD_MORE' | 'S
  * Payload shape for the `SELECTION` event.
  */
 export interface StdUiDataGridSelectionPayload {
-  id?: string;
-}
-
-/**
- * Payload shape for the `LOAD_MORE` event.
- */
-export interface StdUiDataGridLoadMorePayload {
-  id?: string;
+  selectedIds: string[];
 }
 
 /**
  * Payload shape for the `VIEW` event.
  */
 export interface StdUiDataGridViewPayload {
-  id?: string;
+  id: string;
+  row: unknown;
 }
 
 /**

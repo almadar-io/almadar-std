@@ -43,7 +43,7 @@ export interface StdMigrationJobDocumentsListedPayload {
  * Payload shape for the `DOCUMENT_FETCHED` event.
  */
 export interface StdMigrationJobDocumentFetchedPayload {
-  document: EntityRow;
+  document: unknown;
 }
 
 /**
@@ -72,14 +72,14 @@ export interface StdMigrationJobMigrationFetchedPayload {
  * Payload shape for the `MIGRATION_DOCUMENT` event.
  */
 export interface StdMigrationJobMigrationDocumentPayload {
-  document: EntityRow;
+  document: unknown;
 }
 
 /**
  * Payload shape for the `MIGRATION_REVIEW_READY` event.
  */
 export interface StdMigrationJobMigrationReviewReadyPayload {
-  stats: EntityRow;
+  stats: unknown;
   units?: EntityRow[];
   skipped?: EntityRow[];
   validationErrors?: EntityRow[];
@@ -89,7 +89,7 @@ export interface StdMigrationJobMigrationReviewReadyPayload {
  * Payload shape for the `MIGRATION_COMPLETED` event.
  */
 export interface StdMigrationJobMigrationCompletedPayload {
-  stats: EntityRow;
+  stats: unknown;
 }
 
 /**
@@ -262,12 +262,56 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
             'default': {},
             'description': 'ImportSource descriptor of the run (kind + options), supplied by the host.',
             'name': 'source',
+            'properties': {
+              'event': {
+                'name': 'event',
+                'required': false,
+                'type': 'string',
+              },
+              'id': {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+              'kind': {
+                'name': 'kind',
+                'required': true,
+                'type': 'string',
+              },
+              'label': {
+                'name': 'label',
+                'required': true,
+                'type': 'string',
+              },
+            },
             'type': 'object',
           },
           {
             'default': [],
             'description': 'Client-side file metadata for upload sources (name/size/type/lastModified).',
             'items': {
+              'properties': {
+                'lastModified': {
+                  'name': 'lastModified',
+                  'required': false,
+                  'type': 'number',
+                },
+                'name': {
+                  'name': 'name',
+                  'required': false,
+                  'type': 'string',
+                },
+                'size': {
+                  'name': 'size',
+                  'required': false,
+                  'type': 'number',
+                },
+                'type': {
+                  'name': 'type',
+                  'required': false,
+                  'type': 'string',
+                },
+              },
               'type': 'object',
             },
             'name': 'files',
@@ -296,29 +340,54 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
           },
           {
             'default': [],
-            'description': 'Document metadata listed from the source.',
+            'description': 'Document metadata listed from the source — migration.listDocuments service result, never destructured by the atom.',
             'items': {
-              'type': 'object',
+              'type': 'opaque',
             },
             'name': 'documents',
             'type': 'array',
           },
           {
             'default': {},
-            'description': 'Most recently fetched document content.',
+            'description': 'Most recently fetched document content — migration.fetchDocument service result, never destructured by the atom.',
             'name': 'document',
-            'type': 'object',
+            'type': 'opaque',
           },
           {
             'default': {},
-            'description': 'Staged/committed/failed/skipped counts.',
+            'description': 'Staged/committed/failed/skipped counts — merged from host staging and migration.commit service results, never destructured by the atom.',
             'name': 'stats',
-            'type': 'object',
+            'type': 'opaque',
           },
           {
             'default': [],
             'description': 'Staged ImportUnits ready for review (ref/targetEntity/fields/parentRef), when the host stages the full rows rather than aggregate stats only.',
             'items': {
+              'properties': {
+                'fields': {
+                  'items': {
+                    'type': 'scalar',
+                  },
+                  'name': 'fields',
+                  'required': false,
+                  'type': 'object',
+                },
+                'parentRef': {
+                  'name': 'parentRef',
+                  'required': false,
+                  'type': 'string',
+                },
+                'ref': {
+                  'name': 'ref',
+                  'required': true,
+                  'type': 'string',
+                },
+                'targetEntity': {
+                  'name': 'targetEntity',
+                  'required': true,
+                  'type': 'string',
+                },
+              },
               'type': 'object',
             },
             'name': 'units',
@@ -329,6 +398,18 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
             'default': [],
             'description': 'Source elements skipped during staging with a reason each, when the host stages the full rows rather than aggregate stats only.',
             'items': {
+              'properties': {
+                'reason': {
+                  'name': 'reason',
+                  'required': true,
+                  'type': 'string',
+                },
+                'ref': {
+                  'name': 'ref',
+                  'required': true,
+                  'type': 'string',
+                },
+              },
               'type': 'object',
             },
             'name': 'skipped',
@@ -339,7 +420,7 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
             'default': [],
             'description': 'Validation errors surfaced during staging, when the host stages the full rows rather than aggregate stats only.',
             'items': {
-              'type': 'object',
+              'type': 'opaque',
             },
             'name': 'validationErrors',
             'synonyms': 'staging errors, validation issues, import errors',
@@ -401,7 +482,7 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
               {
                 'name': 'documents',
                 'required': true,
-                'type': '[object]',
+                'type': '[opaque]',
               },
             ],
             'tier': 'secondary',
@@ -413,7 +494,7 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
               {
                 'name': 'document',
                 'required': true,
-                'type': 'object',
+                'type': 'opaque',
               },
             ],
             'tier': 'secondary',
@@ -430,7 +511,7 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
               {
                 'name': 'failed',
                 'required': true,
-                'type': '[object]',
+                'type': '[opaque]',
               },
             ],
             'tier': 'secondary',
@@ -454,7 +535,7 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
               {
                 'name': 'documents',
                 'required': true,
-                'type': '[object]',
+                'type': '[opaque]',
               },
             ],
             'scope': 'external',
@@ -468,7 +549,7 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
               {
                 'name': 'document',
                 'required': true,
-                'type': 'object',
+                'type': 'opaque',
               },
             ],
             'scope': 'external',
@@ -482,19 +563,19 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
               {
                 'name': 'stats',
                 'required': true,
-                'type': 'object',
+                'type': 'opaque',
               },
               {
                 'name': 'units',
-                'type': '[object]',
+                'type': '[ImportUnit]',
               },
               {
                 'name': 'skipped',
-                'type': '[object]',
+                'type': '[ImportSkip]',
               },
               {
                 'name': 'validationErrors',
-                'type': '[object]',
+                'type': '[opaque]',
               },
             ],
             'scope': 'external',
@@ -508,7 +589,7 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
               {
                 'name': 'stats',
                 'required': true,
-                'type': 'object',
+                'type': 'opaque',
               },
             ],
             'scope': 'external',
@@ -563,11 +644,50 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
               'payloadSchema': [
                 {
                   'name': 'source',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'kind',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'label',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'event',
+                      'type': 'string',
+                    },
+                  ],
                   'required': true,
                   'type': 'object',
                 },
                 {
                   'name': 'files',
+                  'properties': [
+                    {
+                      'name': 'name',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'size',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'type',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'lastModified',
+                      'type': 'number',
+                    },
+                  ],
                   'type': '[object]',
                 },
               ],
@@ -582,7 +702,7 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                 {
                   'name': 'documents',
                   'required': true,
-                  'type': '[object]',
+                  'type': '[opaque]',
                 },
               ],
               'tier': 'secondary',
@@ -595,7 +715,7 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                 {
                   'name': 'documents',
                   'required': true,
-                  'type': '[object]',
+                  'type': '[opaque]',
                 },
               ],
               'synonyms': 'import fetched, source listed, documents ready',
@@ -609,7 +729,7 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                 {
                   'name': 'document',
                   'required': true,
-                  'type': 'object',
+                  'type': 'opaque',
                 },
               ],
               'synonyms': 'document loaded, content fetched',
@@ -649,7 +769,7 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                 {
                   'name': 'document',
                   'required': true,
-                  'type': 'object',
+                  'type': 'opaque',
                 },
               ],
               'tier': 'secondary',
@@ -662,19 +782,51 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                 {
                   'name': 'stats',
                   'required': true,
-                  'type': 'object',
+                  'type': 'opaque',
                 },
                 {
                   'name': 'units',
+                  'properties': [
+                    {
+                      'name': 'ref',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'targetEntity',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'fields',
+                      'type': 'Map<string,scalar>',
+                    },
+                    {
+                      'name': 'parentRef',
+                      'type': 'string',
+                    },
+                  ],
                   'type': '[object]',
                 },
                 {
                   'name': 'skipped',
+                  'properties': [
+                    {
+                      'name': 'ref',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'reason',
+                      'required': true,
+                      'type': 'string',
+                    },
+                  ],
                   'type': '[object]',
                 },
                 {
                   'name': 'validationErrors',
-                  'type': '[object]',
+                  'type': '[opaque]',
                 },
               ],
               'tier': 'internal',
@@ -692,6 +844,26 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
               'payloadSchema': [
                 {
                   'name': 'units',
+                  'properties': [
+                    {
+                      'name': 'ref',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'targetEntity',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'fields',
+                      'type': 'Map<string,scalar>',
+                    },
+                    {
+                      'name': 'parentRef',
+                      'type': 'string',
+                    },
+                  ],
                   'type': '[object]',
                 },
               ],
@@ -712,19 +884,19 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                 {
                   'name': 'stats',
                   'required': true,
-                  'type': 'object',
+                  'type': 'opaque',
                 },
                 {
                   'name': 'units',
-                  'type': '[object]',
+                  'type': '[ImportUnit]',
                 },
                 {
                   'name': 'skipped',
-                  'type': '[object]',
+                  'type': '[ImportSkip]',
                 },
                 {
                   'name': 'validationErrors',
-                  'type': '[object]',
+                  'type': '[opaque]',
                 },
               ],
               'synonyms': 'preview ready, staging complete, review import',
@@ -743,7 +915,7 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                 {
                   'name': 'failed',
                   'required': true,
-                  'type': '[object]',
+                  'type': '[opaque]',
                 },
               ],
               'tier': 'secondary',
@@ -762,7 +934,7 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                 {
                   'name': 'stats',
                   'required': true,
-                  'type': 'object',
+                  'type': 'opaque',
                 },
               ],
               'synonyms': 'import done, migration complete, data imported',

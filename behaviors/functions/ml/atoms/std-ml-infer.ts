@@ -62,7 +62,7 @@ export interface StdMlInferInferredPayload {
 export interface StdMlInferInferAbstainedPayload {
   reason: string;
   violations: EntityRow[];
-  request?: EntityRow;
+  request?: unknown;
 }
 
 /**
@@ -210,7 +210,7 @@ export function stdMlInferMlInferOrbital(params: StdMlInferMlInferOrbitalParams 
           {
             'default': {},
             'name': 'input',
-            'type': 'object',
+            'type': 'opaque',
           },
           {
             'default': [],
@@ -228,7 +228,102 @@ export function stdMlInferMlInferOrbital(params: StdMlInferMlInferOrbitalParams 
           {
             'default': [],
             'items': {
-              'type': 'object',
+              'properties': {
+                'NotATensorViolation': {
+                  'name': 'NotATensorViolation',
+                  'properties': {
+                    'actualType': {
+                      'name': 'actualType',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    'type': {
+                      'name': 'type',
+                      'required': false,
+                      'type': 'string',
+                      'values': [
+                        'not_a_tensor',
+                      ],
+                    },
+                  },
+                  'type': 'object',
+                },
+                'RangeViolationDetail': {
+                  'name': 'RangeViolationDetail',
+                  'properties': {
+                    'actualMax': {
+                      'name': 'actualMax',
+                      'required': true,
+                      'type': 'number',
+                    },
+                    'actualMin': {
+                      'name': 'actualMin',
+                      'required': true,
+                      'type': 'number',
+                    },
+                    'dim': {
+                      'name': 'dim',
+                      'required': true,
+                      'type': 'number',
+                    },
+                    'max': {
+                      'name': 'max',
+                      'required': true,
+                      'type': 'number',
+                    },
+                    'min': {
+                      'name': 'min',
+                      'required': true,
+                      'type': 'number',
+                    },
+                    'type': {
+                      'name': 'type',
+                      'required': false,
+                      'type': 'string',
+                      'values': [
+                        'range_violation',
+                      ],
+                    },
+                  },
+                  'type': 'object',
+                },
+                'ShapeMismatchViolation': {
+                  'name': 'ShapeMismatchViolation',
+                  'properties': {
+                    'actual': {
+                      'items': {
+                        'type': 'number',
+                      },
+                      'name': 'actual',
+                      'required': true,
+                      'type': 'array',
+                    },
+                    'expected': {
+                      'items': {
+                        'type': 'number',
+                      },
+                      'name': 'expected',
+                      'required': true,
+                      'type': 'array',
+                    },
+                    'type': {
+                      'name': 'type',
+                      'required': false,
+                      'type': 'string',
+                      'values': [
+                        'shape_mismatch',
+                      ],
+                    },
+                  },
+                  'type': 'object',
+                },
+              },
+              'type': 'union',
+              'values': [
+                'ShapeMismatchViolation',
+                'RangeViolationDetail',
+                'NotATensorViolation',
+              ],
             },
             'name': 'violations',
             'type': 'array',
@@ -241,7 +336,7 @@ export function stdMlInferMlInferOrbital(params: StdMlInferMlInferOrbitalParams 
           {
             'default': {},
             'name': 'request',
-            'type': 'object',
+            'type': 'opaque',
           },
           {
             'default': 'idle',
@@ -365,7 +460,7 @@ export function stdMlInferMlInferOrbital(params: StdMlInferMlInferOrbitalParams 
               {
                 'name': 'violations',
                 'required': true,
-                'type': '[object]',
+                'type': '[ContractViolation]',
               },
             ],
             'scope': 'external',
@@ -383,11 +478,11 @@ export function stdMlInferMlInferOrbital(params: StdMlInferMlInferOrbitalParams 
               {
                 'name': 'violations',
                 'required': true,
-                'type': '[object]',
+                'type': '[ContractViolation]',
               },
               {
                 'name': 'request',
-                'type': 'object',
+                'type': 'opaque',
               },
             ],
             'scope': 'external',
@@ -410,11 +505,11 @@ export function stdMlInferMlInferOrbital(params: StdMlInferMlInferOrbitalParams 
                 {
                   'name': 'input',
                   'required': true,
-                  'type': 'object',
+                  'type': 'opaque',
                 },
                 {
                   'name': 'request',
-                  'type': 'object',
+                  'type': 'opaque',
                 },
               ],
             },
@@ -471,7 +566,7 @@ export function stdMlInferMlInferOrbital(params: StdMlInferMlInferOrbitalParams 
                 {
                   'name': 'violations',
                   'required': true,
-                  'type': '[object]',
+                  'type': '[ContractViolation]',
                 },
               ],
               'tier': 'primary',
@@ -489,11 +584,11 @@ export function stdMlInferMlInferOrbital(params: StdMlInferMlInferOrbitalParams 
                 {
                   'name': 'violations',
                   'required': true,
-                  'type': '[object]',
+                  'type': '[ContractViolation]',
                 },
                 {
                   'name': 'request',
-                  'type': 'object',
+                  'type': 'opaque',
                 },
               ],
               'tier': 'primary',

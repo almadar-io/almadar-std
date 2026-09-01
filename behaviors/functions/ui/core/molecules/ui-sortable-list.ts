@@ -36,7 +36,9 @@ export type StdUiSortableListEventKey = 'INIT' | 'REORDER' | 'SortableListLoaded
  * Payload shape for the `REORDER` event.
  */
 export interface StdUiSortableListReorderPayload {
-  id?: string;
+  fromIndex: number;
+  toIndex: number;
+  item: unknown;
 }
 
 /**
@@ -60,7 +62,6 @@ export interface StdUiSortableListConfig {
   itemLabelField?: string;
   /** Default: `"REORDER"` */
   reorderEvent?: string;
-  /** Default: `{}` */
   reorderPayload?: unknown;
   /** Default: `true` */
   selfFetch?: boolean;

@@ -1,6 +1,25 @@
 app ui-canvas "1.0.0"
 "Canvas — UI factory (1:1 with the @almadar/ui canvas pattern)."
 orbital CanvasOrbital {
+  type CanvasCamera = {
+    pos : CanvasCameraPos
+    target : CanvasCameraTarget
+    zoom : number
+    fov : number
+    mode : "isometric" | "perspective" | "top-down" | "front" | "follow" | "chase"
+    azimuth : number
+    elevation : number
+  }
+  type CanvasCameraPos = {
+    x : number!
+    y : number!
+    z : number
+  }
+  type CanvasCameraTarget = {
+    x : number!
+    y : number!
+    z : number
+  }
   type CanvasLighting = {
     ambient : CanvasLightingAmbient
     directional : CanvasLightingDirectional
@@ -91,23 +110,29 @@ orbital CanvasOrbital {
 
     emits {
       @config.tileClickEvent -> external {
-        _payload : object
+        x : number
+        y : number
+        tileId : string
+        z : number
       }
         @description "--- Shared interaction (LOLO-owned). The painter emitted at runtime depends on"
         @tier "essential"
       @config.unitClickEvent -> external {
-        _payload : object
+        unitId : string
+        x : number
+        z : number
       }
         @description "unitClickEvent prop"
         @tier "essential"
       @config.tileHoverEvent -> external {
-        _payload : object
+        x : number
+        y : number
+        tileId : string
+        z : number
       }
         @description "tileHoverEvent prop"
         @tier "essential"
-      @config.tileLeaveEvent -> external {
-        id : string
-      }
+      @config.tileLeaveEvent -> external { }
         @description "tileLeaveEvent prop"
         @tier "essential"
       @config.featureClickEvent -> external {
@@ -129,7 +154,7 @@ orbital CanvasOrbital {
         @label "Drawables"
         @description "Neutral drawable descriptors — the `draw-*` children. Routed to the host's painter."
         @tier "presentation"
-      camera : json = {}
+      camera : CanvasCamera
         @label "Camera"
         @description "Neutral camera pose. Mapped to the underlying host's framing + zoom."
         @tier "presentation"

@@ -3,16 +3,20 @@ app std-ml-infer "1.0.0"
 
 type Range = { min: float!, max: float! }
 type OutputContract = { shape: [int], ranges: Map string Range }
+type ShapeMismatchViolation = { type: "shape_mismatch", expected: [int]!, actual: [int]! }
+type RangeViolationDetail = { type: "range_violation", dim: int!, min: float!, max: float!, actualMin: float!, actualMax: float! }
+type NotATensorViolation = { type: "not_a_tensor", actualType: string! }
+type ContractViolation = ShapeMismatchViolation | RangeViolationDetail | NotATensorViolation
 
 orbital MlInferOrbital {
 
   entity Inference [runtime] {
-    input      : object   = {}
+    input      : opaque   = {}
     output     : [float]  = []
     confidence : float    = 0
-    violations : [object] = []
+    violations : [ContractViolation] = []
     reason     : string   = ""
-    request    : object   = {}
+    request    : opaque   = {}
     status     : "idle" | "inferring" | "resolved" = idle
   }
 
@@ -115,15 +119,15 @@ orbital MlInferOrbital {
       INFERRED -> external {
         output     : [float]!
         confidence : float!
-        violations : [object]!
+        violations : [ContractViolation]!
       }
         @description "The service answered, the output satisfies outputContract, and confidence clears confidenceFloor — output already clamped"
         @tier "primary"
 
       INFER_ABSTAINED -> external {
         reason     : string!
-        violations : [object]!
-        request    : object
+        violations : [ContractViolation]!
+        request    : opaque
       }
         @description "The abstain — reason is one of: low confidence, contract violation, unavailable. violations is populated only on the contract violation path. request echoes the originating request untouched so the next rung can project its own inputs out of it"
         @tier "primary"
@@ -131,8 +135,8 @@ orbital MlInferOrbital {
 
     listens {
       INFER {
-        input : object!
-        request : object
+        input : opaque!
+        request : opaque
       }
     }
   }

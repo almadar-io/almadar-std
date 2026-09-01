@@ -36,7 +36,8 @@ export type StdUiTimelineEventKey = 'INIT' | 'TimelineLoaded' | 'VIEW';
  * Payload shape for the `VIEW` event.
  */
 export interface StdUiTimelineViewPayload {
-  id?: string;
+  id: string;
+  row: unknown;
 }
 
 /**
@@ -322,7 +323,13 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
             'payloadSchema': [
               {
                 'name': 'id',
+                'required': true,
                 'type': 'string',
+              },
+              {
+                'name': 'row',
+                'required': true,
+                'type': '@entity',
               },
             ],
             'scope': 'external',
@@ -376,7 +383,13 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
               'payloadSchema': [
                 {
                   'name': 'id',
+                  'required': true,
                   'type': 'string',
+                },
+                {
+                  'name': 'row',
+                  'required': true,
+                  'type': '@entity',
                 },
               ],
               'tier': 'essential',

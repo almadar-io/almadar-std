@@ -33,13 +33,6 @@ const ALIAS = 'UiInfiniteScrollSentinel';
 export type StdUiInfiniteScrollSentinelEventKey = 'INIT' | 'LOAD_MORE';
 
 /**
- * Payload shape for the `LOAD_MORE` event.
- */
-export interface StdUiInfiniteScrollSentinelLoadMorePayload {
-  id?: string;
-}
-
-/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
@@ -53,7 +46,6 @@ export interface StdUiInfiniteScrollSentinelConfig {
   isLoading?: boolean;
   /** Default: `"LOAD_MORE"` */
   loadMoreEvent?: string;
-  /** Default: `{}` */
   loadMorePayload?: unknown;
   /** Default: `"200px"` */
   threshold?: string;

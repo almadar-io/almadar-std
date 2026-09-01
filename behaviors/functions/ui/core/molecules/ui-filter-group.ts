@@ -41,24 +41,21 @@ export interface StdUiFilterGroupFilterChangePayload {
 }
 
 /**
- * Payload shape for the `CLEAR_ALL` event.
- */
-export interface StdUiFilterGroupClearAllPayload {
-  id?: string;
-}
-
-/**
  * Payload shape for the `EVENT` event.
  */
 export interface StdUiFilterGroupEventPayload {
-  id?: string;
+  entity: string;
+  field: string;
+  value: string;
+  query?: string;
 }
 
 /**
  * Payload shape for the `CLEAR` event.
  */
 export interface StdUiFilterGroupClearPayload {
-  id?: string;
+  entity: string;
+  query?: string;
 }
 
 /**

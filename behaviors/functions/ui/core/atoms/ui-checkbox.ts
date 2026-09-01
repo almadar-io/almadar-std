@@ -33,13 +33,6 @@ const ALIAS = 'UiCheckbox';
 export type StdUiCheckboxEventKey = 'CHANGE' | 'INIT';
 
 /**
- * Payload shape for the `CHANGE` event.
- */
-export interface StdUiCheckboxChangePayload {
-  id?: string;
-}
-
-/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
