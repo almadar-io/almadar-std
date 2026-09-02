@@ -1,0 +1,104 @@
+app std-pickup "1.0.0"
+"Headless side-view collectible authority — the platformer twin of grid std-gather. Listens BODY_MOVED and, when the player touches an uncollected feature (|dx| <= reachX, |dy| <= reachY of the feature center — the coef-pad touch idiom minus the grounded requirement, so airborne pickups work), stamps it collected on the shared entity and emits PICKED once per item (id, kind, position, glyph, message) plus COLLECT{total} with the running count (the event std-gate-lock already consumes). When every feature is collected it emits PICKUP_SET_COMPLETED once. RESTART re-arms every feature and zeroes the count. kind is board-defined vocabulary (star, boost, …) — this atom reports, boards judge. Renders nothing; boards draw the features and read collected from the shared entity."
+orbital PickupOrbital {
+  type PickupFeature = {
+    id : string!
+    x : number!
+    y : number!
+    kind : string!
+    glyph : string
+    message : string
+    collected : boolean
+  }
+
+  entity PickupData [runtime, shared] {
+    id : string!
+    pickups : [PickupFeature] = []
+    pickupCompleted : boolean = false
+    total : number = 0
+  }
+
+  trait Pickup -> @rebindable PickupData [lifecycle] {
+    initial: active
+
+    state active {
+      INIT -> active
+        (set @entity.pickups (array/map @config.features (fn f (object/merge @f { collected: false }))))
+        (set @entity.pickupCompleted false)
+        (set @entity.total 0)
+
+      BODY_MOVED -> active when @config.running
+        (let ((touch (array/filter @entity.pickups (fn f
+          (and (== (object/get @f collected) false)
+            (and (<= (math/abs (- @payload.x (object/get @f x))) @config.reachX)
+              (<= (math/abs (- @payload.y (object/get @f y))) @config.reachY)))))))
+        (if (> (array/len @touch) 0)
+          (let ((f (array/first @touch)))
+          (let ((remaining (array/len (array/filter @entity.pickups (fn c (and (== (object/get @c collected) false) (!= (object/get @c id) (object/get @f id))))))))
+          (do
+            (set @entity.pickups (array/map @entity.pickups (fn c (if (== (object/get @c id) (object/get @f id)) (object/merge @c { collected: true }) @c))))
+            (set @entity.total (+ @entity.total 1))
+            (emit PICKED { id: (object/get @f id), kind: (object/get @f kind), x: (object/get @f x), y: (object/get @f y), glyph: (object/get @f glyph), message: (object/get @f message) })
+            (emit COLLECT { total: @entity.total })
+            (if (and (== @entity.pickupCompleted false) (== @remaining 0))
+              (do
+                (set @entity.pickupCompleted true)
+                (emit PICKUP_SET_COMPLETED {}))
+              null))))
+          null))
+
+      RESTART -> active
+        (set @entity.pickups (array/map @config.features (fn f (object/merge @f { collected: false }))))
+        (set @entity.pickupCompleted false)
+        (set @entity.total 0)
+    }
+
+    emits {
+      PICKED -> external {
+        id : string!
+        kind : string!
+        x : number!
+        y : number!
+        glyph : string
+        message : string
+      }
+        @description "The player touched an uncollected feature; carries the feature identity, board-defined kind (star, boost, …), position and display glyph/message. Fires once per feature per run."
+        @tier "domain"
+      COLLECT -> external {
+        total : number!
+      }
+        @description "Running count of collected features after this pickup — the event std-gate-lock consumes to count openings."
+        @tier "domain"
+      PICKUP_SET_COMPLETED -> external {
+      }
+        @description "Every feature in the set is collected; fires once per run."
+        @tier "domain"
+    }
+
+    listens {
+      BODY_MOVED { x : number!, y : number!, vx : number!, vy : number!, grounded : boolean!, skating : boolean!, speed : number! }
+      RESTART { id : string }
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true, BODY_MOVED collects touched features; toggle to freeze the set as-is."
+        @tier "domain"
+      features : [PickupFeature] = []
+        @label "Features"
+        @description "One row per collectible: id, center (x, y in world units), board-defined kind (star, boost, …), display glyph and message floated on pickup. collected is stamped at runtime."
+        @tier "domain"
+      reachX : number = 0.7
+        @label "Reach X"
+        @description "Horizontal tolerance (world units) around a feature's center when testing player contact."
+        @tier "domain"
+      reachY : number = 1.2
+        @label "Reach Y"
+        @description "Vertical tolerance (world units) around a feature's center when testing player contact; generous values catch fly-through pickups."
+        @tier "domain"
+    }
+  }
+
+  page "/pickup" as PickupPage -> Pickup
+}
