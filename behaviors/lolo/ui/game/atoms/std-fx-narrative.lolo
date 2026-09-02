@@ -1,0 +1,126 @@
+app std-fx-narrative "1.0.0"
+"Headless pedagogy→fx translator for game boards and learning shells: turns high-level narrative events into big transient screen-space or world-space text effects consumed by std-fx-particles / fx-overlay. Levels emit NARRATE { text, style } and get a correctly styled, centered (or positioned) floating text burst without hand-rolling particle structs. Tutorials emit TUTORIAL_SHOW and the atom forwards SHOW to a composed std-tutorial-overlay trait. Renders nothing; centralizes the FX vocabulary so every level's teaching text looks and behaves the same."
+
+orbital FxNarrativeOrbital {
+  type NarrativeCue = {
+    text : string!
+    style : "hint" | "fact" | "warn" | "celebrate"
+    x : number
+    y : number
+    ttl : number
+    space : "screen" | "world"
+  }
+
+  type FxParticle = {
+    id : string!
+    type : string!
+    x : number!
+    z : number
+    y : number
+    message : string
+    ttl : number!
+    maxTtl : number
+    bornAt : number
+    space : string
+    effect : string
+    color : string
+    size : number
+    vx : number
+    vy : number
+    vz : number
+    particleCount : number
+  }
+
+  type StyleDef = {
+    color : string!
+    size : number!
+    ttl : number!
+    effect : string!
+  }
+
+  entity FxNarrativeData [runtime, shared] {
+    id : string!
+    seq : number = 0
+    lastText : string = ""
+  }
+
+  trait FxNarrative -> @rebindable FxNarrativeData [lifecycle] {
+    initial: active
+
+    state active {
+      INIT -> active
+        (set @entity.seq 0)
+        (set @entity.lastText "")
+
+      NARRATE -> active when @config.running
+        (let ((styleKey (if (== (object/get @payload style) null) "fact" (object/get @payload style)))
+              (styleDef (object/get @config.styles @styleKey))
+              (ttl (if (== (object/get @payload ttl) null) (object/get @styleDef ttl) (object/get @payload ttl)))
+              (x (if (== (object/get @payload x) null) 0.5 (object/get @payload x)))
+              (y (if (== (object/get @payload y) null) 0.25 (object/get @payload y)))
+              (space (if (== (object/get @payload space) null) "screen" (object/get @payload space)))
+              (text (object/get @payload text)))
+          (do
+            (set @entity.seq (+ @entity.seq 1))
+            (set @entity.lastText @text)
+            (emit BURST { particles: [ {
+              id: (str/concat "narrative-" @entity.seq),
+              type: "narrative",
+              x: @x,
+              z: @y,
+              y: 0,
+              message: @text,
+              ttl: @ttl,
+              maxTtl: @ttl,
+              bornAt: (time/now),
+              space: @space,
+              effect: (object/get @styleDef effect),
+              color: (object/get @styleDef color),
+              size: (object/get @styleDef size),
+              vx: 0,
+              vy: 0,
+              vz: 0,
+              particleCount: 1
+            } ] })))
+
+      TUTORIAL_SHOW -> active when @config.running
+        (emit SHOW { id: "tutorial" })
+    }
+
+    emits {
+      BURST -> external {
+        particles : [FxParticle]
+      }
+        @description "Styled floating-text particle batch for std-fx-particles / fx-overlay."
+        @tier "domain"
+      SHOW -> external {
+        id : string
+      }
+        @description "Forwarded to a composed std-tutorial-overlay to open the tutorial modal."
+        @tier "domain"
+    }
+
+    listens {
+      NARRATE { text : string!, style : "hint" | "fact" | "warn" | "celebrate", x : number, y : number, ttl : number, space : "screen" | "world" }
+      TUTORIAL_SHOW { text : string, title : string }
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When false all narrative events are ignored."
+        @tier "domain"
+      styles : Map string StyleDef = {
+        "fact": { color: "#38bdf8", size: 28, ttl: 3, effect: "float-text" },
+        "hint": { color: "#a78bfa", size: 24, ttl: 2, effect: "float-text" },
+        "warn": { color: "#f87171", size: 24, ttl: 1.5, effect: "shake" },
+        "celebrate": { color: "#facc15", size: 32, ttl: 3, effect: "sparkle" }
+      }
+        @label "Styles"
+        @description "Map of narrative style to color, size, ttl, and effect. Override per game theme."
+        @tier "presentation"
+    }
+  }
+
+  page "/fx-narrative" as FxNarrativePage -> FxNarrative
+}
