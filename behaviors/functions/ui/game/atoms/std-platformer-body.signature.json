@@ -37,6 +37,11 @@
             "name": "skating",
             "type": "boolean",
             "required": false
+          },
+          {
+            "name": "tuning",
+            "type": "object",
+            "required": false
           }
         ],
         "persistence": "runtime"
@@ -66,7 +71,7 @@
           {
             "name": "BODY_SKATE_START",
             "direction": "emit",
-            "description": "Body engaged curve skating this tick (grounded within skateSnap of the skateCurve surface); slope is the local dy/dx — boards layer fx and equation readouts",
+            "description": "Body engaged curve skating this tick (grounded, landing, or falling within skateSnap above the skateCurve surface); slope is the local dy/dx — boards layer fx and equation readouts",
             "tier": "domain"
           },
           {
@@ -126,6 +131,10 @@
             "direction": "listen"
           },
           {
+            "name": "SET_TUNING",
+            "direction": "listen"
+          },
+          {
             "name": "RESTART",
             "direction": "listen"
           }
@@ -136,7 +145,7 @@
             "type": "boolean",
             "default": false,
             "label": "Curve Mods Enabled",
-            "description": "When true, entity.curveMods reshape the skate surface inside each mod's x-range: the road samples the base curve at (x − h) and applies a·y + k (slope scales by a) — coefficient pads lift/tilt the segment the player is riding. Default off: boards without coef pads pay nothing.",
+            "description": "When true, entity.curveMods reshape the skate surface inside each mod's x-range: the road samples the base curve at (x − h) and applies a·y + k (slope scales by a) — coefficient pads lift/tilt the segment the player is riding. Multiple overlapping mods stack by summing each mod's delta from the base surface; a mod whose shifted sample leaves the curve range is skipped. Default off: boards without coef pads pay nothing.",
             "tier": "domain"
           },
           {
@@ -289,7 +298,7 @@
             "type": "boolean",
             "default": false,
             "label": "Curve Skating",
-            "description": "When true, a grounded body within skateSnap of the skateCurve surface rides the curve: y snaps to the interpolated surface and tangential gravity (g·slope/(1+slope²)) accelerates vx, so the body slides downhill along the graph and launches off its ends; JUMP kicks free",
+            "description": "When true, a grounded body within skateSnap of the skateCurve surface rides the curve: y snaps to the interpolated surface and tangential gravity (g·slope/(1+slope²)) accelerates vx, so the body slides downhill along the graph and launches off its ends; JUMP kicks free. Engages when grounded, when landing on a tile, or when a falling (not rising) body passes within skateSnap above the surface.",
             "tier": "domain"
           },
           {
@@ -415,6 +424,7 @@
           "JUMP",
           "PLACE",
           "RESTART",
+          "SET_TUNING",
           "STEER"
         ],
         "definerKnobs": [],
@@ -427,7 +437,8 @@
             "fell",
             "goalId",
             "hazardId",
-            "skating"
+            "skating",
+            "tuning"
           ]
         }
       }

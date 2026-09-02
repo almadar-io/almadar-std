@@ -1,0 +1,181 @@
+[
+  {
+    "organism": "std-pickup",
+    "orbital": "PickupOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/game/atoms/std-pickup.ts",
+    "entities": [
+      {
+        "name": "PickupData",
+        "fields": [
+          {
+            "name": "pickups",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "pickupCompleted",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "total",
+            "type": "number",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "Pickup",
+        "emittedEvents": [
+          "PICKED",
+          "COLLECT",
+          "PICKUP_SET_COMPLETED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "PICKED",
+            "direction": "emit",
+            "description": "The player touched an uncollected feature; carries the feature identity, board-defined kind (star, boost, …), position and display glyph/message. Fires once per feature per run.",
+            "tier": "domain"
+          },
+          {
+            "name": "COLLECT",
+            "direction": "emit",
+            "description": "Running count of collected features after this pickup — the event std-gate-lock consumes to count openings.",
+            "tier": "domain"
+          },
+          {
+            "name": "PICKUP_SET_COMPLETED",
+            "direction": "emit",
+            "description": "Every feature in the set is collected; fires once per run.",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "BODY_MOVED",
+            "direction": "listen"
+          },
+          {
+            "name": "RESTART",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "features",
+            "type": "[PickupFeature]",
+            "default": [],
+            "label": "Features",
+            "description": "One row per collectible: id, center (x, y in world units), board-defined kind (star, boost, …), display glyph and message floated on pickup. collected is stamped at runtime.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "collected": {
+                  "name": "collected",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "glyph": {
+                  "name": "glyph",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "kind": {
+                  "name": "kind",
+                  "required": true,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "reachX",
+            "type": "number",
+            "default": 0.7,
+            "label": "Reach X",
+            "description": "Horizontal tolerance (world units) around a feature's center when testing player contact.",
+            "tier": "domain"
+          },
+          {
+            "key": "reachY",
+            "type": "number",
+            "default": 1.2,
+            "label": "Reach Y",
+            "description": "Vertical tolerance (world units) around a feature's center when testing player contact; generous values catch fly-through pickups.",
+            "tier": "domain"
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true, BODY_MOVED collects touched features; toggle to freeze the set as-is.",
+            "tier": "domain"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "PickupData",
+        "transitionEvents": [
+          "BODY_MOVED",
+          "INIT",
+          "RESTART"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "pickupCompleted",
+            "pickups",
+            "total"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "PickupPage",
+        "defaultPath": "/pickup",
+        "primaryEntity": "PickupData"
+      }
+    ],
+    "emittedEvents": [
+      "COLLECT",
+      "PICKED",
+      "PICKUP_SET_COMPLETED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

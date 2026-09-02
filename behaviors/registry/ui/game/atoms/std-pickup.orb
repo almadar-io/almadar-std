@@ -1,0 +1,835 @@
+{
+  "description": "Headless side-view collectible authority — the platformer twin of grid std-gather. Listens BODY_MOVED and, when the player touches an uncollected feature (|dx| <= reachX, |dy| <= reachY of the feature center — the coef-pad touch idiom minus the grounded requirement, so airborne pickups work), stamps it collected on the shared entity and emits PICKED once per item (id, kind, position, glyph, message) plus COLLECT{total} with the running count (the event std-gate-lock already consumes). When every feature is collected it emits PICKUP_SET_COMPLETED once. RESTART re-arms every feature and zeroes the count. kind is board-defined vocabulary (star, boost, …) — this atom reports, boards judge. Renders nothing; boards draw the features and read collected from the shared entity.",
+  "ledger": {
+    "entries": {
+      "ent_01M1GJ1RVVTJT76K1YZHQJGRG1": {
+        "bakedName": "PickupData",
+        "curName": "PickupData",
+        "id": "ent_01M1GJ1RVVTJT76K1YZHQJGRG1",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "evt_01M1GJ1RVV15S8HWFJEVX2B3EE": {
+        "bakedName": "RESTART",
+        "curName": "RESTART",
+        "id": "evt_01M1GJ1RVV15S8HWFJEVX2B3EE",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M1GJ1RVVYNAYXGWNA3EB2RFF",
+        "renames": []
+      },
+      "evt_01M1GJ1RVV6P5K79BVV55VS8N1": {
+        "bakedName": "COLLECT",
+        "curName": "COLLECT",
+        "id": "evt_01M1GJ1RVV6P5K79BVV55VS8N1",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M1GJ1RVVYNAYXGWNA3EB2RFF",
+        "renames": []
+      },
+      "evt_01M1GJ1RVVM5H5ZY0QRFXV9CKE": {
+        "bakedName": "BODY_MOVED",
+        "curName": "BODY_MOVED",
+        "id": "evt_01M1GJ1RVVM5H5ZY0QRFXV9CKE",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M1GJ1RVVYNAYXGWNA3EB2RFF",
+        "renames": []
+      },
+      "evt_01M1GJ1RVVN8VVR734HESK50D3": {
+        "bakedName": "PICKUP_SET_COMPLETED",
+        "curName": "PICKUP_SET_COMPLETED",
+        "id": "evt_01M1GJ1RVVN8VVR734HESK50D3",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M1GJ1RVVYNAYXGWNA3EB2RFF",
+        "renames": []
+      },
+      "evt_01M1GJ1RVVSK6CJ213JM62VAQD": {
+        "bakedName": "PICKED",
+        "curName": "PICKED",
+        "id": "evt_01M1GJ1RVVSK6CJ213JM62VAQD",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M1GJ1RVVYNAYXGWNA3EB2RFF",
+        "renames": []
+      },
+      "evt_01M1GJ1RVVV01RP71K50TKTX9B": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01M1GJ1RVVV01RP71K50TKTX9B",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M1GJ1RVVYNAYXGWNA3EB2RFF",
+        "renames": []
+      },
+      "orb_01M1GJ1RVV19SNFS3EG7ABGGVT": {
+        "bakedName": "PickupOrbital",
+        "curName": "PickupOrbital",
+        "id": "orb_01M1GJ1RVV19SNFS3EG7ABGGVT",
+        "kind": "orbital",
+        "owner": "workspace",
+        "renames": []
+      },
+      "pag_01M1GJ1RVVMCZ7HREZ4S52JVK5": {
+        "bakedName": "PickupPage",
+        "curName": "PickupPage",
+        "id": "pag_01M1GJ1RVVMCZ7HREZ4S52JVK5",
+        "kind": "page",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M1GJ1RVVYNAYXGWNA3EB2RFF": {
+        "bakedName": "Pickup",
+        "curName": "Pickup",
+        "id": "trt_01M1GJ1RVVYNAYXGWNA3EB2RFF",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      }
+    },
+    "schemaVersion": 1
+  },
+  "name": "std-pickup",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "collected": {
+                  "name": "collected",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "glyph": {
+                  "name": "glyph",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "kind": {
+                  "name": "kind",
+                  "required": true,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "pickups",
+            "type": "array"
+          },
+          {
+            "default": false,
+            "name": "pickupCompleted",
+            "type": "boolean"
+          },
+          {
+            "default": 0.0,
+            "name": "total",
+            "type": "number"
+          }
+        ],
+        "id": "ent_01M1GJ1RVVTJT76K1YZHQJGRG1",
+        "name": "PickupData",
+        "persistence": "runtime",
+        "shared": true
+      },
+      "id": "orb_01M1GJ1RVV19SNFS3EG7ABGGVT",
+      "name": "PickupOrbital",
+      "pages": [
+        {
+          "id": "pag_01M1GJ1RVVMCZ7HREZ4S52JVK5",
+          "name": "PickupPage",
+          "path": "/pickup",
+          "traits": [
+            {
+              "ref": "Pickup",
+              "refId": "trt_01M1GJ1RVVYNAYXGWNA3EB2RFF"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "lifecycle",
+          "config": {
+            "features": {
+              "default": [],
+              "description": "One row per collectible: id, center (x, y in world units), board-defined kind (star, boost, …), display glyph and message floated on pickup. collected is stamped at runtime.",
+              "items": {
+                "properties": {
+                  "collected": {
+                    "name": "collected",
+                    "required": false,
+                    "type": "boolean"
+                  },
+                  "glyph": {
+                    "name": "glyph",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "kind": {
+                    "name": "kind",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "message": {
+                    "name": "message",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Features",
+              "tier": "domain",
+              "type": "[PickupFeature]"
+            },
+            "reachX": {
+              "default": 0.7,
+              "description": "Horizontal tolerance (world units) around a feature's center when testing player contact.",
+              "label": "Reach X",
+              "tier": "domain",
+              "type": "number"
+            },
+            "reachY": {
+              "default": 1.2,
+              "description": "Vertical tolerance (world units) around a feature's center when testing player contact; generous values catch fly-through pickups.",
+              "label": "Reach Y",
+              "tier": "domain",
+              "type": "number"
+            },
+            "running": {
+              "default": true,
+              "description": "When true, BODY_MOVED collects touched features; toggle to freeze the set as-is.",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            }
+          },
+          "emits": [
+            {
+              "description": "The player touched an uncollected feature; carries the feature identity, board-defined kind (star, boost, …), position and display glyph/message. Fires once per feature per run.",
+              "event": "PICKED",
+              "eventId": "evt_01M1GJ1RVVSK6CJ213JM62VAQD",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "kind",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                },
+                {
+                  "name": "glyph",
+                  "type": "string"
+                },
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Running count of collected features after this pickup — the event std-gate-lock consumes to count openings.",
+              "event": "COLLECT",
+              "eventId": "evt_01M1GJ1RVV6P5K79BVV55VS8N1",
+              "payloadSchema": [
+                {
+                  "name": "total",
+                  "required": true,
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Every feature in the set is collected; fires once per run.",
+              "event": "PICKUP_SET_COMPLETED",
+              "eventId": "evt_01M1GJ1RVVN8VVR734HESK50D3",
+              "scope": "external",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "pickupCompleted",
+              "pickups",
+              "total"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "entityRefIds": {
+            "PickupData": "ent_01M1GJ1RVVTJT76K1YZHQJGRG1"
+          },
+          "id": "trt_01M1GJ1RVVYNAYXGWNA3EB2RFF",
+          "linkedEntity": "PickupData",
+          "linkedEntityId": "ent_01M1GJ1RVVTJT76K1YZHQJGRG1",
+          "name": "Pickup",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "id": "evt_01M1GJ1RVVV01RP71K50TKTX9B",
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "id": "evt_01M1GJ1RVVM5H5ZY0QRFXV9CKE",
+                "key": "BODY_MOVED",
+                "name": "Body Moved",
+                "payloadSchema": [
+                  {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "vx",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "vy",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "grounded",
+                    "required": true,
+                    "type": "boolean"
+                  },
+                  {
+                    "name": "skating",
+                    "required": true,
+                    "type": "boolean"
+                  },
+                  {
+                    "name": "speed",
+                    "required": true,
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "id": "evt_01M1GJ1RVV15S8HWFJEVX2B3EE",
+                "key": "RESTART",
+                "name": "Restart",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "description": "The player touched an uncollected feature; carries the feature identity, board-defined kind (star, boost, …), position and display glyph/message. Fires once per feature per run.",
+                "id": "evt_01M1GJ1RVVSK6CJ213JM62VAQD",
+                "key": "PICKED",
+                "name": "Picked",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "kind",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "glyph",
+                    "type": "string"
+                  },
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Running count of collected features after this pickup — the event std-gate-lock consumes to count openings.",
+                "id": "evt_01M1GJ1RVV6P5K79BVV55VS8N1",
+                "key": "COLLECT",
+                "name": "Collect",
+                "payloadSchema": [
+                  {
+                    "name": "total",
+                    "required": true,
+                    "type": "number"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Every feature in the set is collected; fires once per run.",
+                "id": "evt_01M1GJ1RVVN8VVR734HESK50D3",
+                "key": "PICKUP_SET_COMPLETED",
+                "name": "Pickup Set Completed",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "active"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.pickups",
+                    [
+                      "array/map",
+                      "@config.features",
+                      [
+                        "fn",
+                        "f",
+                        [
+                          "object/merge",
+                          "@f",
+                          {
+                            "collected": false
+                          }
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.pickupCompleted",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.total",
+                    0.0
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01M1GJ1RVVV01RP71K50TKTX9B",
+                "from": "active",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "let",
+                    [
+                      [
+                        "touch",
+                        [
+                          "array/filter",
+                          "@entity.pickups",
+                          [
+                            "fn",
+                            "f",
+                            [
+                              "and",
+                              [
+                                "==",
+                                [
+                                  "object/get",
+                                  "@f",
+                                  "collected"
+                                ],
+                                false
+                              ],
+                              [
+                                "and",
+                                [
+                                  "<=",
+                                  [
+                                    "math/abs",
+                                    [
+                                      "-",
+                                      "@payload.x",
+                                      [
+                                        "object/get",
+                                        "@f",
+                                        "x"
+                                      ]
+                                    ]
+                                  ],
+                                  "@config.reachX"
+                                ],
+                                [
+                                  "<=",
+                                  [
+                                    "math/abs",
+                                    [
+                                      "-",
+                                      "@payload.y",
+                                      [
+                                        "object/get",
+                                        "@f",
+                                        "y"
+                                      ]
+                                    ]
+                                  ],
+                                  "@config.reachY"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "if",
+                      [
+                        ">",
+                        [
+                          "array/len",
+                          "@touch"
+                        ],
+                        0.0
+                      ],
+                      [
+                        "let",
+                        [
+                          [
+                            "f",
+                            [
+                              "array/first",
+                              "@touch"
+                            ]
+                          ]
+                        ],
+                        [
+                          "let",
+                          [
+                            [
+                              "remaining",
+                              [
+                                "array/len",
+                                [
+                                  "array/filter",
+                                  "@entity.pickups",
+                                  [
+                                    "fn",
+                                    "c",
+                                    [
+                                      "and",
+                                      [
+                                        "==",
+                                        [
+                                          "object/get",
+                                          "@c",
+                                          "collected"
+                                        ],
+                                        false
+                                      ],
+                                      [
+                                        "!=",
+                                        [
+                                          "object/get",
+                                          "@c",
+                                          "id"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "@f",
+                                          "id"
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ],
+                          [
+                            "do",
+                            [
+                              "set",
+                              "@entity.pickups",
+                              [
+                                "array/map",
+                                "@entity.pickups",
+                                [
+                                  "fn",
+                                  "c",
+                                  [
+                                    "if",
+                                    [
+                                      "==",
+                                      [
+                                        "object/get",
+                                        "@c",
+                                        "id"
+                                      ],
+                                      [
+                                        "object/get",
+                                        "@f",
+                                        "id"
+                                      ]
+                                    ],
+                                    [
+                                      "object/merge",
+                                      "@c",
+                                      {
+                                        "collected": true
+                                      }
+                                    ],
+                                    "@c"
+                                  ]
+                                ]
+                              ]
+                            ],
+                            [
+                              "set",
+                              "@entity.total",
+                              [
+                                "+",
+                                "@entity.total",
+                                1.0
+                              ]
+                            ],
+                            [
+                              "emit",
+                              "PICKED",
+                              {
+                                "glyph": [
+                                  "object/get",
+                                  "@f",
+                                  "glyph"
+                                ],
+                                "id": [
+                                  "object/get",
+                                  "@f",
+                                  "id"
+                                ],
+                                "kind": [
+                                  "object/get",
+                                  "@f",
+                                  "kind"
+                                ],
+                                "message": [
+                                  "object/get",
+                                  "@f",
+                                  "message"
+                                ],
+                                "x": [
+                                  "object/get",
+                                  "@f",
+                                  "x"
+                                ],
+                                "y": [
+                                  "object/get",
+                                  "@f",
+                                  "y"
+                                ]
+                              }
+                            ],
+                            [
+                              "emit",
+                              "COLLECT",
+                              {
+                                "total": "@entity.total"
+                              }
+                            ],
+                            [
+                              "if",
+                              [
+                                "and",
+                                [
+                                  "==",
+                                  "@entity.pickupCompleted",
+                                  false
+                                ],
+                                [
+                                  "==",
+                                  "@remaining",
+                                  0.0
+                                ]
+                              ],
+                              [
+                                "do",
+                                [
+                                  "set",
+                                  "@entity.pickupCompleted",
+                                  true
+                                ],
+                                [
+                                  "emit",
+                                  "PICKUP_SET_COMPLETED",
+                                  {}
+                                ]
+                              ],
+                              null
+                            ]
+                          ]
+                        ]
+                      ],
+                      null
+                    ]
+                  ]
+                ],
+                "event": "BODY_MOVED",
+                "eventId": "evt_01M1GJ1RVVM5H5ZY0QRFXV9CKE",
+                "from": "active",
+                "guard": "@config.running",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.pickups",
+                    [
+                      "array/map",
+                      "@config.features",
+                      [
+                        "fn",
+                        "f",
+                        [
+                          "object/merge",
+                          "@f",
+                          {
+                            "collected": false
+                          }
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.pickupCompleted",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.total",
+                    0.0
+                  ]
+                ],
+                "event": "RESTART",
+                "eventId": "evt_01M1GJ1RVV15S8HWFJEVX2B3EE",
+                "from": "active",
+                "to": "active"
+              }
+            ]
+          }
+        }
+      ],
+      "types": {
+        "PickupFeature": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "x",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "y",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "kind",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "glyph",
+            "type": "string"
+          },
+          {
+            "name": "message",
+            "type": "string"
+          },
+          {
+            "name": "collected",
+            "type": "boolean"
+          }
+        ]
+      }
+    }
+  ],
+  "schemaVersion": 1,
+  "version": "1.0.0"
+}

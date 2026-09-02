@@ -139,6 +139,7 @@ export * from './ui/game/atoms/std-pad-lock.js';
 export * from './ui/core/atoms/std-pagination.js';
 export * from './ui/game/atoms/std-patience.js';
 export * from './ui/game/atoms/std-patrol-hazard.js';
+export * from './ui/game/atoms/std-pickup.js';
 export * from './ui/game/atoms/std-platformer-body.js';
 export * from './ui/game/atoms/std-production.js';
 export * from './infra/atoms/std-rate-limiter.js';
