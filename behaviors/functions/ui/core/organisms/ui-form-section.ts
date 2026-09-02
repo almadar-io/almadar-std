@@ -82,8 +82,7 @@ export interface StdUiFormSectionConfig {
   isLoading?: boolean;
   /** Default: `"vertical"` */
   layout?: 'vertical' | 'horizontal' | 'inline';
-  /** Default: `"create"` */
-  mode?: 'create' | 'edit';
+  mode?: string;
   onCancel?: string;
   /** Default: `"FIELD_CHANGE"` */
   onFieldChange?: string;
@@ -254,7 +253,61 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
             'properties': {
               'entity': {
                 'items': {
-                  'type': 'opaque',
+                  'properties': {
+                    'FileValue': {
+                      'name': 'FileValue',
+                      'properties': {
+                        'mimeType': {
+                          'name': 'mimeType',
+                          'required': true,
+                          'type': 'string',
+                        },
+                        'name': {
+                          'name': 'name',
+                          'required': true,
+                          'type': 'string',
+                        },
+                        'sizeBytes': {
+                          'name': 'sizeBytes',
+                          'required': true,
+                          'type': 'number',
+                        },
+                        'url': {
+                          'name': 'url',
+                          'required': true,
+                          'type': 'string',
+                        },
+                      },
+                      'type': 'object',
+                    },
+                    'array': {
+                      'items': {
+                        'type': 'string',
+                      },
+                      'name': 'array',
+                      'type': 'array',
+                    },
+                    'boolean': {
+                      'name': 'boolean',
+                      'type': 'boolean',
+                    },
+                    'number': {
+                      'name': 'number',
+                      'type': 'number',
+                    },
+                    'string': {
+                      'name': 'string',
+                      'type': 'string',
+                    },
+                  },
+                  'type': 'union',
+                  'values': [
+                    'string',
+                    'number',
+                    'boolean',
+                    'array',
+                    'FileValue',
+                  ],
                 },
                 'name': 'entity',
                 'required': false,
@@ -262,7 +315,61 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
               },
               'formValues': {
                 'items': {
-                  'type': 'opaque',
+                  'properties': {
+                    'FileValue': {
+                      'name': 'FileValue',
+                      'properties': {
+                        'mimeType': {
+                          'name': 'mimeType',
+                          'required': true,
+                          'type': 'string',
+                        },
+                        'name': {
+                          'name': 'name',
+                          'required': true,
+                          'type': 'string',
+                        },
+                        'sizeBytes': {
+                          'name': 'sizeBytes',
+                          'required': true,
+                          'type': 'number',
+                        },
+                        'url': {
+                          'name': 'url',
+                          'required': true,
+                          'type': 'string',
+                        },
+                      },
+                      'type': 'object',
+                    },
+                    'array': {
+                      'items': {
+                        'type': 'string',
+                      },
+                      'name': 'array',
+                      'type': 'array',
+                    },
+                    'boolean': {
+                      'name': 'boolean',
+                      'type': 'boolean',
+                    },
+                    'number': {
+                      'name': 'number',
+                      'type': 'number',
+                    },
+                    'string': {
+                      'name': 'string',
+                      'type': 'string',
+                    },
+                  },
+                  'type': 'union',
+                  'values': [
+                    'string',
+                    'number',
+                    'boolean',
+                    'array',
+                    'FileValue',
+                  ],
                 },
                 'name': 'formValues',
                 'required': true,
@@ -270,7 +377,61 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
               },
               'globalVariables': {
                 'items': {
-                  'type': 'opaque',
+                  'properties': {
+                    'FileValue': {
+                      'name': 'FileValue',
+                      'properties': {
+                        'mimeType': {
+                          'name': 'mimeType',
+                          'required': true,
+                          'type': 'string',
+                        },
+                        'name': {
+                          'name': 'name',
+                          'required': true,
+                          'type': 'string',
+                        },
+                        'sizeBytes': {
+                          'name': 'sizeBytes',
+                          'required': true,
+                          'type': 'number',
+                        },
+                        'url': {
+                          'name': 'url',
+                          'required': true,
+                          'type': 'string',
+                        },
+                      },
+                      'type': 'object',
+                    },
+                    'array': {
+                      'items': {
+                        'type': 'string',
+                      },
+                      'name': 'array',
+                      'type': 'array',
+                    },
+                    'boolean': {
+                      'name': 'boolean',
+                      'type': 'boolean',
+                    },
+                    'number': {
+                      'name': 'number',
+                      'type': 'number',
+                    },
+                    'string': {
+                      'name': 'string',
+                      'type': 'string',
+                    },
+                  },
+                  'type': 'union',
+                  'values': [
+                    'string',
+                    'number',
+                    'boolean',
+                    'array',
+                    'FileValue',
+                  ],
                 },
                 'name': 'globalVariables',
                 'required': true,
@@ -278,7 +439,61 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
               },
               'localVariables': {
                 'items': {
-                  'type': 'opaque',
+                  'properties': {
+                    'FileValue': {
+                      'name': 'FileValue',
+                      'properties': {
+                        'mimeType': {
+                          'name': 'mimeType',
+                          'required': true,
+                          'type': 'string',
+                        },
+                        'name': {
+                          'name': 'name',
+                          'required': true,
+                          'type': 'string',
+                        },
+                        'sizeBytes': {
+                          'name': 'sizeBytes',
+                          'required': true,
+                          'type': 'number',
+                        },
+                        'url': {
+                          'name': 'url',
+                          'required': true,
+                          'type': 'string',
+                        },
+                      },
+                      'type': 'object',
+                    },
+                    'array': {
+                      'items': {
+                        'type': 'string',
+                      },
+                      'name': 'array',
+                      'type': 'array',
+                    },
+                    'boolean': {
+                      'name': 'boolean',
+                      'type': 'boolean',
+                    },
+                    'number': {
+                      'name': 'number',
+                      'type': 'number',
+                    },
+                    'string': {
+                      'name': 'string',
+                      'type': 'string',
+                    },
+                  },
+                  'type': 'union',
+                  'values': [
+                    'string',
+                    'number',
+                    'boolean',
+                    'array',
+                    'FileValue',
+                  ],
                 },
                 'name': 'localVariables',
                 'required': false,
@@ -408,8 +623,62 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
               'properties': {
                 'defaultValue': {
                   'name': 'defaultValue',
+                  'properties': {
+                    'FileValue': {
+                      'name': 'FileValue',
+                      'properties': {
+                        'mimeType': {
+                          'name': 'mimeType',
+                          'required': true,
+                          'type': 'string',
+                        },
+                        'name': {
+                          'name': 'name',
+                          'required': true,
+                          'type': 'string',
+                        },
+                        'sizeBytes': {
+                          'name': 'sizeBytes',
+                          'required': true,
+                          'type': 'number',
+                        },
+                        'url': {
+                          'name': 'url',
+                          'required': true,
+                          'type': 'string',
+                        },
+                      },
+                      'type': 'object',
+                    },
+                    'array': {
+                      'items': {
+                        'type': 'string',
+                      },
+                      'name': 'array',
+                      'type': 'array',
+                    },
+                    'boolean': {
+                      'name': 'boolean',
+                      'type': 'boolean',
+                    },
+                    'number': {
+                      'name': 'number',
+                      'type': 'number',
+                    },
+                    'string': {
+                      'name': 'string',
+                      'type': 'string',
+                    },
+                  },
                   'required': false,
-                  'type': 'opaque',
+                  'type': 'union',
+                  'values': [
+                    'string',
+                    'number',
+                    'boolean',
+                    'array',
+                    'FileValue',
+                  ],
                 },
                 'disabled': {
                   'name': 'disabled',
@@ -617,15 +886,10 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
             ],
           },
           'mode': {
-            'default': 'create',
             'description': 'Form mode — \'create\' for new records, \'edit\' for updating existing. Accepts `string` so schema-driven callers (whose `config.mode` is typed as `string` per the trait\'s declared config block) compile cleanly. The runtime treats anything other than \'edit\' as \'create\'.',
             'label': 'Mode',
             'tier': 'presentation',
             'type': 'string',
-            'values': [
-              'create',
-              'edit',
-            ],
           },
           'onCancel': {
             'description': 'Cancel event name for trait dispatch (emitted via eventBus as UI:{onCancel})',
@@ -717,8 +981,62 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                     'properties': {
                       'defaultValue': {
                         'name': 'defaultValue',
+                        'properties': {
+                          'FileValue': {
+                            'name': 'FileValue',
+                            'properties': {
+                              'mimeType': {
+                                'name': 'mimeType',
+                                'required': true,
+                                'type': 'string',
+                              },
+                              'name': {
+                                'name': 'name',
+                                'required': true,
+                                'type': 'string',
+                              },
+                              'sizeBytes': {
+                                'name': 'sizeBytes',
+                                'required': true,
+                                'type': 'number',
+                              },
+                              'url': {
+                                'name': 'url',
+                                'required': true,
+                                'type': 'string',
+                              },
+                            },
+                            'type': 'object',
+                          },
+                          'array': {
+                            'items': {
+                              'type': 'string',
+                            },
+                            'name': 'array',
+                            'type': 'array',
+                          },
+                          'boolean': {
+                            'name': 'boolean',
+                            'type': 'boolean',
+                          },
+                          'number': {
+                            'name': 'number',
+                            'type': 'number',
+                          },
+                          'string': {
+                            'name': 'string',
+                            'type': 'string',
+                          },
+                        },
                         'required': false,
-                        'type': 'opaque',
+                        'type': 'union',
+                        'values': [
+                          'string',
+                          'number',
+                          'boolean',
+                          'array',
+                          'FileValue',
+                        ],
                       },
                       'disabled': {
                         'name': 'disabled',
@@ -1062,7 +1380,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                   {
                     'name': 'formValues',
                     'required': true,
-                    'type': 'Map<string,opaque>',
+                    'type': 'Map<string,ControlValue>',
                   },
                 ],
                 'type': 'object',
@@ -1196,7 +1514,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                     {
                       'name': 'formValues',
                       'required': true,
-                      'type': 'Map<string,opaque>',
+                      'type': 'Map<string,ControlValue>',
                     },
                   ],
                   'type': 'object',

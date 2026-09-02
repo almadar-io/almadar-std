@@ -314,7 +314,10 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
                 },
                 'children': {
                   'items': {
-                    'type': 'object',
+                    'type': 'union',
+                    'values': [
+                      'NavItem',
+                    ],
                   },
                   'name': 'children',
                   'required': false,

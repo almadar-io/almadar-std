@@ -312,12 +312,6 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
                   'name': 'placement',
                   'required': false,
                   'type': 'string',
-                  'values': [
-                    'row',
-                    'bulk',
-                    'card',
-                    'footer',
-                  ],
                 },
                 'variant': {
                   'name': 'variant',

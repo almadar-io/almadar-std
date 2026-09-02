@@ -41,7 +41,7 @@ export type StdUiEdgeDecorationEventKey = 'INIT';
 export interface StdUiEdgeDecorationConfig {
   className?: string;
   /** Default: `"primary"` */
-  color?: 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'muted';
+  color?: string;
   /** Default: `0.15` */
   opacity?: number;
   /** Default: `"both"` */

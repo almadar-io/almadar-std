@@ -290,11 +290,6 @@ export function stdUiStatCardStatCardOrbital(params: StdUiStatCardStatCardOrbita
                   'name': 'format',
                   'required': false,
                   'type': 'string',
-                  'values': [
-                    'currency',
-                    'percent',
-                    'number',
-                  ],
                 },
                 'icon': {
                   'name': 'icon',

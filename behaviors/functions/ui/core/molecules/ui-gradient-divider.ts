@@ -40,8 +40,7 @@ export type StdUiGradientDividerEventKey = 'INIT';
  */
 export interface StdUiGradientDividerConfig {
   className?: string;
-  /** Default: `"primary"` */
-  color?: 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'muted';
+  color?: string;
 }
 
 /**

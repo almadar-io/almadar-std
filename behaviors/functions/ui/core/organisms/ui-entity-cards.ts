@@ -372,22 +372,11 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
                   'name': 'placement',
                   'required': false,
                   'type': 'string',
-                  'values': [
-                    'card',
-                    'footer',
-                    'row',
-                  ],
                 },
                 'variant': {
                   'name': 'variant',
                   'required': false,
                   'type': 'string',
-                  'values': [
-                    'primary',
-                    'secondary',
-                    'ghost',
-                    'danger',
-                  ],
                 },
               },
               'type': 'object',

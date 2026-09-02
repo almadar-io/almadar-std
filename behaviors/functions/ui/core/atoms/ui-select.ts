@@ -33,6 +33,13 @@ const ALIAS = 'UiSelect';
 export type StdUiSelectEventKey = 'ACTION' | 'CHANGE' | 'INIT' | 'VALUE_CHANGE';
 
 /**
+ * Payload shape for the `ACTION` event.
+ */
+export interface StdUiSelectActionPayload {
+  value: string;
+}
+
+/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
@@ -55,8 +62,7 @@ export interface StdUiSelectConfig {
   options?: EntityRow[];
   placeholder?: string;
   searchable?: boolean;
-  /** Default: `[]` */
-  value?: string[];
+  value?: string;
 }
 
 /**

@@ -42,8 +42,7 @@ export interface StdUiIconConfig {
   /** Default: `"none"` */
   animation?: 'spin' | 'pulse' | 'none';
   className?: string;
-  /** Default: `"primary"` */
-  color?: 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'muted';
+  color?: string;
   icon?: unknown;
   name?: string;
   /** Default: `"md"` */

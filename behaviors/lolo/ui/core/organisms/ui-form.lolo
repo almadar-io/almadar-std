@@ -10,7 +10,7 @@ orbital FormOrbital {
     inputType : string
     placeholder : string
     required : boolean
-    defaultValue : opaque
+    defaultValue : ControlValue
     options : [FormFieldsItemOptionsItem]
     values : [string]
     relation : FormFieldsItemRelation
@@ -21,6 +21,13 @@ orbital FormOrbital {
     readonly : boolean
     disabled : boolean
     hint : string
+  }
+  type ControlValue = string | number | boolean | [string] | FileValue
+  type FileValue = {
+    name : string!
+    url : string!
+    mimeType : string!
+    sizeBytes : number!
   }
   type FormFieldsItemOptionsItem = {
     value : string!
@@ -69,10 +76,10 @@ orbital FormOrbital {
     message : string!
   }
   type FormEvaluationContext = {
-    formValues : Map string opaque!
-    globalVariables : Map string opaque!
-    localVariables : Map string opaque
-    entity : Map string opaque
+    formValues : Map string ControlValue!
+    globalVariables : Map string ControlValue!
+    localVariables : Map string ControlValue
+    entity : Map string ControlValue
   }
   type FormSectionsItem = {
     id : string!
@@ -89,7 +96,7 @@ orbital FormOrbital {
     inputType : string
     placeholder : string
     required : boolean
-    defaultValue : opaque
+    defaultValue : ControlValue
     options : [FormSectionsItemFieldsItemOptionsItem]
     values : [string]
     relation : FormSectionsItemFieldsItemRelation
@@ -116,7 +123,7 @@ orbital FormOrbital {
   type FormFIELDCHANGEChange = {
     fieldId : string!
     value : string | number | boolean | [string] | FormFIELDCHANGEChangeValue!
-    formValues : Map string opaque!
+    formValues : Map string ControlValue!
   }
   type FormFIELDCHANGEChangeValue = {
     name : string!
@@ -283,7 +290,7 @@ orbital FormOrbital {
         @label "Class Name"
         @description "Additional CSS classes"
         @tier "presentation"
-      mode : "create" | "edit" = create
+      mode : string
         @label "Mode"
         @description "Form mode — 'create' for new records, 'edit' for updating existing. Accepts `string` so schema-driven callers (whose `config.mode` is typed as `string` per the trait's declared config block) compile cleanly. The runtime treats anything other than 'edit' as 'create'."
         @tier "presentation"

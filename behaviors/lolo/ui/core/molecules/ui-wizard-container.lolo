@@ -25,12 +25,12 @@ orbital WizardContainerOrbital {
     description : string
     fields : [WizardContainerStepsItemSectionsItemFieldsItem]
     subsections : [WizardContainerStepsItemSectionsItem]
-    condition : [opaque]
+    condition : SExpr
     repeatable : boolean
     minItems : number
     addButtonLabel : string
     hiddenCalculations : [WizardContainerStepsItemSectionsItemHiddenCalculationsItem]
-    dataSource : opaque
+    dataSource : Map string ControlValue
     readOnly : boolean
   }
   type WizardContainerStepsItemSectionsItemFieldsItem = {
@@ -40,23 +40,23 @@ orbital WizardContainerOrbital {
     required : boolean
     repeatable : boolean
     options : [WizardContainerStepsItemSectionsItemFieldsItemOptionsItem]
-    defaultValue : opaque
-    condition : [opaque]
+    defaultValue : [string]
+    condition : SExpr
     placeholder : string
     entityField : string
     minLength : number
     maxLength : number
-    dataSource : opaque
+    dataSource : Map string ControlValue
     displayFields : [string]
-    searchConfig : opaque
+    searchConfig : Map string ControlValue
     hiddenCalculations : [WizardContainerStepsItemSectionsItemFieldsItemHiddenCalculationsItem]
-    signatureConfig : opaque
-    displayTemplate : opaque
-    lawReference : opaque
+    signatureConfig : Map string ControlValue
+    displayTemplate : Map string ControlValue
+    lawReference : Map string ControlValue
     contextMenu : [string]
-    calculated : opaque
+    calculated : Map string ControlValue
     readOnly : boolean
-    minDate : opaque
+    minDate : string
     stats : [WizardContainerStepsItemSectionsItemFieldsItemStatsItem]
     items : [WizardContainerStepsItemSectionsItemFieldsItemItemsItem]
   }
@@ -65,6 +65,13 @@ orbital WizardContainerOrbital {
     label : string!
     isDefault : boolean
   }
+  type ControlValue = string | number | boolean | [string] | FileValue
+  type FileValue = {
+    name : string!
+    url : string!
+    mimeType : string!
+    sizeBytes : number!
+  }
   type WizardContainerStepsItemSectionsItemFieldsItemHiddenCalculationsItem = {
     variable : string!
     expression : string!
@@ -72,13 +79,13 @@ orbital WizardContainerOrbital {
   }
   type WizardContainerStepsItemSectionsItemFieldsItemStatsItem = {
     label : string!
-    value : opaque!
+    value : [string]!
     icon : string
   }
   type WizardContainerStepsItemSectionsItemFieldsItemItemsItem = {
     id : string!
     label : string!
-    autoCheck : opaque
+    autoCheck : boolean
   }
   type WizardContainerStepsItemSectionsItemHiddenCalculationsItem = {
     variable : string!
@@ -87,12 +94,12 @@ orbital WizardContainerOrbital {
   }
   type WizardContainerStepsItemEntityMapping = {
     entity : string!
-    mode : "search_or_create" | "create_multiple" | "select_one" | "update"!
+    mode : string!
     parentField : string
     idField : string
   }
   type WizardContainerStepsItemValidationRulesItem = {
-    condition : [opaque]!
+    condition : SExpr!
     message : string!
   }
   type WizardContainerStepsItemLawReferencesItem = {
@@ -156,7 +163,7 @@ orbital WizardContainerOrbital {
     }
 
     config {
-      steps : [WizardContainerStepsItem] = [{ id: "Id", tabId: "Tab Id", title: "Title", name: "Name", description: "Description", content: "Content", optional: false, sections: [{ id: "Id", title: "Title", description: "Description", fields: [{ id: "Id", type: "Type", label: "Label", required: false, repeatable: false, options: [], condition: [], placeholder: "Placeholder", entityField: "Entity Field", minLength: 1, maxLength: 1, displayFields: [], hiddenCalculations: [], contextMenu: [], readOnly: false, stats: [], items: [] }, { id: "Id 2", type: "Type 2", label: "Label 2", required: true, repeatable: true, options: [], condition: [], placeholder: "Placeholder 2", entityField: "Entity Field 2", minLength: 2, maxLength: 2, displayFields: [], hiddenCalculations: [], contextMenu: [], readOnly: true, stats: [], items: [] }], subsections: [], condition: [], repeatable: false, minItems: 1, addButtonLabel: "Add Button Label", hiddenCalculations: [{ variable: "Variable", expression: "Expression", scope: "Scope" }, { variable: "Variable 2", expression: "Expression 2", scope: "Scope 2" }], readOnly: false }, { id: "Id 2", title: "Title 2", description: "Description 2", fields: [{ id: "Id", type: "Type", label: "Label", required: false, repeatable: false, options: [], condition: [], placeholder: "Placeholder", entityField: "Entity Field", minLength: 1, maxLength: 1, displayFields: [], hiddenCalculations: [], contextMenu: [], readOnly: false, stats: [], items: [] }, { id: "Id 2", type: "Type 2", label: "Label 2", required: true, repeatable: true, options: [], condition: [], placeholder: "Placeholder 2", entityField: "Entity Field 2", minLength: 2, maxLength: 2, displayFields: [], hiddenCalculations: [], contextMenu: [], readOnly: true, stats: [], items: [] }], subsections: [], condition: [], repeatable: true, minItems: 2, addButtonLabel: "Add Button Label 2", hiddenCalculations: [{ variable: "Variable", expression: "Expression", scope: "Scope" }, { variable: "Variable 2", expression: "Expression 2", scope: "Scope 2" }], readOnly: true }], globalVariablesRequired: ["Item", "Item 2"], globalVariablesSet: ["Item", "Item 2"], localVariables: ["Item", "Item 2"], entityMapping: { entity: "Entity", mode: "search_or_create", parentField: "Parent Field", idField: "Id Field" }, validationRules: [{ condition: [], message: "Message" }, { condition: [], message: "Message 2" }], lawReferences: [{ law: "Law", article: "Article", description: "Description" }, { law: "Law 2", article: "Article 2", description: "Description 2" }], phase: "Phase", contextMenu: ["Item", "Item 2"] }, { id: "Id 2", tabId: "Tab Id 2", title: "Title 2", name: "Name 2", description: "Description 2", content: "Content 2", optional: true, sections: [{ id: "Id", title: "Title", description: "Description", fields: [{ id: "Id", type: "Type", label: "Label", required: false, repeatable: false, options: [], condition: [], placeholder: "Placeholder", entityField: "Entity Field", minLength: 1, maxLength: 1, displayFields: [], hiddenCalculations: [], contextMenu: [], readOnly: false, stats: [], items: [] }, { id: "Id 2", type: "Type 2", label: "Label 2", required: true, repeatable: true, options: [], condition: [], placeholder: "Placeholder 2", entityField: "Entity Field 2", minLength: 2, maxLength: 2, displayFields: [], hiddenCalculations: [], contextMenu: [], readOnly: true, stats: [], items: [] }], subsections: [], condition: [], repeatable: false, minItems: 1, addButtonLabel: "Add Button Label", hiddenCalculations: [{ variable: "Variable", expression: "Expression", scope: "Scope" }, { variable: "Variable 2", expression: "Expression 2", scope: "Scope 2" }], readOnly: false }, { id: "Id 2", title: "Title 2", description: "Description 2", fields: [{ id: "Id", type: "Type", label: "Label", required: false, repeatable: false, options: [], condition: [], placeholder: "Placeholder", entityField: "Entity Field", minLength: 1, maxLength: 1, displayFields: [], hiddenCalculations: [], contextMenu: [], readOnly: false, stats: [], items: [] }, { id: "Id 2", type: "Type 2", label: "Label 2", required: true, repeatable: true, options: [], condition: [], placeholder: "Placeholder 2", entityField: "Entity Field 2", minLength: 2, maxLength: 2, displayFields: [], hiddenCalculations: [], contextMenu: [], readOnly: true, stats: [], items: [] }], subsections: [], condition: [], repeatable: true, minItems: 2, addButtonLabel: "Add Button Label 2", hiddenCalculations: [{ variable: "Variable", expression: "Expression", scope: "Scope" }, { variable: "Variable 2", expression: "Expression 2", scope: "Scope 2" }], readOnly: true }], globalVariablesRequired: ["Item", "Item 2"], globalVariablesSet: ["Item", "Item 2"], localVariables: ["Item", "Item 2"], entityMapping: { entity: "Entity 2", mode: "create_multiple", parentField: "Parent Field 2", idField: "Id Field 2" }, validationRules: [{ condition: [], message: "Message" }, { condition: [], message: "Message 2" }], lawReferences: [{ law: "Law", article: "Article", description: "Description" }, { law: "Law 2", article: "Article 2", description: "Description 2" }], phase: "Phase 2", contextMenu: ["Item", "Item 2"] }]
+      steps : [WizardContainerStepsItem] = [{ id: "Id", tabId: "Tab Id", title: "Title", name: "Name", description: "Description", content: "Content", optional: false, sections: [{ id: "Id", title: "Title", description: "Description", fields: [{ id: "Id", type: "Type", label: "Label", required: false, repeatable: false, options: [], defaultValue: [], placeholder: "Placeholder", entityField: "Entity Field", minLength: 1, maxLength: 1, displayFields: [], hiddenCalculations: [], contextMenu: [], readOnly: false, minDate: "Min Date", stats: [], items: [] }, { id: "Id 2", type: "Type 2", label: "Label 2", required: true, repeatable: true, options: [], defaultValue: [], placeholder: "Placeholder 2", entityField: "Entity Field 2", minLength: 2, maxLength: 2, displayFields: [], hiddenCalculations: [], contextMenu: [], readOnly: true, minDate: "Min Date 2", stats: [], items: [] }], subsections: [], repeatable: false, minItems: 1, addButtonLabel: "Add Button Label", hiddenCalculations: [{ variable: "Variable", expression: "Expression", scope: "Scope" }, { variable: "Variable 2", expression: "Expression 2", scope: "Scope 2" }], readOnly: false }, { id: "Id 2", title: "Title 2", description: "Description 2", fields: [{ id: "Id", type: "Type", label: "Label", required: false, repeatable: false, options: [], defaultValue: [], placeholder: "Placeholder", entityField: "Entity Field", minLength: 1, maxLength: 1, displayFields: [], hiddenCalculations: [], contextMenu: [], readOnly: false, minDate: "Min Date", stats: [], items: [] }, { id: "Id 2", type: "Type 2", label: "Label 2", required: true, repeatable: true, options: [], defaultValue: [], placeholder: "Placeholder 2", entityField: "Entity Field 2", minLength: 2, maxLength: 2, displayFields: [], hiddenCalculations: [], contextMenu: [], readOnly: true, minDate: "Min Date 2", stats: [], items: [] }], subsections: [], repeatable: true, minItems: 2, addButtonLabel: "Add Button Label 2", hiddenCalculations: [{ variable: "Variable", expression: "Expression", scope: "Scope" }, { variable: "Variable 2", expression: "Expression 2", scope: "Scope 2" }], readOnly: true }], globalVariablesRequired: ["Item", "Item 2"], globalVariablesSet: ["Item", "Item 2"], localVariables: ["Item", "Item 2"], entityMapping: { entity: "Entity", mode: "Mode", parentField: "Parent Field", idField: "Id Field" }, validationRules: [{ condition: {}, message: "Message" }, { condition: {}, message: "Message 2" }], lawReferences: [{ law: "Law", article: "Article", description: "Description" }, { law: "Law 2", article: "Article 2", description: "Description 2" }], phase: "Phase", contextMenu: ["Item", "Item 2"] }, { id: "Id 2", tabId: "Tab Id 2", title: "Title 2", name: "Name 2", description: "Description 2", content: "Content 2", optional: true, sections: [{ id: "Id", title: "Title", description: "Description", fields: [{ id: "Id", type: "Type", label: "Label", required: false, repeatable: false, options: [], defaultValue: [], placeholder: "Placeholder", entityField: "Entity Field", minLength: 1, maxLength: 1, displayFields: [], hiddenCalculations: [], contextMenu: [], readOnly: false, minDate: "Min Date", stats: [], items: [] }, { id: "Id 2", type: "Type 2", label: "Label 2", required: true, repeatable: true, options: [], defaultValue: [], placeholder: "Placeholder 2", entityField: "Entity Field 2", minLength: 2, maxLength: 2, displayFields: [], hiddenCalculations: [], contextMenu: [], readOnly: true, minDate: "Min Date 2", stats: [], items: [] }], subsections: [], repeatable: false, minItems: 1, addButtonLabel: "Add Button Label", hiddenCalculations: [{ variable: "Variable", expression: "Expression", scope: "Scope" }, { variable: "Variable 2", expression: "Expression 2", scope: "Scope 2" }], readOnly: false }, { id: "Id 2", title: "Title 2", description: "Description 2", fields: [{ id: "Id", type: "Type", label: "Label", required: false, repeatable: false, options: [], defaultValue: [], placeholder: "Placeholder", entityField: "Entity Field", minLength: 1, maxLength: 1, displayFields: [], hiddenCalculations: [], contextMenu: [], readOnly: false, minDate: "Min Date", stats: [], items: [] }, { id: "Id 2", type: "Type 2", label: "Label 2", required: true, repeatable: true, options: [], defaultValue: [], placeholder: "Placeholder 2", entityField: "Entity Field 2", minLength: 2, maxLength: 2, displayFields: [], hiddenCalculations: [], contextMenu: [], readOnly: true, minDate: "Min Date 2", stats: [], items: [] }], subsections: [], repeatable: true, minItems: 2, addButtonLabel: "Add Button Label 2", hiddenCalculations: [{ variable: "Variable", expression: "Expression", scope: "Scope" }, { variable: "Variable 2", expression: "Expression 2", scope: "Scope 2" }], readOnly: true }], globalVariablesRequired: ["Item", "Item 2"], globalVariablesSet: ["Item", "Item 2"], localVariables: ["Item", "Item 2"], entityMapping: { entity: "Entity 2", mode: "Mode 2", parentField: "Parent Field 2", idField: "Id Field 2" }, validationRules: [{ condition: {}, message: "Message" }, { condition: {}, message: "Message 2" }], lawReferences: [{ law: "Law", article: "Article", description: "Description" }, { law: "Law 2", article: "Article 2", description: "Description 2" }], phase: "Phase 2", contextMenu: ["Item", "Item 2"] }]
         @label "Steps"
         @description "Wizard steps"
         @tier "presentation"

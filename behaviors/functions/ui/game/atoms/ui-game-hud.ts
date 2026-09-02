@@ -44,8 +44,7 @@ export interface StdUiGameHudConfig {
   elements?: EntityRow[];
   /** Default: `[]` */
   items?: EntityRow[];
-  /** Default: `"top"` */
-  position?: 'top' | 'bottom' | 'corners';
+  position?: string;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
   /** Default: `[]` */

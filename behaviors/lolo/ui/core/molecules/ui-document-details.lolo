@@ -14,6 +14,13 @@ orbital DocumentDetailsOrbital {
     format : "date" | "currency" | "number" | "boolean" | "percent"
     type : string
   }
+  type ControlValue = string | number | boolean | [string] | FileValue
+  type FileValue = {
+    name : string!
+    url : string!
+    mimeType : string!
+    sizeBytes : number!
+  }
 
   entity DocumentDetailsItem [runtime] {
     id : string!
@@ -59,7 +66,7 @@ orbital DocumentDetailsOrbital {
     emits {
       @config.metaCommitEvent -> external {
         id : string!
-        patch : Map string opaque!
+        patch : Map string ControlValue!
       }
         @description "Emitted when a property commits: { id, patch } — patch carries the id plus the one changed field, ready for a partial persist update."
         @tier "essential"

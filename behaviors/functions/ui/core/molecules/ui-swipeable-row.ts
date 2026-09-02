@@ -41,7 +41,8 @@ export type StdUiSwipeableRowEventKey = 'INIT';
 export interface StdUiSwipeableRowConfig {
   children?: PatternValue;
   className?: string;
-  itemData?: unknown;
+  /** Default: `{}` */
+  itemData?: Record<string, TraitConfig>;
   /** Default: `[]` */
   leftActions?: EntityRow[];
   /** Default: `[]` */

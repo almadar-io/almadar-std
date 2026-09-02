@@ -54,11 +54,11 @@ export interface StdUiControlButtonConfig {
   /** Default: `"RELEASE"` */
   releaseEvent?: string;
   /** Default: `"circle"` */
-  shape?: 'circle' | 'rounded' | 'square';
+  shape?: string;
   /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: string;
   /** Default: `"secondary"` */
-  variant?: 'primary' | 'secondary' | 'ghost';
+  variant?: string;
 }
 
 /**

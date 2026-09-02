@@ -65,7 +65,7 @@ export interface StdUiDrawerConfig {
   showCloseButton?: boolean;
   title?: PatternValue;
   /** Default: `"md"` */
-  width?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  width?: string;
 }
 
 /**

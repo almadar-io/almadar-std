@@ -65,9 +65,12 @@ orbital InputGroupOrbital {
 
     emits {
       @config.action -> external {
-        value : string!
+        value : match @config.inputType {
+          "number" -> number
+          _ -> string
+        }!
       }
-        @description "Declarative event name for trait dispatch"
+        @description "Declarative event name for trait dispatch."
         @tier "essential"
       @config.onClear -> external { }
         @description "Callback or declarative event key when clear button is clicked"
@@ -79,7 +82,10 @@ orbital InputGroupOrbital {
 
     listens {
       ACTION {
-        value : string!
+        value : match @config.inputType {
+          "number" -> number
+          _ -> string
+        }!
       }
     }
 
@@ -102,7 +108,7 @@ orbital InputGroupOrbital {
         @tier "presentation"
       action : event = "ACTION"
         @label "Action"
-        @description "Declarative event name for trait dispatch"
+        @description "Declarative event name for trait dispatch."
         @tier "presentation"
       inputType : "text" | "email" | "password" | "number" | "tel" | "url" | "search" | "date" | "datetime-local" | "time" | "checkbox" | "select" | "textarea" = text
         @label "Input Type"

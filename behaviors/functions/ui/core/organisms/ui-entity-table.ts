@@ -433,22 +433,11 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
                   'name': 'placement',
                   'required': false,
                   'type': 'string',
-                  'values': [
-                    'row',
-                    'bulk',
-                  ],
                 },
                 'variant': {
                   'name': 'variant',
                   'required': false,
                   'type': 'string',
-                  'values': [
-                    'default',
-                    'primary',
-                    'secondary',
-                    'ghost',
-                    'danger',
-                  ],
                 },
               },
               'type': 'object',

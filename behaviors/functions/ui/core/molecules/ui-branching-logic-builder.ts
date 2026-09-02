@@ -53,7 +53,7 @@ export interface StdUiBranchingLogicBuilderConfig {
   questions?: EntityRow[];
   /** Default: `false` */
   readOnly?: boolean;
-  /** Default: `[{"id":"Id","operator":"equals","sourceQuestionId":"Source Question Id","targetQuestionId":"Target Question Id","value":["Item","Item 2"]},{"id":"Id 2","operator":"not-equals","sourceQuestionId":"Source Question Id 2","targetQuestionId":"Target Question Id 2","value":["Item","Item 2"]}]` */
+  /** Default: `[{"id":"Id","operator":"equals","sourceQuestionId":"Source Question Id","targetQuestionId":"Target Question Id","value":"Value"},{"id":"Id 2","operator":"not-equals","sourceQuestionId":"Source Question Id 2","targetQuestionId":"Target Question Id 2","value":"Value 2"}]` */
   rules?: EntityRow[];
   /** Default: `"RULES_CHANGE"` */
   rulesChangeEvent?: string;

@@ -601,7 +601,10 @@ export function stdFileStoreStoredFileOrbital(params: StdFileStoreStoredFileOrbi
               'properties': {
                 'children': {
                   'items': {
-                    'type': 'object',
+                    'type': 'union',
+                    'values': [
+                      'TreeNode',
+                    ],
                   },
                   'name': 'children',
                   'required': false,

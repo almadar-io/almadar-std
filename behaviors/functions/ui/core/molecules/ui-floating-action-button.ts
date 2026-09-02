@@ -50,7 +50,7 @@ export interface StdUiFloatingActionButtonConfig {
   /** Default: `"CLICK"` */
   onClick?: string;
   /** Default: `"bottom-right"` */
-  position?: 'bottom-right' | 'bottom-left' | 'bottom-center' | 'top-right' | 'top-left' | 'top-center';
+  position?: string;
   /** Default: `"primary"` */
   variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning';
 }

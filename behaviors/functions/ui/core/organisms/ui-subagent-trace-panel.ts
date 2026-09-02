@@ -50,9 +50,9 @@ export interface StdUiSubagentTracePanelConfig {
   activeFilters?: Record<string, TraitConfig>;
   className?: string;
   /** Default: `[]` */
-  coordinatorActivities?: EntityRow[];
+  coordinatorActivities?: unknown;
   /** Default: `[]` */
-  coordinatorMessages?: EntityRow[];
+  coordinatorMessages?: unknown;
   /** Default: `1` */
   disclosureLevel?: number;
   error?: EntityRow;
@@ -73,7 +73,7 @@ export interface StdUiSubagentTracePanelConfig {
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
   /** Default: `[]` */
-  subagents?: EntityRow[];
+  subagents?: unknown;
   totalCount?: number;
 }
 
@@ -168,21 +168,27 @@ export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSu
             'default': [],
             'description': 'Full coordinator activities (tool calls, results, messages, errors).',
             'items': {
-              'type': 'opaque',
+              'items': {
+                'type': 'scalar',
+              },
+              'type': 'object',
             },
             'label': 'Coordinator Activities',
             'tier': 'presentation',
-            'type': '[opaque]',
+            'type': '[Map<string,scalar>]',
           },
           'coordinatorMessages': {
             'default': [],
             'description': 'Canonical Coordinator conversation — same shape live and on reload. When present, takes precedence over `coordinatorActivities` for the Coordinator section.',
             'items': {
-              'type': 'opaque',
+              'items': {
+                'type': 'scalar',
+              },
+              'type': 'object',
             },
             'label': 'Coordinator Messages',
             'tier': 'presentation',
-            'type': '[opaque]',
+            'type': '[Map<string,scalar>]',
           },
           'disclosureLevel': {
             'default': 1,
@@ -306,11 +312,14 @@ export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSu
             'default': [],
             'description': 'All known subagents from the runner.',
             'items': {
-              'type': 'opaque',
+              'items': {
+                'type': 'scalar',
+              },
+              'type': 'object',
             },
             'label': 'Subagents',
             'tier': 'presentation',
-            'type': '[opaque]',
+            'type': '[Map<string,scalar>]',
           },
           'totalCount': {
             'description': 'Total number of items',

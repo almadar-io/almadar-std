@@ -43,18 +43,18 @@ export interface StdUiStatBadgeConfig {
   className?: string;
   field?: string;
   /** Default: `"number"` */
-  format?: 'number' | 'hearts' | 'bar' | 'text';
+  format?: string;
   icon?: unknown;
   iconUrl?: EntityRow;
   /** Default: `""` */
   label?: string;
   max?: number;
   /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
+  size?: string;
   source?: string;
   value?: string;
   /** Default: `"default"` */
-  variant?: 'default' | 'primary' | 'success' | 'warning' | 'danger';
+  variant?: string;
 }
 
 /**
