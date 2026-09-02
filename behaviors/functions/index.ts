@@ -57,6 +57,7 @@ export * from './ui/core/atoms/std-export.js';
 export * from './ui/core/atoms/std-file-store.js';
 export * from './ui/core/atoms/std-filter.js';
 export * from './ui/core/atoms/std-form-advanced.js';
+export * from './ui/game/atoms/std-fx-narrative.js';
 export * from './ui/game/atoms/std-fx-particles.js';
 export * from './ui/game/atoms/std-fx-trail.js';
 export * from './ui/core/atoms/std-gallery.js';
