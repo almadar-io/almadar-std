@@ -7,16 +7,30 @@
     "entities": [
       {
         "name": "SplitPaneItem",
-        "fields": [],
+        "fields": [
+          {
+            "name": "ratio",
+            "type": "number",
+            "required": false
+          }
+        ],
         "persistence": "runtime"
       }
     ],
     "traits": [
       {
         "name": "SplitPaneRender",
-        "emittedEvents": [],
+        "emittedEvents": [
+          "RATIO_CHANGE"
+        ],
         "listenedEvents": [],
         "events": [
+          {
+            "name": "RATIO_CHANGE",
+            "direction": "emit",
+            "description": "Called with the new ratio while dragging. Providing this makes `ratio` controlled — the rendered split always tracks the prop instead of internal state, mirroring a controlled input. Omit for uncontrolled (self-tracked) behavior.",
+            "tier": "essential"
+          },
           {
             "name": "INIT",
             "direction": "listen"
@@ -66,6 +80,14 @@
             "tier": "presentation"
           },
           {
+            "key": "onRatioChange",
+            "type": "event",
+            "default": "RATIO_CHANGE",
+            "label": "On Ratio Change",
+            "description": "Called with the new ratio while dragging. Providing this makes `ratio` controlled — the rendered split always tracks the prop instead of internal state, mirroring a controlled input. Omit for uncontrolled (self-tracked) behavior.",
+            "tier": "presentation"
+          },
+          {
             "key": "ratio",
             "type": "number",
             "label": "Ratio",
@@ -99,13 +121,18 @@
         "capabilities": [],
         "linkedEntity": "SplitPaneItem",
         "transitionEvents": [
-          "INIT"
+          "INIT",
+          "RATIO_CHANGE"
         ],
-        "definerKnobs": [],
+        "definerKnobs": [
+          "onRatioChange"
+        ],
         "entityRebindable": true,
         "entityContract": {
           "requires": [],
-          "provides": []
+          "provides": [
+            "ratio"
+          ]
         }
       }
     ],
@@ -116,7 +143,9 @@
         "primaryEntity": "SplitPaneItem"
       }
     ],
-    "emittedEvents": [],
+    "emittedEvents": [
+      "RATIO_CHANGE"
+    ],
     "listenedEvents": [],
     "exposure": "palette",
     "provenance": "generated",

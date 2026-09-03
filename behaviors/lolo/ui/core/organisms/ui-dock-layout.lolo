@@ -1,0 +1,186 @@
+app ui-dock-layout "1.0.0"
+"DockLayout — UI factory (1:1 with the @almadar/ui dock-layout pattern)."
+orbital DockLayoutOrbital {
+  entity DockLayoutItem [runtime] {
+    id : string!
+  }
+
+  trait DockLayoutRender -> @rebindable DockLayoutItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          rail: @config.rail
+          sidebar: @config.sidebar
+          main: @config.main
+          bottomPanel: @config.bottomPanel
+          statusBar: @config.statusBar
+          secondarySidebar: @config.secondarySidebar
+          railWidth: @config.railWidth
+          secondarySidebarWidth: @config.secondarySidebarWidth
+          sidebarCollapsed: @config.sidebarCollapsed
+          onSidebarCollapsedChange: @config.onSidebarCollapsedChange
+          sidebarWidth: @config.sidebarWidth
+          onSidebarWidthChange: @config.onSidebarWidthChange
+          sidebarMinSize: @config.sidebarMinSize
+          bottomPanelCollapsed: @config.bottomPanelCollapsed
+          onBottomPanelCollapsedChange: @config.onBottomPanelCollapsedChange
+          bottomPanelHeight: @config.bottomPanelHeight
+          onBottomPanelHeightChange: @config.onBottomPanelHeightChange
+          bottomPanelMinSize: @config.bottomPanelMinSize
+          secondarySidebarCollapsed: @config.secondarySidebarCollapsed
+          onSecondarySidebarCollapsedChange: @config.onSecondarySidebarCollapsedChange
+          className: @config.className
+          railClassName: @config.railClassName
+          sidebarClassName: @config.sidebarClassName
+          mainClassName: @config.mainClassName
+          bottomPanelClassName: @config.bottomPanelClassName
+          statusBarClassName: @config.statusBarClassName
+          secondarySidebarClassName: @config.secondarySidebarClassName
+          type: dock-layout
+        })
+    }
+
+    emits {
+      @config.onSidebarCollapsedChange -> external {
+        collapsed : boolean
+      }
+        @description "onSidebarCollapsedChange prop"
+        @tier "essential"
+      @config.onSidebarWidthChange -> external {
+        width : number
+      }
+        @description "onSidebarWidthChange prop"
+        @tier "essential"
+      @config.onBottomPanelCollapsedChange -> external {
+        collapsed : boolean
+      }
+        @description "onBottomPanelCollapsedChange prop"
+        @tier "essential"
+      @config.onBottomPanelHeightChange -> external {
+        height : number
+      }
+        @description "onBottomPanelHeightChange prop"
+        @tier "essential"
+      @config.onSecondarySidebarCollapsedChange -> external {
+        collapsed : boolean
+      }
+        @description "onSecondarySidebarCollapsedChange prop"
+        @tier "essential"
+    }
+
+    config {
+      rail : node
+        @label "Rail"
+        @description "Fixed-width far-left vertical strip (e.g. an icon nav rail)."
+        @tier "presentation"
+      sidebar : node
+        @label "Sidebar"
+        @description "Collapsible, resizable left sidebar."
+        @tier "presentation"
+      main : node = []
+        @label "Main"
+        @description "Required center region."
+        @tier "presentation"
+      bottomPanel : node
+        @label "Bottom Panel"
+        @description "Collapsible, resizable-height bottom panel."
+        @tier "presentation"
+      statusBar : node
+        @label "Status Bar"
+        @description "Slim strip pinned to the bottom of the frame, below the bottom panel."
+        @tier "presentation"
+      secondarySidebar : node
+        @label "Secondary Sidebar"
+        @description "Collapsible right sidebar."
+        @tier "presentation"
+      railWidth : number = 56
+        @label "Rail Width"
+        @description "Width of `rail` in pixels. @default 56"
+        @tier "presentation"
+      secondarySidebarWidth : number = 280
+        @label "Secondary Sidebar Width"
+        @description "Width of `secondarySidebar` in pixels (fixed — not resizable). @default 280"
+        @tier "presentation"
+      sidebarCollapsed : boolean = false
+        @label "Sidebar Collapsed"
+        @description "Whether `sidebar` is collapsed. @default false"
+        @tier "presentation"
+      onSidebarCollapsedChange : event = "SIDEBAR_COLLAPSED_CHANGE"
+        @label "On Sidebar Collapsed Change"
+        @description "onSidebarCollapsedChange prop"
+        @tier "presentation"
+      sidebarWidth : number = 20
+        @label "Sidebar Width"
+        @description "Sidebar size as a SplitPane ratio (0-100, percentage of the sidebar/main split). @default 20"
+        @tier "presentation"
+      onSidebarWidthChange : event = "SIDEBAR_WIDTH_CHANGE"
+        @label "On Sidebar Width Change"
+        @description "onSidebarWidthChange prop"
+        @tier "presentation"
+      sidebarMinSize : number = 160
+        @label "Sidebar Min Size"
+        @description "Minimum sidebar size in pixels, forwarded to SplitPane's `minSize`. @default 160"
+        @tier "presentation"
+      bottomPanelCollapsed : boolean = false
+        @label "Bottom Panel Collapsed"
+        @description "Whether `bottomPanel` is collapsed. @default false"
+        @tier "presentation"
+      onBottomPanelCollapsedChange : event = "BOTTOM_PANEL_COLLAPSED_CHANGE"
+        @label "On Bottom Panel Collapsed Change"
+        @description "onBottomPanelCollapsedChange prop"
+        @tier "presentation"
+      bottomPanelHeight : number = 30
+        @label "Bottom Panel Height"
+        @description "Bottom panel size as a SplitPane ratio (0-100, percentage given to the panel). @default 30"
+        @tier "presentation"
+      onBottomPanelHeightChange : event = "BOTTOM_PANEL_HEIGHT_CHANGE"
+        @label "On Bottom Panel Height Change"
+        @description "onBottomPanelHeightChange prop"
+        @tier "presentation"
+      bottomPanelMinSize : number = 120
+        @label "Bottom Panel Min Size"
+        @description "Minimum bottom panel size in pixels, forwarded to SplitPane's `minSize`. @default 120"
+        @tier "presentation"
+      secondarySidebarCollapsed : boolean = false
+        @label "Secondary Sidebar Collapsed"
+        @description "Whether `secondarySidebar` is collapsed. @default false"
+        @tier "presentation"
+      onSecondarySidebarCollapsedChange : event = "SECONDARY_SIDEBAR_COLLAPSED_CHANGE"
+        @label "On Secondary Sidebar Collapsed Change"
+        @description "onSecondarySidebarCollapsedChange prop"
+        @tier "presentation"
+      className : string
+        @label "Class Name"
+        @description "Additional CSS classes on the root frame."
+        @tier "presentation"
+      railClassName : string
+        @label "Rail Class Name"
+        @description "railClassName prop"
+        @tier "presentation"
+      sidebarClassName : string
+        @label "Sidebar Class Name"
+        @description "sidebarClassName prop"
+        @tier "presentation"
+      mainClassName : string
+        @label "Main Class Name"
+        @description "mainClassName prop"
+        @tier "presentation"
+      bottomPanelClassName : string
+        @label "Bottom Panel Class Name"
+        @description "bottomPanelClassName prop"
+        @tier "presentation"
+      statusBarClassName : string
+        @label "Status Bar Class Name"
+        @description "statusBarClassName prop"
+        @tier "presentation"
+      secondarySidebarClassName : string
+        @label "Secondary Sidebar Class Name"
+        @description "secondarySidebarClassName prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/dock-layout" as DockLayoutPage -> DockLayoutRender
+}

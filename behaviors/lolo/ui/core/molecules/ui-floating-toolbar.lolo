@@ -1,0 +1,54 @@
+app ui-floating-toolbar "1.0.0"
+"FloatingToolbar — UI factory (1:1 with the @almadar/ui floating-toolbar pattern)."
+orbital FloatingToolbarOrbital {
+  type FloatingToolbarItemsItem = {
+    id : string!
+    icon : icon!
+    label : string!
+    event : string
+    action : string
+    actionPayload : Map string scalar
+    active : boolean
+    disabled : boolean
+  }
+
+  entity FloatingToolbarItem [runtime] {
+    id : string!
+  }
+
+  trait FloatingToolbarRender -> @rebindable FloatingToolbarItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          items: @config.items
+          position: @config.position
+          children: @config.children
+          className: @config.className
+          type: floating-toolbar
+        })
+    }
+
+    config {
+      items : [FloatingToolbarItemsItem] = [{ id: "Id", icon: "circle", label: "Label", action: "Action", active: false, disabled: false }, { id: "Id 2", icon: "circle", label: "Label 2", action: "Action 2", active: true, disabled: true }]
+        @label "Items"
+        @description "Tool items rendered as icon buttons"
+        @tier "presentation"
+      position : "bottom-center" | "bottom-left" | "bottom-right" = "bottom-center"
+        @label "Position"
+        @description "Strip position within the app frame."
+        @tier "presentation"
+      children : node
+        @label "Children"
+        @description "Custom cells appended after the items, separated by a divider"
+        @tier "presentation"
+      className : string
+        @label "Class Name"
+        @description "Additional CSS classes on the positioned root"
+        @tier "presentation"
+    }
+  }
+
+  page "/floating-toolbar" as FloatingToolbarPage -> FloatingToolbarRender
+}

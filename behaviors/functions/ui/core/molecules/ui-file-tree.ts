@@ -60,6 +60,8 @@ export interface StdUiFileTreeConfig {
   /** Default: `""` */
   onNodeAction?: string;
   /** Default: `""` */
+  onNodeReorder?: string;
+  /** Default: `""` */
   onNodeSelect?: string;
   selectedId?: string;
   selectedPath?: string;

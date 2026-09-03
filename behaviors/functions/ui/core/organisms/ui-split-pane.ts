@@ -30,7 +30,14 @@ const ALIAS = 'UiSplitPane';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiSplitPaneEventKey = 'INIT';
+export type StdUiSplitPaneEventKey = 'INIT' | 'RATIO_CHANGE';
+
+/**
+ * Payload shape for the `RATIO_CHANGE` event.
+ */
+export interface StdUiSplitPaneRatioChangePayload {
+  ratio?: number;
+}
 
 /**
  * Typed call-site config block for this trait — every
@@ -47,6 +54,8 @@ export interface StdUiSplitPaneConfig {
   leftClassName?: string;
   /** Default: `100` */
   minSize?: number;
+  /** Default: `"RATIO_CHANGE"` */
+  onRatioChange?: string;
   ratio?: number;
   /** Default: `true` */
   resizable?: boolean;
@@ -115,6 +124,10 @@ export function stdUiSplitPaneSplitPaneOrbital(params: StdUiSplitPaneSplitPaneOr
             'required': true,
             'type': 'string',
           },
+          {
+            'name': 'ratio',
+            'type': 'number',
+          },
         ];
         const extras = params.fields ?? [];
         if (extras.length === 0) return canonical;
@@ -163,6 +176,13 @@ export function stdUiSplitPaneSplitPaneOrbital(params: StdUiSplitPaneSplitPaneOr
             'tier': 'presentation',
             'type': 'number',
           },
+          'onRatioChange': {
+            'default': 'RATIO_CHANGE',
+            'description': 'Called with the new ratio while dragging. Providing this makes `ratio` controlled — the rendered split always tracks the prop instead of internal state, mirroring a controlled input. Omit for uncontrolled (self-tracked) behavior.',
+            'label': 'On Ratio Change',
+            'tier': 'presentation',
+            'type': 'event',
+          },
           'ratio': {
             'description': 'Initial ratio (0-100, percentage of first pane)',
             'label': 'Ratio',
@@ -190,8 +210,25 @@ export function stdUiSplitPaneSplitPaneOrbital(params: StdUiSplitPaneSplitPaneOr
             'type': 'string',
           },
         },
+        'emits': [
+          {
+            'definerKnob': 'onRatioChange',
+            'description': 'Called with the new ratio while dragging. Providing this makes `ratio` controlled — the rendered split always tracks the prop instead of internal state, mirroring a controlled input. Omit for uncontrolled (self-tracked) behavior.',
+            'event': '@config.onRatioChange',
+            'payloadSchema': [
+              {
+                'name': 'ratio',
+                'type': 'number',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'essential',
+          },
+        ],
         'entityContract': {
-          'provides': [],
+          'provides': [
+            'ratio',
+          ],
           'requires': [],
         },
         'entityRebindable': true,
@@ -204,6 +241,28 @@ export function stdUiSplitPaneSplitPaneOrbital(params: StdUiSplitPaneSplitPaneOr
               'key': 'INIT',
               'name': 'Initialize',
             },
+            {
+              'key': 'RATIO_CHANGE',
+              'name': 'Ratio Change',
+              'payloadSchema': [
+                {
+                  'name': 'ratio',
+                  'type': 'number',
+                },
+              ],
+            },
+            {
+              'description': 'Called with the new ratio while dragging. Providing this makes `ratio` controlled — the rendered split always tracks the prop instead of internal state, mirroring a controlled input. Omit for uncontrolled (self-tracked) behavior.',
+              'key': '@config.onRatioChange',
+              'name': '@config.on ratio change',
+              'payloadSchema': [
+                {
+                  'name': 'ratio',
+                  'type': 'number',
+                },
+              ],
+              'tier': 'essential',
+            },
           ],
           'states': [
             {
@@ -215,6 +274,11 @@ export function stdUiSplitPaneSplitPaneOrbital(params: StdUiSplitPaneSplitPaneOr
             {
               'effects': [
                 [
+                  'set',
+                  '@entity.ratio',
+                  '@config.ratio',
+                ],
+                [
                   'render-ui',
                   'main',
                   {
@@ -223,7 +287,8 @@ export function stdUiSplitPaneSplitPaneOrbital(params: StdUiSplitPaneSplitPaneOr
                     'left': '@config.left',
                     'leftClassName': '@config.leftClassName',
                     'minSize': '@config.minSize',
-                    'ratio': '@config.ratio',
+                    'onRatioChange': '@config.onRatioChange',
+                    'ratio': '@entity.ratio',
                     'resizable': '@config.resizable',
                     'right': '@config.right',
                     'rightClassName': '@config.rightClassName',
@@ -232,6 +297,35 @@ export function stdUiSplitPaneSplitPaneOrbital(params: StdUiSplitPaneSplitPaneOr
                 ],
               ],
               'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.ratio',
+                  '@payload.ratio',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'className': '@config.className',
+                    'direction': '@config.direction',
+                    'left': '@config.left',
+                    'leftClassName': '@config.leftClassName',
+                    'minSize': '@config.minSize',
+                    'onRatioChange': '@config.onRatioChange',
+                    'ratio': '@entity.ratio',
+                    'resizable': '@config.resizable',
+                    'right': '@config.right',
+                    'rightClassName': '@config.rightClassName',
+                    'type': 'split-pane',
+                  },
+                ],
+              ],
+              'event': 'RATIO_CHANGE',
               'from': 'idle',
               'to': 'idle',
             },

@@ -111,8 +111,12 @@ export {
   hasGoldenOrb,
   // Query helpers
   type RegistryEntry,
+  type RegistryTraitSurface,
+  type BehaviorTraitRole,
   type BehaviorSummary,
   getBehaviorRegistry,
+  getBehaviorsByRole,
+  getTraitSurface,
   getBehaviorsByDomain,
   getBehaviorsByOperations,
   searchBehaviors,

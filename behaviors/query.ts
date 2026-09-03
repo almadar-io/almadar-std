@@ -8,7 +8,13 @@
  * @packageDocumentation
  */
 
-import type { FactoryExposure, FactoryProvenance } from '@almadar/core';
+import type {
+  FactoryConfigParam,
+  FactoryEventSignature,
+  FactoryExposure,
+  FactoryProvenance,
+  JsonValue,
+} from '@almadar/core';
 import { loadGoldenOrb } from './exports-reader.js';
 import { resolveStdDataDir } from './data-dir.js';
 
@@ -45,6 +51,56 @@ async function loadRegistryDataUncached(): Promise<{ behaviors: Record<string, u
 // Types
 // ============================================================================
 
+/**
+ * The role a trait plays inside its orbital — stamped by
+ * `tools/almadar-pattern-sync` (`behaviors` command) via `deriveTraitRole`.
+ * `authority` = owns ticking state it provides fields for; `reactor` = wires
+ * transitions off listened/transitioned events with no tick of its own;
+ * `renderer` = renders UI; `chrome` = a generated `ui-*` atom wrapper;
+ * `frame` = an organism-level ref trait sharing a `linkedEntity` with a
+ * sibling ref trait (≥2), neither independently classified; `catalog` = a
+ * trait declaring the `asset-catalog` capability; `passive` = none of the
+ * above (config-only binding).
+ */
+export type BehaviorTraitRole =
+  | 'authority'
+  | 'reactor'
+  | 'renderer'
+  | 'chrome'
+  | 'frame'
+  | 'catalog'
+  | 'passive';
+
+/**
+ * Per-trait exposure surface for one trait inside a `RegistryEntry`'s
+ * orbital — the registry-record mirror of `FactoryTraitSignature`
+ * (`@almadar/core` `src/factory/types.ts`) plus the fields
+ * `*.signature.json` computes but the trait-signature type doesn't carry
+ * (`ticks`, `rendersUi`) and the derived `role`. Stamped by
+ * `tools/almadar-pattern-sync` (`behaviors` command); a ref trait (organism
+ * call site) inherits `entityContract`/`transitionEvents`/`ticks`/
+ * `rendersUi`/`overridableConfigKeys` from the referenced atom.
+ */
+export interface RegistryTraitSurface {
+  name: string;
+  orbital: string;
+  ref?: string;
+  category?: string;
+  role: BehaviorTraitRole;
+  entityRebindable?: boolean;
+  linkedEntity?: string;
+  entityContract?: { requires: string[]; provides: string[] };
+  transitionEvents?: string[];
+  emittedEvents: string[];
+  listenedEvents: string[];
+  events?: FactoryEventSignature[];
+  overridableConfigKeys: FactoryConfigParam[];
+  definerKnobs?: string[];
+  capabilities: string[];
+  ticks: Array<{ name: string; interval: string | number }>;
+  rendersUi: boolean;
+}
+
 export interface RegistryEntry {
   name: string;
   level: 'atom' | 'molecule' | 'organism';
@@ -77,16 +133,19 @@ export interface RegistryEntry {
   defaultEntity: {
     name: string;
     persistence: string;
-    fields: Array<{ name: string; type: string; default?: string }>;
+    fields: Array<{ name: string; type: string; required?: boolean; default?: JsonValue }>;
   };
   defaultLabels: {
     title: string;
+    createButton?: string;
     entitySingular: string;
     entityPlural: string;
   };
+  /** Icon names lifted from the INIT render-ui tree. Stamped by `tools/almadar-pattern-sync` (`behaviors` command). */
+  defaultIcons?: string[];
   composableWith: string[];
   connectableEvents: string[];
-  eventPayloads: Record<string, Array<{ name: string; type: string; required: boolean }>>;
+  eventPayloads: Record<string, Array<{ name: string; type: string; required?: boolean }>>;
   /**
    * Where the behavior may be dispatched: `app` (whole-app organisms),
    * `palette` (composable primitives), `both`, or `internal` (never
@@ -110,6 +169,26 @@ export interface RegistryEntry {
    * legacy filters.
    */
   provenance?: FactoryProvenance;
+  /**
+   * Per-trait exposure surfaces for the orbital's first (canonical) orbital
+   * — the registry-record mirror of `FactorySignature.traits`. Stamped by
+   * `tools/almadar-pattern-sync` (`behaviors` command) via `extractSignatures`
+   * + `inheritCallSiteOverrideTypes`. Optional: pre-W0 registries don't carry it.
+   */
+  traits?: RegistryTraitSurface[];
+  /** Sorted unique union of `traits[].role`. Optional: pre-W0 registries don't carry it. */
+  roles?: BehaviorTraitRole[];
+  /**
+   * `orb validate`/`orb resolve` readiness, back-stamped by `std-ts`
+   * (`tools/almadar-pattern-sync` `regenerate.ts`) right after it computes
+   * the same fields for `*.signature.json` — one writer, pipeline-ordered.
+   * Optional: unstamped until the `orb` binary is available at regen time.
+   */
+  sourceValid?: boolean;
+  /** `orb validate`/`orb resolve` error strings when `sourceValid` is `false`. Back-stamped alongside `sourceValid`. */
+  sourceErrors?: string[];
+  /** Path (relative to the package root) of the generated factory source, mirrors `FactorySignature.factoryPath`. */
+  factoryPath?: string;
 }
 
 export interface BehaviorSummary {
@@ -141,6 +220,32 @@ export async function getBehaviorRegistry(): Promise<Record<string, RegistryEntr
 // ============================================================================
 // Query Functions
 // ============================================================================
+
+/**
+ * Filter behaviors by the derived per-trait role (`authority`/`reactor`/
+ * `renderer`/`chrome`/`frame`/`catalog`/`passive`) — matches an entry whose
+ * `roles` union contains `role`. Entries from a pre-W0 registry (no `roles`
+ * stamped) never match.
+ */
+export async function getBehaviorsByRole(role: BehaviorTraitRole): Promise<RegistryEntry[]> {
+  const registry = await getBehaviorRegistry();
+  return Object.values(registry).filter((b) => (b.roles ?? []).includes(role));
+}
+
+/**
+ * Look up one trait's exposure surface by behavior name + trait name.
+ * Returns `null` when the behavior or trait isn't found, or the registry
+ * entry predates `traits` stamping (V0 rollout).
+ */
+export async function getTraitSurface(
+  name: string,
+  trait: string,
+): Promise<RegistryTraitSurface | null> {
+  const registry = await getBehaviorRegistry();
+  const entry = registry[name];
+  if (!entry) return null;
+  return entry.traits?.find((t) => t.name === trait) ?? null;
+}
 
 /**
  * Filter behaviors by domain. Matches against layer (primary) and family (fallback).

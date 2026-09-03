@@ -3,6 +3,7 @@ app ui-split-pane "1.0.0"
 orbital SplitPaneOrbital {
   entity SplitPaneItem [runtime] {
     id : string!
+    ratio : number
   }
 
   trait SplitPaneRender -> @rebindable SplitPaneItem [interaction, instance] {
@@ -10,9 +11,10 @@ orbital SplitPaneOrbital {
 
     state idle {
       INIT -> idle
+        (set @entity.ratio @config.ratio)
         (render-ui main {
           direction: @config.direction
-          ratio: @config.ratio
+          ratio: @entity.ratio
           minSize: @config.minSize
           resizable: @config.resizable
           left: @config.left
@@ -20,8 +22,38 @@ orbital SplitPaneOrbital {
           className: @config.className
           leftClassName: @config.leftClassName
           rightClassName: @config.rightClassName
+          onRatioChange: @config.onRatioChange
           type: split-pane
         })
+      RATIO_CHANGE -> idle
+        (set @entity.ratio ?ratio)
+        (render-ui main {
+          direction: @config.direction
+          ratio: @entity.ratio
+          minSize: @config.minSize
+          resizable: @config.resizable
+          left: @config.left
+          right: @config.right
+          className: @config.className
+          leftClassName: @config.leftClassName
+          rightClassName: @config.rightClassName
+          onRatioChange: @config.onRatioChange
+          type: split-pane
+        })
+    }
+
+    emits {
+      @config.onRatioChange -> external {
+        ratio : number
+      }
+        @description "Called with the new ratio while dragging. Providing this makes `ratio` controlled — the rendered split always tracks the prop instead of internal state, mirroring a controlled input. Omit for uncontrolled (self-tracked) behavior."
+        @tier "essential"
+    }
+
+    listens {
+      RATIO_CHANGE {
+        ratio : number
+      }
     }
 
     config {
@@ -60,6 +92,10 @@ orbital SplitPaneOrbital {
       rightClassName : string
         @label "Right Class Name"
         @description "Class for right/bottom pane"
+        @tier "presentation"
+      onRatioChange : event = "RATIO_CHANGE"
+        @label "On Ratio Change"
+        @description "Called with the new ratio while dragging. Providing this makes `ratio` controlled — the rendered split always tracks the prop instead of internal state, mirroring a controlled input. Omit for uncontrolled (self-tracked) behavior."
         @tier "presentation"
     }
   }

@@ -19,6 +19,24 @@
         "parent": "trt_01KXG04SZQZQTYV05GPN6HEPVA",
         "renames": []
       },
+      "evt_01M1JMH852A3KDZRKMEBY5RZ23": {
+        "bakedName": "RATIO_CHANGE",
+        "curName": "RATIO_CHANGE",
+        "id": "evt_01M1JMH852A3KDZRKMEBY5RZ23",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04SZQZQTYV05GPN6HEPVA",
+        "renames": []
+      },
+      "evt_01M1JMH852AWVKHSRQDJYCBMBR": {
+        "bakedName": "@config.onRatioChange",
+        "curName": "@config.onRatioChange",
+        "id": "evt_01M1JMH852AWVKHSRQDJYCBMBR",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04SZQZQTYV05GPN6HEPVA",
+        "renames": []
+      },
       "orb_01KXG04SZQ0QSZT2WW4D62B2AK": {
         "bakedName": "SplitPaneOrbital",
         "curName": "SplitPaneOrbital",
@@ -55,6 +73,10 @@
             "name": "id",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "ratio",
+            "type": "number"
           }
         ],
         "id": "ent_01KXG04SZQ7G8R7PH46DZWE8P9",
@@ -117,6 +139,13 @@
               "tier": "presentation",
               "type": "number"
             },
+            "onRatioChange": {
+              "default": "RATIO_CHANGE",
+              "description": "Called with the new ratio while dragging. Providing this makes `ratio` controlled — the rendered split always tracks the prop instead of internal state, mirroring a controlled input. Omit for uncontrolled (self-tracked) behavior.",
+              "label": "On Ratio Change",
+              "tier": "presentation",
+              "type": "event"
+            },
             "ratio": {
               "description": "Initial ratio (0-100, percentage of first pane)",
               "label": "Ratio",
@@ -144,8 +173,26 @@
               "type": "string"
             }
           },
+          "emits": [
+            {
+              "definerKnob": "onRatioChange",
+              "description": "Called with the new ratio while dragging. Providing this makes `ratio` controlled — the rendered split always tracks the prop instead of internal state, mirroring a controlled input. Omit for uncontrolled (self-tracked) behavior.",
+              "event": "@config.onRatioChange",
+              "eventId": "evt_01M1JMH852AWVKHSRQDJYCBMBR",
+              "payloadSchema": [
+                {
+                  "name": "ratio",
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
           "entityContract": {
-            "provides": [],
+            "provides": [
+              "ratio"
+            ],
             "requires": []
           },
           "entityRebindable": true,
@@ -163,6 +210,30 @@
                 "id": "evt_01KXG04SZQHBYQ7QDGS6TKJTVZ",
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "id": "evt_01M1JMH852A3KDZRKMEBY5RZ23",
+                "key": "RATIO_CHANGE",
+                "name": "Ratio Change",
+                "payloadSchema": [
+                  {
+                    "name": "ratio",
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "description": "Called with the new ratio while dragging. Providing this makes `ratio` controlled — the rendered split always tracks the prop instead of internal state, mirroring a controlled input. Omit for uncontrolled (self-tracked) behavior.",
+                "id": "evt_01M1JMH852AWVKHSRQDJYCBMBR",
+                "key": "@config.onRatioChange",
+                "name": "@config.on ratio change",
+                "payloadSchema": [
+                  {
+                    "name": "ratio",
+                    "type": "number"
+                  }
+                ],
+                "tier": "essential"
               }
             ],
             "states": [
@@ -175,6 +246,11 @@
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.ratio",
+                    "@config.ratio"
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
@@ -183,7 +259,8 @@
                       "left": "@config.left",
                       "leftClassName": "@config.leftClassName",
                       "minSize": "@config.minSize",
-                      "ratio": "@config.ratio",
+                      "onRatioChange": "@config.onRatioChange",
+                      "ratio": "@entity.ratio",
                       "resizable": "@config.resizable",
                       "right": "@config.right",
                       "rightClassName": "@config.rightClassName",
@@ -193,6 +270,36 @@
                 ],
                 "event": "INIT",
                 "eventId": "evt_01KXG04SZQHBYQ7QDGS6TKJTVZ",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.ratio",
+                    "@payload.ratio"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "direction": "@config.direction",
+                      "left": "@config.left",
+                      "leftClassName": "@config.leftClassName",
+                      "minSize": "@config.minSize",
+                      "onRatioChange": "@config.onRatioChange",
+                      "ratio": "@entity.ratio",
+                      "resizable": "@config.resizable",
+                      "right": "@config.right",
+                      "rightClassName": "@config.rightClassName",
+                      "type": "split-pane"
+                    }
+                  ]
+                ],
+                "event": "RATIO_CHANGE",
+                "eventId": "evt_01M1JMH852A3KDZRKMEBY5RZ23",
                 "from": "idle",
                 "to": "idle"
               }

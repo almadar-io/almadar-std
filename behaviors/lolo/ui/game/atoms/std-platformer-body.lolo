@@ -84,6 +84,9 @@ orbital PlatformerBodyOrbital {
       CURVE_MOD_ADD -> active when @config.curveModsEnabled
         (set @entity.curveMods (array/append @entity.curveMods { x0: @payload.x0, x1: @payload.x1, a: @payload.a, b: (if (== @payload.b null) 1 @payload.b), h: @payload.h, k: @payload.k }))
 
+      CURVE_MOD_CLEAR -> active when @config.curveModsEnabled
+        (set @entity.curveMods [])
+
       SET_TUNING -> active
         (set @entity.tuning (object/merge @entity.tuning (if (== @payload.jumpStrength null) {} { jumpStrength: @payload.jumpStrength })))
         (set @entity.tuning (object/merge @entity.tuning (if (== @payload.moveSpeed null) {} { moveSpeed: @payload.moveSpeed })))
@@ -237,6 +240,10 @@ orbital PlatformerBodyOrbital {
       }
         @description "Body crossed killY in the gravity direction (pit fall); fires once per fall and re-arms on PLACE/RESTART, leaving the respawn rule to the board"
         @tier "domain"
+      CURVE_MOD_CLEAR -> external {
+      }
+        @description "Curve mods were cleared; the skate surface is back to the base skateCurve until a new mod is added."
+        @tier "domain"
     }
 
     listens {
@@ -244,6 +251,7 @@ orbital PlatformerBodyOrbital {
       JUMP { id : string }
       PLACE { x : number!, y : number! }
       CURVE_MOD_ADD { x0 : number!, x1 : number!, a : number!, b : number, h : number!, k : number! }
+      CURVE_MOD_CLEAR { }
       SET_TUNING { jumpStrength : number, moveSpeed : number, gravity : number }
       RESTART { id : string }
     }

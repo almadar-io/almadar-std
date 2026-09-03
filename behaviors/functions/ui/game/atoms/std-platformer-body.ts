@@ -30,7 +30,7 @@ const ALIAS = 'PlatformerBody';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdPlatformerBodyEventKey = 'BODY_FELL' | 'BODY_GOAL' | 'BODY_HAZARD' | 'BODY_JUMPED' | 'BODY_LANDED' | 'BODY_MOVED' | 'BODY_SKATE_END' | 'BODY_SKATE_START' | 'CURVE_MOD_ADD' | 'INIT' | 'JUMP' | 'PLACE' | 'RESTART' | 'SET_TUNING' | 'STEER';
+export type StdPlatformerBodyEventKey = 'BODY_FELL' | 'BODY_GOAL' | 'BODY_HAZARD' | 'BODY_JUMPED' | 'BODY_LANDED' | 'BODY_MOVED' | 'BODY_SKATE_END' | 'BODY_SKATE_START' | 'CURVE_MOD_ADD' | 'CURVE_MOD_CLEAR' | 'INIT' | 'JUMP' | 'PLACE' | 'RESTART' | 'SET_TUNING' | 'STEER';
 
 /**
  * Payload shape for the `BODY_MOVED` event.

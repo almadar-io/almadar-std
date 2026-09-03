@@ -555,6 +555,11 @@ import {
   isStdUiDetailPanelDetailPanelOrbitalParams,
 } from './ui/core/organisms/ui-detail-panel.js';
 import {
+  stdUiDockLayoutDockLayoutOrbital,
+  StdUiDockLayoutDockLayoutOrbitalManifest,
+  isStdUiDockLayoutDockLayoutOrbitalParams,
+} from './ui/core/organisms/ui-dock-layout.js';
+import {
   stdUiDrawerSlotDrawerSlotOrbital,
   StdUiDrawerSlotDrawerSlotOrbitalManifest,
   isStdUiDrawerSlotDrawerSlotOrbitalParams,
@@ -1669,6 +1674,15 @@ REGISTRY_MUT.set('ui-detail-panel::DetailPanelOrbital', {
     return stdUiDetailPanelDetailPanelOrbital(p);
   },
   manifest: StdUiDetailPanelDetailPanelOrbitalManifest,
+});
+REGISTRY_MUT.set('ui-dock-layout::DockLayoutOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdUiDockLayoutDockLayoutOrbitalParams(p)) {
+      throw new TypeError('Invalid params for ui-dock-layout::DockLayoutOrbital');
+    }
+    return stdUiDockLayoutDockLayoutOrbital(p);
+  },
+  manifest: StdUiDockLayoutDockLayoutOrbitalManifest,
 });
 REGISTRY_MUT.set('ui-drawer-slot::DrawerSlotOrbital', {
   factory: (p: object): OrbitalDefinition => {
