@@ -36,6 +36,7 @@ orbital PlatformerBodyOrbital {
     x0 : number!
     x1 : number!
     a : number!
+    b : number!
     h : number!
     k : number!
   }
@@ -81,7 +82,7 @@ orbital PlatformerBodyOrbital {
         (set @entity.skating false)
 
       CURVE_MOD_ADD -> active when @config.curveModsEnabled
-        (set @entity.curveMods (array/append @entity.curveMods { x0: @payload.x0, x1: @payload.x1, a: @payload.a, h: @payload.h, k: @payload.k }))
+        (set @entity.curveMods (array/append @entity.curveMods { x0: @payload.x0, x1: @payload.x1, a: @payload.a, b: (if (== @payload.b null) 1 @payload.b), h: @payload.h, k: @payload.k }))
 
       SET_TUNING -> active
         (set @entity.tuning (object/merge @entity.tuning (if (== @payload.jumpStrength null) {} { jumpStrength: @payload.jumpStrength })))
@@ -123,7 +124,7 @@ orbital PlatformerBodyOrbital {
         (let ((gapBreak (and (> @config.skateMaxGap 0) (> (- (object/get @rightSamp x) (object/get @leftSamp x)) @config.skateMaxGap))))
         (let ((mods (if (and @config.curveModsEnabled @inRange) (array/filter @entity.curveMods (fn m (and (>= @cx (object/get @m x0)) (<= @cx (object/get @m x1))))) [])))
         (let ((modded (array/reduce @mods { y: @curveY, s: @slope } (fn (acc m)
-          (let ((modX (- @cx (object/get @m h))))
+          (let ((modX (* (object/get @m b) (- @cx (object/get @m h)))))
           (let ((modInRange (and (>= @modX (object/get (array/first @config.skateCurve) x)) (< @modX (object/get (array/last @config.skateCurve) x)))))
           (let ((modLeft (if @modInRange (array/last (array/filter @config.skateCurve (fn s (<= (object/get @s x) @modX)))) null)))
           (let ((modRight (if @modInRange (array/first (array/filter @config.skateCurve (fn s (> (object/get @s x) @modX)))) null)))
@@ -131,7 +132,7 @@ orbital PlatformerBodyOrbital {
           (let ((modSlope (if @modOK (/ (- (object/get @modRight y) (object/get @modLeft y)) (- (object/get @modRight x) (object/get @modLeft x))) 0)))
           (let ((modCurveY (if @modOK (+ (object/get @modLeft y) (* @modSlope (- @modX (object/get @modLeft x)))) 0)))
           (if @modOK
-            { y: (+ (object/get @acc y) (- (+ (* (object/get @m a) @modCurveY) (object/get @m k)) @curveY)), s: (+ (object/get @acc s) (- (* (object/get @m a) @modSlope) @slope)) }
+            { y: (+ (object/get @acc y) (- (+ (* (object/get @m a) @modCurveY) (object/get @m k)) @curveY)), s: (+ (object/get @acc s) (- (* (* (object/get @m a) (object/get @m b)) @modSlope) @slope)) }
             @acc))))))))))))
         (let ((slope (object/get @modded s)))
         (let ((curveY (object/get @modded y)))
@@ -242,7 +243,7 @@ orbital PlatformerBodyOrbital {
       STEER { dir : number! }
       JUMP { id : string }
       PLACE { x : number!, y : number! }
-      CURVE_MOD_ADD { x0 : number!, x1 : number!, a : number!, h : number!, k : number! }
+      CURVE_MOD_ADD { x0 : number!, x1 : number!, a : number!, b : number, h : number!, k : number! }
       SET_TUNING { jumpStrength : number, moveSpeed : number, gravity : number }
       RESTART { id : string }
     }
@@ -266,7 +267,7 @@ orbital PlatformerBodyOrbital {
         @tier "domain"
       curveModsEnabled : boolean = false
         @label "Curve Mods Enabled"
-        @description "When true, entity.curveMods reshape the skate surface inside each mod's x-range: the road samples the base curve at (x − h) and applies a·y + k (slope scales by a) — coefficient pads lift/tilt the segment the player is riding. Multiple overlapping mods stack by summing each mod's delta from the base surface; a mod whose shifted sample leaves the curve range is skipped. Default off: boards without coef pads pay nothing."
+        @description "When true, entity.curveMods reshape the skate surface inside each mod's x-range: the road samples the base curve at b·(x − h) and applies a·y + k (slope scales by a·b) — coefficient pads lift/tilt/compress the segment the player is riding. Multiple overlapping mods stack by summing each mod's delta from the base surface; a mod whose shifted sample leaves the curve range is skipped. Default off: boards without coef pads pay nothing."
         @tier "domain"
       jumpStrength : number = 11
         @label "Jump Strength"
