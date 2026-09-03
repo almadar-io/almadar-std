@@ -129,6 +129,11 @@
                       "required": true,
                       "type": "number"
                     },
+                    "b": {
+                      "name": "b",
+                      "required": false,
+                      "type": "number"
+                    },
                     "h": {
                       "name": "h",
                       "required": true,
@@ -221,7 +226,7 @@
           "config": {
             "coefPads": {
               "default": [],
-              "description": "One row per pad: id, center (x, y in world units), the mod applied to the road while inside x0..x1 (a scales slope+height, h shifts horizontally, k lifts), and the hint floated on apply, and hop (true = the board teleports the player onto the reshaped surface — use when the mod steps the road far from the pad; false = the skate snap carries the player, preserving speed). applied is stamped at runtime.",
+              "description": "One row per pad: id, center (x, y in world units), the mod applied to the road while inside x0..x1 (a scales slope+height, b compresses/stretch period, h shifts horizontally, k lifts), and the hint floated on apply, and hop (true = the board teleports the player onto the reshaped surface — use when the mod steps the road far from the pad; false = the skate snap carries the player, preserving speed). applied is stamped at runtime.",
               "items": {
                 "properties": {
                   "applied": {
@@ -255,6 +260,11 @@
                       "a": {
                         "name": "a",
                         "required": true,
+                        "type": "number"
+                      },
+                      "b": {
+                        "name": "b",
+                        "required": false,
                         "type": "number"
                       },
                       "h": {
@@ -342,7 +352,7 @@
           },
           "emits": [
             {
-              "description": "The player stood on an unapplied coefficient pad; carries the pad position and the full mod (x0, x1, a, h, k) so the board appends it to the body authority's curveMods and hops the player onto the reshaped road. Fires once per pad per run.",
+              "description": "The player stood on an unapplied coefficient pad; carries the pad position and the full mod (x0, x1, a, b, h, k) so the board appends it to the body authority's curveMods and hops the player onto the reshaped road. Fires once per pad per run.",
               "event": "COEF_PAD_APPLIED",
               "eventId": "evt_01M14952XMJ1FAWXKV41ST5G5Y",
               "payloadSchema": [
@@ -374,6 +384,10 @@
                 {
                   "name": "a",
                   "required": true,
+                  "type": "number"
+                },
+                {
+                  "name": "b",
                   "type": "number"
                 },
                 {
@@ -487,7 +501,7 @@
                 ]
               },
               {
-                "description": "The player stood on an unapplied coefficient pad; carries the pad position and the full mod (x0, x1, a, h, k) so the board appends it to the body authority's curveMods and hops the player onto the reshaped road. Fires once per pad per run.",
+                "description": "The player stood on an unapplied coefficient pad; carries the pad position and the full mod (x0, x1, a, b, h, k) so the board appends it to the body authority's curveMods and hops the player onto the reshaped road. Fires once per pad per run.",
                 "id": "evt_01M14952XMJ1FAWXKV41ST5G5Y",
                 "key": "COEF_PAD_APPLIED",
                 "name": "Coef Pad Applied",
@@ -520,6 +534,10 @@
                   {
                     "name": "a",
                     "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "b",
                     "type": "number"
                   },
                   {
@@ -789,6 +807,24 @@
                                     "@m",
                                     "a"
                                   ],
+                                  "b": [
+                                    "if",
+                                    [
+                                      "==",
+                                      [
+                                        "object/get",
+                                        "@m",
+                                        "b"
+                                      ],
+                                      null
+                                    ],
+                                    1.0,
+                                    [
+                                      "object/get",
+                                      "@m",
+                                      "b"
+                                    ]
+                                  ],
                                   "h": [
                                     "object/get",
                                     "@m",
@@ -920,7 +956,137 @@
             ]
           }
         }
-      ]
+      ],
+      "types": {
+        "CoefMod": [
+          {
+            "name": "x0",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "x1",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "a",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "b",
+            "type": "number"
+          },
+          {
+            "name": "h",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "k",
+            "required": true,
+            "type": "number"
+          }
+        ],
+        "CoefModSample": [
+          {
+            "name": "x",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "y",
+            "required": true,
+            "type": "number"
+          }
+        ],
+        "CoefPad": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "x",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "y",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "mod",
+            "properties": [
+              {
+                "name": "x0",
+                "required": true,
+                "type": "number"
+              },
+              {
+                "name": "x1",
+                "required": true,
+                "type": "number"
+              },
+              {
+                "name": "a",
+                "required": true,
+                "type": "number"
+              },
+              {
+                "name": "b",
+                "type": "number"
+              },
+              {
+                "name": "h",
+                "required": true,
+                "type": "number"
+              },
+              {
+                "name": "k",
+                "required": true,
+                "type": "number"
+              }
+            ],
+            "required": true,
+            "type": "object"
+          },
+          {
+            "name": "glyph",
+            "type": "string"
+          },
+          {
+            "name": "hint",
+            "type": "string"
+          },
+          {
+            "name": "hop",
+            "type": "boolean"
+          },
+          {
+            "name": "samples",
+            "properties": [
+              {
+                "name": "x",
+                "required": true,
+                "type": "number"
+              },
+              {
+                "name": "y",
+                "required": true,
+                "type": "number"
+              }
+            ],
+            "type": "[object]"
+          },
+          {
+            "name": "applied",
+            "type": "boolean"
+          }
+        ]
+      }
     }
   ],
   "schemaVersion": 1,

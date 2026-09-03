@@ -42,6 +42,7 @@ export interface StdCoefPadCoefPadAppliedPayload {
   x0: number;
   x1: number;
   a: number;
+  b?: number;
   h: number;
   k: number;
   hint?: string;

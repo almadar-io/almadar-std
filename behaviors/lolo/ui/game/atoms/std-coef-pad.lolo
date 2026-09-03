@@ -5,6 +5,7 @@ orbital CoefPadOrbital {
     x0 : number!
     x1 : number!
     a : number!
+    b : number
     h : number!
     k : number!
   }
@@ -50,7 +51,7 @@ orbital CoefPadOrbital {
           (let ((remaining (array/len (array/filter @entity.coefPads (fn c (and (== (object/get @c applied) false) (!= (object/get @c id) (object/get @p id))))))))
           (do
             (set @entity.coefPads (array/map @entity.coefPads (fn c (if (== (object/get @c id) (object/get @p id)) (object/merge @c { applied: true }) @c))))
-            (emit COEF_PAD_APPLIED { id: (object/get @p id), x: (object/get @p x), y: (object/get @p y), x0: (object/get @m x0), x1: (object/get @m x1), a: (object/get @m a), h: (object/get @m h), k: (object/get @m k), hint: (object/get @p hint), hop: (object/get @p hop), samples: (object/get @p samples) })
+            (emit COEF_PAD_APPLIED { id: (object/get @p id), x: (object/get @p x), y: (object/get @p y), x0: (object/get @m x0), x1: (object/get @m x1), a: (object/get @m a), b: (if (== (object/get @m b) null) 1 (object/get @m b)), h: (object/get @m h), k: (object/get @m k), hint: (object/get @p hint), hop: (object/get @p hop), samples: (object/get @p samples) })
             (if (and (== @entity.coefCompleted false) (== @remaining 0))
               (do
                 (set @entity.coefCompleted true)
@@ -71,13 +72,14 @@ orbital CoefPadOrbital {
         x0 : number!
         x1 : number!
         a : number!
+        b : number
         h : number!
         k : number!
         hint : string
         hop : boolean
         samples : [CoefModSample]
       }
-        @description "The player stood on an unapplied coefficient pad; carries the pad position and the full mod (x0, x1, a, h, k) so the board appends it to the body authority's curveMods and hops the player onto the reshaped road. Fires once per pad per run."
+        @description "The player stood on an unapplied coefficient pad; carries the pad position and the full mod (x0, x1, a, b, h, k) so the board appends it to the body authority's curveMods and hops the player onto the reshaped road. Fires once per pad per run."
         @tier "domain"
       COEF_PAD_SET_COMPLETED -> external {
       }
@@ -97,7 +99,7 @@ orbital CoefPadOrbital {
         @tier "domain"
       coefPads : [CoefPad] = []
         @label "Coefficient Pads"
-        @description "One row per pad: id, center (x, y in world units), the mod applied to the road while inside x0..x1 (a scales slope+height, h shifts horizontally, k lifts), and the hint floated on apply, and hop (true = the board teleports the player onto the reshaped surface — use when the mod steps the road far from the pad; false = the skate snap carries the player, preserving speed). applied is stamped at runtime."
+        @description "One row per pad: id, center (x, y in world units), the mod applied to the road while inside x0..x1 (a scales slope+height, b compresses/stretch period, h shifts horizontally, k lifts), and the hint floated on apply, and hop (true = the board teleports the player onto the reshaped surface — use when the mod steps the road far from the pad; false = the skate snap carries the player, preserving speed). applied is stamped at runtime."
         @tier "domain"
       reachX : number = 0.7
         @label "Reach X"
