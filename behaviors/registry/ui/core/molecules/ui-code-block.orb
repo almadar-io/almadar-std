@@ -37,6 +37,78 @@
         "parent": "trt_01KXG04N2STG2K5C78H6K1FDZ8",
         "renames": []
       },
+      "evt_01M1N9828S0M5MX7SXC81YEM9G": {
+        "bakedName": "INSERT_TEXT",
+        "curName": "INSERT_TEXT",
+        "id": "evt_01M1N9828S0M5MX7SXC81YEM9G",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04N2STG2K5C78H6K1FDZ8",
+        "renames": []
+      },
+      "evt_01M1N9828S2VQW6HFZAXVJ2ABM": {
+        "bakedName": "MOTION",
+        "curName": "MOTION",
+        "id": "evt_01M1N9828S2VQW6HFZAXVJ2ABM",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04N2STG2K5C78H6K1FDZ8",
+        "renames": []
+      },
+      "evt_01M1N9828S6770N3CF36C6PZQ7": {
+        "bakedName": "EDITOR_FOCUS",
+        "curName": "EDITOR_FOCUS",
+        "id": "evt_01M1N9828S6770N3CF36C6PZQ7",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04N2STG2K5C78H6K1FDZ8",
+        "renames": []
+      },
+      "evt_01M1N9828S6H9T4QBK0D7T39SR": {
+        "bakedName": "@config.onEditorFocus",
+        "curName": "@config.onEditorFocus",
+        "id": "evt_01M1N9828S6H9T4QBK0D7T39SR",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04N2STG2K5C78H6K1FDZ8",
+        "renames": []
+      },
+      "evt_01M1N9828S897H4K23GXS4XX8P": {
+        "bakedName": "OPERATE",
+        "curName": "OPERATE",
+        "id": "evt_01M1N9828S897H4K23GXS4XX8P",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04N2STG2K5C78H6K1FDZ8",
+        "renames": []
+      },
+      "evt_01M1N9828SBZ3WH3DDT7YKPPRQ": {
+        "bakedName": "EDITOR_BLUR",
+        "curName": "EDITOR_BLUR",
+        "id": "evt_01M1N9828SBZ3WH3DDT7YKPPRQ",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04N2STG2K5C78H6K1FDZ8",
+        "renames": []
+      },
+      "evt_01M1N9828SPENEHFZJMAD6FJW4": {
+        "bakedName": "SET_MODE",
+        "curName": "SET_MODE",
+        "id": "evt_01M1N9828SPENEHFZJMAD6FJW4",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04N2STG2K5C78H6K1FDZ8",
+        "renames": []
+      },
+      "evt_01M1N9828SSVJX3ANZVEN3DARX": {
+        "bakedName": "@config.onEditorBlur",
+        "curName": "@config.onEditorBlur",
+        "id": "evt_01M1N9828SSVJX3ANZVEN3DARX",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04N2STG2K5C78H6K1FDZ8",
+        "renames": []
+      },
       "orb_01KXG04N2S51MYQ8WYZMAPKCX0": {
         "bakedName": "CodeBlockOrbital",
         "curName": "CodeBlockOrbital",
@@ -76,6 +148,10 @@
           },
           {
             "name": "code",
+            "type": "string"
+          },
+          {
+            "name": "editorId",
             "type": "string"
           }
         ],
@@ -195,6 +271,12 @@
               "label": "Editable",
               "tier": "presentation",
               "type": "boolean"
+            },
+            "editorId": {
+              "description": "Stable identity for the keyboard router / plugin host to target this editor. Unset = this instance never receives capability events.",
+              "label": "Editor Id",
+              "tier": "presentation",
+              "type": "string"
             },
             "error": {
               "description": "Error state",
@@ -371,6 +453,51 @@
                 "diff"
               ]
             },
+            "motions": {
+              "default": [
+                "left",
+                "right",
+                "up",
+                "down",
+                "word-forward",
+                "word-back",
+                "word-end",
+                "line-start",
+                "line-end",
+                "first-nonblank",
+                "doc-start",
+                "doc-end",
+                "paragraph-forward",
+                "paragraph-back",
+                "line",
+                "selection"
+              ],
+              "description": "Motion vocabulary this editor accepts. Default: the full `EditorMotion` set.",
+              "items": {
+                "type": "string",
+                "values": [
+                  "left",
+                  "right",
+                  "up",
+                  "down",
+                  "word-forward",
+                  "word-back",
+                  "word-end",
+                  "line-start",
+                  "line-end",
+                  "first-nonblank",
+                  "doc-start",
+                  "doc-end",
+                  "paragraph-forward",
+                  "paragraph-back",
+                  "line",
+                  "selection"
+                ]
+              },
+              "label": "Motions",
+              "tier": "presentation",
+              "type": "[string]"
+            },
             "newValue": {
               "description": "New source text — generates diff when combined with oldValue",
               "label": "New Value",
@@ -389,6 +516,71 @@
               "label": "On Change",
               "tier": "presentation",
               "type": "event"
+            },
+            "onEditorBlur": {
+              "default": "EDITOR_BLUR",
+              "description": "Declarative bus emit fired when this editor loses focus.",
+              "label": "On Editor Blur",
+              "tier": "presentation",
+              "type": "event"
+            },
+            "onEditorFocus": {
+              "default": "EDITOR_FOCUS",
+              "description": "Declarative bus emit fired when this editor gains focus.",
+              "label": "On Editor Focus",
+              "tier": "presentation",
+              "type": "event"
+            },
+            "onInsertText": {
+              "default": "INSERT_TEXT",
+              "description": "Declarative bus listen: insert literal text at the cursor.",
+              "label": "On Insert Text",
+              "refId": "evt_01M1N9828S0M5MX7SXC81YEM9G",
+              "tier": "presentation",
+              "type": "event"
+            },
+            "onMotion": {
+              "default": "MOTION",
+              "description": "Declarative bus listen: move the cursor per the vim-style motion vocabulary.",
+              "label": "On Motion",
+              "refId": "evt_01M1N9828S2VQW6HFZAXVJ2ABM",
+              "tier": "presentation",
+              "type": "event"
+            },
+            "onOperate": {
+              "default": "OPERATE",
+              "description": "Declarative bus listen: apply a text operator over a motion's range.",
+              "label": "On Operate",
+              "refId": "evt_01M1N9828S897H4K23GXS4XX8P",
+              "tier": "presentation",
+              "type": "event"
+            },
+            "onSetMode": {
+              "default": "SET_MODE",
+              "description": "Declarative bus listen: switch editor mode and caret style.",
+              "label": "On Set Mode",
+              "refId": "evt_01M1N9828SPENEHFZJMAD6FJW4",
+              "tier": "presentation",
+              "type": "event"
+            },
+            "operators": {
+              "default": [
+                "delete",
+                "yank",
+                "change"
+              ],
+              "description": "Operator vocabulary this editor accepts. Default: the full `EditorOperator` set.",
+              "items": {
+                "type": "string",
+                "values": [
+                  "delete",
+                  "yank",
+                  "change"
+                ]
+              },
+              "label": "Operators",
+              "tier": "presentation",
+              "type": "[string]"
             },
             "showCopy": {
               "description": "Show copy button (viewer alias for showCopyButton)",
@@ -445,11 +637,42 @@
               ],
               "scope": "external",
               "tier": "essential"
+            },
+            {
+              "definerKnob": "onEditorFocus",
+              "description": "Declarative bus emit fired when this editor gains focus.",
+              "event": "@config.onEditorFocus",
+              "eventId": "evt_01M1N9828S6H9T4QBK0D7T39SR",
+              "payloadSchema": [
+                {
+                  "name": "editorId",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "definerKnob": "onEditorBlur",
+              "description": "Declarative bus emit fired when this editor loses focus.",
+              "event": "@config.onEditorBlur",
+              "eventId": "evt_01M1N9828SSVJX3ANZVEN3DARX",
+              "payloadSchema": [
+                {
+                  "name": "editorId",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
             }
           ],
           "entityContract": {
             "provides": [
-              "code"
+              "code",
+              "editorId"
             ],
             "requires": []
           },
@@ -481,6 +704,118 @@
                 ]
               },
               {
+                "id": "evt_01M1N9828S6770N3CF36C6PZQ7",
+                "key": "EDITOR_FOCUS",
+                "name": "Editor Focus",
+                "payloadSchema": [
+                  {
+                    "name": "editorId",
+                    "required": true,
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "id": "evt_01M1N9828SBZ3WH3DDT7YKPPRQ",
+                "key": "EDITOR_BLUR",
+                "name": "Editor Blur",
+                "payloadSchema": [
+                  {
+                    "name": "editorId",
+                    "required": true,
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "id": "evt_01M1N9828S2VQW6HFZAXVJ2ABM",
+                "key": "MOTION",
+                "name": "Motion",
+                "payloadSchema": [
+                  {
+                    "name": "editorId",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "motion",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "count",
+                    "required": true,
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "id": "evt_01M1N9828S897H4K23GXS4XX8P",
+                "key": "OPERATE",
+                "name": "Operate",
+                "payloadSchema": [
+                  {
+                    "name": "editorId",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "operator",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "motion",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "count",
+                    "required": true,
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "id": "evt_01M1N9828S0M5MX7SXC81YEM9G",
+                "key": "INSERT_TEXT",
+                "name": "Insert Text",
+                "payloadSchema": [
+                  {
+                    "name": "editorId",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "text",
+                    "required": true,
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "id": "evt_01M1N9828SPENEHFZJMAD6FJW4",
+                "key": "SET_MODE",
+                "name": "Set Mode",
+                "payloadSchema": [
+                  {
+                    "name": "editorId",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "mode",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "caret",
+                    "required": true,
+                    "type": "string"
+                  }
+                ]
+              },
+              {
                 "description": "GAP-51: called with the new code on every keystroke when `editable === true`. Consumers should debounce + parse downstream — `CodeBlock` does not.",
                 "id": "evt_01KXG04N2V41DBRXK6PA5TWZZ0",
                 "key": "@config.onChange",
@@ -488,6 +823,34 @@
                 "payloadSchema": [
                   {
                     "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Declarative bus emit fired when this editor gains focus.",
+                "id": "evt_01M1N9828S6H9T4QBK0D7T39SR",
+                "key": "@config.onEditorFocus",
+                "name": "@config.on editor focus",
+                "payloadSchema": [
+                  {
+                    "name": "editorId",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Declarative bus emit fired when this editor loses focus.",
+                "id": "evt_01M1N9828SSVJX3ANZVEN3DARX",
+                "key": "@config.onEditorBlur",
+                "name": "@config.on editor blur",
+                "payloadSchema": [
+                  {
+                    "name": "editorId",
+                    "required": true,
                     "type": "string"
                   }
                 ],
@@ -509,6 +872,11 @@
                     "@config.code"
                   ],
                   [
+                    "set",
+                    "@entity.editorId",
+                    "@config.editorId"
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
@@ -517,6 +885,7 @@
                       "code": "@entity.code",
                       "diff": "@config.diff",
                       "editable": "@config.editable",
+                      "editorId": "@entity.editorId",
                       "error": "@config.error",
                       "files": "@config.files",
                       "foldable": "@config.foldable",
@@ -524,9 +893,17 @@
                       "language": "@config.language",
                       "maxHeight": "@config.maxHeight",
                       "mode": "@config.mode",
+                      "motions": "@config.motions",
                       "newValue": "@config.newValue",
                       "oldValue": "@config.oldValue",
                       "onChange": "@config.onChange",
+                      "onEditorBlur": "@config.onEditorBlur",
+                      "onEditorFocus": "@config.onEditorFocus",
+                      "onInsertText": "@config.onInsertText",
+                      "onMotion": "@config.onMotion",
+                      "onOperate": "@config.onOperate",
+                      "onSetMode": "@config.onSetMode",
+                      "operators": "@config.operators",
                       "showCopy": "@config.showCopy",
                       "showCopyButton": "@config.showCopyButton",
                       "showLanguageBadge": "@config.showLanguageBadge",
@@ -558,6 +935,7 @@
                       "code": "@entity.code",
                       "diff": "@config.diff",
                       "editable": "@config.editable",
+                      "editorId": "@entity.editorId",
                       "error": "@config.error",
                       "files": "@config.files",
                       "foldable": "@config.foldable",
@@ -565,9 +943,17 @@
                       "language": "@config.language",
                       "maxHeight": "@config.maxHeight",
                       "mode": "@config.mode",
+                      "motions": "@config.motions",
                       "newValue": "@config.newValue",
                       "oldValue": "@config.oldValue",
                       "onChange": "@config.onChange",
+                      "onEditorBlur": "@config.onEditorBlur",
+                      "onEditorFocus": "@config.onEditorFocus",
+                      "onInsertText": "@config.onInsertText",
+                      "onMotion": "@config.onMotion",
+                      "onOperate": "@config.onOperate",
+                      "onSetMode": "@config.onSetMode",
+                      "operators": "@config.operators",
                       "showCopy": "@config.showCopy",
                       "showCopyButton": "@config.showCopyButton",
                       "showLanguageBadge": "@config.showLanguageBadge",
@@ -580,6 +966,306 @@
                 ],
                 "event": "CHANGE",
                 "eventId": "evt_01KXG04N2V6YYA247E33H0VB9Q",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.editorId",
+                    "@payload.editorId"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "actions": "@config.actions",
+                      "className": "@config.className",
+                      "code": "@entity.code",
+                      "diff": "@config.diff",
+                      "editable": "@config.editable",
+                      "editorId": "@entity.editorId",
+                      "error": "@config.error",
+                      "files": "@config.files",
+                      "foldable": "@config.foldable",
+                      "isLoading": "@config.isLoading",
+                      "language": "@config.language",
+                      "maxHeight": "@config.maxHeight",
+                      "mode": "@config.mode",
+                      "motions": "@config.motions",
+                      "newValue": "@config.newValue",
+                      "oldValue": "@config.oldValue",
+                      "onChange": "@config.onChange",
+                      "onEditorBlur": "@config.onEditorBlur",
+                      "onEditorFocus": "@config.onEditorFocus",
+                      "onInsertText": "@config.onInsertText",
+                      "onMotion": "@config.onMotion",
+                      "onOperate": "@config.onOperate",
+                      "onSetMode": "@config.onSetMode",
+                      "operators": "@config.operators",
+                      "showCopy": "@config.showCopy",
+                      "showCopyButton": "@config.showCopyButton",
+                      "showLanguageBadge": "@config.showLanguageBadge",
+                      "showLineNumbers": "@config.showLineNumbers",
+                      "title": "@config.title",
+                      "type": "code-block",
+                      "wordWrap": "@config.wordWrap"
+                    }
+                  ]
+                ],
+                "event": "EDITOR_FOCUS",
+                "eventId": "evt_01M1N9828S6770N3CF36C6PZQ7",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.editorId",
+                    "@payload.editorId"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "actions": "@config.actions",
+                      "className": "@config.className",
+                      "code": "@entity.code",
+                      "diff": "@config.diff",
+                      "editable": "@config.editable",
+                      "editorId": "@entity.editorId",
+                      "error": "@config.error",
+                      "files": "@config.files",
+                      "foldable": "@config.foldable",
+                      "isLoading": "@config.isLoading",
+                      "language": "@config.language",
+                      "maxHeight": "@config.maxHeight",
+                      "mode": "@config.mode",
+                      "motions": "@config.motions",
+                      "newValue": "@config.newValue",
+                      "oldValue": "@config.oldValue",
+                      "onChange": "@config.onChange",
+                      "onEditorBlur": "@config.onEditorBlur",
+                      "onEditorFocus": "@config.onEditorFocus",
+                      "onInsertText": "@config.onInsertText",
+                      "onMotion": "@config.onMotion",
+                      "onOperate": "@config.onOperate",
+                      "onSetMode": "@config.onSetMode",
+                      "operators": "@config.operators",
+                      "showCopy": "@config.showCopy",
+                      "showCopyButton": "@config.showCopyButton",
+                      "showLanguageBadge": "@config.showLanguageBadge",
+                      "showLineNumbers": "@config.showLineNumbers",
+                      "title": "@config.title",
+                      "type": "code-block",
+                      "wordWrap": "@config.wordWrap"
+                    }
+                  ]
+                ],
+                "event": "EDITOR_BLUR",
+                "eventId": "evt_01M1N9828SBZ3WH3DDT7YKPPRQ",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.editorId",
+                    "@payload.editorId"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "actions": "@config.actions",
+                      "className": "@config.className",
+                      "code": "@entity.code",
+                      "diff": "@config.diff",
+                      "editable": "@config.editable",
+                      "editorId": "@entity.editorId",
+                      "error": "@config.error",
+                      "files": "@config.files",
+                      "foldable": "@config.foldable",
+                      "isLoading": "@config.isLoading",
+                      "language": "@config.language",
+                      "maxHeight": "@config.maxHeight",
+                      "mode": "@config.mode",
+                      "motions": "@config.motions",
+                      "newValue": "@config.newValue",
+                      "oldValue": "@config.oldValue",
+                      "onChange": "@config.onChange",
+                      "onEditorBlur": "@config.onEditorBlur",
+                      "onEditorFocus": "@config.onEditorFocus",
+                      "onInsertText": "@config.onInsertText",
+                      "onMotion": "@config.onMotion",
+                      "onOperate": "@config.onOperate",
+                      "onSetMode": "@config.onSetMode",
+                      "operators": "@config.operators",
+                      "showCopy": "@config.showCopy",
+                      "showCopyButton": "@config.showCopyButton",
+                      "showLanguageBadge": "@config.showLanguageBadge",
+                      "showLineNumbers": "@config.showLineNumbers",
+                      "title": "@config.title",
+                      "type": "code-block",
+                      "wordWrap": "@config.wordWrap"
+                    }
+                  ]
+                ],
+                "event": "MOTION",
+                "eventId": "evt_01M1N9828S2VQW6HFZAXVJ2ABM",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.editorId",
+                    "@payload.editorId"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "actions": "@config.actions",
+                      "className": "@config.className",
+                      "code": "@entity.code",
+                      "diff": "@config.diff",
+                      "editable": "@config.editable",
+                      "editorId": "@entity.editorId",
+                      "error": "@config.error",
+                      "files": "@config.files",
+                      "foldable": "@config.foldable",
+                      "isLoading": "@config.isLoading",
+                      "language": "@config.language",
+                      "maxHeight": "@config.maxHeight",
+                      "mode": "@config.mode",
+                      "motions": "@config.motions",
+                      "newValue": "@config.newValue",
+                      "oldValue": "@config.oldValue",
+                      "onChange": "@config.onChange",
+                      "onEditorBlur": "@config.onEditorBlur",
+                      "onEditorFocus": "@config.onEditorFocus",
+                      "onInsertText": "@config.onInsertText",
+                      "onMotion": "@config.onMotion",
+                      "onOperate": "@config.onOperate",
+                      "onSetMode": "@config.onSetMode",
+                      "operators": "@config.operators",
+                      "showCopy": "@config.showCopy",
+                      "showCopyButton": "@config.showCopyButton",
+                      "showLanguageBadge": "@config.showLanguageBadge",
+                      "showLineNumbers": "@config.showLineNumbers",
+                      "title": "@config.title",
+                      "type": "code-block",
+                      "wordWrap": "@config.wordWrap"
+                    }
+                  ]
+                ],
+                "event": "OPERATE",
+                "eventId": "evt_01M1N9828S897H4K23GXS4XX8P",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.editorId",
+                    "@payload.editorId"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "actions": "@config.actions",
+                      "className": "@config.className",
+                      "code": "@entity.code",
+                      "diff": "@config.diff",
+                      "editable": "@config.editable",
+                      "editorId": "@entity.editorId",
+                      "error": "@config.error",
+                      "files": "@config.files",
+                      "foldable": "@config.foldable",
+                      "isLoading": "@config.isLoading",
+                      "language": "@config.language",
+                      "maxHeight": "@config.maxHeight",
+                      "mode": "@config.mode",
+                      "motions": "@config.motions",
+                      "newValue": "@config.newValue",
+                      "oldValue": "@config.oldValue",
+                      "onChange": "@config.onChange",
+                      "onEditorBlur": "@config.onEditorBlur",
+                      "onEditorFocus": "@config.onEditorFocus",
+                      "onInsertText": "@config.onInsertText",
+                      "onMotion": "@config.onMotion",
+                      "onOperate": "@config.onOperate",
+                      "onSetMode": "@config.onSetMode",
+                      "operators": "@config.operators",
+                      "showCopy": "@config.showCopy",
+                      "showCopyButton": "@config.showCopyButton",
+                      "showLanguageBadge": "@config.showLanguageBadge",
+                      "showLineNumbers": "@config.showLineNumbers",
+                      "title": "@config.title",
+                      "type": "code-block",
+                      "wordWrap": "@config.wordWrap"
+                    }
+                  ]
+                ],
+                "event": "INSERT_TEXT",
+                "eventId": "evt_01M1N9828S0M5MX7SXC81YEM9G",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.editorId",
+                    "@payload.editorId"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "actions": "@config.actions",
+                      "className": "@config.className",
+                      "code": "@entity.code",
+                      "diff": "@config.diff",
+                      "editable": "@config.editable",
+                      "editorId": "@entity.editorId",
+                      "error": "@config.error",
+                      "files": "@config.files",
+                      "foldable": "@config.foldable",
+                      "isLoading": "@config.isLoading",
+                      "language": "@config.language",
+                      "maxHeight": "@config.maxHeight",
+                      "mode": "@config.mode",
+                      "motions": "@config.motions",
+                      "newValue": "@config.newValue",
+                      "oldValue": "@config.oldValue",
+                      "onChange": "@config.onChange",
+                      "onEditorBlur": "@config.onEditorBlur",
+                      "onEditorFocus": "@config.onEditorFocus",
+                      "onInsertText": "@config.onInsertText",
+                      "onMotion": "@config.onMotion",
+                      "onOperate": "@config.onOperate",
+                      "onSetMode": "@config.onSetMode",
+                      "operators": "@config.operators",
+                      "showCopy": "@config.showCopy",
+                      "showCopyButton": "@config.showCopyButton",
+                      "showLanguageBadge": "@config.showLanguageBadge",
+                      "showLineNumbers": "@config.showLineNumbers",
+                      "title": "@config.title",
+                      "type": "code-block",
+                      "wordWrap": "@config.wordWrap"
+                    }
+                  ]
+                ],
+                "event": "SET_MODE",
+                "eventId": "evt_01M1N9828SPENEHFZJMAD6FJW4",
                 "from": "idle",
                 "to": "idle"
               }

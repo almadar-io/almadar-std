@@ -68,7 +68,7 @@ export interface StdUiPaginationConfig {
   pageSize?: number;
   /** Default: `"PAGE_SIZE_CHANGE"` */
   pageSizeChangeEvent?: string;
-  /** Default: `[]` */
+  /** Default: `[10,20,50,100]` */
   pageSizeOptions?: number[];
   /** Default: `false` */
   showJumpToPage?: boolean;

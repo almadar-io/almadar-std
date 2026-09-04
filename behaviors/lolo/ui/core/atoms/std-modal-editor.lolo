@@ -1,0 +1,230 @@
+app std-modal-editor "0.1.0"
+"UI substrate: modal keyboard editing over any editable CodeBlock. The topology is fixed (NORMAL / INSERT / VISUAL / OPERATOR_PENDING / COMMAND) and every binding is config: mode-entry keys, motions, operators, ex-commands, the digit table that accumulates a repeat count, and the per-mode captured-key table the host's keyboard router reads. Vim ships as the default flavor; a Kakoune/Helix binding is the same topology with different config, never a fork. Emits are the mechanical vocabulary an editable CodeBlock listens to (SET_MODE / MOTION / OPERATE / INSERT_TEXT) plus one neutral EX_COMMAND for a buffered ':' line — std names no host command; a realization maps EX_COMMAND.name onto its own host vocabulary."
+orbital ModalEditorOrbital {
+  entity EditorMode [runtime] {
+    id : string!
+    editorId : string = ""
+    count : number = 0
+    operator : string = ""
+    operatorKey : string = ""
+    cmdline : string = ""
+  }
+
+  trait Modes -> @rebindable EditorMode [lifecycle, instance] {
+    initial: NORMAL
+
+    state NORMAL {
+      INIT -> NORMAL
+        (set @entity.count 0)
+
+      KEY -> INSERT when ["=", ?key, @config.insertKey]
+        (set @entity.editorId ?editorId)
+        (set @entity.count 0)
+        (emit SET_MODE { editorId: ?editorId, mode: "INSERT", caret: "bar" })
+
+      KEY -> INSERT when ["=", ?key, @config.appendKey]
+        (set @entity.editorId ?editorId)
+        (set @entity.count 0)
+        (emit MOTION { editorId: ?editorId, motion: "right", count: 1 })
+        (emit SET_MODE { editorId: ?editorId, mode: "INSERT", caret: "bar" })
+
+      KEY -> INSERT when ["=", ?key, @config.openLineKey]
+        (set @entity.editorId ?editorId)
+        (set @entity.count 0)
+        (emit MOTION { editorId: ?editorId, motion: "line-end", count: 1 })
+        (emit INSERT_TEXT { editorId: ?editorId, text: "\n" })
+        (emit SET_MODE { editorId: ?editorId, mode: "INSERT", caret: "bar" })
+
+      KEY -> VISUAL when ["=", ?key, @config.visualKey]
+        (set @entity.editorId ?editorId)
+        (emit SET_MODE { editorId: ?editorId, mode: "VISUAL", caret: "block" })
+
+      KEY -> COMMAND when ["=", ?key, @config.commandKey]
+        (set @entity.editorId ?editorId)
+        (set @entity.cmdline "")
+        (emit SET_MODE { editorId: ?editorId, mode: "COMMAND", caret: "block" })
+
+      KEY -> OPERATOR_PENDING when (object/has @config.operators ?key)
+        (set @entity.editorId ?editorId)
+        (set @entity.operator (object/get @config.operators ?key))
+        (set @entity.operatorKey ?key)
+
+      KEY -> NORMAL when (and (object/has @config.digits ?key) (or ["!=", ?key, "0"] [">", @entity.count, 0]))
+        (set @entity.count (+ (* @entity.count 10) (object/get @config.digits ?key)))
+
+      KEY -> NORMAL when (object/has @config.motions ?key)
+        (set @entity.editorId ?editorId)
+        (emit MOTION { editorId: ?editorId, motion: (object/get @config.motions ?key), count: (if [">", @entity.count, 0] @entity.count 1) })
+        (set @entity.count 0)
+
+      KEY -> NORMAL when ["=", ?key, "Escape"]
+        (set @entity.count 0)
+        (set @entity.operator "")
+        (set @entity.operatorKey "")
+    }
+
+    state INSERT {
+      KEY -> NORMAL when ["=", ?key, "Escape"]
+        (emit SET_MODE { editorId: ?editorId, mode: "NORMAL", caret: "block" })
+    }
+
+    state VISUAL {
+      KEY -> NORMAL when ["=", ?key, "Escape"]
+        (set @entity.count 0)
+        (emit SET_MODE { editorId: ?editorId, mode: "NORMAL", caret: "block" })
+
+      KEY -> NORMAL when (object/has @config.operators ?key)
+        (set @entity.count 0)
+        (emit OPERATE { editorId: ?editorId, operator: (object/get @config.operators ?key), motion: "selection", count: 1 })
+        (emit SET_MODE { editorId: ?editorId, mode: "NORMAL", caret: "block" })
+
+      KEY -> VISUAL when (object/has @config.motions ?key)
+        (emit MOTION { editorId: ?editorId, motion: (object/get @config.motions ?key), count: (if [">", @entity.count, 0] @entity.count 1) })
+        (set @entity.count 0)
+    }
+
+    state OPERATOR_PENDING {
+      KEY -> NORMAL when ["=", ?key, @entity.operatorKey]
+        (emit OPERATE { editorId: ?editorId, operator: @entity.operator, motion: "line", count: (if [">", @entity.count, 0] @entity.count 1) })
+        (set @entity.operator "")
+        (set @entity.operatorKey "")
+        (set @entity.count 0)
+
+      KEY -> NORMAL when (object/has @config.motions ?key)
+        (emit OPERATE { editorId: ?editorId, operator: @entity.operator, motion: (object/get @config.motions ?key), count: (if [">", @entity.count, 0] @entity.count 1) })
+        (set @entity.operator "")
+        (set @entity.operatorKey "")
+        (set @entity.count 0)
+
+      KEY -> NORMAL when ["=", ?key, "Escape"]
+        (set @entity.operator "")
+        (set @entity.operatorKey "")
+        (set @entity.count 0)
+    }
+
+    state COMMAND {
+      KEY -> COMMAND when ["=", ?key, "Backspace"]
+        (set @entity.cmdline (str/slice @entity.cmdline 0 (- (str/len @entity.cmdline) 1)))
+
+      KEY -> NORMAL when (and ["=", ?key, "Enter"] (object/has @config.exCommands @entity.cmdline))
+        (emit EX_COMMAND { editorId: ?editorId, name: (object/get @config.exCommands @entity.cmdline) })
+        (set @entity.cmdline "")
+        (emit SET_MODE { editorId: ?editorId, mode: "NORMAL", caret: "block" })
+
+      KEY -> NORMAL when (and ["=", ?key, "Enter"] (not (object/has @config.exCommands @entity.cmdline)))
+        (set @entity.cmdline "")
+        (emit SET_MODE { editorId: ?editorId, mode: "NORMAL", caret: "block" })
+
+      KEY -> NORMAL when ["=", ?key, "Escape"]
+        (set @entity.cmdline "")
+        (emit SET_MODE { editorId: ?editorId, mode: "NORMAL", caret: "block" })
+
+      KEY -> COMMAND when (and ["!=", ?key, "Enter"] ["!=", ?key, "Escape"] ["!=", ?key, "Backspace"])
+        (set @entity.cmdline (str/concat @entity.cmdline ?key))
+    }
+
+    listens {
+      KEY {
+        editorId : string
+        key : string
+        code : string
+        ctrl : boolean
+        alt : boolean
+        shift : boolean
+        meta : boolean
+        repeat : boolean
+      }
+        @description "One physical keydown, delivered by the host's keyboard router. The host decides preventDefault from config.keymap; this trait only reads key + editorId."
+    }
+
+    emits {
+      SET_MODE -> external {
+        editorId : string
+        mode : string
+        caret : string
+      }
+        @description "Mode + caret instruction for the editor surface (bar | block). Also the fact a realization reads to drive a mode indicator."
+        @tier "primary"
+      MOTION -> external {
+        editorId : string
+        motion : string
+        count : number
+      }
+        @description "Move the caret (or extend the selection in VISUAL) by a closed motion name, `count` times."
+        @tier "primary"
+      OPERATE -> external {
+        editorId : string
+        operator : string
+        motion : string
+        count : number
+      }
+        @description "Apply a config-declared operator (delete | yank | change) over the range a motion describes; `line` for doubled operators, `selection` in VISUAL."
+        @tier "primary"
+      INSERT_TEXT -> external {
+        editorId : string
+        text : string
+      }
+        @description "Insert literal text at the caret (e.g. the newline `o` opens before entering INSERT)."
+        @tier "secondary"
+      EX_COMMAND -> external {
+        editorId : string
+        name : string
+      }
+        @description "A buffered ':' line resolved through config.exCommands. `name` is a neutral config-declared string; a realization maps it onto its host's command vocabulary."
+        @tier "secondary"
+    }
+
+    config {
+      insertKey : string = "i"
+        @label "Enter INSERT before the caret"
+        @description "Key that switches NORMAL to INSERT with the caret unchanged."
+        @synonyms "insert mode, insert key"
+        @tier "presentation"
+      appendKey : string = "a"
+        @label "Enter INSERT after the caret"
+        @description "Key that nudges the caret one column right, then switches to INSERT."
+        @synonyms "append, append mode"
+        @tier "presentation"
+      openLineKey : string = "o"
+        @label "Open a line below and insert"
+        @description "Key that moves to line end, inserts a newline, then switches to INSERT."
+        @synonyms "open line, new line below"
+        @tier "presentation"
+      visualKey : string = "v"
+        @label "Enter VISUAL"
+        @description "Key that switches NORMAL to VISUAL; motions then extend the selection and an operator acts on it."
+        @synonyms "visual mode, select mode"
+        @tier "presentation"
+      commandKey : string = ":"
+        @label "Enter COMMAND"
+        @description "Key that switches NORMAL to COMMAND and starts buffering an ex-command line."
+        @synonyms "ex mode, command line, colon"
+        @tier "presentation"
+      operators : Map string string = { d: "delete", y: "yank", c: "change" }
+        @label "Operator keys"
+        @description "Keys that arm OPERATOR_PENDING, mapped to the operator name carried on OPERATE. Pressing the same key again operates on the whole line."
+        @synonyms "operators, delete, yank, change"
+        @tier "domain"
+      motions : Map string string = { h: "left", j: "down", k: "up", l: "right", w: "word-forward", b: "word-back", e: "word-end", "0": "line-start", "$": "line-end", "^": "first-nonblank", G: "doc-end", "{": "paragraph-back", "}": "paragraph-forward" }
+        @label "Motion keys"
+        @description "Keys recognized in NORMAL, VISUAL and OPERATOR_PENDING, mapped to the closed motion vocabulary the editor surface understands."
+        @synonyms "motions, movement, hjkl, word motion"
+        @tier "domain"
+      digits : Map string number = { "0": 0, "1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9 }
+        @label "Count digits"
+        @description "Digit keys accumulated into a repeat count before a motion or operator fires; each digit's integer value is a lookup because the language has no string-to-int operator."
+        @tier "internal"
+      exCommands : Map string string = { w: "save", q: "close-tab", wq: "save-close-tab" }
+        @label "Ex-commands"
+        @description "Buffered COMMAND-mode lines (typed after ':') mapped to a neutral command name carried on EX_COMMAND."
+        @synonyms "ex commands, colon commands"
+        @tier "domain"
+      keymap : Map string [string] = { NORMAL: ["i", "a", "o", "v", ":", "d", "y", "c", "h", "j", "k", "l", "w", "b", "e", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "$", "^", "G", "{", "}", "Escape"], INSERT: ["Escape"], VISUAL: ["Escape", "d", "y", "c", "h", "j", "k", "l", "w", "b", "e", "0", "$", "^", "G", "{", "}"], OPERATOR_PENDING: ["Escape", "d", "y", "c", "h", "j", "k", "l", "w", "b", "e", "0", "$", "^", "G", "{", "}"], COMMAND: ["Escape", "Enter", "Backspace", "w", "q"] }
+        @label "Captured keys per mode"
+        @description "The declared key set the host's keyboard router reads synchronously to decide preventDefault, keyed by this trait's current state name. A key not listed reaches the underlying textarea untouched. Keep in sync with the other knobs."
+        @tier "internal"
+    }
+  }
+
+  page "/modal-editor" as ModalEditorPage -> Modes
+}

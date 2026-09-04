@@ -131,6 +131,7 @@ export * from './ml/atoms/std-ml-posterior.js';
 export * from './ml/atoms/std-ml-similarity.js';
 export * from './infra/atoms/std-mod-queue.js';
 export * from './ui/core/atoms/std-modal.js';
+export * from './ui/core/atoms/std-modal-editor.js';
 export * from './ui/game/atoms/std-motion-body.js';
 export * from './ui/core/atoms/std-multi-party-flow.js';
 export * from './infra/atoms/std-notification-center.js';

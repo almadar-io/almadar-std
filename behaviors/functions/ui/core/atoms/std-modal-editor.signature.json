@@ -1,0 +1,354 @@
+[
+  {
+    "organism": "std-modal-editor",
+    "orbital": "ModalEditorOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/core/atoms/std-modal-editor.ts",
+    "entities": [
+      {
+        "name": "EditorMode",
+        "fields": [
+          {
+            "name": "editorId",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "count",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "operator",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "operatorKey",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "cmdline",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "Modes",
+        "emittedEvents": [
+          "SET_MODE",
+          "MOTION",
+          "OPERATE",
+          "INSERT_TEXT",
+          "EX_COMMAND"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "SET_MODE",
+            "direction": "emit",
+            "description": "Mode + caret instruction for the editor surface (bar | block). Also the fact a realization reads to drive a mode indicator.",
+            "tier": "primary"
+          },
+          {
+            "name": "MOTION",
+            "direction": "emit",
+            "description": "Move the caret (or extend the selection in VISUAL) by a closed motion name, `count` times.",
+            "tier": "primary"
+          },
+          {
+            "name": "OPERATE",
+            "direction": "emit",
+            "description": "Apply a config-declared operator (delete | yank | change) over the range a motion describes; `line` for doubled operators, `selection` in VISUAL.",
+            "tier": "primary"
+          },
+          {
+            "name": "INSERT_TEXT",
+            "direction": "emit",
+            "description": "Insert literal text at the caret (e.g. the newline `o` opens before entering INSERT).",
+            "tier": "secondary"
+          },
+          {
+            "name": "EX_COMMAND",
+            "direction": "emit",
+            "description": "A buffered ':' line resolved through config.exCommands. `name` is a neutral config-declared string; a realization maps it onto its host's command vocabulary.",
+            "tier": "secondary"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "KEY",
+            "direction": "listen",
+            "description": "One physical keydown, delivered by the host's keyboard router. The host decides preventDefault from config.keymap; this trait only reads key + editorId."
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "appendKey",
+            "type": "string",
+            "default": "a",
+            "label": "Enter INSERT after the caret",
+            "description": "Key that nudges the caret one column right, then switches to INSERT.",
+            "synonyms": "append, append mode",
+            "tier": "presentation"
+          },
+          {
+            "key": "commandKey",
+            "type": "string",
+            "default": ":",
+            "label": "Enter COMMAND",
+            "description": "Key that switches NORMAL to COMMAND and starts buffering an ex-command line.",
+            "synonyms": "ex mode, command line, colon",
+            "tier": "presentation"
+          },
+          {
+            "key": "digits",
+            "type": "Map<string,number>",
+            "default": {
+              "0": 0,
+              "1": 1,
+              "2": 2,
+              "3": 3,
+              "4": 4,
+              "5": 5,
+              "6": 6,
+              "7": 7,
+              "8": 8,
+              "9": 9
+            },
+            "label": "Count digits",
+            "description": "Digit keys accumulated into a repeat count before a motion or operator fires; each digit's integer value is a lookup because the language has no string-to-int operator.",
+            "tier": "internal",
+            "items": {
+              "type": "number"
+            }
+          },
+          {
+            "key": "exCommands",
+            "type": "Map<string,string>",
+            "default": {
+              "q": "close-tab",
+              "w": "save",
+              "wq": "save-close-tab"
+            },
+            "label": "Ex-commands",
+            "description": "Buffered COMMAND-mode lines (typed after ':') mapped to a neutral command name carried on EX_COMMAND.",
+            "synonyms": "ex commands, colon commands",
+            "tier": "domain",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "insertKey",
+            "type": "string",
+            "default": "i",
+            "label": "Enter INSERT before the caret",
+            "description": "Key that switches NORMAL to INSERT with the caret unchanged.",
+            "synonyms": "insert mode, insert key",
+            "tier": "presentation"
+          },
+          {
+            "key": "keymap",
+            "type": "Map<string,[string]>",
+            "default": {
+              "COMMAND": [
+                "Escape",
+                "Enter",
+                "Backspace",
+                "w",
+                "q"
+              ],
+              "INSERT": [
+                "Escape"
+              ],
+              "NORMAL": [
+                "i",
+                "a",
+                "o",
+                "v",
+                ":",
+                "d",
+                "y",
+                "c",
+                "h",
+                "j",
+                "k",
+                "l",
+                "w",
+                "b",
+                "e",
+                "0",
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6",
+                "7",
+                "8",
+                "9",
+                "$",
+                "^",
+                "G",
+                "{",
+                "}",
+                "Escape"
+              ],
+              "OPERATOR_PENDING": [
+                "Escape",
+                "d",
+                "y",
+                "c",
+                "h",
+                "j",
+                "k",
+                "l",
+                "w",
+                "b",
+                "e",
+                "0",
+                "$",
+                "^",
+                "G",
+                "{",
+                "}"
+              ],
+              "VISUAL": [
+                "Escape",
+                "d",
+                "y",
+                "c",
+                "h",
+                "j",
+                "k",
+                "l",
+                "w",
+                "b",
+                "e",
+                "0",
+                "$",
+                "^",
+                "G",
+                "{",
+                "}"
+              ]
+            },
+            "label": "Captured keys per mode",
+            "description": "The declared key set the host's keyboard router reads synchronously to decide preventDefault, keyed by this trait's current state name. A key not listed reaches the underlying textarea untouched. Keep in sync with the other knobs.",
+            "tier": "internal",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "key": "motions",
+            "type": "Map<string,string>",
+            "default": {
+              "0": "line-start",
+              "$": "line-end",
+              "G": "doc-end",
+              "^": "first-nonblank",
+              "b": "word-back",
+              "e": "word-end",
+              "h": "left",
+              "j": "down",
+              "k": "up",
+              "l": "right",
+              "w": "word-forward",
+              "{": "paragraph-back",
+              "}": "paragraph-forward"
+            },
+            "label": "Motion keys",
+            "description": "Keys recognized in NORMAL, VISUAL and OPERATOR_PENDING, mapped to the closed motion vocabulary the editor surface understands.",
+            "synonyms": "motions, movement, hjkl, word motion",
+            "tier": "domain",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "openLineKey",
+            "type": "string",
+            "default": "o",
+            "label": "Open a line below and insert",
+            "description": "Key that moves to line end, inserts a newline, then switches to INSERT.",
+            "synonyms": "open line, new line below",
+            "tier": "presentation"
+          },
+          {
+            "key": "operators",
+            "type": "Map<string,string>",
+            "default": {
+              "c": "change",
+              "d": "delete",
+              "y": "yank"
+            },
+            "label": "Operator keys",
+            "description": "Keys that arm OPERATOR_PENDING, mapped to the operator name carried on OPERATE. Pressing the same key again operates on the whole line.",
+            "synonyms": "operators, delete, yank, change",
+            "tier": "domain",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "visualKey",
+            "type": "string",
+            "default": "v",
+            "label": "Enter VISUAL",
+            "description": "Key that switches NORMAL to VISUAL; motions then extend the selection and an operator acts on it.",
+            "synonyms": "visual mode, select mode",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "EditorMode",
+        "transitionEvents": [
+          "INIT",
+          "KEY"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "cmdline",
+            "count",
+            "editorId",
+            "operator",
+            "operatorKey"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "ModalEditorPage",
+        "defaultPath": "/modal-editor",
+        "primaryEntity": "EditorMode"
+      }
+    ],
+    "emittedEvents": [
+      "EX_COMMAND",
+      "INSERT_TEXT",
+      "MOTION",
+      "OPERATE",
+      "SET_MODE"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

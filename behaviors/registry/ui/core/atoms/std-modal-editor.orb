@@ -1,0 +1,1450 @@
+{
+  "description": "UI substrate: modal keyboard editing over any editable CodeBlock. The topology is fixed (NORMAL / INSERT / VISUAL / OPERATOR_PENDING / COMMAND) and every binding is config: mode-entry keys, motions, operators, ex-commands, the digit table that accumulates a repeat count, and the per-mode captured-key table the host's keyboard router reads. Vim ships as the default flavor; a Kakoune/Helix binding is the same topology with different config, never a fork. Emits are the mechanical vocabulary an editable CodeBlock listens to (SET_MODE / MOTION / OPERATE / INSERT_TEXT) plus one neutral EX_COMMAND for a buffered ':' line — std names no host command; a realization maps EX_COMMAND.name onto its own host vocabulary.",
+  "ledger": {
+    "entries": {
+      "ent_01M1N9RFGVPGR86MHTEQC9T0HK": {
+        "bakedName": "EditorMode",
+        "curName": "EditorMode",
+        "id": "ent_01M1N9RFGVPGR86MHTEQC9T0HK",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "evt_01M1N9RFGV1D58J57GNQA2X8Z9": {
+        "bakedName": "MOTION",
+        "curName": "MOTION",
+        "id": "evt_01M1N9RFGV1D58J57GNQA2X8Z9",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M1N9RFGV6G937WGGW6HPTVC3",
+        "renames": []
+      },
+      "evt_01M1N9RFGVK31M3ZE4N9FBHBWM": {
+        "bakedName": "KEY",
+        "curName": "KEY",
+        "id": "evt_01M1N9RFGVK31M3ZE4N9FBHBWM",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M1N9RFGV6G937WGGW6HPTVC3",
+        "renames": []
+      },
+      "evt_01M1N9RFGVR67GHR554ZYYYN7F": {
+        "bakedName": "INSERT_TEXT",
+        "curName": "INSERT_TEXT",
+        "id": "evt_01M1N9RFGVR67GHR554ZYYYN7F",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M1N9RFGV6G937WGGW6HPTVC3",
+        "renames": []
+      },
+      "evt_01M1N9RFGVV28SH1SVXFJ7X9XY": {
+        "bakedName": "OPERATE",
+        "curName": "OPERATE",
+        "id": "evt_01M1N9RFGVV28SH1SVXFJ7X9XY",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M1N9RFGV6G937WGGW6HPTVC3",
+        "renames": []
+      },
+      "evt_01M1N9RFGVVTJX76Y9V7M6TWFT": {
+        "bakedName": "EX_COMMAND",
+        "curName": "EX_COMMAND",
+        "id": "evt_01M1N9RFGVVTJX76Y9V7M6TWFT",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M1N9RFGV6G937WGGW6HPTVC3",
+        "renames": []
+      },
+      "evt_01M1N9RFGVZNP12BFQMJPA2SWD": {
+        "bakedName": "SET_MODE",
+        "curName": "SET_MODE",
+        "id": "evt_01M1N9RFGVZNP12BFQMJPA2SWD",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M1N9RFGV6G937WGGW6HPTVC3",
+        "renames": []
+      },
+      "evt_01M1N9S6G5JM3N66C9QE54J32Y": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01M1N9S6G5JM3N66C9QE54J32Y",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M1N9RFGV6G937WGGW6HPTVC3",
+        "renames": []
+      },
+      "orb_01M1N9RFGVXRX7KY7J5VAKVWB8": {
+        "bakedName": "ModalEditorOrbital",
+        "curName": "ModalEditorOrbital",
+        "id": "orb_01M1N9RFGVXRX7KY7J5VAKVWB8",
+        "kind": "orbital",
+        "owner": "workspace",
+        "renames": []
+      },
+      "pag_01M1N9TS0RBGZ6G17KSXBQVKAM": {
+        "bakedName": "ModalEditorPage",
+        "curName": "ModalEditorPage",
+        "id": "pag_01M1N9TS0RBGZ6G17KSXBQVKAM",
+        "kind": "page",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M1N9RFGV6G937WGGW6HPTVC3": {
+        "bakedName": "Modes",
+        "curName": "Modes",
+        "id": "trt_01M1N9RFGV6G937WGGW6HPTVC3",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      }
+    },
+    "schemaVersion": 1
+  },
+  "name": "std-modal-editor",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": "",
+            "name": "editorId",
+            "type": "string"
+          },
+          {
+            "default": 0.0,
+            "name": "count",
+            "type": "number"
+          },
+          {
+            "default": "",
+            "name": "operator",
+            "type": "string"
+          },
+          {
+            "default": "",
+            "name": "operatorKey",
+            "type": "string"
+          },
+          {
+            "default": "",
+            "name": "cmdline",
+            "type": "string"
+          }
+        ],
+        "id": "ent_01M1N9RFGVPGR86MHTEQC9T0HK",
+        "name": "EditorMode",
+        "persistence": "runtime"
+      },
+      "id": "orb_01M1N9RFGVXRX7KY7J5VAKVWB8",
+      "name": "ModalEditorOrbital",
+      "pages": [
+        {
+          "id": "pag_01M1N9TS0RBGZ6G17KSXBQVKAM",
+          "name": "ModalEditorPage",
+          "path": "/modal-editor",
+          "traits": [
+            {
+              "ref": "Modes",
+              "refId": "trt_01M1N9RFGV6G937WGGW6HPTVC3"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "lifecycle",
+          "config": {
+            "appendKey": {
+              "default": "a",
+              "description": "Key that nudges the caret one column right, then switches to INSERT.",
+              "label": "Enter INSERT after the caret",
+              "synonyms": "append, append mode",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "commandKey": {
+              "default": ":",
+              "description": "Key that switches NORMAL to COMMAND and starts buffering an ex-command line.",
+              "label": "Enter COMMAND",
+              "synonyms": "ex mode, command line, colon",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "digits": {
+              "default": {
+                "0": 0.0,
+                "1": 1.0,
+                "2": 2.0,
+                "3": 3.0,
+                "4": 4.0,
+                "5": 5.0,
+                "6": 6.0,
+                "7": 7.0,
+                "8": 8.0,
+                "9": 9.0
+              },
+              "description": "Digit keys accumulated into a repeat count before a motion or operator fires; each digit's integer value is a lookup because the language has no string-to-int operator.",
+              "items": {
+                "type": "number"
+              },
+              "label": "Count digits",
+              "tier": "internal",
+              "type": "Map<string,number>"
+            },
+            "exCommands": {
+              "default": {
+                "q": "close-tab",
+                "w": "save",
+                "wq": "save-close-tab"
+              },
+              "description": "Buffered COMMAND-mode lines (typed after ':') mapped to a neutral command name carried on EX_COMMAND.",
+              "items": {
+                "type": "string"
+              },
+              "label": "Ex-commands",
+              "synonyms": "ex commands, colon commands",
+              "tier": "domain",
+              "type": "Map<string,string>"
+            },
+            "insertKey": {
+              "default": "i",
+              "description": "Key that switches NORMAL to INSERT with the caret unchanged.",
+              "label": "Enter INSERT before the caret",
+              "synonyms": "insert mode, insert key",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "keymap": {
+              "default": {
+                "COMMAND": [
+                  "Escape",
+                  "Enter",
+                  "Backspace",
+                  "w",
+                  "q"
+                ],
+                "INSERT": [
+                  "Escape"
+                ],
+                "NORMAL": [
+                  "i",
+                  "a",
+                  "o",
+                  "v",
+                  ":",
+                  "d",
+                  "y",
+                  "c",
+                  "h",
+                  "j",
+                  "k",
+                  "l",
+                  "w",
+                  "b",
+                  "e",
+                  "0",
+                  "1",
+                  "2",
+                  "3",
+                  "4",
+                  "5",
+                  "6",
+                  "7",
+                  "8",
+                  "9",
+                  "$",
+                  "^",
+                  "G",
+                  "{",
+                  "}",
+                  "Escape"
+                ],
+                "OPERATOR_PENDING": [
+                  "Escape",
+                  "d",
+                  "y",
+                  "c",
+                  "h",
+                  "j",
+                  "k",
+                  "l",
+                  "w",
+                  "b",
+                  "e",
+                  "0",
+                  "$",
+                  "^",
+                  "G",
+                  "{",
+                  "}"
+                ],
+                "VISUAL": [
+                  "Escape",
+                  "d",
+                  "y",
+                  "c",
+                  "h",
+                  "j",
+                  "k",
+                  "l",
+                  "w",
+                  "b",
+                  "e",
+                  "0",
+                  "$",
+                  "^",
+                  "G",
+                  "{",
+                  "}"
+                ]
+              },
+              "description": "The declared key set the host's keyboard router reads synchronously to decide preventDefault, keyed by this trait's current state name. A key not listed reaches the underlying textarea untouched. Keep in sync with the other knobs.",
+              "items": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "label": "Captured keys per mode",
+              "tier": "internal",
+              "type": "Map<string,[string]>"
+            },
+            "motions": {
+              "default": {
+                "$": "line-end",
+                "0": "line-start",
+                "G": "doc-end",
+                "^": "first-nonblank",
+                "b": "word-back",
+                "e": "word-end",
+                "h": "left",
+                "j": "down",
+                "k": "up",
+                "l": "right",
+                "w": "word-forward",
+                "{": "paragraph-back",
+                "}": "paragraph-forward"
+              },
+              "description": "Keys recognized in NORMAL, VISUAL and OPERATOR_PENDING, mapped to the closed motion vocabulary the editor surface understands.",
+              "items": {
+                "type": "string"
+              },
+              "label": "Motion keys",
+              "synonyms": "motions, movement, hjkl, word motion",
+              "tier": "domain",
+              "type": "Map<string,string>"
+            },
+            "openLineKey": {
+              "default": "o",
+              "description": "Key that moves to line end, inserts a newline, then switches to INSERT.",
+              "label": "Open a line below and insert",
+              "synonyms": "open line, new line below",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "operators": {
+              "default": {
+                "c": "change",
+                "d": "delete",
+                "y": "yank"
+              },
+              "description": "Keys that arm OPERATOR_PENDING, mapped to the operator name carried on OPERATE. Pressing the same key again operates on the whole line.",
+              "items": {
+                "type": "string"
+              },
+              "label": "Operator keys",
+              "synonyms": "operators, delete, yank, change",
+              "tier": "domain",
+              "type": "Map<string,string>"
+            },
+            "visualKey": {
+              "default": "v",
+              "description": "Key that switches NORMAL to VISUAL; motions then extend the selection and an operator acts on it.",
+              "label": "Enter VISUAL",
+              "synonyms": "visual mode, select mode",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
+          "emits": [
+            {
+              "description": "Mode + caret instruction for the editor surface (bar | block). Also the fact a realization reads to drive a mode indicator.",
+              "event": "SET_MODE",
+              "eventId": "evt_01M1N9RFGVZNP12BFQMJPA2SWD",
+              "payloadSchema": [
+                {
+                  "name": "editorId",
+                  "type": "string"
+                },
+                {
+                  "name": "mode",
+                  "type": "string"
+                },
+                {
+                  "name": "caret",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "primary"
+            },
+            {
+              "description": "Move the caret (or extend the selection in VISUAL) by a closed motion name, `count` times.",
+              "event": "MOTION",
+              "eventId": "evt_01M1N9RFGV1D58J57GNQA2X8Z9",
+              "payloadSchema": [
+                {
+                  "name": "editorId",
+                  "type": "string"
+                },
+                {
+                  "name": "motion",
+                  "type": "string"
+                },
+                {
+                  "name": "count",
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "primary"
+            },
+            {
+              "description": "Apply a config-declared operator (delete | yank | change) over the range a motion describes; `line` for doubled operators, `selection` in VISUAL.",
+              "event": "OPERATE",
+              "eventId": "evt_01M1N9RFGVV28SH1SVXFJ7X9XY",
+              "payloadSchema": [
+                {
+                  "name": "editorId",
+                  "type": "string"
+                },
+                {
+                  "name": "operator",
+                  "type": "string"
+                },
+                {
+                  "name": "motion",
+                  "type": "string"
+                },
+                {
+                  "name": "count",
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "primary"
+            },
+            {
+              "description": "Insert literal text at the caret (e.g. the newline `o` opens before entering INSERT).",
+              "event": "INSERT_TEXT",
+              "eventId": "evt_01M1N9RFGVR67GHR554ZYYYN7F",
+              "payloadSchema": [
+                {
+                  "name": "editorId",
+                  "type": "string"
+                },
+                {
+                  "name": "text",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "secondary"
+            },
+            {
+              "description": "A buffered ':' line resolved through config.exCommands. `name` is a neutral config-declared string; a realization maps it onto its host's command vocabulary.",
+              "event": "EX_COMMAND",
+              "eventId": "evt_01M1N9RFGVVTJX76Y9V7M6TWFT",
+              "payloadSchema": [
+                {
+                  "name": "editorId",
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "secondary"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "cmdline",
+              "count",
+              "editorId",
+              "operator",
+              "operatorKey"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "entityRefIds": {
+            "EditorMode": "ent_01M1N9RFGVPGR86MHTEQC9T0HK"
+          },
+          "id": "trt_01M1N9RFGV6G937WGGW6HPTVC3",
+          "linkedEntity": "EditorMode",
+          "linkedEntityId": "ent_01M1N9RFGVPGR86MHTEQC9T0HK",
+          "name": "Modes",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "id": "evt_01M1N9S6G5JM3N66C9QE54J32Y",
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "One physical keydown, delivered by the host's keyboard router. The host decides preventDefault from config.keymap; this trait only reads key + editorId.",
+                "id": "evt_01M1N9RFGVK31M3ZE4N9FBHBWM",
+                "key": "KEY",
+                "name": "Key",
+                "payloadSchema": [
+                  {
+                    "name": "editorId",
+                    "type": "string"
+                  },
+                  {
+                    "name": "key",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  },
+                  {
+                    "name": "ctrl",
+                    "type": "boolean"
+                  },
+                  {
+                    "name": "alt",
+                    "type": "boolean"
+                  },
+                  {
+                    "name": "shift",
+                    "type": "boolean"
+                  },
+                  {
+                    "name": "meta",
+                    "type": "boolean"
+                  },
+                  {
+                    "name": "repeat",
+                    "type": "boolean"
+                  }
+                ]
+              },
+              {
+                "description": "Mode + caret instruction for the editor surface (bar | block). Also the fact a realization reads to drive a mode indicator.",
+                "id": "evt_01M1N9RFGVZNP12BFQMJPA2SWD",
+                "key": "SET_MODE",
+                "name": "Set Mode",
+                "payloadSchema": [
+                  {
+                    "name": "editorId",
+                    "type": "string"
+                  },
+                  {
+                    "name": "mode",
+                    "type": "string"
+                  },
+                  {
+                    "name": "caret",
+                    "type": "string"
+                  }
+                ],
+                "tier": "primary"
+              },
+              {
+                "description": "Move the caret (or extend the selection in VISUAL) by a closed motion name, `count` times.",
+                "id": "evt_01M1N9RFGV1D58J57GNQA2X8Z9",
+                "key": "MOTION",
+                "name": "Motion",
+                "payloadSchema": [
+                  {
+                    "name": "editorId",
+                    "type": "string"
+                  },
+                  {
+                    "name": "motion",
+                    "type": "string"
+                  },
+                  {
+                    "name": "count",
+                    "type": "number"
+                  }
+                ],
+                "tier": "primary"
+              },
+              {
+                "description": "Apply a config-declared operator (delete | yank | change) over the range a motion describes; `line` for doubled operators, `selection` in VISUAL.",
+                "id": "evt_01M1N9RFGVV28SH1SVXFJ7X9XY",
+                "key": "OPERATE",
+                "name": "Operate",
+                "payloadSchema": [
+                  {
+                    "name": "editorId",
+                    "type": "string"
+                  },
+                  {
+                    "name": "operator",
+                    "type": "string"
+                  },
+                  {
+                    "name": "motion",
+                    "type": "string"
+                  },
+                  {
+                    "name": "count",
+                    "type": "number"
+                  }
+                ],
+                "tier": "primary"
+              },
+              {
+                "description": "Insert literal text at the caret (e.g. the newline `o` opens before entering INSERT).",
+                "id": "evt_01M1N9RFGVR67GHR554ZYYYN7F",
+                "key": "INSERT_TEXT",
+                "name": "Insert Text",
+                "payloadSchema": [
+                  {
+                    "name": "editorId",
+                    "type": "string"
+                  },
+                  {
+                    "name": "text",
+                    "type": "string"
+                  }
+                ],
+                "tier": "secondary"
+              },
+              {
+                "description": "A buffered ':' line resolved through config.exCommands. `name` is a neutral config-declared string; a realization maps it onto its host's command vocabulary.",
+                "id": "evt_01M1N9RFGVVTJX76Y9V7M6TWFT",
+                "key": "EX_COMMAND",
+                "name": "Ex Command",
+                "payloadSchema": [
+                  {
+                    "name": "editorId",
+                    "type": "string"
+                  },
+                  {
+                    "name": "name",
+                    "type": "string"
+                  }
+                ],
+                "tier": "secondary"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "NORMAL"
+              },
+              {
+                "name": "INSERT"
+              },
+              {
+                "name": "VISUAL"
+              },
+              {
+                "name": "OPERATOR_PENDING"
+              },
+              {
+                "name": "COMMAND"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.count",
+                    0.0
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01M1N9S6G5JM3N66C9QE54J32Y",
+                "from": "NORMAL",
+                "to": "NORMAL"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.editorId",
+                    "@payload.editorId"
+                  ],
+                  [
+                    "set",
+                    "@entity.count",
+                    0.0
+                  ],
+                  [
+                    "emit",
+                    "SET_MODE",
+                    {
+                      "caret": "bar",
+                      "editorId": "@payload.editorId",
+                      "mode": "INSERT"
+                    }
+                  ]
+                ],
+                "event": "KEY",
+                "eventId": "evt_01M1N9RFGVK31M3ZE4N9FBHBWM",
+                "from": "NORMAL",
+                "guard": [
+                  "=",
+                  "@payload.key",
+                  "@config.insertKey"
+                ],
+                "to": "INSERT"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.editorId",
+                    "@payload.editorId"
+                  ],
+                  [
+                    "set",
+                    "@entity.count",
+                    0.0
+                  ],
+                  [
+                    "emit",
+                    "MOTION",
+                    {
+                      "count": 1.0,
+                      "editorId": "@payload.editorId",
+                      "motion": "right"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "SET_MODE",
+                    {
+                      "caret": "bar",
+                      "editorId": "@payload.editorId",
+                      "mode": "INSERT"
+                    }
+                  ]
+                ],
+                "event": "KEY",
+                "eventId": "evt_01M1N9RFGVK31M3ZE4N9FBHBWM",
+                "from": "NORMAL",
+                "guard": [
+                  "=",
+                  "@payload.key",
+                  "@config.appendKey"
+                ],
+                "to": "INSERT"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.editorId",
+                    "@payload.editorId"
+                  ],
+                  [
+                    "set",
+                    "@entity.count",
+                    0.0
+                  ],
+                  [
+                    "emit",
+                    "MOTION",
+                    {
+                      "count": 1.0,
+                      "editorId": "@payload.editorId",
+                      "motion": "line-end"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "INSERT_TEXT",
+                    {
+                      "editorId": "@payload.editorId",
+                      "text": "\n"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "SET_MODE",
+                    {
+                      "caret": "bar",
+                      "editorId": "@payload.editorId",
+                      "mode": "INSERT"
+                    }
+                  ]
+                ],
+                "event": "KEY",
+                "eventId": "evt_01M1N9RFGVK31M3ZE4N9FBHBWM",
+                "from": "NORMAL",
+                "guard": [
+                  "=",
+                  "@payload.key",
+                  "@config.openLineKey"
+                ],
+                "to": "INSERT"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.editorId",
+                    "@payload.editorId"
+                  ],
+                  [
+                    "emit",
+                    "SET_MODE",
+                    {
+                      "caret": "block",
+                      "editorId": "@payload.editorId",
+                      "mode": "VISUAL"
+                    }
+                  ]
+                ],
+                "event": "KEY",
+                "eventId": "evt_01M1N9RFGVK31M3ZE4N9FBHBWM",
+                "from": "NORMAL",
+                "guard": [
+                  "=",
+                  "@payload.key",
+                  "@config.visualKey"
+                ],
+                "to": "VISUAL"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.editorId",
+                    "@payload.editorId"
+                  ],
+                  [
+                    "set",
+                    "@entity.cmdline",
+                    ""
+                  ],
+                  [
+                    "emit",
+                    "SET_MODE",
+                    {
+                      "caret": "block",
+                      "editorId": "@payload.editorId",
+                      "mode": "COMMAND"
+                    }
+                  ]
+                ],
+                "event": "KEY",
+                "eventId": "evt_01M1N9RFGVK31M3ZE4N9FBHBWM",
+                "from": "NORMAL",
+                "guard": [
+                  "=",
+                  "@payload.key",
+                  "@config.commandKey"
+                ],
+                "to": "COMMAND"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.editorId",
+                    "@payload.editorId"
+                  ],
+                  [
+                    "set",
+                    "@entity.operator",
+                    [
+                      "object/get",
+                      "@config.operators",
+                      "@payload.key"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.operatorKey",
+                    "@payload.key"
+                  ]
+                ],
+                "event": "KEY",
+                "eventId": "evt_01M1N9RFGVK31M3ZE4N9FBHBWM",
+                "from": "NORMAL",
+                "guard": [
+                  "object/has",
+                  "@config.operators",
+                  "@payload.key"
+                ],
+                "to": "OPERATOR_PENDING"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.count",
+                    [
+                      "+",
+                      [
+                        "*",
+                        "@entity.count",
+                        10.0
+                      ],
+                      [
+                        "object/get",
+                        "@config.digits",
+                        "@payload.key"
+                      ]
+                    ]
+                  ]
+                ],
+                "event": "KEY",
+                "eventId": "evt_01M1N9RFGVK31M3ZE4N9FBHBWM",
+                "from": "NORMAL",
+                "guard": [
+                  "and",
+                  [
+                    "object/has",
+                    "@config.digits",
+                    "@payload.key"
+                  ],
+                  [
+                    "or",
+                    [
+                      "!=",
+                      "@payload.key",
+                      "0"
+                    ],
+                    [
+                      ">",
+                      "@entity.count",
+                      0.0
+                    ]
+                  ]
+                ],
+                "to": "NORMAL"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.editorId",
+                    "@payload.editorId"
+                  ],
+                  [
+                    "emit",
+                    "MOTION",
+                    {
+                      "count": [
+                        "if",
+                        [
+                          ">",
+                          "@entity.count",
+                          0.0
+                        ],
+                        "@entity.count",
+                        1.0
+                      ],
+                      "editorId": "@payload.editorId",
+                      "motion": [
+                        "object/get",
+                        "@config.motions",
+                        "@payload.key"
+                      ]
+                    }
+                  ],
+                  [
+                    "set",
+                    "@entity.count",
+                    0.0
+                  ]
+                ],
+                "event": "KEY",
+                "eventId": "evt_01M1N9RFGVK31M3ZE4N9FBHBWM",
+                "from": "NORMAL",
+                "guard": [
+                  "object/has",
+                  "@config.motions",
+                  "@payload.key"
+                ],
+                "to": "NORMAL"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.count",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.operator",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.operatorKey",
+                    ""
+                  ]
+                ],
+                "event": "KEY",
+                "eventId": "evt_01M1N9RFGVK31M3ZE4N9FBHBWM",
+                "from": "NORMAL",
+                "guard": [
+                  "=",
+                  "@payload.key",
+                  "Escape"
+                ],
+                "to": "NORMAL"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "SET_MODE",
+                    {
+                      "caret": "block",
+                      "editorId": "@payload.editorId",
+                      "mode": "NORMAL"
+                    }
+                  ]
+                ],
+                "event": "KEY",
+                "eventId": "evt_01M1N9RFGVK31M3ZE4N9FBHBWM",
+                "from": "INSERT",
+                "guard": [
+                  "=",
+                  "@payload.key",
+                  "Escape"
+                ],
+                "to": "NORMAL"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.count",
+                    0.0
+                  ],
+                  [
+                    "emit",
+                    "SET_MODE",
+                    {
+                      "caret": "block",
+                      "editorId": "@payload.editorId",
+                      "mode": "NORMAL"
+                    }
+                  ]
+                ],
+                "event": "KEY",
+                "eventId": "evt_01M1N9RFGVK31M3ZE4N9FBHBWM",
+                "from": "VISUAL",
+                "guard": [
+                  "=",
+                  "@payload.key",
+                  "Escape"
+                ],
+                "to": "NORMAL"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.count",
+                    0.0
+                  ],
+                  [
+                    "emit",
+                    "OPERATE",
+                    {
+                      "count": 1.0,
+                      "editorId": "@payload.editorId",
+                      "motion": "selection",
+                      "operator": [
+                        "object/get",
+                        "@config.operators",
+                        "@payload.key"
+                      ]
+                    }
+                  ],
+                  [
+                    "emit",
+                    "SET_MODE",
+                    {
+                      "caret": "block",
+                      "editorId": "@payload.editorId",
+                      "mode": "NORMAL"
+                    }
+                  ]
+                ],
+                "event": "KEY",
+                "eventId": "evt_01M1N9RFGVK31M3ZE4N9FBHBWM",
+                "from": "VISUAL",
+                "guard": [
+                  "object/has",
+                  "@config.operators",
+                  "@payload.key"
+                ],
+                "to": "NORMAL"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "MOTION",
+                    {
+                      "count": [
+                        "if",
+                        [
+                          ">",
+                          "@entity.count",
+                          0.0
+                        ],
+                        "@entity.count",
+                        1.0
+                      ],
+                      "editorId": "@payload.editorId",
+                      "motion": [
+                        "object/get",
+                        "@config.motions",
+                        "@payload.key"
+                      ]
+                    }
+                  ],
+                  [
+                    "set",
+                    "@entity.count",
+                    0.0
+                  ]
+                ],
+                "event": "KEY",
+                "eventId": "evt_01M1N9RFGVK31M3ZE4N9FBHBWM",
+                "from": "VISUAL",
+                "guard": [
+                  "object/has",
+                  "@config.motions",
+                  "@payload.key"
+                ],
+                "to": "VISUAL"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "OPERATE",
+                    {
+                      "count": [
+                        "if",
+                        [
+                          ">",
+                          "@entity.count",
+                          0.0
+                        ],
+                        "@entity.count",
+                        1.0
+                      ],
+                      "editorId": "@payload.editorId",
+                      "motion": "line",
+                      "operator": "@entity.operator"
+                    }
+                  ],
+                  [
+                    "set",
+                    "@entity.operator",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.operatorKey",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.count",
+                    0.0
+                  ]
+                ],
+                "event": "KEY",
+                "eventId": "evt_01M1N9RFGVK31M3ZE4N9FBHBWM",
+                "from": "OPERATOR_PENDING",
+                "guard": [
+                  "=",
+                  "@payload.key",
+                  "@entity.operatorKey"
+                ],
+                "to": "NORMAL"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "OPERATE",
+                    {
+                      "count": [
+                        "if",
+                        [
+                          ">",
+                          "@entity.count",
+                          0.0
+                        ],
+                        "@entity.count",
+                        1.0
+                      ],
+                      "editorId": "@payload.editorId",
+                      "motion": [
+                        "object/get",
+                        "@config.motions",
+                        "@payload.key"
+                      ],
+                      "operator": "@entity.operator"
+                    }
+                  ],
+                  [
+                    "set",
+                    "@entity.operator",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.operatorKey",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.count",
+                    0.0
+                  ]
+                ],
+                "event": "KEY",
+                "eventId": "evt_01M1N9RFGVK31M3ZE4N9FBHBWM",
+                "from": "OPERATOR_PENDING",
+                "guard": [
+                  "object/has",
+                  "@config.motions",
+                  "@payload.key"
+                ],
+                "to": "NORMAL"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.operator",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.operatorKey",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.count",
+                    0.0
+                  ]
+                ],
+                "event": "KEY",
+                "eventId": "evt_01M1N9RFGVK31M3ZE4N9FBHBWM",
+                "from": "OPERATOR_PENDING",
+                "guard": [
+                  "=",
+                  "@payload.key",
+                  "Escape"
+                ],
+                "to": "NORMAL"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.cmdline",
+                    [
+                      "str/slice",
+                      "@entity.cmdline",
+                      0.0,
+                      [
+                        "-",
+                        [
+                          "str/len",
+                          "@entity.cmdline"
+                        ],
+                        1.0
+                      ]
+                    ]
+                  ]
+                ],
+                "event": "KEY",
+                "eventId": "evt_01M1N9RFGVK31M3ZE4N9FBHBWM",
+                "from": "COMMAND",
+                "guard": [
+                  "=",
+                  "@payload.key",
+                  "Backspace"
+                ],
+                "to": "COMMAND"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "EX_COMMAND",
+                    {
+                      "editorId": "@payload.editorId",
+                      "name": [
+                        "object/get",
+                        "@config.exCommands",
+                        "@entity.cmdline"
+                      ]
+                    }
+                  ],
+                  [
+                    "set",
+                    "@entity.cmdline",
+                    ""
+                  ],
+                  [
+                    "emit",
+                    "SET_MODE",
+                    {
+                      "caret": "block",
+                      "editorId": "@payload.editorId",
+                      "mode": "NORMAL"
+                    }
+                  ]
+                ],
+                "event": "KEY",
+                "eventId": "evt_01M1N9RFGVK31M3ZE4N9FBHBWM",
+                "from": "COMMAND",
+                "guard": [
+                  "and",
+                  [
+                    "=",
+                    "@payload.key",
+                    "Enter"
+                  ],
+                  [
+                    "object/has",
+                    "@config.exCommands",
+                    "@entity.cmdline"
+                  ]
+                ],
+                "to": "NORMAL"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.cmdline",
+                    ""
+                  ],
+                  [
+                    "emit",
+                    "SET_MODE",
+                    {
+                      "caret": "block",
+                      "editorId": "@payload.editorId",
+                      "mode": "NORMAL"
+                    }
+                  ]
+                ],
+                "event": "KEY",
+                "eventId": "evt_01M1N9RFGVK31M3ZE4N9FBHBWM",
+                "from": "COMMAND",
+                "guard": [
+                  "and",
+                  [
+                    "=",
+                    "@payload.key",
+                    "Enter"
+                  ],
+                  [
+                    "not",
+                    [
+                      "object/has",
+                      "@config.exCommands",
+                      "@entity.cmdline"
+                    ]
+                  ]
+                ],
+                "to": "NORMAL"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.cmdline",
+                    ""
+                  ],
+                  [
+                    "emit",
+                    "SET_MODE",
+                    {
+                      "caret": "block",
+                      "editorId": "@payload.editorId",
+                      "mode": "NORMAL"
+                    }
+                  ]
+                ],
+                "event": "KEY",
+                "eventId": "evt_01M1N9RFGVK31M3ZE4N9FBHBWM",
+                "from": "COMMAND",
+                "guard": [
+                  "=",
+                  "@payload.key",
+                  "Escape"
+                ],
+                "to": "NORMAL"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.cmdline",
+                    [
+                      "str/concat",
+                      "@entity.cmdline",
+                      "@payload.key"
+                    ]
+                  ]
+                ],
+                "event": "KEY",
+                "eventId": "evt_01M1N9RFGVK31M3ZE4N9FBHBWM",
+                "from": "COMMAND",
+                "guard": [
+                  "and",
+                  [
+                    "!=",
+                    "@payload.key",
+                    "Enter"
+                  ],
+                  [
+                    "!=",
+                    "@payload.key",
+                    "Escape"
+                  ],
+                  [
+                    "!=",
+                    "@payload.key",
+                    "Backspace"
+                  ]
+                ],
+                "to": "COMMAND"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 1,
+  "version": "0.1.0"
+}

@@ -30,13 +30,27 @@ const ALIAS = 'UiCodeBlock';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiCodeBlockEventKey = 'CHANGE' | 'INIT';
+export type StdUiCodeBlockEventKey = 'CHANGE' | 'EDITOR_BLUR' | 'EDITOR_FOCUS' | 'INIT' | 'INSERT_TEXT' | 'MOTION' | 'OPERATE' | 'SET_MODE';
 
 /**
  * Payload shape for the `CHANGE` event.
  */
 export interface StdUiCodeBlockChangePayload {
   code?: string;
+}
+
+/**
+ * Payload shape for the `EDITOR_FOCUS` event.
+ */
+export interface StdUiCodeBlockEditorFocusPayload {
+  editorId: string;
+}
+
+/**
+ * Payload shape for the `EDITOR_BLUR` event.
+ */
+export interface StdUiCodeBlockEditorBlurPayload {
+  editorId: string;
 }
 
 /**
@@ -54,6 +68,7 @@ export interface StdUiCodeBlockConfig {
   diff?: EntityRow[];
   /** Default: `false` */
   editable?: boolean;
+  editorId?: string;
   error?: EntityRow;
   /** Default: `[]` */
   files?: EntityRow[];
@@ -66,10 +81,26 @@ export interface StdUiCodeBlockConfig {
   maxHeight?: string;
   /** Default: `"code"` */
   mode?: 'code' | 'diff';
+  /** Default: `["left","right","up","down","word-forward","word-back","word-end","line-start","line-end","first-nonblank","doc-start","doc-end","paragraph-forward","paragraph-back","line","selection"]` */
+  motions?: string[];
   newValue?: string;
   oldValue?: string;
   /** Default: `"CHANGE"` */
   onChange?: string;
+  /** Default: `"EDITOR_BLUR"` */
+  onEditorBlur?: string;
+  /** Default: `"EDITOR_FOCUS"` */
+  onEditorFocus?: string;
+  /** Default: `"INSERT_TEXT"` */
+  onInsertText?: string;
+  /** Default: `"MOTION"` */
+  onMotion?: string;
+  /** Default: `"OPERATE"` */
+  onOperate?: string;
+  /** Default: `"SET_MODE"` */
+  onSetMode?: string;
+  /** Default: `["delete","yank","change"]` */
+  operators?: string[];
   showCopy?: boolean;
   /** Default: `true` */
   showCopyButton?: boolean;
