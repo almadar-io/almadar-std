@@ -1,0 +1,116 @@
+app ui-command-palette "1.0.0"
+"CommandPalette — UI factory (1:1 with the @almadar/ui command-palette pattern)."
+orbital CommandPaletteOrbital {
+  type CommandPaletteCommandsItem = {
+    id : string!
+    label : string!
+    icon : icon
+    shortcut : string
+    keywords : [string]
+    group : string
+    disabled : boolean
+    event : string
+    action : string
+    actionPayload : Map string scalar
+  }
+  type CommandPaletteSELECTCommand = {
+    id : string!
+    label : string!
+    icon : icon
+    shortcut : string
+    keywords : [string]
+    group : string
+    disabled : boolean
+    event : string
+    action : string
+    actionPayload : Map string scalar
+  }
+
+  entity CommandPaletteItem [runtime] {
+    id : string!
+    open : boolean = false
+  }
+
+  trait CommandPaletteRender -> @rebindable CommandPaletteItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.open @config.open)
+        (render-ui main {
+          open: @entity.open
+          onOpenChange: @config.onOpenChange
+          commands: @config.commands
+          onSelect: @config.onSelect
+          placeholder: @config.placeholder
+          emptyLabel: @config.emptyLabel
+          className: @config.className
+          type: command-palette
+        })
+      OPEN_CHANGE -> idle
+        (set @entity.open ?open)
+        (render-ui main {
+          open: @entity.open
+          onOpenChange: @config.onOpenChange
+          commands: @config.commands
+          onSelect: @config.onSelect
+          placeholder: @config.placeholder
+          emptyLabel: @config.emptyLabel
+          className: @config.className
+          type: command-palette
+        })
+    }
+
+    emits {
+      @config.onOpenChange -> external {
+        open : boolean
+      }
+        @description "Called to open/close the overlay (Escape, overlay click, or a selection)"
+        @tier "essential"
+      @config.onSelect -> external {
+        command : CommandPaletteSELECTCommand
+      }
+        @description "Called with the selected command (click, or Enter on the highlighted row)"
+        @tier "essential"
+    }
+
+    listens {
+      OPEN_CHANGE {
+        open : boolean
+      }
+    }
+
+    config {
+      open : boolean = false
+        @label "Open"
+        @description "Whether the palette overlay is open"
+        @tier "presentation"
+      onOpenChange : event = "OPEN_CHANGE"
+        @label "On Open Change"
+        @description "Called to open/close the overlay (Escape, overlay click, or a selection)"
+        @tier "presentation"
+      commands : [CommandPaletteCommandsItem] = [{ id: "Id", label: "Label", icon: "circle", shortcut: "Shortcut", keywords: ["Item", "Item 2"], group: "Group", disabled: false, action: "Action" }, { id: "Id 2", label: "Label 2", icon: "circle", shortcut: "Shortcut 2", keywords: ["Item", "Item 2"], group: "Group 2", disabled: true, action: "Action 2" }]
+        @label "Commands"
+        @description "Commands listed in the palette, filtered as the user types"
+        @tier "presentation"
+      onSelect : event = "SELECT"
+        @label "On Select"
+        @description "Called with the selected command (click, or Enter on the highlighted row)"
+        @tier "presentation"
+      placeholder : string = "Type a command..."
+        @label "Placeholder"
+        @description "Search field placeholder. Consumers own i18n — plain string prop, no package-internal translation (matches FloatingToolbar's convention)."
+        @tier "presentation"
+      emptyLabel : string = "No matching commands"
+        @label "Empty Label"
+        @description "Label shown when no command matches the query"
+        @tier "presentation"
+      className : string
+        @label "Class Name"
+        @description "Additional CSS classes on the overlay's dialog"
+        @tier "presentation"
+    }
+  }
+
+  page "/command-palette" as CommandPalettePage -> CommandPaletteRender
+}

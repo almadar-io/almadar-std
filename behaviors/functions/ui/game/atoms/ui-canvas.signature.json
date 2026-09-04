@@ -19,7 +19,9 @@
           "UNIT_CLICK",
           "TILE_HOVER",
           "TILE_LEAVE",
-          "FEATURE_CLICK"
+          "FEATURE_CLICK",
+          "SELECT",
+          "MOVE"
         ],
         "listenedEvents": [],
         "events": [
@@ -51,6 +53,18 @@
             "name": "FEATURE_CLICK",
             "direction": "emit",
             "description": "Feature-click event (3D only).",
+            "tier": "essential"
+          },
+          {
+            "name": "SELECT",
+            "direction": "emit",
+            "description": "Fired on a click that changes selection — before `selectEvent`.",
+            "tier": "essential"
+          },
+          {
+            "name": "MOVE",
+            "direction": "emit",
+            "description": "Fired once per drag gesture, on drop — before `moveEvent`.",
             "tier": "essential"
           },
           {
@@ -183,6 +197,13 @@
             "items": {
               "type": "node"
             }
+          },
+          {
+            "key": "editable",
+            "type": "boolean",
+            "label": "Editable",
+            "description": "--- Scene-edit mode (a game studio selecting/dragging drawables). Purely",
+            "tier": "presentation"
           },
           {
             "key": "featureClickEvent",
@@ -396,6 +417,30 @@
             ]
           },
           {
+            "key": "moveEvent",
+            "type": "event",
+            "default": "MOVE",
+            "label": "Move Event",
+            "description": "Declarative move event, `UI:{moveEvent} { id, x, y }` — fired once on drop.",
+            "tier": "presentation"
+          },
+          {
+            "key": "onMove",
+            "type": "event",
+            "default": "MOVE",
+            "label": "On Move",
+            "description": "Fired once per drag gesture, on drop — before `moveEvent`.",
+            "tier": "presentation"
+          },
+          {
+            "key": "onSelect",
+            "type": "event",
+            "default": "SELECT",
+            "label": "On Select",
+            "description": "Fired on a click that changes selection — before `selectEvent`.",
+            "tier": "presentation"
+          },
+          {
             "key": "pixelsPerUnit",
             "type": "number",
             "label": "Pixels Per Unit",
@@ -464,6 +509,21 @@
               "free",
               "side"
             ]
+          },
+          {
+            "key": "selectEvent",
+            "type": "event",
+            "default": "SELECT",
+            "label": "Select Event",
+            "description": "Declarative selection event, `UI:{selectEvent} { id }`.",
+            "tier": "presentation"
+          },
+          {
+            "key": "selectedId",
+            "type": "string",
+            "label": "Selected Id",
+            "description": "The currently-selected drawable id (controlled); `null`/undefined = none.",
+            "tier": "presentation"
           },
           {
             "key": "shadows",
@@ -568,6 +628,8 @@
         ],
         "definerKnobs": [
           "featureClickEvent",
+          "onMove",
+          "onSelect",
           "tileClickEvent",
           "tileHoverEvent",
           "tileLeaveEvent",
@@ -589,6 +651,8 @@
     ],
     "emittedEvents": [
       "FEATURE_CLICK",
+      "MOVE",
+      "SELECT",
       "TILE_CLICK",
       "TILE_HOVER",
       "TILE_LEAVE",

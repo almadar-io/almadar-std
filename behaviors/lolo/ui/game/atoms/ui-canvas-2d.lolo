@@ -40,6 +40,12 @@ orbital Canvas2dOrbital {
           tileLeaveEvent: @config.tileLeaveEvent
           keyMap: @config.keyMap
           keyUpMap: @config.keyUpMap
+          editable: @config.editable
+          selectedId: @config.selectedId
+          onSelect: @config.onSelect
+          onMove: @config.onMove
+          selectEvent: @config.selectEvent
+          moveEvent: @config.moveEvent
           camera: @config.camera
           scale: @config.scale
           tileWidth: @config.tileWidth
@@ -73,6 +79,18 @@ orbital Canvas2dOrbital {
         @tier "essential"
       @config.tileLeaveEvent -> external { }
         @description "Emits UI:{tileLeaveEvent} with {} on pointer leave."
+        @tier "essential"
+      @config.onSelect -> external {
+        id : string
+      }
+        @description "Fired on a click that changes selection — before `selectEvent`."
+        @tier "essential"
+      @config.onMove -> external {
+        id : string
+        x : number
+        y : number
+      }
+        @description "Fired once per drag gesture, on drop — before `moveEvent`."
         @tier "essential"
     }
 
@@ -124,6 +142,30 @@ orbital Canvas2dOrbital {
       keyUpMap : Map string string = { item: "Item" }
         @label "Key Up Map"
         @description "Maps a keyup `e.code` → the board's SEMANTIC event."
+        @tier "presentation"
+      editable : boolean = false
+        @label "Editable"
+        @description "--- Scene-edit mode (a game studio selecting/dragging drawables). Purely"
+        @tier "presentation"
+      selectedId : string
+        @label "Selected Id"
+        @description "The currently-selected drawable id (controlled); `null`/undefined = none."
+        @tier "presentation"
+      onSelect : event = "SELECT"
+        @label "On Select"
+        @description "Fired on a click that changes selection — before `selectEvent`."
+        @tier "presentation"
+      onMove : event = "MOVE"
+        @label "On Move"
+        @description "Fired once per drag gesture, on drop — before `moveEvent`."
+        @tier "presentation"
+      selectEvent : event = "SELECT"
+        @label "Select Event"
+        @description "Declarative selection event, `UI:{selectEvent} { id }`."
+        @tier "presentation"
+      moveEvent : event = "MOVE"
+        @label "Move Event"
+        @description "Declarative move event, `UI:{moveEvent} { id, x, y }` — fired once on drop."
         @tier "presentation"
       camera : "pan-zoom" | "follow" | "fixed" = "pan-zoom"
         @label "Camera"

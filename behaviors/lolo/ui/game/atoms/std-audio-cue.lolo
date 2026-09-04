@@ -1,0 +1,138 @@
+app std-audio-cue "1.0.0"
+"Headless-ish sound driver: the SOLE writer of cue/cueSeq/music/muted/volume, rendered through the game-audio-cue atom which mounts @almadar/ui's useGameAudio hook. Intents: CUE plays a one-shot SFX by manifest key (cueSeq increments so the same key can re-fire), MUSIC crossfades to a looping track by key, STOP_MUSIC fades it out, MUTE/UNMUTE/TOGGLE_MUTE flip playback and emit AUDIO_MUTED, SET_VOLUME sets master volume, RESTART reseeds from config. The manifest and baseUrl are config, not runtime state — swap them per game by rebinding this atom's config, never by hand-authoring a second audio layer."
+orbital AudioCueOrbital {
+  type SoundEntry = {
+    path : string
+    volume : number
+    loop : boolean
+    poolSize : number
+    autostart : boolean
+    crossfade : boolean
+    crossfadeDurationMs : number
+  }
+
+  entity AudioState [runtime, shared] {
+    id : string!
+    cue : string = ""
+    cueSeq : number = 0
+    music : string = ""
+    muted : boolean = false
+    volume : number = 1
+  }
+
+  trait AudioCue -> @rebindable AudioState [lifecycle] {
+    initial: active
+
+    state active {
+      INIT -> active
+        (set @entity.cue "")
+        (set @entity.cueSeq 0)
+        (set @entity.music @config.initialMusic)
+        (set @entity.muted @config.initialMuted)
+        (set @entity.volume @config.initialVolume)
+        (render-ui main {
+          cue: @entity.cue
+          cueSeq: @entity.cueSeq
+          music: @entity.music
+          muted: @entity.muted
+          volume: @entity.volume
+          manifest: @config.manifest
+          baseUrl: @config.baseUrl
+          type: game-audio-cue
+        })
+
+      CUE -> active
+        (set @entity.cue ?key)
+        (set @entity.cueSeq (+ @entity.cueSeq 1))
+
+      MUSIC -> active
+        (set @entity.music ?key)
+
+      STOP_MUSIC -> active
+        (set @entity.music "")
+
+      MUTE -> active
+        (set @entity.muted true)
+        (emit AUDIO_MUTED { muted: true })
+
+      UNMUTE -> active
+        (set @entity.muted false)
+        (emit AUDIO_MUTED { muted: false })
+
+      TOGGLE_MUTE -> active
+        (set @entity.muted (not @entity.muted))
+        (emit AUDIO_MUTED { muted: @entity.muted })
+
+      SET_VOLUME -> active
+        (set @entity.volume ?volume)
+
+      RESTART -> active
+        (set @entity.cue "")
+        (set @entity.cueSeq 0)
+        (set @entity.music @config.initialMusic)
+        (set @entity.muted @config.initialMuted)
+        (set @entity.volume @config.initialVolume)
+    }
+
+    emits {
+      AUDIO_MUTED -> external {
+        muted : boolean!
+      }
+        @description "Mute state changed via MUTE/UNMUTE/TOGGLE_MUTE."
+        @synonyms "mute-changed, sound-toggled"
+        @tier "domain"
+    }
+
+    listens {
+      CUE { key : string! }
+        @description "Play a one-shot SFX by manifest key; re-fires even when key repeats."
+        @tier "domain"
+      MUSIC { key : string! }
+        @description "Crossfade to a looping background track by manifest key."
+        @tier "domain"
+      STOP_MUSIC
+        @description "Fade out and stop the current music."
+        @tier "domain"
+      MUTE
+        @description "Mute all playback."
+        @tier "domain"
+      UNMUTE
+        @description "Unmute playback."
+        @tier "domain"
+      TOGGLE_MUTE
+        @description "Flip the current mute state."
+        @tier "domain"
+      SET_VOLUME { volume : number! }
+        @description "Set master volume 0-1."
+        @tier "domain"
+      RESTART
+        @description "Reseed cue/music/muted/volume from config."
+        @tier "domain"
+    }
+
+    config {
+      manifest : Map string SoundEntry = {}
+        @label "Manifest"
+        @description "Sound definitions keyed by logical name — path(s), volume, loop, pooling, autostart, crossfade."
+        @tier "domain"
+      baseUrl : string = ""
+        @label "Base Url"
+        @description "Prefix prepended to every manifest path."
+        @tier "infra"
+      initialMuted : boolean = false
+        @label "Initial Muted"
+        @description "Muted state seeded on INIT/RESTART."
+        @tier "presentation"
+      initialVolume : number = 1
+        @label "Initial Volume"
+        @description "Master volume 0-1 seeded on INIT/RESTART."
+        @tier "presentation"
+      initialMusic : string = ""
+        @label "Initial Music"
+        @description "Manifest key auto-played as looping music on INIT/RESTART; empty plays none."
+        @tier "presentation"
+    }
+  }
+
+  page "/audio-cue" as AudioCuePage -> AudioCue
+}

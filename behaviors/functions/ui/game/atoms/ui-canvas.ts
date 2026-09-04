@@ -30,7 +30,7 @@ const ALIAS = 'UiCanvas';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiCanvasEventKey = 'FEATURE_CLICK' | 'INIT' | 'TILE_CLICK' | 'TILE_HOVER' | 'TILE_LEAVE' | 'UNIT_CLICK';
+export type StdUiCanvasEventKey = 'FEATURE_CLICK' | 'INIT' | 'MOVE' | 'SELECT' | 'TILE_CLICK' | 'TILE_HOVER' | 'TILE_LEAVE' | 'UNIT_CLICK';
 
 /**
  * Payload shape for the `TILE_CLICK` event.
@@ -72,6 +72,22 @@ export interface StdUiCanvasFeatureClickPayload {
 }
 
 /**
+ * Payload shape for the `SELECT` event.
+ */
+export interface StdUiCanvasSelectPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `MOVE` event.
+ */
+export interface StdUiCanvasMovePayload {
+  id?: string;
+  x?: number;
+  y?: number;
+}
+
+/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
@@ -85,6 +101,7 @@ export interface StdUiCanvasConfig {
   className?: string;
   /** Default: `[]` */
   drawables?: PatternValue[];
+  editable?: boolean;
   /** Default: `"FEATURE_CLICK"` */
   featureClickEvent?: string;
   fit?: boolean;
@@ -98,10 +115,19 @@ export interface StdUiCanvasConfig {
   lighting?: EntityRow;
   /** Default: `"2d"` */
   mode?: '2d' | '3d';
+  /** Default: `"MOVE"` */
+  moveEvent?: string;
+  /** Default: `"MOVE"` */
+  onMove?: string;
+  /** Default: `"SELECT"` */
+  onSelect?: string;
   pixelsPerUnit?: number;
   post?: EntityRow;
   /** Default: `"isometric"` */
   projection?: 'isometric' | 'hex' | 'flat' | 'free' | 'side';
+  /** Default: `"SELECT"` */
+  selectEvent?: string;
+  selectedId?: string;
   shadows?: boolean;
   showCoordinates?: boolean;
   showGrid?: boolean;

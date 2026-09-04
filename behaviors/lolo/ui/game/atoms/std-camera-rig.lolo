@@ -1,0 +1,158 @@
+app std-camera-rig "1.0.0"
+"Headless camera authority: the SOLE writer of camX/camY/camZoom on side-view and top-down boards. Every 33ms camera tick it eases camX/camY toward (camTargetX + camLead, camTargetY) — a dead-zone camera: inside deadzoneX/deadzoneY the axis holds, outside it lerps by stiffness — clamps the result to bounds, eases camZoom toward camTargetZoom the same way, and decays camShake toward 0 by shakeDecay. Intents: FOLLOW retargets from a moving body's x/y/vx (vx feeds camLead, the horizontal look-ahead), CUT snaps position+target instantly (no ease, for teleports/cutscenes), SET_ZOOM retargets zoom (clamped to minZoom/maxZoom), SHAKE sets camShake for a consumer to jitter with at bind time — this atom never writes shake into camX/camY itself, RESTART reseeds from config. Emits CAMERA_MOVED every tick. Renders nothing — a board binds its own canvas camera prop straight to camX/camY/camZoom."
+orbital CameraRigOrbital {
+  type CameraPos = {
+    x : number!
+    y : number!
+  }
+  type CameraBounds = {
+    xMin : number!
+    xMax : number!
+    yMin : number!
+    yMax : number!
+  }
+
+  entity CameraState [runtime, shared] {
+    id : string!
+    camX : number = 0
+    camY : number = 0
+    camZoom : number = 1
+    camTargetX : number = 0
+    camTargetY : number = 0
+    camTargetZoom : number = 1
+    camLead : number = 0
+    camShake : number = 0
+  }
+
+  trait CameraRig -> @rebindable CameraState [lifecycle] {
+    initial: active
+
+    state active {
+      INIT -> active
+        (set @entity.camX @config.start.x)
+        (set @entity.camY @config.start.y)
+        (set @entity.camZoom @config.zoom)
+        (set @entity.camTargetX @config.start.x)
+        (set @entity.camTargetY @config.start.y)
+        (set @entity.camTargetZoom @config.zoom)
+        (set @entity.camLead 0)
+        (set @entity.camShake 0)
+
+      FOLLOW -> active
+        (set @entity.camTargetX ?x)
+        (set @entity.camTargetY ?y)
+        (set @entity.camLead (* ?vx @config.lead))
+
+      CUT -> active
+        (set @entity.camX ?x)
+        (set @entity.camY ?y)
+        (set @entity.camTargetX ?x)
+        (set @entity.camTargetY ?y)
+        (set @entity.camLead 0)
+
+      SET_ZOOM -> active
+        (set @entity.camTargetZoom (math/clamp ?zoom @config.minZoom @config.maxZoom))
+
+      SHAKE -> active
+        (set @entity.camShake ?magnitude)
+
+      RESTART -> active
+        (set @entity.camX @config.start.x)
+        (set @entity.camY @config.start.y)
+        (set @entity.camZoom @config.zoom)
+        (set @entity.camTargetX @config.start.x)
+        (set @entity.camTargetY @config.start.y)
+        (set @entity.camTargetZoom @config.zoom)
+        (set @entity.camLead 0)
+        (set @entity.camShake 0)
+    }
+
+    ticks {
+      camTick every 33ms
+        when @config.running
+        (do
+          (set @entity.camX (math/clamp (if (> (math/abs (- (+ @entity.camTargetX @entity.camLead) @entity.camX)) @config.deadzoneX) (math/lerp @entity.camX (+ @entity.camTargetX @entity.camLead) @config.stiffness) @entity.camX) @config.bounds.xMin @config.bounds.xMax))
+          (set @entity.camY (math/clamp (if (> (math/abs (- @entity.camTargetY @entity.camY)) @config.deadzoneY) (math/lerp @entity.camY @entity.camTargetY @config.stiffness) @entity.camY) @config.bounds.yMin @config.bounds.yMax))
+          (set @entity.camZoom (math/clamp (math/lerp @entity.camZoom @entity.camTargetZoom @config.stiffness) @config.minZoom @config.maxZoom))
+          (set @entity.camShake (math/max 0 (- @entity.camShake @config.shakeDecay))))
+        (emit CAMERA_MOVED { x: @entity.camX, y: @entity.camY, zoom: @entity.camZoom })
+    }
+
+    emits {
+      CAMERA_MOVED -> external {
+        x : number!
+        y : number!
+        zoom : number!
+      }
+        @description "Eased camera position/zoom after this tick."
+        @tier "domain"
+    }
+
+    listens {
+      FOLLOW { x : number!, y : number!, vx : number! }
+        @description "Retarget from a moving body's position and horizontal velocity (vx drives camLead)."
+        @tier "domain"
+      CUT { x : number!, y : number! }
+        @description "Snap position and target instantly, no ease — teleports and cutscenes."
+        @tier "domain"
+      SET_ZOOM { zoom : number! }
+        @description "Retarget zoom, clamped to minZoom/maxZoom."
+        @tier "domain"
+      SHAKE { magnitude : number! }
+        @description "Set camShake; a consumer jitters camX/camY with it at bind time — this atom never writes shake into position."
+        @tier "domain"
+      RESTART
+        @description "Reseed position/zoom/lead/shake from config."
+        @tier "domain"
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true the 33ms camera tick eases toward target; toggle to freeze the camera"
+        @tier "domain"
+      start : CameraPos = { x: 0, y: 0 }
+        @label "Start Position"
+        @description "Initial and RESTART camera position/target"
+        @tier "domain"
+      zoom : number = 1
+        @label "Zoom"
+        @description "Initial and RESTART zoom level"
+        @tier "domain"
+      minZoom : number = 0.5
+        @label "Min Zoom"
+        @description "Lower clamp for SET_ZOOM and the eased zoom"
+        @tier "presentation"
+      maxZoom : number = 3
+        @label "Max Zoom"
+        @description "Upper clamp for SET_ZOOM and the eased zoom"
+        @tier "presentation"
+      stiffness : number = 0.1
+        @label "Stiffness"
+        @description "Per-tick lerp factor easing position/zoom toward target (0-1, higher = snappier)"
+        @tier "presentation"
+      deadzoneX : number = 0
+        @label "Dead Zone X"
+        @description "Horizontal distance from target the camera tolerates without easing"
+        @tier "presentation"
+      deadzoneY : number = 0
+        @label "Dead Zone Y"
+        @description "Vertical distance from target the camera tolerates without easing"
+        @tier "presentation"
+      lead : number = 0
+        @label "Lead"
+        @description "Horizontal look-ahead multiplier applied to FOLLOW's vx"
+        @tier "presentation"
+      bounds : CameraBounds = { xMin: -1000000, xMax: 1000000, yMin: -1000000, yMax: 1000000 }
+        @label "Bounds"
+        @description "World-space clamp applied to the eased camera position every tick"
+        @tier "presentation"
+      shakeDecay : number = 0.1
+        @label "Shake Decay"
+        @description "Amount camShake reduces toward 0 every tick"
+        @tier "presentation"
+    }
+  }
+
+  page "/camera-rig" as CameraRigPage -> CameraRig
+}

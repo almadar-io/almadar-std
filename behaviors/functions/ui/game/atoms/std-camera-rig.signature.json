@@ -1,0 +1,278 @@
+[
+  {
+    "organism": "std-camera-rig",
+    "orbital": "CameraRigOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/game/atoms/std-camera-rig.ts",
+    "entities": [
+      {
+        "name": "CameraState",
+        "fields": [
+          {
+            "name": "camX",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "camY",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "camZoom",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "camTargetX",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "camTargetY",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "camTargetZoom",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "camLead",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "camShake",
+            "type": "number",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "CameraRig",
+        "emittedEvents": [
+          "CAMERA_MOVED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "CAMERA_MOVED",
+            "direction": "emit",
+            "description": "Eased camera position/zoom after this tick.",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "FOLLOW",
+            "direction": "listen",
+            "description": "Retarget from a moving body's position and horizontal velocity (vx drives camLead).",
+            "tier": "domain"
+          },
+          {
+            "name": "CUT",
+            "direction": "listen",
+            "description": "Snap position and target instantly, no ease — teleports and cutscenes.",
+            "tier": "domain"
+          },
+          {
+            "name": "SET_ZOOM",
+            "direction": "listen",
+            "description": "Retarget zoom, clamped to minZoom/maxZoom.",
+            "tier": "domain"
+          },
+          {
+            "name": "SHAKE",
+            "direction": "listen",
+            "description": "Set camShake; a consumer jitters camX/camY with it at bind time — this atom never writes shake into position.",
+            "tier": "domain"
+          },
+          {
+            "name": "RESTART",
+            "direction": "listen",
+            "description": "Reseed position/zoom/lead/shake from config.",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "bounds",
+            "type": "CameraBounds",
+            "default": {
+              "xMax": 1000000,
+              "xMin": -1000000,
+              "yMax": 1000000,
+              "yMin": -1000000
+            },
+            "label": "Bounds",
+            "description": "World-space clamp applied to the eased camera position every tick",
+            "tier": "presentation",
+            "properties": {
+              "xMax": {
+                "name": "xMax",
+                "required": true,
+                "type": "number"
+              },
+              "xMin": {
+                "name": "xMin",
+                "required": true,
+                "type": "number"
+              },
+              "yMax": {
+                "name": "yMax",
+                "required": true,
+                "type": "number"
+              },
+              "yMin": {
+                "name": "yMin",
+                "required": true,
+                "type": "number"
+              }
+            }
+          },
+          {
+            "key": "deadzoneX",
+            "type": "number",
+            "default": 0,
+            "label": "Dead Zone X",
+            "description": "Horizontal distance from target the camera tolerates without easing",
+            "tier": "presentation"
+          },
+          {
+            "key": "deadzoneY",
+            "type": "number",
+            "default": 0,
+            "label": "Dead Zone Y",
+            "description": "Vertical distance from target the camera tolerates without easing",
+            "tier": "presentation"
+          },
+          {
+            "key": "lead",
+            "type": "number",
+            "default": 0,
+            "label": "Lead",
+            "description": "Horizontal look-ahead multiplier applied to FOLLOW's vx",
+            "tier": "presentation"
+          },
+          {
+            "key": "maxZoom",
+            "type": "number",
+            "default": 3,
+            "label": "Max Zoom",
+            "description": "Upper clamp for SET_ZOOM and the eased zoom",
+            "tier": "presentation"
+          },
+          {
+            "key": "minZoom",
+            "type": "number",
+            "default": 0.5,
+            "label": "Min Zoom",
+            "description": "Lower clamp for SET_ZOOM and the eased zoom",
+            "tier": "presentation"
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true the 33ms camera tick eases toward target; toggle to freeze the camera",
+            "tier": "domain"
+          },
+          {
+            "key": "shakeDecay",
+            "type": "number",
+            "default": 0.1,
+            "label": "Shake Decay",
+            "description": "Amount camShake reduces toward 0 every tick",
+            "tier": "presentation"
+          },
+          {
+            "key": "start",
+            "type": "CameraPos",
+            "default": {
+              "x": 0,
+              "y": 0
+            },
+            "label": "Start Position",
+            "description": "Initial and RESTART camera position/target",
+            "tier": "domain",
+            "properties": {
+              "x": {
+                "name": "x",
+                "required": true,
+                "type": "number"
+              },
+              "y": {
+                "name": "y",
+                "required": true,
+                "type": "number"
+              }
+            }
+          },
+          {
+            "key": "stiffness",
+            "type": "number",
+            "default": 0.1,
+            "label": "Stiffness",
+            "description": "Per-tick lerp factor easing position/zoom toward target (0-1, higher = snappier)",
+            "tier": "presentation"
+          },
+          {
+            "key": "zoom",
+            "type": "number",
+            "default": 1,
+            "label": "Zoom",
+            "description": "Initial and RESTART zoom level",
+            "tier": "domain"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "CameraState",
+        "transitionEvents": [
+          "CUT",
+          "FOLLOW",
+          "INIT",
+          "RESTART",
+          "SET_ZOOM",
+          "SHAKE"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "camLead",
+            "camShake",
+            "camTargetX",
+            "camTargetY",
+            "camTargetZoom",
+            "camX",
+            "camY",
+            "camZoom"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "CameraRigPage",
+        "defaultPath": "/camera-rig",
+        "primaryEntity": "CameraState"
+      }
+    ],
+    "emittedEvents": [
+      "CAMERA_MOVED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

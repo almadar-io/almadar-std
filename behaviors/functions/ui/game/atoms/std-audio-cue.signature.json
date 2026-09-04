@@ -1,0 +1,232 @@
+[
+  {
+    "organism": "std-audio-cue",
+    "orbital": "AudioCueOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/game/atoms/std-audio-cue.ts",
+    "entities": [
+      {
+        "name": "AudioState",
+        "fields": [
+          {
+            "name": "cue",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "cueSeq",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "music",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "muted",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "volume",
+            "type": "number",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "AudioCue",
+        "emittedEvents": [
+          "AUDIO_MUTED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "AUDIO_MUTED",
+            "direction": "emit",
+            "description": "Mute state changed via MUTE/UNMUTE/TOGGLE_MUTE.",
+            "synonyms": "mute-changed, sound-toggled",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "CUE",
+            "direction": "listen",
+            "description": "Play a one-shot SFX by manifest key; re-fires even when key repeats.",
+            "tier": "domain"
+          },
+          {
+            "name": "MUSIC",
+            "direction": "listen",
+            "description": "Crossfade to a looping background track by manifest key.",
+            "tier": "domain"
+          },
+          {
+            "name": "STOP_MUSIC",
+            "direction": "listen",
+            "description": "Fade out and stop the current music.",
+            "tier": "domain"
+          },
+          {
+            "name": "MUTE",
+            "direction": "listen",
+            "description": "Mute all playback.",
+            "tier": "domain"
+          },
+          {
+            "name": "UNMUTE",
+            "direction": "listen",
+            "description": "Unmute playback.",
+            "tier": "domain"
+          },
+          {
+            "name": "TOGGLE_MUTE",
+            "direction": "listen",
+            "description": "Flip the current mute state.",
+            "tier": "domain"
+          },
+          {
+            "name": "SET_VOLUME",
+            "direction": "listen",
+            "description": "Set master volume 0-1.",
+            "tier": "domain"
+          },
+          {
+            "name": "RESTART",
+            "direction": "listen",
+            "description": "Reseed cue/music/muted/volume from config.",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "baseUrl",
+            "type": "string",
+            "default": "",
+            "label": "Base Url",
+            "description": "Prefix prepended to every manifest path.",
+            "tier": "infra"
+          },
+          {
+            "key": "initialMusic",
+            "type": "string",
+            "default": "",
+            "label": "Initial Music",
+            "description": "Manifest key auto-played as looping music on INIT/RESTART; empty plays none.",
+            "tier": "presentation"
+          },
+          {
+            "key": "initialMuted",
+            "type": "boolean",
+            "default": false,
+            "label": "Initial Muted",
+            "description": "Muted state seeded on INIT/RESTART.",
+            "tier": "presentation"
+          },
+          {
+            "key": "initialVolume",
+            "type": "number",
+            "default": 1,
+            "label": "Initial Volume",
+            "description": "Master volume 0-1 seeded on INIT/RESTART.",
+            "tier": "presentation"
+          },
+          {
+            "key": "manifest",
+            "type": "Map<string,SoundEntry>",
+            "default": {},
+            "label": "Manifest",
+            "description": "Sound definitions keyed by logical name — path(s), volume, loop, pooling, autostart, crossfade.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "autostart": {
+                  "name": "autostart",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "crossfade": {
+                  "name": "crossfade",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "crossfadeDurationMs": {
+                  "name": "crossfadeDurationMs",
+                  "required": false,
+                  "type": "number"
+                },
+                "loop": {
+                  "name": "loop",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "path": {
+                  "name": "path",
+                  "required": false,
+                  "type": "string"
+                },
+                "poolSize": {
+                  "name": "poolSize",
+                  "required": false,
+                  "type": "number"
+                },
+                "volume": {
+                  "name": "volume",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "AudioState",
+        "transitionEvents": [
+          "CUE",
+          "INIT",
+          "MUSIC",
+          "MUTE",
+          "RESTART",
+          "SET_VOLUME",
+          "STOP_MUSIC",
+          "TOGGLE_MUTE",
+          "UNMUTE"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "cue",
+            "cueSeq",
+            "music",
+            "muted",
+            "volume"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "AudioCuePage",
+        "defaultPath": "/audio-cue",
+        "primaryEntity": "AudioState"
+      }
+    ],
+    "emittedEvents": [
+      "AUDIO_MUTED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

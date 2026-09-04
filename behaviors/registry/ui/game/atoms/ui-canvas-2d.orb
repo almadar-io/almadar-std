@@ -55,6 +55,24 @@
         "parent": "trt_01M055GNYNDBSMRP68BDSWWFFG",
         "renames": []
       },
+      "evt_01M1M6SDSA6W1GZA9YZJR17DHX": {
+        "bakedName": "@config.onSelect",
+        "curName": "@config.onSelect",
+        "id": "evt_01M1M6SDSA6W1GZA9YZJR17DHX",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M055GNYNDBSMRP68BDSWWFFG",
+        "renames": []
+      },
+      "evt_01M1M6SDSAXEXSM691C4WD5WP1": {
+        "bakedName": "@config.onMove",
+        "curName": "@config.onMove",
+        "id": "evt_01M1M6SDSAXEXSM691C4WD5WP1",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M055GNYNDBSMRP68BDSWWFFG",
+        "renames": []
+      },
       "orb_01M055GNYNB72EY2C3M49826C0": {
         "bakedName": "Canvas2dOrbital",
         "curName": "Canvas2dOrbital",
@@ -185,6 +203,13 @@
               "tier": "presentation",
               "type": "[node]"
             },
+            "editable": {
+              "default": false,
+              "description": "--- Scene-edit mode (a game studio selecting/dragging drawables). Purely",
+              "label": "Editable",
+              "tier": "presentation",
+              "type": "boolean"
+            },
             "error": {
               "description": "Error state",
               "label": "Error",
@@ -274,6 +299,27 @@
               "tier": "presentation",
               "type": "Map<string,string>"
             },
+            "moveEvent": {
+              "default": "MOVE",
+              "description": "Declarative move event, `UI:{moveEvent} { id, x, y }` — fired once on drop.",
+              "label": "Move Event",
+              "tier": "presentation",
+              "type": "event"
+            },
+            "onMove": {
+              "default": "MOVE",
+              "description": "Fired once per drag gesture, on drop — before `moveEvent`.",
+              "label": "On Move",
+              "tier": "presentation",
+              "type": "event"
+            },
+            "onSelect": {
+              "default": "SELECT",
+              "description": "Fired on a click that changes selection — before `selectEvent`.",
+              "label": "On Select",
+              "tier": "presentation",
+              "type": "event"
+            },
             "projection": {
               "default": "isometric",
               "description": "--- Projection ---",
@@ -294,6 +340,19 @@
               "label": "Scale",
               "tier": "presentation",
               "type": "number"
+            },
+            "selectEvent": {
+              "default": "SELECT",
+              "description": "Declarative selection event, `UI:{selectEvent} { id }`.",
+              "label": "Select Event",
+              "tier": "presentation",
+              "type": "event"
+            },
+            "selectedId": {
+              "description": "The currently-selected drawable id (controlled); `null`/undefined = none.",
+              "label": "Selected Id",
+              "tier": "presentation",
+              "type": "string"
             },
             "showMinimap": {
               "default": true,
@@ -400,6 +459,42 @@
               "eventId": "evt_01M055GNYPQZ509HNQSND656XT",
               "scope": "external",
               "tier": "essential"
+            },
+            {
+              "definerKnob": "onSelect",
+              "description": "Fired on a click that changes selection — before `selectEvent`.",
+              "event": "@config.onSelect",
+              "eventId": "evt_01M1M6SDSA6W1GZA9YZJR17DHX",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "definerKnob": "onMove",
+              "description": "Fired once per drag gesture, on drop — before `moveEvent`.",
+              "event": "@config.onMove",
+              "eventId": "evt_01M1M6SDSAXEXSM691C4WD5WP1",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "x",
+                  "type": "number"
+                },
+                {
+                  "name": "y",
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
             }
           ],
           "entityContract": {
@@ -480,6 +575,40 @@
                 "key": "@config.tileLeaveEvent",
                 "name": "@config.tile leave event",
                 "tier": "essential"
+              },
+              {
+                "description": "Fired on a click that changes selection — before `selectEvent`.",
+                "id": "evt_01M1M6SDSA6W1GZA9YZJR17DHX",
+                "key": "@config.onSelect",
+                "name": "@config.on select",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Fired once per drag gesture, on drop — before `moveEvent`.",
+                "id": "evt_01M1M6SDSAXEXSM691C4WD5WP1",
+                "key": "@config.onMove",
+                "name": "@config.on move",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  },
+                  {
+                    "name": "x",
+                    "type": "number"
+                  },
+                  {
+                    "name": "y",
+                    "type": "number"
+                  }
+                ],
+                "tier": "essential"
               }
             ],
             "states": [
@@ -502,14 +631,20 @@
                       "children": "@config.children",
                       "className": "@config.className",
                       "drawables": "@config.drawables",
+                      "editable": "@config.editable",
                       "error": "@config.error",
                       "fit": "@config.fit",
                       "followTarget": "@config.followTarget",
                       "isLoading": "@config.isLoading",
                       "keyMap": "@config.keyMap",
                       "keyUpMap": "@config.keyUpMap",
+                      "moveEvent": "@config.moveEvent",
+                      "onMove": "@config.onMove",
+                      "onSelect": "@config.onSelect",
                       "projection": "@config.projection",
                       "scale": "@config.scale",
+                      "selectEvent": "@config.selectEvent",
+                      "selectedId": "@config.selectedId",
                       "showMinimap": "@config.showMinimap",
                       "tileClickEvent": "@config.tileClickEvent",
                       "tileHoverEvent": "@config.tileHoverEvent",

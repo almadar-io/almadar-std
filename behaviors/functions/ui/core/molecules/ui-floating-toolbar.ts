@@ -41,7 +41,7 @@ export type StdUiFloatingToolbarEventKey = 'INIT';
 export interface StdUiFloatingToolbarConfig {
   children?: PatternValue;
   className?: string;
-  /** Default: `[{"action":"Action","active":false,"disabled":false,"icon":"circle","id":"Id","label":"Label"},{"action":"Action 2","active":true,"disabled":true,"icon":"circle","id":"Id 2","label":"Label 2"}]` */
+  /** Default: `[{"action":"Action","active":false,"disabled":false,"icon":"circle","id":"Id","label":"Label","testId":"Test Id"},{"action":"Action 2","active":true,"disabled":true,"icon":"circle","id":"Id 2","label":"Label 2","testId":"Test Id 2"}]` */
   items?: EntityRow[];
   /** Default: `"bottom-center"` */
   position?: 'bottom-center' | 'bottom-left' | 'bottom-right';

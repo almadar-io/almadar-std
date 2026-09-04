@@ -30,7 +30,7 @@ const ALIAS = 'UiCanvas2d';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiCanvas2dEventKey = 'INIT' | 'TILE_CLICK' | 'TILE_HOVER' | 'TILE_LEAVE' | 'UNIT_CLICK';
+export type StdUiCanvas2dEventKey = 'INIT' | 'MOVE' | 'SELECT' | 'TILE_CLICK' | 'TILE_HOVER' | 'TILE_LEAVE' | 'UNIT_CLICK';
 
 /**
  * Payload shape for the `TILE_CLICK` event.
@@ -56,6 +56,22 @@ export interface StdUiCanvas2dTileHoverPayload {
 }
 
 /**
+ * Payload shape for the `SELECT` event.
+ */
+export interface StdUiCanvas2dSelectPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `MOVE` event.
+ */
+export interface StdUiCanvas2dMovePayload {
+  id?: string;
+  x?: number;
+  y?: number;
+}
+
+/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
@@ -71,6 +87,8 @@ export interface StdUiCanvas2dConfig {
   className?: string;
   /** Default: `[]` */
   drawables?: PatternValue[];
+  /** Default: `false` */
+  editable?: boolean;
   error?: EntityRow;
   /** Default: `false` */
   fit?: boolean;
@@ -81,10 +99,19 @@ export interface StdUiCanvas2dConfig {
   keyMap?: Record<string, TraitConfig>;
   /** Default: `{"item":"Item"}` */
   keyUpMap?: Record<string, TraitConfig>;
+  /** Default: `"MOVE"` */
+  moveEvent?: string;
+  /** Default: `"MOVE"` */
+  onMove?: string;
+  /** Default: `"SELECT"` */
+  onSelect?: string;
   /** Default: `"isometric"` */
   projection?: 'isometric' | 'hex' | 'flat' | 'free' | 'side';
   /** Default: `0.4` */
   scale?: number;
+  /** Default: `"SELECT"` */
+  selectEvent?: string;
+  selectedId?: string;
   /** Default: `true` */
   showMinimap?: boolean;
   /** Default: `"TILE_CLICK"` */

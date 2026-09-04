@@ -52,8 +52,17 @@ orbital GameAudioToggleOrbital {
           error: @config.error
           onAsset: @config.onAsset
           offAsset: @config.offAsset
+          toggleEvent: @config.toggleEvent
           type: game-audio-toggle
         })
+    }
+
+    emits {
+      @config.toggleEvent -> external {
+        muted : boolean!
+      }
+        @description "Event dispatched via event bus on toggle, carrying the new muted state."
+        @tier "essential"
     }
 
     config {
@@ -80,6 +89,10 @@ orbital GameAudioToggleOrbital {
       offAsset : GameAudioToggleOffAsset
         @label "Off Asset"
         @description "Asset rendered when sound is OFF (muted). Falls back to 🔇 emoji."
+        @tier "presentation"
+      toggleEvent : event = "TOGGLE"
+        @label "Toggle Event"
+        @description "Event dispatched via event bus on toggle, carrying the new muted state."
         @tier "presentation"
     }
   }

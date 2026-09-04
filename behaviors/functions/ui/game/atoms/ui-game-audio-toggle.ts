@@ -30,7 +30,14 @@ const ALIAS = 'UiGameAudioToggle';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiGameAudioToggleEventKey = 'INIT';
+export type StdUiGameAudioToggleEventKey = 'INIT' | 'TOGGLE';
+
+/**
+ * Payload shape for the `TOGGLE` event.
+ */
+export interface StdUiGameAudioToggleTogglePayload {
+  muted: boolean;
+}
 
 /**
  * Typed call-site config block for this trait — every
@@ -46,6 +53,8 @@ export interface StdUiGameAudioToggleConfig {
   onAsset?: EntityRow;
   /** Default: `"sm"` */
   size?: 'sm' | 'md' | 'lg';
+  /** Default: `"TOGGLE"` */
+  toggleEvent?: string;
 }
 
 /**

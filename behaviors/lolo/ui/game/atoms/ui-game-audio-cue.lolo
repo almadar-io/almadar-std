@@ -1,0 +1,68 @@
+app ui-game-audio-cue "1.0.0"
+"GameAudioCue — UI factory (1:1 with the @almadar/ui game-audio-cue pattern)."
+orbital GameAudioCueOrbital {
+  type GameAudioCueManifestValue = {
+    path : string!
+    volume : number
+    loop : boolean
+    poolSize : number
+    autostart : boolean
+    crossfade : boolean
+    crossfadeDurationMs : number
+  }
+
+  entity GameAudioCueItem [runtime] {
+    id : string!
+  }
+
+  trait GameAudioCueRender -> @rebindable GameAudioCueItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          cue: @config.cue
+          cueSeq: @config.cueSeq
+          music: @config.music
+          muted: @config.muted
+          volume: @config.volume
+          manifest: @config.manifest
+          baseUrl: @config.baseUrl
+          type: game-audio-cue
+        })
+    }
+
+    config {
+      cue : string
+        @label "Cue"
+        @description "Manifest key played as a one-shot SFX each time `cueSeq` advances."
+        @tier "presentation"
+      cueSeq : number
+        @label "Cue Seq"
+        @description "Monotonically increasing counter — bumping it re-triggers `cue`."
+        @tier "presentation"
+      music : string
+        @label "Music"
+        @description "Manifest key to crossfade to as looping background music; unset/empty stops music."
+        @tier "presentation"
+      muted : boolean
+        @label "Muted"
+        @description "Muted state, owned externally and mirrored into the hook."
+        @tier "presentation"
+      volume : number
+        @label "Volume"
+        @description "Master volume 0-1, owned externally and mirrored into the hook."
+        @tier "presentation"
+      manifest : Map string GameAudioCueManifestValue = {}
+        @label "Manifest"
+        @description "Sound manifest — keys mapped to sound definitions (path, volume, loop, ...)."
+        @tier "presentation"
+      baseUrl : string
+        @label "Base Url"
+        @description "Base URL prepended to every manifest path."
+        @tier "presentation"
+    }
+  }
+
+  page "/game-audio-cue" as GameAudioCuePage -> GameAudioCueRender
+}

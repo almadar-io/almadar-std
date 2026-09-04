@@ -1,0 +1,226 @@
+[
+  {
+    "organism": "ui-command-palette",
+    "orbital": "CommandPaletteOrbital",
+    "tier": "molecules",
+    "factoryPath": "behaviors/functions/ui/core/molecules/ui-command-palette.ts",
+    "entities": [
+      {
+        "name": "CommandPaletteItem",
+        "fields": [
+          {
+            "name": "open",
+            "type": "boolean",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "CommandPaletteRender",
+        "emittedEvents": [
+          "OPEN_CHANGE",
+          "SELECT"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "OPEN_CHANGE",
+            "direction": "emit",
+            "description": "Called to open/close the overlay (Escape, overlay click, or a selection)",
+            "tier": "essential"
+          },
+          {
+            "name": "SELECT",
+            "direction": "emit",
+            "description": "Called with the selected command (click, or Enter on the highlighted row)",
+            "tier": "essential"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "className",
+            "type": "string",
+            "label": "Class Name",
+            "description": "Additional CSS classes on the overlay's dialog",
+            "tier": "presentation"
+          },
+          {
+            "key": "commands",
+            "type": "[CommandPaletteCommandsItem]",
+            "default": [
+              {
+                "action": "Action",
+                "disabled": false,
+                "group": "Group",
+                "icon": "circle",
+                "id": "Id",
+                "keywords": [
+                  "Item",
+                  "Item 2"
+                ],
+                "label": "Label",
+                "shortcut": "Shortcut"
+              },
+              {
+                "action": "Action 2",
+                "disabled": true,
+                "group": "Group 2",
+                "icon": "circle",
+                "id": "Id 2",
+                "keywords": [
+                  "Item",
+                  "Item 2"
+                ],
+                "label": "Label 2",
+                "shortcut": "Shortcut 2"
+              }
+            ],
+            "label": "Commands",
+            "description": "Commands listed in the palette, filtered as the user types",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "action": {
+                  "name": "action",
+                  "required": false,
+                  "type": "string"
+                },
+                "actionPayload": {
+                  "name": "actionPayload",
+                  "required": false,
+                  "type": "object",
+                  "items": {
+                    "type": "scalar"
+                  }
+                },
+                "disabled": {
+                  "name": "disabled",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "event": {
+                  "name": "event",
+                  "required": false,
+                  "type": "string"
+                },
+                "group": {
+                  "name": "group",
+                  "required": false,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "keywords": {
+                  "name": "keywords",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "shortcut": {
+                  "name": "shortcut",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "emptyLabel",
+            "type": "string",
+            "default": "No matching commands",
+            "label": "Empty Label",
+            "description": "Label shown when no command matches the query",
+            "tier": "presentation"
+          },
+          {
+            "key": "onOpenChange",
+            "type": "event",
+            "default": "OPEN_CHANGE",
+            "label": "On Open Change",
+            "description": "Called to open/close the overlay (Escape, overlay click, or a selection)",
+            "tier": "presentation"
+          },
+          {
+            "key": "onSelect",
+            "type": "event",
+            "default": "SELECT",
+            "label": "On Select",
+            "description": "Called with the selected command (click, or Enter on the highlighted row)",
+            "tier": "presentation"
+          },
+          {
+            "key": "open",
+            "type": "boolean",
+            "default": false,
+            "label": "Open",
+            "description": "Whether the palette overlay is open",
+            "tier": "presentation"
+          },
+          {
+            "key": "placeholder",
+            "type": "string",
+            "default": "Type a command...",
+            "label": "Placeholder",
+            "description": "Search field placeholder. Consumers own i18n — plain string prop, no package-internal translation (matches FloatingToolbar's convention).",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "CommandPaletteItem",
+        "transitionEvents": [
+          "INIT",
+          "OPEN_CHANGE"
+        ],
+        "definerKnobs": [
+          "onOpenChange",
+          "onSelect"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "open"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "CommandPalettePage",
+        "defaultPath": "/command-palette",
+        "primaryEntity": "CommandPaletteItem"
+      }
+    ],
+    "emittedEvents": [
+      "OPEN_CHANGE",
+      "SELECT"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]
