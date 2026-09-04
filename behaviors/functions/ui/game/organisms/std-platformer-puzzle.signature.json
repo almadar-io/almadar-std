@@ -1,0 +1,795 @@
+[
+  {
+    "organism": "std-platformer-puzzle",
+    "orbital": "PlatformerPuzzleOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/ui/game/organisms/std-platformer-puzzle.ts",
+    "entities": [
+      {
+        "name": "PlatformerPuzzleData",
+        "fields": [
+          {
+            "name": "body",
+            "type": "object",
+            "required": false
+          },
+          {
+            "name": "fell",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "hazardId",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "goalId",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "skating",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "curveMods",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "tuning",
+            "type": "object",
+            "required": false
+          },
+          {
+            "name": "pickups",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "pickupCompleted",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "total",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "choices",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "result",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "fx",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "narrativeSeq",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "lastNarrative",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "step",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "done",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "score",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "lives",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "objectivesLeft",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "celebrated",
+            "type": "boolean",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "PlatformerPuzzleBody",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "running",
+            "type": "unknown",
+            "default": true
+          }
+        ],
+        "capabilities": [],
+        "ref": "Body.traits.PlatformerBody",
+        "linkedEntity": "PlatformerPuzzleData",
+        "eventRenames": {
+          "BODY_FELL": "BODY_FELL",
+          "BODY_GOAL": "BODY_GOAL",
+          "BODY_HAZARD": "BODY_HAZARD",
+          "BODY_JUMPED": "BODY_JUMPED",
+          "BODY_LANDED": "BODY_LANDED",
+          "BODY_MOVED": "BODY_MOVED",
+          "BODY_SKATE_END": "BODY_SKATE_END",
+          "BODY_SKATE_START": "BODY_SKATE_START",
+          "CURVE_MOD_ADD": "CURVE_MOD_ADD",
+          "CURVE_MOD_CLEAR": "CURVE_MOD_CLEAR",
+          "JUMP": "JUMP",
+          "PLACE": "PLACE",
+          "SET_TUNING": "SET_TUNING",
+          "STEER": "STEER"
+        }
+      },
+      {
+        "name": "PlatformerPuzzlePickup",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "running",
+            "type": "unknown",
+            "default": true
+          }
+        ],
+        "capabilities": [],
+        "ref": "Pickup.traits.Pickup",
+        "linkedEntity": "PlatformerPuzzleData",
+        "eventRenames": {
+          "BODY_MOVED": "BODY_MOVED"
+        }
+      },
+      {
+        "name": "PlatformerPuzzleObjective",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "running",
+            "type": "unknown",
+            "default": true
+          }
+        ],
+        "capabilities": [],
+        "ref": "Gate.traits.ObjectiveFlow",
+        "linkedEntity": "PlatformerPuzzleData",
+        "eventRenames": {
+          "GAME_END": "GAME_END",
+          "PROGRESS": "PROGRESS"
+        }
+      },
+      {
+        "name": "PlatformerPuzzleChoice",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "running",
+            "type": "unknown",
+            "default": true
+          }
+        ],
+        "capabilities": [],
+        "ref": "Choice.traits.ChoiceGate",
+        "linkedEntity": "PlatformerPuzzleData",
+        "eventRenames": {
+          "BODY_MOVED": "BODY_MOVED"
+        }
+      },
+      {
+        "name": "PlatformerPuzzleFx",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "running",
+            "type": "unknown",
+            "default": true
+          }
+        ],
+        "capabilities": [],
+        "ref": "Particles.traits.FxParticles",
+        "linkedEntity": "PlatformerPuzzleData",
+        "eventRenames": {
+          "BURST": "BURST"
+        }
+      },
+      {
+        "name": "PlatformerPuzzleNarrative",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "running",
+            "type": "unknown",
+            "default": true
+          }
+        ],
+        "capabilities": [],
+        "ref": "Narrative.traits.FxNarrative",
+        "linkedEntity": "PlatformerPuzzleData",
+        "eventRenames": {
+          "BURST": "BURST",
+          "NARRATE": "NARRATE"
+        }
+      },
+      {
+        "name": "PlatformerPuzzleTutorial",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "autoShow",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "previewTrait",
+            "type": "unknown",
+            "default": "@trait.PlatformerPuzzleNoopPreview"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Tutorial.traits.TutorialOverlay",
+        "linkedEntity": "PlatformerPuzzleData",
+        "eventRenames": {
+          "SHOW": "SHOW",
+          "TUTORIAL_DONE": "TUTORIAL_DONE"
+        }
+      },
+      {
+        "name": "PlatformerPuzzleNoopPreview",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [],
+        "capabilities": [],
+        "linkedEntity": "PlatformerPuzzleData",
+        "transitionEvents": [
+          "INIT"
+        ],
+        "definerKnobs": []
+      },
+      {
+        "name": "PlatformerPuzzle",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "agencyTrait",
+            "type": "trait",
+            "label": "Agency trait",
+            "description": "Trait that provides player verbs and immediate response. Usually a rebinding of std-platformer-body, std-motion-body, or std-hero-nav.",
+            "tier": "domain"
+          },
+          {
+            "key": "backgroundAsset",
+            "type": "Asset",
+            "default": {},
+            "label": "Background Asset",
+            "description": "Game-shell background panel sprite (theme chrome).",
+            "tier": "presentation",
+            "properties": {
+              "animations": {
+                "name": "animations",
+                "required": false,
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "aspect": {
+                "name": "aspect",
+                "required": false,
+                "type": "string"
+              },
+              "atlas": {
+                "name": "atlas",
+                "required": false,
+                "type": "string"
+              },
+              "category": {
+                "name": "category",
+                "required": false,
+                "type": "string"
+              },
+              "dimension": {
+                "name": "dimension",
+                "required": false,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "role": {
+                "name": "role",
+                "required": false,
+                "type": "string"
+              },
+              "sprite": {
+                "name": "sprite",
+                "required": false,
+                "type": "string"
+              },
+              "style": {
+                "name": "style",
+                "required": false,
+                "type": "string"
+              },
+              "thumbnailUrl": {
+                "name": "thumbnailUrl",
+                "required": false,
+                "type": "string"
+              },
+              "url": {
+                "name": "url",
+                "required": false,
+                "type": "string"
+              },
+              "variant": {
+                "name": "variant",
+                "required": false,
+                "type": "string"
+              }
+            }
+          },
+          {
+            "key": "challengeTrait",
+            "type": "trait",
+            "label": "Challenge trait",
+            "description": "Trait that provides the obstacle, decision, or opposition. Usually a rebinding of std-choice-gate, std-gate-lock, std-patrol-hazard, std-velocity-gate, std-loop-lock, or std-pad-lock.",
+            "tier": "domain"
+          },
+          {
+            "key": "directionAssets",
+            "type": "DirectionAssets",
+            "default": {},
+            "label": "Direction Assets",
+            "description": "D-pad direction icon sprites.",
+            "tier": "presentation",
+            "properties": {
+              "down": {
+                "name": "down",
+                "required": false,
+                "properties": {
+                  "animations": {
+                    "name": "animations",
+                    "required": false,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "aspect": {
+                    "name": "aspect",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "atlas": {
+                    "name": "atlas",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "category": {
+                    "name": "category",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "dimension": {
+                    "name": "dimension",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "name": {
+                    "name": "name",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "role": {
+                    "name": "role",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "sprite": {
+                    "name": "sprite",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "style": {
+                    "name": "style",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "thumbnailUrl": {
+                    "name": "thumbnailUrl",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "url": {
+                    "name": "url",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "left": {
+                "name": "left",
+                "required": false,
+                "properties": {
+                  "animations": {
+                    "name": "animations",
+                    "required": false,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "aspect": {
+                    "name": "aspect",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "atlas": {
+                    "name": "atlas",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "category": {
+                    "name": "category",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "dimension": {
+                    "name": "dimension",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "name": {
+                    "name": "name",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "role": {
+                    "name": "role",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "sprite": {
+                    "name": "sprite",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "style": {
+                    "name": "style",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "thumbnailUrl": {
+                    "name": "thumbnailUrl",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "url": {
+                    "name": "url",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "right": {
+                "name": "right",
+                "required": false,
+                "properties": {
+                  "animations": {
+                    "name": "animations",
+                    "required": false,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "aspect": {
+                    "name": "aspect",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "atlas": {
+                    "name": "atlas",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "category": {
+                    "name": "category",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "dimension": {
+                    "name": "dimension",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "name": {
+                    "name": "name",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "role": {
+                    "name": "role",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "sprite": {
+                    "name": "sprite",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "style": {
+                    "name": "style",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "thumbnailUrl": {
+                    "name": "thumbnailUrl",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "url": {
+                    "name": "url",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "up": {
+                "name": "up",
+                "required": false,
+                "properties": {
+                  "animations": {
+                    "name": "animations",
+                    "required": false,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "aspect": {
+                    "name": "aspect",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "atlas": {
+                    "name": "atlas",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "category": {
+                    "name": "category",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "dimension": {
+                    "name": "dimension",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "name": {
+                    "name": "name",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "role": {
+                    "name": "role",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "sprite": {
+                    "name": "sprite",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "style": {
+                    "name": "style",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "thumbnailUrl": {
+                    "name": "thumbnailUrl",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "url": {
+                    "name": "url",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          {
+            "key": "feedbackTrait",
+            "type": "trait",
+            "label": "Feedback trait",
+            "description": "Trait that provides visual, audio, or narrative feedback. Usually a rebinding of std-fx-particles, std-fx-narrative, std-tutorial-overlay, std-audio-cue, or std-zone-card.",
+            "tier": "domain"
+          },
+          {
+            "key": "goalTrait",
+            "type": "trait",
+            "label": "Goal trait",
+            "description": "Trait that resolves the win condition. Usually a rebinding of std-objective-flow or std-objective-reach.",
+            "tier": "domain"
+          },
+          {
+            "key": "hudBackgroundAsset",
+            "type": "Asset",
+            "default": {},
+            "label": "HUD Background Asset",
+            "description": "HUD panel background sprite (theme chrome).",
+            "tier": "presentation",
+            "properties": {
+              "animations": {
+                "name": "animations",
+                "required": false,
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "aspect": {
+                "name": "aspect",
+                "required": false,
+                "type": "string"
+              },
+              "atlas": {
+                "name": "atlas",
+                "required": false,
+                "type": "string"
+              },
+              "category": {
+                "name": "category",
+                "required": false,
+                "type": "string"
+              },
+              "dimension": {
+                "name": "dimension",
+                "required": false,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "role": {
+                "name": "role",
+                "required": false,
+                "type": "string"
+              },
+              "sprite": {
+                "name": "sprite",
+                "required": false,
+                "type": "string"
+              },
+              "style": {
+                "name": "style",
+                "required": false,
+                "type": "string"
+              },
+              "thumbnailUrl": {
+                "name": "thumbnailUrl",
+                "required": false,
+                "type": "string"
+              },
+              "url": {
+                "name": "url",
+                "required": false,
+                "type": "string"
+              },
+              "variant": {
+                "name": "variant",
+                "required": false,
+                "type": "string"
+              }
+            }
+          },
+          {
+            "key": "rewardTrait",
+            "type": "trait",
+            "label": "Reward trait",
+            "description": "Trait that provides collectibles or scoring. Usually a rebinding of std-pickup, std-score, std-xp, or std-gold.",
+            "tier": "domain"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "PlatformerPuzzleData",
+        "transitionEvents": [
+          "INIT"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "PlatformerPuzzlePage",
+        "defaultPath": "/platformer-puzzle",
+        "primaryEntity": "PlatformerPuzzleData"
+      }
+    ],
+    "emittedEvents": [],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

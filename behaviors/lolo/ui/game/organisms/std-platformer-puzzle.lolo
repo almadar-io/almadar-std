@@ -1,0 +1,302 @@
+app std-platformer-puzzle "1.0.0"
+"Platformer + puzzle genre substrate organism. Composes the standard authorities — platformer-body, pickup, objective-flow, choice-gate, fx-particles, fx-narrative, tutorial-overlay — and enforces five trait-typed pillar slots: agency, challenge, goal, reward, feedback. Levels consume this organism, fill every slot with a local rebinding trait, and add their own geometry, render, and math rules. Math targets and grade levels stay downstream in the domain package; this substrate is domain-agnostic."
+
+orbital PlatformerPuzzleOrbital {
+  uses Body from "std/behaviors/std-platformer-body"
+  uses Pickup from "std/behaviors/std-pickup"
+  uses Gate from "std/behaviors/std-objective-flow"
+  uses Choice from "std/behaviors/std-choice-gate"
+  uses Particles from "std/behaviors/std-fx-particles"
+  uses Narrative from "std/behaviors/std-fx-narrative"
+  uses Tutorial from "std/behaviors/std-tutorial-overlay"
+
+  type PlatformerBody = {
+    x : number!
+    y : number!
+    width : number!
+    height : number!
+    vx : number
+    vy : number
+    grounded : boolean
+    facingRight : boolean
+  }
+  type PlatformerPlatform = {
+    id : string
+    x : number!
+    y : number!
+    width : number!
+    height : number!
+    type : "ground" | "platform" | "hazard" | "goal"
+  }
+  type PlatformerCurveSample = {
+    x : number!
+    y : number!
+  }
+  type BodyDriftRegion = {
+    id : string!
+    x0 : number!
+    x1 : number!
+    y0 : number!
+    y1 : number!
+    ax : number!
+    ay : number!
+  }
+  type CurveMod = {
+    x0 : number!
+    x1 : number!
+    a : number!
+    b : number
+    h : number!
+    k : number!
+  }
+  type PlatformerTuning = {
+    jumpStrength : number
+    moveSpeed : number
+    gravity : number
+  }
+  type PickupFeature = {
+    id : string!
+    x : number!
+    y : number!
+    kind : string!
+    glyph : string
+    message : string
+    collected : boolean
+  }
+  type ChoiceOption = {
+    id : string!
+    dx : number!
+    label : string!
+    correct : boolean!
+  }
+  type ChoiceGate = {
+    id : string!
+    x : number!
+    y : number!
+    hint : string
+    options : [ChoiceOption]!
+    solved : boolean
+    chosen : string
+  }
+  type Fx = {
+    id : string!
+    type : string!
+    x : number!
+    z : number
+    y : number
+    message : string
+    ttl : number!
+    maxTtl : number
+    bornAt : number
+    space : string
+    effect : string
+    color : string
+    size : number
+    vx : number
+    vy : number
+    vz : number
+    particleCount : number
+    animation : string
+  }
+  type FxPreset = {
+    type : string!
+    color : string
+    color2 : string
+    size : number
+    shape : string
+    count : number
+    glow : number
+    gravity : number
+    vx : number
+    vy : number
+    vz : number
+    space : string
+    effect : string
+    particleCount : number
+    animation : string
+  }
+  type NarrativeCue = {
+    text : string!
+    style : "hint" | "fact" | "warn" | "celebrate"
+    x : number
+    y : number
+    ttl : number
+    space : "screen" | "world"
+  }
+  type StyleDef = {
+    color : string!
+    size : number!
+    ttl : number!
+    effect : string!
+  }
+  type TutorialStep = {
+    id : string!
+    title : string!
+    body : string
+    demoId : string
+  }
+  type Asset = {
+    url : asset
+    atlas : asset
+    sprite : string
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    variant : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+  type DirectionAssets = {
+    up : Asset
+    down : Asset
+    left : Asset
+    right : Asset
+  }
+
+  entity PlatformerPuzzleData [runtime, shared] {
+    id : string!
+    body : PlatformerBody = { x: 0, y: 0, width: 1, height: 1, vx: 0, vy: 0, grounded: false, facingRight: true }
+    fell : boolean = false
+    hazardId : string = ""
+    goalId : string = ""
+    skating : boolean = false
+    curveMods : [CurveMod] = []
+    tuning : PlatformerTuning = {}
+    pickups : [PickupFeature] = []
+    pickupCompleted : boolean = false
+    total : number = 0
+    choices : [ChoiceGate] = []
+    result : string = "none"
+    fx : [Fx] = []
+    narrativeSeq : number = 0
+    lastNarrative : string = ""
+    step : number = 0
+    done : boolean = false
+    score : number = 0
+    lives : number = 3
+    objectivesLeft : number = 1
+    celebrated : boolean = false
+  }
+
+  trait PlatformerPuzzleBody = Body.traits.PlatformerBody -> PlatformerPuzzleData {
+    events {
+      STEER: STEER
+      JUMP: JUMP
+      PLACE: PLACE
+      BODY_MOVED: BODY_MOVED
+      BODY_JUMPED: BODY_JUMPED
+      BODY_LANDED: BODY_LANDED
+      BODY_HAZARD: BODY_HAZARD
+      BODY_GOAL: BODY_GOAL
+      BODY_FELL: BODY_FELL
+      BODY_SKATE_START: BODY_SKATE_START
+      BODY_SKATE_END: BODY_SKATE_END
+      CURVE_MOD_ADD: CURVE_MOD_ADD
+      CURVE_MOD_CLEAR: CURVE_MOD_CLEAR
+      SET_TUNING: SET_TUNING
+    }
+    config { running: true }
+  }
+
+  trait PlatformerPuzzlePickup = Pickup.traits.Pickup -> PlatformerPuzzleData {
+    events {
+      BODY_MOVED: BODY_MOVED
+    }
+    config { running: true }
+  }
+
+  trait PlatformerPuzzleObjective = Gate.traits.ObjectiveFlow -> PlatformerPuzzleData {
+    events {
+      PROGRESS: PROGRESS
+      GAME_END: GAME_END
+    }
+    config { running: true }
+  }
+
+  trait PlatformerPuzzleChoice = Choice.traits.ChoiceGate -> PlatformerPuzzleData {
+    events {
+      BODY_MOVED: BODY_MOVED
+    }
+    config { running: true }
+  }
+
+  trait PlatformerPuzzleFx = Particles.traits.FxParticles -> PlatformerPuzzleData {
+    events {
+      BURST: BURST
+    }
+    config { running: true }
+  }
+
+  trait PlatformerPuzzleNarrative = Narrative.traits.FxNarrative -> PlatformerPuzzleData {
+    events {
+      NARRATE: NARRATE
+      BURST: BURST
+    }
+    config { running: true }
+  }
+
+  trait PlatformerPuzzleTutorial = Tutorial.traits.TutorialOverlay -> PlatformerPuzzleData {
+    events {
+      SHOW: SHOW
+      TUTORIAL_DONE: TUTORIAL_DONE
+    }
+    config { autoShow: false, previewTrait: @trait.PlatformerPuzzleNoopPreview }
+  }
+
+  trait PlatformerPuzzleNoopPreview -> PlatformerPuzzleData [interaction, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (render-ui overlay null)
+    }
+  }
+
+  trait PlatformerPuzzle -> @rebindable PlatformerPuzzleData [interaction, instance] {
+    initial: active
+
+    state active {
+      INIT -> active
+        (render-ui main null)
+    }
+
+    config {
+      agencyTrait : trait
+        @label "Agency trait"
+        @description "Trait that provides player verbs and immediate response. Usually a rebinding of std-platformer-body, std-motion-body, or std-hero-nav."
+        @tier "domain"
+      challengeTrait : trait
+        @label "Challenge trait"
+        @description "Trait that provides the obstacle, decision, or opposition. Usually a rebinding of std-choice-gate, std-gate-lock, std-patrol-hazard, std-velocity-gate, std-loop-lock, or std-pad-lock."
+        @tier "domain"
+      goalTrait : trait
+        @label "Goal trait"
+        @description "Trait that resolves the win condition. Usually a rebinding of std-objective-flow or std-objective-reach."
+        @tier "domain"
+      rewardTrait : trait
+        @label "Reward trait"
+        @description "Trait that provides collectibles or scoring. Usually a rebinding of std-pickup, std-score, std-xp, or std-gold."
+        @tier "domain"
+      feedbackTrait : trait
+        @label "Feedback trait"
+        @description "Trait that provides visual, audio, or narrative feedback. Usually a rebinding of std-fx-particles, std-fx-narrative, std-tutorial-overlay, std-audio-cue, or std-zone-card."
+        @tier "domain"
+      backgroundAsset : Asset = {}
+        @label "Background Asset"
+        @description "Game-shell background panel sprite (theme chrome)."
+        @tier "presentation"
+      hudBackgroundAsset : Asset = {}
+        @label "HUD Background Asset"
+        @description "HUD panel background sprite (theme chrome)."
+        @tier "presentation"
+      directionAssets : DirectionAssets = {}
+        @label "Direction Assets"
+        @description "D-pad direction icon sprites."
+        @tier "presentation"
+    }
+  }
+
+  page "/platformer-puzzle" as PlatformerPuzzlePage -> PlatformerPuzzleBody, PlatformerPuzzlePickup, PlatformerPuzzleObjective, PlatformerPuzzleChoice, PlatformerPuzzleFx, PlatformerPuzzleNarrative, PlatformerPuzzleTutorial, PlatformerPuzzle
+}

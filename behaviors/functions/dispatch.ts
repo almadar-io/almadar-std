@@ -360,6 +360,11 @@ import {
   isStdPlatformerBoard2dPlatformerBoard2DOrbitalParams,
 } from './ui/game/organisms/std-platformer-board-2d.js';
 import {
+  stdPlatformerPuzzlePlatformerPuzzleOrbital,
+  StdPlatformerPuzzlePlatformerPuzzleOrbitalManifest,
+  isStdPlatformerPuzzlePlatformerPuzzleOrbitalParams,
+} from './ui/game/organisms/std-platformer-puzzle.js';
+import {
   stdRateLimiterRateBucketOrbital,
   StdRateLimiterRateBucketOrbitalManifest,
   isStdRateLimiterRateBucketOrbitalParams,
@@ -1323,6 +1328,15 @@ REGISTRY_MUT.set('std-platformer-board-2d::PlatformerBoard2DOrbital', {
     return stdPlatformerBoard2dPlatformerBoard2DOrbital(p);
   },
   manifest: StdPlatformerBoard2dPlatformerBoard2DOrbitalManifest,
+});
+REGISTRY_MUT.set('std-platformer-puzzle::PlatformerPuzzleOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdPlatformerPuzzlePlatformerPuzzleOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-platformer-puzzle::PlatformerPuzzleOrbital');
+    }
+    return stdPlatformerPuzzlePlatformerPuzzleOrbital(p);
+  },
+  manifest: StdPlatformerPuzzlePlatformerPuzzleOrbitalManifest,
 });
 REGISTRY_MUT.set('std-rate-limiter::RateBucketOrbital', {
   factory: (p: object): OrbitalDefinition => {
