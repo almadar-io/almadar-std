@@ -64,6 +64,7 @@ export * from './ui/game/atoms/std-fx-particles.js';
 export * from './ui/game/atoms/std-fx-trail.js';
 export * from './ui/core/atoms/std-gallery.js';
 export * from './infra/atoms/std-game-clock.js';
+export * from './ui/game/atoms/std-game-design-sheet.js';
 export * from './ui/game/atoms/std-gate-lock.js';
 export * from './ui/game/atoms/std-gather.js';
 export * from './ui/core/atoms/std-geosearch.js';

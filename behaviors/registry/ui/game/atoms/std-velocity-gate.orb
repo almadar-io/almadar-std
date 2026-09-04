@@ -1,5 +1,5 @@
 {
-  "description": "Headless velocity-gate mechanic: gates that open only when the player crosses them inside a speed band, optionally in a required direction, optionally sustained for a dwell. Listens BODY_MOVED and, per closed gate, tests the player's rect (padded by reachMargin), their speed against [minSpeed, maxSpeed], and their horizontal direction against dir (0 = either). Instant gates (dwellMs 0) open on the first passing cross; dwell gates (dwellMs > 0) accumulate ~33ms per passing move and open once held reaches dwellMs — a failing move resets the hold. The first newly opened gate emits VELOCITY_GATE_OPENED (the shared entity carries the rest). Entering a closed INSTANT gate while NOT passing emits VELOCITY_GATE_DENIED once per approach — re-arming only after the player steps out — so the board can answer with a PLACE back and a hint fx; dwell gates never deny (a hot entry is fine — coming to rest inside is the point), a failed hold simply resets. RESTART re-closes every gate. Renders nothing; boards draw the gate band/chest and read open/held from the shared entity (the render authority).",
+  "description": "Headless velocity-gate mechanic: gates that open only when the player crosses them inside a speed band, optionally in a required direction, optionally sustained for a dwell. Listens BODY_MOVED and, per closed gate, tests the player's rect (padded by reachMargin), their speed against [minSpeed, maxSpeed], and their horizontal direction against dir (0 = either). Instant gates (dwellMs 0) open on the first passing cross; dwell gates (dwellMs > 0) accumulate ~33ms per passing move and open once held reaches dwellMs — a failing move resets the hold. The first newly opened gate emits VELOCITY_GATE_OPENED (the shared entity carries the rest). Entering a closed INSTANT gate while NOT passing emits VELOCITY_GATE_DENIED once per approach — re-arming only after the player steps out — so the board can answer with a PLACE back and a hint fx; dwell gates never deny (a hot entry is fine — coming to rest inside is the point), a failed hold simply resets. RESTART re-closes every gate. Renders nothing; boards draw the gate band/chest and read open/held from the shared entity (the render authority). Corresponds to the design-sheet field(s): challenge, mechanics.",
   "ledger": {
     "entries": {
       "ent_01M11M409RW0H8NTF5AKJH3NTJ": {
@@ -1032,7 +1032,80 @@
             ]
           }
         }
-      ]
+      ],
+      "types": {
+        "VelocityGate": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "x",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "y",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "width",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "height",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "minSpeed",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "maxSpeed",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "dwellMs",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "dir",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "hint",
+            "type": "string"
+          },
+          {
+            "name": "open",
+            "type": "boolean"
+          },
+          {
+            "name": "touching",
+            "type": "boolean"
+          },
+          {
+            "name": "denied",
+            "type": "boolean"
+          },
+          {
+            "name": "held",
+            "type": "number"
+          },
+          {
+            "name": "reported",
+            "type": "boolean"
+          }
+        ]
+      }
     }
   ],
   "schemaVersion": 1,

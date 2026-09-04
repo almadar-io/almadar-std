@@ -1,5 +1,5 @@
 {
-  "description": "Headless choice-gate mechanic for side-view boards: a gate of N labeled option platforms where progress stops until the player commits to an answer. Listens BODY_MOVED and judges a gate when the player stands grounded on one of its option platforms (|dx| <= reachX of the option center, |dy| <= reachY of the gate's option plane — the pad-lock touch pattern): the correct option stamps the gate solved + chosen on the shared entity and emits CHOICE_CORRECT once (a solved gate never judges again, so the path stays open); a wrong option emits CHOICE_WRONG carrying the gate id, the chosen optionId, and the option's world position, so the board can bounce the player back and float the gate's hint (the board owns the bounce — the atom only reports). RESTART unsolves every gate. Renders nothing; boards draw the option platforms and labels from the shared entity (the render authority).",
+  "description": "Headless choice-gate mechanic for side-view boards: a gate of N labeled option platforms where progress stops until the player commits to an answer. Listens BODY_MOVED and judges a gate when the player stands grounded on one of its option platforms (|dx| <= reachX of the option center, |dy| <= reachY of the gate's option plane — the pad-lock touch pattern): the correct option stamps the gate solved + chosen on the shared entity and emits CHOICE_CORRECT once (a solved gate never judges again, so the path stays open); a wrong option emits CHOICE_WRONG carrying the gate id, the chosen optionId, and the option's world position, so the board can bounce the player back and float the gate's hint (the board owns the bounce — the atom only reports). RESTART unsolves every gate. Renders nothing; boards draw the option platforms and labels from the shared entity (the render authority). Corresponds to the design-sheet field(s): challenge, agency.",
   "ledger": {
     "entries": {
       "ent_01M144Y1KF1D8W68N3195C53AC": {
@@ -847,7 +847,87 @@
             ]
           }
         }
-      ]
+      ],
+      "types": {
+        "ChoiceGate": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "x",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "y",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "hint",
+            "type": "string"
+          },
+          {
+            "name": "options",
+            "properties": [
+              {
+                "name": "id",
+                "required": true,
+                "type": "string"
+              },
+              {
+                "name": "dx",
+                "required": true,
+                "type": "number"
+              },
+              {
+                "name": "label",
+                "required": true,
+                "type": "string"
+              },
+              {
+                "name": "correct",
+                "required": true,
+                "type": "boolean"
+              }
+            ],
+            "required": true,
+            "type": "[object]"
+          },
+          {
+            "name": "solved",
+            "type": "boolean"
+          },
+          {
+            "name": "chosen",
+            "type": "string"
+          }
+        ],
+        "ChoiceOption": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "dx",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "label",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "correct",
+            "required": true,
+            "type": "boolean"
+          }
+        ]
+      }
     }
   ],
   "schemaVersion": 1,
