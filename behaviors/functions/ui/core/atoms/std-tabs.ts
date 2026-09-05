@@ -343,6 +343,20 @@ export function stdTabsTabsItemOrbital(params: StdTabsTabsItemOrbitalParams = {}
             ],
           },
         },
+        'effectRow': [
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.activeTab',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.items',
+          },
+        ],
         'emits': [
           {
             'description': 'Signals a tab selection has occurred.',

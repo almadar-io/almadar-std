@@ -559,6 +559,21 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
             'type': 'string',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'ModQueueItem',
+          },
+          {
+            'kind': 'persist',
+            'resource': 'ModQueueItem',
+          },
+          {
+            'kind': 'render-ui',
+            'resolved': false,
+            'resource': '@config.reviewSlot',
+          },
+        ],
         'emits': [
           {
             'description': 'Signals that a moderation item has been approved.',

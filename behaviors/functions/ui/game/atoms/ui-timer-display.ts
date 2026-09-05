@@ -348,6 +348,34 @@ export function stdUiTimerDisplayTimerDisplayOrbital(params: StdUiTimerDisplayTi
             ],
           },
         },
+        'effectRow': [
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+            'site': 'tick',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.running',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.seconds',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.seconds',
+            'site': 'tick',
+          },
+          {
+            'kind': 'ticks',
+            'site': 'tick',
+          },
+        ],
         'entityContract': {
           'provides': [
             'running',

@@ -45,6 +45,10 @@
             "direction": "listen"
           },
           {
+            "name": "SET_FILLS",
+            "direction": "listen"
+          },
+          {
             "name": "RESTART",
             "direction": "listen"
           }
@@ -55,7 +59,7 @@
             "type": "[AreaFill]",
             "default": [],
             "label": "Fills",
-            "description": "One row per fill region: id, x-range (x0..x1 in world units), baseline the height is measured from, target area, rateMode (area | speed | ride — default area), optional hint, and the curve samples to interpolate. filled/frontier/reported are stamped at runtime.",
+            "description": "One row per fill region: id, x-range (x0..x1 in world units), baseline the height is measured from, target area, rateMode (area | speed | ride — default area), optional hint, and the curve samples to interpolate. filled/frontier/reported are stamped at runtime. Seeded onto the entity on INIT; the live set is entity.fills — SET_FILLS replaces it at runtime (boards that import fills), and RESTART re-arms the live set rather than re-reading config, so injected fills survive respawns.",
             "tier": "domain",
             "items": {
               "properties": {
@@ -147,7 +151,8 @@
         "transitionEvents": [
           "BODY_MOVED",
           "INIT",
-          "RESTART"
+          "RESTART",
+          "SET_FILLS"
         ],
         "definerKnobs": [],
         "entityRebindable": true,
@@ -157,7 +162,21 @@
             "fills",
             "lastX"
           ]
-        }
+        },
+        "effectRow": [
+          {
+            "kind": "emit",
+            "resource": "AREA_FILLED"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.fills"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.lastX"
+          }
+        ]
       }
     ],
     "pages": [

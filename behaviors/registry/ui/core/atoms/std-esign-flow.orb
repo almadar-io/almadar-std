@@ -401,6 +401,16 @@
       "traits": [
         {
           "category": "interaction",
+          "effectRow": [
+            {
+              "kind": "fetch",
+              "resource": "SignatureSession"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "main"
+            }
+          ],
           "emits": [
             {
               "description": "Indicates a new signature request has been initiated.",
@@ -1267,8 +1277,7 @@
             }
           ],
           "name": "SignatureSessionCreate",
-          "ref": "Modal.traits.ModalRecordModal",
-          "refId": "trt_01KXG04GVS1W2103BQKJT7KZRZ"
+          "ref": "Modal.traits.ModalRecordModal"
         },
         {
           "config": {
@@ -1307,11 +1316,16 @@
             }
           ],
           "name": "SignatureSessionDelete",
-          "ref": "Confirmation.traits.ConfirmActionConfirmation",
-          "refId": "trt_01KXG04FYBTTTS73WNZ70BHYG3"
+          "ref": "Confirmation.traits.ConfirmActionConfirmation"
         },
         {
           "category": "lifecycle",
+          "effectRow": [
+            {
+              "kind": "persist",
+              "resource": "SignatureSession"
+            }
+          ],
           "emits": [
             {
               "description": "A new signature session has been initialized.",
@@ -1565,6 +1579,27 @@
         },
         {
           "category": "lifecycle",
+          "effectRow": [
+            {
+              "kind": "call-service",
+              "resource": "esign.getEnvelopeStatus"
+            },
+            {
+              "kind": "call-service",
+              "resource": "esign.sendEnvelope"
+            },
+            {
+              "kind": "notify"
+            },
+            {
+              "kind": "persist",
+              "resource": "SignatureSession"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.id"
+            }
+          ],
           "emits": [
             {
               "description": "The provider accepted the envelope; carries its id.",

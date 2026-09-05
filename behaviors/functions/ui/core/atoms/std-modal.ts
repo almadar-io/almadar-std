@@ -345,6 +345,28 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
             'type': 'string',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'ModalRecord',
+          },
+          {
+            'kind': 'notify',
+          },
+          {
+            'kind': 'render-ui',
+            'resolved': false,
+            'resource': '@config.detailSlot',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.id',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.seedRow',
+          },
+        ],
         'emits': [
           {
             'description': 'Indicates a successful data save operation.',

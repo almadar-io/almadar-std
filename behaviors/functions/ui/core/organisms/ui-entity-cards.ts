@@ -477,6 +477,16 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
             'type': 'string',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'EntityCardsItem',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'emits': [
           {
             'description': 'User opened a record from the list.',

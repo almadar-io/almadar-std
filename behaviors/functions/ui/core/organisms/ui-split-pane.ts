@@ -210,6 +210,16 @@ export function stdUiSplitPaneSplitPaneOrbital(params: StdUiSplitPaneSplitPaneOr
             'type': 'string',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.ratio',
+          },
+        ],
         'emits': [
           {
             'definerKnob': 'onRatioChange',

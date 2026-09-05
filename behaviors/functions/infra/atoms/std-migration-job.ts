@@ -474,6 +474,97 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
             'type': 'string',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'call-service',
+            'resource': 'migration.commit',
+          },
+          {
+            'kind': 'call-service',
+            'resource': 'migration.fetchDocument',
+          },
+          {
+            'kind': 'call-service',
+            'resource': 'migration.listDocuments',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'MIGRATION_COMPLETED',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'MIGRATION_DOCUMENT',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'MIGRATION_FAILED',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'MIGRATION_FETCHED',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'MIGRATION_REVIEW_READY',
+          },
+          {
+            'kind': 'persist',
+            'resource': 'MigrationJob',
+          },
+          {
+            'kind': 'render-ui',
+            'resolved': false,
+            'resource': '@config.reviewSlot',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.createdAt',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.document',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.documents',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.error',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.files',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.skipped',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.source',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.stats',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.status',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.target',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.units',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.validationErrors',
+          },
+        ],
         'emits': [
           {
             'description': 'migration.listDocuments service result, flattened onto the payload by the call-service effect executor',

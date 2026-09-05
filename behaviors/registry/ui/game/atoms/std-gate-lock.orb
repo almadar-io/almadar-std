@@ -1,5 +1,5 @@
 {
-  "description": "Headless collectible-gate mechanic: doors that stay shut until the player's collected total reaches their cost. Listens COLLECT (the board's running total — stars, coins, keys) and flips every door whose cost is met, stamping open on the shared door rows and emitting GATE_OPENED for the first newly opened door (the shared entity is the render authority for the rest). While a closed door's rect contains the player it emits GATE_BLOCKED once per approach — re-arming only after the player steps out — so the board can answer with a PLACE back and a locked fx. RESTART re-locks every door and zeroes the total. Renders nothing; boards draw closed doors as bars/walls and open ones as gaps. Corresponds to the design-sheet field(s): challenge, rewards.",
+  "description": "Headless collectible-gate mechanic: doors that stay shut until the player's collected total reaches their cost. Listens COLLECT (the board's running total — stars, coins, keys) and flips every door whose cost is met, stamping open on the shared door rows and emitting GATE_OPENED for the first newly opened door (the shared entity is the render authority for the rest). While a closed door's rect contains the player it emits GATE_BLOCKED once per approach — re-arming only after the player steps out — so the board can answer with a PLACE back and a locked fx. RESTART re-locks every live door and zeroes the total (re-arming the live entity set, so SET_DOORS-injected doors survive respawns). SET_DOORS replaces the door set at runtime for boards that import their doors. Renders nothing; boards draw closed doors as bars/walls and open ones as gaps. Corresponds to the design-sheet field(s): challenge, rewards.",
   "ledger": {
     "entries": {
       "ent_01M0PCAKPNCX4VB9ENH9KE7A6K": {
@@ -59,6 +59,15 @@
         "bakedName": "GATE_OPENED",
         "curName": "GATE_OPENED",
         "id": "evt_01M0PCAKPPW543QCFNMEFRA1TT",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M0PCAKPP3AGKNKD907BM5QKD",
+        "renames": []
+      },
+      "evt_01M1PVY25N9C5YBSWG01V0B1R9": {
+        "bakedName": "SET_DOORS",
+        "curName": "SET_DOORS",
+        "id": "evt_01M1PVY25N9C5YBSWG01V0B1R9",
         "kind": "event",
         "owner": "workspace",
         "parent": "trt_01M0PCAKPP3AGKNKD907BM5QKD",
@@ -188,7 +197,7 @@
           "config": {
             "doors": {
               "default": [],
-              "description": "One row per gate: id, min-corner rect (x, y, width, height in world units) and the collected total that opens it. open/touching are stamped at runtime.",
+              "description": "One row per gate: id, min-corner rect (x, y, width, height in world units) and the collected total that opens it. open/touching are stamped at runtime. Seeded onto the entity on INIT; the live set is entity.doors — SET_DOORS replaces it at runtime (boards that import doors), and RESTART re-arms the live set rather than re-reading config, so injected doors survive respawns.",
               "items": {
                 "properties": {
                   "blocked": {
@@ -258,6 +267,24 @@
               "type": "boolean"
             }
           },
+          "effectRow": [
+            {
+              "kind": "emit",
+              "resource": "GATE_BLOCKED"
+            },
+            {
+              "kind": "emit",
+              "resource": "GATE_OPENED"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.doors"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.total"
+            }
+          ],
           "emits": [
             {
               "description": "A door's cost was reached by the collected total and it flipped open; boards layer unlock fx. When several doors open on one total, the first reports and the shared entity carries the rest.",
@@ -377,6 +404,62 @@
                     "name": "speed",
                     "required": true,
                     "type": "number"
+                  }
+                ]
+              },
+              {
+                "id": "evt_01M1PVY25N9C5YBSWG01V0B1R9",
+                "key": "SET_DOORS",
+                "name": "Set Doors",
+                "payloadSchema": [
+                  {
+                    "name": "doors",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "width",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "height",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "cost",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "open",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "touching",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "blocked",
+                        "type": "boolean"
+                      }
+                    ],
+                    "required": true,
+                    "type": "[object]"
                   }
                 ]
               },
@@ -814,7 +897,41 @@
                     "@entity.doors",
                     [
                       "array/map",
-                      "@config.doors",
+                      "@payload.doors",
+                      [
+                        "fn",
+                        "d",
+                        [
+                          "object/merge",
+                          "@d",
+                          {
+                            "blocked": false,
+                            "open": false,
+                            "touching": false
+                          }
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.total",
+                    0.0
+                  ]
+                ],
+                "event": "SET_DOORS",
+                "eventId": "evt_01M1PVY25N9C5YBSWG01V0B1R9",
+                "from": "active",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.doors",
+                    [
+                      "array/map",
+                      "@entity.doors",
                       [
                         "fn",
                         "d",

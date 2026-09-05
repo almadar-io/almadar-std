@@ -332,6 +332,17 @@ export function stdStatusLifecycleStatusLifecycleOrbital(params: StdStatusLifecy
             'type': '[TransitionSpec]',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'StatusChanged',
+          },
+          {
+            'kind': 'persist',
+            'resolved': false,
+            'resource': '@config.targetEntity',
+          },
+        ],
         'emits': [
           {
             'event': 'StatusChanged',

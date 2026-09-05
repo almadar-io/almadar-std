@@ -285,6 +285,35 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
     traits: [
       {
         'category': 'lifecycle',
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'LOOP_STEP',
+          },
+          {
+            'kind': 'llm/call-tools',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.iterations',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.messages',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.response',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.status',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.tools',
+          },
+        ],
         'emits': [
           {
             'event': 'LOOP_STEP',
@@ -680,6 +709,12 @@ export function stdAgentToolLoopAgentToolLoopOrbital(params: StdAgentToolLoopAge
       } satisfies Trait,
       {
         'category': 'lifecycle',
+        'effectRow': [
+          {
+            'kind': 'set',
+            'resource': '@entity.status',
+          },
+        ],
         'linkedEntity': 'ToolLoop',
         'listens': [
           {

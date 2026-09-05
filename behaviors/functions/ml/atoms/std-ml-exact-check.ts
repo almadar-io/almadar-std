@@ -238,6 +238,24 @@ export function stdMlExactCheckMlExactCheckOrbital(params: StdMlExactCheckMlExac
             'type': 'boolean',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'EXACT_MATCHED',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'EXACT_UNMATCHED',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.matched',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.status',
+          },
+        ],
         'emits': [
           {
             'description': 'Fired when the candidate exactly equals the key under the configured normalization',

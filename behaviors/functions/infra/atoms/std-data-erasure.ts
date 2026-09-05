@@ -571,6 +571,50 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
             'type': 'string',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'ExecuteErasure',
+          },
+          {
+            'kind': 'fetch',
+            'resource': 'ErasureRequest',
+          },
+          {
+            'kind': 'fetch',
+            'resource': 'ErasureRequest',
+            'site': 'tick',
+          },
+          {
+            'kind': 'persist',
+            'resource': 'ErasureRequest',
+          },
+          {
+            'kind': 'render-ui',
+            'resolved': false,
+            'resource': '@config.reviewSlot',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.id',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.status',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.subjectId',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.targetEntity',
+          },
+          {
+            'kind': 'ticks',
+            'site': 'tick',
+          },
+        ],
         'emits': [
           {
             'description': 'Signals a request cancellation during its processing lifecycle.',

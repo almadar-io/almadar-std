@@ -649,6 +649,80 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
             'type': 'string',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'MultiPartyView',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.audit',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.cancelReason',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.currentActionDescription',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.currentActionIcon',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.currentActionLabel',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.currentPartyActor',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.currentPartyIcon',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.currentPartyId',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.currentPartyIndex',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.currentPartyTitle',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.currentStepLabel',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.disputeReason',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.errorMessage',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.parties',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.reason',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.totalParties',
+          },
+        ],
         'emits': [
           {
             'description': 'Signals a party\'s acceptance or agreement within the flow.',

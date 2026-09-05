@@ -286,6 +286,16 @@ export function stdUiTeamOrganismTeamOrganismOrbital(params: StdUiTeamOrganismTe
             'type': 'number',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'TeamOrganismItem',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'emits': [
           {
             'description': 'TeamOrganism rows finished loading; payload.data holds the collection.',

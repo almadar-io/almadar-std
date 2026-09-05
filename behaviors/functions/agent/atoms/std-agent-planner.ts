@@ -257,6 +257,34 @@ export function stdAgentPlannerAgentPlannerOrbital(params: StdAgentPlannerAgentP
     traits: [
       {
         'category': 'lifecycle',
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'PLANNED',
+          },
+          {
+            'kind': 'llm/generate',
+          },
+          {
+            'kind': 'memory/recall',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.memories',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.plan',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.prompt',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.status',
+          },
+        ],
         'emits': [
           {
             'event': 'PLANNED',
@@ -568,6 +596,12 @@ export function stdAgentPlannerAgentPlannerOrbital(params: StdAgentPlannerAgentP
       } satisfies Trait,
       {
         'category': 'lifecycle',
+        'effectRow': [
+          {
+            'kind': 'set',
+            'resource': '@entity.status',
+          },
+        ],
         'linkedEntity': 'PlannerPlan',
         'listens': [
           {

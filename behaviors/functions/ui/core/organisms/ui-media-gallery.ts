@@ -415,6 +415,16 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
             'type': 'number',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'MediaGalleryItem',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'emits': [
           {
             'definerKnob': 'selectionEvent',

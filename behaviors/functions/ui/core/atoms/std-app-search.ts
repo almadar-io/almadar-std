@@ -204,6 +204,12 @@ export function stdAppSearchAppSearchOrbital(params: StdAppSearchAppSearchOrbita
     traits: [
       {
         'category': 'interaction',
+        'effectRow': [
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'linkedEntity': 'AppSearchTarget',
         'name': 'AppSearchIdleHint',
         'scope': 'instance',
@@ -433,6 +439,20 @@ export function stdAppSearchAppSearchOrbital(params: StdAppSearchAppSearchOrbita
             'type': 'string',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'AppSearchTarget',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.searchTerm',
+          },
+        ],
         'emits': [
           {
             'description': 'Filtered search results loaded',

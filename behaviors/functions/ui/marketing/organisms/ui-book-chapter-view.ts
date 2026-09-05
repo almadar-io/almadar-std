@@ -149,6 +149,16 @@ export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChap
             'type': 'boolean',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'BookChapterViewItem',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'emits': [
           {
             'description': 'BookChapterView rows finished loading; payload.data holds the collection.',

@@ -387,6 +387,16 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
     traits: [
       {
         'category': 'interaction',
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'SignatureSession',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'emits': [
           {
             'description': 'Indicates a new signature request has been initiated.',
@@ -1258,6 +1268,12 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
       }),
       {
         'category': 'lifecycle',
+        'effectRow': [
+          {
+            'kind': 'persist',
+            'resource': 'SignatureSession',
+          },
+        ],
         'emits': [
           {
             'description': 'A new signature session has been initialized.',
@@ -1485,6 +1501,27 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
       } satisfies Trait,
       {
         'category': 'lifecycle',
+        'effectRow': [
+          {
+            'kind': 'call-service',
+            'resource': 'esign.getEnvelopeStatus',
+          },
+          {
+            'kind': 'call-service',
+            'resource': 'esign.sendEnvelope',
+          },
+          {
+            'kind': 'notify',
+          },
+          {
+            'kind': 'persist',
+            'resource': 'SignatureSession',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.id',
+          },
+        ],
         'emits': [
           {
             'description': 'The provider accepted the envelope; carries its id.',

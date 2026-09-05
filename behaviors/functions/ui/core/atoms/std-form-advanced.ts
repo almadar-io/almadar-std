@@ -444,6 +444,23 @@ export function stdFormAdvancedFormEntryOrbital(params: StdFormAdvancedFormEntry
             'type': 'string',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'FormEntry',
+          },
+          {
+            'kind': 'notify',
+          },
+          {
+            'kind': 'persist',
+            'resource': 'FormEntry',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'emits': [
           {
             'description': 'Signals successful loading of form entry data.',

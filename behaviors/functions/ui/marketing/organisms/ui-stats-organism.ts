@@ -266,6 +266,16 @@ export function stdUiStatsOrganismStatsOrganismOrbital(params: StdUiStatsOrganis
             'type': 'number',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'StatsOrganismItem',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'emits': [
           {
             'description': 'StatsOrganism rows finished loading; payload.data holds the collection.',

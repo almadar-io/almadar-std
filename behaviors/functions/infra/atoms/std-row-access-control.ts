@@ -286,6 +286,28 @@ export function stdRowAccessControlRowAccessControlOrbital(params: StdRowAccessC
             'type': '[string]',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'RowsFiltered',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.accessDenied',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.filteredData',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.inputCount',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.outputCount',
+          },
+        ],
         'emits': [
           {
             'event': 'RowsFiltered',

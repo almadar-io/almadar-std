@@ -50,6 +50,10 @@
             "direction": "listen"
           },
           {
+            "name": "SET_PATROLS",
+            "direction": "listen"
+          },
+          {
             "name": "RESTART",
             "direction": "listen"
           }
@@ -68,7 +72,7 @@
             "type": "[Patrol]",
             "default": [],
             "label": "Patrols",
-            "description": "One row per patroller: id, the [x0, x1] beat it walks, its base y, its speed in units/s, and optionally waveAmp/wavePeriod for a vertical sine bob (waveAmp 0 = flat ping-pong). Current x/dir/t/cy/touching/hit are stamped at runtime.",
+            "description": "One row per patroller: id, the [x0, x1] beat it walks, its base y, its speed in units/s, and optionally waveAmp/wavePeriod for a vertical sine bob (waveAmp 0 = flat ping-pong). Current x/dir/t/cy/touching/hit are stamped at runtime. Seeded onto the entity on INIT; the live set is entity.patrols — SET_PATROLS replaces it at runtime (boards that import patrols), and RESTART re-arms the live set rather than re-reading config, so injected patrols survive respawns.",
             "tier": "domain",
             "items": {
               "properties": {
@@ -171,7 +175,8 @@
         "transitionEvents": [
           "BODY_MOVED",
           "INIT",
-          "RESTART"
+          "RESTART",
+          "SET_PATROLS"
         ],
         "definerKnobs": [],
         "entityRebindable": true,
@@ -182,7 +187,35 @@
             "px",
             "py"
           ]
-        }
+        },
+        "effectRow": [
+          {
+            "kind": "emit",
+            "resource": "PATROL_HIT",
+            "site": "tick"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.patrols"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.patrols",
+            "site": "tick"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.px"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.py"
+          },
+          {
+            "kind": "ticks",
+            "site": "tick"
+          }
+        ]
       }
     ],
     "pages": [

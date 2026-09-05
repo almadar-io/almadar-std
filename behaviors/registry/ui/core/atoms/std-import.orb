@@ -239,8 +239,7 @@
           "linkedEntity": "ImportPanel",
           "linkedEntityId": "ent_01KYEH1JJPJH06F07Q6CNTHTR8",
           "name": "Button1",
-          "ref": "Button.traits.ButtonRender",
-          "refId": "trt_01KXG04JBQPWD7RW8X33NXPXG9"
+          "ref": "Button.traits.ButtonRender"
         },
         {
           "config": {
@@ -263,8 +262,7 @@
           "linkedEntity": "ImportPanel",
           "linkedEntityId": "ent_01KYEH1JJPJH06F07Q6CNTHTR8",
           "name": "Menu1",
-          "ref": "Menu.traits.MenuRender",
-          "refId": "trt_01KXG04Q03EYTCP5J0MX1ACQH7"
+          "ref": "Menu.traits.MenuRender"
         },
         {
           "category": "interaction",
@@ -340,6 +338,31 @@
               "type": "[SourceOption]"
             }
           },
+          "effectRow": [
+            {
+              "kind": "browser/open-file-picker"
+            },
+            {
+              "kind": "emit",
+              "resource": "IMPORT_FAILED"
+            },
+            {
+              "kind": "emit",
+              "resource": "IMPORT_REQUESTED"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "main"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.pendingFiles"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.pendingSource"
+            }
+          ],
           "emits": [
             {
               "description": "Requests an import from the picked source. source is the SourceOption descriptor (id/kind/label); files carries picker metadata (name/size/type/lastModified) for file-kind sources, empty otherwise. A sibling std-migration-job listens and drives the run.",
@@ -772,6 +795,48 @@
           }
         }
       ],
+      "types": {
+        "ImportFileMeta": [
+          {
+            "name": "name",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "size",
+            "type": "number"
+          },
+          {
+            "name": "type",
+            "type": "string"
+          },
+          {
+            "name": "lastModified",
+            "type": "number"
+          }
+        ],
+        "SourceOption": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "kind",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "label",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "event",
+            "type": "string"
+          }
+        ]
+      },
       "uses": [
         {
           "as": "Button",

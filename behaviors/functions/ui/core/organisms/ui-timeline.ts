@@ -316,6 +316,16 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
             'type': 'string',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'TimelineItem',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'emits': [
           {
             'description': 'User opened a record from the list.',

@@ -270,6 +270,28 @@ export function stdCrossReferenceCrossReferenceOrbital(params: StdCrossReference
     traits: [
       {
         'category': 'lifecycle',
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'LinksLoaded',
+          },
+          {
+            'kind': 'fetch',
+            'resource': 'CrossRefLink',
+          },
+          {
+            'kind': 'persist',
+            'resource': 'CrossRefLink',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.filteredLinks',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.leftId',
+          },
+        ],
         'emits': [
           {
             'description': 'Fired after a junction row is persisted.',

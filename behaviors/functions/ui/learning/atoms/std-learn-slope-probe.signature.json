@@ -79,6 +79,11 @@
             "required": false
           },
           {
+            "name": "curve",
+            "type": "array",
+            "required": false
+          },
+          {
             "name": "segment",
             "type": "array",
             "required": false
@@ -111,6 +116,10 @@
             "direction": "listen"
           },
           {
+            "name": "SET_CURVE",
+            "direction": "listen"
+          },
+          {
             "name": "BODY_MOVED",
             "direction": "listen"
           },
@@ -125,7 +134,7 @@
             "type": "[ProbeSample]",
             "default": [],
             "label": "Curve",
-            "description": "Surface samples (x strictly increasing) of the graph being ridden — the same table the body skates and the canvas draws, so the readout matches what is underfoot.",
+            "description": "Surface samples (x strictly increasing) of the graph being ridden — the same table the body skates and the canvas draws, so the readout matches what is underfoot. Seeded onto the entity on INIT; the live curve is entity.curve — SET_CURVE replaces it at runtime (stitched mega-curves) and RESTART does not reseed it.",
             "tier": "domain",
             "items": {
               "properties": {
@@ -173,7 +182,8 @@
         "transitionEvents": [
           "BODY_MOVED",
           "INIT",
-          "RESTART"
+          "RESTART",
+          "SET_CURVE"
         ],
         "definerKnobs": [],
         "entityRebindable": true,
@@ -181,6 +191,7 @@
           "requires": [],
           "provides": [
             "bucket",
+            "curve",
             "probing",
             "segment",
             "slope",
@@ -197,7 +208,81 @@
             "x",
             "y"
           ]
-        }
+        },
+        "effectRow": [
+          {
+            "kind": "emit",
+            "resource": "SLOPE_CHANGED"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.bucket"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.curve"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.probing"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.segment"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.slope"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.tax"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.tay"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.tbx"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.tby"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.triAx"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.triAy"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.triBx"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.triBy"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.triCx"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.triCy"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.x"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.y"
+          }
+        ]
       }
     ],
     "pages": [

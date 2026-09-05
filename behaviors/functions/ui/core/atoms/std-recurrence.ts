@@ -464,6 +464,64 @@ export function stdRecurrenceRecurrenceOrbital(params: StdRecurrenceRecurrenceOr
             'type': 'string',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'RecurrenceView',
+          },
+          {
+            'kind': 'persist',
+            'resource': 'RecurrenceView',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.currentOccurrenceDate',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.currentOccurrenceId',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.currentOccurrenceLabel',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.endAfterCount',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.endDate',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.errorMessage',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.frequency',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.interval',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.occurrences',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.rescheduleDate',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.startDate',
+          },
+        ],
         'emits': [
           {
             'description': 'Signals the rule definition is being modified.',

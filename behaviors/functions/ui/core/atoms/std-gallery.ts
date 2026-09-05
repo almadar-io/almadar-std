@@ -568,6 +568,24 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
             'type': 'string',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'GalleryItem',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'modal',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.id',
+          },
+        ],
         'emits': [
           {
             'description': 'Signals an item has been selected for viewing.',

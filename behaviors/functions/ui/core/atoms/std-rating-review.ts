@@ -600,6 +600,56 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
             'type': 'string',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'ReviewView',
+          },
+          {
+            'kind': 'persist',
+            'resource': 'ReviewView',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.averageRating',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.currentSort',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.draftComment',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.draftRating',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.errorMessage',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.reviews',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.reviewsSource',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.starDistribution',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.totalReviews',
+          },
+        ],
         'emits': [
           {
             'description': 'Initiates the review composition flow.',
@@ -2730,6 +2780,28 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
             'type': 'string',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'persist',
+            'resource': 'ReviewView',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.draftComment',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.draftRating',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.errorMessage',
+          },
+        ],
         'emits': [
           {
             'description': 'Signals a review draft has been created or updated.',

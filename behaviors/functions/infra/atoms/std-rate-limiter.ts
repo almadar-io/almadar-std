@@ -805,6 +805,24 @@ export function stdRateLimiterRateBucketOrbital(params: StdRateLimiterRateBucket
             ],
           },
         },
+        'effectRow': [
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.count',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.limiterStatus',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.window',
+          },
+        ],
         'linkedEntity': 'RateBucket',
         'listens': [
           {

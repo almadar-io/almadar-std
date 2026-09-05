@@ -156,6 +156,12 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
             'type': 'boolean',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'entityContract': {
           'provides': [],
           'requires': [],

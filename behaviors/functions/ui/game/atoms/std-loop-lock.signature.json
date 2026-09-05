@@ -40,6 +40,10 @@
             "direction": "listen"
           },
           {
+            "name": "SET_LOCKS",
+            "direction": "listen"
+          },
+          {
             "name": "RESTART",
             "direction": "listen"
           }
@@ -50,7 +54,7 @@
             "type": "[LoopLock]",
             "default": [],
             "label": "Locks",
-            "description": "One row per winding lock: id, anchor (x, y in world units), ring radius, radial tolerance band, and revolutions required. swept/inside/unlocked are stamped at runtime.",
+            "description": "One row per winding lock: id, anchor (x, y in world units), ring radius, radial tolerance band, and revolutions required. swept/inside/unlocked are stamped at runtime. Seeded onto the entity on INIT; the live set is entity.locks — SET_LOCKS replaces it at runtime (boards that import locks), and RESTART re-arms the live set rather than re-reading config, so injected locks survive respawns.",
             "tier": "domain",
             "items": {
               "properties": {
@@ -127,7 +131,8 @@
         "transitionEvents": [
           "BODY_MOVED",
           "INIT",
-          "RESTART"
+          "RESTART",
+          "SET_LOCKS"
         ],
         "definerKnobs": [],
         "entityRebindable": true,
@@ -136,7 +141,17 @@
           "provides": [
             "locks"
           ]
-        }
+        },
+        "effectRow": [
+          {
+            "kind": "emit",
+            "resource": "LOOP_UNLOCKED"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.locks"
+          }
+        ]
       }
     ],
     "pages": [

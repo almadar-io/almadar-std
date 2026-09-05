@@ -1,5 +1,5 @@
 {
-  "description": "Headless velocity-gate mechanic: gates that open only when the player crosses them inside a speed band, optionally in a required direction, optionally sustained for a dwell. Listens BODY_MOVED and, per closed gate, tests the player's rect (padded by reachMargin), their speed against [minSpeed, maxSpeed], and their horizontal direction against dir (0 = either). Instant gates (dwellMs 0) open on the first passing cross; dwell gates (dwellMs > 0) accumulate ~33ms per passing move and open once held reaches dwellMs — a failing move resets the hold. The first newly opened gate emits VELOCITY_GATE_OPENED (the shared entity carries the rest). Entering a closed INSTANT gate while NOT passing emits VELOCITY_GATE_DENIED once per approach — re-arming only after the player steps out — so the board can answer with a PLACE back and a hint fx; dwell gates never deny (a hot entry is fine — coming to rest inside is the point), a failed hold simply resets. RESTART re-closes every gate. Renders nothing; boards draw the gate band/chest and read open/held from the shared entity (the render authority). Corresponds to the design-sheet field(s): challenge, mechanics.",
+  "description": "Headless velocity-gate mechanic: gates that open only when the player crosses them inside a speed band, optionally in a required direction, optionally sustained for a dwell. Listens BODY_MOVED and, per closed gate, tests the player's rect (padded by reachMargin), their speed against [minSpeed, maxSpeed], and their horizontal direction against dir (0 = either). Instant gates (dwellMs 0) open on the first passing cross; dwell gates (dwellMs > 0) accumulate ~33ms per passing move and open once held reaches dwellMs — a failing move resets the hold. The first newly opened gate emits VELOCITY_GATE_OPENED (the shared entity carries the rest). Entering a closed INSTANT gate while NOT passing emits VELOCITY_GATE_DENIED once per approach — re-arming only after the player steps out — so the board can answer with a PLACE back and a hint fx; dwell gates never deny (a hot entry is fine — coming to rest inside is the point), a failed hold simply resets. RESTART re-closes every live gate (re-arming the live entity set, so SET_VGATES-injected gates survive respawns). SET_VGATES replaces the gate set at runtime for boards that import their gates. Renders nothing; boards draw the gate band/chest and read open/held from the shared entity (the render authority). Corresponds to the design-sheet field(s): challenge, mechanics.",
   "ledger": {
     "entries": {
       "ent_01M11M409RW0H8NTF5AKJH3NTJ": {
@@ -50,6 +50,15 @@
         "bakedName": "VELOCITY_GATE_OPENED",
         "curName": "VELOCITY_GATE_OPENED",
         "id": "evt_01M11M409RWEC4MAX79RVXR02R",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M11M409R4QHY3YC5E9VM5GQQ",
+        "renames": []
+      },
+      "evt_01M1PVY2526BJGTVGG5DPPMPVW": {
+        "bakedName": "SET_VGATES",
+        "curName": "SET_VGATES",
+        "id": "evt_01M1PVY2526BJGTVGG5DPPMPVW",
         "kind": "event",
         "owner": "workspace",
         "parent": "trt_01M11M409R4QHY3YC5E9VM5GQQ",
@@ -204,7 +213,7 @@
           "config": {
             "gates": {
               "default": [],
-              "description": "One row per velocity gate: id, min-corner rect (x, y, width, height in world units), the speed band [minSpeed, maxSpeed] that opens it, the hold required (dwellMs 0 = instant), the horizontal direction required (dir -1/0/+1), and an optional hint shown when denied. open/touching/denied/held/reported are stamped at runtime.",
+              "description": "One row per velocity gate: id, min-corner rect (x, y, width, height in world units), the speed band [minSpeed, maxSpeed] that opens it, the hold required (dwellMs 0 = instant), the horizontal direction required (dir -1/0/+1), and an optional hint shown when denied. open/touching/denied/held/reported are stamped at runtime. Seeded onto the entity on INIT; the live set is entity.gates — SET_VGATES replaces it at runtime (boards that import gates), and RESTART re-arms the live set rather than re-reading config, so injected gates survive respawns.",
               "items": {
                 "properties": {
                   "denied": {
@@ -304,6 +313,20 @@
               "type": "boolean"
             }
           },
+          "effectRow": [
+            {
+              "kind": "emit",
+              "resource": "VELOCITY_GATE_DENIED"
+            },
+            {
+              "kind": "emit",
+              "resource": "VELOCITY_GATE_OPENED"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.gates"
+            }
+          ],
           "emits": [
             {
               "description": "A gate's speed band was satisfied (instantly, or held for its dwell) and it flipped open; boards layer treasure fx and rewards. When several gates open on one move, the first reports and the shared entity carries the rest.",
@@ -420,6 +443,89 @@
                     "name": "speed",
                     "required": true,
                     "type": "number"
+                  }
+                ]
+              },
+              {
+                "id": "evt_01M1PVY2526BJGTVGG5DPPMPVW",
+                "key": "SET_VGATES",
+                "name": "Set Vgates",
+                "payloadSchema": [
+                  {
+                    "name": "gates",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "width",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "height",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "minSpeed",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "maxSpeed",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "dwellMs",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "dir",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "hint",
+                        "type": "string"
+                      },
+                      {
+                        "name": "open",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "touching",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "denied",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "held",
+                        "type": "number"
+                      },
+                      {
+                        "name": "reported",
+                        "type": "boolean"
+                      }
+                    ],
+                    "required": true,
+                    "type": "[object]"
                   }
                 ]
               },
@@ -1005,7 +1111,38 @@
                     "@entity.gates",
                     [
                       "array/map",
-                      "@config.gates",
+                      "@payload.gates",
+                      [
+                        "fn",
+                        "g",
+                        [
+                          "object/merge",
+                          "@g",
+                          {
+                            "denied": false,
+                            "held": 0.0,
+                            "open": false,
+                            "reported": false,
+                            "touching": false
+                          }
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                "event": "SET_VGATES",
+                "eventId": "evt_01M1PVY2526BJGTVGG5DPPMPVW",
+                "from": "active",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.gates",
+                    [
+                      "array/map",
+                      "@entity.gates",
                       [
                         "fn",
                         "g",

@@ -1827,6 +1827,106 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
             'type': 'number',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'AI_TURN',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'ATTACK',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'MOVE',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+            'site': 'tick',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.actedIds',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.animAtkTicksLeft',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.animAtkTicksLeft',
+            'site': 'tick',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.animAttackerId',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.animAttackerId',
+            'site': 'tick',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.animState',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.animState',
+            'site': 'tick',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.animTicksLeft',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.animTicksLeft',
+            'site': 'tick',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.animUnitId',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.animUnitId',
+            'site': 'tick',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.attackTargets',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.movedIds',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.selectedUnitId',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.turn',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.uiPhase',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.validMoves',
+          },
+          {
+            'kind': 'ticks',
+            'site': 'tick',
+          },
+        ],
         'emits': [
           {
             'description': 'Player move intent applied by the grid-tactics authority',

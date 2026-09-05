@@ -328,6 +328,16 @@ export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSu
             'type': 'number',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'overlay',
+          },
+        ],
         'emits': [
           {
             'definerKnob': 'onClose',

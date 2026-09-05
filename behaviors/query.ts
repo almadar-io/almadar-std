@@ -90,6 +90,12 @@ export interface RegistryTraitSurface {
   entityRebindable?: boolean;
   linkedEntity?: string;
   entityContract?: { requires: string[]; provides: string[] };
+  effectRow?: Array<{
+    kind: string;
+    resource?: string;
+    resolved?: boolean;
+    site?: 'transition' | 'tick';
+  }>;
   transitionEvents?: string[];
   emittedEvents: string[];
   listenedEvents: string[];

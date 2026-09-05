@@ -1,5 +1,5 @@
 {
-  "description": "Headless area-fill mechanic: the player paints area under a curve by moving through a fill region. Listens BODY_MOVED and, per fill, accumulates height(x) × |dx| while the player is inside the fill's x-range (the per-tick step is clamped to 0.5 world units — the physical per-tick maximum — so teleports and respawns paint nothing) — height is linear interpolation of the config curve samples above the fill's baseline (the platformer body's leftSamp/rightSamp idiom). rateMode picks the rate: \"area\" (height × |dx|, default — fills fastest where the curve is tallest), \"speed\" (|dx| only, flat rate), or \"ride\" (|dx| only while the move reports skating — walking the same distance paints nothing). When a fill's filled reaches its target it flips reported and emits AREA_FILLED once (the shared entity carries the rest); each fill also stamps a frontier (x0 + span × min(1, filled/target)) so boards can shade the painted region left-to-right as the gauge grows. RESTART resets every fill. Renders nothing; boards shade the painted region and read filled/frontier from the shared entity (the render authority).",
+  "description": "Headless area-fill mechanic: the player paints area under a curve by moving through a fill region. Listens BODY_MOVED and, per fill, accumulates height(x) × |dx| while the player is inside the fill's x-range (the per-tick step is clamped to 0.5 world units — the physical per-tick maximum — so teleports and respawns paint nothing) — height is linear interpolation of the config curve samples above the fill's baseline (the platformer body's leftSamp/rightSamp idiom). rateMode picks the rate: \"area\" (height × |dx|, default — fills fastest where the curve is tallest), \"speed\" (|dx| only, flat rate), or \"ride\" (|dx| only while the move reports skating — walking the same distance paints nothing). When a fill's filled reaches its target it flips reported and emits AREA_FILLED once (the shared entity carries the rest); each fill also stamps a frontier (x0 + span × min(1, filled/target)) so boards can shade the painted region left-to-right as the gauge grows. RESTART resets every live fill (re-arming the live entity set, so SET_FILLS-injected fills survive respawns). SET_FILLS replaces the fill set at runtime for boards that import their fills. Renders nothing; boards shade the painted region and read filled/frontier from the shared entity (the render authority).",
   "ledger": {
     "entries": {
       "ent_01M11YTBT97CN5A2TMP33YQY1Q": {
@@ -41,6 +41,15 @@
         "bakedName": "BODY_MOVED",
         "curName": "BODY_MOVED",
         "id": "evt_01M11YTBT9YEJHGSHNR1P4SRPV",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M11YTBT93WB5MVA0SQR2ZMPR",
+        "renames": []
+      },
+      "evt_01M1PVY24P4W3B0KYCRGVBX50G": {
+        "bakedName": "SET_FILLS",
+        "curName": "SET_FILLS",
+        "id": "evt_01M1PVY24P4W3B0KYCRGVBX50G",
         "kind": "event",
         "owner": "workspace",
         "parent": "trt_01M11YTBT93WB5MVA0SQR2ZMPR",
@@ -195,7 +204,7 @@
           "config": {
             "fills": {
               "default": [],
-              "description": "One row per fill region: id, x-range (x0..x1 in world units), baseline the height is measured from, target area, rateMode (area | speed | ride — default area), optional hint, and the curve samples to interpolate. filled/frontier/reported are stamped at runtime.",
+              "description": "One row per fill region: id, x-range (x0..x1 in world units), baseline the height is measured from, target area, rateMode (area | speed | ride — default area), optional hint, and the curve samples to interpolate. filled/frontier/reported are stamped at runtime. Seeded onto the entity on INIT; the live set is entity.fills — SET_FILLS replaces it at runtime (boards that import fills), and RESTART re-arms the live set rather than re-reading config, so injected fills survive respawns.",
               "items": {
                 "properties": {
                   "baseline": {
@@ -283,6 +292,20 @@
               "type": "boolean"
             }
           },
+          "effectRow": [
+            {
+              "kind": "emit",
+              "resource": "AREA_FILLED"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.fills"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.lastX"
+            }
+          ],
           "emits": [
             {
               "description": "A fill's painted area reached its target (x, y = the player's position at completion, for burst placement). When several fills complete on one move, the first reports and the shared entity carries the rest.",
@@ -371,6 +394,82 @@
                     "name": "speed",
                     "required": true,
                     "type": "number"
+                  }
+                ]
+              },
+              {
+                "id": "evt_01M1PVY24P4W3B0KYCRGVBX50G",
+                "key": "SET_FILLS",
+                "name": "Set Fills",
+                "payloadSchema": [
+                  {
+                    "name": "fills",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "x0",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "x1",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "baseline",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "target",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "rateMode",
+                        "type": "string"
+                      },
+                      {
+                        "name": "hint",
+                        "type": "string"
+                      },
+                      {
+                        "name": "samples",
+                        "properties": [
+                          {
+                            "name": "x",
+                            "required": true,
+                            "type": "number"
+                          },
+                          {
+                            "name": "y",
+                            "required": true,
+                            "type": "number"
+                          }
+                        ],
+                        "required": true,
+                        "type": "[object]"
+                      },
+                      {
+                        "name": "filled",
+                        "type": "number"
+                      },
+                      {
+                        "name": "frontier",
+                        "type": "number"
+                      },
+                      {
+                        "name": "reported",
+                        "type": "boolean"
+                      }
+                    ],
+                    "required": true,
+                    "type": "[object]"
                   }
                 ]
               },
@@ -913,7 +1012,45 @@
                     "@entity.fills",
                     [
                       "array/map",
-                      "@config.fills",
+                      "@payload.fills",
+                      [
+                        "fn",
+                        "f",
+                        [
+                          "object/merge",
+                          "@f",
+                          {
+                            "filled": 0.0,
+                            "frontier": [
+                              "object/get",
+                              "@f",
+                              "x0"
+                            ],
+                            "reported": false
+                          }
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.lastX",
+                    0.0
+                  ]
+                ],
+                "event": "SET_FILLS",
+                "eventId": "evt_01M1PVY24P4W3B0KYCRGVBX50G",
+                "from": "active",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.fills",
+                    [
+                      "array/map",
+                      "@entity.fills",
                       [
                         "fn",
                         "f",
@@ -947,7 +1084,85 @@
             ]
           }
         }
-      ]
+      ],
+      "types": {
+        "AreaFill": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "x0",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "x1",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "baseline",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "target",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "rateMode",
+            "type": "string"
+          },
+          {
+            "name": "hint",
+            "type": "string"
+          },
+          {
+            "name": "samples",
+            "properties": [
+              {
+                "name": "x",
+                "required": true,
+                "type": "number"
+              },
+              {
+                "name": "y",
+                "required": true,
+                "type": "number"
+              }
+            ],
+            "required": true,
+            "type": "[object]"
+          },
+          {
+            "name": "filled",
+            "type": "number"
+          },
+          {
+            "name": "frontier",
+            "type": "number"
+          },
+          {
+            "name": "reported",
+            "type": "boolean"
+          }
+        ],
+        "AreaFillSample": [
+          {
+            "name": "x",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "y",
+            "required": true,
+            "type": "number"
+          }
+        ]
+      }
     }
   ],
   "schemaVersion": 1,

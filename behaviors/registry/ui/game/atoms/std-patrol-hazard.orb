@@ -1,5 +1,5 @@
 {
-  "description": "Headless patrol-hazard mechanic for side-view boards: moves each configured patrol back and forth along its [x0, x1] beat at its own speed (33ms tick, ping-pong with clamped turnarounds; a patrol declaring waveAmp/wavePeriod also bobs vertically — cy = y + waveAmp·sin(2πt/wavePeriod from a per-row time accumulator — and the hit test and render read cy, so a waveAmp of 0 keeps the flat beat), tracks the player position off the body authority's BODY_MOVED, and emits PATROL_HIT once per contact — a per-patrol hit flag re-arms only after the player separates, so damage rules stay sparse (when two patrols connect on the same tick the first reports; the other reports on the next tick). Patrols live on a [runtime, shared] entity for the render layer (boards draw them as markers/sprites); damage, lives, and respawn stay downstream (std-lives) — this atom simulates, it never judges. Renders nothing. Corresponds to the design-sheet field(s): challenge, dynamics.",
+  "description": "Headless patrol-hazard mechanic for side-view boards: moves each configured patrol back and forth along its [x0, x1] beat at its own speed (33ms tick, ping-pong with clamped turnarounds; a patrol declaring waveAmp/wavePeriod also bobs vertically — cy = y + waveAmp·sin(2πt/wavePeriod from a per-row time accumulator — and the hit test and render read cy, so a waveAmp of 0 keeps the flat beat), tracks the player position off the body authority's BODY_MOVED, and emits PATROL_HIT once per contact — a per-patrol hit flag re-arms only after the player separates, so damage rules stay sparse (when two patrols connect on the same tick the first reports; the other reports on the next tick). Patrols live on a [runtime, shared] entity for the render layer (boards draw them as markers/sprites); damage, lives, and respawn stay downstream (std-lives) — this atom simulates, it never judges. SET_PATROLS replaces the live patrol set at runtime for boards that import their patrols; RESTART re-arms the live set, so injected patrols survive respawns. Renders nothing. Corresponds to the design-sheet field(s): challenge, dynamics.",
   "ledger": {
     "entries": {
       "ent_01M0PCAKKXX0TFABTMPC8BNH64": {
@@ -41,6 +41,15 @@
         "bakedName": "BODY_MOVED",
         "curName": "BODY_MOVED",
         "id": "evt_01M0PCAKKXZGA2QS6J3G9MZTPJ",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M0PCAKKXTHKSQ9FKTMSFDTQ6",
+        "renames": []
+      },
+      "evt_01M1PVY24WZSXBYFQASTKY6Q77": {
+        "bakedName": "SET_PATROLS",
+        "curName": "SET_PATROLS",
+        "id": "evt_01M1PVY24WZSXBYFQASTKY6Q77",
         "kind": "event",
         "owner": "workspace",
         "parent": "trt_01M0PCAKKXTHKSQ9FKTMSFDTQ6",
@@ -202,7 +211,7 @@
             },
             "patrols": {
               "default": [],
-              "description": "One row per patroller: id, the [x0, x1] beat it walks, its base y, its speed in units/s, and optionally waveAmp/wavePeriod for a vertical sine bob (waveAmp 0 = flat ping-pong). Current x/dir/t/cy/touching/hit are stamped at runtime.",
+              "description": "One row per patroller: id, the [x0, x1] beat it walks, its base y, its speed in units/s, and optionally waveAmp/wavePeriod for a vertical sine bob (waveAmp 0 = flat ping-pong). Current x/dir/t/cy/touching/hit are stamped at runtime. Seeded onto the entity on INIT; the live set is entity.patrols — SET_PATROLS replaces it at runtime (boards that import patrols), and RESTART re-arms the live set rather than re-reading config, so injected patrols survive respawns.",
               "items": {
                 "properties": {
                   "cy": {
@@ -299,6 +308,34 @@
               "type": "boolean"
             }
           },
+          "effectRow": [
+            {
+              "kind": "emit",
+              "resource": "PATROL_HIT",
+              "site": "tick"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.patrols"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.patrols",
+              "site": "tick"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.px"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.py"
+            },
+            {
+              "kind": "ticks",
+              "site": "tick"
+            }
+          ],
           "emits": [
             {
               "description": "A patrol made contact with the player this tick; fires once per contact and re-arms only after separation — boards route it to their damage rule (std-lives DAMAGE).",
@@ -388,6 +425,77 @@
                     "name": "speed",
                     "required": true,
                     "type": "number"
+                  }
+                ]
+              },
+              {
+                "id": "evt_01M1PVY24WZSXBYFQASTKY6Q77",
+                "key": "SET_PATROLS",
+                "name": "Set Patrols",
+                "payloadSchema": [
+                  {
+                    "name": "patrols",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "x0",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "x1",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "speed",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "waveAmp",
+                        "type": "number"
+                      },
+                      {
+                        "name": "wavePeriod",
+                        "type": "number"
+                      },
+                      {
+                        "name": "x",
+                        "type": "number"
+                      },
+                      {
+                        "name": "dir",
+                        "type": "number"
+                      },
+                      {
+                        "name": "t",
+                        "type": "number"
+                      },
+                      {
+                        "name": "cy",
+                        "type": "number"
+                      },
+                      {
+                        "name": "touching",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "hit",
+                        "type": "boolean"
+                      }
+                    ],
+                    "required": true,
+                    "type": "[object]"
                   }
                 ]
               },
@@ -509,7 +617,57 @@
                     "@entity.patrols",
                     [
                       "array/map",
-                      "@config.patrols",
+                      "@payload.patrols",
+                      [
+                        "fn",
+                        "p",
+                        [
+                          "object/merge",
+                          "@p",
+                          {
+                            "cy": [
+                              "object/get",
+                              "@p",
+                              "y"
+                            ],
+                            "dir": 1.0,
+                            "hit": false,
+                            "t": 0.0,
+                            "touching": false,
+                            "x": [
+                              "object/get",
+                              "@p",
+                              "x0"
+                            ]
+                          }
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.px",
+                    "@config.playerSpawnX"
+                  ],
+                  [
+                    "set",
+                    "@entity.py",
+                    "@config.playerSpawnY"
+                  ]
+                ],
+                "event": "SET_PATROLS",
+                "eventId": "evt_01M1PVY24WZSXBYFQASTKY6Q77",
+                "from": "active",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.patrols",
+                    [
+                      "array/map",
+                      "@entity.patrols",
                       [
                         "fn",
                         "p",

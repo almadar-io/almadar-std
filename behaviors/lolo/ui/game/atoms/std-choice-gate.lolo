@@ -1,5 +1,5 @@
 app std-choice-gate "1.0.0"
-"Headless choice-gate mechanic for side-view boards: a gate of N labeled option platforms where progress stops until the player commits to an answer. Listens BODY_MOVED and judges a gate when the player stands grounded on one of its option platforms (|dx| <= reachX of the option center, |dy| <= reachY of the gate's option plane — the pad-lock touch pattern): the correct option stamps the gate solved + chosen on the shared entity and emits CHOICE_CORRECT once (a solved gate never judges again, so the path stays open); a wrong option emits CHOICE_WRONG carrying the gate id, the chosen optionId, and the option's world position, so the board can bounce the player back and float the gate's hint (the board owns the bounce — the atom only reports). RESTART unsolves every gate. Renders nothing; boards draw the option platforms and labels from the shared entity (the render authority). Corresponds to the design-sheet field(s): challenge, agency."
+"Headless choice-gate mechanic for side-view boards: a gate of N labeled option platforms where progress stops until the player commits to an answer. Listens BODY_MOVED and judges a gate when the player stands grounded on one of its option platforms (|dx| <= reachX of the option center, |dy| <= reachY of the gate's option plane — the pad-lock touch pattern): the correct option stamps the gate solved + chosen on the shared entity and emits CHOICE_CORRECT once (a solved gate never judges again, so the path stays open); a wrong option emits CHOICE_WRONG carrying the gate id, the chosen optionId, and the option's world position, so the board can bounce the player back and float the gate's hint (the board owns the bounce — the atom only reports). RESTART unsolves every live gate (re-arming the live entity set, so SET_GATES-injected gates survive respawns). SET_GATES replaces the gate set at runtime for boards that import their gates. Renders nothing; boards draw the option platforms and labels from the shared entity (the render authority). Corresponds to the design-sheet field(s): challenge, agency."
 orbital ChoiceGateOrbital {
   type ChoiceOption = {
     id : string!
@@ -49,8 +49,11 @@ orbital ChoiceGateOrbital {
             (emit CHOICE_WRONG { id: (object/get @g id), optionId: (object/get @o id), x: (+ (object/get @g x) (object/get @o dx)), y: (object/get @g y) }))))
           null))
 
+      SET_GATES -> active
+        (set @entity.choices (array/map @payload.gates (fn g (object/merge @g { solved: false, chosen: "" }))))
+
       RESTART -> active
-        (set @entity.choices (array/map @config.gates (fn g (object/merge @g { solved: false, chosen: "" }))))
+        (set @entity.choices (array/map @entity.choices (fn g (object/merge @g { solved: false, chosen: "" }))))
     }
 
     emits {
@@ -73,6 +76,7 @@ orbital ChoiceGateOrbital {
 
     listens {
       BODY_MOVED { x : number!, y : number!, vx : number!, vy : number!, grounded : boolean!, skating : boolean!, speed : number! }
+      SET_GATES { gates : [ChoiceGate]! }
       RESTART { id : string }
     }
 
@@ -83,7 +87,7 @@ orbital ChoiceGateOrbital {
         @tier "domain"
       gates : [ChoiceGate] = []
         @label "Choice Gates"
-        @description "One row per gate: id, gate center (x, y — y is the option-platform surface the judge tests against), the hint floated on a wrong answer, and the options: id, dx offset from the gate center, the label drawn above the platform, and correct. solved/chosen are stamped at runtime."
+        @description "One row per gate: id, gate center (x, y — y is the option-platform surface the judge tests against), the hint floated on a wrong answer, and the options: id, dx offset from the gate center, the label drawn above the platform, and correct. solved/chosen are stamped at runtime. Seeded onto the entity on INIT; the live set is entity.choices — SET_GATES replaces it at runtime (boards that import gates), and RESTART re-arms the live set rather than re-reading config, so injected gates survive respawns."
         @tier "domain"
       reachX : number = 0.7
         @label "Reach X"

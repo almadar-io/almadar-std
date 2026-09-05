@@ -156,6 +156,16 @@ export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUi
             'type': 'boolean',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'BookTableOfContentsItem',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'emits': [
           {
             'description': 'BookTableOfContents rows finished loading; payload.data holds the collection.',

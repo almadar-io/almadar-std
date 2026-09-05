@@ -252,6 +252,34 @@ export function stdAgentFixLoopAgentFixLoopOrbital(params: StdAgentFixLoopAgentF
     traits: [
       {
         'category': 'lifecycle',
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'FIX_APPLIED',
+          },
+          {
+            'kind': 'llm/generate',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.errors',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.fixPrompt',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.orbitalName',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.status',
+          },
+          {
+            'kind': 'validate/validate',
+          },
+        ],
         'emits': [
           {
             'event': 'FIX_APPLIED',
@@ -465,6 +493,12 @@ export function stdAgentFixLoopAgentFixLoopOrbital(params: StdAgentFixLoopAgentF
       } satisfies Trait,
       {
         'category': 'lifecycle',
+        'effectRow': [
+          {
+            'kind': 'set',
+            'resource': '@entity.status',
+          },
+        ],
         'linkedEntity': 'FixLoop',
         'listens': [
           {

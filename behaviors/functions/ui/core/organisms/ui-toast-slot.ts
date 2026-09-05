@@ -201,6 +201,16 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
             ],
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'ToastSlotItem',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'entityContract': {
           'provides': [],
           'requires': [],

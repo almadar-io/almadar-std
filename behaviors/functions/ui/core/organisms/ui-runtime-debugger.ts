@@ -165,6 +165,12 @@ export function stdUiRuntimeDebuggerRuntimeDebuggerOrbital(params: StdUiRuntimeD
             ],
           },
         },
+        'effectRow': [
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'entityContract': {
           'provides': [],
           'requires': [],

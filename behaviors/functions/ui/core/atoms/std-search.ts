@@ -216,6 +216,16 @@ export function stdSearchSearchResultOrbital(params: StdSearchSearchResultOrbita
             'type': 'string',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.searchTerm',
+          },
+        ],
         'emits': [
           {
             'description': 'Initiates a search operation based on the input term.',

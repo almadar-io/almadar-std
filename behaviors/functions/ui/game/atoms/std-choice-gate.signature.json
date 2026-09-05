@@ -47,6 +47,10 @@
             "direction": "listen"
           },
           {
+            "name": "SET_GATES",
+            "direction": "listen"
+          },
+          {
             "name": "RESTART",
             "direction": "listen"
           }
@@ -57,7 +61,7 @@
             "type": "[ChoiceGate]",
             "default": [],
             "label": "Choice Gates",
-            "description": "One row per gate: id, gate center (x, y — y is the option-platform surface the judge tests against), the hint floated on a wrong answer, and the options: id, dx offset from the gate center, the label drawn above the platform, and correct. solved/chosen are stamped at runtime.",
+            "description": "One row per gate: id, gate center (x, y — y is the option-platform surface the judge tests against), the hint floated on a wrong answer, and the options: id, dx offset from the gate center, the label drawn above the platform, and correct. solved/chosen are stamped at runtime. Seeded onto the entity on INIT; the live set is entity.choices — SET_GATES replaces it at runtime (boards that import gates), and RESTART re-arms the live set rather than re-reading config, so injected gates survive respawns.",
             "tier": "domain",
             "items": {
               "properties": {
@@ -155,7 +159,8 @@
         "transitionEvents": [
           "BODY_MOVED",
           "INIT",
-          "RESTART"
+          "RESTART",
+          "SET_GATES"
         ],
         "definerKnobs": [],
         "entityRebindable": true,
@@ -164,7 +169,21 @@
           "provides": [
             "choices"
           ]
-        }
+        },
+        "effectRow": [
+          {
+            "kind": "emit",
+            "resource": "CHOICE_CORRECT"
+          },
+          {
+            "kind": "emit",
+            "resource": "CHOICE_WRONG"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.choices"
+          }
+        ]
       }
     ],
     "pages": [

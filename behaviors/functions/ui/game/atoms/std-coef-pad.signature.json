@@ -52,6 +52,10 @@
             "direction": "listen"
           },
           {
+            "name": "SET_PADS",
+            "direction": "listen"
+          },
+          {
             "name": "RESTART",
             "direction": "listen"
           }
@@ -62,7 +66,7 @@
             "type": "[CoefPad]",
             "default": [],
             "label": "Coefficient Pads",
-            "description": "One row per pad: id, center (x, y in world units), the mod applied to the road while inside x0..x1 (a scales slope+height, b compresses/stretch period, h shifts horizontally, k lifts), and the hint floated on apply, and hop (true = the board teleports the player onto the reshaped surface — use when the mod steps the road far from the pad; false = the skate snap carries the player, preserving speed). applied is stamped at runtime.",
+            "description": "One row per pad: id, center (x, y in world units), the mod applied to the road while inside x0..x1 (a scales slope+height, b compresses/stretch period, h shifts horizontally, k lifts), and the hint floated on apply, and hop (true = the board teleports the player onto the reshaped surface — use when the mod steps the road far from the pad; false = the skate snap carries the player, preserving speed). applied is stamped at runtime. Seeded onto the entity on INIT; the live set is entity.coefPads — SET_PADS replaces it at runtime (boards that import pads), and RESTART re-arms the live set rather than re-reading config, so injected pads survive respawns.",
             "tier": "domain",
             "items": {
               "properties": {
@@ -192,7 +196,8 @@
         "transitionEvents": [
           "BODY_MOVED",
           "INIT",
-          "RESTART"
+          "RESTART",
+          "SET_PADS"
         ],
         "definerKnobs": [],
         "entityRebindable": true,
@@ -202,7 +207,25 @@
             "coefCompleted",
             "coefPads"
           ]
-        }
+        },
+        "effectRow": [
+          {
+            "kind": "emit",
+            "resource": "COEF_PAD_APPLIED"
+          },
+          {
+            "kind": "emit",
+            "resource": "COEF_PAD_SET_COMPLETED"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.coefCompleted"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.coefPads"
+          }
+        ]
       }
     ],
     "pages": [

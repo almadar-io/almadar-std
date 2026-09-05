@@ -1156,6 +1156,52 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
             'type': 'string',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'BoardView',
+          },
+          {
+            'kind': 'persist',
+            'resource': 'BoardView',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.boards',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.currentDescription',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.currentId',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.currentNotes',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.currentRow',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.currentStage',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.currentTitle',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.errorMessage',
+          },
+        ],
         'emits': [
           {
             'description': 'Indicates a card within the board has been selected.',

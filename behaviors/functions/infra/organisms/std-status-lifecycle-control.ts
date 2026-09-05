@@ -187,6 +187,16 @@ export function stdStatusLifecycleControlStatusLifecycleControlOrbital(params: S
             'type': '[TransitionSpec]',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'ChangeStatusRequested',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'emits': [
           {
             'description': 'Fired when the viewer picks a legal next status from the control.',

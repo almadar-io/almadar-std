@@ -56,6 +56,10 @@
             "direction": "listen"
           },
           {
+            "name": "SET_DOORS",
+            "direction": "listen"
+          },
+          {
             "name": "RESTART",
             "direction": "listen"
           }
@@ -66,7 +70,7 @@
             "type": "[Door]",
             "default": [],
             "label": "Doors",
-            "description": "One row per gate: id, min-corner rect (x, y, width, height in world units) and the collected total that opens it. open/touching are stamped at runtime.",
+            "description": "One row per gate: id, min-corner rect (x, y, width, height in world units) and the collected total that opens it. open/touching are stamped at runtime. Seeded onto the entity on INIT; the live set is entity.doors — SET_DOORS replaces it at runtime (boards that import doors), and RESTART re-arms the live set rather than re-reading config, so injected doors survive respawns.",
             "tier": "domain",
             "items": {
               "properties": {
@@ -142,7 +146,8 @@
           "BODY_MOVED",
           "COLLECT",
           "INIT",
-          "RESTART"
+          "RESTART",
+          "SET_DOORS"
         ],
         "definerKnobs": [],
         "entityRebindable": true,
@@ -152,7 +157,25 @@
             "doors",
             "total"
           ]
-        }
+        },
+        "effectRow": [
+          {
+            "kind": "emit",
+            "resource": "GATE_BLOCKED"
+          },
+          {
+            "kind": "emit",
+            "resource": "GATE_OPENED"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.doors"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.total"
+          }
+        ]
       }
     ],
     "pages": [

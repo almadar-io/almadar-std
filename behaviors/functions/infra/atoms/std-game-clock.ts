@@ -216,6 +216,26 @@ export function stdGameClockGameClockOrbital(params: StdGameClockGameClockOrbita
             'type': 'boolean',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'GameClockTicked',
+            'site': 'tick',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.elapsedMs',
+            'site': 'tick',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.running',
+          },
+          {
+            'kind': 'ticks',
+            'site': 'tick',
+          },
+        ],
         'emits': [
           {
             'description': 'Fires every clock tick while running; consumers use elapsedMs to drive animations and game logic.',

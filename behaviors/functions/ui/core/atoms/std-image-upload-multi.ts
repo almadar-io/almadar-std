@@ -366,6 +366,24 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
             'type': 'string',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'call-service',
+            'resource': 'storage.uploadMany',
+          },
+          {
+            'kind': 'fetch',
+            'resource': 'UploadedImage',
+          },
+          {
+            'kind': 'persist',
+            'resource': 'UploadedImage',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'emits': [
           {
             'description': 'Signals that an image upload process has begun.',

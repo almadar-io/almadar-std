@@ -1412,6 +1412,66 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
             'type': 'number',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'BURST',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'PLAT_JUMP',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'PLAT_PLACE',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'PLAT_STEER',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'PROGRESS',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'RESTART',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+            'site': 'tick',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.celebrated',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.frame',
+            'site': 'tick',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.lives',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.objectivesLeft',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.score',
+          },
+          {
+            'kind': 'ticks',
+            'site': 'tick',
+          },
+        ],
         'emits': [
           {
             'description': 'Move-left intent from ArrowLeft/KeyA keydown or d-pad (forwarded to the body authority as STEER dir −1)',

@@ -661,6 +661,12 @@ export function stdPlatformerPuzzlePlatformerPuzzleOrbital(params: StdPlatformer
       }),
       {
         'category': 'interaction',
+        'effectRow': [
+          {
+            'kind': 'render-ui',
+            'resource': 'overlay',
+          },
+        ],
         'linkedEntity': 'PlatformerPuzzleData',
         'name': 'PlatformerPuzzleNoopPreview',
         'scope': 'instance',
@@ -1160,6 +1166,12 @@ export function stdPlatformerPuzzlePlatformerPuzzleOrbital(params: StdPlatformer
             'type': 'trait',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'entityContract': {
           'provides': [],
           'requires': [],

@@ -337,6 +337,36 @@ export function stdReminderSchedulerReminderSchedulerOrbital(params: StdReminder
             'type': 'string',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'ReminderDue',
+          },
+          {
+            'kind': 'fetch',
+            'resolved': false,
+            'resource': '@config.targetEntity',
+          },
+          {
+            'kind': 'fetch',
+            'resolved': false,
+            'resource': '@config.targetEntity',
+            'site': 'tick',
+          },
+          {
+            'kind': 'persist',
+            'resolved': false,
+            'resource': '@config.targetEntity',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.headId',
+          },
+          {
+            'kind': 'ticks',
+            'site': 'tick',
+          },
+        ],
         'emits': [
           {
             'event': 'ReminderDue',

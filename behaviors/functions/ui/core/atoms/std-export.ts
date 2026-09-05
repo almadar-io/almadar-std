@@ -357,6 +357,12 @@ export function stdExportExportOrbital(params: StdExportExportOrbitalParams = {}
             'type': 'string',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'emits': [
           {
             'description': 'Requests export of data in the picked format. itemId is the format id (matches the FormatOption.id/format of the picked entry).',

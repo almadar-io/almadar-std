@@ -336,6 +336,63 @@ export function stdMlSimilarityMlSimilarityOrbital(params: StdMlSimilarityMlSimi
             'type': 'float',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'SIMILARITY_ABSTAINED',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'SIMILARITY_MATCHED',
+          },
+          {
+            'kind': 'llm/embed',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.candidateVectors',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.candidates',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.embeddings',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.matchIndex',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.matchMargin',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.matchScore',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.query',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.queryVector',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.reason',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.request',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.status',
+          },
+        ],
         'emits': [
           {
             'description': 'Raw embeddings from llm/embed — query vector at index 0, candidate vectors following in input order',

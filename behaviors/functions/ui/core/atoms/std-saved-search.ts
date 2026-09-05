@@ -352,6 +352,36 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
             'type': 'string',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'SavedSearch',
+          },
+          {
+            'kind': 'persist',
+            'resource': 'SavedSearch',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.alertEnabled',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.alertFrequency',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.id',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.name',
+          },
+        ],
         'emits': [
           {
             'description': 'Indicates the alert subscription status has been changed.',

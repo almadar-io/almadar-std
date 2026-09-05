@@ -42,6 +42,21 @@
             "name": "tuning",
             "type": "object",
             "required": false
+          },
+          {
+            "name": "platforms",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "skateCurve",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "driftRegions",
+            "type": "array",
+            "required": false
           }
         ],
         "persistence": "runtime"
@@ -138,7 +153,23 @@
             "direction": "listen"
           },
           {
+            "name": "CURVE_MOD_CLEAR_RANGE",
+            "direction": "listen"
+          },
+          {
             "name": "SET_TUNING",
+            "direction": "listen"
+          },
+          {
+            "name": "SET_PLATFORMS",
+            "direction": "listen"
+          },
+          {
+            "name": "SET_SKATE_CURVE",
+            "direction": "listen"
+          },
+          {
+            "name": "SET_DRIFT_REGIONS",
             "direction": "listen"
           },
           {
@@ -160,7 +191,7 @@
             "type": "[BodyDriftRegion]",
             "default": [],
             "label": "Drift Regions",
-            "description": "Axis-aligned rects (x0..x1, y0..y1 in world units) each carrying a constant acceleration (ax, ay in units/s²) applied with the physics dt whenever the body's center is inside — winds, currents, gradient pushes. Empty list = zero behavior change.",
+            "description": "Axis-aligned rects (x0..x1, y0..y1 in world units) each carrying a constant acceleration (ax, ay in units/s²) applied with the physics dt whenever the body's center is inside — winds, currents, gradient pushes. Empty list = zero behavior change. Seeded onto the entity on INIT; the live set is entity.driftRegions — SET_DRIFT_REGIONS replaces it at runtime and RESTART does not reseed it.",
             "tier": "domain",
             "items": {
               "properties": {
@@ -248,7 +279,7 @@
             "type": "[PlatformerPlatform]",
             "default": [],
             "label": "Platforms",
-            "description": "Level geometry as min-corner rects: ground/platform tiles are solid one-way landing surfaces, hazard tiles emit BODY_HAZARD on touch, goal tiles emit BODY_GOAL",
+            "description": "Level geometry as min-corner rects: ground/platform tiles are solid one-way landing surfaces, hazard tiles emit BODY_HAZARD on touch, goal tiles emit BODY_GOAL. Seeded onto the entity on INIT; the live set is entity.platforms — SET_PLATFORMS replaces it at runtime (boards that import geometry, e.g. stitched open worlds) and RESTART deliberately does NOT reseed it, so injected geometry survives respawns.",
             "tier": "domain",
             "items": {
               "properties": {
@@ -313,7 +344,7 @@
             "type": "[PlatformerCurveSample]",
             "default": [],
             "label": "Skate Curve",
-            "description": "Surface samples (x strictly increasing) the body skates when skate is on; y is the surface height for the body's MIN corner, linearly interpolated between bracketing samples — mirror the render-side curve so what you see is what you ride",
+            "description": "Surface samples (x strictly increasing) the body skates when skate is on; y is the surface height for the body's MIN corner, linearly interpolated between bracketing samples — mirror the render-side curve so what you see is what you ride. Seeded onto the entity on INIT; the live curve is entity.skateCurve — SET_SKATE_CURVE replaces it at runtime (stitched mega-curves) and RESTART does not reseed it.",
             "tier": "domain",
             "items": {
               "properties": {
@@ -428,10 +459,14 @@
         "transitionEvents": [
           "CURVE_MOD_ADD",
           "CURVE_MOD_CLEAR",
+          "CURVE_MOD_CLEAR_RANGE",
           "INIT",
           "JUMP",
           "PLACE",
           "RESTART",
+          "SET_DRIFT_REGIONS",
+          "SET_PLATFORMS",
+          "SET_SKATE_CURVE",
           "SET_TUNING",
           "STEER"
         ],
@@ -442,13 +477,126 @@
           "provides": [
             "body",
             "curveMods",
+            "driftRegions",
             "fell",
             "goalId",
             "hazardId",
+            "platforms",
+            "skateCurve",
             "skating",
             "tuning"
           ]
-        }
+        },
+        "effectRow": [
+          {
+            "kind": "emit",
+            "resource": "BODY_FELL",
+            "site": "tick"
+          },
+          {
+            "kind": "emit",
+            "resource": "BODY_GOAL",
+            "site": "tick"
+          },
+          {
+            "kind": "emit",
+            "resource": "BODY_HAZARD",
+            "site": "tick"
+          },
+          {
+            "kind": "emit",
+            "resource": "BODY_JUMPED"
+          },
+          {
+            "kind": "emit",
+            "resource": "BODY_LANDED",
+            "site": "tick"
+          },
+          {
+            "kind": "emit",
+            "resource": "BODY_MOVED",
+            "site": "tick"
+          },
+          {
+            "kind": "emit",
+            "resource": "BODY_SKATE_END",
+            "site": "tick"
+          },
+          {
+            "kind": "emit",
+            "resource": "BODY_SKATE_START",
+            "site": "tick"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.body"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.body",
+            "site": "tick"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.curveMods"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.driftRegions"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.fell"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.fell",
+            "site": "tick"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.goalId"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.goalId",
+            "site": "tick"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.hazardId"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.hazardId",
+            "site": "tick"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.platforms"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.skateCurve"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.skating"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.skating",
+            "site": "tick"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.tuning"
+          },
+          {
+            "kind": "ticks",
+            "site": "tick"
+          }
+        ]
       }
     ],
     "pages": [

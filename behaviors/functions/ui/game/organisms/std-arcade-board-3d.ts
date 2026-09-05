@@ -1630,6 +1630,54 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
             'type': 'number',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'MOVE',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'PLAY_MACHINE',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'RESTART',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'WANDER',
+            'site': 'tick',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+            'site': 'tick',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.features',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.phase',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.selectedUnitId',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.validMoves',
+          },
+          {
+            'kind': 'ticks',
+            'site': 'tick',
+          },
+        ],
         'emits': [
           {
             'description': 'Hero move intent applied by the hero-nav authority',

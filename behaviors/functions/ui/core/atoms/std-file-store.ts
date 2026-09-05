@@ -637,6 +637,32 @@ export function stdFileStoreStoredFileOrbital(params: StdFileStoreStoredFileOrbi
             'type': '[TreeNode]',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'StoredFile',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.folder',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.id',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.name',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.path',
+          },
+        ],
         'emits': [
           {
             'description': 'Indicates a file has been selected for viewing.',

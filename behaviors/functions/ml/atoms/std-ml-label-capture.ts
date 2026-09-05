@@ -256,6 +256,40 @@ export function stdMlLabelCaptureMlLabelCaptureOrbital(params: StdMlLabelCapture
             'type': 'string',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'LABEL_CAPTURED',
+          },
+          {
+            'kind': 'persist',
+            'resource': 'LabeledExample',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.input',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.outcome',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.recordedAt',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.sink',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.source',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.verdict',
+          },
+        ],
         'emits': [
           {
             'description': 'Fired after a labeled example is persisted.',

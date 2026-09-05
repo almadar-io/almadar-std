@@ -1,5 +1,5 @@
 {
-  "description": "Headless run/jump platformer-physics authority: the SOLE writer of body + fell + hazardId + goalId on side-view boards. Where std-motion-body owns free 2D drift (no collision), this atom owns the platformer contract: every 33ms physics tick it integrates gravity into the body's vertical velocity, steps position in per-second units, and collides the body rect against the config platforms with one-way semantics — a body moving in the gravity direction that overlaps a ground/platform tile lands on its anti-gravity face (vy zeroed, grounded set), while a body moving against gravity passes through, so jumping up through a platform and walking up a staircase both just work. The sign of gravity IS the vertical convention: positive pulls toward +y (screen boards, y down — sprite canvases), negative toward −y (math canvases, y up); jumps always fire against it. Intents: STEER sets horizontal velocity (dir −1/0/1 × moveSpeed, hold-to-run: keydown steers, keyup steers 0), JUMP kicks vertical velocity when grounded, PLACE teleports (spawns, hazard respawns), RESTART reseeds. Emits BODY_MOVED every tick for the render layer (boards that don't subscribe pay nothing), plus the sparse rule signals a board needs to score: BODY_JUMPED, BODY_LANDED (with impact speed), BODY_HAZARD (once per hazard entry, re-arms on exit), BODY_GOAL (same arming), BODY_FELL (once per fall past killY, re-armed by PLACE/RESTART). Drift regions: config.driftRegions lists axis-aligned rects each carrying a constant acceleration (ax, ay) applied with the same 0.033s dt whenever the body's center is inside (empty list = zero behavior change). Curve skating: when config.skate is on and the grounded body comes within skateSnap of the config.skateCurve surface, the body rides the curve — y snaps to the interpolated surface and tangential gravity (g·slope/(1+slope²)) accelerates vx, and the vertical velocity is the tangential projection (s = vx·cos θ, vy = s·sin θ — no discontinuous jumps at sample boundaries), so the body slides downhill along the graph itself and launches ballistically off its ends; jumping kicks free. Sparse BODY_SKATE_START/BODY_SKATE_END signals fire on engage/disengage so boards can layer fx. Lives, score, and win/lose stay downstream — this atom simulates, it never judges. Renders nothing. Corresponds to the design-sheet field(s): mechanics, dynamics.",
+  "description": "Headless run/jump platformer-physics authority: the SOLE writer of body + fell + hazardId + goalId on side-view boards. Where std-motion-body owns free 2D drift (no collision), this atom owns the platformer contract: every 33ms physics tick it integrates gravity into the body's vertical velocity, steps position in per-second units, and collides the body rect against the platform set with one-way semantics — a body moving in the gravity direction that overlaps a ground/platform tile lands on its anti-gravity face (vy zeroed, grounded set), while a body moving against gravity passes through, so jumping up through a platform and walking up a staircase both just work. The sign of gravity IS the vertical convention: positive pulls toward +y (screen boards, y down — sprite canvases), negative toward −y (math canvases, y up); jumps always fire against it. Geometry lives on the shared entity: config platforms/skateCurve/driftRegions seed entity.platforms/skateCurve/driftRegions on INIT, and SET_PLATFORMS / SET_SKATE_CURVE / SET_DRIFT_REGIONS replace them at runtime (RESTART keeps the live set, so boards that import geometry never lose it on a respawn). Intents: STEER sets horizontal velocity (dir −1/0/1 × moveSpeed, hold-to-run: keydown steers, keyup steers 0), JUMP kicks vertical velocity when grounded, PLACE teleports (spawns, hazard respawns), RESTART reseeds. Emits BODY_MOVED every tick for the render layer (boards that don't subscribe pay nothing), plus the sparse rule signals a board needs to score: BODY_JUMPED, BODY_LANDED (with impact speed), BODY_HAZARD (once per hazard entry, re-arms on exit), BODY_GOAL (same arming), BODY_FELL (once per fall past killY, re-armed by PLACE/RESTART). Drift regions: the driftRegions set lists axis-aligned rects each carrying a constant acceleration (ax, ay) applied with the same 0.033s dt whenever the body's center is inside (empty list = zero behavior change). Curve skating: when config.skate is on and the grounded body comes within skateSnap of the skateCurve surface, the body rides the curve — y snaps to the interpolated surface and tangential gravity (g·slope/(1+slope²)) accelerates vx, and the vertical velocity is the tangential projection (s = vx·cos θ, vy = s·sin θ — no discontinuous jumps at sample boundaries), so the body slides downhill along the graph itself and launches ballistically off its ends; jumping kicks free. Sparse BODY_SKATE_START/BODY_SKATE_END signals fire on engage/disengage so boards can layer fx. Lives, score, and win/lose stay downstream — this atom simulates, it never judges. Renders nothing. Corresponds to the design-sheet field(s): mechanics, dynamics.",
   "ledger": {
     "entries": {
       "ent_01M0H2SJBB5TG61D238AWJW3KC": {
@@ -149,6 +149,42 @@
         "bakedName": "CURVE_MOD_CLEAR",
         "curName": "CURVE_MOD_CLEAR",
         "id": "evt_01M1KCHVK8J2707S2GJT2NE4YC",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M0H2SJBBCZW9WSQ3YBCVRKM2",
+        "renames": []
+      },
+      "evt_01M1PTMXBPH77Q9H6XT4TXDC2M": {
+        "bakedName": "SET_PLATFORMS",
+        "curName": "SET_PLATFORMS",
+        "id": "evt_01M1PTMXBPH77Q9H6XT4TXDC2M",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M0H2SJBBCZW9WSQ3YBCVRKM2",
+        "renames": []
+      },
+      "evt_01M1PTMXBPJFF80K3X3X69DDSH": {
+        "bakedName": "SET_SKATE_CURVE",
+        "curName": "SET_SKATE_CURVE",
+        "id": "evt_01M1PTMXBPJFF80K3X3X69DDSH",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M0H2SJBBCZW9WSQ3YBCVRKM2",
+        "renames": []
+      },
+      "evt_01M1PTMXBPR9CPHE60G8652PXN": {
+        "bakedName": "SET_DRIFT_REGIONS",
+        "curName": "SET_DRIFT_REGIONS",
+        "id": "evt_01M1PTMXBPR9CPHE60G8652PXN",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M0H2SJBBCZW9WSQ3YBCVRKM2",
+        "renames": []
+      },
+      "evt_01M1QJ5V1EK7HFDQ42NFRKQJA8": {
+        "bakedName": "CURVE_MOD_CLEAR_RANGE",
+        "curName": "CURVE_MOD_CLEAR_RANGE",
+        "id": "evt_01M1QJ5V1EK7HFDQ42NFRKQJA8",
         "kind": "event",
         "owner": "workspace",
         "parent": "trt_01M0H2SJBBCZW9WSQ3YBCVRKM2",
@@ -328,6 +364,117 @@
               }
             },
             "type": "object"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "height": {
+                  "name": "height",
+                  "required": true,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "type": {
+                  "name": "type",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "ground",
+                    "platform",
+                    "hazard",
+                    "goal"
+                  ]
+                },
+                "width": {
+                  "name": "width",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "platforms",
+            "type": "array"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "skateCurve",
+            "type": "array"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "ax": {
+                  "name": "ax",
+                  "required": true,
+                  "type": "number"
+                },
+                "ay": {
+                  "name": "ay",
+                  "required": true,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "x0": {
+                  "name": "x0",
+                  "required": true,
+                  "type": "number"
+                },
+                "x1": {
+                  "name": "x1",
+                  "required": true,
+                  "type": "number"
+                },
+                "y0": {
+                  "name": "y0",
+                  "required": true,
+                  "type": "number"
+                },
+                "y1": {
+                  "name": "y1",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "driftRegions",
+            "type": "array"
           }
         ],
         "id": "ent_01M0H2SJBB5TG61D238AWJW3KC",
@@ -363,7 +510,7 @@
             },
             "driftRegions": {
               "default": [],
-              "description": "Axis-aligned rects (x0..x1, y0..y1 in world units) each carrying a constant acceleration (ax, ay in units/s²) applied with the physics dt whenever the body's center is inside — winds, currents, gradient pushes. Empty list = zero behavior change.",
+              "description": "Axis-aligned rects (x0..x1, y0..y1 in world units) each carrying a constant acceleration (ax, ay in units/s²) applied with the physics dt whenever the body's center is inside — winds, currents, gradient pushes. Empty list = zero behavior change. Seeded onto the entity on INIT; the live set is entity.driftRegions — SET_DRIFT_REGIONS replaces it at runtime and RESTART does not reseed it.",
               "items": {
                 "properties": {
                   "ax": {
@@ -445,7 +592,7 @@
             },
             "platforms": {
               "default": [],
-              "description": "Level geometry as min-corner rects: ground/platform tiles are solid one-way landing surfaces, hazard tiles emit BODY_HAZARD on touch, goal tiles emit BODY_GOAL",
+              "description": "Level geometry as min-corner rects: ground/platform tiles are solid one-way landing surfaces, hazard tiles emit BODY_HAZARD on touch, goal tiles emit BODY_GOAL. Seeded onto the entity on INIT; the live set is entity.platforms — SET_PLATFORMS replaces it at runtime (boards that import geometry, e.g. stitched open worlds) and RESTART deliberately does NOT reseed it, so injected geometry survives respawns.",
               "items": {
                 "properties": {
                   "height": {
@@ -507,7 +654,7 @@
             },
             "skateCurve": {
               "default": [],
-              "description": "Surface samples (x strictly increasing) the body skates when skate is on; y is the surface height for the body's MIN corner, linearly interpolated between bracketing samples — mirror the render-side curve so what you see is what you ride",
+              "description": "Surface samples (x strictly increasing) the body skates when skate is on; y is the surface height for the body's MIN corner, linearly interpolated between bracketing samples — mirror the render-side curve so what you see is what you ride. Seeded onto the entity on INIT; the live curve is entity.skateCurve — SET_SKATE_CURVE replaces it at runtime (stitched mega-curves) and RESTART does not reseed it.",
               "items": {
                 "properties": {
                   "x": {
@@ -614,6 +761,116 @@
               "type": "number"
             }
           },
+          "effectRow": [
+            {
+              "kind": "emit",
+              "resource": "BODY_FELL",
+              "site": "tick"
+            },
+            {
+              "kind": "emit",
+              "resource": "BODY_GOAL",
+              "site": "tick"
+            },
+            {
+              "kind": "emit",
+              "resource": "BODY_HAZARD",
+              "site": "tick"
+            },
+            {
+              "kind": "emit",
+              "resource": "BODY_JUMPED"
+            },
+            {
+              "kind": "emit",
+              "resource": "BODY_LANDED",
+              "site": "tick"
+            },
+            {
+              "kind": "emit",
+              "resource": "BODY_MOVED",
+              "site": "tick"
+            },
+            {
+              "kind": "emit",
+              "resource": "BODY_SKATE_END",
+              "site": "tick"
+            },
+            {
+              "kind": "emit",
+              "resource": "BODY_SKATE_START",
+              "site": "tick"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.body"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.body",
+              "site": "tick"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.curveMods"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.driftRegions"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.fell"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.fell",
+              "site": "tick"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.goalId"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.goalId",
+              "site": "tick"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.hazardId"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.hazardId",
+              "site": "tick"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.platforms"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.skateCurve"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.skating"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.skating",
+              "site": "tick"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.tuning"
+            },
+            {
+              "kind": "ticks",
+              "site": "tick"
+            }
+          ],
           "emits": [
             {
               "description": "The body after this physics tick: position, velocity, grounded and skating flags, and scalar speed; render layers subscribe (or read the shared entity), rule layers stay on the sparse signals",
@@ -824,9 +1081,12 @@
             "provides": [
               "body",
               "curveMods",
+              "driftRegions",
               "fell",
               "goalId",
               "hazardId",
+              "platforms",
+              "skateCurve",
               "skating",
               "tuning"
             ],
@@ -932,6 +1192,23 @@
                 "tier": "domain"
               },
               {
+                "id": "evt_01M1QJ5V1EK7HFDQ42NFRKQJA8",
+                "key": "CURVE_MOD_CLEAR_RANGE",
+                "name": "Curve Mod Clear Range",
+                "payloadSchema": [
+                  {
+                    "name": "x0",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "x1",
+                    "required": true,
+                    "type": "number"
+                  }
+                ]
+              },
+              {
                 "id": "evt_01M1GJ1RVFG67Q9AE87QG7RWTJ",
                 "key": "SET_TUNING",
                 "name": "Set Tuning",
@@ -947,6 +1224,121 @@
                   {
                     "name": "gravity",
                     "type": "number"
+                  }
+                ]
+              },
+              {
+                "id": "evt_01M1PTMXBPH77Q9H6XT4TXDC2M",
+                "key": "SET_PLATFORMS",
+                "name": "Set Platforms",
+                "payloadSchema": [
+                  {
+                    "name": "platforms",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "width",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "height",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "type",
+                        "type": "string"
+                      }
+                    ],
+                    "required": true,
+                    "type": "[object]"
+                  }
+                ]
+              },
+              {
+                "id": "evt_01M1PTMXBPJFF80K3X3X69DDSH",
+                "key": "SET_SKATE_CURVE",
+                "name": "Set Skate Curve",
+                "payloadSchema": [
+                  {
+                    "name": "curve",
+                    "properties": [
+                      {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      }
+                    ],
+                    "required": true,
+                    "type": "[object]"
+                  }
+                ]
+              },
+              {
+                "id": "evt_01M1PTMXBPR9CPHE60G8652PXN",
+                "key": "SET_DRIFT_REGIONS",
+                "name": "Set Drift Regions",
+                "payloadSchema": [
+                  {
+                    "name": "regions",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "x0",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "x1",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "y0",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "y1",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "ax",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "ay",
+                        "required": true,
+                        "type": "number"
+                      }
+                    ],
+                    "required": true,
+                    "type": "[object]"
                   }
                 ]
               },
@@ -1192,6 +1584,21 @@
                     "set",
                     "@entity.skating",
                     false
+                  ],
+                  [
+                    "set",
+                    "@entity.platforms",
+                    "@config.platforms"
+                  ],
+                  [
+                    "set",
+                    "@entity.skateCurve",
+                    "@config.skateCurve"
+                  ],
+                  [
+                    "set",
+                    "@entity.driftRegions",
+                    "@config.driftRegions"
                   ]
                 ],
                 "event": "INIT",
@@ -1453,6 +1860,48 @@
                 "effects": [
                   [
                     "set",
+                    "@entity.curveMods",
+                    [
+                      "array/filter",
+                      "@entity.curveMods",
+                      [
+                        "fn",
+                        "m",
+                        [
+                          "or",
+                          [
+                            "<",
+                            [
+                              "object/get",
+                              "@m",
+                              "x1"
+                            ],
+                            "@payload.x0"
+                          ],
+                          [
+                            ">",
+                            [
+                              "object/get",
+                              "@m",
+                              "x0"
+                            ],
+                            "@payload.x1"
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                "event": "CURVE_MOD_CLEAR_RANGE",
+                "eventId": "evt_01M1QJ5V1EK7HFDQ42NFRKQJA8",
+                "from": "active",
+                "guard": "@config.curveModsEnabled",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
                     "@entity.tuning",
                     [
                       "object/merge",
@@ -1514,6 +1963,45 @@
                 ],
                 "event": "SET_TUNING",
                 "eventId": "evt_01M1GJ1RVFG67Q9AE87QG7RWTJ",
+                "from": "active",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.platforms",
+                    "@payload.platforms"
+                  ]
+                ],
+                "event": "SET_PLATFORMS",
+                "eventId": "evt_01M1PTMXBPH77Q9H6XT4TXDC2M",
+                "from": "active",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.skateCurve",
+                    "@payload.curve"
+                  ]
+                ],
+                "event": "SET_SKATE_CURVE",
+                "eventId": "evt_01M1PTMXBPJFF80K3X3X69DDSH",
+                "from": "active",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.driftRegions",
+                    "@payload.regions"
+                  ]
+                ],
+                "event": "SET_DRIFT_REGIONS",
+                "eventId": "evt_01M1PTMXBPR9CPHE60G8652PXN",
                 "from": "active",
                 "to": "active"
               },
@@ -1660,7 +2148,7 @@
                             "drift",
                             [
                               "array/find",
-                              "@config.driftRegions",
+                              "@entity.driftRegions",
                               [
                                 "fn",
                                 "r",
@@ -1857,7 +2345,7 @@
                                           "hit",
                                           [
                                             "array/find",
-                                            "@config.platforms",
+                                            "@entity.platforms",
                                             [
                                               "fn",
                                               "p",
@@ -2004,7 +2492,7 @@
                                                         ">",
                                                         [
                                                           "array/len",
-                                                          "@config.skateCurve"
+                                                          "@entity.skateCurve"
                                                         ],
                                                         1.0
                                                       ],
@@ -2017,7 +2505,7 @@
                                                             "object/get",
                                                             [
                                                               "array/first",
-                                                              "@config.skateCurve"
+                                                              "@entity.skateCurve"
                                                             ],
                                                             "x"
                                                           ]
@@ -2029,7 +2517,7 @@
                                                             "object/get",
                                                             [
                                                               "array/last",
-                                                              "@config.skateCurve"
+                                                              "@entity.skateCurve"
                                                             ],
                                                             "x"
                                                           ]
@@ -2051,7 +2539,7 @@
                                                         "array/last",
                                                         [
                                                           "array/filter",
-                                                          "@config.skateCurve",
+                                                          "@entity.skateCurve",
                                                           [
                                                             "fn",
                                                             "s",
@@ -2086,7 +2574,7 @@
                                                           "array/first",
                                                           [
                                                             "array/filter",
-                                                            "@config.skateCurve",
+                                                            "@entity.skateCurve",
                                                             [
                                                               "fn",
                                                               "s",
@@ -2316,7 +2804,7 @@
                                                                                   "object/get",
                                                                                   [
                                                                                     "array/first",
-                                                                                    "@config.skateCurve"
+                                                                                    "@entity.skateCurve"
                                                                                   ],
                                                                                   "x"
                                                                                 ]
@@ -2328,7 +2816,7 @@
                                                                                   "object/get",
                                                                                   [
                                                                                     "array/last",
-                                                                                    "@config.skateCurve"
+                                                                                    "@entity.skateCurve"
                                                                                   ],
                                                                                   "x"
                                                                                 ]
@@ -2348,7 +2836,7 @@
                                                                                   "array/last",
                                                                                   [
                                                                                     "array/filter",
-                                                                                    "@config.skateCurve",
+                                                                                    "@entity.skateCurve",
                                                                                     [
                                                                                       "fn",
                                                                                       "s",
@@ -2380,7 +2868,7 @@
                                                                                     "array/first",
                                                                                     [
                                                                                       "array/filter",
-                                                                                      "@config.skateCurve",
+                                                                                      "@entity.skateCurve",
                                                                                       [
                                                                                         "fn",
                                                                                         "s",
@@ -2831,7 +3319,7 @@
                                                                                   "hazardHit",
                                                                                   [
                                                                                     "array/find",
-                                                                                    "@config.platforms",
+                                                                                    "@entity.platforms",
                                                                                     [
                                                                                       "fn",
                                                                                       "p",
@@ -2868,7 +3356,7 @@
                                                                                     "goalHit",
                                                                                     [
                                                                                       "array/find",
-                                                                                      "@config.platforms",
+                                                                                      "@entity.platforms",
                                                                                       [
                                                                                         "fn",
                                                                                         "p",

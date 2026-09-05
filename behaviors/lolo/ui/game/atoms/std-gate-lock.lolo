@@ -1,5 +1,5 @@
 app std-gate-lock "1.0.0"
-"Headless collectible-gate mechanic: doors that stay shut until the player's collected total reaches their cost. Listens COLLECT (the board's running total — stars, coins, keys) and flips every door whose cost is met, stamping open on the shared door rows and emitting GATE_OPENED for the first newly opened door (the shared entity is the render authority for the rest). While a closed door's rect contains the player it emits GATE_BLOCKED once per approach — re-arming only after the player steps out — so the board can answer with a PLACE back and a locked fx. RESTART re-locks every door and zeroes the total. Renders nothing; boards draw closed doors as bars/walls and open ones as gaps. Corresponds to the design-sheet field(s): challenge, rewards."
+"Headless collectible-gate mechanic: doors that stay shut until the player's collected total reaches their cost. Listens COLLECT (the board's running total — stars, coins, keys) and flips every door whose cost is met, stamping open on the shared door rows and emitting GATE_OPENED for the first newly opened door (the shared entity is the render authority for the rest). While a closed door's rect contains the player it emits GATE_BLOCKED once per approach — re-arming only after the player steps out — so the board can answer with a PLACE back and a locked fx. RESTART re-locks every live door and zeroes the total (re-arming the live entity set, so SET_DOORS-injected doors survive respawns). SET_DOORS replaces the door set at runtime for boards that import their doors. Renders nothing; boards draw closed doors as bars/walls and open ones as gaps. Corresponds to the design-sheet field(s): challenge, rewards."
 orbital GateLockOrbital {
   type Door = {
     id : string!
@@ -49,8 +49,12 @@ orbital GateLockOrbital {
           (emit GATE_BLOCKED { id: (object/get (array/first @blocked) id), x: (object/get (array/first @blocked) x), y: (object/get (array/first @blocked) y) })
           null))
 
+      SET_DOORS -> active
+        (set @entity.doors (array/map @payload.doors (fn d (object/merge @d { open: false, touching: false, blocked: false }))))
+        (set @entity.total 0)
+
       RESTART -> active
-        (set @entity.doors (array/map @config.doors (fn d (object/merge @d { open: false, touching: false, blocked: false }))))
+        (set @entity.doors (array/map @entity.doors (fn d (object/merge @d { open: false, touching: false, blocked: false }))))
         (set @entity.total 0)
     }
 
@@ -73,6 +77,7 @@ orbital GateLockOrbital {
     listens {
       COLLECT { total : number! }
       BODY_MOVED { x : number!, y : number!, vx : number!, vy : number!, grounded : boolean!, skating : boolean!, speed : number! }
+      SET_DOORS { doors : [Door]! }
       RESTART { id : string }
     }
 
@@ -83,7 +88,7 @@ orbital GateLockOrbital {
         @tier "domain"
       doors : [Door] = []
         @label "Doors"
-        @description "One row per gate: id, min-corner rect (x, y, width, height in world units) and the collected total that opens it. open/touching are stamped at runtime."
+        @description "One row per gate: id, min-corner rect (x, y, width, height in world units) and the collected total that opens it. open/touching are stamped at runtime. Seeded onto the entity on INIT; the live set is entity.doors — SET_DOORS replaces it at runtime (boards that import doors), and RESTART re-arms the live set rather than re-reading config, so injected doors survive respawns."
         @tier "domain"
       reachMargin : number = 0.6
         @label "Reach Margin"

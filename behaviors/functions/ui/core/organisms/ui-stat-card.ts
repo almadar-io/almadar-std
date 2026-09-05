@@ -429,6 +429,16 @@ export function stdUiStatCardStatCardOrbital(params: StdUiStatCardStatCardOrbita
             'type': '[string]',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'StatCardItem',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'emits': [
           {
             'description': 'StatCard rows finished loading; payload.data holds the collection.',

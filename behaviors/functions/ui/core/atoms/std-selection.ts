@@ -335,6 +335,16 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
             ],
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'SelectableItem',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'emits': [
           {
             'description': 'Indicates a selectable item has been successfully loaded.',

@@ -344,6 +344,40 @@ export function stdLifecycleLifecycleOrbital(params: StdLifecycleLifecycleOrbita
             'type': 'string',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'LifecycleTransitioned',
+          },
+          {
+            'kind': 'fetch',
+            'resolved': false,
+            'resource': '@config.targetEntity',
+          },
+          {
+            'kind': 'fetch',
+            'resolved': false,
+            'resource': '@config.targetEntity',
+            'site': 'tick',
+          },
+          {
+            'kind': 'persist',
+            'resolved': false,
+            'resource': '@config.targetEntity',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.headId',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.headStatus',
+          },
+          {
+            'kind': 'ticks',
+            'site': 'tick',
+          },
+        ],
         'emits': [
           {
             'event': 'LifecycleTransitioned',

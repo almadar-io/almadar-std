@@ -1293,6 +1293,16 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
             'type': '[FormViolationTriggersItem]',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'FormItem',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'emits': [
           {
             'definerKnob': 'submitEvent',

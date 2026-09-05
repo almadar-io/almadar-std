@@ -825,6 +825,28 @@ export function stdCircuitBreakerServiceNodeOrbital(params: StdCircuitBreakerSer
             ],
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'ServiceNode',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.failureCount',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.successCount',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.threshold',
+          },
+        ],
         'emits': [
           {
             'description': 'Signals successful loading of a service node.',

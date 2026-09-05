@@ -310,6 +310,48 @@ export function stdMlClassifyMlClassifyOrbital(params: StdMlClassifyMlClassifyOr
             'type': 'string',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'call-service',
+            'resource': 'llm.classify',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'CLASSIFIED',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'CLASSIFY_FAILED',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.category',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.confidence',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.errorMessage',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.reasoning',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.request',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.status',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.text',
+          },
+        ],
         'emits': [
           {
             'description': 'Raw llm.classify service result, flattened onto the payload by the call-service effect executor',

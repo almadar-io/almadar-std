@@ -918,6 +918,20 @@ export function stdCacheAsideCacheEntryOrbital(params: StdCacheAsideCacheEntryOr
             'type': 'number',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'CacheEntry',
+          },
+          {
+            'kind': 'persist',
+            'resource': 'CacheEntry',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'emits': [
           {
             'description': 'Indicates a cache entry has been successfully retrieved.',

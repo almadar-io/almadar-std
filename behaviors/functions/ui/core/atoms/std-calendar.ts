@@ -1004,6 +1004,24 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
             'type': 'render-ui',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'CalendarEvent',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.selectedRange',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.weekAnchor',
+          },
+        ],
         'emits': [
           {
             'description': 'Indicates that calendar events have been successfully retrieved.',

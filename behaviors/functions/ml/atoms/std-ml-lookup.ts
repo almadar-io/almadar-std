@@ -228,6 +228,24 @@ export function stdMlLookupMlLookupOrbital(params: StdMlLookupMlLookupOrbitalPar
             'type': 'boolean',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'KEY_HIT',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'KEY_MISS',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.matched',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.status',
+          },
+        ],
         'emits': [
           {
             'description': 'Fired when the candidate matches an entry in the accepted list',

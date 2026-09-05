@@ -221,6 +221,27 @@
       "traits": [
         {
           "category": "lifecycle",
+          "effectRow": [
+            {
+              "kind": "llm/call-tools"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.messages"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.response"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.status"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.tools"
+            }
+          ],
           "emits": [
             {
               "event": "TOOLS_CALLED",
@@ -477,6 +498,12 @@
         },
         {
           "category": "lifecycle",
+          "effectRow": [
+            {
+              "kind": "set",
+              "resource": "@entity.status"
+            }
+          ],
           "entityRefIds": {
             "ToolCall": "ent_01KXG04EMPKFN0NRKMKPE891HT"
           },
@@ -581,7 +608,45 @@
             ]
           }
         }
-      ]
+      ],
+      "types": {
+        "LlmMessage": [
+          {
+            "name": "role",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "content",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "toolCalls",
+            "type": "[opaque]"
+          },
+          {
+            "name": "toolCallId",
+            "type": "string"
+          }
+        ],
+        "LlmToolDef": [
+          {
+            "name": "name",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "schema",
+            "type": "opaque"
+          }
+        ]
+      }
     }
   ],
   "schemaVersion": 1,

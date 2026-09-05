@@ -303,6 +303,16 @@ export function stdUiStepFlowOrganismStepFlowOrganismOrbital(params: StdUiStepFl
             'type': 'number',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'StepFlowOrganismItem',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'emits': [
           {
             'description': 'StepFlowOrganism rows finished loading; payload.data holds the collection.',

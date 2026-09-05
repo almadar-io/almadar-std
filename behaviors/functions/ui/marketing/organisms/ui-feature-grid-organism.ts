@@ -295,6 +295,16 @@ export function stdUiFeatureGridOrganismFeatureGridOrganismOrbital(params: StdUi
             'type': 'number',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'FeatureGridOrganismItem',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'emits': [
           {
             'description': 'FeatureGridOrganism rows finished loading; payload.data holds the collection.',

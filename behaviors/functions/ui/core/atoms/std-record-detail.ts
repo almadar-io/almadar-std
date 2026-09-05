@@ -778,6 +778,60 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
             'type': 'string',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'CONTENT_COMMITTED',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'CONTENT_SAVED',
+          },
+          {
+            'kind': 'fetch',
+            'resource': 'RecordItem',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.content',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.coverUrl',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.description',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.iconName',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.id',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.loadedRow',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.name',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.openDraft',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.slug',
+          },
+        ],
         'emits': [
           {
             'description': 'Signals that the record has been successfully loaded.',
@@ -3422,6 +3476,20 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
             'type': '[MetaFieldSpec]',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'META_SAVED',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'drawer',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.loadedRow',
+          },
+        ],
         'emits': [
           {
             'description': 'A property in the settings rail committed in place; patch carries the row id plus the one changed field, ready to hand straight to a persist update. Quiet contract: the host persists without refetching or repainting the open document.',

@@ -416,6 +416,16 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
             ],
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'EntityListItem',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'emits': [
           {
             'description': 'Item actions - schema-driven or function-based',

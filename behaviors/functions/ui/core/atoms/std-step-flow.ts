@@ -611,6 +611,76 @@ export function stdStepFlowStepFlowOrbital(params: StdStepFlowStepFlowOrbitalPar
             'type': 'string',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'StepFlowView',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.currentStepDescription',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.currentStepIcon',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.currentStepIndex',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.currentStepLabel',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.errorMessage',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.finalStatus',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.id',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.isFirstStep',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.isLastStep',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.primaryActionIcon',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.primaryActionLabel',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.primaryActionVariant',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.rejectionReason',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.totalSteps',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.wizardSteps',
+          },
+        ],
         'emits': [
           {
             'description': 'Signals progression to the next step in the sequence.',

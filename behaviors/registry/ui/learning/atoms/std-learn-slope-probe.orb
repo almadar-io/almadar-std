@@ -46,6 +46,15 @@
         "parent": "trt_01M0PCKHE1M92GK1XB3S6AJ740",
         "renames": []
       },
+      "evt_01M1PXK9E513AHXV8CJ047X7PK": {
+        "bakedName": "SET_CURVE",
+        "curName": "SET_CURVE",
+        "id": "evt_01M1PXK9E513AHXV8CJ047X7PK",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M0PCKHE1M92GK1XB3S6AJ740",
+        "renames": []
+      },
       "orb_01M0PCKHE1NHAQJX69K4B0BDYN": {
         "bakedName": "LearnSlopeProbeOrbital",
         "curName": "LearnSlopeProbeOrbital",
@@ -170,6 +179,26 @@
               },
               "type": "object"
             },
+            "name": "curve",
+            "type": "array"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
             "name": "segment",
             "type": "array"
           },
@@ -205,7 +234,7 @@
           "config": {
             "curve": {
               "default": [],
-              "description": "Surface samples (x strictly increasing) of the graph being ridden — the same table the body skates and the canvas draws, so the readout matches what is underfoot.",
+              "description": "Surface samples (x strictly increasing) of the graph being ridden — the same table the body skates and the canvas draws, so the readout matches what is underfoot. Seeded onto the entity on INIT; the live curve is entity.curve — SET_CURVE replaces it at runtime (stitched mega-curves) and RESTART does not reseed it.",
               "items": {
                 "properties": {
                   "x": {
@@ -247,6 +276,80 @@
               "type": "number"
             }
           },
+          "effectRow": [
+            {
+              "kind": "emit",
+              "resource": "SLOPE_CHANGED"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.bucket"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.curve"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.probing"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.segment"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.slope"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.tax"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.tay"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.tbx"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.tby"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.triAx"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.triAy"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.triBx"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.triBy"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.triCx"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.triCy"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.x"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.y"
+            }
+          ],
           "emits": [
             {
               "description": "The local dy/dx crossed a 0.5 bucket boundary while the probe was active; slope is exact, bucket is the rounded step — fx/HUD scale with steepness without paying per-tick events.",
@@ -271,6 +374,7 @@
           "entityContract": {
             "provides": [
               "bucket",
+              "curve",
               "probing",
               "segment",
               "slope",
@@ -304,6 +408,30 @@
                 "id": "evt_01M0PCKHE128V5KDZKW5641SC0",
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "id": "evt_01M1PXK9E513AHXV8CJ047X7PK",
+                "key": "SET_CURVE",
+                "name": "Set Curve",
+                "payloadSchema": [
+                  {
+                    "name": "curve",
+                    "properties": [
+                      {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      }
+                    ],
+                    "required": true,
+                    "type": "[object]"
+                  }
+                ]
               },
               {
                 "id": "evt_01M0PCKHE13WYBS0FD96E41N8P",
@@ -394,6 +522,11 @@
                   ],
                   [
                     "set",
+                    "@entity.curve",
+                    "@config.curve"
+                  ],
+                  [
+                    "set",
                     "@entity.segment",
                     []
                   ],
@@ -411,6 +544,19 @@
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.curve",
+                    "@payload.curve"
+                  ]
+                ],
+                "event": "SET_CURVE",
+                "eventId": "evt_01M1PXK9E513AHXV8CJ047X7PK",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
                     "let",
                     [
                       [
@@ -422,7 +568,7 @@
                             ">",
                             [
                               "array/len",
-                              "@config.curve"
+                              "@entity.curve"
                             ],
                             1.0
                           ]
@@ -446,7 +592,7 @@
                                   "object/get",
                                   [
                                     "array/first",
-                                    "@config.curve"
+                                    "@entity.curve"
                                   ],
                                   "x"
                                 ]
@@ -458,7 +604,7 @@
                                   "object/get",
                                   [
                                     "array/last",
-                                    "@config.curve"
+                                    "@entity.curve"
                                   ],
                                   "x"
                                 ]
@@ -479,7 +625,7 @@
                                 "array/last",
                                 [
                                   "array/filter",
-                                  "@config.curve",
+                                  "@entity.curve",
                                   [
                                     "fn",
                                     "s",
@@ -502,7 +648,7 @@
                                 "array/first",
                                 [
                                   "array/filter",
-                                  "@config.curve",
+                                  "@entity.curve",
                                   [
                                     "fn",
                                     "s",
@@ -778,7 +924,7 @@
                                         "@entity.segment",
                                         [
                                           "array/filter",
-                                          "@config.curve",
+                                          "@entity.curve",
                                           [
                                             "fn",
                                             "s",
@@ -900,7 +1046,21 @@
             ]
           }
         }
-      ]
+      ],
+      "types": {
+        "ProbeSample": [
+          {
+            "name": "x",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "y",
+            "required": true,
+            "type": "number"
+          }
+        ]
+      }
     }
   ],
   "schemaVersion": 1,

@@ -305,6 +305,24 @@ export function stdSignatureCaptureSignatureCaptureOrbital(params: StdSignatureC
             'type': 'string',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'Signature',
+          },
+          {
+            'kind': 'persist',
+            'resource': 'Signature',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.signatureDataUrl',
+          },
+        ],
         'emits': [
           {
             'description': 'Indicates a change in the signature drawing.',

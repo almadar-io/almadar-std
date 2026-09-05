@@ -300,6 +300,36 @@ export function stdTokenizerMlTokenizerOrbital(params: StdTokenizerMlTokenizerOr
             'type': 'Map<string,int>',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'TOKENIZED',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.request',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.status',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.text',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.tokenCount',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.tokenIds',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.tokens',
+          },
+        ],
         'emits': [
           {
             'description': 'Text tokenized into a normalized, truncated token sequence with vocabulary ids',

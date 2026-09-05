@@ -367,6 +367,12 @@ export function stdUiDockLayoutDockLayoutOrbital(params: StdUiDockLayoutDockLayo
             'type': 'string',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'emits': [
           {
             'definerKnob': 'onSidebarCollapsedChange',

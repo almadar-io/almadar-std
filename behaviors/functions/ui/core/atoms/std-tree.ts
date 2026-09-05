@@ -393,6 +393,24 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
             'type': 'string',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'CHILD_REQUESTED',
+          },
+          {
+            'kind': 'fetch',
+            'resource': 'TreeNode',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.id',
+          },
+        ],
         'emits': [
           {
             'description': 'Signals a tree node has been selected for external handoff.',

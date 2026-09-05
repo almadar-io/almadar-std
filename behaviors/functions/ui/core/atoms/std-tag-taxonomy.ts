@@ -355,6 +355,40 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
             'type': 'string',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'LEVEL_RELOAD',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'TagSelected',
+          },
+          {
+            'kind': 'fetch',
+            'resource': 'Tag',
+          },
+          {
+            'kind': 'persist',
+            'resource': 'Tag',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'modal',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.id',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.parentId',
+          },
+        ],
         'emits': [
           {
             'description': 'Signals a tag has been chosen for navigation.',

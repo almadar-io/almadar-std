@@ -30,7 +30,7 @@ const ALIAS = 'LearnSlopeProbe';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdLearnSlopeProbeEventKey = 'BODY_MOVED' | 'INIT' | 'RESTART' | 'SLOPE_CHANGED';
+export type StdLearnSlopeProbeEventKey = 'BODY_MOVED' | 'INIT' | 'RESTART' | 'SET_CURVE' | 'SLOPE_CHANGED';
 
 /**
  * Payload shape for the `SLOPE_CHANGED` event.

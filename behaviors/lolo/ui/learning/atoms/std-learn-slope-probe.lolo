@@ -22,6 +22,7 @@ orbital LearnSlopeProbeOrbital {
     triBy : number = 0
     triCx : number = 0
     triCy : number = 0
+    curve : [ProbeSample] = []
     segment : [ProbeSample] = []
     bucket : number = 9999
   }
@@ -32,15 +33,19 @@ orbital LearnSlopeProbeOrbital {
     state idle {
       INIT -> idle
         (set @entity.probing false)
+        (set @entity.curve @config.curve)
         (set @entity.segment [])
         (set @entity.bucket 9999)
 
+      SET_CURVE -> idle
+        (set @entity.curve @payload.curve)
+
       BODY_MOVED -> idle when @config.running
-        (let ((on (and @payload.skating (> (array/len @config.curve) 1))))
-        (let ((inRange (and @on (and (>= @payload.x (object/get (array/first @config.curve) x)) (<= @payload.x (object/get (array/last @config.curve) x))))))
+        (let ((on (and @payload.skating (> (array/len @entity.curve) 1))))
+        (let ((inRange (and @on (and (>= @payload.x (object/get (array/first @entity.curve) x)) (<= @payload.x (object/get (array/last @entity.curve) x))))))
         (if @inRange
-          (let ((leftSamp (array/last (array/filter @config.curve (fn s (<= (object/get @s x) @payload.x)))))
-                (rightSamp (array/first (array/filter @config.curve (fn s (> (object/get @s x) @payload.x))))))
+          (let ((leftSamp (array/last (array/filter @entity.curve (fn s (<= (object/get @s x) @payload.x)))))
+                (rightSamp (array/first (array/filter @entity.curve (fn s (> (object/get @s x) @payload.x))))))
           (let ((slope (if (== @rightSamp null) 0 (/ (- (object/get @rightSamp y) (object/get @leftSamp y)) (- (object/get @rightSamp x) (object/get @leftSamp x))))))
           (let ((curveY (if (== @rightSamp null) (object/get @leftSamp y) (+ (object/get @leftSamp y) (* @slope (- @payload.x (object/get @leftSamp x)))))))
           (let ((norm (math/sqrt (+ 1 (* @slope @slope)))))
@@ -61,7 +66,7 @@ orbital LearnSlopeProbeOrbital {
               (set @entity.triBy @curveY)
               (set @entity.triCx (+ @payload.x @config.triRun))
               (set @entity.triCy (+ @curveY (* @slope @config.triRun)))
-              (set @entity.segment (array/filter @config.curve (fn s (and (>= (object/get @s x) (- @payload.x @config.window)) (<= (object/get @s x) (+ @payload.x @config.window))))))
+              (set @entity.segment (array/filter @entity.curve (fn s (and (>= (object/get @s x) (- @payload.x @config.window)) (<= (object/get @s x) (+ @payload.x @config.window))))))
               (if (!= @newBucket @entity.bucket)
                 (do
                   (set @entity.bucket @newBucket)
@@ -89,6 +94,7 @@ orbital LearnSlopeProbeOrbital {
     }
 
     listens {
+      SET_CURVE { curve : [ProbeSample]! }
       BODY_MOVED { x : number!, y : number!, vx : number!, vy : number!, grounded : boolean!, skating : boolean!, speed : number! }
       RESTART { id : string }
     }
@@ -100,7 +106,7 @@ orbital LearnSlopeProbeOrbital {
         @tier "domain"
       curve : [ProbeSample] = []
         @label "Curve"
-        @description "Surface samples (x strictly increasing) of the graph being ridden — the same table the body skates and the canvas draws, so the readout matches what is underfoot."
+        @description "Surface samples (x strictly increasing) of the graph being ridden — the same table the body skates and the canvas draws, so the readout matches what is underfoot. Seeded onto the entity on INIT; the live curve is entity.curve — SET_CURVE replaces it at runtime (stitched mega-curves) and RESTART does not reseed it."
         @tier "domain"
       window : number = 1.5
         @label "Tangent Window"

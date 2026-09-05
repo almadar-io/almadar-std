@@ -603,6 +603,36 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
             'type': 'string',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'ThreadPost',
+          },
+          {
+            'kind': 'persist',
+            'resource': 'ThreadPost',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.content',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.focusedRow',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.parentId',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.threadRootId',
+          },
+        ],
         'emits': [
           {
             'description': 'Indicates a post or reply has been chosen for interaction.',

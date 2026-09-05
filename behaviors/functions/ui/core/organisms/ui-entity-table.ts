@@ -583,6 +583,16 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
             'type': 'number',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'EntityTableItem',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'emits': [
           {
             'description': 'User opened a record from the list.',

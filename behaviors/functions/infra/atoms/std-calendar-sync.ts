@@ -513,6 +513,72 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
             'type': 'string',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'call-service',
+            'resource': 'calendar.createEvent',
+          },
+          {
+            'kind': 'call-service',
+            'resource': 'calendar.listEvents',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'CAL_SYNCED',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'PULL_NEXT',
+          },
+          {
+            'kind': 'fetch',
+            'resolved': false,
+            'resource': '@config.targetEntity',
+          },
+          {
+            'kind': 'fetch',
+            'resolved': false,
+            'resource': '@config.targetEntity',
+            'site': 'tick',
+          },
+          {
+            'kind': 'fetch',
+            'resource': 'CalendarEvent',
+          },
+          {
+            'kind': 'persist',
+            'resolved': false,
+            'resource': '@config.targetEntity',
+          },
+          {
+            'kind': 'persist',
+            'resource': 'CalendarEvent',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.headId',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.lastError',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.lastSyncedAt',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.pending',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.syncToken',
+          },
+          {
+            'kind': 'ticks',
+            'site': 'tick',
+          },
+        ],
         'emits': [
           {
             'description': 'A full push+pull cycle completed; wire to std-notify-on-event or a status surface.',

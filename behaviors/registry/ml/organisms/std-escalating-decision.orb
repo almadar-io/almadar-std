@@ -793,6 +793,16 @@
       "traits": [
         {
           "category": "lifecycle",
+          "effectRow": [
+            {
+              "kind": "emit",
+              "resource": "RUN_EXACT"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.status"
+            }
+          ],
           "emits": [
             {
               "description": "Starts the ladder at the exact-check rung (R0). request is the whole DECIDE payload, carried down the chain so each rung can project its own inputs.",
@@ -1025,8 +1035,7 @@
             }
           ],
           "name": "ExactRung",
-          "ref": "Rung0.traits.ExactCheckRun",
-          "refId": "trt_01KYBMJJSH06PN6D6P8SDH0KGV"
+          "ref": "Rung0.traits.ExactCheckRun"
         },
         {
           "id": "trt_01M055GH539YNZDXNM10WM3HRM",
@@ -1052,8 +1061,7 @@
             }
           ],
           "name": "LookupRung",
-          "ref": "Rung1.traits.LookupRun",
-          "refId": "trt_01KYBMJJT4887BT5V7KWCDW7XR"
+          "ref": "Rung1.traits.LookupRun"
         },
         {
           "id": "trt_01M055GH533GQGJYG04RGZHJ36",
@@ -1082,8 +1090,7 @@
             }
           ],
           "name": "SimilarityRung",
-          "ref": "Rung3.traits.SimilarityRun",
-          "refId": "trt_01KYBN0QT9C1SZTVGAG9X3YA5X"
+          "ref": "Rung3.traits.SimilarityRun"
         },
         {
           "id": "trt_01M055GH53G9HXAGKNEVJ5KND1",
@@ -1104,8 +1111,7 @@
             }
           ],
           "name": "InferRung",
-          "ref": "Rung4.traits.InferenceRun",
-          "refId": "trt_01KYBPCRRYRDWPJQ44M6MKZ2YX"
+          "ref": "Rung4.traits.InferenceRun"
         },
         {
           "id": "trt_01M055GH539YGP03HZ1K13XEFT",
@@ -1133,11 +1139,40 @@
             }
           ],
           "name": "ClassifyRung",
-          "ref": "Rung5.traits.ClassifyRun",
-          "refId": "trt_01KYBN0QT30GWRAF1975RP6W1M"
+          "ref": "Rung5.traits.ClassifyRun"
         },
         {
           "category": "lifecycle",
+          "effectRow": [
+            {
+              "kind": "emit",
+              "resource": "DECIDED"
+            },
+            {
+              "kind": "emit",
+              "resource": "DECISION_FAILED"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.confidence"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.failReason"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.reasoning"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.rung"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.status"
+            }
+          ],
           "emits": [
             {
               "description": "The ladder proved an answer. rung names which one served it: R0 exact, R1 table, R3 retrieved, R4 learned, R5 generative.",
@@ -1319,7 +1354,7 @@
                   {
                     "name": "score",
                     "required": true,
-                    "type": "float"
+                    "type": "number"
                   }
                 ]
               },
@@ -1336,7 +1371,7 @@
                   {
                     "name": "confidence",
                     "required": true,
-                    "type": "float"
+                    "type": "number"
                   }
                 ]
               },
@@ -1353,7 +1388,7 @@
                   {
                     "name": "confidence",
                     "required": true,
-                    "type": "float"
+                    "type": "number"
                   },
                   {
                     "name": "reasoning",
@@ -1780,6 +1815,80 @@
           }
         }
       ],
+      "types": {
+        "ContractNotATensor": [
+          {
+            "name": "type",
+            "type": "string"
+          },
+          {
+            "name": "actualType",
+            "type": "string"
+          }
+        ],
+        "ContractRangeViolation": [
+          {
+            "name": "type",
+            "type": "string"
+          },
+          {
+            "name": "dim",
+            "type": "int"
+          },
+          {
+            "name": "min",
+            "type": "number"
+          },
+          {
+            "name": "max",
+            "type": "number"
+          },
+          {
+            "name": "actualMin",
+            "type": "number"
+          },
+          {
+            "name": "actualMax",
+            "type": "number"
+          }
+        ],
+        "ContractShapeMismatch": [
+          {
+            "name": "type",
+            "type": "string"
+          },
+          {
+            "name": "expected",
+            "type": "[int]"
+          },
+          {
+            "name": "actual",
+            "type": "[int]"
+          }
+        ],
+        "DecisionRequest": [
+          {
+            "name": "candidate",
+            "required": true,
+            "type": "scalar"
+          },
+          {
+            "name": "key",
+            "required": true,
+            "type": "scalar"
+          },
+          {
+            "name": "accepted",
+            "required": true,
+            "type": "[scalar]"
+          },
+          {
+            "name": "categories",
+            "required": true,
+            "type": "[string]"
+          }
+        ]
+      },
       "uses": [
         {
           "as": "Rung0",

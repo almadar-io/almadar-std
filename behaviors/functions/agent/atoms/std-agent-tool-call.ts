@@ -264,6 +264,27 @@ export function stdAgentToolCallAgentToolCallOrbital(params: StdAgentToolCallAge
     traits: [
       {
         'category': 'lifecycle',
+        'effectRow': [
+          {
+            'kind': 'llm/call-tools',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.messages',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.response',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.status',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.tools',
+          },
+        ],
         'emits': [
           {
             'event': 'TOOLS_CALLED',
@@ -503,6 +524,12 @@ export function stdAgentToolCallAgentToolCallOrbital(params: StdAgentToolCallAge
       } satisfies Trait,
       {
         'category': 'lifecycle',
+        'effectRow': [
+          {
+            'kind': 'set',
+            'resource': '@entity.status',
+          },
+        ],
         'linkedEntity': 'ToolCall',
         'listens': [
           {

@@ -64,6 +64,18 @@
             "direction": "listen"
           },
           {
+            "name": "SET_FEATURES",
+            "direction": "listen"
+          },
+          {
+            "name": "ADD_FEATURES",
+            "direction": "listen"
+          },
+          {
+            "name": "FEATURES_ACTIVE",
+            "direction": "listen"
+          },
+          {
             "name": "RESTART",
             "direction": "listen"
           }
@@ -74,10 +86,15 @@
             "type": "[PickupFeature]",
             "default": [],
             "label": "Features",
-            "description": "One row per collectible: id, center (x, y in world units), board-defined kind (star, boost, …), display glyph and message floated on pickup. collected is stamped at runtime.",
+            "description": "One row per collectible: id, center (x, y in world units), board-defined kind (star, boost, …), display glyph and message floated on pickup. collected is stamped at runtime. Seeded onto the entity on INIT; the live set is entity.pickups — SET_FEATURES replaces it at runtime (boards that import collectibles), and RESTART re-arms the live set rather than re-reading config, so injected features survive respawns.",
             "tier": "domain",
             "items": {
               "properties": {
+                "active": {
+                  "name": "active",
+                  "required": false,
+                  "type": "boolean"
+                },
                 "collected": {
                   "name": "collected",
                   "required": false,
@@ -145,9 +162,12 @@
         "capabilities": [],
         "linkedEntity": "PickupData",
         "transitionEvents": [
+          "ADD_FEATURES",
           "BODY_MOVED",
+          "FEATURES_ACTIVE",
           "INIT",
-          "RESTART"
+          "RESTART",
+          "SET_FEATURES"
         ],
         "definerKnobs": [],
         "entityRebindable": true,
@@ -158,7 +178,33 @@
             "pickups",
             "total"
           ]
-        }
+        },
+        "effectRow": [
+          {
+            "kind": "emit",
+            "resource": "COLLECT"
+          },
+          {
+            "kind": "emit",
+            "resource": "PICKED"
+          },
+          {
+            "kind": "emit",
+            "resource": "PICKUP_SET_COMPLETED"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.pickupCompleted"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.pickups"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.total"
+          }
+        ]
       }
     ],
     "pages": [

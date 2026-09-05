@@ -303,6 +303,16 @@ export function stdScatterScatterItemOrbital(params: StdScatterScatterItemOrbita
             'type': 'string',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.points',
+          },
+        ],
         'linkedEntity': 'ScatterItem',
         'name': 'ScatterItemPlot',
         'scope': 'instance',

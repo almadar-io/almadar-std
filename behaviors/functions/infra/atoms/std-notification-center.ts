@@ -485,6 +485,22 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
     traits: [
       {
         'category': 'lifecycle',
+        'effectRow': [
+          {
+            'kind': 'browser/push-subscribe',
+          },
+          {
+            'kind': 'notify',
+          },
+          {
+            'kind': 'persist',
+            'resource': 'PushSubscription',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.lastError',
+          },
+        ],
         'emits': [
           {
             'description': 'browser/push-subscribe resolved; the subscription credentials arrive flat on the payload',
@@ -715,6 +731,15 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
       } satisfies Trait,
       {
         'category': 'lifecycle',
+        'effectRow': [
+          {
+            'kind': 'notify',
+          },
+          {
+            'kind': 'persist',
+            'resource': 'NotificationPreference',
+          },
+        ],
         'emits': [
           {
             'description': 'Preference row persisted',
@@ -1009,6 +1034,49 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
             'type': 'number',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'call-service',
+            'resource': 'email.send',
+          },
+          {
+            'kind': 'fetch',
+            'resource': 'NotificationRecord',
+          },
+          {
+            'kind': 'fetch',
+            'resource': 'NotificationRecord',
+            'site': 'tick',
+          },
+          {
+            'kind': 'persist',
+            'resource': 'NotificationRecord',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.drainedCount',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.headId',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.headMessage',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.headRecipient',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.lastError',
+          },
+          {
+            'kind': 'ticks',
+            'site': 'tick',
+          },
+        ],
         'emits': [
           {
             'description': 'Undispatched digest/quiet-hours audit rows past minAgeHours, oldest batch first',

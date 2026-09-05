@@ -241,6 +241,20 @@ export function stdDateRangeDateRangeOrbital(params: StdDateRangeDateRangeOrbita
             'type': 'string',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.from',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.to',
+          },
+        ],
         'emits': [
           {
             'description': 'Signals a change in the selected date range.',

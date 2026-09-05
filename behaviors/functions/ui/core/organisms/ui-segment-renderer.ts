@@ -193,6 +193,12 @@ export function stdUiSegmentRendererSegmentRendererOrbital(params: StdUiSegmentR
             'type': 'SegmentRendererUserProgress',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'entityContract': {
           'provides': [],
           'requires': [],

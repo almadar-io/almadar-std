@@ -240,6 +240,23 @@ export function stdAgentContextAgentContextOrbital(params: StdAgentContextAgentC
     traits: [
       {
         'category': 'lifecycle',
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'COUNTED',
+          },
+          {
+            'kind': 'llm/token-count',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.status',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.tokenCount',
+          },
+        ],
         'emits': [
           {
             'event': 'COUNTED',
@@ -432,6 +449,30 @@ export function stdAgentContextAgentContextOrbital(params: StdAgentContextAgentC
       } satisfies Trait,
       {
         'category': 'lifecycle',
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'COMPACTED',
+          },
+          {
+            'kind': 'llm/compact',
+          },
+          {
+            'kind': 'llm/token-count',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.afterTokens',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.beforeTokens',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.status',
+          },
+        ],
         'emits': [
           {
             'event': 'COMPACTED',
@@ -766,6 +807,12 @@ export function stdAgentContextAgentContextOrbital(params: StdAgentContextAgentC
       } satisfies Trait,
       {
         'category': 'lifecycle',
+        'effectRow': [
+          {
+            'kind': 'set',
+            'resource': '@entity.status',
+          },
+        ],
         'linkedEntity': 'ContextWindow',
         'listens': [
           {

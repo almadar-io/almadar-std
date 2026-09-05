@@ -1,5 +1,5 @@
 app std-loop-lock "1.0.0"
-"Headless winding-lock mechanic: locks that open only after the player travels a full revolution around their anchor. Listens BODY_MOVED and, while the player stays within a radial band of a lock's ring, accumulates the wrapped angular delta of their position into swept (radians, signed — either direction counts); when |swept| reaches turns × 2π the lock flips unlocked and emits LOOP_UNLOCKED once. Entering the band reseeds the angle so leaving and returning never jumps the sweep; progress is kept across exits, so a revolution can be completed in stages. RESTART re-locks every lock. Renders nothing; boards draw the ring/chest and read swept from the shared entity (the render authority). Corresponds to the design-sheet field(s): challenge, rewards."
+"Headless winding-lock mechanic: locks that open only after the player travels a full revolution around their anchor. Listens BODY_MOVED and, while the player stays within a radial band of a lock's ring, accumulates the wrapped angular delta of their position into swept (radians, signed — either direction counts); when |swept| reaches turns × 2π the lock flips unlocked and emits LOOP_UNLOCKED once. Entering the band reseeds the angle so leaving and returning never jumps the sweep; progress is kept across exits, so a revolution can be completed in stages. RESTART re-locks every live lock (re-arming the live entity set, so SET_LOCKS-injected locks survive respawns). SET_LOCKS replaces the lock set at runtime for boards that import their locks. Renders nothing; boards draw the ring/chest and read swept from the shared entity (the render authority). Corresponds to the design-sheet field(s): challenge, rewards."
 orbital LoopLockOrbital {
   type LoopLock = {
     id : string!
@@ -44,8 +44,11 @@ orbital LoopLockOrbital {
             (emit LOOP_UNLOCKED { id: (object/get (array/first @newly) id), x: (object/get (array/first @newly) x), y: (object/get (array/first @newly) y) }))
           null))
 
+      SET_LOCKS -> active
+        (set @entity.locks (array/map @payload.locks (fn l (object/merge @l { swept: 0, lastAngle: 0, inside: false, unlocked: false, reported: false }))))
+
       RESTART -> active
-        (set @entity.locks (array/map @config.locks (fn l (object/merge @l { swept: 0, lastAngle: 0, inside: false, unlocked: false, reported: false }))))
+        (set @entity.locks (array/map @entity.locks (fn l (object/merge @l { swept: 0, lastAngle: 0, inside: false, unlocked: false, reported: false }))))
     }
 
     emits {
@@ -60,6 +63,7 @@ orbital LoopLockOrbital {
 
     listens {
       BODY_MOVED { x : number!, y : number!, vx : number!, vy : number!, grounded : boolean!, skating : boolean!, speed : number! }
+      SET_LOCKS { locks : [LoopLock]! }
       RESTART { id : string }
     }
 
@@ -70,7 +74,7 @@ orbital LoopLockOrbital {
         @tier "domain"
       locks : [LoopLock] = []
         @label "Locks"
-        @description "One row per winding lock: id, anchor (x, y in world units), ring radius, radial tolerance band, and revolutions required. swept/inside/unlocked are stamped at runtime."
+        @description "One row per winding lock: id, anchor (x, y in world units), ring radius, radial tolerance band, and revolutions required. swept/inside/unlocked are stamped at runtime. Seeded onto the entity on INIT; the live set is entity.locks — SET_LOCKS replaces it at runtime (boards that import locks), and RESTART re-arms the live set rather than re-reading config, so injected locks survive respawns."
         @tier "domain"
     }
   }

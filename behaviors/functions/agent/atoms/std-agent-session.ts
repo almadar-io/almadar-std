@@ -290,6 +290,34 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
     traits: [
       {
         'category': 'lifecycle',
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'SPEC_READ',
+          },
+          {
+            'kind': 'session/read-history',
+          },
+          {
+            'kind': 'session/read-spec',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.history',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.orbitalName',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.spec',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.status',
+          },
+        ],
         'emits': [
           {
             'event': 'SPEC_READ',
@@ -657,6 +685,27 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
       } satisfies Trait,
       {
         'category': 'lifecycle',
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'SPEC_WRITTEN',
+          },
+          {
+            'kind': 'session/write-spec',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.orbitalName',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.spec',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.status',
+          },
+        ],
         'emits': [
           {
             'event': 'SPEC_WRITTEN',
@@ -831,6 +880,12 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
       } satisfies Trait,
       {
         'category': 'lifecycle',
+        'effectRow': [
+          {
+            'kind': 'set',
+            'resource': '@entity.status',
+          },
+        ],
         'linkedEntity': 'AgentSession',
         'listens': [
           {

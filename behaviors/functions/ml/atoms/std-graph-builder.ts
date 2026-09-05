@@ -270,6 +270,32 @@ export function stdGraphBuilderGraphBuilderOrbital(params: StdGraphBuilderGraphB
             'type': '[string]',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'GRAPH_READY',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.edgeCount',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.edges',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.nodeCount',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.nodes',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.status',
+          },
+        ],
         'emits': [
           {
             'description': 'Fired when node/edge structures have been built from the source entity collection',

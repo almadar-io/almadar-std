@@ -474,6 +474,16 @@ export function stdGraphsGraphItemOrbital(params: StdGraphsGraphItemOrbitalParam
             'type': 'pattern',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.chartData',
+          },
+        ],
         'entityContract': {
           'provides': [
             'chartData',

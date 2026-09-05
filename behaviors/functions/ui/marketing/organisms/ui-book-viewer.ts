@@ -323,6 +323,16 @@ export function stdUiBookViewerBookViewerOrbital(params: StdUiBookViewerBookView
             'type': 'number',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'BookViewerItem',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'emits': [
           {
             'description': 'BookViewer rows finished loading; payload.data holds the collection.',

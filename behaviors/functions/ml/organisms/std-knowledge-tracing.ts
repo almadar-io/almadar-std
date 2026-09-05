@@ -208,6 +208,24 @@ export function stdKnowledgeTracingKnowledgeTracingOrbital(params: StdKnowledgeT
     traits: [
       {
         'category': 'lifecycle',
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'CAPTURE_LABEL',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'OBSERVATION_MADE',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.lastOutcome',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.skillId',
+          },
+        ],
         'emits': [
           {
             'description': 'Forwards the raw outcome to PosteriorTracker once skillId is recorded on the shared entity.',

@@ -1710,6 +1710,72 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
             'type': 'boolean',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'MOVE',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+            'site': 'tick',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.animState',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.animState',
+            'site': 'tick',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.animTicksLeft',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.animTicksLeft',
+            'site': 'tick',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.animUnitId',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.animUnitId',
+            'site': 'tick',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.crewCount',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.oxygen',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.phase',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.selectedUnitId',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.validMoves',
+          },
+          {
+            'kind': 'ticks',
+            'site': 'tick',
+          },
+        ],
         'emits': [
           {
             'description': 'Crew move intent applied by the hero-nav authority',

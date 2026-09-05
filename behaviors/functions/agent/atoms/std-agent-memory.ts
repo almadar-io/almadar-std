@@ -275,6 +275,39 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
     traits: [
       {
         'category': 'lifecycle',
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'RECALLED',
+          },
+          {
+            'kind': 'memory/recall',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.category',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.content',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.memoryId',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.query',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.results',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.status',
+          },
+        ],
         'emits': [
           {
             'event': 'RECALLED',
@@ -507,6 +540,31 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
       } satisfies Trait,
       {
         'category': 'lifecycle',
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'STORED',
+          },
+          {
+            'kind': 'memory/store',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.category',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.content',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.memoryId',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.status',
+          },
+        ],
         'emits': [
           {
             'event': 'STORED',
@@ -745,6 +803,12 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
       } satisfies Trait,
       {
         'category': 'lifecycle',
+        'effectRow': [
+          {
+            'kind': 'set',
+            'resource': '@entity.status',
+          },
+        ],
         'linkedEntity': 'AgentMemory',
         'listens': [
           {

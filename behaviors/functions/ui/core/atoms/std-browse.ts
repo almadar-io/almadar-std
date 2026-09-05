@@ -1632,6 +1632,16 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
             'type': 'pattern',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'BrowseItem',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'emits': [
           {
             'description': 'Signals that a browse item has been successfully loaded.',

@@ -1,5 +1,5 @@
 app std-coef-pad "1.0.0"
-"Headless coefficient-pad mechanic for graph-riding boards: floor pads that reshape the road the player is riding (y = a·f(x−h) + k). Listens BODY_MOVED and, when the player stands grounded on an unapplied pad (|dx| <= reachX, |dy| <= reachY of the pad center — the pad-lock touch pattern), stamps the pad applied on the shared entity and emits COEF_PAD_APPLIED carrying the pad position AND its mod (x0, x1, a, h, k), so the board can append the mod to the body authority's curveMods (std-platformer-body with curveModsEnabled) and hop the player onto the reshaped surface. When every pad is applied it emits COEF_PAD_SET_COMPLETED once. RESTART un-applies every pad (the board clears curveMods alongside — the pad reports, the board owns the road). Renders nothing; boards draw the pads and read applied from the shared entity (the render authority)."
+"Headless coefficient-pad mechanic for graph-riding boards: floor pads that reshape the road the player is riding (y = a·f(x−h) + k). Listens BODY_MOVED and, when the player stands grounded on an unapplied pad (|dx| <= reachX, |dy| <= reachY of the pad center — the pad-lock touch pattern), stamps the pad applied on the shared entity and emits COEF_PAD_APPLIED carrying the pad position AND its mod (x0, x1, a, h, k), so the board can append the mod to the body authority's curveMods (std-platformer-body with curveModsEnabled) and hop the player onto the reshaped surface. When every pad is applied it emits COEF_PAD_SET_COMPLETED once. RESTART un-applies every live pad (re-arming the live entity set, so SET_PADS-injected pads survive respawns; the board clears curveMods alongside — the pad reports, the board owns the road). SET_PADS replaces the pad set at runtime for boards that import their pads. Renders nothing; boards draw the pads and read applied from the shared entity (the render authority)."
 orbital CoefPadOrbital {
   type CoefMod = {
     x0 : number!
@@ -59,8 +59,12 @@ orbital CoefPadOrbital {
               null)))))
           null))
 
+      SET_PADS -> active
+        (set @entity.coefPads (array/map @payload.pads (fn p (object/merge @p { applied: false }))))
+        (set @entity.coefCompleted false)
+
       RESTART -> active
-        (set @entity.coefPads (array/map @config.coefPads (fn p (object/merge @p { applied: false }))))
+        (set @entity.coefPads (array/map @entity.coefPads (fn p (object/merge @p { applied: false }))))
         (set @entity.coefCompleted false)
     }
 
@@ -89,6 +93,7 @@ orbital CoefPadOrbital {
 
     listens {
       BODY_MOVED { x : number!, y : number!, vx : number!, vy : number!, grounded : boolean!, skating : boolean!, speed : number! }
+      SET_PADS { pads : [CoefPad]! }
       RESTART { id : string }
     }
 
@@ -99,7 +104,7 @@ orbital CoefPadOrbital {
         @tier "domain"
       coefPads : [CoefPad] = []
         @label "Coefficient Pads"
-        @description "One row per pad: id, center (x, y in world units), the mod applied to the road while inside x0..x1 (a scales slope+height, b compresses/stretch period, h shifts horizontally, k lifts), and the hint floated on apply, and hop (true = the board teleports the player onto the reshaped surface — use when the mod steps the road far from the pad; false = the skate snap carries the player, preserving speed). applied is stamped at runtime."
+        @description "One row per pad: id, center (x, y in world units), the mod applied to the road while inside x0..x1 (a scales slope+height, b compresses/stretch period, h shifts horizontally, k lifts), and the hint floated on apply, and hop (true = the board teleports the player onto the reshaped surface — use when the mod steps the road far from the pad; false = the skate snap carries the player, preserving speed). applied is stamped at runtime. Seeded onto the entity on INIT; the live set is entity.coefPads — SET_PADS replaces it at runtime (boards that import pads), and RESTART re-arms the live set rather than re-reading config, so injected pads survive respawns."
         @tier "domain"
       reachX : number = 0.7
         @label "Reach X"

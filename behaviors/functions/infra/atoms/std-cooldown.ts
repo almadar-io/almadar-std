@@ -216,6 +216,34 @@ export function stdCooldownCooldownOrbital(params: StdCooldownCooldownOrbitalPar
             'type': 'number',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'CooldownReady',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'EXPIRE',
+            'site': 'tick',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.active',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.remainingMs',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.remainingMs',
+            'site': 'tick',
+          },
+          {
+            'kind': 'ticks',
+            'site': 'tick',
+          },
+        ],
         'emits': [
           {
             'description': 'Fired when the cooldown expires; wire to re-enable the ability or action.',

@@ -2643,6 +2643,38 @@ export function stdDungeonBoard2dDungeonBoard2DOrbital(params: StdDungeonBoard2d
             'type': 'number',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'ATTACK',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'MONSTER_TICK',
+            'site': 'tick',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'MOVE',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'RESTART',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+            'site': 'tick',
+          },
+          {
+            'kind': 'ticks',
+            'site': 'tick',
+          },
+        ],
         'emits': [
           {
             'description': 'Hero move intent applied by the hero-nav authority',

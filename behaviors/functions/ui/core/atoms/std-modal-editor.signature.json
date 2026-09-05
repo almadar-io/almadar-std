@@ -32,6 +32,21 @@
             "name": "cmdline",
             "type": "string",
             "required": false
+          },
+          {
+            "name": "lastOperator",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "lastMotion",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "lastCount",
+            "type": "number",
+            "required": false
           }
         ],
         "persistence": "runtime"
@@ -64,13 +79,13 @@
           {
             "name": "OPERATE",
             "direction": "emit",
-            "description": "Apply a config-declared operator (delete | yank | change) over the range a motion describes; `line` for doubled operators, `selection` in VISUAL.",
+            "description": "Apply a config-declared operator (delete | yank | change | put | put-before | undo | redo | join | toggle-case | indent | dedent | replace) over the range a motion describes; `line` for doubled operators, `selection` in VISUAL, and a fixed `right` placeholder for the point operators (put | put-before | undo | redo) which the editor ignores.",
             "tier": "primary"
           },
           {
             "name": "INSERT_TEXT",
             "direction": "emit",
-            "description": "Insert literal text at the caret (e.g. the newline `o` opens before entering INSERT).",
+            "description": "Insert literal text at the caret (e.g. the newline `o`/`O` insert before entering INSERT, or the replacement char `r` inserts).",
             "tier": "secondary"
           },
           {
@@ -87,6 +102,11 @@
             "name": "KEY",
             "direction": "listen",
             "description": "One physical keydown, delivered by the host's keyboard router. The host decides preventDefault from config.keymap; this trait only reads key + editorId."
+          },
+          {
+            "name": "EDITOR_FOCUS",
+            "direction": "listen",
+            "description": "The host focused a different editor surface. Every state re-emits its own SET_MODE so the newly focused editor's mode indicator and caret style start correct."
           }
         ],
         "overridableConfigKeys": [
@@ -100,12 +120,39 @@
             "tier": "presentation"
           },
           {
+            "key": "appendLineKey",
+            "type": "string",
+            "default": "A",
+            "label": "Enter INSERT at end of line",
+            "description": "Key that moves to line end and past it, then switches to INSERT — vim's `A`.",
+            "synonyms": "append at end of line",
+            "tier": "presentation"
+          },
+          {
             "key": "commandKey",
             "type": "string",
             "default": ":",
             "label": "Enter COMMAND",
             "description": "Key that switches NORMAL to COMMAND and starts buffering an ex-command line.",
             "synonyms": "ex mode, command line, colon",
+            "tier": "presentation"
+          },
+          {
+            "key": "deleteCharBackKey",
+            "type": "string",
+            "default": "X",
+            "label": "Delete char before caret",
+            "description": "Key that deletes the character(s) to the left of the caret, count times.",
+            "synonyms": "delete char back",
+            "tier": "presentation"
+          },
+          {
+            "key": "deleteCharKey",
+            "type": "string",
+            "default": "x",
+            "label": "Delete char under caret",
+            "description": "Key that deletes the character(s) to the right of the caret, count times.",
+            "synonyms": "delete char, x",
             "tier": "presentation"
           },
           {
@@ -124,7 +171,7 @@
               "9": 9
             },
             "label": "Count digits",
-            "description": "Digit keys accumulated into a repeat count before a motion or operator fires; each digit's integer value is a lookup because the language has no string-to-int operator.",
+            "description": "Digit keys accumulated into a repeat count before a motion or operator fires (also inside OPERATOR_PENDING, e.g. `d3w`); each digit's integer value is a lookup because the language has no string-to-int operator.",
             "tier": "internal",
             "items": {
               "type": "number"
@@ -135,8 +182,10 @@
             "type": "Map<string,string>",
             "default": {
               "q": "close-tab",
+              "q!": "close-tab-discard",
               "w": "save",
-              "wq": "save-close-tab"
+              "wq": "save-close-tab",
+              "x": "save-close-tab"
             },
             "label": "Ex-commands",
             "description": "Buffered COMMAND-mode lines (typed after ':') mapped to a neutral command name carried on EX_COMMAND.",
@@ -145,6 +194,15 @@
             "items": {
               "type": "string"
             }
+          },
+          {
+            "key": "gotoPrefixKey",
+            "type": "string",
+            "default": "g",
+            "label": "Goto prefix",
+            "description": "Arms OPERATOR_PENDING with the `goto` pseudo-operator; pressed again (`gg`) moves to the document start. Any other key cancels back to NORMAL.",
+            "synonyms": "goto, gg, doc start",
+            "tier": "presentation"
           },
           {
             "key": "insertKey",
@@ -156,6 +214,24 @@
             "tier": "presentation"
           },
           {
+            "key": "insertLineKey",
+            "type": "string",
+            "default": "I",
+            "label": "Enter INSERT at first non-blank",
+            "description": "Key that moves to the line's first non-blank column, then switches to INSERT — vim's `I`.",
+            "synonyms": "insert at line start",
+            "tier": "presentation"
+          },
+          {
+            "key": "joinKey",
+            "type": "string",
+            "default": "J",
+            "label": "Join lines",
+            "description": "Key that joins the current line with the line(s) below; a count above 1 joins that many lines.",
+            "synonyms": "join lines",
+            "tier": "presentation"
+          },
+          {
             "key": "keymap",
             "type": "Map<string,[string]>",
             "default": {
@@ -163,8 +239,45 @@
                 "Escape",
                 "Enter",
                 "Backspace",
+                "a",
+                "b",
+                "c",
+                "d",
+                "e",
+                "f",
+                "g",
+                "h",
+                "i",
+                "j",
+                "k",
+                "l",
+                "m",
+                "n",
+                "o",
+                "p",
+                "q",
+                "r",
+                "s",
+                "t",
+                "u",
+                "v",
                 "w",
-                "q"
+                "x",
+                "y",
+                "z",
+                "0",
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6",
+                "7",
+                "8",
+                "9",
+                "!",
+                "%",
+                " "
               ],
               "INSERT": [
                 "Escape"
@@ -173,6 +286,9 @@
                 "i",
                 "a",
                 "o",
+                "O",
+                "A",
+                "I",
                 "v",
                 ":",
                 "d",
@@ -200,6 +316,19 @@
                 "G",
                 "{",
                 "}",
+                "%",
+                ">",
+                "<",
+                "x",
+                "X",
+                "p",
+                "P",
+                "u",
+                "r",
+                "~",
+                "J",
+                ".",
+                "g",
                 "Escape"
               ],
               "OPERATOR_PENDING": [
@@ -215,11 +344,24 @@
                 "b",
                 "e",
                 "0",
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6",
+                "7",
+                "8",
+                "9",
                 "$",
                 "^",
                 "G",
                 "{",
-                "}"
+                "}",
+                "%",
+                ">",
+                "<",
+                "g"
               ],
               "VISUAL": [
                 "Escape",
@@ -238,7 +380,12 @@
                 "^",
                 "G",
                 "{",
-                "}"
+                "}",
+                "%",
+                "~",
+                ">",
+                "<",
+                "J"
               ]
             },
             "label": "Captured keys per mode",
@@ -257,6 +404,7 @@
             "default": {
               "0": "line-start",
               "$": "line-end",
+              "%": "match-bracket",
               "G": "doc-end",
               "^": "first-nonblank",
               "b": "word-back",
@@ -278,11 +426,20 @@
             }
           },
           {
+            "key": "openLineAboveKey",
+            "type": "string",
+            "default": "O",
+            "label": "Open a line above and insert",
+            "description": "Key that moves to line start, inserts a newline, then moves up and switches to INSERT — vim's `O`.",
+            "synonyms": "open line above, new line above",
+            "tier": "presentation"
+          },
+          {
             "key": "openLineKey",
             "type": "string",
             "default": "o",
             "label": "Open a line below and insert",
-            "description": "Key that moves to line end, inserts a newline, then switches to INSERT.",
+            "description": "Key that moves to line end (past the last char), inserts a newline, then switches to INSERT — vim's `o`.",
             "synonyms": "open line, new line below",
             "tier": "presentation"
           },
@@ -290,17 +447,82 @@
             "key": "operators",
             "type": "Map<string,string>",
             "default": {
+              "<": "dedent",
+              ">": "indent",
               "c": "change",
               "d": "delete",
               "y": "yank"
             },
             "label": "Operator keys",
             "description": "Keys that arm OPERATOR_PENDING, mapped to the operator name carried on OPERATE. Pressing the same key again operates on the whole line.",
-            "synonyms": "operators, delete, yank, change",
+            "synonyms": "operators, delete, yank, change, indent, dedent",
             "tier": "domain",
             "items": {
               "type": "string"
             }
+          },
+          {
+            "key": "putBeforeKey",
+            "type": "string",
+            "default": "P",
+            "label": "Put before caret",
+            "description": "Key that pastes the last yank/delete before the caret. `motion` on OPERATE is a fixed `right` placeholder — this is a point operator and the editor ignores it.",
+            "synonyms": "paste before, put before",
+            "tier": "presentation"
+          },
+          {
+            "key": "putKey",
+            "type": "string",
+            "default": "p",
+            "label": "Put after caret",
+            "description": "Key that pastes the last yank/delete after the caret. `motion` on OPERATE is a fixed `right` placeholder — this is a point operator and the editor ignores it.",
+            "synonyms": "paste, put",
+            "tier": "presentation"
+          },
+          {
+            "key": "redoKey",
+            "type": "string",
+            "default": "r",
+            "label": "Redo (with Ctrl)",
+            "description": "Held with Ctrl, redoes the last undone change. `motion` on OPERATE is a fixed `right` placeholder — this is a point operator and the editor ignores it. Shares its default key with replaceKey; the ctrl modifier disambiguates.",
+            "synonyms": "redo, ctrl-r",
+            "tier": "presentation"
+          },
+          {
+            "key": "repeatKey",
+            "type": "string",
+            "default": ".",
+            "label": "Repeat last change",
+            "description": "Key that re-applies the last OPERATE (operator, motion, count) recorded from OPERATOR_PENDING or VISUAL. No-op until a change has been recorded.",
+            "synonyms": "repeat, dot repeat",
+            "tier": "presentation"
+          },
+          {
+            "key": "replaceKey",
+            "type": "string",
+            "default": "r",
+            "label": "Replace char",
+            "description": "Without Ctrl, arms a one-key replace: the next non-Escape key overwrites the character under the caret. Shares its default key with redoKey; the ctrl modifier disambiguates.",
+            "synonyms": "replace char",
+            "tier": "presentation"
+          },
+          {
+            "key": "toggleCaseKey",
+            "type": "string",
+            "default": "~",
+            "label": "Toggle case",
+            "description": "Key that flips the case of the character under the caret, count times.",
+            "synonyms": "toggle case, tilde",
+            "tier": "presentation"
+          },
+          {
+            "key": "undoKey",
+            "type": "string",
+            "default": "u",
+            "label": "Undo",
+            "description": "Key that undoes the last change. `motion` on OPERATE is a fixed `right` placeholder — this is a point operator and the editor ignores it.",
+            "synonyms": "undo",
+            "tier": "presentation"
           },
           {
             "key": "visualKey",
@@ -315,6 +537,7 @@
         "capabilities": [],
         "linkedEntity": "EditorMode",
         "transitionEvents": [
+          "EDITOR_FOCUS",
           "INIT",
           "KEY"
         ],
@@ -326,10 +549,67 @@
             "cmdline",
             "count",
             "editorId",
+            "lastCount",
+            "lastMotion",
+            "lastOperator",
             "operator",
             "operatorKey"
           ]
-        }
+        },
+        "effectRow": [
+          {
+            "kind": "emit",
+            "resource": "EX_COMMAND"
+          },
+          {
+            "kind": "emit",
+            "resource": "INSERT_TEXT"
+          },
+          {
+            "kind": "emit",
+            "resource": "MOTION"
+          },
+          {
+            "kind": "emit",
+            "resource": "OPERATE"
+          },
+          {
+            "kind": "emit",
+            "resource": "SET_MODE"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.cmdline"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.count"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.editorId"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.lastCount"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.lastMotion"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.lastOperator"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.operator"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.operatorKey"
+          }
+        ]
       }
     ],
     "pages": [

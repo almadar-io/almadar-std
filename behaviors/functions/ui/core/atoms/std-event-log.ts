@@ -652,6 +652,56 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
             'type': 'string',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'EventLogView',
+          },
+          {
+            'kind': 'persist',
+            'resource': 'EventLogView',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.allEntries',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.backfillDate',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.backfillDescription',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.backfillKind',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.backfillTitle',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.entries',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.errorMessage',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.filterChips',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.filterKind',
+          },
+        ],
         'emits': [
           {
             'description': 'Signals a filter has been applied to the event log.',

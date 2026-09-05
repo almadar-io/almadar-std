@@ -221,6 +221,24 @@ export function stdDataCollectorMlDataCollectorOrbital(params: StdDataCollectorM
             'type': 'int',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'BUFFER_READY',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.buffer',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.count',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.status',
+          },
+        ],
         'emits': [
           {
             'description': 'Fired when the buffer reaches config.bufferSize; carries the full accumulated buffer and its count, then the buffer resets for the next cycle.',

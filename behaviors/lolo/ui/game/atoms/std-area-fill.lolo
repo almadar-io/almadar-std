@@ -1,5 +1,5 @@
 app std-area-fill "1.0.0"
-"Headless area-fill mechanic: the player paints area under a curve by moving through a fill region. Listens BODY_MOVED and, per fill, accumulates height(x) × |dx| while the player is inside the fill's x-range (the per-tick step is clamped to 0.5 world units — the physical per-tick maximum — so teleports and respawns paint nothing) — height is linear interpolation of the config curve samples above the fill's baseline (the platformer body's leftSamp/rightSamp idiom). rateMode picks the rate: \"area\" (height × |dx|, default — fills fastest where the curve is tallest), \"speed\" (|dx| only, flat rate), or \"ride\" (|dx| only while the move reports skating — walking the same distance paints nothing). When a fill's filled reaches its target it flips reported and emits AREA_FILLED once (the shared entity carries the rest); each fill also stamps a frontier (x0 + span × min(1, filled/target)) so boards can shade the painted region left-to-right as the gauge grows. RESTART resets every fill. Renders nothing; boards shade the painted region and read filled/frontier from the shared entity (the render authority)."
+"Headless area-fill mechanic: the player paints area under a curve by moving through a fill region. Listens BODY_MOVED and, per fill, accumulates height(x) × |dx| while the player is inside the fill's x-range (the per-tick step is clamped to 0.5 world units — the physical per-tick maximum — so teleports and respawns paint nothing) — height is linear interpolation of the config curve samples above the fill's baseline (the platformer body's leftSamp/rightSamp idiom). rateMode picks the rate: \"area\" (height × |dx|, default — fills fastest where the curve is tallest), \"speed\" (|dx| only, flat rate), or \"ride\" (|dx| only while the move reports skating — walking the same distance paints nothing). When a fill's filled reaches its target it flips reported and emits AREA_FILLED once (the shared entity carries the rest); each fill also stamps a frontier (x0 + span × min(1, filled/target)) so boards can shade the painted region left-to-right as the gauge grows. RESTART resets every live fill (re-arming the live entity set, so SET_FILLS-injected fills survive respawns). SET_FILLS replaces the fill set at runtime for boards that import their fills. Renders nothing; boards shade the painted region and read filled/frontier from the shared entity (the render authority)."
 orbital AreaFillOrbital {
   type AreaFillSample = {
     x : number!
@@ -57,8 +57,12 @@ orbital AreaFillOrbital {
             (emit AREA_FILLED { id: (object/get (array/first @newly) id), x: @payload.x, y: @payload.y }))
           null))
 
+      SET_FILLS -> active
+        (set @entity.fills (array/map @payload.fills (fn f (object/merge @f { filled: 0, frontier: (object/get @f x0), reported: false }))))
+        (set @entity.lastX 0)
+
       RESTART -> active
-        (set @entity.fills (array/map @config.fills (fn f (object/merge @f { filled: 0, frontier: (object/get @f x0), reported: false }))))
+        (set @entity.fills (array/map @entity.fills (fn f (object/merge @f { filled: 0, frontier: (object/get @f x0), reported: false }))))
         (set @entity.lastX 0)
     }
 
@@ -74,6 +78,7 @@ orbital AreaFillOrbital {
 
     listens {
       BODY_MOVED { x : number!, y : number!, vx : number!, vy : number!, grounded : boolean!, skating : boolean!, speed : number! }
+      SET_FILLS { fills : [AreaFill]! }
       RESTART { id : string }
     }
 
@@ -84,7 +89,7 @@ orbital AreaFillOrbital {
         @tier "domain"
       fills : [AreaFill] = []
         @label "Fills"
-        @description "One row per fill region: id, x-range (x0..x1 in world units), baseline the height is measured from, target area, rateMode (area | speed | ride — default area), optional hint, and the curve samples to interpolate. filled/frontier/reported are stamped at runtime."
+        @description "One row per fill region: id, x-range (x0..x1 in world units), baseline the height is measured from, target area, rateMode (area | speed | ride — default area), optional hint, and the curve samples to interpolate. filled/frontier/reported are stamped at runtime. Seeded onto the entity on INIT; the live set is entity.fills — SET_FILLS replaces it at runtime (boards that import fills), and RESTART re-arms the live set rather than re-reading config, so injected fills survive respawns."
         @tier "domain"
     }
   }

@@ -224,6 +224,12 @@ export function stdUiTabbedContainerTabbedContainerOrbital(params: StdUiTabbedCo
             'type': '[TabbedContainerTabsItem]',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'emits': [
           {
             'definerKnob': 'onTabChange',

@@ -218,6 +218,27 @@ export function stdAgentCompletionAgentCompletionOrbital(params: StdAgentComplet
     traits: [
       {
         'category': 'lifecycle',
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'COMPLETED',
+          },
+          {
+            'kind': 'llm/generate',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.prompt',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.response',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.status',
+          },
+        ],
         'emits': [
           {
             'event': 'COMPLETED',
@@ -428,6 +449,12 @@ export function stdAgentCompletionAgentCompletionOrbital(params: StdAgentComplet
       } satisfies Trait,
       {
         'category': 'lifecycle',
+        'effectRow': [
+          {
+            'kind': 'set',
+            'resource': '@entity.status',
+          },
+        ],
         'linkedEntity': 'Completion',
         'listens': [
           {

@@ -81,7 +81,7 @@ export interface StdUiCodeBlockConfig {
   maxHeight?: string;
   /** Default: `"code"` */
   mode?: 'code' | 'diff';
-  /** Default: `["left","right","up","down","word-forward","word-back","word-end","line-start","line-end","first-nonblank","doc-start","doc-end","paragraph-forward","paragraph-back","line","selection"]` */
+  /** Default: `["left","right","up","down","word-forward","word-back","word-end","line-start","line-end","first-nonblank","doc-start","doc-end","paragraph-forward","paragraph-back","line","selection","match-bracket"]` */
   motions?: string[];
   newValue?: string;
   oldValue?: string;
@@ -99,7 +99,7 @@ export interface StdUiCodeBlockConfig {
   onOperate?: string;
   /** Default: `"SET_MODE"` */
   onSetMode?: string;
-  /** Default: `["delete","yank","change"]` */
+  /** Default: `["delete","yank","change","put","put-before","undo","redo","join","toggle-case","indent","dedent","replace"]` */
   operators?: string[];
   showCopy?: boolean;
   /** Default: `true` */

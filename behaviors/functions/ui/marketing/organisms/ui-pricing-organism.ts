@@ -307,6 +307,16 @@ export function stdUiPricingOrganismPricingOrganismOrbital(params: StdUiPricingO
             'type': 'number',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'PricingOrganismItem',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'emits': [
           {
             'description': 'PricingOrganism rows finished loading; payload.data holds the collection.',

@@ -279,6 +279,16 @@ export function stdUiMasterDetailMasterDetailOrbital(params: StdUiMasterDetailMa
             'type': 'number',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'MasterDetailItem',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'emits': [
           {
             'description': 'MasterDetail rows finished loading; payload.data holds the collection.',

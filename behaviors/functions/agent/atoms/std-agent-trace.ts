@@ -200,6 +200,30 @@ export function stdAgentTraceAgentTraceOrbital(params: StdAgentTraceAgentTraceOr
     traits: [
       {
         'category': 'lifecycle',
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'TRACED',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.event',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.level',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.message',
+          },
+          {
+            'kind': 'trace/emit',
+          },
+          {
+            'kind': 'trace/log',
+          },
+        ],
         'emits': [
           {
             'event': 'TRACED',
@@ -326,6 +350,20 @@ export function stdAgentTraceAgentTraceOrbital(params: StdAgentTraceAgentTraceOr
       } satisfies Trait,
       {
         'category': 'lifecycle',
+        'effectRow': [
+          {
+            'kind': 'set',
+            'resource': '@entity.event',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.level',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.message',
+          },
+        ],
         'linkedEntity': 'AgentTrace',
         'listens': [
           {

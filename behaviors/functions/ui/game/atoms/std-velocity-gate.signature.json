@@ -47,6 +47,10 @@
             "direction": "listen"
           },
           {
+            "name": "SET_VGATES",
+            "direction": "listen"
+          },
+          {
             "name": "RESTART",
             "direction": "listen"
           }
@@ -57,7 +61,7 @@
             "type": "[VelocityGate]",
             "default": [],
             "label": "Gates",
-            "description": "One row per velocity gate: id, min-corner rect (x, y, width, height in world units), the speed band [minSpeed, maxSpeed] that opens it, the hold required (dwellMs 0 = instant), the horizontal direction required (dir -1/0/+1), and an optional hint shown when denied. open/touching/denied/held/reported are stamped at runtime.",
+            "description": "One row per velocity gate: id, min-corner rect (x, y, width, height in world units), the speed band [minSpeed, maxSpeed] that opens it, the hold required (dwellMs 0 = instant), the horizontal direction required (dir -1/0/+1), and an optional hint shown when denied. open/touching/denied/held/reported are stamped at runtime. Seeded onto the entity on INIT; the live set is entity.gates — SET_VGATES replaces it at runtime (boards that import gates), and RESTART re-arms the live set rather than re-reading config, so injected gates survive respawns.",
             "tier": "domain",
             "items": {
               "properties": {
@@ -162,7 +166,8 @@
         "transitionEvents": [
           "BODY_MOVED",
           "INIT",
-          "RESTART"
+          "RESTART",
+          "SET_VGATES"
         ],
         "definerKnobs": [],
         "entityRebindable": true,
@@ -171,7 +176,21 @@
           "provides": [
             "gates"
           ]
-        }
+        },
+        "effectRow": [
+          {
+            "kind": "emit",
+            "resource": "VELOCITY_GATE_DENIED"
+          },
+          {
+            "kind": "emit",
+            "resource": "VELOCITY_GATE_OPENED"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.gates"
+          }
+        ]
       }
     ],
     "pages": [

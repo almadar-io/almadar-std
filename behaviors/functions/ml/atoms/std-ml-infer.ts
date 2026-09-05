@@ -413,6 +413,48 @@ export function stdMlInferMlInferOrbital(params: StdMlInferMlInferOrbitalParams 
             'type': 'OutputContract',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'call-service',
+            'resource': 'ml.infer',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'INFERRED',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'INFER_ABSTAINED',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.confidence',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.input',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.output',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.reason',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.request',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.status',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.violations',
+          },
+        ],
         'emits': [
           {
             'description': 'Raw ml.infer service result, flattened onto the payload by the call-service effect executor',

@@ -695,6 +695,56 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
             'type': 'string',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'ApprovalDenied',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'ApprovalGranted',
+          },
+          {
+            'kind': 'fetch',
+            'resource': 'ApprovalRequest',
+          },
+          {
+            'kind': 'notify',
+          },
+          {
+            'kind': 'persist',
+            'resource': 'ApprovalRequest',
+          },
+          {
+            'kind': 'render-ui',
+            'resolved': false,
+            'resource': '@config.reviewSlot',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.decidedAt',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.id',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.notes',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.reviewer',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.status',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.subjectLabel',
+          },
+        ],
         'emits': [
           {
             'description': 'Signals that an approval request has been approved.',

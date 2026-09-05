@@ -62,6 +62,10 @@
             "direction": "listen"
           },
           {
+            "name": "SET_PADS",
+            "direction": "listen"
+          },
+          {
             "name": "RESTART",
             "direction": "listen"
           }
@@ -72,7 +76,7 @@
             "type": "[PadLock]",
             "default": [],
             "label": "Pads",
-            "description": "One row per floor pad: id, center (x, y in world units), and grp (0 = ungrouped, always live; N = live only while it is the lowest uncompleted group). lit is stamped at runtime.",
+            "description": "One row per floor pad: id, center (x, y in world units), and grp (0 = ungrouped, always live; N = live only while it is the lowest uncompleted group). lit is stamped at runtime. Seeded onto the entity on INIT; the live set is entity.pads — SET_PADS replaces it at runtime (boards that import pads), and RESTART re-arms the live set rather than re-reading config, so injected pads survive respawns.",
             "tier": "domain",
             "items": {
               "properties": {
@@ -135,7 +139,8 @@
         "transitionEvents": [
           "BODY_MOVED",
           "INIT",
-          "RESTART"
+          "RESTART",
+          "SET_PADS"
         ],
         "definerKnobs": [],
         "entityRebindable": true,
@@ -147,7 +152,33 @@
             "groupsDone",
             "pads"
           ]
-        }
+        },
+        "effectRow": [
+          {
+            "kind": "emit",
+            "resource": "PAD_GROUP_COMPLETED"
+          },
+          {
+            "kind": "emit",
+            "resource": "PAD_SET_COMPLETED"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.completed"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.currentGrp"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.groupsDone"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.pads"
+          }
+        ]
       }
     ],
     "pages": [

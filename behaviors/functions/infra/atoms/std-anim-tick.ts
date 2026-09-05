@@ -208,6 +208,30 @@ export function stdAnimTickAnimTickOrbital(params: StdAnimTickAnimTickOrbitalPar
             'type': '[string]',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'set',
+            'resource': '@entity.animCounter',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.animCounter',
+            'site': 'tick',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.frameName',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.frameName',
+            'site': 'tick',
+          },
+          {
+            'kind': 'ticks',
+            'site': 'tick',
+          },
+        ],
         'entityContract': {
           'provides': [
             'animCounter',

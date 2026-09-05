@@ -1,5 +1,5 @@
 app std-velocity-gate "1.0.0"
-"Headless velocity-gate mechanic: gates that open only when the player crosses them inside a speed band, optionally in a required direction, optionally sustained for a dwell. Listens BODY_MOVED and, per closed gate, tests the player's rect (padded by reachMargin), their speed against [minSpeed, maxSpeed], and their horizontal direction against dir (0 = either). Instant gates (dwellMs 0) open on the first passing cross; dwell gates (dwellMs > 0) accumulate ~33ms per passing move and open once held reaches dwellMs — a failing move resets the hold. The first newly opened gate emits VELOCITY_GATE_OPENED (the shared entity carries the rest). Entering a closed INSTANT gate while NOT passing emits VELOCITY_GATE_DENIED once per approach — re-arming only after the player steps out — so the board can answer with a PLACE back and a hint fx; dwell gates never deny (a hot entry is fine — coming to rest inside is the point), a failed hold simply resets. RESTART re-closes every gate. Renders nothing; boards draw the gate band/chest and read open/held from the shared entity (the render authority). Corresponds to the design-sheet field(s): challenge, mechanics."
+"Headless velocity-gate mechanic: gates that open only when the player crosses them inside a speed band, optionally in a required direction, optionally sustained for a dwell. Listens BODY_MOVED and, per closed gate, tests the player's rect (padded by reachMargin), their speed against [minSpeed, maxSpeed], and their horizontal direction against dir (0 = either). Instant gates (dwellMs 0) open on the first passing cross; dwell gates (dwellMs > 0) accumulate ~33ms per passing move and open once held reaches dwellMs — a failing move resets the hold. The first newly opened gate emits VELOCITY_GATE_OPENED (the shared entity carries the rest). Entering a closed INSTANT gate while NOT passing emits VELOCITY_GATE_DENIED once per approach — re-arming only after the player steps out — so the board can answer with a PLACE back and a hint fx; dwell gates never deny (a hot entry is fine — coming to rest inside is the point), a failed hold simply resets. RESTART re-closes every live gate (re-arming the live entity set, so SET_VGATES-injected gates survive respawns). SET_VGATES replaces the gate set at runtime for boards that import their gates. Renders nothing; boards draw the gate band/chest and read open/held from the shared entity (the render authority). Corresponds to the design-sheet field(s): challenge, mechanics."
 orbital VelocityGateOrbital {
   type VelocityGate = {
     id : string!
@@ -54,8 +54,11 @@ orbital VelocityGateOrbital {
           (emit VELOCITY_GATE_DENIED { id: (object/get (array/first @denied) id), x: (object/get (array/first @denied) x), y: (object/get (array/first @denied) y), speed: @payload.speed })
           null))
 
+      SET_VGATES -> active
+        (set @entity.gates (array/map @payload.gates (fn g (object/merge @g { open: false, touching: false, denied: false, held: 0, reported: false }))))
+
       RESTART -> active
-        (set @entity.gates (array/map @config.gates (fn g (object/merge @g { open: false, touching: false, denied: false, held: 0, reported: false }))))
+        (set @entity.gates (array/map @entity.gates (fn g (object/merge @g { open: false, touching: false, denied: false, held: 0, reported: false }))))
     }
 
     emits {
@@ -78,6 +81,7 @@ orbital VelocityGateOrbital {
 
     listens {
       BODY_MOVED { x : number!, y : number!, vx : number!, vy : number!, grounded : boolean!, skating : boolean!, speed : number! }
+      SET_VGATES { gates : [VelocityGate]! }
       RESTART { id : string }
     }
 
@@ -88,7 +92,7 @@ orbital VelocityGateOrbital {
         @tier "domain"
       gates : [VelocityGate] = []
         @label "Gates"
-        @description "One row per velocity gate: id, min-corner rect (x, y, width, height in world units), the speed band [minSpeed, maxSpeed] that opens it, the hold required (dwellMs 0 = instant), the horizontal direction required (dir -1/0/+1), and an optional hint shown when denied. open/touching/denied/held/reported are stamped at runtime."
+        @description "One row per velocity gate: id, min-corner rect (x, y, width, height in world units), the speed band [minSpeed, maxSpeed] that opens it, the hold required (dwellMs 0 = instant), the horizontal direction required (dir -1/0/+1), and an optional hint shown when denied. open/touching/denied/held/reported are stamped at runtime. Seeded onto the entity on INIT; the live set is entity.gates — SET_VGATES replaces it at runtime (boards that import gates), and RESTART re-arms the live set rather than re-reading config, so injected gates survive respawns."
         @tier "domain"
       reachMargin : number = 0.6
         @label "Reach Margin"

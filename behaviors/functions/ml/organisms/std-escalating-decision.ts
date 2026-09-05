@@ -603,6 +603,16 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
     traits: [
       {
         'category': 'lifecycle',
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'RUN_EXACT',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.status',
+          },
+        ],
         'emits': [
           {
             'description': 'Starts the ladder at the exact-check rung (R0). request is the whole DECIDE payload, carried down the chain so each rung can project its own inputs.',
@@ -919,6 +929,36 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
       }),
       {
         'category': 'lifecycle',
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'DECIDED',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'DECISION_FAILED',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.confidence',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.failReason',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.reasoning',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.rung',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.status',
+          },
+        ],
         'emits': [
           {
             'description': 'The ladder proved an answer. rung names which one served it: R0 exact, R1 table, R3 retrieved, R4 learned, R5 generative.',
@@ -1077,7 +1117,7 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
                 {
                   'name': 'score',
                   'required': true,
-                  'type': 'float',
+                  'type': 'number',
                 },
               ],
             },
@@ -1093,7 +1133,7 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
                 {
                   'name': 'confidence',
                   'required': true,
-                  'type': 'float',
+                  'type': 'number',
                 },
               ],
             },
@@ -1109,7 +1149,7 @@ export function stdEscalatingDecisionEscalatingDecisionOrbital(params: StdEscala
                 {
                   'name': 'confidence',
                   'required': true,
-                  'type': 'float',
+                  'type': 'number',
                 },
                 {
                   'name': 'reasoning',

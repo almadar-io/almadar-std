@@ -506,6 +506,76 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
             'type': 'string',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'WizardView',
+          },
+          {
+            'kind': 'persist',
+            'resource': 'WizardView',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.cancelReason',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.completionMessage',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.currentFields',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.currentStepDescription',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.currentStepIcon',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.currentStepIndex',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.currentStepLabel',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.errorMessage',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.isFirstStep',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.isLastStep',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.primaryActionIcon',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.primaryActionLabel',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.totalSteps',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.wizardSteps',
+          },
+        ],
         'emits': [
           {
             'description': 'Signals progression to the next step in the wizard.',

@@ -277,6 +277,24 @@ export function stdConfirmationConfirmActionOrbital(params: StdConfirmationConfi
             'type': 'string',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'ConfirmAction',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'modal',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.name',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.pendingId',
+          },
+        ],
         'emits': [
           {
             'description': 'Indicates the user has approved the action.',

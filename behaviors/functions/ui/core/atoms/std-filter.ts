@@ -307,6 +307,28 @@ export function stdFilterFilterTargetOrbital(params: StdFilterFilterTargetOrbita
             'type': '[FilterSpec]',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'FILTER',
+          },
+          {
+            'kind': 'fetch',
+            'resource': 'FilterTarget',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.field',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.value',
+          },
+        ],
         'emits': [
           {
             'description': 'Signals a filter has been applied or changed.',

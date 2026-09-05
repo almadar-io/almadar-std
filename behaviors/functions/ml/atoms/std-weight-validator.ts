@@ -292,6 +292,36 @@ export function stdWeightValidatorMlWeightValidatorOrbital(params: StdWeightVali
             'type': 'float',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'WEIGHTS_ACCEPTED',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'WEIGHTS_REJECTED',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.baseline',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.status',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.valid',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.violations',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.weights',
+          },
+        ],
         'emits': [
           {
             'description': 'All constraint checks passed — magnitude bounds, forbidden regions, and regression are all clear',

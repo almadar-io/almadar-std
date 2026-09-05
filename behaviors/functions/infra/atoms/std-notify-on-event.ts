@@ -736,6 +736,103 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
             'type': 'string',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'call-service',
+            'resource': 'email.send',
+          },
+          {
+            'kind': 'call-service',
+            'resource': 'push.send',
+          },
+          {
+            'kind': 'call-service',
+            'resource': 'twilio.sendSMS',
+          },
+          {
+            'kind': 'call-service',
+            'resource': 'webhook.send',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'NotificationDispatched',
+          },
+          {
+            'kind': 'fetch',
+            'resource': 'NotificationPreference',
+          },
+          {
+            'kind': 'fetch',
+            'resource': 'NotificationRecord',
+          },
+          {
+            'kind': 'fetch',
+            'resource': 'PushSubscription',
+          },
+          {
+            'kind': 'notify',
+          },
+          {
+            'kind': 'persist',
+            'resource': 'NotificationRecord',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.channel',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.dispatched',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.error',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.message',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.prefChannel',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.prefMode',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.prefQuietEnd',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.prefQuietStart',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.pushAuth',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.pushEndpoint',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.pushP256dh',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.recipient',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.recordedAt',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.severity',
+          },
+        ],
         'emits': [
           {
             'event': 'NotificationDispatched',

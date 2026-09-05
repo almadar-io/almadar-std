@@ -206,6 +206,60 @@ export function stdAgentRabitCoordinatorOrbital(params: StdAgentRabitCoordinator
     traits: [
       {
         'category': 'lifecycle',
+        'effectRow': [
+          {
+            'kind': 'compose/compose-all',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'DISPATCHED',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'RABIT_DONE',
+          },
+          {
+            'kind': 'llm/generate',
+          },
+          {
+            'kind': 'session/write-spec',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.completedCount',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.composedSchema',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.failedCount',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.phase',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.plan',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.prompt',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.totalOrbitals',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.validationErrors',
+          },
+          {
+            'kind': 'validate/validate',
+          },
+        ],
         'emits': [
           {
             'event': 'PLANNED',
@@ -638,6 +692,24 @@ export function stdAgentRabitCoordinatorOrbital(params: StdAgentRabitCoordinator
       } satisfies Trait,
       {
         'category': 'lifecycle',
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'ALL_DONE',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.completedCount',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.failedCount',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.totalOrbitals',
+          },
+        ],
         'emits': [
           {
             'event': 'ALL_DONE',
@@ -846,6 +918,12 @@ export function stdAgentRabitCoordinatorOrbital(params: StdAgentRabitCoordinator
       } satisfies Trait,
       {
         'category': 'lifecycle',
+        'effectRow': [
+          {
+            'kind': 'set',
+            'resource': '@entity.phase',
+          },
+        ],
         'linkedEntity': 'Coordinator',
         'listens': [
           {
@@ -1150,6 +1228,65 @@ export function stdAgentRabitOrbitalProcessOrbital(params: StdAgentRabitOrbitalP
     traits: [
       {
         'category': 'lifecycle',
+        'effectRow': [
+          {
+            'kind': 'behavior/instantiate',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'BUILD_STEP',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'ORBITAL_COMPLETE',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'PROCESS_DONE',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'PROCESS_RETRY',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'REBUILD',
+          },
+          {
+            'kind': 'llm/generate',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.attempts',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.fixPrompt',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.maxAttempts',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.method',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.orbitalName',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.spec',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.status',
+          },
+          {
+            'kind': 'validate/validate',
+          },
+        ],
         'emits': [
           {
             'event': 'BUILD_STEP',
@@ -1610,6 +1747,16 @@ export function stdAgentRabitOrbitalProcessOrbital(params: StdAgentRabitOrbitalP
       } satisfies Trait,
       {
         'category': 'lifecycle',
+        'effectRow': [
+          {
+            'kind': 'set',
+            'resource': '@entity.method',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.orbitalName',
+          },
+        ],
         'linkedEntity': 'OrbitalProcess',
         'listens': [
           {

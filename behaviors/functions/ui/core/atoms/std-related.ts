@@ -269,6 +269,20 @@ export function stdRelatedRelatedItemOrbital(params: StdRelatedRelatedItemOrbita
             'type': 'string',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'RelatedItem',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.id',
+          },
+        ],
         'emits': [
           {
             'description': 'Signals that related items have been successfully loaded.',

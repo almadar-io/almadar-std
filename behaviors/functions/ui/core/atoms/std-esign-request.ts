@@ -433,6 +433,23 @@ export function stdEsignRequestESignRequestOrbital(params: StdEsignRequestESignR
             'type': 'string',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'ESignRequest',
+          },
+          {
+            'kind': 'notify',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.id',
+          },
+        ],
         'emits': [
           {
             'description': 'Signals a request has been sent for signature.',

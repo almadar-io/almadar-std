@@ -301,6 +301,38 @@ export function stdCascadeOnDeleteCascadeOnDeleteOrbital(params: StdCascadeOnDel
             'type': 'entity',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'CascadeCompleted',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'CascadeRowDeleted',
+          },
+          {
+            'kind': 'fetch',
+            'resolved': false,
+            'resource': '@config.dependentEntity',
+          },
+          {
+            'kind': 'persist',
+            'resolved': false,
+            'resource': '@config.dependentEntity',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.headId',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.parentEntity',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.parentId',
+          },
+        ],
         'emits': [
           {
             'event': 'CascadeRowDeleted',

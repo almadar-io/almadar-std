@@ -433,6 +433,16 @@ export function stdListListItemOrbital(params: StdListListItemOrbitalParams = {}
             'type': 'string',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'ListItem',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'emits': [
           {
             'description': 'Signals a new item has been successfully created.',
@@ -1433,6 +1443,12 @@ export function stdListListItemOrbital(params: StdListListItemOrbitalParams = {}
       }),
       {
         'category': 'lifecycle',
+        'effectRow': [
+          {
+            'kind': 'persist',
+            'resource': 'ListItem',
+          },
+        ],
         'emits': [
           {
             'description': 'Signals a new item has been added to the list.',

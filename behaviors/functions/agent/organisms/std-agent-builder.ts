@@ -173,6 +173,45 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
     traits: [
       {
         'category': 'lifecycle',
+        'effectRow': [
+          {
+            'kind': 'behavior/instantiate',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'BUILD_COMPLETE',
+          },
+          {
+            'kind': 'llm/generate',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.fixPrompt',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.orbitalName',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.plan',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.request',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.status',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.validationResult',
+          },
+          {
+            'kind': 'validate/validate',
+          },
+        ],
         'emits': [
           {
             'event': 'BUILD_COMPLETE',
@@ -464,6 +503,12 @@ export function stdAgentBuilderAgentBuilderOrbital(params: StdAgentBuilderAgentB
       } satisfies Trait,
       {
         'category': 'lifecycle',
+        'effectRow': [
+          {
+            'kind': 'set',
+            'resource': '@entity.status',
+          },
+        ],
         'linkedEntity': 'BuilderProcess',
         'listens': [
           {

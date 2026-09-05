@@ -1293,6 +1293,16 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
             'type': '[FormSectionViolationTriggersItem]',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'FormSectionItem',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'emits': [
           {
             'definerKnob': 'submitEvent',

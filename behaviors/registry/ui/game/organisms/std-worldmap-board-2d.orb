@@ -1042,8 +1042,7 @@
           "linkedEntity": "GameState",
           "linkedEntityId": "ent_01M055GQ0JEDRS05AVCAY089TN",
           "name": "TacticsAuthority",
-          "ref": "Tactics.traits.GridTactics",
-          "refId": "trt_01KXG04THREP6VTN7SEQ5QND02"
+          "ref": "Tactics.traits.GridTactics"
         },
         {
           "config": {
@@ -1056,8 +1055,7 @@
           "linkedEntity": "GameState",
           "linkedEntityId": "ent_01M055GQ0JEDRS05AVCAY089TN",
           "name": "RoundLogic",
-          "ref": "Round.traits.RoundFlow",
-          "refId": "trt_01KXG04TNCJQBQBHH17BMMRPXT"
+          "ref": "Round.traits.RoundFlow"
         },
         {
           "config": {
@@ -1078,8 +1076,7 @@
           "linkedEntity": "GameState",
           "linkedEntityId": "ent_01M055GQ0JEDRS05AVCAY089TN",
           "name": "GoldAuthority",
-          "ref": "Gold.traits.GoldMine",
-          "refId": "trt_01KXG04TH34ES2DPDMM3BSZE0W"
+          "ref": "Gold.traits.GoldMine"
         },
         {
           "category": "interaction",
@@ -2091,6 +2088,53 @@
               "type": "Asset"
             }
           },
+          "effectRow": [
+            {
+              "kind": "emit",
+              "resource": "ATTACK"
+            },
+            {
+              "kind": "emit",
+              "resource": "MINE_HIT"
+            },
+            {
+              "kind": "emit",
+              "resource": "MOVE"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "main"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "main",
+              "site": "tick"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.effects"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.selectedHeroId"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.turn"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.validMoves"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.waypoints"
+            },
+            {
+              "kind": "ticks",
+              "site": "tick"
+            }
+          ],
           "emits": [
             {
               "description": "Emits UI:{unitClickEvent} with { unitId } on hero selection or attack-target click",
@@ -4095,6 +4139,462 @@
           ]
         }
       ],
+      "types": {
+        "Asset": [
+          {
+            "name": "url",
+            "type": "asset"
+          },
+          {
+            "name": "atlas",
+            "type": "asset"
+          },
+          {
+            "name": "sprite",
+            "type": "string"
+          },
+          {
+            "name": "role",
+            "type": "string"
+          },
+          {
+            "name": "category",
+            "type": "string"
+          },
+          {
+            "name": "animations",
+            "type": "[string]"
+          },
+          {
+            "name": "style",
+            "type": "string"
+          },
+          {
+            "name": "variant",
+            "type": "string"
+          },
+          {
+            "name": "dimension",
+            "type": "string"
+          },
+          {
+            "name": "aspect",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "thumbnailUrl",
+            "type": "string"
+          }
+        ],
+        "AssetManifest": [
+          {
+            "name": "terrains",
+            "type": "Map<string,Asset>"
+          },
+          {
+            "name": "units",
+            "type": "Map<string,Asset>"
+          },
+          {
+            "name": "features",
+            "type": "Map<string,Asset>"
+          },
+          {
+            "name": "effects",
+            "type": "Map<string,Asset>"
+          }
+        ],
+        "Effect": [
+          {
+            "name": "key",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "x",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "y",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "ttl",
+            "required": true,
+            "type": "number"
+          }
+        ],
+        "Feature": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "x",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "y",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "type",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "sprite",
+            "properties": [
+              {
+                "name": "url",
+                "type": "asset"
+              },
+              {
+                "name": "atlas",
+                "type": "asset"
+              },
+              {
+                "name": "sprite",
+                "type": "string"
+              },
+              {
+                "name": "role",
+                "type": "string"
+              },
+              {
+                "name": "category",
+                "type": "string"
+              },
+              {
+                "name": "animations",
+                "type": "[string]"
+              },
+              {
+                "name": "style",
+                "type": "string"
+              },
+              {
+                "name": "variant",
+                "type": "string"
+              },
+              {
+                "name": "dimension",
+                "type": "string"
+              },
+              {
+                "name": "aspect",
+                "type": "string"
+              },
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "thumbnailUrl",
+                "type": "string"
+              }
+            ],
+            "type": "object"
+          }
+        ],
+        "HudButton": [
+          {
+            "name": "type",
+            "type": "string"
+          },
+          {
+            "name": "action",
+            "type": "string"
+          },
+          {
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "name": "variant",
+            "type": "string"
+          },
+          {
+            "name": "iconAsset",
+            "properties": [
+              {
+                "name": "url",
+                "type": "asset"
+              },
+              {
+                "name": "atlas",
+                "type": "asset"
+              },
+              {
+                "name": "sprite",
+                "type": "string"
+              },
+              {
+                "name": "role",
+                "type": "string"
+              },
+              {
+                "name": "category",
+                "type": "string"
+              },
+              {
+                "name": "animations",
+                "type": "[string]"
+              },
+              {
+                "name": "style",
+                "type": "string"
+              },
+              {
+                "name": "variant",
+                "type": "string"
+              },
+              {
+                "name": "dimension",
+                "type": "string"
+              },
+              {
+                "name": "aspect",
+                "type": "string"
+              },
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "thumbnailUrl",
+                "type": "string"
+              }
+            ],
+            "type": "object"
+          }
+        ],
+        "HudStat": [
+          {
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "name": "value",
+            "type": "number"
+          }
+        ],
+        "Tile": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "x",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "y",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "terrain",
+            "type": "string"
+          },
+          {
+            "name": "terrainSprite",
+            "properties": [
+              {
+                "name": "url",
+                "type": "asset"
+              },
+              {
+                "name": "atlas",
+                "type": "asset"
+              },
+              {
+                "name": "sprite",
+                "type": "string"
+              },
+              {
+                "name": "role",
+                "type": "string"
+              },
+              {
+                "name": "category",
+                "type": "string"
+              },
+              {
+                "name": "animations",
+                "type": "[string]"
+              },
+              {
+                "name": "style",
+                "type": "string"
+              },
+              {
+                "name": "variant",
+                "type": "string"
+              },
+              {
+                "name": "dimension",
+                "type": "string"
+              },
+              {
+                "name": "aspect",
+                "type": "string"
+              },
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "thumbnailUrl",
+                "type": "string"
+              }
+            ],
+            "type": "object"
+          },
+          {
+            "name": "passable",
+            "type": "boolean"
+          }
+        ],
+        "Unit": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "position",
+            "properties": [
+              {
+                "name": "x",
+                "required": true,
+                "type": "number"
+              },
+              {
+                "name": "y",
+                "required": true,
+                "type": "number"
+              }
+            ],
+            "type": "object"
+          },
+          {
+            "name": "x",
+            "type": "number"
+          },
+          {
+            "name": "y",
+            "type": "number"
+          },
+          {
+            "name": "z",
+            "type": "number"
+          },
+          {
+            "name": "sprite",
+            "properties": [
+              {
+                "name": "url",
+                "type": "asset"
+              },
+              {
+                "name": "atlas",
+                "type": "asset"
+              },
+              {
+                "name": "sprite",
+                "type": "string"
+              },
+              {
+                "name": "role",
+                "type": "string"
+              },
+              {
+                "name": "category",
+                "type": "string"
+              },
+              {
+                "name": "animations",
+                "type": "[string]"
+              },
+              {
+                "name": "style",
+                "type": "string"
+              },
+              {
+                "name": "variant",
+                "type": "string"
+              },
+              {
+                "name": "dimension",
+                "type": "string"
+              },
+              {
+                "name": "aspect",
+                "type": "string"
+              },
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "thumbnailUrl",
+                "type": "string"
+              }
+            ],
+            "type": "object"
+          },
+          {
+            "name": "unitType",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "team",
+            "type": "string"
+          },
+          {
+            "name": "health",
+            "type": "number"
+          },
+          {
+            "name": "maxHealth",
+            "type": "number"
+          },
+          {
+            "name": "animation",
+            "type": "string"
+          },
+          {
+            "name": "frame",
+            "type": "number"
+          }
+        ],
+        "ValidMove": [
+          {
+            "name": "x",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "y",
+            "required": true,
+            "type": "number"
+          }
+        ]
+      },
       "uses": [
         {
           "as": "Tactics",

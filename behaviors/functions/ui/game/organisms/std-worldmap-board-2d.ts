@@ -2041,6 +2041,53 @@ export function stdWorldmapBoard2dWorldMapBoard2DOrbital(params: StdWorldmapBoar
             'type': 'Asset',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'emit',
+            'resource': 'ATTACK',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'MINE_HIT',
+          },
+          {
+            'kind': 'emit',
+            'resource': 'MOVE',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+            'site': 'tick',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.effects',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.selectedHeroId',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.turn',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.validMoves',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.waypoints',
+          },
+          {
+            'kind': 'ticks',
+            'site': 'tick',
+          },
+        ],
         'emits': [
           {
             'description': 'Emits UI:{unitClickEvent} with { unitId } on hero selection or attack-target click',

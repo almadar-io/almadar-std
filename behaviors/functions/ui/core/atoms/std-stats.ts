@@ -897,6 +897,16 @@ export function stdStatsStatsItemOrbital(params: StdStatsStatsItemOrbitalParams 
             'type': 'pattern',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.cards',
+          },
+        ],
         'entityContract': {
           'provides': [
             'cards',

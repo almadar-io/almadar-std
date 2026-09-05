@@ -231,6 +231,24 @@ export function stdPaginationPagedItemOrbital(params: StdPaginationPagedItemOrbi
             'type': 'number',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'PagedItem',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.currentPage',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.totalPages',
+          },
+        ],
         'emits': [
           {
             'description': 'Indicates a change in the currently displayed page.',

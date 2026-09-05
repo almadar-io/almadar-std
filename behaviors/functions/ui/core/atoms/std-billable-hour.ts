@@ -533,6 +533,60 @@ export function stdBillableHourBillableHourOrbital(params: StdBillableHourBillab
             'type': 'string',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'fetch',
+            'resource': 'BillableHour',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.description',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.hours',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.id',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.invoiceStatus',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.isBillable',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.matterId',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.projectId',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.rate',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.workDate',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.workerId',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.workerName',
+          },
+        ],
         'emits': [
           {
             'description': 'Signals the display of the hours list.',

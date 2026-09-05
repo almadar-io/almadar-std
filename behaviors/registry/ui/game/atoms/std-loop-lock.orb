@@ -1,5 +1,5 @@
 {
-  "description": "Headless winding-lock mechanic: locks that open only after the player travels a full revolution around their anchor. Listens BODY_MOVED and, while the player stays within a radial band of a lock's ring, accumulates the wrapped angular delta of their position into swept (radians, signed — either direction counts); when |swept| reaches turns × 2π the lock flips unlocked and emits LOOP_UNLOCKED once. Entering the band reseeds the angle so leaving and returning never jumps the sweep; progress is kept across exits, so a revolution can be completed in stages. RESTART re-locks every lock. Renders nothing; boards draw the ring/chest and read swept from the shared entity (the render authority). Corresponds to the design-sheet field(s): challenge, rewards.",
+  "description": "Headless winding-lock mechanic: locks that open only after the player travels a full revolution around their anchor. Listens BODY_MOVED and, while the player stays within a radial band of a lock's ring, accumulates the wrapped angular delta of their position into swept (radians, signed — either direction counts); when |swept| reaches turns × 2π the lock flips unlocked and emits LOOP_UNLOCKED once. Entering the band reseeds the angle so leaving and returning never jumps the sweep; progress is kept across exits, so a revolution can be completed in stages. RESTART re-locks every live lock (re-arming the live entity set, so SET_LOCKS-injected locks survive respawns). SET_LOCKS replaces the lock set at runtime for boards that import their locks. Renders nothing; boards draw the ring/chest and read swept from the shared entity (the render authority). Corresponds to the design-sheet field(s): challenge, rewards.",
   "ledger": {
     "entries": {
       "ent_01M119MVXMDX7KPCDQRRYHABX8": {
@@ -41,6 +41,15 @@
         "bakedName": "BODY_MOVED",
         "curName": "BODY_MOVED",
         "id": "evt_01M119MVXMZ1D551Q50N583X54",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M119MVXMETN5BG3SCSWD03ZZ",
+        "renames": []
+      },
+      "evt_01M1PVY2596ZBHHE50Q7R3WDPC": {
+        "bakedName": "SET_LOCKS",
+        "curName": "SET_LOCKS",
+        "id": "evt_01M1PVY2596ZBHHE50Q7R3WDPC",
         "kind": "event",
         "owner": "workspace",
         "parent": "trt_01M119MVXMETN5BG3SCSWD03ZZ",
@@ -175,7 +184,7 @@
           "config": {
             "locks": {
               "default": [],
-              "description": "One row per winding lock: id, anchor (x, y in world units), ring radius, radial tolerance band, and revolutions required. swept/inside/unlocked are stamped at runtime.",
+              "description": "One row per winding lock: id, anchor (x, y in world units), ring radius, radial tolerance band, and revolutions required. swept/inside/unlocked are stamped at runtime. Seeded onto the entity on INIT; the live set is entity.locks — SET_LOCKS replaces it at runtime (boards that import locks), and RESTART re-arms the live set rather than re-reading config, so injected locks survive respawns.",
               "items": {
                 "properties": {
                   "band": {
@@ -248,6 +257,16 @@
               "type": "boolean"
             }
           },
+          "effectRow": [
+            {
+              "kind": "emit",
+              "resource": "LOOP_UNLOCKED"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.locks"
+            }
+          ],
           "emits": [
             {
               "description": "A lock's angular sweep reached turns × 2π and it flipped unlocked; boards layer treasure fx and rewards. When several locks open on one move, the first reports and the shared entity carries the rest.",
@@ -335,6 +354,70 @@
                     "name": "speed",
                     "required": true,
                     "type": "number"
+                  }
+                ]
+              },
+              {
+                "id": "evt_01M1PVY2596ZBHHE50Q7R3WDPC",
+                "key": "SET_LOCKS",
+                "name": "Set Locks",
+                "payloadSchema": [
+                  {
+                    "name": "locks",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "radius",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "band",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "turns",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "swept",
+                        "type": "number"
+                      },
+                      {
+                        "name": "lastAngle",
+                        "type": "number"
+                      },
+                      {
+                        "name": "inside",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "unlocked",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "reported",
+                        "type": "boolean"
+                      }
+                    ],
+                    "required": true,
+                    "type": "[object]"
                   }
                 ]
               },
@@ -750,7 +833,38 @@
                     "@entity.locks",
                     [
                       "array/map",
-                      "@config.locks",
+                      "@payload.locks",
+                      [
+                        "fn",
+                        "l",
+                        [
+                          "object/merge",
+                          "@l",
+                          {
+                            "inside": false,
+                            "lastAngle": 0.0,
+                            "reported": false,
+                            "swept": 0.0,
+                            "unlocked": false
+                          }
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                "event": "SET_LOCKS",
+                "eventId": "evt_01M1PVY2596ZBHHE50Q7R3WDPC",
+                "from": "active",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.locks",
+                    [
+                      "array/map",
+                      "@entity.locks",
                       [
                         "fn",
                         "l",

@@ -1,5 +1,5 @@
 {
-  "description": "Headless side-view collectible authority — the platformer twin of grid std-gather. Listens BODY_MOVED and, when the player touches an uncollected feature (|dx| <= reachX, |dy| <= reachY of the feature center — the coef-pad touch idiom minus the grounded requirement, so airborne pickups work), stamps it collected on the shared entity and emits PICKED once per item (id, kind, position, glyph, message) plus COLLECT{total} with the running count (the event std-gate-lock already consumes). When every feature is collected it emits PICKUP_SET_COMPLETED once. RESTART re-arms every feature and zeroes the count. kind is board-defined vocabulary (star, boost, …) — this atom reports, boards judge. Renders nothing; boards draw the features and read collected from the shared entity. Corresponds to the design-sheet field(s): rewards.",
+  "description": "Headless side-view collectible authority — the platformer twin of grid std-gather. Listens BODY_MOVED and, when the player touches an uncollected feature (|dx| <= reachX, |dy| <= reachY of the feature center — the coef-pad touch idiom minus the grounded requirement, so airborne pickups work), stamps it collected on the shared entity and emits PICKED once per item (id, kind, position, glyph, message) plus COLLECT{total} with the running count (the event std-gate-lock already consumes). A feature carrying active: false is visible but NOT collectible (gated pickups — e.g. a star that only counts once the curve passes through it); FEATURES_ACTIVE{updates:[{id,active}]} flips gates in place without re-arming collected. When every feature is collected it emits PICKUP_SET_COMPLETED once. RESTART re-arms every feature and zeroes the count (re-arming the live entity set, so SET_FEATURES-injected features survive). SET_FEATURES replaces the collectible set at runtime for boards that import their features; ADD_FEATURES appends without disturbing the live set (mid-game gem drops). kind is board-defined vocabulary (star, boost, …) — this atom reports, boards judge. Renders nothing; boards draw the features and read collected from the shared entity. Corresponds to the design-sheet field(s): rewards.",
   "ledger": {
     "entries": {
       "ent_01M1GJ1RVVTJT76K1YZHQJGRG1": {
@@ -64,6 +64,33 @@
         "parent": "trt_01M1GJ1RVVYNAYXGWNA3EB2RFF",
         "renames": []
       },
+      "evt_01M1PTZX5Z31ST77X2GQFT7GWG": {
+        "bakedName": "SET_FEATURES",
+        "curName": "SET_FEATURES",
+        "id": "evt_01M1PTZX5Z31ST77X2GQFT7GWG",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M1GJ1RVVYNAYXGWNA3EB2RFF",
+        "renames": []
+      },
+      "evt_01M1QEXGHDMZ87C3AJSYCSP70Q": {
+        "bakedName": "FEATURES_ACTIVE",
+        "curName": "FEATURES_ACTIVE",
+        "id": "evt_01M1QEXGHDMZ87C3AJSYCSP70Q",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M1GJ1RVVYNAYXGWNA3EB2RFF",
+        "renames": []
+      },
+      "evt_01M1QFBHTSEH9DETBGERW7K3S2": {
+        "bakedName": "ADD_FEATURES",
+        "curName": "ADD_FEATURES",
+        "id": "evt_01M1QFBHTSEH9DETBGERW7K3S2",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M1GJ1RVVYNAYXGWNA3EB2RFF",
+        "renames": []
+      },
       "orb_01M1GJ1RVV19SNFS3EG7ABGGVT": {
         "bakedName": "PickupOrbital",
         "curName": "PickupOrbital",
@@ -105,6 +132,11 @@
             "default": [],
             "items": {
               "properties": {
+                "active": {
+                  "name": "active",
+                  "required": false,
+                  "type": "boolean"
+                },
                 "collected": {
                   "name": "collected",
                   "required": false,
@@ -183,9 +215,14 @@
           "config": {
             "features": {
               "default": [],
-              "description": "One row per collectible: id, center (x, y in world units), board-defined kind (star, boost, …), display glyph and message floated on pickup. collected is stamped at runtime.",
+              "description": "One row per collectible: id, center (x, y in world units), board-defined kind (star, boost, …), display glyph and message floated on pickup. collected is stamped at runtime. Seeded onto the entity on INIT; the live set is entity.pickups — SET_FEATURES replaces it at runtime (boards that import collectibles), and RESTART re-arms the live set rather than re-reading config, so injected features survive respawns.",
               "items": {
                 "properties": {
+                  "active": {
+                    "name": "active",
+                    "required": false,
+                    "type": "boolean"
+                  },
                   "collected": {
                     "name": "collected",
                     "required": false,
@@ -250,6 +287,32 @@
               "type": "boolean"
             }
           },
+          "effectRow": [
+            {
+              "kind": "emit",
+              "resource": "COLLECT"
+            },
+            {
+              "kind": "emit",
+              "resource": "PICKED"
+            },
+            {
+              "kind": "emit",
+              "resource": "PICKUP_SET_COMPLETED"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.pickupCompleted"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.pickups"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.total"
+            }
+          ],
           "emits": [
             {
               "description": "The player touched an uncollected feature; carries the feature identity, board-defined kind (star, boost, …), position and display glyph/message. Fires once per feature per run.",
@@ -373,6 +436,130 @@
                     "name": "speed",
                     "required": true,
                     "type": "number"
+                  }
+                ]
+              },
+              {
+                "id": "evt_01M1PTZX5Z31ST77X2GQFT7GWG",
+                "key": "SET_FEATURES",
+                "name": "Set Features",
+                "payloadSchema": [
+                  {
+                    "name": "features",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "kind",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "glyph",
+                        "type": "string"
+                      },
+                      {
+                        "name": "message",
+                        "type": "string"
+                      },
+                      {
+                        "name": "collected",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "active",
+                        "type": "boolean"
+                      }
+                    ],
+                    "required": true,
+                    "type": "[object]"
+                  }
+                ]
+              },
+              {
+                "id": "evt_01M1QFBHTSEH9DETBGERW7K3S2",
+                "key": "ADD_FEATURES",
+                "name": "Add Features",
+                "payloadSchema": [
+                  {
+                    "name": "features",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "kind",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "glyph",
+                        "type": "string"
+                      },
+                      {
+                        "name": "message",
+                        "type": "string"
+                      },
+                      {
+                        "name": "collected",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "active",
+                        "type": "boolean"
+                      }
+                    ],
+                    "required": true,
+                    "type": "[object]"
+                  }
+                ]
+              },
+              {
+                "id": "evt_01M1QEXGHDMZ87C3AJSYCSP70Q",
+                "key": "FEATURES_ACTIVE",
+                "name": "Features Active",
+                "payloadSchema": [
+                  {
+                    "name": "updates",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "active",
+                        "required": true,
+                        "type": "boolean"
+                      }
+                    ],
+                    "required": true,
+                    "type": "[object]"
                   }
                 ]
               },
@@ -517,36 +704,48 @@
                               [
                                 "and",
                                 [
-                                  "<=",
+                                  "!=",
                                   [
-                                    "math/abs",
-                                    [
-                                      "-",
-                                      "@payload.x",
-                                      [
-                                        "object/get",
-                                        "@f",
-                                        "x"
-                                      ]
-                                    ]
+                                    "object/get",
+                                    "@f",
+                                    "active"
                                   ],
-                                  "@config.reachX"
+                                  false
                                 ],
                                 [
-                                  "<=",
+                                  "and",
                                   [
-                                    "math/abs",
+                                    "<=",
                                     [
-                                      "-",
-                                      "@payload.y",
+                                      "math/abs",
                                       [
-                                        "object/get",
-                                        "@f",
-                                        "y"
+                                        "-",
+                                        "@payload.x",
+                                        [
+                                          "object/get",
+                                          "@f",
+                                          "x"
+                                        ]
                                       ]
-                                    ]
+                                    ],
+                                    "@config.reachX"
                                   ],
-                                  "@config.reachY"
+                                  [
+                                    "<=",
+                                    [
+                                      "math/abs",
+                                      [
+                                        "-",
+                                        "@payload.y",
+                                        [
+                                          "object/get",
+                                          "@f",
+                                          "y"
+                                        ]
+                                      ]
+                                    ],
+                                    "@config.reachY"
+                                  ]
                                 ]
                               ]
                             ]
@@ -758,7 +957,155 @@
                     "@entity.pickups",
                     [
                       "array/map",
-                      "@config.features",
+                      "@payload.features",
+                      [
+                        "fn",
+                        "f",
+                        [
+                          "object/merge",
+                          "@f",
+                          {
+                            "collected": false
+                          }
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.pickupCompleted",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.total",
+                    0.0
+                  ]
+                ],
+                "event": "SET_FEATURES",
+                "eventId": "evt_01M1PTZX5Z31ST77X2GQFT7GWG",
+                "from": "active",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.pickups",
+                    [
+                      "array/concat",
+                      "@entity.pickups",
+                      [
+                        "array/map",
+                        "@payload.features",
+                        [
+                          "fn",
+                          "f",
+                          [
+                            "object/merge",
+                            "@f",
+                            {
+                              "collected": false
+                            }
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.pickupCompleted",
+                    false
+                  ]
+                ],
+                "event": "ADD_FEATURES",
+                "eventId": "evt_01M1QFBHTSEH9DETBGERW7K3S2",
+                "from": "active",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.pickups",
+                    [
+                      "array/map",
+                      "@entity.pickups",
+                      [
+                        "fn",
+                        "f",
+                        [
+                          "let",
+                          [
+                            [
+                              "m",
+                              [
+                                "array/filter",
+                                "@payload.updates",
+                                [
+                                  "fn",
+                                  "u",
+                                  [
+                                    "==",
+                                    [
+                                      "object/get",
+                                      "@u",
+                                      "id"
+                                    ],
+                                    [
+                                      "object/get",
+                                      "@f",
+                                      "id"
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ],
+                          [
+                            "if",
+                            [
+                              ">",
+                              [
+                                "array/len",
+                                "@m"
+                              ],
+                              0.0
+                            ],
+                            [
+                              "object/merge",
+                              "@f",
+                              {
+                                "active": [
+                                  "object/get",
+                                  [
+                                    "array/first",
+                                    "@m"
+                                  ],
+                                  "active"
+                                ]
+                              }
+                            ],
+                            "@f"
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                "event": "FEATURES_ACTIVE",
+                "eventId": "evt_01M1QEXGHDMZ87C3AJSYCSP70Q",
+                "from": "active",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.pickups",
+                    [
+                      "array/map",
+                      "@entity.pickups",
                       [
                         "fn",
                         "f",
@@ -793,6 +1140,18 @@
         }
       ],
       "types": {
+        "PickupActiveUpdate": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "active",
+            "required": true,
+            "type": "boolean"
+          }
+        ],
         "PickupFeature": [
           {
             "name": "id",
@@ -824,6 +1183,10 @@
           },
           {
             "name": "collected",
+            "type": "boolean"
+          },
+          {
+            "name": "active",
             "type": "boolean"
           }
         ]

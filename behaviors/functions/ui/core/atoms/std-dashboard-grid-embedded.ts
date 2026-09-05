@@ -244,6 +244,12 @@ export function stdDashboardGridEmbeddedDashboardGridEmbeddedOrbital(params: Std
       }),
       {
         'category': 'interaction',
+        'effectRow': [
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'linkedEntity': 'DashboardGridEmbeddedData',
         'name': 'EmptyTile',
         'scope': 'instance',
@@ -427,6 +433,12 @@ export function stdDashboardGridEmbeddedDashboardGridEmbeddedOrbital(params: Std
             'type': 'trait',
           },
         },
+        'effectRow': [
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
         'linkedEntity': 'DashboardGridEmbeddedData',
         'name': 'DashboardGridEmbedded',
         'scope': 'instance',
