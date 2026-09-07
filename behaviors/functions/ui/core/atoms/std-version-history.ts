@@ -678,6 +678,7 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
           {
             'description': 'Indicates a revision has been successfully restored to a previous state.',
             'event': 'RevisionRolledBack',
+            'payloadEntity': 'Revision',
             'payloadSchema': [
               {
                 'name': 'id',
@@ -849,6 +850,7 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
               'description': 'Indicates a revision has been successfully restored to a previous state.',
               'key': 'RevisionRolledBack',
               'name': 'Revision rolled back',
+              'payloadEntity': 'Revision',
               'payloadSchema': [
                 {
                   'name': 'id',

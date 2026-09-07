@@ -494,6 +494,7 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
           {
             'description': 'A new image has been successfully uploaded.',
             'event': 'UploadedImageCreated',
+            'payloadEntity': 'UploadedImage',
             'payloadSchema': [
               {
                 'name': 'id',
@@ -842,6 +843,7 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
               'description': 'A new image has been successfully uploaded.',
               'key': 'UploadedImageCreated',
               'name': 'UploadedImage created',
+              'payloadEntity': 'UploadedImage',
               'payloadSchema': [
                 {
                   'name': 'id',

@@ -847,6 +847,7 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
           {
             'description': 'Signals a moderation queue item has been reviewed and a verdict recorded.',
             'event': 'ModQueueItemReviewed',
+            'payloadEntity': 'ModQueueItem',
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1218,6 +1219,7 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
               'description': 'Signals a moderation queue item has been reviewed and a verdict recorded.',
               'key': 'ModQueueItemReviewed',
               'name': 'ModQueueItem reviewed',
+              'payloadEntity': 'ModQueueItem',
               'payloadSchema': [
                 {
                   'name': 'id',

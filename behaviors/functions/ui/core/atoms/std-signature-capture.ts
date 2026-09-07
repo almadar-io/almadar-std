@@ -423,6 +423,7 @@ export function stdSignatureCaptureSignatureCaptureOrbital(params: StdSignatureC
           {
             'description': 'Indicates a signature has been successfully captured and submitted.',
             'event': 'SignatureSubmitted',
+            'payloadEntity': 'Signature',
             'payloadSchema': [
               {
                 'name': 'id',
@@ -593,6 +594,7 @@ export function stdSignatureCaptureSignatureCaptureOrbital(params: StdSignatureC
               'description': 'Indicates a signature has been successfully captured and submitted.',
               'key': 'SignatureSubmitted',
               'name': 'Signature submitted',
+              'payloadEntity': 'Signature',
               'payloadSchema': [
                 {
                   'name': 'id',

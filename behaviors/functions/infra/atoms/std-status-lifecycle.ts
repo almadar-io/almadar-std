@@ -361,6 +361,7 @@ export function stdStatusLifecycleStatusLifecycleOrbital(params: StdStatusLifecy
           {
             'description': 'Internal: the status write landed; carries the persisted row flat.',
             'event': 'StatusPersisted',
+            'payloadEntity': 'StatusRecord',
             'payloadSchema': [
               {
                 'name': 'id',
@@ -420,6 +421,7 @@ export function stdStatusLifecycleStatusLifecycleOrbital(params: StdStatusLifecy
             {
               'key': 'StatusPersisted',
               'name': 'Status persisted',
+              'payloadEntity': 'StatusRecord',
               'payloadSchema': [
                 {
                   'name': 'id',

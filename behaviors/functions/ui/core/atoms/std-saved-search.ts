@@ -537,6 +537,7 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
           {
             'description': 'Indicates a saved search has been modified and persisted.',
             'event': 'SavedSearchUpdated',
+            'payloadEntity': 'SavedSearch',
             'payloadSchema': [
               {
                 'name': 'id',
@@ -726,6 +727,7 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
               'description': 'Indicates a saved search has been modified and persisted.',
               'key': 'SavedSearchUpdated',
               'name': 'SavedSearch updated',
+              'payloadEntity': 'SavedSearch',
               'payloadSchema': [
                 {
                   'name': 'id',

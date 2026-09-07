@@ -527,6 +527,7 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
           {
             'description': 'A new tag row persisted; the open level refetches to show it.',
             'event': 'TagCreated',
+            'payloadEntity': 'Tag',
             'payloadSchema': [
               {
                 'name': 'id',
@@ -725,6 +726,7 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
               'description': 'A new tag row persisted; the open level refetches to show it.',
               'key': 'TagCreated',
               'name': 'Tag created',
+              'payloadEntity': 'Tag',
               'payloadSchema': [
                 {
                   'name': 'id',

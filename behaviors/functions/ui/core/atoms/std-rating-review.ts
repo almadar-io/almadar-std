@@ -764,6 +764,7 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
           {
             'description': 'Indicates a review has been successfully saved.',
             'event': 'ReviewSaved',
+            'payloadEntity': 'ReviewView',
             'payloadSchema': [
               {
                 'name': 'id',
@@ -958,6 +959,7 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
               'description': 'Indicates a review has been successfully saved.',
               'key': 'ReviewSaved',
               'name': 'Review saved',
+              'payloadEntity': 'ReviewView',
               'payloadSchema': [
                 {
                   'name': 'id',
@@ -3004,6 +3006,7 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
           {
             'description': 'Indicates a review has been successfully stored.',
             'event': 'ReviewSaved',
+            'payloadEntity': 'ReviewView',
             'payloadSchema': [
               {
                 'name': 'id',
@@ -3188,6 +3191,7 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
               'description': 'Indicates a review has been successfully stored.',
               'key': 'ReviewSaved',
               'name': 'Review saved',
+              'payloadEntity': 'ReviewView',
               'payloadSchema': [
                 {
                   'name': 'id',

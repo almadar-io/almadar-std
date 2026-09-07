@@ -780,6 +780,7 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
           {
             'description': 'A new post has been added to the thread — payload is the created ThreadPost row itself (flat: ?id, ?threadRootId, ?authorId, ?content, …), not wrapped under a row field.',
             'event': 'ThreadPostCreated',
+            'payloadEntity': 'ThreadPost',
             'payloadSchema': [
               {
                 'name': 'id',
@@ -992,6 +993,7 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
               'description': 'A new post has been added to the thread — payload is the created ThreadPost row itself (flat: ?id, ?threadRootId, ?authorId, ?content, …), not wrapped under a row field.',
               'key': 'ThreadPostCreated',
               'name': 'ThreadPost created',
+              'payloadEntity': 'ThreadPost',
               'payloadSchema': [
                 {
                   'name': 'id',

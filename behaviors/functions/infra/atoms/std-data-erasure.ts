@@ -750,6 +750,7 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
           {
             'description': 'Indicates a new erasure request has been successfully saved.',
             'event': 'ErasureSaved',
+            'payloadEntity': 'ErasureRequest',
             'payloadSchema': [
               {
                 'name': 'id',
@@ -1159,6 +1160,7 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
               'description': 'Indicates a new erasure request has been successfully saved.',
               'key': 'ErasureSaved',
               'name': 'Erasure saved',
+              'payloadEntity': 'ErasureRequest',
               'payloadSchema': [
                 {
                   'name': 'id',
