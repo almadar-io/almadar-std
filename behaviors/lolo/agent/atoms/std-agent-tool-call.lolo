@@ -1,8 +1,13 @@
 app std-agent-tool-call "1.0.0"
 "Wraps llm/call-tools — takes messages + tools, returns tool-call result."
 
-type LlmMessage = { role: string!, content: string!, toolCalls: [opaque], toolCallId: string }
-type LlmToolDef = { name: string!, description: string!, schema: opaque }
+type LlmToolCall = { id: string!, type: "function", function: { name: string!, arguments: string! } }
+;; JSON Schema is recursive (@almadar/core JsonSchema: properties/items/$defs self-reference)
+;; and .lolo has no recursive-JSON type; this deliberately partial shape declares only the
+;; always-scalar top-level keys and leaves the recursive keys undeclared (honest, not checked).
+type LlmToolSchema = { type: string, description: string }
+type LlmMessage = { role: string!, content: string!, toolCalls: [LlmToolCall], toolCallId: string }
+type LlmToolDef = { name: string!, description: string!, schema: LlmToolSchema }
 
 orbital AgentToolCallOrbital {
 

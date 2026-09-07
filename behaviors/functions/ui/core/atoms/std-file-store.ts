@@ -674,6 +674,7 @@ export function stdFileStoreStoredFileOrbital(params: StdFileStoreStoredFileOrbi
                 'type': 'string',
               },
               {
+                'entity': 'StoredFile',
                 'name': 'row',
                 'properties': [
                   {
@@ -767,6 +768,7 @@ export function stdFileStoreStoredFileOrbital(params: StdFileStoreStoredFileOrbi
                 'type': 'string',
               },
               {
+                'entity': 'StoredFile',
                 'name': 'row',
                 'properties': [
                   {
@@ -823,8 +825,53 @@ export function stdFileStoreStoredFileOrbital(params: StdFileStoreStoredFileOrbi
             'event': 'StoredFileLoaded',
             'payloadSchema': [
               {
+                'entity': 'StoredFile',
                 'name': 'data',
-                'type': '[StoredFile]',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'name',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'path',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'mimeType',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'sizeBytes',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'uploaderId',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'uploaderName',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'folder',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'uploadedAt',
+                    'type': 'datetime',
+                  },
+                  {
+                    'name': 'isArchived',
+                    'type': 'boolean',
+                  },
+                ],
+                'type': '[object]',
               },
             ],
             'synonyms': 'loaded, fetched, retrieved, ready',
@@ -871,8 +918,53 @@ export function stdFileStoreStoredFileOrbital(params: StdFileStoreStoredFileOrbi
               'name': 'StoredFile loaded',
               'payloadSchema': [
                 {
+                  'entity': 'StoredFile',
                   'name': 'data',
-                  'type': '[StoredFile]',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'name',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'path',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'mimeType',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'sizeBytes',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'uploaderId',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'uploaderName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'folder',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'uploadedAt',
+                      'type': 'datetime',
+                    },
+                    {
+                      'name': 'isArchived',
+                      'type': 'boolean',
+                    },
+                  ],
+                  'type': '[object]',
                 },
               ],
               'synonyms': 'loaded, fetched, retrieved, ready',
@@ -906,6 +998,7 @@ export function stdFileStoreStoredFileOrbital(params: StdFileStoreStoredFileOrbi
                   'type': 'string',
                 },
                 {
+                  'entity': 'StoredFile',
                   'name': 'row',
                   'properties': [
                     {
@@ -968,6 +1061,7 @@ export function stdFileStoreStoredFileOrbital(params: StdFileStoreStoredFileOrbi
                   'type': 'string',
                 },
                 {
+                  'entity': 'StoredFile',
                   'name': 'row',
                   'properties': [
                     {
@@ -1130,7 +1224,10 @@ export function stdFileStoreStoredFileOrbital(params: StdFileStoreStoredFileOrbi
                             'variant': 'h3',
                           },
                           {
-                            'label': '@payload.data.length',
+                            'label': [
+                              'array/len',
+                              '@payload.data',
+                            ],
                             'size': 'sm',
                             'type': 'badge',
                             'variant': 'neutral',
@@ -1651,12 +1748,36 @@ export const StdFileStoreStoredFileOrbitalManifest = {
   organism: 'std-file-store',
   orbitalName: 'StoredFileOrbital',
   paramFields: [
-    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
-    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
-    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
-    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
-    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+    {
+      'name': 'fields',
+      'type': 'EntityField[]',
+      'description': 'Extra fields appended to the canonical entity.',
+    },
+    {
+      'name': 'pagePath',
+      'type': 'string',
+      'description': 'URL override for the orbital first page.',
+    },
+    {
+      'name': 'persistence',
+      'type': '\'persistent\' | \'runtime\'',
+      'description': 'Override the canonical entity persistence mode.',
+    },
+    {
+      'name': 'entityName',
+      'type': 'string',
+      'description': 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.',
+    },
+    {
+      'name': 'collection',
+      'type': 'string',
+      'description': 'Override derived collection key. Defaults to plural(entityName).toLowerCase().',
+    },
+    {
+      'name': 'traitOverrides',
+      'type': 'Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>',
+      'description': '.lolo\'s native trait-composition surface 1:1: per-imported-trait config, linkedEntity, events, name, emitsScope, listens. effects is excluded (atom-owned; use listens via a sibling trait).',
+    },
   ] as const,
   traitNames: [
   ] as const,

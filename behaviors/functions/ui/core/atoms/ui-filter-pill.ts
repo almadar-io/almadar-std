@@ -50,7 +50,7 @@ export interface StdUiFilterPillConfig {
   /** Default: `"CLICK"` */
   clickEvent?: string;
   icon?: unknown;
-  label?: string;
+  label?: unknown;
   /** Default: `"CLICK"` */
   onClick?: string;
   /** Default: `""` */

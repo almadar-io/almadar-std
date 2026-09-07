@@ -1,19 +1,20 @@
 app ui-swipeable-row "1.0.0"
 "SwipeableRow — UI factory (1:1 with the @almadar/ui swipeable-row pattern)."
 orbital SwipeableRowOrbital {
+    type SwipeableRowLoaded = Event { data : [SwipeableRowItem] } "SwipeableRow rows finished loading; payload.data holds the collection"
   type SwipeableRowLeftActionsItem = {
     label : string!
     icon : icon
     variant : "primary" | "secondary" | "danger" | "ghost"
     event : event!
-    eventPayload : Map string scalar
+    eventPayload : @payload event
   }
   type SwipeableRowRightActionsItem = {
     label : string!
     icon : icon
     variant : "primary" | "secondary" | "danger" | "ghost"
     event : event!
-    eventPayload : Map string scalar
+    eventPayload : @payload event
   }
 
   entity SwipeableRowItem [runtime] {
@@ -24,16 +25,44 @@ orbital SwipeableRowOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle
+      INIT -> idle when @config.selfFetch
+        (fetch SwipeableRowItem { emit: { success: SwipeableRowLoaded } })
         (render-ui main {
           leftActions: @config.leftActions
           rightActions: @config.rightActions
           threshold: @config.threshold
           children: @config.children
-          itemData: @config.itemData
+          itemData: @entity
           className: @config.className
           type: swipeable-row
         })
+      INIT -> idle when (not @config.selfFetch)
+        (render-ui main {
+          leftActions: @config.leftActions
+          rightActions: @config.rightActions
+          threshold: @config.threshold
+          children: @config.children
+          itemData: @entity
+          className: @config.className
+          type: swipeable-row
+        })
+      SwipeableRowLoaded -> idle
+        (render-ui main {
+          leftActions: @config.leftActions
+          rightActions: @config.rightActions
+          threshold: @config.threshold
+          children: @config.children
+          itemData: @payload.data
+          className: @config.className
+          type: swipeable-row
+        })
+    }
+
+    emits {
+      SwipeableRowLoaded
+        @description "SwipeableRow rows finished loading; payload.data holds the collection."
+        @synonyms "loaded, fetched, retrieved"
+        @tier "essential"
     }
 
     config {
@@ -53,14 +82,14 @@ orbital SwipeableRowOrbital {
         @label "Children"
         @description "children prop"
         @tier "presentation"
-      itemData : Map string scalar = {}
-        @label "Item Data"
-        @description "itemData prop"
-        @tier "presentation"
       className : string
         @label "Class Name"
         @description "className prop"
         @tier "presentation"
+      selfFetch : boolean = true
+        @label "Fetch its own rows on mount?"
+        @description "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's."
+        @tier "internal"
     }
   }
 

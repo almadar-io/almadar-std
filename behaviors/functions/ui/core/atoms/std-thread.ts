@@ -702,8 +702,60 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
             'event': 'ThreadPostLoaded',
             'payloadSchema': [
               {
+                'entity': 'ThreadPost',
                 'name': 'data',
-                'type': '[ThreadPost]',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'parentId',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'threadRootId',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'authorId',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'authorName',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'content',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'createdAt',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'voteCount',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'replyCount',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'replies',
+                    'type': '[ThreadPost]',
+                  },
+                  {
+                    'name': 'focusedRow',
+                    'type': 'Map<string,scalar>',
+                  },
+                ],
+                'type': '[object]',
               },
             ],
             'synonyms': 'loaded, fetched, retrieved',
@@ -825,8 +877,60 @@ export function stdThreadThreadPostOrbital(params: StdThreadThreadPostOrbitalPar
               'name': 'ThreadPost loaded',
               'payloadSchema': [
                 {
+                  'entity': 'ThreadPost',
                   'name': 'data',
-                  'type': '[ThreadPost]',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'parentId',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'threadRootId',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'authorId',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'authorName',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'content',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'voteCount',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'replyCount',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'replies',
+                      'type': '[ThreadPost]',
+                    },
+                    {
+                      'name': 'focusedRow',
+                      'type': 'Map<string,scalar>',
+                    },
+                  ],
+                  'type': '[object]',
                 },
               ],
               'synonyms': 'loaded, fetched, retrieved',
@@ -1931,12 +2035,36 @@ export const StdThreadThreadPostOrbitalManifest = {
   organism: 'std-thread',
   orbitalName: 'ThreadPostOrbital',
   paramFields: [
-    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
-    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
-    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
-    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
-    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+    {
+      'name': 'fields',
+      'type': 'EntityField[]',
+      'description': 'Extra fields appended to the canonical entity.',
+    },
+    {
+      'name': 'pagePath',
+      'type': 'string',
+      'description': 'URL override for the orbital first page.',
+    },
+    {
+      'name': 'persistence',
+      'type': '\'persistent\' | \'runtime\'',
+      'description': 'Override the canonical entity persistence mode.',
+    },
+    {
+      'name': 'entityName',
+      'type': 'string',
+      'description': 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.',
+    },
+    {
+      'name': 'collection',
+      'type': 'string',
+      'description': 'Override derived collection key. Defaults to plural(entityName).toLowerCase().',
+    },
+    {
+      'name': 'traitOverrides',
+      'type': 'Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>',
+      'description': '.lolo\'s native trait-composition surface 1:1: per-imported-trait config, linkedEntity, events, name, emitsScope, listens. effects is excluded (atom-owned; use listens via a sibling trait).',
+    },
   ] as const,
   traitNames: [
   ] as const,

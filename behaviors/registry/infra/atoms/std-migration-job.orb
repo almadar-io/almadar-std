@@ -294,7 +294,10 @@
             "default": [],
             "description": "Document metadata listed from the source — migration.listDocuments service result, never destructured by the atom.",
             "items": {
-              "type": "opaque"
+              "items": {
+                "type": "scalar"
+              },
+              "type": "object"
             },
             "name": "documents",
             "type": "array"
@@ -302,14 +305,35 @@
           {
             "default": {},
             "description": "Most recently fetched document content — migration.fetchDocument service result, never destructured by the atom.",
+            "items": {
+              "type": "scalar"
+            },
             "name": "document",
-            "type": "opaque"
+            "type": "object"
           },
           {
             "default": {},
             "description": "Staged/committed/failed/skipped counts — merged from host staging and migration.commit service results, never destructured by the atom.",
             "name": "stats",
-            "type": "opaque"
+            "properties": {
+              "committed": {
+                "name": "committed",
+                "required": false,
+                "type": "number"
+              },
+              "failed": {
+                "items": {
+                  "items": {
+                    "type": "scalar"
+                  },
+                  "type": "object"
+                },
+                "name": "failed",
+                "required": false,
+                "type": "array"
+              }
+            },
+            "type": "object"
           },
           {
             "default": [],
@@ -372,7 +396,10 @@
             "default": [],
             "description": "Validation errors surfaced during staging, when the host stages the full rows rather than aggregate stats only.",
             "items": {
-              "type": "opaque"
+              "items": {
+                "type": "scalar"
+              },
+              "type": "object"
             },
             "name": "validationErrors",
             "synonyms": "staging errors, validation issues, import errors",
@@ -539,7 +566,7 @@
                 {
                   "name": "documents",
                   "required": true,
-                  "type": "[opaque]"
+                  "type": "[Map<string,scalar>]"
                 }
               ],
               "tier": "secondary"
@@ -552,7 +579,7 @@
                 {
                   "name": "document",
                   "required": true,
-                  "type": "opaque"
+                  "type": "Map<string,scalar>"
                 }
               ],
               "tier": "secondary"
@@ -570,7 +597,7 @@
                 {
                   "name": "failed",
                   "required": true,
-                  "type": "[opaque]"
+                  "type": "[Map<string,scalar>]"
                 }
               ],
               "tier": "secondary"
@@ -596,7 +623,7 @@
                 {
                   "name": "documents",
                   "required": true,
-                  "type": "[opaque]"
+                  "type": "[Map<string,scalar>]"
                 }
               ],
               "scope": "external",
@@ -611,7 +638,7 @@
                 {
                   "name": "document",
                   "required": true,
-                  "type": "opaque"
+                  "type": "Map<string,scalar>"
                 }
               ],
               "scope": "external",
@@ -625,20 +652,64 @@
               "payloadSchema": [
                 {
                   "name": "stats",
+                  "properties": [
+                    {
+                      "name": "committed",
+                      "type": "number"
+                    },
+                    {
+                      "name": "failed",
+                      "type": "[Map<string,scalar>]"
+                    }
+                  ],
                   "required": true,
-                  "type": "opaque"
+                  "type": "object"
                 },
                 {
+                  "entity": "ImportUnit",
                   "name": "units",
-                  "type": "[ImportUnit]"
+                  "properties": [
+                    {
+                      "name": "ref",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "targetEntity",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "fields",
+                      "type": "Map<string,scalar>"
+                    },
+                    {
+                      "name": "parentRef",
+                      "type": "string"
+                    }
+                  ],
+                  "type": "[object]"
                 },
                 {
+                  "entity": "ImportSkip",
                   "name": "skipped",
-                  "type": "[ImportSkip]"
+                  "properties": [
+                    {
+                      "name": "ref",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "reason",
+                      "required": true,
+                      "type": "string"
+                    }
+                  ],
+                  "type": "[object]"
                 },
                 {
                   "name": "validationErrors",
-                  "type": "[opaque]"
+                  "type": "[Map<string,scalar>]"
                 }
               ],
               "scope": "external",
@@ -652,8 +723,18 @@
               "payloadSchema": [
                 {
                   "name": "stats",
+                  "properties": [
+                    {
+                      "name": "committed",
+                      "type": "number"
+                    },
+                    {
+                      "name": "failed",
+                      "type": "[Map<string,scalar>]"
+                    }
+                  ],
                   "required": true,
-                  "type": "opaque"
+                  "type": "object"
                 }
               ],
               "scope": "external",
@@ -775,7 +856,7 @@
                   {
                     "name": "documents",
                     "required": true,
-                    "type": "[opaque]"
+                    "type": "[Map<string,scalar>]"
                   }
                 ],
                 "tier": "secondary"
@@ -789,7 +870,7 @@
                   {
                     "name": "documents",
                     "required": true,
-                    "type": "[opaque]"
+                    "type": "[Map<string,scalar>]"
                   }
                 ],
                 "synonyms": "import fetched, source listed, documents ready",
@@ -804,7 +885,7 @@
                   {
                     "name": "document",
                     "required": true,
-                    "type": "opaque"
+                    "type": "Map<string,scalar>"
                   }
                 ],
                 "synonyms": "document loaded, content fetched",
@@ -847,7 +928,7 @@
                   {
                     "name": "document",
                     "required": true,
-                    "type": "opaque"
+                    "type": "Map<string,scalar>"
                   }
                 ],
                 "tier": "secondary"
@@ -860,8 +941,18 @@
                 "payloadSchema": [
                   {
                     "name": "stats",
+                    "properties": [
+                      {
+                        "name": "committed",
+                        "type": "number"
+                      },
+                      {
+                        "name": "failed",
+                        "type": "[Map<string,scalar>]"
+                      }
+                    ],
                     "required": true,
-                    "type": "opaque"
+                    "type": "object"
                   },
                   {
                     "name": "units",
@@ -905,7 +996,7 @@
                   },
                   {
                     "name": "validationErrors",
-                    "type": "[opaque]"
+                    "type": "[Map<string,scalar>]"
                   }
                 ],
                 "tier": "internal"
@@ -966,20 +1057,64 @@
                 "payloadSchema": [
                   {
                     "name": "stats",
+                    "properties": [
+                      {
+                        "name": "committed",
+                        "type": "number"
+                      },
+                      {
+                        "name": "failed",
+                        "type": "[Map<string,scalar>]"
+                      }
+                    ],
                     "required": true,
-                    "type": "opaque"
+                    "type": "object"
                   },
                   {
+                    "entity": "ImportUnit",
                     "name": "units",
-                    "type": "[ImportUnit]"
+                    "properties": [
+                      {
+                        "name": "ref",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "targetEntity",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "fields",
+                        "type": "Map<string,scalar>"
+                      },
+                      {
+                        "name": "parentRef",
+                        "type": "string"
+                      }
+                    ],
+                    "type": "[object]"
                   },
                   {
+                    "entity": "ImportSkip",
                     "name": "skipped",
-                    "type": "[ImportSkip]"
+                    "properties": [
+                      {
+                        "name": "ref",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "reason",
+                        "required": true,
+                        "type": "string"
+                      }
+                    ],
+                    "type": "[object]"
                   },
                   {
                     "name": "validationErrors",
-                    "type": "[opaque]"
+                    "type": "[Map<string,scalar>]"
                   }
                 ],
                 "synonyms": "preview ready, staging complete, review import",
@@ -999,7 +1134,7 @@
                   {
                     "name": "failed",
                     "required": true,
-                    "type": "[opaque]"
+                    "type": "[Map<string,scalar>]"
                   }
                 ],
                 "tier": "secondary"
@@ -1019,8 +1154,18 @@
                 "payloadSchema": [
                   {
                     "name": "stats",
+                    "properties": [
+                      {
+                        "name": "committed",
+                        "type": "number"
+                      },
+                      {
+                        "name": "failed",
+                        "type": "[Map<string,scalar>]"
+                      }
+                    ],
                     "required": true,
-                    "type": "opaque"
+                    "type": "object"
                   }
                 ],
                 "synonyms": "import done, migration complete, data imported",
@@ -1850,6 +1995,16 @@
           {
             "name": "lastModified",
             "type": "number"
+          }
+        ],
+        "MigrationStats": [
+          {
+            "name": "committed",
+            "type": "number"
+          },
+          {
+            "name": "failed",
+            "type": "[Map<string,scalar>]"
           }
         ]
       }

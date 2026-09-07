@@ -68,7 +68,7 @@ export interface StdUiInputGroupConfig {
   rightAddon?: PatternValue;
   rightIcon?: unknown;
   rows?: number;
-  value?: string;
+  value?: unknown;
 }
 
 /**

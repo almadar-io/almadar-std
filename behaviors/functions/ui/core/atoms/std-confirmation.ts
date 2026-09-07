@@ -336,8 +336,35 @@ export function stdConfirmationConfirmActionOrbital(params: StdConfirmationConfi
             'event': 'ConfirmActionLoaded',
             'payloadSchema': [
               {
+                'entity': 'ConfirmAction',
                 'name': 'data',
-                'type': '[ConfirmAction]',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'name',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'description',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'status',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'createdAt',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'pendingId',
+                    'type': 'string',
+                  },
+                ],
+                'type': '[object]',
               },
             ],
             'scope': 'internal',
@@ -373,6 +400,7 @@ export function stdConfirmationConfirmActionOrbital(params: StdConfirmationConfi
                   'type': 'string',
                 },
                 {
+                  'entity': 'ConfirmAction',
                   'name': 'row',
                   'properties': [
                     {
@@ -456,8 +484,35 @@ export function stdConfirmationConfirmActionOrbital(params: StdConfirmationConfi
               'name': 'ConfirmAction loaded',
               'payloadSchema': [
                 {
+                  'entity': 'ConfirmAction',
                   'name': 'data',
-                  'type': '[ConfirmAction]',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'name',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'description',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'pendingId',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': '[object]',
                 },
               ],
               'synonyms': 'loaded, ready, initialized',
@@ -674,10 +729,26 @@ export const StdConfirmationConfirmActionOrbitalManifest = {
   organism: 'std-confirmation',
   orbitalName: 'ConfirmActionOrbital',
   paramFields: [
-    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
-    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
-    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
-    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+    {
+      'name': 'fields',
+      'type': 'EntityField[]',
+      'description': 'Extra fields appended to the canonical entity.',
+    },
+    {
+      'name': 'pagePath',
+      'type': 'string',
+      'description': 'URL override for the orbital first page.',
+    },
+    {
+      'name': 'entityName',
+      'type': 'string',
+      'description': 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.',
+    },
+    {
+      'name': 'traitOverrides',
+      'type': 'Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>',
+      'description': '.lolo\'s native trait-composition surface 1:1: per-imported-trait config, linkedEntity, events, name, emitsScope, listens. effects is excluded (atom-owned; use listens via a sibling trait).',
+    },
   ] as const,
   traitNames: [
   ] as const,

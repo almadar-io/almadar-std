@@ -52,12 +52,12 @@ export interface StdUiAnimatedGraphicConfig {
   /** Default: `"cubic-bezier(0.16, 1, 0.3, 1)"` */
   easing?: string;
   fillColor?: string;
-  height?: string;
+  height?: unknown;
   /** Default: `"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"` */
   src?: unknown;
   strokeColor?: string;
   svgContent?: string;
-  width?: string;
+  width?: unknown;
 }
 
 /**

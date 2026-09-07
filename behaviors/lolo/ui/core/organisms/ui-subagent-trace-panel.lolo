@@ -7,6 +7,34 @@ orbital SubagentTracePanelOrbital {
     code : string
     stack : string
   }
+  type SubagentTracePanelSubagentsItem = {
+    id : string!
+    name : string!
+    role : string!
+    orbitalName : string
+    parentId : string
+    status : "running" | "complete" | "error"!
+    task : string!
+    messages : [SubagentTracePanelSubagentsItemMessagesItem]!
+    durationMs : number
+  }
+  type SubagentTracePanelSubagentsItemMessagesItem = {
+    message : string!
+    tool : string
+    timestamp : number!
+  }
+  type SubagentTracePanelCoordinatorMessagesItem = {
+    role : "system" | "user" | "assistant" | "tool"!
+    content : string!
+    toolCalls : [SubagentTracePanelCoordinatorMessagesItemToolCallsItem]
+    toolCallId : string
+    toolName : string
+    reasoningContent : string
+  }
+  type SubagentTracePanelCoordinatorMessagesItemToolCallsItem = {
+    id : string!
+    name : string!
+  }
 
   entity SubagentTracePanelItem [runtime] {
     id : string!
@@ -40,7 +68,6 @@ orbital SubagentTracePanelOrbital {
           disclosureLevel: @config.disclosureLevel
           open: @config.open
           onClose: @config.onClose
-          coordinatorActivities: @config.coordinatorActivities
           coordinatorMessages: @config.coordinatorMessages
           mode: @config.mode
           type: subagent-trace-panel
@@ -114,7 +141,7 @@ orbital SubagentTracePanelOrbital {
         @label "Selected Ids"
         @description "Currently selected item IDs"
         @tier "presentation"
-      subagents : [Map string scalar] = []
+      subagents : [SubagentTracePanelSubagentsItem] = [{ id: "Id", name: "Name", role: "Role", orbitalName: "Orbital Name", parentId: "Parent Id", status: running, task: "Task", messages: [{ message: "Message", tool: "Tool", timestamp: 1 }, { message: "Message 2", tool: "Tool 2", timestamp: 2 }], durationMs: 1, timeline: [] }, { id: "Id 2", name: "Name 2", role: "Role 2", orbitalName: "Orbital Name 2", parentId: "Parent Id 2", status: complete, task: "Task 2", messages: [{ message: "Message", tool: "Tool", timestamp: 1 }, { message: "Message 2", tool: "Tool 2", timestamp: 2 }], durationMs: 2, timeline: [] }]
         @label "Subagents"
         @description "All known subagents from the runner."
         @tier "presentation"
@@ -134,11 +161,7 @@ orbital SubagentTracePanelOrbital {
         @label "On Close"
         @description "Optional dismiss handler."
         @tier "presentation"
-      coordinatorActivities : [Map string scalar] = []
-        @label "Coordinator Activities"
-        @description "Full coordinator activities (tool calls, results, messages, errors)."
-        @tier "presentation"
-      coordinatorMessages : [Map string scalar] = []
+      coordinatorMessages : [SubagentTracePanelCoordinatorMessagesItem] = []
         @label "Coordinator Messages"
         @description "Canonical Coordinator conversation — same shape live and on reload. When present, takes precedence over `coordinatorActivities` for the Coordinator section."
         @tier "presentation"

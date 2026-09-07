@@ -14,7 +14,7 @@ orbital MlWeightValidatorOrbital {
     status     : "idle" | "checked" = idle
   }
 
-  trait WeightValidatorRun -> WeightValidation [lifecycle, instance] {
+  trait WeightValidatorRun (r : Entity) -> WeightValidation [lifecycle, instance] {
     initial: idle
 
     config {
@@ -88,7 +88,7 @@ orbital MlWeightValidatorOrbital {
 
       WEIGHTS_REJECTED -> external {
         violations : [WeightViolation]!
-        request : opaque
+        request : r
       }
         @description "At least one constraint check failed; violations lists every failing check with its detail (magnitude, forbidden-region, or regression). request echoes the originating request untouched so the next rung can project its own inputs out of it"
         @tier "primary"
@@ -98,7 +98,7 @@ orbital MlWeightValidatorOrbital {
       VALIDATE_WEIGHTS {
         weights  : [float]!
         baseline : [float]
-        request  : opaque
+        request  : r
       }
     }
   }

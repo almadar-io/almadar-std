@@ -45,7 +45,8 @@ export interface StdUiSimpleGridConfig {
   /** Default: `"md"` */
   gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   maxCols?: number;
-  minChildWidth?: string;
+  /** Default: `250` */
+  minChildWidth?: unknown;
 }
 
 /**

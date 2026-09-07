@@ -11,12 +11,12 @@ type ContractViolation = ShapeMismatchViolation | RangeViolationDetail | NotATen
 orbital MlInferOrbital {
 
   entity Inference [runtime] {
-    input      : opaque   = {}
+    input      : Map string scalar   = {}
     output     : [float]  = []
     confidence : float    = 0
     violations : [ContractViolation] = []
     reason     : string   = ""
-    request    : opaque   = {}
+    request    : Map string scalar   = {}
     status     : "idle" | "inferring" | "resolved" = idle
   }
 
@@ -127,7 +127,7 @@ orbital MlInferOrbital {
       INFER_ABSTAINED -> external {
         reason     : string!
         violations : [ContractViolation]!
-        request    : opaque
+        request    : Map string scalar
       }
         @description "The abstain — reason is one of: low confidence, contract violation, unavailable. violations is populated only on the contract violation path. request echoes the originating request untouched so the next rung can project its own inputs out of it"
         @tier "primary"
@@ -135,8 +135,8 @@ orbital MlInferOrbital {
 
     listens {
       INFER {
-        input : opaque!
-        request : opaque
+        input : Map string scalar!
+        request : Map string scalar
       }
     }
   }

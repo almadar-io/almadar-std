@@ -36,7 +36,7 @@ export type StdDataCollectorEventKey = 'BUFFER_READY' | 'COLLECT' | 'INIT';
  * Payload shape for the `BUFFER_READY` event.
  */
 export interface StdDataCollectorBufferReadyPayload {
-  buffer: EntityRow[];
+  buffer: unknown;
   count: number;
 }
 
@@ -182,7 +182,10 @@ export function stdDataCollectorMlDataCollectorOrbital(params: StdDataCollectorM
             'default': [],
             'description': 'Data points accumulated in the current cycle.',
             'items': {
-              'type': 'opaque',
+              'items': {
+                'type': 'scalar',
+              },
+              'type': 'object',
             },
             'name': 'buffer',
             'type': 'array',
@@ -247,7 +250,7 @@ export function stdDataCollectorMlDataCollectorOrbital(params: StdDataCollectorM
               {
                 'name': 'buffer',
                 'required': true,
-                'type': '[opaque]',
+                'type': '[Map<string,scalar>]',
               },
               {
                 'name': 'count',
@@ -284,7 +287,7 @@ export function stdDataCollectorMlDataCollectorOrbital(params: StdDataCollectorM
                 {
                   'name': 'point',
                   'required': true,
-                  'type': 'opaque',
+                  'type': 'Map<string,scalar>',
                 },
               ],
             },
@@ -296,7 +299,7 @@ export function stdDataCollectorMlDataCollectorOrbital(params: StdDataCollectorM
                 {
                   'name': 'buffer',
                   'required': true,
-                  'type': '[opaque]',
+                  'type': '[Map<string,scalar>]',
                 },
                 {
                   'name': 'count',
@@ -474,10 +477,26 @@ export const StdDataCollectorMlDataCollectorOrbitalManifest = {
   organism: 'std-data-collector',
   orbitalName: 'MlDataCollectorOrbital',
   paramFields: [
-    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
-    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
-    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
-    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+    {
+      'name': 'fields',
+      'type': 'EntityField[]',
+      'description': 'Extra fields appended to the canonical entity.',
+    },
+    {
+      'name': 'pagePath',
+      'type': 'string',
+      'description': 'URL override for the orbital first page.',
+    },
+    {
+      'name': 'entityName',
+      'type': 'string',
+      'description': 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.',
+    },
+    {
+      'name': 'traitOverrides',
+      'type': 'Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>',
+      'description': '.lolo\'s native trait-composition surface 1:1: per-imported-trait config, linkedEntity, events, name, emitsScope, listens. effects is excluded (atom-owned; use listens via a sibling trait).',
+    },
   ] as const,
   traitNames: [
   ] as const,

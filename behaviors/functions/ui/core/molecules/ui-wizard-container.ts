@@ -69,7 +69,7 @@ export interface StdUiWizardContainerConfig {
   compact?: boolean;
   /** Default: `"COMPLETE"` */
   completeEvent?: string;
-  currentStep?: string;
+  currentStep?: unknown;
   error?: EntityRow;
   isLoading?: boolean;
   /** Default: `"NEXT"` */

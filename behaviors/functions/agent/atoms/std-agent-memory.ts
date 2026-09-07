@@ -313,9 +313,31 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
             'event': 'RECALLED',
             'payloadSchema': [
               {
+                'entity': 'MemoryRecord',
                 'name': 'results',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'content',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'category',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'strength',
+                    'type': 'number',
+                  },
+                ],
                 'required': true,
-                'type': '[MemoryRecord]',
+                'type': '[object]',
               },
             ],
           },
@@ -323,9 +345,31 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
             'event': 'RECALL_COMPLETE',
             'payloadSchema': [
               {
+                'entity': 'MemoryRecord',
                 'name': 'result',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'content',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'category',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'strength',
+                    'type': 'number',
+                  },
+                ],
                 'required': true,
-                'type': '[MemoryRecord]',
+                'type': '[object]',
               },
             ],
           },
@@ -355,9 +399,31 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
               'name': 'Recall Complete',
               'payloadSchema': [
                 {
+                  'entity': 'MemoryRecord',
                   'name': 'result',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'content',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'category',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'strength',
+                      'type': 'number',
+                    },
+                  ],
                   'required': true,
-                  'type': '[MemoryRecord]',
+                  'type': '[object]',
                 },
               ],
             },
@@ -374,9 +440,31 @@ export function stdAgentMemoryAgentMemoryOrbital(params: StdAgentMemoryAgentMemo
               'name': 'Recalled',
               'payloadSchema': [
                 {
+                  'entity': 'MemoryRecord',
                   'name': 'results',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'content',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'category',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'strength',
+                      'type': 'number',
+                    },
+                  ],
                   'required': true,
-                  'type': '[MemoryRecord]',
+                  'type': '[object]',
                 },
               ],
             },
@@ -983,10 +1071,26 @@ export const StdAgentMemoryAgentMemoryOrbitalManifest = {
   organism: 'std-agent-memory',
   orbitalName: 'AgentMemoryOrbital',
   paramFields: [
-    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
-    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
-    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
-    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+    {
+      'name': 'fields',
+      'type': 'EntityField[]',
+      'description': 'Extra fields appended to the canonical entity.',
+    },
+    {
+      'name': 'pagePath',
+      'type': 'string',
+      'description': 'URL override for the orbital first page.',
+    },
+    {
+      'name': 'entityName',
+      'type': 'string',
+      'description': 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.',
+    },
+    {
+      'name': 'traitOverrides',
+      'type': 'Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>',
+      'description': '.lolo\'s native trait-composition surface 1:1: per-imported-trait config, linkedEntity, events, name, emitsScope, listens. effects is excluded (atom-owned; use listens via a sibling trait).',
+    },
   ] as const,
   traitNames: [
   ] as const,

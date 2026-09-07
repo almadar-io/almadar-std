@@ -349,9 +349,26 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                 'type': 'object',
               },
               {
+                'entity': 'HistoryEntry',
                 'name': 'history',
+                'properties': [
+                  {
+                    'name': 'role',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'content',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'timestamp',
+                    'type': 'number',
+                  },
+                ],
                 'required': true,
-                'type': '[HistoryEntry]',
+                'type': '[object]',
               },
             ],
           },
@@ -390,9 +407,26 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
             'event': 'HISTORY_LOADED',
             'payloadSchema': [
               {
+                'entity': 'HistoryEntry',
                 'name': 'result',
+                'properties': [
+                  {
+                    'name': 'role',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'content',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'timestamp',
+                    'type': 'number',
+                  },
+                ],
                 'required': true,
-                'type': '[HistoryEntry]',
+                'type': '[object]',
               },
             ],
           },
@@ -458,9 +492,26 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
               'name': 'History Loaded',
               'payloadSchema': [
                 {
+                  'entity': 'HistoryEntry',
                   'name': 'result',
+                  'properties': [
+                    {
+                      'name': 'role',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'content',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'timestamp',
+                      'type': 'number',
+                    },
+                  ],
                   'required': true,
-                  'type': '[HistoryEntry]',
+                  'type': '[object]',
                 },
               ],
             },
@@ -503,9 +554,26 @@ export function stdAgentSessionAgentSessionOrbital(params: StdAgentSessionAgentS
                   'type': 'object',
                 },
                 {
+                  'entity': 'HistoryEntry',
                   'name': 'history',
+                  'properties': [
+                    {
+                      'name': 'role',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'content',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'timestamp',
+                      'type': 'number',
+                    },
+                  ],
                   'required': true,
-                  'type': '[HistoryEntry]',
+                  'type': '[object]',
                 },
               ],
             },
@@ -1072,10 +1140,26 @@ export const StdAgentSessionAgentSessionOrbitalManifest = {
   organism: 'std-agent-session',
   orbitalName: 'AgentSessionOrbital',
   paramFields: [
-    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
-    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
-    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
-    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+    {
+      'name': 'fields',
+      'type': 'EntityField[]',
+      'description': 'Extra fields appended to the canonical entity.',
+    },
+    {
+      'name': 'pagePath',
+      'type': 'string',
+      'description': 'URL override for the orbital first page.',
+    },
+    {
+      'name': 'entityName',
+      'type': 'string',
+      'description': 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.',
+    },
+    {
+      'name': 'traitOverrides',
+      'type': 'Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>',
+      'description': '.lolo\'s native trait-composition surface 1:1: per-imported-trait config, linkedEntity, events, name, emitsScope, listens. effects is excluded (atom-owned; use listens via a sibling trait).',
+    },
   ] as const,
   traitNames: [
   ] as const,

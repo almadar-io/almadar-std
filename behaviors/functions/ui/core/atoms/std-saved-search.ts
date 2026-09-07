@@ -470,8 +470,49 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
             'event': 'SavedSearchLoaded',
             'payloadSchema': [
               {
+                'entity': 'SavedSearch',
                 'name': 'data',
-                'type': '[SavedSearch]',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'name',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'query',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'filters',
+                    'type': 'Map<string,scalar>',
+                  },
+                  {
+                    'name': 'alertEnabled',
+                    'type': 'boolean',
+                  },
+                  {
+                    'name': 'alertFrequency',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'userId',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'lastNotifiedAt',
+                    'type': 'datetime',
+                  },
+                  {
+                    'name': 'createdAt',
+                    'type': 'string',
+                  },
+                ],
+                'type': '[object]',
               },
             ],
             'synonyms': 'loaded, retrieved, fetched',
@@ -569,8 +610,49 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
               'name': 'SavedSearch loaded',
               'payloadSchema': [
                 {
+                  'entity': 'SavedSearch',
                   'name': 'data',
-                  'type': '[SavedSearch]',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'name',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'query',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'filters',
+                      'type': 'Map<string,scalar>',
+                    },
+                    {
+                      'name': 'alertEnabled',
+                      'type': 'boolean',
+                    },
+                    {
+                      'name': 'alertFrequency',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'userId',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'lastNotifiedAt',
+                      'type': 'datetime',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': '[object]',
                 },
               ],
               'synonyms': 'loaded, retrieved, fetched',
@@ -1280,12 +1362,36 @@ export const StdSavedSearchSavedSearchOrbitalManifest = {
   organism: 'std-saved-search',
   orbitalName: 'SavedSearchOrbital',
   paramFields: [
-    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
-    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
-    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
-    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
-    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+    {
+      'name': 'fields',
+      'type': 'EntityField[]',
+      'description': 'Extra fields appended to the canonical entity.',
+    },
+    {
+      'name': 'pagePath',
+      'type': 'string',
+      'description': 'URL override for the orbital first page.',
+    },
+    {
+      'name': 'persistence',
+      'type': '\'persistent\' | \'runtime\'',
+      'description': 'Override the canonical entity persistence mode.',
+    },
+    {
+      'name': 'entityName',
+      'type': 'string',
+      'description': 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.',
+    },
+    {
+      'name': 'collection',
+      'type': 'string',
+      'description': 'Override derived collection key. Defaults to plural(entityName).toLowerCase().',
+    },
+    {
+      'name': 'traitOverrides',
+      'type': 'Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>',
+      'description': '.lolo\'s native trait-composition surface 1:1: per-imported-trait config, linkedEntity, events, name, emitsScope, listens. effects is excluded (atom-owned; use listens via a sibling trait).',
+    },
   ] as const,
   traitNames: [
   ] as const,

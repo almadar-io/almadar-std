@@ -341,13 +341,29 @@ export function stdWeightValidatorMlWeightValidatorOrbital(params: StdWeightVali
             'event': 'WEIGHTS_REJECTED',
             'payloadSchema': [
               {
+                'entity': 'WeightViolation',
                 'name': 'violations',
+                'properties': [
+                  {
+                    'name': 'check',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'value',
+                    'type': 'float',
+                  },
+                  {
+                    'name': 'index',
+                    'type': 'int',
+                  },
+                ],
                 'required': true,
-                'type': '[WeightViolation]',
+                'type': '[object]',
               },
               {
                 'name': 'request',
-                'type': 'opaque',
+                'type': '$r',
               },
             ],
             'scope': 'external',
@@ -378,7 +394,7 @@ export function stdWeightValidatorMlWeightValidatorOrbital(params: StdWeightVali
                 },
                 {
                   'name': 'request',
-                  'type': 'opaque',
+                  'type': '$r',
                 },
               ],
             },
@@ -405,13 +421,29 @@ export function stdWeightValidatorMlWeightValidatorOrbital(params: StdWeightVali
               'name': 'Weights Rejected',
               'payloadSchema': [
                 {
+                  'entity': 'WeightViolation',
                   'name': 'violations',
+                  'properties': [
+                    {
+                      'name': 'check',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'value',
+                      'type': 'float',
+                    },
+                    {
+                      'name': 'index',
+                      'type': 'int',
+                    },
+                  ],
                   'required': true,
-                  'type': '[WeightViolation]',
+                  'type': '[object]',
                 },
                 {
                   'name': 'request',
-                  'type': 'opaque',
+                  'type': '$r',
                 },
               ],
               'tier': 'primary',
@@ -735,6 +767,12 @@ export function stdWeightValidatorMlWeightValidatorOrbital(params: StdWeightVali
             },
           ],
         },
+        'typeParams': [
+          {
+            'kind': 'Entity',
+            'name': 'r',
+          },
+        ],
       } satisfies Trait,
     ],
     pages: [
@@ -791,10 +829,26 @@ export const StdWeightValidatorMlWeightValidatorOrbitalManifest = {
   organism: 'std-weight-validator',
   orbitalName: 'MlWeightValidatorOrbital',
   paramFields: [
-    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
-    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
-    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
-    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+    {
+      'name': 'fields',
+      'type': 'EntityField[]',
+      'description': 'Extra fields appended to the canonical entity.',
+    },
+    {
+      'name': 'pagePath',
+      'type': 'string',
+      'description': 'URL override for the orbital first page.',
+    },
+    {
+      'name': 'entityName',
+      'type': 'string',
+      'description': 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.',
+    },
+    {
+      'name': 'traitOverrides',
+      'type': 'Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>',
+      'description': '.lolo\'s native trait-composition surface 1:1: per-imported-trait config, linkedEntity, events, name, emitsScope, listens. effects is excluded (atom-owned; use listens via a sibling trait).',
+    },
   ] as const,
   traitNames: [
   ] as const,

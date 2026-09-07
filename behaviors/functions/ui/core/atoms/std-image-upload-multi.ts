@@ -390,9 +390,29 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
             'event': 'UPLOAD',
             'payloadSchema': [
               {
+                'entity': 'UploadBatchFile',
                 'name': 'files',
+                'properties': [
+                  {
+                    'name': 'name',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'size',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'type',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'content',
+                    'type': 'string',
+                  },
+                ],
                 'required': true,
-                'type': '[UploadBatchFile]',
+                'type': '[object]',
               },
             ],
             'synonyms': 'start, initiate, begin',
@@ -403,8 +423,53 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
             'event': 'UploadedImageLoaded',
             'payloadSchema': [
               {
+                'entity': 'UploadedImage',
                 'name': 'data',
-                'type': '[UploadedImage]',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'url',
+                    'required': true,
+                    'type': 'url',
+                  },
+                  {
+                    'name': 'name',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'sizeBytes',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'mimeType',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'width',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'height',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'parentId',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'parentType',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'uploadedAt',
+                    'type': 'datetime',
+                  },
+                ],
+                'type': '[object]',
               },
             ],
             'synonyms': 'loaded, received, parsed',
@@ -482,8 +547,36 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
             'event': 'UploadedImageStored',
             'payloadSchema': [
               {
+                'entity': 'StoredImageItem',
                 'name': 'items',
-                'type': '[StoredImageItem]',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'key',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'url',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'name',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'sizeBytes',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'mimeType',
+                    'type': 'string',
+                  },
+                ],
+                'type': '[object]',
               },
               {
                 'name': 'count',
@@ -554,8 +647,53 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
               'name': 'UploadedImage loaded',
               'payloadSchema': [
                 {
+                  'entity': 'UploadedImage',
                   'name': 'data',
-                  'type': '[UploadedImage]',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'url',
+                      'required': true,
+                      'type': 'url',
+                    },
+                    {
+                      'name': 'name',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'sizeBytes',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'mimeType',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'width',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'height',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'parentId',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'parentType',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'uploadedAt',
+                      'type': 'datetime',
+                    },
+                  ],
+                  'type': '[object]',
                 },
               ],
               'synonyms': 'loaded, received, parsed',
@@ -1216,12 +1354,36 @@ export const StdImageUploadMultiUploadedImageOrbitalManifest = {
   organism: 'std-image-upload-multi',
   orbitalName: 'UploadedImageOrbital',
   paramFields: [
-    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
-    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
-    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
-    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
-    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+    {
+      'name': 'fields',
+      'type': 'EntityField[]',
+      'description': 'Extra fields appended to the canonical entity.',
+    },
+    {
+      'name': 'pagePath',
+      'type': 'string',
+      'description': 'URL override for the orbital first page.',
+    },
+    {
+      'name': 'persistence',
+      'type': '\'persistent\' | \'runtime\'',
+      'description': 'Override the canonical entity persistence mode.',
+    },
+    {
+      'name': 'entityName',
+      'type': 'string',
+      'description': 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.',
+    },
+    {
+      'name': 'collection',
+      'type': 'string',
+      'description': 'Override derived collection key. Defaults to plural(entityName).toLowerCase().',
+    },
+    {
+      'name': 'traitOverrides',
+      'type': 'Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>',
+      'description': '.lolo\'s native trait-composition surface 1:1: per-imported-trait config, linkedEntity, events, name, emitsScope, listens. effects is excluded (atom-owned; use listens via a sibling trait).',
+    },
   ] as const,
   traitNames: [
   ] as const,

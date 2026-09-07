@@ -244,16 +244,22 @@ export function stdAuditCaptureAuditCaptureOrbital(params: StdAuditCaptureAuditC
           {
             'default': {},
             'description': 'The state of the entity prior to the modification.',
+            'items': {
+              'type': 'scalar',
+            },
             'name': 'before',
             'synonyms': 'previous, original, old value',
-            'type': 'opaque',
+            'type': 'object',
           },
           {
             'default': {},
             'description': 'The state of the entity after a modification.',
+            'items': {
+              'type': 'scalar',
+            },
             'name': 'after',
             'synonyms': 'new, updated, post, subsequent',
-            'type': 'opaque',
+            'type': 'object',
           },
           {
             'default': 0,
@@ -646,12 +652,36 @@ export const StdAuditCaptureAuditCaptureOrbitalManifest = {
   organism: 'std-audit-capture',
   orbitalName: 'AuditCaptureOrbital',
   paramFields: [
-    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
-    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
-    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
-    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
-    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+    {
+      'name': 'fields',
+      'type': 'EntityField[]',
+      'description': 'Extra fields appended to the canonical entity.',
+    },
+    {
+      'name': 'pagePath',
+      'type': 'string',
+      'description': 'URL override for the orbital first page.',
+    },
+    {
+      'name': 'persistence',
+      'type': '\'persistent\' | \'runtime\'',
+      'description': 'Override the canonical entity persistence mode.',
+    },
+    {
+      'name': 'entityName',
+      'type': 'string',
+      'description': 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.',
+    },
+    {
+      'name': 'collection',
+      'type': 'string',
+      'description': 'Override derived collection key. Defaults to plural(entityName).toLowerCase().',
+    },
+    {
+      'name': 'traitOverrides',
+      'type': 'Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>',
+      'description': '.lolo\'s native trait-composition surface 1:1: per-imported-trait config, linkedEntity, events, name, emitsScope, listens. effects is excluded (atom-owned; use listens via a sibling trait).',
+    },
   ] as const,
   traitNames: [
   ] as const,

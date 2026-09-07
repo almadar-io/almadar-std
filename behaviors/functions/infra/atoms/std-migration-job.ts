@@ -36,14 +36,14 @@ export type StdMigrationJobEventKey = 'COMMITTED' | 'DOCUMENTS_LISTED' | 'DOCUME
  * Payload shape for the `DOCUMENTS_LISTED` event.
  */
 export interface StdMigrationJobDocumentsListedPayload {
-  documents: EntityRow[];
+  documents: unknown;
 }
 
 /**
  * Payload shape for the `DOCUMENT_FETCHED` event.
  */
 export interface StdMigrationJobDocumentFetchedPayload {
-  document: unknown;
+  document: Record<string, EntityRow>;
 }
 
 /**
@@ -51,7 +51,7 @@ export interface StdMigrationJobDocumentFetchedPayload {
  */
 export interface StdMigrationJobCommittedPayload {
   committed: number;
-  failed: EntityRow[];
+  failed: unknown;
 }
 
 /**
@@ -65,31 +65,31 @@ export interface StdMigrationJobMigrationCallFailedPayload {
  * Payload shape for the `MIGRATION_FETCHED` event.
  */
 export interface StdMigrationJobMigrationFetchedPayload {
-  documents: EntityRow[];
+  documents: unknown;
 }
 
 /**
  * Payload shape for the `MIGRATION_DOCUMENT` event.
  */
 export interface StdMigrationJobMigrationDocumentPayload {
-  document: unknown;
+  document: Record<string, EntityRow>;
 }
 
 /**
  * Payload shape for the `MIGRATION_REVIEW_READY` event.
  */
 export interface StdMigrationJobMigrationReviewReadyPayload {
-  stats: unknown;
+  stats: EntityRow;
   units?: EntityRow[];
   skipped?: EntityRow[];
-  validationErrors?: EntityRow[];
+  validationErrors?: unknown;
 }
 
 /**
  * Payload shape for the `MIGRATION_COMPLETED` event.
  */
 export interface StdMigrationJobMigrationCompletedPayload {
-  stats: unknown;
+  stats: EntityRow;
 }
 
 /**
@@ -342,7 +342,10 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
             'default': [],
             'description': 'Document metadata listed from the source — migration.listDocuments service result, never destructured by the atom.',
             'items': {
-              'type': 'opaque',
+              'items': {
+                'type': 'scalar',
+              },
+              'type': 'object',
             },
             'name': 'documents',
             'type': 'array',
@@ -350,14 +353,35 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
           {
             'default': {},
             'description': 'Most recently fetched document content — migration.fetchDocument service result, never destructured by the atom.',
+            'items': {
+              'type': 'scalar',
+            },
             'name': 'document',
-            'type': 'opaque',
+            'type': 'object',
           },
           {
             'default': {},
             'description': 'Staged/committed/failed/skipped counts — merged from host staging and migration.commit service results, never destructured by the atom.',
             'name': 'stats',
-            'type': 'opaque',
+            'properties': {
+              'committed': {
+                'name': 'committed',
+                'required': false,
+                'type': 'number',
+              },
+              'failed': {
+                'items': {
+                  'items': {
+                    'type': 'scalar',
+                  },
+                  'type': 'object',
+                },
+                'name': 'failed',
+                'required': false,
+                'type': 'array',
+              },
+            },
+            'type': 'object',
           },
           {
             'default': [],
@@ -420,7 +444,10 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
             'default': [],
             'description': 'Validation errors surfaced during staging, when the host stages the full rows rather than aggregate stats only.',
             'items': {
-              'type': 'opaque',
+              'items': {
+                'type': 'scalar',
+              },
+              'type': 'object',
             },
             'name': 'validationErrors',
             'synonyms': 'staging errors, validation issues, import errors',
@@ -573,7 +600,7 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
               {
                 'name': 'documents',
                 'required': true,
-                'type': '[opaque]',
+                'type': '[Map<string,scalar>]',
               },
             ],
             'tier': 'secondary',
@@ -585,7 +612,7 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
               {
                 'name': 'document',
                 'required': true,
-                'type': 'opaque',
+                'type': 'Map<string,scalar>',
               },
             ],
             'tier': 'secondary',
@@ -602,7 +629,7 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
               {
                 'name': 'failed',
                 'required': true,
-                'type': '[opaque]',
+                'type': '[Map<string,scalar>]',
               },
             ],
             'tier': 'secondary',
@@ -626,7 +653,7 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
               {
                 'name': 'documents',
                 'required': true,
-                'type': '[opaque]',
+                'type': '[Map<string,scalar>]',
               },
             ],
             'scope': 'external',
@@ -640,7 +667,7 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
               {
                 'name': 'document',
                 'required': true,
-                'type': 'opaque',
+                'type': 'Map<string,scalar>',
               },
             ],
             'scope': 'external',
@@ -653,20 +680,64 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
             'payloadSchema': [
               {
                 'name': 'stats',
+                'properties': [
+                  {
+                    'name': 'committed',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'failed',
+                    'type': '[Map<string,scalar>]',
+                  },
+                ],
                 'required': true,
-                'type': 'opaque',
+                'type': 'object',
               },
               {
+                'entity': 'ImportUnit',
                 'name': 'units',
-                'type': '[ImportUnit]',
+                'properties': [
+                  {
+                    'name': 'ref',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'targetEntity',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'fields',
+                    'type': 'Map<string,scalar>',
+                  },
+                  {
+                    'name': 'parentRef',
+                    'type': 'string',
+                  },
+                ],
+                'type': '[object]',
               },
               {
+                'entity': 'ImportSkip',
                 'name': 'skipped',
-                'type': '[ImportSkip]',
+                'properties': [
+                  {
+                    'name': 'ref',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'reason',
+                    'required': true,
+                    'type': 'string',
+                  },
+                ],
+                'type': '[object]',
               },
               {
                 'name': 'validationErrors',
-                'type': '[opaque]',
+                'type': '[Map<string,scalar>]',
               },
             ],
             'scope': 'external',
@@ -679,8 +750,18 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
             'payloadSchema': [
               {
                 'name': 'stats',
+                'properties': [
+                  {
+                    'name': 'committed',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'failed',
+                    'type': '[Map<string,scalar>]',
+                  },
+                ],
                 'required': true,
-                'type': 'opaque',
+                'type': 'object',
               },
             ],
             'scope': 'external',
@@ -793,7 +874,7 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                 {
                   'name': 'documents',
                   'required': true,
-                  'type': '[opaque]',
+                  'type': '[Map<string,scalar>]',
                 },
               ],
               'tier': 'secondary',
@@ -806,7 +887,7 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                 {
                   'name': 'documents',
                   'required': true,
-                  'type': '[opaque]',
+                  'type': '[Map<string,scalar>]',
                 },
               ],
               'synonyms': 'import fetched, source listed, documents ready',
@@ -820,7 +901,7 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                 {
                   'name': 'document',
                   'required': true,
-                  'type': 'opaque',
+                  'type': 'Map<string,scalar>',
                 },
               ],
               'synonyms': 'document loaded, content fetched',
@@ -860,7 +941,7 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                 {
                   'name': 'document',
                   'required': true,
-                  'type': 'opaque',
+                  'type': 'Map<string,scalar>',
                 },
               ],
               'tier': 'secondary',
@@ -872,8 +953,18 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
               'payloadSchema': [
                 {
                   'name': 'stats',
+                  'properties': [
+                    {
+                      'name': 'committed',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'failed',
+                      'type': '[Map<string,scalar>]',
+                    },
+                  ],
                   'required': true,
-                  'type': 'opaque',
+                  'type': 'object',
                 },
                 {
                   'name': 'units',
@@ -917,7 +1008,7 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                 },
                 {
                   'name': 'validationErrors',
-                  'type': '[opaque]',
+                  'type': '[Map<string,scalar>]',
                 },
               ],
               'tier': 'internal',
@@ -974,20 +1065,64 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
               'payloadSchema': [
                 {
                   'name': 'stats',
+                  'properties': [
+                    {
+                      'name': 'committed',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'failed',
+                      'type': '[Map<string,scalar>]',
+                    },
+                  ],
                   'required': true,
-                  'type': 'opaque',
+                  'type': 'object',
                 },
                 {
+                  'entity': 'ImportUnit',
                   'name': 'units',
-                  'type': '[ImportUnit]',
+                  'properties': [
+                    {
+                      'name': 'ref',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'targetEntity',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'fields',
+                      'type': 'Map<string,scalar>',
+                    },
+                    {
+                      'name': 'parentRef',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': '[object]',
                 },
                 {
+                  'entity': 'ImportSkip',
                   'name': 'skipped',
-                  'type': '[ImportSkip]',
+                  'properties': [
+                    {
+                      'name': 'ref',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'reason',
+                      'required': true,
+                      'type': 'string',
+                    },
+                  ],
+                  'type': '[object]',
                 },
                 {
                   'name': 'validationErrors',
-                  'type': '[opaque]',
+                  'type': '[Map<string,scalar>]',
                 },
               ],
               'synonyms': 'preview ready, staging complete, review import',
@@ -1006,7 +1141,7 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                 {
                   'name': 'failed',
                   'required': true,
-                  'type': '[opaque]',
+                  'type': '[Map<string,scalar>]',
                 },
               ],
               'tier': 'secondary',
@@ -1024,8 +1159,18 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
               'payloadSchema': [
                 {
                   'name': 'stats',
+                  'properties': [
+                    {
+                      'name': 'committed',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'failed',
+                      'type': '[Map<string,scalar>]',
+                    },
+                  ],
                   'required': true,
-                  'type': 'opaque',
+                  'type': 'object',
                 },
               ],
               'synonyms': 'import done, migration complete, data imported',
@@ -1815,12 +1960,36 @@ export const StdMigrationJobMigrationJobOrbitalManifest = {
   organism: 'std-migration-job',
   orbitalName: 'MigrationJobOrbital',
   paramFields: [
-    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
-    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
-    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
-    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
-    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+    {
+      'name': 'fields',
+      'type': 'EntityField[]',
+      'description': 'Extra fields appended to the canonical entity.',
+    },
+    {
+      'name': 'pagePath',
+      'type': 'string',
+      'description': 'URL override for the orbital first page.',
+    },
+    {
+      'name': 'persistence',
+      'type': '\'persistent\' | \'runtime\'',
+      'description': 'Override the canonical entity persistence mode.',
+    },
+    {
+      'name': 'entityName',
+      'type': 'string',
+      'description': 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.',
+    },
+    {
+      'name': 'collection',
+      'type': 'string',
+      'description': 'Override derived collection key. Defaults to plural(entityName).toLowerCase().',
+    },
+    {
+      'name': 'traitOverrides',
+      'type': 'Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>',
+      'description': '.lolo\'s native trait-composition surface 1:1: per-imported-trait config, linkedEntity, events, name, emitsScope, listens. effects is excluded (atom-owned; use listens via a sibling trait).',
+    },
   ] as const,
   traitNames: [
   ] as const,

@@ -50,9 +50,7 @@ export interface StdUiSubagentTracePanelConfig {
   activeFilters?: Record<string, TraitConfig>;
   className?: string;
   /** Default: `[]` */
-  coordinatorActivities?: unknown;
-  /** Default: `[]` */
-  coordinatorMessages?: unknown;
+  coordinatorMessages?: EntityRow[];
   /** Default: `1` */
   disclosureLevel?: number;
   error?: EntityRow;
@@ -72,8 +70,8 @@ export interface StdUiSubagentTracePanelConfig {
   sortBy?: string;
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
-  /** Default: `[]` */
-  subagents?: unknown;
+  /** Default: `[{"durationMs":1,"id":"Id","messages":[{"message":"Message","timestamp":1,"tool":"Tool"},{"message":"Message 2","timestamp":2,"tool":"Tool 2"}],"name":"Name","orbitalName":"Orbital Name","parentId":"Parent Id","role":"Role","status":"running","task":"Task","timeline":[]},{"durationMs":2,"id":"Id 2","messages":[{"message":"Message","timestamp":1,"tool":"Tool"},{"message":"Message 2","timestamp":2,"tool":"Tool 2"}],"name":"Name 2","orbitalName":"Orbital Name 2","parentId":"Parent Id 2","role":"Role 2","status":"complete","task":"Task 2","timeline":[]}]` */
+  subagents?: EntityRow[];
   totalCount?: number;
 }
 
@@ -164,31 +162,68 @@ export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSu
             'tier': 'presentation',
             'type': 'string',
           },
-          'coordinatorActivities': {
-            'default': [],
-            'description': 'Full coordinator activities (tool calls, results, messages, errors).',
-            'items': {
-              'items': {
-                'type': 'scalar',
-              },
-              'type': 'object',
-            },
-            'label': 'Coordinator Activities',
-            'tier': 'presentation',
-            'type': '[Map<string,scalar>]',
-          },
           'coordinatorMessages': {
             'default': [],
             'description': 'Canonical Coordinator conversation — same shape live and on reload. When present, takes precedence over `coordinatorActivities` for the Coordinator section.',
             'items': {
-              'items': {
-                'type': 'scalar',
+              'properties': {
+                'content': {
+                  'name': 'content',
+                  'required': true,
+                  'type': 'string',
+                },
+                'reasoningContent': {
+                  'name': 'reasoningContent',
+                  'required': false,
+                  'type': 'string',
+                },
+                'role': {
+                  'name': 'role',
+                  'required': true,
+                  'type': 'string',
+                  'values': [
+                    'system',
+                    'user',
+                    'assistant',
+                    'tool',
+                  ],
+                },
+                'toolCallId': {
+                  'name': 'toolCallId',
+                  'required': false,
+                  'type': 'string',
+                },
+                'toolCalls': {
+                  'items': {
+                    'properties': {
+                      'id': {
+                        'name': 'id',
+                        'required': true,
+                        'type': 'string',
+                      },
+                      'name': {
+                        'name': 'name',
+                        'required': true,
+                        'type': 'string',
+                      },
+                    },
+                    'type': 'object',
+                  },
+                  'name': 'toolCalls',
+                  'required': false,
+                  'type': 'array',
+                },
+                'toolName': {
+                  'name': 'toolName',
+                  'required': false,
+                  'type': 'string',
+                },
               },
               'type': 'object',
             },
             'label': 'Coordinator Messages',
             'tier': 'presentation',
-            'type': '[Map<string,scalar>]',
+            'type': '[SubagentTracePanelCoordinatorMessagesItem]',
           },
           'disclosureLevel': {
             'default': 1,
@@ -309,17 +344,133 @@ export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSu
             ],
           },
           'subagents': {
-            'default': [],
+            'default': [
+              {
+                'durationMs': 1,
+                'id': 'Id',
+                'messages': [
+                  {
+                    'message': 'Message',
+                    'timestamp': 1,
+                    'tool': 'Tool',
+                  },
+                  {
+                    'message': 'Message 2',
+                    'timestamp': 2,
+                    'tool': 'Tool 2',
+                  },
+                ],
+                'name': 'Name',
+                'orbitalName': 'Orbital Name',
+                'parentId': 'Parent Id',
+                'role': 'Role',
+                'status': 'running',
+                'task': 'Task',
+                'timeline': [],
+              },
+              {
+                'durationMs': 2,
+                'id': 'Id 2',
+                'messages': [
+                  {
+                    'message': 'Message',
+                    'timestamp': 1,
+                    'tool': 'Tool',
+                  },
+                  {
+                    'message': 'Message 2',
+                    'timestamp': 2,
+                    'tool': 'Tool 2',
+                  },
+                ],
+                'name': 'Name 2',
+                'orbitalName': 'Orbital Name 2',
+                'parentId': 'Parent Id 2',
+                'role': 'Role 2',
+                'status': 'complete',
+                'task': 'Task 2',
+                'timeline': [],
+              },
+            ],
             'description': 'All known subagents from the runner.',
             'items': {
-              'items': {
-                'type': 'scalar',
+              'properties': {
+                'durationMs': {
+                  'name': 'durationMs',
+                  'required': false,
+                  'type': 'number',
+                },
+                'id': {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                'messages': {
+                  'items': {
+                    'properties': {
+                      'message': {
+                        'name': 'message',
+                        'required': true,
+                        'type': 'string',
+                      },
+                      'timestamp': {
+                        'name': 'timestamp',
+                        'required': true,
+                        'type': 'number',
+                      },
+                      'tool': {
+                        'name': 'tool',
+                        'required': false,
+                        'type': 'string',
+                      },
+                    },
+                    'type': 'object',
+                  },
+                  'name': 'messages',
+                  'required': true,
+                  'type': 'array',
+                },
+                'name': {
+                  'name': 'name',
+                  'required': true,
+                  'type': 'string',
+                },
+                'orbitalName': {
+                  'name': 'orbitalName',
+                  'required': false,
+                  'type': 'string',
+                },
+                'parentId': {
+                  'name': 'parentId',
+                  'required': false,
+                  'type': 'string',
+                },
+                'role': {
+                  'name': 'role',
+                  'required': true,
+                  'type': 'string',
+                },
+                'status': {
+                  'name': 'status',
+                  'required': true,
+                  'type': 'string',
+                  'values': [
+                    'running',
+                    'complete',
+                    'error',
+                  ],
+                },
+                'task': {
+                  'name': 'task',
+                  'required': true,
+                  'type': 'string',
+                },
               },
               'type': 'object',
             },
             'label': 'Subagents',
             'tier': 'presentation',
-            'type': '[Map<string,scalar>]',
+            'type': '[SubagentTracePanelSubagentsItem]',
           },
           'totalCount': {
             'description': 'Total number of items',
@@ -430,7 +581,6 @@ export function stdUiSubagentTracePanelSubagentTracePanelOrbital(params: StdUiSu
                   {
                     'activeFilters': '@config.activeFilters',
                     'className': '@config.className',
-                    'coordinatorActivities': '@config.coordinatorActivities',
                     'coordinatorMessages': '@config.coordinatorMessages',
                     'disclosureLevel': '@config.disclosureLevel',
                     'error': '@config.error',
@@ -534,10 +684,26 @@ export const StdUiSubagentTracePanelSubagentTracePanelOrbitalManifest = {
   organism: 'ui-subagent-trace-panel',
   orbitalName: 'SubagentTracePanelOrbital',
   paramFields: [
-    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
-    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
-    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
-    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+    {
+      'name': 'fields',
+      'type': 'EntityField[]',
+      'description': 'Extra fields appended to the canonical entity.',
+    },
+    {
+      'name': 'pagePath',
+      'type': 'string',
+      'description': 'URL override for the orbital first page.',
+    },
+    {
+      'name': 'entityName',
+      'type': 'string',
+      'description': 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.',
+    },
+    {
+      'name': 'traitOverrides',
+      'type': 'Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>',
+      'description': '.lolo\'s native trait-composition surface 1:1: per-imported-trait config, linkedEntity, events, name, emitsScope, listens. effects is excluded (atom-owned; use listens via a sibling trait).',
+    },
   ] as const,
   traitNames: [
   ] as const,

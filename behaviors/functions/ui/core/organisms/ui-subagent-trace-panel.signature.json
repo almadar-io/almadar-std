@@ -57,31 +57,67 @@
             "tier": "presentation"
           },
           {
-            "key": "coordinatorActivities",
-            "type": "[Map<string,scalar>]",
-            "default": [],
-            "label": "Coordinator Activities",
-            "description": "Full coordinator activities (tool calls, results, messages, errors).",
-            "tier": "presentation",
-            "items": {
-              "type": "object",
-              "items": {
-                "type": "scalar"
-              }
-            }
-          },
-          {
             "key": "coordinatorMessages",
-            "type": "[Map<string,scalar>]",
+            "type": "[SubagentTracePanelCoordinatorMessagesItem]",
             "default": [],
             "label": "Coordinator Messages",
             "description": "Canonical Coordinator conversation — same shape live and on reload. When present, takes precedence over `coordinatorActivities` for the Coordinator section.",
             "tier": "presentation",
             "items": {
-              "type": "object",
-              "items": {
-                "type": "scalar"
-              }
+              "properties": {
+                "content": {
+                  "name": "content",
+                  "required": true,
+                  "type": "string"
+                },
+                "reasoningContent": {
+                  "name": "reasoningContent",
+                  "required": false,
+                  "type": "string"
+                },
+                "role": {
+                  "name": "role",
+                  "required": true,
+                  "type": "string",
+                  "values": [
+                    "system",
+                    "user",
+                    "assistant",
+                    "tool"
+                  ]
+                },
+                "toolCallId": {
+                  "name": "toolCallId",
+                  "required": false,
+                  "type": "string"
+                },
+                "toolCalls": {
+                  "name": "toolCalls",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "id": {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "name": {
+                        "name": "name",
+                        "required": true,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "toolName": {
+                  "name": "toolName",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
             }
           },
           {
@@ -217,16 +253,132 @@
           },
           {
             "key": "subagents",
-            "type": "[Map<string,scalar>]",
-            "default": [],
+            "type": "[SubagentTracePanelSubagentsItem]",
+            "default": [
+              {
+                "durationMs": 1,
+                "id": "Id",
+                "messages": [
+                  {
+                    "message": "Message",
+                    "timestamp": 1,
+                    "tool": "Tool"
+                  },
+                  {
+                    "message": "Message 2",
+                    "timestamp": 2,
+                    "tool": "Tool 2"
+                  }
+                ],
+                "name": "Name",
+                "orbitalName": "Orbital Name",
+                "parentId": "Parent Id",
+                "role": "Role",
+                "status": "running",
+                "task": "Task",
+                "timeline": []
+              },
+              {
+                "durationMs": 2,
+                "id": "Id 2",
+                "messages": [
+                  {
+                    "message": "Message",
+                    "timestamp": 1,
+                    "tool": "Tool"
+                  },
+                  {
+                    "message": "Message 2",
+                    "timestamp": 2,
+                    "tool": "Tool 2"
+                  }
+                ],
+                "name": "Name 2",
+                "orbitalName": "Orbital Name 2",
+                "parentId": "Parent Id 2",
+                "role": "Role 2",
+                "status": "complete",
+                "task": "Task 2",
+                "timeline": []
+              }
+            ],
             "label": "Subagents",
             "description": "All known subagents from the runner.",
             "tier": "presentation",
             "items": {
-              "type": "object",
-              "items": {
-                "type": "scalar"
-              }
+              "properties": {
+                "durationMs": {
+                  "name": "durationMs",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "messages": {
+                  "name": "messages",
+                  "required": true,
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "message": {
+                        "name": "message",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "timestamp": {
+                        "name": "timestamp",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "tool": {
+                        "name": "tool",
+                        "required": false,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
+                "orbitalName": {
+                  "name": "orbitalName",
+                  "required": false,
+                  "type": "string"
+                },
+                "parentId": {
+                  "name": "parentId",
+                  "required": false,
+                  "type": "string"
+                },
+                "role": {
+                  "name": "role",
+                  "required": true,
+                  "type": "string"
+                },
+                "status": {
+                  "name": "status",
+                  "required": true,
+                  "type": "string",
+                  "values": [
+                    "running",
+                    "complete",
+                    "error"
+                  ]
+                },
+                "task": {
+                  "name": "task",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
             }
           },
           {

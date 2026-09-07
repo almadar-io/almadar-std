@@ -46,7 +46,7 @@ export interface StdUiAnimatedCounterConfig {
   prefix?: string;
   suffix?: string;
   /** Default: `""` */
-  value?: string;
+  value?: unknown;
 }
 
 /**

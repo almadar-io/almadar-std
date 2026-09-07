@@ -16,8 +16,6 @@ orbital ApprovalGateOrbital {
 
     type ApprovalRequestReviewFailed = Event { error : string, code : string } "Fired when the persist fails"
 
-    type ApprovalGranted = Event { requestId : string, payload : opaque } "Re-emitted on approval; carries the held payload so the downstream listener can replay the gated action without a lookup."
-
     type DenyCommit = { id : string!, notes : string }
 
     type ApprovalDenied = Event { requestId : string, reason : string } "Emitted on denial; carries the reviewer's written reason. Downstream listeners log, notify, or return the subject to its prior state."
@@ -46,7 +44,7 @@ orbital ApprovalGateOrbital {
     decidedAt : number @description "Timestamp indicating when a decision was made on the request." @synonyms "decision time, resolved at, completed at" = 0
     escalatedAt : number @description "Timestamp indicating when the request was escalated." @synonyms "escalation time, escalation timestamp, escalated time" = 0
     notes : string @description "The reviewer's written reason, captured by the deny step." @synonyms "comments, remarks, explanation, reason, details" = ""
-    payload : opaque @description "The held data of the gated action, replayed by the downstream listener when the request is granted." @synonyms "request data, held payload, pending data, gated data" = {}
+    payload : Map string scalar @description "The held data of the gated action, replayed by the downstream listener when the request is granted." @synonyms "request data, held payload, pending data, gated data" = {}
   }
 
   trait LoadingSpinner = Spinner.traits.SpinnerRender -> ApprovalRequest {
@@ -115,7 +113,7 @@ orbital ApprovalGateOrbital {
     }
   }
 
-  trait ApprovalGateReview -> @rebindable ApprovalRequest [interaction, collection, approval] {
+  trait ApprovalGateReview (p : Entity) -> @rebindable ApprovalRequest [interaction, collection, approval] {
     initial: idle
 
     ;; Every queue fetch is scoped to PENDING rows: a decided row must leave
@@ -372,7 +370,7 @@ orbital ApprovalGateOrbital {
         @tier "domain"
       ApprovalGranted -> external {
         requestId : string
-        payload : opaque
+        payload : p
       }
         @description "Signals that an approval process has been successfully completed; carries the held payload for the downstream listener to replay. Contract: if the replay fails (access denial, write failure), the host MUST emit APPROVAL_REPLAY_FAILED back so the request reopens."
         @synonyms "approved, authorized, confirmed, validated"

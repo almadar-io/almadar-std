@@ -723,8 +723,23 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
             'event': 'ReviewsLoaded',
             'payloadSchema': [
               {
+                'entity': 'ObjectSpec',
                 'name': 'data',
-                'type': '[ObjectSpec]',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'label',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'value',
+                    'type': 'string',
+                  },
+                ],
+                'type': '[object]',
               },
             ],
             'synonyms': 'loaded, fetched, ready, available',
@@ -757,11 +772,73 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
               },
               {
                 'name': 'reviews',
-                'type': '[ReviewRow]',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'rating',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'comment',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'authorName',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'avatarIcon',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'createdAt',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'helpful',
+                    'type': 'number',
+                  },
+                ],
+                'type': '[object]',
               },
               {
                 'name': 'reviewsSource',
-                'type': '[ReviewRow]',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'rating',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'comment',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'authorName',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'avatarIcon',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'createdAt',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'helpful',
+                    'type': 'number',
+                  },
+                ],
+                'type': '[object]',
               },
               {
                 'name': 'totalReviews',
@@ -773,7 +850,18 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
               },
               {
                 'name': 'starDistribution',
-                'type': '[StarBar]',
+                'properties': [
+                  {
+                    'name': 'label',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'percentage',
+                    'type': 'number',
+                  },
+                ],
+                'type': '[object]',
               },
               {
                 'name': 'currentSort',
@@ -878,11 +966,73 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
                 },
                 {
                   'name': 'reviews',
-                  'type': '[ReviewRow]',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'rating',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'comment',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'authorName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'avatarIcon',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'helpful',
+                      'type': 'number',
+                    },
+                  ],
+                  'type': '[object]',
                 },
                 {
                   'name': 'reviewsSource',
-                  'type': '[ReviewRow]',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'rating',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'comment',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'authorName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'avatarIcon',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'helpful',
+                      'type': 'number',
+                    },
+                  ],
+                  'type': '[object]',
                 },
                 {
                   'name': 'totalReviews',
@@ -894,7 +1044,18 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
                 },
                 {
                   'name': 'starDistribution',
-                  'type': '[StarBar]',
+                  'properties': [
+                    {
+                      'name': 'label',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'percentage',
+                      'type': 'number',
+                    },
+                  ],
+                  'type': '[object]',
                 },
                 {
                   'name': 'currentSort',
@@ -2851,11 +3012,73 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
               },
               {
                 'name': 'reviews',
-                'type': '[ReviewRow]',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'rating',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'comment',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'authorName',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'avatarIcon',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'createdAt',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'helpful',
+                    'type': 'number',
+                  },
+                ],
+                'type': '[object]',
               },
               {
                 'name': 'reviewsSource',
-                'type': '[ReviewRow]',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'rating',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'comment',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'authorName',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'avatarIcon',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'createdAt',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'helpful',
+                    'type': 'number',
+                  },
+                ],
+                'type': '[object]',
               },
               {
                 'name': 'totalReviews',
@@ -2867,7 +3090,18 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
               },
               {
                 'name': 'starDistribution',
-                'type': '[StarBar]',
+                'properties': [
+                  {
+                    'name': 'label',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'percentage',
+                    'type': 'number',
+                  },
+                ],
+                'type': '[object]',
               },
               {
                 'name': 'currentSort',
@@ -2962,11 +3196,73 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
                 },
                 {
                   'name': 'reviews',
-                  'type': '[ReviewRow]',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'rating',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'comment',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'authorName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'avatarIcon',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'helpful',
+                      'type': 'number',
+                    },
+                  ],
+                  'type': '[object]',
                 },
                 {
                   'name': 'reviewsSource',
-                  'type': '[ReviewRow]',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'rating',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'comment',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'authorName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'avatarIcon',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'helpful',
+                      'type': 'number',
+                    },
+                  ],
+                  'type': '[object]',
                 },
                 {
                   'name': 'totalReviews',
@@ -2978,7 +3274,18 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
                 },
                 {
                   'name': 'starDistribution',
-                  'type': '[StarBar]',
+                  'properties': [
+                    {
+                      'name': 'label',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'percentage',
+                      'type': 'number',
+                    },
+                  ],
+                  'type': '[object]',
                 },
                 {
                   'name': 'currentSort',
@@ -3474,10 +3781,26 @@ export const StdRatingReviewRatingReviewOrbitalManifest = {
   organism: 'std-rating-review',
   orbitalName: 'RatingReviewOrbital',
   paramFields: [
-    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
-    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
-    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
-    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+    {
+      'name': 'fields',
+      'type': 'EntityField[]',
+      'description': 'Extra fields appended to the canonical entity.',
+    },
+    {
+      'name': 'pagePath',
+      'type': 'string',
+      'description': 'URL override for the orbital first page.',
+    },
+    {
+      'name': 'entityName',
+      'type': 'string',
+      'description': 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.',
+    },
+    {
+      'name': 'traitOverrides',
+      'type': 'Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>',
+      'description': '.lolo\'s native trait-composition surface 1:1: per-imported-trait config, linkedEntity, events, name, emitsScope, listens. effects is excluded (atom-owned; use listens via a sibling trait).',
+    },
   ] as const,
   traitNames: [
   ] as const,

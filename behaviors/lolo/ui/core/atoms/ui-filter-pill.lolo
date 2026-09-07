@@ -3,7 +3,6 @@ app ui-filter-pill "1.0.0"
 orbital FilterPillOrbital {
   entity FilterPillItem [runtime] {
     id : string!
-    label : string
   }
 
   trait FilterPillRender -> @rebindable FilterPillItem [interaction, instance] {
@@ -11,27 +10,11 @@ orbital FilterPillOrbital {
 
     state idle {
       INIT -> idle
-        (set @entity.label @config.label)
         (render-ui main {
           className: @config.className
           variant: @config.variant
           size: @config.size
-          label: @entity.label
-          icon: @config.icon
-          onRemove: @config.onRemove
-          removable: @config.removable
-          onClick: @config.onClick
-          clickEvent: @config.clickEvent
-          removeEvent: @config.removeEvent
-          type: filter-pill
-        })
-      CLICK -> idle
-        (set @entity.label ?label)
-        (render-ui main {
-          className: @config.className
-          variant: @config.variant
-          size: @config.size
-          label: @entity.label
+          label: @config.label
           icon: @config.icon
           onRemove: @config.onRemove
           removable: @config.removable
@@ -50,12 +33,6 @@ orbital FilterPillOrbital {
         @tier "essential"
     }
 
-    listens {
-      CLICK {
-        label : string!
-      }
-    }
-
     config {
       className : string
         @label "Class Name"
@@ -69,7 +46,7 @@ orbital FilterPillOrbital {
         @label "Size"
         @description "size prop"
         @tier "presentation"
-      label : string
+      label : scalar
         @label "Label"
         @description "Pill label text (alternative to children for schema-driven rendering)."
         @tier "presentation"

@@ -597,6 +597,7 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
                 'type': 'string',
               },
               {
+                'entity': 'GalleryItem',
                 'name': 'row',
                 'properties': [
                   {
@@ -639,8 +640,37 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
             'event': 'GalleryItemLoaded',
             'payloadSchema': [
               {
+                'entity': 'GalleryItem',
                 'name': 'data',
-                'type': '[GalleryItem]',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'name',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'description',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'status',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'createdAt',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'imageUrl',
+                    'type': 'image',
+                  },
+                ],
+                'type': '[object]',
               },
             ],
             'synonyms': 'loaded, ready, available',
@@ -683,8 +713,37 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
               'name': 'GalleryItem loaded',
               'payloadSchema': [
                 {
+                  'entity': 'GalleryItem',
                   'name': 'data',
-                  'type': '[GalleryItem]',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'name',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'description',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'imageUrl',
+                      'type': 'image',
+                    },
+                  ],
+                  'type': '[object]',
                 },
               ],
               'synonyms': 'loaded, ready, available',
@@ -774,6 +833,7 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
                   'type': 'string',
                 },
                 {
+                  'entity': 'GalleryItem',
                   'name': 'row',
                   'properties': [
                     {
@@ -1373,10 +1433,26 @@ export const StdGalleryGalleryItemOrbitalManifest = {
   organism: 'std-gallery',
   orbitalName: 'GalleryItemOrbital',
   paramFields: [
-    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
-    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
-    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
-    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+    {
+      'name': 'fields',
+      'type': 'EntityField[]',
+      'description': 'Extra fields appended to the canonical entity.',
+    },
+    {
+      'name': 'pagePath',
+      'type': 'string',
+      'description': 'URL override for the orbital first page.',
+    },
+    {
+      'name': 'entityName',
+      'type': 'string',
+      'description': 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.',
+    },
+    {
+      'name': 'traitOverrides',
+      'type': 'Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>',
+      'description': '.lolo\'s native trait-composition surface 1:1: per-imported-trait config, linkedEntity, events, name, emitsScope, listens. effects is excluded (atom-owned; use listens via a sibling trait).',
+    },
   ] as const,
   traitNames: [
     'LoadingSpinner',

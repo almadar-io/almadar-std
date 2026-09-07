@@ -41,19 +41,19 @@ export type StdUiFlexEventKey = 'INIT';
 export interface StdUiFlexConfig {
   /** Default: `"stretch"` */
   align?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
-  basis?: string;
+  basis?: unknown;
   children?: PatternValue;
   className?: string;
   /** Default: `"row"` */
   direction?: 'row' | 'row-reverse' | 'col' | 'col-reverse';
   /** Default: `"none"` */
   gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-  grow?: number;
+  grow?: unknown;
   /** Default: `false` */
   inline?: boolean;
   /** Default: `"start"` */
   justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
-  shrink?: number;
+  shrink?: unknown;
   /** Default: `"nowrap"` */
   wrap?: 'nowrap' | 'wrap' | 'wrap-reverse';
 }

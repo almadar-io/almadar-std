@@ -42,7 +42,7 @@ export interface StdUiNotificationConfig {
   /** Default: `"ACTION"` */
   actionEvent?: string;
   actionLabel?: string;
-  badge?: string;
+  badge?: unknown;
   className?: string;
   /** Default: `"DISMISS"` */
   dismissEvent?: string;

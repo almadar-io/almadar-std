@@ -1028,8 +1028,53 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
             'event': 'CalendarEventLoaded',
             'payloadSchema': [
               {
+                'entity': 'CalendarEvent',
                 'name': 'data',
-                'type': '[CalendarEvent]',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'name',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'description',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'status',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'createdAt',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'date',
+                    'type': 'datetime',
+                  },
+                  {
+                    'name': 'time',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'duration',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'selectedRange',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'weekAnchor',
+                    'type': 'date',
+                  },
+                ],
+                'type': '[object]',
               },
             ],
             'scope': 'internal',
@@ -1098,8 +1143,53 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
               'name': 'CalendarEvent loaded',
               'payloadSchema': [
                 {
+                  'entity': 'CalendarEvent',
                   'name': 'data',
-                  'type': '[CalendarEvent]',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'name',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'description',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'date',
+                      'type': 'datetime',
+                    },
+                    {
+                      'name': 'time',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'duration',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'selectedRange',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'weekAnchor',
+                      'type': 'date',
+                    },
+                  ],
+                  'type': '[object]',
                 },
               ],
               'synonyms': 'loaded, fetched, retrieved, populated',
@@ -1721,10 +1811,26 @@ export const StdCalendarCalendarEventOrbitalManifest = {
   organism: 'std-calendar',
   orbitalName: 'CalendarEventOrbital',
   paramFields: [
-    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
-    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
-    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
-    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+    {
+      'name': 'fields',
+      'type': 'EntityField[]',
+      'description': 'Extra fields appended to the canonical entity.',
+    },
+    {
+      'name': 'pagePath',
+      'type': 'string',
+      'description': 'URL override for the orbital first page.',
+    },
+    {
+      'name': 'entityName',
+      'type': 'string',
+      'description': 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.',
+    },
+    {
+      'name': 'traitOverrides',
+      'type': 'Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>',
+      'description': '.lolo\'s native trait-composition surface 1:1: per-imported-trait config, linkedEntity, events, name, emitsScope, listens. effects is excluded (atom-owned; use listens via a sibling trait).',
+    },
   ] as const,
   traitNames: [
   ] as const,

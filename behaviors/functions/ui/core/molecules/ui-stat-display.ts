@@ -70,7 +70,7 @@ export interface StdUiStatDisplayConfig {
   /** Default: `"higher-is-better"` */
   trendPolarity?: 'higher-is-better' | 'lower-is-better';
   /** Default: `""` */
-  value?: string;
+  value?: unknown;
   /** Default: `"default"` */
   variant?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info';
 }

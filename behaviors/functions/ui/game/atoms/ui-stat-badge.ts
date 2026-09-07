@@ -52,7 +52,7 @@ export interface StdUiStatBadgeConfig {
   /** Default: `"md"` */
   size?: string;
   source?: string;
-  value?: string;
+  value?: unknown;
   /** Default: `"default"` */
   variant?: string;
 }

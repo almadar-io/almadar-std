@@ -247,7 +247,7 @@ export type StdOperatorCategory = (typeof STD_OPERATOR_CATEGORIES)[number];
 export type OperatorTypeRef =
   | string
   | { kind: 'union'; of: OperatorTypeRef[] }
-  | { kind: 'literal'; value: string | number | boolean }
+  | { kind: 'literal'; value: string | number | boolean | null }
   | { kind: 'array'; of: OperatorTypeRef }
   | { kind: 'object'; fields: Record<string, OperatorTypeRef>; open?: boolean }
   | { kind: 'entity'; collection?: string }

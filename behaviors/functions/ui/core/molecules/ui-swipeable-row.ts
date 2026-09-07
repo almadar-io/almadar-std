@@ -30,7 +30,14 @@ const ALIAS = 'UiSwipeableRow';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiSwipeableRowEventKey = 'INIT';
+export type StdUiSwipeableRowEventKey = 'INIT' | 'SwipeableRowLoaded';
+
+/**
+ * Payload shape for the `SwipeableRowLoaded` event.
+ */
+export interface StdUiSwipeableRowSwipeableRowLoadedPayload {
+  data?: EntityRow[];
+}
 
 /**
  * Typed call-site config block for this trait — every
@@ -41,12 +48,12 @@ export type StdUiSwipeableRowEventKey = 'INIT';
 export interface StdUiSwipeableRowConfig {
   children?: PatternValue;
   className?: string;
-  /** Default: `{}` */
-  itemData?: Record<string, TraitConfig>;
   /** Default: `[]` */
   leftActions?: EntityRow[];
   /** Default: `[]` */
   rightActions?: EntityRow[];
+  /** Default: `true` */
+  selfFetch?: boolean;
   /** Default: `80` */
   threshold?: number;
 }

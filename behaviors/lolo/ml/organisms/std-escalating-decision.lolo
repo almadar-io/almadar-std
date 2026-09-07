@@ -25,6 +25,10 @@ orbital EscalatingDecisionOrbital {
   type ContractNotATensor = { type : "not_a_tensor", actualType : string }
   type ContractViolation = ContractShapeMismatch | ContractRangeViolation | ContractNotATensor
 
+  ;; matched varies by which rung answered: an exact key, a table entry, a
+  ;; match index, or a category label (all scalar) — or R4's raw tensor output.
+  type Matched = scalar | [float]
+
   ;; The entry holds no request data: the whole DECIDE payload travels down
   ;; the chain as `request`, so there is nothing for this trait to remember.
   entity LadderRequest [runtime] {
@@ -133,13 +137,13 @@ orbital EscalatingDecisionOrbital {
     }
   }
 
-  trait ExactRung = Rung0.traits.ExactCheckRun -> ExactCheck {
+  trait ExactRung :: r DecisionRequest = Rung0.traits.ExactCheckRun -> ExactCheck {
     listens {
       LadderEntry.RUN_EXACT -> CHECK
     }
   }
 
-  trait LookupRung = Rung1.traits.LookupRun -> KeyLookup {
+  trait LookupRung :: e scalar r DecisionRequest = Rung1.traits.LookupRun -> KeyLookup {
     listens {
       ExactRung.EXACT_UNMATCHED -> LOOKUP
         with { candidate: ?candidate, accepted: (object/get ?request "accepted"), request: ?request }
@@ -248,7 +252,7 @@ orbital EscalatingDecisionOrbital {
       DECIDED -> external {
         rung : string!
         confidence : number!
-        matched : opaque!
+        matched : Matched!
         reasoning : string!
       }
         @description "The ladder proved an answer. rung names which one served it: R0 exact, R1 table, R3 retrieved, R4 learned, R5 generative."

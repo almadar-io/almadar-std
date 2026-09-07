@@ -202,17 +202,6 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
     ],
     example: '["object/filter", "@data", ["fn", ["k", "v"], ["!=", "@v", null]]]',
   },
-  'object/empty?': {
-    module: 'object',
-    category: 'std-object',
-    minArity: 1,
-    maxArity: 1,
-    description: 'Check if object has no keys',
-    hasSideEffects: false,
-    returnType: 'boolean',
-    params: [{ name: 'obj', type: 'object', description: 'The object' }],
-    example: '["object/empty?", {}] // => true',
-  },
   'object/equals': {
     module: 'object',
     category: 'std-object',

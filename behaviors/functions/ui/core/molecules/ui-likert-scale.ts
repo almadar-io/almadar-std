@@ -58,7 +58,7 @@ export interface StdUiLikertScaleConfig {
   question?: string;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
-  value?: string;
+  value?: unknown;
   /** Default: `"radios"` */
   variant?: 'radios' | 'buttons';
 }

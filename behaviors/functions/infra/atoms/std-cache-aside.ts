@@ -938,8 +938,41 @@ export function stdCacheAsideCacheEntryOrbital(params: StdCacheAsideCacheEntryOr
             'event': 'CacheEntryLoaded',
             'payloadSchema': [
               {
+                'entity': 'CacheEntry',
                 'name': 'data',
-                'type': '[CacheEntry]',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'name',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'description',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'status',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'createdAt',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'hitCount',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'cacheAge',
+                    'type': 'number',
+                  },
+                ],
+                'type': '[object]',
               },
             ],
             'scope': 'internal',
@@ -1047,8 +1080,41 @@ export function stdCacheAsideCacheEntryOrbital(params: StdCacheAsideCacheEntryOr
               'name': 'CacheEntry loaded',
               'payloadSchema': [
                 {
+                  'entity': 'CacheEntry',
                   'name': 'data',
-                  'type': '[CacheEntry]',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'name',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'description',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'hitCount',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'cacheAge',
+                      'type': 'number',
+                    },
+                  ],
+                  'type': '[object]',
                 },
               ],
               'synonyms': 'loaded, retrieved, fetched',
@@ -1081,6 +1147,7 @@ export function stdCacheAsideCacheEntryOrbital(params: StdCacheAsideCacheEntryOr
               'name': 'Cached',
               'payloadSchema': [
                 {
+                  'entity': 'CacheEntry',
                   'name': 'data',
                   'properties': [
                     {
@@ -2011,10 +2078,26 @@ export const StdCacheAsideCacheEntryOrbitalManifest = {
   organism: 'std-cache-aside',
   orbitalName: 'CacheEntryOrbital',
   paramFields: [
-    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
-    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
-    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
-    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+    {
+      'name': 'fields',
+      'type': 'EntityField[]',
+      'description': 'Extra fields appended to the canonical entity.',
+    },
+    {
+      'name': 'pagePath',
+      'type': 'string',
+      'description': 'URL override for the orbital first page.',
+    },
+    {
+      'name': 'entityName',
+      'type': 'string',
+      'description': 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.',
+    },
+    {
+      'name': 'traitOverrides',
+      'type': 'Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>',
+      'description': '.lolo\'s native trait-composition surface 1:1: per-imported-trait config, linkedEntity, events, name, emitsScope, listens. effects is excluded (atom-owned; use listens via a sibling trait).',
+    },
   ] as const,
   traitNames: [
     'FetchButton',

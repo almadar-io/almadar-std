@@ -49,7 +49,8 @@ export interface StdUiDocumentViewerConfig {
   /** Default: `[]` */
   documents?: EntityRow[];
   error?: EntityRow;
-  height?: string;
+  /** Default: `600` */
+  height?: unknown;
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `false` */

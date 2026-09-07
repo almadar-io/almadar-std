@@ -172,12 +172,43 @@ export function stdKnowledgeTracingKnowledgeTracingOrbital(params: StdKnowledgeT
             ],
           },
           {
+            'default': {},
             'name': 'input',
-            'type': 'opaque',
+            'properties': {
+              'skillId': {
+                'name': 'skillId',
+                'required': true,
+                'type': 'string',
+              },
+            },
+            'type': 'object',
           },
           {
+            'default': {},
             'name': 'verdict',
-            'type': 'opaque',
+            'properties': {
+              'intervalHigh': {
+                'name': 'intervalHigh',
+                'required': true,
+                'type': 'number',
+              },
+              'intervalLow': {
+                'name': 'intervalLow',
+                'required': true,
+                'type': 'number',
+              },
+              'mean': {
+                'name': 'mean',
+                'required': true,
+                'type': 'number',
+              },
+              'status': {
+                'name': 'status',
+                'required': true,
+                'type': 'string',
+              },
+            },
+            'type': 'object',
           },
           {
             'default': '',
@@ -185,8 +216,12 @@ export function stdKnowledgeTracingKnowledgeTracingOrbital(params: StdKnowledgeT
             'type': 'string',
           },
           {
+            'default': {},
+            'items': {
+              'type': 'scalar',
+            },
             'name': 'outcome',
-            'type': 'opaque',
+            'type': 'object',
           },
           {
             'default': '',
@@ -666,10 +701,26 @@ export const StdKnowledgeTracingKnowledgeTracingOrbitalManifest = {
   organism: 'std-knowledge-tracing',
   orbitalName: 'KnowledgeTracingOrbital',
   paramFields: [
-    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
-    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
-    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
-    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+    {
+      'name': 'fields',
+      'type': 'EntityField[]',
+      'description': 'Extra fields appended to the canonical entity.',
+    },
+    {
+      'name': 'pagePath',
+      'type': 'string',
+      'description': 'URL override for the orbital first page.',
+    },
+    {
+      'name': 'entityName',
+      'type': 'string',
+      'description': 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.',
+    },
+    {
+      'name': 'traitOverrides',
+      'type': 'Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>',
+      'description': '.lolo\'s native trait-composition surface 1:1: per-imported-trait config, linkedEntity, events, name, emitsScope, listens. effects is excluded (atom-owned; use listens via a sibling trait).',
+    },
   ] as const,
   traitNames: [
     'PosteriorTracker',

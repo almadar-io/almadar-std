@@ -8,7 +8,7 @@ orbital MlExactCheckOrbital {
     status  : "idle" | "checked" = idle
   }
 
-  trait ExactCheckRun -> ExactCheck [lifecycle, instance] {
+  trait ExactCheckRun (r : Entity) -> ExactCheck [lifecycle, instance] {
     initial: idle
 
     config {
@@ -71,7 +71,7 @@ orbital MlExactCheckOrbital {
       EXACT_UNMATCHED -> external {
         candidate : scalar!
         key : scalar!
-        request : opaque
+        request : r
       }
         @description "Abstain — candidate does not equal the key; the next rung should take over. request echoes the originating request untouched so the next rung can project its own inputs out of it"
         @tier "primary"
@@ -81,7 +81,7 @@ orbital MlExactCheckOrbital {
       CHECK {
         candidate : scalar!
         key : scalar!
-        request : opaque
+        request : r
       }
     }
   }

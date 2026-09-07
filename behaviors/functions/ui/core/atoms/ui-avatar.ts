@@ -43,7 +43,7 @@ export interface StdUiAvatarConfig {
   action?: string;
   actionPayload?: unknown;
   alt?: string;
-  badge?: string;
+  badge?: unknown;
   className?: string;
   icon?: unknown;
   initials?: string;

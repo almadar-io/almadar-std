@@ -203,7 +203,39 @@ export function stdAgentToolCallAgentToolCallOrbital(params: StdAgentToolCallAge
                 },
                 'toolCalls': {
                   'items': {
-                    'type': 'opaque',
+                    'properties': {
+                      'function': {
+                        'name': 'function',
+                        'properties': {
+                          'arguments': {
+                            'name': 'arguments',
+                            'required': true,
+                            'type': 'string',
+                          },
+                          'name': {
+                            'name': 'name',
+                            'required': true,
+                            'type': 'string',
+                          },
+                        },
+                        'required': false,
+                        'type': 'object',
+                      },
+                      'id': {
+                        'name': 'id',
+                        'required': true,
+                        'type': 'string',
+                      },
+                      'type': {
+                        'name': 'type',
+                        'required': false,
+                        'type': 'string',
+                        'values': [
+                          'function',
+                        ],
+                      },
+                    },
+                    'type': 'object',
                   },
                   'name': 'toolCalls',
                   'required': false,
@@ -231,8 +263,20 @@ export function stdAgentToolCallAgentToolCallOrbital(params: StdAgentToolCallAge
                 },
                 'schema': {
                   'name': 'schema',
+                  'properties': {
+                    'description': {
+                      'name': 'description',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'type': {
+                      'name': 'type',
+                      'required': false,
+                      'type': 'string',
+                    },
+                  },
                   'required': false,
-                  'type': 'opaque',
+                  'type': 'object',
                 },
               },
               'type': 'object',
@@ -325,7 +369,34 @@ export function stdAgentToolCallAgentToolCallOrbital(params: StdAgentToolCallAge
                     },
                     {
                       'name': 'toolCalls',
-                      'type': '[opaque]',
+                      'properties': [
+                        {
+                          'name': 'id',
+                          'required': true,
+                          'type': 'string',
+                        },
+                        {
+                          'name': 'type',
+                          'type': 'string',
+                        },
+                        {
+                          'name': 'function',
+                          'properties': [
+                            {
+                              'name': 'name',
+                              'required': true,
+                              'type': 'string',
+                            },
+                            {
+                              'name': 'arguments',
+                              'required': true,
+                              'type': 'string',
+                            },
+                          ],
+                          'type': 'object',
+                        },
+                      ],
+                      'type': '[object]',
                     },
                     {
                       'name': 'toolCallId',
@@ -350,7 +421,17 @@ export function stdAgentToolCallAgentToolCallOrbital(params: StdAgentToolCallAge
                     },
                     {
                       'name': 'schema',
-                      'type': 'opaque',
+                      'properties': [
+                        {
+                          'name': 'type',
+                          'type': 'string',
+                        },
+                        {
+                          'name': 'description',
+                          'type': 'string',
+                        },
+                      ],
+                      'type': 'object',
                     },
                   ],
                   'required': true,
@@ -677,10 +758,26 @@ export const StdAgentToolCallAgentToolCallOrbitalManifest = {
   organism: 'std-agent-tool-call',
   orbitalName: 'AgentToolCallOrbital',
   paramFields: [
-    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
-    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
-    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
-    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+    {
+      'name': 'fields',
+      'type': 'EntityField[]',
+      'description': 'Extra fields appended to the canonical entity.',
+    },
+    {
+      'name': 'pagePath',
+      'type': 'string',
+      'description': 'URL override for the orbital first page.',
+    },
+    {
+      'name': 'entityName',
+      'type': 'string',
+      'description': 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.',
+    },
+    {
+      'name': 'traitOverrides',
+      'type': 'Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>',
+      'description': '.lolo\'s native trait-composition surface 1:1: per-imported-trait config, linkedEntity, events, name, emitsScope, listens. effects is excluded (atom-owned; use listens via a sibling trait).',
+    },
   ] as const,
   traitNames: [
   ] as const,

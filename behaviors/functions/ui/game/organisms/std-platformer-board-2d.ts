@@ -1633,8 +1633,83 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
             'event': 'BURST',
             'payloadSchema': [
               {
+                'entity': 'Fx',
                 'name': 'particles',
-                'type': '[Fx]',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'type',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'x',
+                    'required': true,
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'z',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'y',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'message',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'ttl',
+                    'required': true,
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'maxTtl',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'bornAt',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'space',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'effect',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'color',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'size',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'vx',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'vy',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'vz',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'particleCount',
+                    'type': 'number',
+                  },
+                ],
+                'type': '[object]',
               },
             ],
             'scope': 'external',
@@ -1891,8 +1966,83 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
               'name': 'Burst',
               'payloadSchema': [
                 {
+                  'entity': 'Fx',
                   'name': 'particles',
-                  'type': '[Fx]',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'type',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'x',
+                      'required': true,
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'z',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'y',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'message',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'ttl',
+                      'required': true,
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'maxTtl',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'bornAt',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'space',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'effect',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'color',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'size',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'vx',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'vy',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'vz',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'particleCount',
+                      'type': 'number',
+                    },
+                  ],
+                  'type': '[object]',
                 },
               ],
               'tier': 'domain',
@@ -2952,10 +3102,26 @@ export const StdPlatformerBoard2dPlatformerBoard2DOrbitalManifest = {
   organism: 'std-platformer-board-2d',
   orbitalName: 'PlatformerBoard2DOrbital',
   paramFields: [
-    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
-    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
-    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
-    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+    {
+      'name': 'fields',
+      'type': 'EntityField[]',
+      'description': 'Extra fields appended to the canonical entity.',
+    },
+    {
+      'name': 'pagePath',
+      'type': 'string',
+      'description': 'URL override for the orbital first page.',
+    },
+    {
+      'name': 'entityName',
+      'type': 'string',
+      'description': 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.',
+    },
+    {
+      'name': 'traitOverrides',
+      'type': 'Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>',
+      'description': '.lolo\'s native trait-composition surface 1:1: per-imported-trait config, linkedEntity, events, name, emitsScope, listens. effects is excluded (atom-owned; use listens via a sibling trait).',
+    },
   ] as const,
   traitNames: [
     'BodyAuthority',

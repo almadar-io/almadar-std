@@ -441,6 +441,7 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                 'type': 'string',
               },
               {
+                'entity': 'Revision',
                 'name': 'row',
                 'properties': [
                   {
@@ -524,8 +525,59 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                 'type': 'string',
               },
               {
+                'entity': 'Revision',
                 'name': 'revisions',
-                'type': '[Revision]',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'documentId',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'documentType',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'versionNumber',
+                    'required': true,
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'authorId',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'authorName',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'content',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'summary',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'searchTerm',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'createdAt',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'scopeKey',
+                    'type': 'string',
+                  },
+                ],
+                'type': '[object]',
               },
             ],
             'synonyms': 'compare, diff, contrast',
@@ -549,8 +601,59 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
             'event': 'RevisionLoaded',
             'payloadSchema': [
               {
+                'entity': 'Revision',
                 'name': 'data',
-                'type': '[Revision]',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'documentId',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'documentType',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'versionNumber',
+                    'required': true,
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'authorId',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'authorName',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'content',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'summary',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'searchTerm',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'createdAt',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'scopeKey',
+                    'type': 'string',
+                  },
+                ],
+                'type': '[object]',
               },
             ],
             'synonyms': 'loaded, fetched, retrieved, available',
@@ -684,8 +787,59 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
               'name': 'Revision loaded',
               'payloadSchema': [
                 {
+                  'entity': 'Revision',
                   'name': 'data',
-                  'type': '[Revision]',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'documentId',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'documentType',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'versionNumber',
+                      'required': true,
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'authorId',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'authorName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'content',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'summary',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'searchTerm',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'scopeKey',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': '[object]',
                 },
               ],
               'synonyms': 'loaded, fetched, retrieved, available',
@@ -807,6 +961,7 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                   'type': 'string',
                 },
                 {
+                  'entity': 'Revision',
                   'name': 'row',
                   'properties': [
                     {
@@ -906,8 +1061,59 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                   'type': 'string',
                 },
                 {
+                  'entity': 'Revision',
                   'name': 'revisions',
-                  'type': '[Revision]',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'documentId',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'documentType',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'versionNumber',
+                      'required': true,
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'authorId',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'authorName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'content',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'summary',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'searchTerm',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'scopeKey',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': '[object]',
                 },
               ],
               'synonyms': 'compare, diff, contrast',
@@ -2124,12 +2330,36 @@ export const StdVersionHistoryRevisionOrbitalManifest = {
   organism: 'std-version-history',
   orbitalName: 'RevisionOrbital',
   paramFields: [
-    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
-    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
-    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
-    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
-    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+    {
+      'name': 'fields',
+      'type': 'EntityField[]',
+      'description': 'Extra fields appended to the canonical entity.',
+    },
+    {
+      'name': 'pagePath',
+      'type': 'string',
+      'description': 'URL override for the orbital first page.',
+    },
+    {
+      'name': 'persistence',
+      'type': '\'persistent\' | \'runtime\'',
+      'description': 'Override the canonical entity persistence mode.',
+    },
+    {
+      'name': 'entityName',
+      'type': 'string',
+      'description': 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.',
+    },
+    {
+      'name': 'collection',
+      'type': 'string',
+      'description': 'Override derived collection key. Defaults to plural(entityName).toLowerCase().',
+    },
+    {
+      'name': 'traitOverrides',
+      'type': 'Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>',
+      'description': '.lolo\'s native trait-composition surface 1:1: per-imported-trait config, linkedEntity, events, name, emitsScope, listens. effects is excluded (atom-owned; use listens via a sibling trait).',
+    },
   ] as const,
   traitNames: [
   ] as const,

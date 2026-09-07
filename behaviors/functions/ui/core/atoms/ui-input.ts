@@ -68,7 +68,7 @@ export interface StdUiInputConfig {
   rightIcon?: unknown;
   /** Default: `3` */
   rows?: number;
-  value?: string;
+  value?: unknown;
 }
 
 /**

@@ -49,7 +49,7 @@ export interface StdUiCenterConfig {
   horizontal?: boolean;
   /** Default: `false` */
   inline?: boolean;
-  minHeight?: string;
+  minHeight?: unknown;
   /** Default: `{}` */
   style?: Record<string, TraitConfig>;
   /** Default: `true` */

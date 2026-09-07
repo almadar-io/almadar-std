@@ -14,9 +14,18 @@
     "traits": [
       {
         "name": "SwipeableRowRender",
-        "emittedEvents": [],
+        "emittedEvents": [
+          "SwipeableRowLoaded"
+        ],
         "listenedEvents": [],
         "events": [
+          {
+            "name": "SwipeableRowLoaded",
+            "direction": "emit",
+            "description": "SwipeableRow rows finished loading; payload.data holds the collection.",
+            "synonyms": "loaded, fetched, retrieved",
+            "tier": "essential"
+          },
           {
             "name": "INIT",
             "direction": "listen"
@@ -38,17 +47,6 @@
             "tier": "presentation"
           },
           {
-            "key": "itemData",
-            "type": "Map<string,scalar>",
-            "default": {},
-            "label": "Item Data",
-            "description": "itemData prop",
-            "tier": "presentation",
-            "items": {
-              "type": "scalar"
-            }
-          },
-          {
             "key": "leftActions",
             "type": "[SwipeableRowLeftActionsItem]",
             "default": [],
@@ -65,10 +63,7 @@
                 "eventPayload": {
                   "name": "eventPayload",
                   "required": false,
-                  "type": "object",
-                  "items": {
-                    "type": "scalar"
-                  }
+                  "type": "object"
                 },
                 "icon": {
                   "name": "icon",
@@ -112,10 +107,7 @@
                 "eventPayload": {
                   "name": "eventPayload",
                   "required": false,
-                  "type": "object",
-                  "items": {
-                    "type": "scalar"
-                  }
+                  "type": "object"
                 },
                 "icon": {
                   "name": "icon",
@@ -143,6 +135,14 @@
             }
           },
           {
+            "key": "selfFetch",
+            "type": "boolean",
+            "default": true,
+            "label": "Fetch its own rows on mount?",
+            "description": "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's.",
+            "tier": "internal"
+          },
+          {
             "key": "threshold",
             "type": "number",
             "default": 80,
@@ -154,7 +154,8 @@
         "capabilities": [],
         "linkedEntity": "SwipeableRowItem",
         "transitionEvents": [
-          "INIT"
+          "INIT",
+          "SwipeableRowLoaded"
         ],
         "definerKnobs": [],
         "entityRebindable": true,
@@ -164,9 +165,16 @@
         },
         "effectRow": [
           {
+            "kind": "fetch",
+            "resource": "SwipeableRowItem"
+          },
+          {
             "kind": "render-ui",
             "resource": "main"
           }
+        ],
+        "effectEntityRefs": [
+          "SwipeableRowItem"
         ]
       }
     ],
@@ -177,7 +185,9 @@
         "primaryEntity": "SwipeableRowItem"
       }
     ],
-    "emittedEvents": [],
+    "emittedEvents": [
+      "SwipeableRowLoaded"
+    ],
     "listenedEvents": [],
     "exposure": "palette",
     "provenance": "generated",

@@ -19,6 +19,15 @@
         "parent": "trt_01KXG04RR2H3KMQGZ10VB5VQ6D",
         "renames": []
       },
+      "evt_01M1WZ4WX4KTRXEMYZG2C6QQNP": {
+        "bakedName": "SwipeableRowLoaded",
+        "curName": "SwipeableRowLoaded",
+        "id": "evt_01M1WZ4WX4KTRXEMYZG2C6QQNP",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04RR2H3KMQGZ10VB5VQ6D",
+        "renames": []
+      },
       "orb_01KXG04RR2BEEQ32MCZT5162EP": {
         "bakedName": "SwipeableRowOrbital",
         "curName": "SwipeableRowOrbital",
@@ -92,16 +101,6 @@
               "tier": "presentation",
               "type": "string"
             },
-            "itemData": {
-              "default": {},
-              "description": "itemData prop",
-              "items": {
-                "type": "scalar"
-              },
-              "label": "Item Data",
-              "tier": "presentation",
-              "type": "Map<string,scalar>"
-            },
             "leftActions": {
               "default": [],
               "description": "leftActions prop",
@@ -113,9 +112,6 @@
                     "type": "event"
                   },
                   "eventPayload": {
-                    "items": {
-                      "type": "scalar"
-                    },
                     "name": "eventPayload",
                     "required": false,
                     "type": "object"
@@ -159,9 +155,6 @@
                     "type": "event"
                   },
                   "eventPayload": {
-                    "items": {
-                      "type": "scalar"
-                    },
                     "name": "eventPayload",
                     "required": false,
                     "type": "object"
@@ -194,6 +187,13 @@
               "tier": "presentation",
               "type": "[SwipeableRowRightActionsItem]"
             },
+            "selfFetch": {
+              "default": true,
+              "description": "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's.",
+              "label": "Fetch its own rows on mount?",
+              "tier": "internal",
+              "type": "boolean"
+            },
             "threshold": {
               "default": 80.0,
               "description": "threshold prop",
@@ -204,8 +204,36 @@
           },
           "effectRow": [
             {
+              "kind": "fetch",
+              "resource": "SwipeableRowItem"
+            },
+            {
               "kind": "render-ui",
               "resource": "main"
+            }
+          ],
+          "emits": [
+            {
+              "description": "SwipeableRow rows finished loading; payload.data holds the collection.",
+              "event": "SwipeableRowLoaded",
+              "eventId": "evt_01M1WZ4WX4KTRXEMYZG2C6QQNP",
+              "payloadSchema": [
+                {
+                  "entity": "SwipeableRowItem",
+                  "name": "data",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "required": true,
+                      "type": "string"
+                    }
+                  ],
+                  "type": "[object]"
+                }
+              ],
+              "scope": "internal",
+              "synonyms": "loaded, fetched, retrieved",
+              "tier": "essential"
             }
           ],
           "entityContract": {
@@ -227,6 +255,28 @@
                 "id": "evt_01KXG04RR2SB60JTQCVEN867B6",
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "description": "SwipeableRow rows finished loading; payload.data holds the collection.",
+                "id": "evt_01M1WZ4WX4KTRXEMYZG2C6QQNP",
+                "key": "SwipeableRowLoaded",
+                "name": "Swipeable row loaded",
+                "payloadSchema": [
+                  {
+                    "entity": "SwipeableRowItem",
+                    "name": "data",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      }
+                    ],
+                    "type": "[object]"
+                  }
+                ],
+                "synonyms": "loaded, fetched, retrieved",
+                "tier": "essential"
               }
             ],
             "states": [
@@ -239,12 +289,21 @@
               {
                 "effects": [
                   [
+                    "fetch",
+                    "SwipeableRowItem",
+                    {
+                      "emit": {
+                        "success": "SwipeableRowLoaded"
+                      }
+                    }
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
                       "children": "@config.children",
                       "className": "@config.className",
-                      "itemData": "@config.itemData",
+                      "itemData": "@entity",
                       "leftActions": "@config.leftActions",
                       "rightActions": "@config.rightActions",
                       "threshold": "@config.threshold",
@@ -254,6 +313,53 @@
                 ],
                 "event": "INIT",
                 "eventId": "evt_01KXG04RR2SB60JTQCVEN867B6",
+                "from": "idle",
+                "guard": "@config.selfFetch",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": "@config.children",
+                      "className": "@config.className",
+                      "itemData": "@entity",
+                      "leftActions": "@config.leftActions",
+                      "rightActions": "@config.rightActions",
+                      "threshold": "@config.threshold",
+                      "type": "swipeable-row"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01KXG04RR2SB60JTQCVEN867B6",
+                "from": "idle",
+                "guard": [
+                  "not",
+                  "@config.selfFetch"
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": "@config.children",
+                      "className": "@config.className",
+                      "itemData": "@payload.data",
+                      "leftActions": "@config.leftActions",
+                      "rightActions": "@config.rightActions",
+                      "threshold": "@config.threshold",
+                      "type": "swipeable-row"
+                    }
+                  ]
+                ],
+                "event": "SwipeableRowLoaded",
+                "eventId": "evt_01M1WZ4WX4KTRXEMYZG2C6QQNP",
                 "from": "idle",
                 "to": "idle"
               }
@@ -283,7 +389,7 @@
           },
           {
             "name": "eventPayload",
-            "type": "Map<string,scalar>"
+            "type": "@payload(.event)"
           }
         ],
         "SwipeableRowRightActionsItem": [
@@ -307,7 +413,7 @@
           },
           {
             "name": "eventPayload",
-            "type": "Map<string,scalar>"
+            "type": "@payload(.event)"
           }
         ]
       }

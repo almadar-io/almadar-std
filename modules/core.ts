@@ -750,7 +750,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
           kind: 'union',
           of: [
             { kind: 'object', fields: { patternType: PATTERN_TYPE }, open: true },
-            { kind: 'literal', value: null as unknown as string },
+            { kind: 'literal', value: null },
           ],
         },
         description: 'Pattern config (or null to clear the slot)',

@@ -311,8 +311,36 @@ export function stdUiFeatureGridOrganismFeatureGridOrganismOrbital(params: StdUi
             'event': 'FeatureGridOrganismLoaded',
             'payloadSchema': [
               {
+                'entity': 'FeatureGridOrganismItem',
                 'name': 'data',
-                'type': '[FeatureGridOrganismItem]',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'title',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'icon',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'description',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'href',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'linkLabel',
+                    'type': 'string',
+                  },
+                ],
+                'type': '[object]',
               },
             ],
             'scope': 'internal',
@@ -340,8 +368,36 @@ export function stdUiFeatureGridOrganismFeatureGridOrganismOrbital(params: StdUi
               'name': 'Feature grid organism loaded',
               'payloadSchema': [
                 {
+                  'entity': 'FeatureGridOrganismItem',
                   'name': 'data',
-                  'type': '[FeatureGridOrganismItem]',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'title',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'icon',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'description',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'href',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'linkLabel',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': '[object]',
                 },
               ],
               'synonyms': 'loaded, fetched, retrieved',
@@ -514,10 +570,26 @@ export const StdUiFeatureGridOrganismFeatureGridOrganismOrbitalManifest = {
   organism: 'ui-feature-grid-organism',
   orbitalName: 'FeatureGridOrganismOrbital',
   paramFields: [
-    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
-    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
-    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
-    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+    {
+      'name': 'fields',
+      'type': 'EntityField[]',
+      'description': 'Extra fields appended to the canonical entity.',
+    },
+    {
+      'name': 'pagePath',
+      'type': 'string',
+      'description': 'URL override for the orbital first page.',
+    },
+    {
+      'name': 'entityName',
+      'type': 'string',
+      'description': 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.',
+    },
+    {
+      'name': 'traitOverrides',
+      'type': 'Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>',
+      'description': '.lolo\'s native trait-composition surface 1:1: per-imported-trait config, linkedEntity, events, name, emitsScope, listens. effects is excluded (atom-owned; use listens via a sibling trait).',
+    },
   ] as const,
   traitNames: [
   ] as const,

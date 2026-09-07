@@ -2,6 +2,16 @@ app ui-reply-tree "1.0.0"
 "ReplyTree — UI factory (1:1 with the @almadar/ui reply-tree pattern)."
 orbital ReplyTreeOrbital {
     type ReplyTreeLoaded = Event { data : [ReplyTreeItem] } "ReplyTree rows finished loading; payload.data holds the collection"
+  type ReplyNodeRow = {
+    authorName : string
+    content : string
+    authorAvatarUrl : string
+    postedAt : string
+    voteCount : number
+    userVote : "up" | "down" | "none"
+    collapsed : boolean
+    replies : [ReplyNodeRow]
+  }
 
   entity ReplyTreeItem [runtime] {
     id : string!
@@ -12,7 +22,7 @@ orbital ReplyTreeOrbital {
     voteCount : number = 1
     userVote : "up" | "down" | "none" = up
     collapsed : boolean = false
-    replies : [opaque] = []
+    replies : [ReplyNodeRow] = []
   }
 
   trait ReplyTreeRender -> @rebindable ReplyTreeItem [interaction, instance] {

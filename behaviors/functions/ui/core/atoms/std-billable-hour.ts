@@ -598,6 +598,7 @@ export function stdBillableHourBillableHourOrbital(params: StdBillableHourBillab
                 'type': 'string',
               },
               {
+                'entity': 'BillableHour',
                 'name': 'row',
                 'properties': [
                   {
@@ -691,8 +692,58 @@ export function stdBillableHourBillableHourOrbital(params: StdBillableHourBillab
             'event': 'BillableHourLoaded',
             'payloadSchema': [
               {
+                'entity': 'BillableHour',
                 'name': 'data',
-                'type': '[BillableHour]',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'workerId',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'workerName',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'matterId',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'projectId',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'workDate',
+                    'required': true,
+                    'type': 'date',
+                  },
+                  {
+                    'name': 'hours',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'rate',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'description',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'isBillable',
+                    'type': 'boolean',
+                  },
+                  {
+                    'name': 'invoiceStatus',
+                    'type': 'string',
+                  },
+                ],
+                'type': '[object]',
               },
             ],
             'synonyms': 'loaded, fetched, retrieved, populated',
@@ -730,8 +781,58 @@ export function stdBillableHourBillableHourOrbital(params: StdBillableHourBillab
               'name': 'BillableHour loaded',
               'payloadSchema': [
                 {
+                  'entity': 'BillableHour',
                   'name': 'data',
-                  'type': '[BillableHour]',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'workerId',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'workerName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'matterId',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'projectId',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'workDate',
+                      'required': true,
+                      'type': 'date',
+                    },
+                    {
+                      'name': 'hours',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'rate',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'description',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'isBillable',
+                      'type': 'boolean',
+                    },
+                    {
+                      'name': 'invoiceStatus',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': '[object]',
                 },
               ],
               'synonyms': 'loaded, fetched, retrieved, populated',
@@ -765,6 +866,7 @@ export function stdBillableHourBillableHourOrbital(params: StdBillableHourBillab
                   'type': 'string',
                 },
                 {
+                  'entity': 'BillableHour',
                   'name': 'row',
                   'properties': [
                     {
@@ -1475,12 +1577,36 @@ export const StdBillableHourBillableHourOrbitalManifest = {
   organism: 'std-billable-hour',
   orbitalName: 'BillableHourOrbital',
   paramFields: [
-    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
-    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
-    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
-    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
-    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+    {
+      'name': 'fields',
+      'type': 'EntityField[]',
+      'description': 'Extra fields appended to the canonical entity.',
+    },
+    {
+      'name': 'pagePath',
+      'type': 'string',
+      'description': 'URL override for the orbital first page.',
+    },
+    {
+      'name': 'persistence',
+      'type': '\'persistent\' | \'runtime\'',
+      'description': 'Override the canonical entity persistence mode.',
+    },
+    {
+      'name': 'entityName',
+      'type': 'string',
+      'description': 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.',
+    },
+    {
+      'name': 'collection',
+      'type': 'string',
+      'description': 'Override derived collection key. Defaults to plural(entityName).toLowerCase().',
+    },
+    {
+      'name': 'traitOverrides',
+      'type': 'Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>',
+      'description': '.lolo\'s native trait-composition surface 1:1: per-imported-trait config, linkedEntity, events, name, emitsScope, listens. effects is excluded (atom-owned; use listens via a sibling trait).',
+    },
   ] as const,
   traitNames: [
     'DenseHoursTable',

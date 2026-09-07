@@ -585,6 +585,7 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                 'type': 'string',
               },
               {
+                'entity': 'ModQueueItem',
                 'name': 'row',
                 'properties': [
                   {
@@ -647,6 +648,7 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                 'type': 'string',
               },
               {
+                'entity': 'ModQueueItem',
                 'name': 'row',
                 'properties': [
                   {
@@ -709,6 +711,7 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                 'type': 'string',
               },
               {
+                'entity': 'ModQueueItem',
                 'name': 'row',
                 'properties': [
                   {
@@ -772,8 +775,54 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
             'event': 'ModQueueItemLoaded',
             'payloadSchema': [
               {
+                'entity': 'ModQueueItem',
                 'name': 'data',
-                'type': '[ModQueueItem]',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'targetId',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'targetType',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'reason',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'flagCount',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'status',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'reviewedBy',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'reviewedAt',
+                    'type': 'datetime',
+                  },
+                  {
+                    'name': 'notes',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'seedRow',
+                    'type': 'ModQueueItem',
+                  },
+                ],
+                'type': '[object]',
               },
             ],
             'synonyms': 'loaded, fetched, available, ready',
@@ -889,8 +938,54 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
               'name': 'ModQueueItem loaded',
               'payloadSchema': [
                 {
+                  'entity': 'ModQueueItem',
                   'name': 'data',
-                  'type': '[ModQueueItem]',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'targetId',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'targetType',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'reason',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'flagCount',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'reviewedBy',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'reviewedAt',
+                      'type': 'datetime',
+                    },
+                    {
+                      'name': 'notes',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'seedRow',
+                      'type': 'ModQueueItem',
+                    },
+                  ],
+                  'type': '[object]',
                 },
               ],
               'synonyms': 'loaded, fetched, available, ready',
@@ -938,6 +1033,7 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                   'type': 'string',
                 },
                 {
+                  'entity': 'ModQueueItem',
                   'name': 'row',
                   'properties': [
                     {
@@ -1001,6 +1097,7 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                   'type': 'string',
                 },
                 {
+                  'entity': 'ModQueueItem',
                   'name': 'row',
                   'properties': [
                     {
@@ -1064,6 +1161,7 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                   'type': 'string',
                 },
                 {
+                  'entity': 'ModQueueItem',
                   'name': 'row',
                   'properties': [
                     {
@@ -1618,12 +1716,36 @@ export const StdModQueueModQueueItemOrbitalManifest = {
   organism: 'std-mod-queue',
   orbitalName: 'ModQueueItemOrbital',
   paramFields: [
-    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
-    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
-    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
-    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
-    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+    {
+      'name': 'fields',
+      'type': 'EntityField[]',
+      'description': 'Extra fields appended to the canonical entity.',
+    },
+    {
+      'name': 'pagePath',
+      'type': 'string',
+      'description': 'URL override for the orbital first page.',
+    },
+    {
+      'name': 'persistence',
+      'type': '\'persistent\' | \'runtime\'',
+      'description': 'Override the canonical entity persistence mode.',
+    },
+    {
+      'name': 'entityName',
+      'type': 'string',
+      'description': 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.',
+    },
+    {
+      'name': 'collection',
+      'type': 'string',
+      'description': 'Override derived collection key. Defaults to plural(entityName).toLowerCase().',
+    },
+    {
+      'name': 'traitOverrides',
+      'type': 'Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>',
+      'description': '.lolo\'s native trait-composition surface 1:1: per-imported-trait config, linkedEntity, events, name, emitsScope, listens. effects is excluded (atom-owned; use listens via a sibling trait).',
+    },
   ] as const,
   traitNames: [
     'LoadingSpinner',

@@ -42,17 +42,6 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
     ],
     example: '["array/range", 0, 5] // => [0, 1, 2, 3, 4]',
   },
-  'array/empty?': {
-    module: 'array',
-    category: 'std-array',
-    minArity: 1,
-    maxArity: 1,
-    description: 'Check if array is empty',
-    hasSideEffects: false,
-    returnType: 'boolean',
-    params: [{ name: 'arr', type: 'array', description: 'The array' }],
-    example: '["array/empty?", []] // => true',
-  },
   'array/first': {
     module: 'array',
     category: 'std-array',

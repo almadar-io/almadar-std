@@ -12,6 +12,7 @@ import {
   LANGUAGE_CODES,
   checkI18nCoverage,
   coreTables,
+  lexLolo,
   parseOperatorTables,
   type LanguageCode,
   type OperatorTables,
@@ -42,5 +43,24 @@ describe('i18n operator tables', () => {
       console.error(`  [${p.lang}] ${p.section}.${p.kind}: ${p.key}${p.detail ? ' — ' + p.detail : ''}`);
     }
     expect(result.ok, `${result.problems.length} i18n coverage problem(s) — see console output above`).toBe(true);
+  });
+
+  // Prevention for the `array/empty?` / `object/empty?` class of defect: both
+  // were registered operators with i18n translations, yet unspellable in
+  // `.lolo` — the lexer's identifier-continue set excludes `?`, so
+  // `(array/empty? @x)` actually lexes as the identifier `array/empty`
+  // followed by a bare payload sigil, never as one operator token. Nothing
+  // caught that a registered name could not be written as itself; this does.
+  it('every canonical operator name lexes as exactly one token (so it is actually spellable)', () => {
+    const canonical = JSON.parse(readFileSync(join(PKG_ROOT, 'canonical-operators.json'), 'utf8')) as {
+      operators: Record<string, unknown>;
+    };
+    const unspellable: string[] = [];
+    for (const name of Object.keys(canonical.operators)) {
+      const tokens = lexLolo(name);
+      const isOneToken = tokens.length === 1 && tokens[0].start === 0 && tokens[0].end === name.length;
+      if (!isOneToken) unspellable.push(name);
+    }
+    expect(unspellable, `registered but unspellable as one token: ${unspellable.join(', ')}`).toEqual([]);
   });
 });

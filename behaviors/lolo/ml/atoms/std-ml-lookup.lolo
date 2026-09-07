@@ -8,7 +8,7 @@ orbital MlLookupOrbital {
     status  : "idle" | "checked" = idle
   }
 
-  trait LookupRun -> KeyLookup [lifecycle, instance] {
+  trait LookupRun (e : Entity, r : Entity) -> KeyLookup [lifecycle, instance] {
     initial: idle
 
     config {
@@ -57,14 +57,14 @@ orbital MlLookupOrbital {
     emits {
       KEY_HIT -> external {
         candidate : scalar!
-        entry : opaque!
+        entry : e!
       }
         @description "Fired when the candidate matches an entry in the accepted list"
         @tier "primary"
 
       KEY_MISS -> external {
         candidate : scalar!
-        request : opaque
+        request : r
       }
         @description "Abstain — candidate matches nothing in the accepted list; the next rung should take over. request echoes the originating request untouched so the next rung can project its own inputs out of it"
         @tier "primary"
@@ -73,8 +73,8 @@ orbital MlLookupOrbital {
     listens {
       LOOKUP {
         candidate : scalar!
-        accepted : [opaque]!
-        request : opaque
+        accepted : [e]!
+        request : r
       }
     }
   }

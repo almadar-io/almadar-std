@@ -409,8 +409,35 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
             'event': 'ModalRecordLoaded',
             'payloadSchema': [
               {
+                'entity': 'ModalRecord',
                 'name': 'data',
-                'type': '[ModalRecord]',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'name',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'description',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'status',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'seedRow',
+                    'type': 'ModalRecord',
+                  },
+                  {
+                    'name': 'createdAt',
+                    'type': 'string',
+                  },
+                ],
+                'type': '[object]',
               },
             ],
             'scope': 'internal',
@@ -440,6 +467,7 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
               'name': 'Seed',
               'payloadSchema': [
                 {
+                  'entity': 'ModalRecord',
                   'name': 'row',
                   'properties': [
                     {
@@ -483,6 +511,7 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
                   'type': 'string',
                 },
                 {
+                  'entity': 'ModalRecord',
                   'name': 'row',
                   'properties': [
                     {
@@ -560,8 +589,35 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
               'name': 'ModalRecord loaded',
               'payloadSchema': [
                 {
+                  'entity': 'ModalRecord',
                   'name': 'data',
-                  'type': '[ModalRecord]',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'name',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'description',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'seedRow',
+                      'type': 'ModalRecord',
+                    },
+                    {
+                      'name': 'createdAt',
+                      'type': 'string',
+                    },
+                  ],
+                  'type': '[object]',
                 },
               ],
               'synonyms': 'loaded, data ready, populated',
@@ -795,10 +851,26 @@ export const StdModalModalRecordOrbitalManifest = {
   organism: 'std-modal',
   orbitalName: 'ModalRecordOrbital',
   paramFields: [
-    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
-    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
-    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
-    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+    {
+      'name': 'fields',
+      'type': 'EntityField[]',
+      'description': 'Extra fields appended to the canonical entity.',
+    },
+    {
+      'name': 'pagePath',
+      'type': 'string',
+      'description': 'URL override for the orbital first page.',
+    },
+    {
+      'name': 'entityName',
+      'type': 'string',
+      'description': 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.',
+    },
+    {
+      'name': 'traitOverrides',
+      'type': 'Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>',
+      'description': '.lolo\'s native trait-composition surface 1:1: per-imported-trait config, linkedEntity, events, name, emitsScope, listens. effects is excluded (atom-owned; use listens via a sibling trait).',
+    },
   ] as const,
   traitNames: [
   ] as const,

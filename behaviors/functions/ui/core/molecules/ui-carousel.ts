@@ -51,7 +51,7 @@ export interface StdUiCarouselConfig {
   /** Default: `5000` */
   autoPlayInterval?: number;
   className?: string;
-  /** Default: `[]` */
+  /** Default: `[{"id":"Id","image":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png","title":"Title"},{"id":"Id 2","image":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png","title":"Title 2"}]` */
   items?: EntityRow[];
   /** Default: `false` */
   loop?: boolean;

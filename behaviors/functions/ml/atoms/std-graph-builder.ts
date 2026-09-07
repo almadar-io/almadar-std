@@ -307,9 +307,22 @@ export function stdGraphBuilderGraphBuilderOrbital(params: StdGraphBuilderGraphB
                 'type': '[Map<string,scalar>]',
               },
               {
+                'entity': 'GraphBuilderEdge',
                 'name': 'edges',
+                'properties': [
+                  {
+                    'name': 'source',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'target',
+                    'required': true,
+                    'type': 'string',
+                  },
+                ],
                 'required': true,
-                'type': '[GraphBuilderEdge]',
+                'type': '[object]',
               },
               {
                 'name': 'nodeCount',
@@ -342,7 +355,7 @@ export function stdGraphBuilderGraphBuilderOrbital(params: StdGraphBuilderGraphB
                 {
                   'name': 'entities',
                   'required': true,
-                  'type': '[opaque]',
+                  'type': '[Map<string,scalar>]',
                 },
               ],
             },
@@ -361,9 +374,22 @@ export function stdGraphBuilderGraphBuilderOrbital(params: StdGraphBuilderGraphB
                   'type': '[Map<string,scalar>]',
                 },
                 {
+                  'entity': 'GraphBuilderEdge',
                   'name': 'edges',
+                  'properties': [
+                    {
+                      'name': 'source',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'target',
+                      'required': true,
+                      'type': 'string',
+                    },
+                  ],
                   'required': true,
-                  'type': '[GraphBuilderEdge]',
+                  'type': '[object]',
                 },
                 {
                   'name': 'nodeCount',
@@ -647,10 +673,26 @@ export const StdGraphBuilderGraphBuilderOrbitalManifest = {
   organism: 'std-graph-builder',
   orbitalName: 'GraphBuilderOrbital',
   paramFields: [
-    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
-    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
-    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
-    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+    {
+      'name': 'fields',
+      'type': 'EntityField[]',
+      'description': 'Extra fields appended to the canonical entity.',
+    },
+    {
+      'name': 'pagePath',
+      'type': 'string',
+      'description': 'URL override for the orbital first page.',
+    },
+    {
+      'name': 'entityName',
+      'type': 'string',
+      'description': 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.',
+    },
+    {
+      'name': 'traitOverrides',
+      'type': 'Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>',
+      'description': '.lolo\'s native trait-composition surface 1:1: per-imported-trait config, linkedEntity, events, name, emitsScope, listens. effects is excluded (atom-owned; use listens via a sibling trait).',
+    },
   ] as const,
   traitNames: [
   ] as const,

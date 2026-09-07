@@ -78,7 +78,7 @@ export interface StdUiCodeBlockConfig {
   /** Default: `"text"` */
   language?: string;
   /** Default: `"60vh"` */
-  maxHeight?: string;
+  maxHeight?: unknown;
   /** Default: `"code"` */
   mode?: 'code' | 'diff';
   /** Default: `["left","right","up","down","word-forward","word-back","word-end","line-start","line-end","first-nonblank","doc-start","doc-end","paragraph-forward","paragraph-back","line","selection","match-bracket"]` */

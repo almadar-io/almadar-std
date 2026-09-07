@@ -43,7 +43,7 @@ export interface StdUiBadgeConfig {
   className?: string;
   icon?: unknown;
   iconAsset?: EntityRow;
-  label?: string;
+  label?: unknown;
   /** Default: `""` */
   onRemove?: string;
   removeLabel?: string;

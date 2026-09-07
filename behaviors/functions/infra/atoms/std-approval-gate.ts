@@ -447,9 +447,12 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
           {
             'default': {},
             'description': 'The held data of the gated action, replayed by the downstream listener when the request is granted.',
+            'items': {
+              'type': 'scalar',
+            },
             'name': 'payload',
             'synonyms': 'request data, held payload, pending data, gated data',
-            'type': 'opaque',
+            'type': 'object',
           },
         ];
         const extras = params.fields ?? [];
@@ -756,6 +759,7 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
                 'type': 'string',
               },
               {
+                'entity': 'ApprovalRequest',
                 'name': 'row',
                 'properties': [
                   {
@@ -809,7 +813,7 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
                   },
                   {
                     'name': 'payload',
-                    'type': 'opaque',
+                    'type': 'Map<string,scalar>',
                   },
                 ],
                 'type': 'object',
@@ -828,6 +832,7 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
                 'type': 'string',
               },
               {
+                'entity': 'ApprovalRequest',
                 'name': 'row',
                 'properties': [
                   {
@@ -881,7 +886,7 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
                   },
                   {
                     'name': 'payload',
-                    'type': 'opaque',
+                    'type': 'Map<string,scalar>',
                   },
                 ],
                 'type': 'object',
@@ -957,7 +962,7 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
               },
               {
                 'name': 'payload',
-                'type': 'opaque',
+                'type': '$p',
               },
             ],
             'scope': 'external',
@@ -986,8 +991,64 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
             'event': 'ApprovalRequestLoaded',
             'payloadSchema': [
               {
+                'entity': 'ApprovalRequest',
                 'name': 'data',
-                'type': '[ApprovalRequest]',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'gatedEvent',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'subjectLabel',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'subjectId',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'requestedBy',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'requestedByName',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'status',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'reviewer',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'requestedAt',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'decidedAt',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'escalatedAt',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'notes',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'payload',
+                    'type': 'Map<string,scalar>',
+                  },
+                ],
+                'type': '[object]',
               },
             ],
             'synonyms': 'loaded, fetched, retrieved',
@@ -1075,8 +1136,64 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
               'name': 'ApprovalRequest loaded',
               'payloadSchema': [
                 {
+                  'entity': 'ApprovalRequest',
                   'name': 'data',
-                  'type': '[ApprovalRequest]',
+                  'properties': [
+                    {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'gatedEvent',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'subjectLabel',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'subjectId',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'requestedBy',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'requestedByName',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'status',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'reviewer',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'requestedAt',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'decidedAt',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'escalatedAt',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'notes',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'payload',
+                      'type': 'Map<string,scalar>',
+                    },
+                  ],
+                  'type': '[object]',
                 },
               ],
               'synonyms': 'loaded, fetched, retrieved',
@@ -1142,6 +1259,7 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
                   'type': 'string',
                 },
                 {
+                  'entity': 'ApprovalRequest',
                   'name': 'row',
                   'properties': [
                     {
@@ -1195,7 +1313,7 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
                     },
                     {
                       'name': 'payload',
-                      'type': 'opaque',
+                      'type': 'Map<string,scalar>',
                     },
                   ],
                   'type': 'object',
@@ -1215,6 +1333,7 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
                   'type': 'string',
                 },
                 {
+                  'entity': 'ApprovalRequest',
                   'name': 'row',
                   'properties': [
                     {
@@ -1268,7 +1387,7 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
                     },
                     {
                       'name': 'payload',
-                      'type': 'opaque',
+                      'type': 'Map<string,scalar>',
                     },
                   ],
                   'type': 'object',
@@ -1371,7 +1490,7 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
                 },
                 {
                   'name': 'payload',
-                  'type': 'opaque',
+                  'type': '$p',
                 },
               ],
               'synonyms': 'approved, authorized, confirmed, validated',
@@ -2128,6 +2247,12 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
             },
           ],
         },
+        'typeParams': [
+          {
+            'kind': 'Entity',
+            'name': 'p',
+          },
+        ],
       } satisfies Trait,
     ],
     pages: [
@@ -2184,12 +2309,36 @@ export const StdApprovalGateApprovalGateOrbitalManifest = {
   organism: 'std-approval-gate',
   orbitalName: 'ApprovalGateOrbital',
   paramFields: [
-    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
-    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
-    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
-    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
-    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+    {
+      'name': 'fields',
+      'type': 'EntityField[]',
+      'description': 'Extra fields appended to the canonical entity.',
+    },
+    {
+      'name': 'pagePath',
+      'type': 'string',
+      'description': 'URL override for the orbital first page.',
+    },
+    {
+      'name': 'persistence',
+      'type': '\'persistent\' | \'runtime\'',
+      'description': 'Override the canonical entity persistence mode.',
+    },
+    {
+      'name': 'entityName',
+      'type': 'string',
+      'description': 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.',
+    },
+    {
+      'name': 'collection',
+      'type': 'string',
+      'description': 'Override derived collection key. Defaults to plural(entityName).toLowerCase().',
+    },
+    {
+      'name': 'traitOverrides',
+      'type': 'Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>',
+      'description': '.lolo\'s native trait-composition surface 1:1: per-imported-trait config, linkedEntity, events, name, emitsScope, listens. effects is excluded (atom-owned; use listens via a sibling trait).',
+    },
   ] as const,
   traitNames: [
     'LoadingSpinner',

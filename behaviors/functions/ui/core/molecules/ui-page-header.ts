@@ -62,10 +62,10 @@ export interface StdUiPageHeaderConfig {
   /** Default: `false` */
   showBack?: boolean;
   status?: EntityRow;
-  subtitle?: string;
+  subtitle?: unknown;
   /** Default: `[]` */
   tabs?: EntityRow[];
-  title?: string;
+  title?: unknown;
 }
 
 /**

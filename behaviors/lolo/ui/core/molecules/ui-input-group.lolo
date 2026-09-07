@@ -8,7 +8,6 @@ orbital InputGroupOrbital {
 
   entity InputGroupItem [runtime] {
     id : string!
-    value : string
   }
 
   trait InputGroupRender -> @rebindable InputGroupItem [interaction, instance] {
@@ -16,34 +15,10 @@ orbital InputGroupOrbital {
 
     state idle {
       INIT -> idle
-        (set @entity.value @config.value)
         (render-ui main {
           className: @config.className
           placeholder: @config.placeholder
-          value: @entity.value
-          disabled: @config.disabled
-          action: @config.action
-          inputType: @config.inputType
-          label: @config.label
-          helperText: @config.helperText
-          error: @config.error
-          leftIcon: @config.leftIcon
-          rightIcon: @config.rightIcon
-          clearable: @config.clearable
-          onClear: @config.onClear
-          options: @config.options
-          rows: @config.rows
-          onChange: @config.onChange
-          leftAddon: @config.leftAddon
-          rightAddon: @config.rightAddon
-          type: input-group
-        })
-      ACTION -> idle
-        (set @entity.value ?value)
-        (render-ui main {
-          className: @config.className
-          placeholder: @config.placeholder
-          value: @entity.value
+          value: @config.value
           disabled: @config.disabled
           action: @config.action
           inputType: @config.inputType
@@ -80,15 +55,6 @@ orbital InputGroupOrbital {
         @tier "essential"
     }
 
-    listens {
-      ACTION {
-        value : match @config.inputType {
-          "number" -> number
-          _ -> string
-        }!
-      }
-    }
-
     config {
       className : string
         @label "Class Name"
@@ -98,7 +64,7 @@ orbital InputGroupOrbital {
         @label "Placeholder"
         @description "Placeholder text"
         @tier "presentation"
-      value : string
+      value : scalar
         @label "Value"
         @description "Current value"
         @tier "presentation"

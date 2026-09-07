@@ -608,8 +608,19 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
             'event': 'PUSH_ROWS_LOADED',
             'payloadSchema': [
               {
+                'entity': 'TargetRow',
                 'name': 'data',
-                'type': '[TargetRow]',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'externalEventId',
+                    'type': 'string',
+                  },
+                ],
+                'type': '[object]',
               },
             ],
             'tier': 'secondary',
@@ -653,8 +664,43 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
             'event': 'CAL_REMOTE_LISTED',
             'payloadSchema': [
               {
+                'entity': 'RemoteEvent',
                 'name': 'events',
-                'type': '[RemoteEvent]',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'summary',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'description',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'location',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'start',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'end',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'status',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'updated',
+                    'type': 'string',
+                  },
+                ],
+                'type': '[object]',
               },
               {
                 'name': 'nextSyncToken',
@@ -668,8 +714,19 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
             'event': 'PULL_TARGET_LOADED',
             'payloadSchema': [
               {
+                'entity': 'TargetRow',
                 'name': 'data',
-                'type': '[TargetRow]',
+                'properties': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'externalEventId',
+                    'type': 'string',
+                  },
+                ],
+                'type': '[object]',
               },
             ],
             'tier': 'secondary',
@@ -1803,12 +1860,36 @@ export const StdCalendarSyncCalendarSyncOrbitalManifest = {
   organism: 'std-calendar-sync',
   orbitalName: 'CalendarSyncOrbital',
   paramFields: [
-    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
-    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
-    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
-    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
-    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+    {
+      'name': 'fields',
+      'type': 'EntityField[]',
+      'description': 'Extra fields appended to the canonical entity.',
+    },
+    {
+      'name': 'pagePath',
+      'type': 'string',
+      'description': 'URL override for the orbital first page.',
+    },
+    {
+      'name': 'persistence',
+      'type': '\'persistent\' | \'runtime\'',
+      'description': 'Override the canonical entity persistence mode.',
+    },
+    {
+      'name': 'entityName',
+      'type': 'string',
+      'description': 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.',
+    },
+    {
+      'name': 'collection',
+      'type': 'string',
+      'description': 'Override derived collection key. Defaults to plural(entityName).toLowerCase().',
+    },
+    {
+      'name': 'traitOverrides',
+      'type': 'Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>',
+      'description': '.lolo\'s native trait-composition surface 1:1: per-imported-trait config, linkedEntity, events, name, emitsScope, listens. effects is excluded (atom-owned; use listens via a sibling trait).',
+    },
   ] as const,
   traitNames: [
   ] as const,
