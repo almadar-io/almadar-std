@@ -124,22 +124,6 @@
         "owner": "workspace",
         "renames": []
       },
-      "trt_01KXZ44Y963YXRJDNR4F2M5QHX": {
-        "bakedName": "DenseTableView",
-        "curName": "DenseTableView",
-        "id": "trt_01KXZ44Y963YXRJDNR4F2M5QHX",
-        "kind": "trait",
-        "owner": "workspace",
-        "renames": []
-      },
-      "trt_01KXZ44Y965J2Q55E5JN4JKVGR": {
-        "bakedName": "DataGrid1",
-        "curName": "DataGrid1",
-        "id": "trt_01KXZ44Y965J2Q55E5JN4JKVGR",
-        "kind": "trait",
-        "owner": "workspace",
-        "renames": []
-      },
       "trt_01KYG176Z400JFKWZ2XPKJ4798": {
         "bakedName": "MasterListView",
         "curName": "MasterListView",
@@ -211,112 +195,6 @@
         }
       ],
       "traits": [
-        {
-          "config": {
-            "cols": {
-              "default": "@config.cols",
-              "type": "unknown"
-            },
-            "fields": {
-              "default": "@config.fields",
-              "type": "unknown"
-            },
-            "gap": {
-              "default": "@config.gap",
-              "type": "unknown"
-            },
-            "imageField": {
-              "default": "@config.imageField",
-              "type": "unknown"
-            },
-            "itemActions": {
-              "default": "@config.itemActions",
-              "type": "unknown"
-            },
-            "maxInlineActions": {
-              "default": "@config.maxInlineActions",
-              "type": "unknown"
-            },
-            "pageSize": {
-              "default": "@config.displayPageSize",
-              "type": "unknown"
-            },
-            "selfFetch": {
-              "default": false,
-              "type": "unknown"
-            }
-          },
-          "id": "trt_01KXZ44Y965J2Q55E5JN4JKVGR",
-          "linkedEntity": "BrowseItem",
-          "linkedEntityId": "ent_01KXG04FVGGWM52VJZVMAEG5H0",
-          "listens": [
-            {
-              "event": "BrowseItemLoaded",
-              "source": {
-                "kind": "trait",
-                "trait": "BrowseItemBrowse"
-              },
-              "triggers": "DataGridLoaded"
-            }
-          ],
-          "name": "DataGrid1",
-          "ref": "DataGrid.traits.DataGridRender"
-        },
-        {
-          "config": {
-            "columns": {
-              "default": "@config.columns",
-              "type": "unknown"
-            },
-            "emptyMessage": {
-              "default": "No records",
-              "type": "unknown"
-            },
-            "itemActions": {
-              "default": "@config.itemActions",
-              "type": "unknown"
-            },
-            "itemClickEvent": {
-              "default": "@config.itemClickEvent",
-              "type": "unknown"
-            },
-            "look": {
-              "default": "dense",
-              "type": "unknown"
-            },
-            "maxInlineActions": {
-              "default": "@config.maxInlineActions",
-              "type": "unknown"
-            },
-            "pageSize": {
-              "default": "@config.displayPageSize",
-              "type": "unknown"
-            },
-            "selectable": {
-              "default": "@config.selectable",
-              "type": "unknown"
-            },
-            "selfFetch": {
-              "default": false,
-              "type": "unknown"
-            }
-          },
-          "id": "trt_01KXZ44Y963YXRJDNR4F2M5QHX",
-          "linkedEntity": "BrowseItem",
-          "linkedEntityId": "ent_01KXG04FVGGWM52VJZVMAEG5H0",
-          "listens": [
-            {
-              "event": "BrowseItemLoaded",
-              "source": {
-                "kind": "trait",
-                "trait": "BrowseItemBrowse"
-              },
-              "triggers": "TableViewLoaded"
-            }
-          ],
-          "name": "DenseTableView",
-          "ref": "TableView.traits.TableViewRender"
-        },
         {
           "config": {
             "fields": {
@@ -433,15 +311,24 @@
                       "type": "stack"
                     }
                   ],
-                  "@trait.DataGrid1"
+                  {
+                    "cols": "@config.cols",
+                    "entity": "@payload.data",
+                    "fields": "@config.fields",
+                    "gap": "@config.gap",
+                    "imageField": "@config.imageField",
+                    "itemActions": "@config.itemActions",
+                    "maxInlineActions": "@config.maxInlineActions",
+                    "pageSize": "@config.displayPageSize",
+                    "type": "data-grid"
+                  }
                 ],
                 "direction": "vertical",
                 "gap": "md",
                 "type": "stack"
               },
-              "description": "Render-ui SExpr rendered after rows load when browseLook = table (the default). Toolbar (search when bodySearch, filter bar when filters is non-empty) above the canonical data-grid call. Until 2026-08-27 this was the only one of the six looks with no search affordance at all. See denseBodyContent/feedBodyContent/galleryBodyContent for the other browseLook bodies; any may be overridden directly while inheriting the same trait, state machine, emits, and listens.",
+              "description": "Render-ui SExpr rendered after rows load when browseLook = table (the default). Toolbar (search when bodySearch, filter bar when filters is non-empty) above the canonical data-grid call. Until 2026-08-27 this was the only one of the six looks with no search affordance at all. See denseBodyContent/feedBodyContent/galleryBodyContent for the other browseLook bodies; any may be overridden directly while inheriting the same trait, state machine, emits, and listens. Inlined directly (not via a composed sibling trait) 2026-09-08 — a separately-listening DataGrid1 sibling fired unconditionally on every BrowseItemLoaded regardless of browseLook, racing the correct body for slot main (a listens guard can't gate this: both the Rust interpreter and the TS codegen path restrict a listens guard's context to @payload only, so a browseLook config check there always evaluates undefined).",
               "label": "Body content tree",
-              "tier": "internal",
               "type": "render-ui"
             },
             "bodySearch": {
@@ -638,7 +525,18 @@
                   ],
                   {
                     "children": [
-                      "@trait.DenseTableView"
+                      {
+                        "columns": "@config.columns",
+                        "emptyMessage": "No records",
+                        "entity": "@payload.data",
+                        "itemActions": "@config.itemActions",
+                        "itemClickEvent": "@config.itemClickEvent",
+                        "look": "dense",
+                        "maxInlineActions": "@config.maxInlineActions",
+                        "pageSize": "@config.displayPageSize",
+                        "selectable": "@config.selectable",
+                        "type": "table-view"
+                      }
                     ],
                     "className": "overflow-x-auto",
                     "direction": "vertical",
@@ -651,7 +549,7 @@
                 "gap": "none",
                 "type": "stack"
               },
-              "description": "Render-ui SExpr rendered after rows load when browseLook = dense. Spreadsheet-style sticky-header data-table with a search bar; composes columns/itemActions/maxInlineActions/displayPageSize/searchPlaceholder. Folded from std-browse-dense (Phase 5.B).",
+              "description": "Render-ui SExpr rendered after rows load when browseLook = dense. Spreadsheet-style sticky-header data-table with a search bar; composes columns/itemActions/maxInlineActions/displayPageSize/searchPlaceholder. Folded from std-browse-dense (Phase 5.B). Inlined directly (not via a composed sibling trait) 2026-09-08 — see the table-default body's note for why.",
               "label": "Dense look body",
               "tier": "internal",
               "type": "render-ui"
@@ -2623,8 +2521,6 @@
             ]
           },
           "traitEmbedIds": {
-            "DataGrid1": "trt_01KXZ44Y965J2Q55E5JN4JKVGR",
-            "DenseTableView": "trt_01KXZ44Y963YXRJDNR4F2M5QHX",
             "MasterListView": "trt_01KYG176Z400JFKWZ2XPKJ4798"
           }
         }
@@ -2763,14 +2659,6 @@
         {
           "as": "Typography",
           "from": "std/behaviors/ui-typography"
-        },
-        {
-          "as": "DataGrid",
-          "from": "std/behaviors/ui-data-grid"
-        },
-        {
-          "as": "TableView",
-          "from": "std/behaviors/ui-table-view"
         },
         {
           "as": "DataList",

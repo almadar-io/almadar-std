@@ -25,44 +25,19 @@ orbital BrowseItemOrbital {
   }
 
   uses Typography from "std/behaviors/ui-typography"
-  uses DataGrid from "std/behaviors/ui-data-grid"
-  uses TableView from "std/behaviors/ui-table-view"
   uses DataList from "std/behaviors/ui-data-list"
 
-  trait DataGrid1 = DataGrid.traits.DataGridRender -> BrowseItem {
-    config {
-      cols: @config.cols
-      fields: @config.fields
-      gap: @config.gap
-      imageField: @config.imageField
-      itemActions: @config.itemActions
-      maxInlineActions: @config.maxInlineActions
-      pageSize: @config.displayPageSize
-      selfFetch: false
-    }
-
-    listens {
-      BrowseItemBrowse.BrowseItemLoaded -> DataGridLoaded
-    }
-  }
-
-  trait DenseTableView = TableView.traits.TableViewRender -> BrowseItem {
-    config {
-      columns: @config.columns
-      emptyMessage: "No records"
-      itemActions: @config.itemActions
-      itemClickEvent: @config.itemClickEvent
-      look: dense
-      maxInlineActions: @config.maxInlineActions
-      pageSize: @config.displayPageSize
-      selectable: @config.selectable
-      selfFetch: false
-    }
-
-    listens {
-      BrowseItemBrowse.BrowseItemLoaded -> TableViewLoaded
-    }
-  }
+  ;; table-default and dense looks used to compose separately-listening
+  ;; sibling traits (DataGrid1/DenseTableView) here, same shape as
+  ;; MasterListView below. Both re-render fully on every BrowseItemLoaded
+  ;; (unlike master-detail's VIEW/CLOSE, which doesn't carry `.data`), so
+  ;; unlike MasterListView they had no reason to be persistent components —
+  ;; inlined into denseBodyContent/bodyContent directly 2026-09-08, matching
+  ;; feed/gallery/triage's existing inline shape. A separately-listening
+  ;; sibling fires unconditionally regardless of browseLook (a listens guard
+  ;; can't gate on @config — both the Rust interpreter and the TS codegen
+  ;; path restrict a listens guard's context to @payload only), so all three
+  ;; used to race for slot main on every load.
 
   trait MasterListView = DataList.traits.DataListRender -> BrowseItem {
     config {
@@ -461,14 +436,23 @@ orbital BrowseItemOrbital {
           children: []
           gap: none
           type: stack
-        }), @trait.DataGrid1]
+        }), {
+          cols: @config.cols
+          entity: ?data
+          fields: @config.fields
+          gap: @config.gap
+          imageField: @config.imageField
+          itemActions: @config.itemActions
+          maxInlineActions: @config.maxInlineActions
+          pageSize: @config.displayPageSize
+          type: data-grid
+        }]
         direction: vertical
         gap: md
         type: stack
       }
         @label "Body content tree"
-        @description "Render-ui SExpr rendered after rows load when browseLook = table (the default). Toolbar (search when bodySearch, filter bar when filters is non-empty) above the canonical data-grid call. Until 2026-08-27 this was the only one of the six looks with no search affordance at all. See denseBodyContent/feedBodyContent/galleryBodyContent for the other browseLook bodies; any may be overridden directly while inheriting the same trait, state machine, emits, and listens."
-        @tier "internal"
+        @description "Render-ui SExpr rendered after rows load when browseLook = table (the default). Toolbar (search when bodySearch, filter bar when filters is non-empty) above the canonical data-grid call. Until 2026-08-27 this was the only one of the six looks with no search affordance at all. See denseBodyContent/feedBodyContent/galleryBodyContent for the other browseLook bodies; any may be overridden directly while inheriting the same trait, state machine, emits, and listens. Inlined directly (not via a composed sibling trait) 2026-09-08 — a separately-listening DataGrid1 sibling fired unconditionally on every BrowseItemLoaded regardless of browseLook, racing the correct body for slot main (a listens guard can't gate this: both the Rust interpreter and the TS codegen path restrict a listens guard's context to @payload only, so a browseLook config check there always evaluates undefined)."
       denseBodyContent : render-ui = {
         children: [(if @config.bodySearch {
           children: [{
@@ -503,7 +487,18 @@ orbital BrowseItemOrbital {
           gap: none
           type: stack
         }), {
-          children: [@trait.DenseTableView]
+          children: [{
+            columns: @config.columns
+            emptyMessage: "No records"
+            entity: ?data
+            itemActions: @config.itemActions
+            itemClickEvent: @config.itemClickEvent
+            look: dense
+            maxInlineActions: @config.maxInlineActions
+            pageSize: @config.displayPageSize
+            selectable: @config.selectable
+            type: table-view
+          }]
           className: overflow-x-auto
           direction: vertical
           gap: none
@@ -515,7 +510,7 @@ orbital BrowseItemOrbital {
         type: stack
       }
         @label "Dense look body"
-        @description "Render-ui SExpr rendered after rows load when browseLook = dense. Spreadsheet-style sticky-header data-table with a search bar; composes columns/itemActions/maxInlineActions/displayPageSize/searchPlaceholder. Folded from std-browse-dense (Phase 5.B)."
+        @description "Render-ui SExpr rendered after rows load when browseLook = dense. Spreadsheet-style sticky-header data-table with a search bar; composes columns/itemActions/maxInlineActions/displayPageSize/searchPlaceholder. Folded from std-browse-dense (Phase 5.B). Inlined directly (not via a composed sibling trait) 2026-09-08 — see the table-default body's note for why."
         @tier "internal"
       feedBodyContent : render-ui = {
         children: [(if @config.bodySearch {
