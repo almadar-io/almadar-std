@@ -136,7 +136,7 @@ orbital ApprovalGateOrbital {
         (persist update ApprovalRequest @entity {
           emit: { failure: ApprovalRequestReviewFailed, success: ApprovalRequestReviewed }
         })
-        (notify "Approval could not be applied — the request was reopened." error)
+        (notify error "Approval could not be applied — the request was reopened.")
       OPEN -> loading when @config.enabled
         (fetch ApprovalRequest {
           filter: ["=", (object/get @entity status), "pending"]
@@ -282,7 +282,7 @@ orbital ApprovalGateOrbital {
         (persist update ApprovalRequest @entity {
           emit: { failure: ApprovalRequestReviewFailed, success: ApprovalRequestReviewed }
         })
-        (notify "Approval could not be applied — the request was reopened." error)
+        (notify error "Approval could not be applied — the request was reopened.")
       CLOSE -> idle
         (render-ui @config.reviewSlot null)
     }

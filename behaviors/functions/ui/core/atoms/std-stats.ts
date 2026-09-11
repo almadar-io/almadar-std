@@ -196,6 +196,7 @@ export function stdStatsStatsItemOrbital(params: StdStatsStatsItemOrbitalParams 
           {
             'default': [],
             'description': 'A collection of statistical cards to display.',
+            'intrinsic': true,
             'items': {
               'properties': {
                 'clickEvent': {

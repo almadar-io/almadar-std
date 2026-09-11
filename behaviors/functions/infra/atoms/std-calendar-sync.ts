@@ -274,6 +274,7 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
           {
             'default': '',
             'description': 'Scratch: Google incremental-sync token from the last listEvents; in-memory per instance — a restart falls back to a full list.',
+            'intrinsic': true,
             'name': 'syncToken',
             'synonyms': 'sync cursor, next token',
             'type': 'string',
@@ -281,6 +282,7 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
           {
             'default': 0,
             'description': 'When the last full push+pull cycle completed; 0 = never.',
+            'intrinsic': true,
             'name': 'lastSyncedAt',
             'synonyms': 'last sync time',
             'type': 'number',
@@ -288,6 +290,7 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
           {
             'default': '',
             'description': 'Scratch: id of the target row the push loop is currently exporting.',
+            'intrinsic': true,
             'name': 'headId',
             'synonyms': 'cursor, current row',
             'type': 'string',
@@ -295,6 +298,7 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
           {
             'default': [],
             'description': 'Scratch: remote events remaining in the current pull-upsert loop.',
+            'intrinsic': true,
             'items': {
               'properties': {
                 'description': {
@@ -347,6 +351,7 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
           {
             'default': '',
             'description': 'Last sync failure detail; blank = none.',
+            'intrinsic': true,
             'name': 'lastError',
             'synonyms': 'sync error, failure',
             'type': 'string',

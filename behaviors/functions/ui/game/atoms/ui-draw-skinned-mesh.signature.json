@@ -1,0 +1,391 @@
+[
+  {
+    "organism": "ui-draw-skinned-mesh",
+    "orbital": "DrawSkinnedMeshOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/game/atoms/ui-draw-skinned-mesh.ts",
+    "entities": [
+      {
+        "name": "DrawSkinnedMeshItem",
+        "fields": [],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "DrawSkinnedMeshRender",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "asset",
+            "type": "DrawSkinnedMeshAsset",
+            "label": "Asset",
+            "description": "The texture the mesh UVs cut into.",
+            "tier": "presentation",
+            "properties": {
+              "animations": {
+                "name": "animations",
+                "required": false,
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "aspect": {
+                "name": "aspect",
+                "required": false,
+                "type": "string",
+                "values": [
+                  "1:1",
+                  "16:9",
+                  "5:7",
+                  "8:1"
+                ]
+              },
+              "atlas": {
+                "name": "atlas",
+                "required": false,
+                "type": "string"
+              },
+              "category": {
+                "name": "category",
+                "required": true,
+                "type": "string"
+              },
+              "dimension": {
+                "name": "dimension",
+                "required": false,
+                "type": "string",
+                "values": [
+                  "2d",
+                  "3d"
+                ]
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "role": {
+                "name": "role",
+                "required": true,
+                "type": "string"
+              },
+              "sprite": {
+                "name": "sprite",
+                "required": false,
+                "type": "string"
+              },
+              "style": {
+                "name": "style",
+                "required": false,
+                "type": "string",
+                "values": [
+                  "pixel",
+                  "vector",
+                  "hd",
+                  "1-bit",
+                  "isometric"
+                ]
+              },
+              "thumbnailUrl": {
+                "name": "thumbnailUrl",
+                "required": false,
+                "type": "string"
+              },
+              "url": {
+                "name": "url",
+                "required": true,
+                "type": "string"
+              },
+              "variant": {
+                "name": "variant",
+                "required": false,
+                "type": "string"
+              }
+            }
+          },
+          {
+            "key": "bones",
+            "type": "[DrawSkinnedMeshBonesItem]",
+            "default": [
+              {
+                "name": "Name",
+                "parent": "Parent",
+                "pivot": [
+                  1,
+                  2
+                ],
+                "tip": [
+                  1,
+                  2
+                ]
+              },
+              {
+                "name": "Name 2",
+                "parent": "Parent 2",
+                "pivot": [
+                  1,
+                  2
+                ],
+                "tip": [
+                  1,
+                  2
+                ]
+              }
+            ],
+            "label": "Bones",
+            "description": "The skeleton (bind pose; FK chain via `parent` names).",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
+                "parent": {
+                  "name": "parent",
+                  "required": true,
+                  "type": "string"
+                },
+                "pivot": {
+                  "name": "pivot",
+                  "required": true,
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                "tip": {
+                  "name": "tip",
+                  "required": true,
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "clip",
+            "type": "DrawSkinnedMeshClip",
+            "label": "Clip",
+            "description": "Pose animation clip; with `frame`, pose = `frames[frame % frames.length]`.",
+            "tier": "presentation",
+            "properties": {
+              "frames": {
+                "name": "frames",
+                "required": true,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "items": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "key": "frame",
+            "type": "number",
+            "label": "Frame",
+            "description": "Clip frame counter (host-driven paint clock frame).",
+            "tier": "presentation"
+          },
+          {
+            "key": "ghost",
+            "type": "DrawSkinnedMeshGhost",
+            "label": "Ghost",
+            "description": "Onion skin: render the mesh at this clip frame underneath, at this opacity.",
+            "tier": "presentation",
+            "properties": {
+              "frame": {
+                "name": "frame",
+                "required": true,
+                "type": "number"
+              },
+              "opacity": {
+                "name": "opacity",
+                "required": true,
+                "type": "number"
+              }
+            }
+          },
+          {
+            "key": "mesh",
+            "type": "DrawSkinnedMeshMesh",
+            "label": "Mesh",
+            "description": "Inline bind mesh; wins over `meshUrl`.",
+            "tier": "presentation",
+            "properties": {
+              "triangles": {
+                "name": "triangles",
+                "required": true,
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                }
+              },
+              "vertices": {
+                "name": "vertices",
+                "required": true,
+                "type": "array",
+                "items": {
+                  "properties": {
+                    "u": {
+                      "name": "u",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "v": {
+                      "name": "v",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "weights": {
+                      "name": "weights",
+                      "required": true,
+                      "type": "array",
+                      "items": {
+                        "properties": {
+                          "bone": {
+                            "name": "bone",
+                            "required": true,
+                            "type": "number"
+                          },
+                          "w": {
+                            "name": "w",
+                            "required": true,
+                            "type": "number"
+                          }
+                        },
+                        "type": "object"
+                      }
+                    },
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            }
+          },
+          {
+            "key": "meshUrl",
+            "type": "string",
+            "label": "Mesh Url",
+            "description": "URL of a JSON `SkinMesh` (fetched + cached); used when `mesh` is absent.",
+            "tier": "presentation"
+          },
+          {
+            "key": "opacity",
+            "type": "number",
+            "label": "Opacity",
+            "description": "0..1 opacity.",
+            "tier": "presentation"
+          },
+          {
+            "key": "pose",
+            "type": "Map<string,number>",
+            "default": {
+              "item": 1
+            },
+            "label": "Pose",
+            "description": "Static pose (bone name → degrees relative to bind). Overridden by `clip` + `frame`.",
+            "tier": "presentation",
+            "items": {
+              "type": "number"
+            }
+          },
+          {
+            "key": "position",
+            "type": "DrawSkinnedMeshPosition",
+            "default": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            },
+            "label": "Position",
+            "description": "Logical scene position; mesh local coords are world units relative to its projected top-left.",
+            "tier": "presentation",
+            "properties": {
+              "x": {
+                "name": "x",
+                "required": true,
+                "type": "number"
+              },
+              "y": {
+                "name": "y",
+                "required": true,
+                "type": "number"
+              },
+              "z": {
+                "name": "z",
+                "required": false,
+                "type": "number"
+              }
+            }
+          },
+          {
+            "key": "weightsOverlay",
+            "type": "boolean",
+            "label": "Weights Overlay",
+            "description": "Paint per-triangle dominant-bone colors instead of the texture (rig inspection).",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "DrawSkinnedMeshItem",
+        "transitionEvents": [
+          "INIT"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        },
+        "effectRow": [
+          {
+            "kind": "render-ui",
+            "resource": "main"
+          }
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "name": "DrawSkinnedMeshPage",
+        "defaultPath": "/draw-skinned-mesh",
+        "primaryEntity": "DrawSkinnedMeshItem"
+      }
+    ],
+    "emittedEvents": [],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

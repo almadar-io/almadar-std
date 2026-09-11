@@ -146,6 +146,10 @@ orbital BrowseItemOrbital {
                 (if ["=", @config.browseLook, triage]
                   (render-ui main @config.triageBodyContent)
                   (render-ui main @config.bodyContent))))))
+      ;; A refetch keeps the populated body on screen; only the failure
+      ;; itself has to reach the user.
+      BrowseItemLoadFailed -> browsing
+        (notify error (str/concat "Couldn't refresh the list — " ?error))
     }
 
     state error {

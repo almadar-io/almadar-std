@@ -253,6 +253,7 @@ export function stdCascadeOnDeleteCascadeOnDeleteOrbital(params: StdCascadeOnDel
           {
             'default': '',
             'description': 'Scratch: id of the dependent row the loop is currently deleting.',
+            'intrinsic': true,
             'name': 'headId',
             'synonyms': 'current id, cursor',
             'type': 'string',
@@ -321,6 +322,10 @@ export function stdCascadeOnDeleteCascadeOnDeleteOrbital(params: StdCascadeOnDel
             'resource': '@config.dependentEntity',
           },
           {
+            'kind': 'persist',
+            'resource': 'CascadeLog',
+          },
+          {
             'kind': 'set',
             'resource': '@entity.headId',
           },
@@ -331,6 +336,10 @@ export function stdCascadeOnDeleteCascadeOnDeleteOrbital(params: StdCascadeOnDel
           {
             'kind': 'set',
             'resource': '@entity.parentId',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.rowCount',
           },
         ],
         'emits': [
@@ -590,6 +599,16 @@ export function stdCascadeOnDeleteCascadeOnDeleteOrbital(params: StdCascadeOnDel
                     'parentId': '@entity.parentId',
                   },
                 ],
+                [
+                  'persist',
+                  'create',
+                  ('CascadeLog' satisfies _StdCascadeOnDeleteEntityName),
+                  {
+                    'parentEntity': '@entity.parentEntity',
+                    'parentId': '@entity.parentId',
+                    'rowCount': '@entity.rowCount',
+                  },
+                ],
               ],
               'event': 'DepsLoaded',
               'from': 'scanning',
@@ -621,6 +640,15 @@ export function stdCascadeOnDeleteCascadeOnDeleteOrbital(params: StdCascadeOnDel
             },
             {
               'effects': [
+                [
+                  'set',
+                  '@entity.rowCount',
+                  [
+                    '+',
+                    '@entity.rowCount',
+                    1,
+                  ],
+                ],
                 [
                   'fetch',
                   '@config.dependentEntity',

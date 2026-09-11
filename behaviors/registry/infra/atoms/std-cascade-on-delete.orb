@@ -135,6 +135,7 @@
           {
             "default": "",
             "description": "Scratch: id of the dependent row the loop is currently deleting.",
+            "intrinsic": true,
             "name": "headId",
             "synonyms": "current id, cursor",
             "type": "string"
@@ -217,6 +218,10 @@
               "resource": "@config.dependentEntity"
             },
             {
+              "kind": "persist",
+              "resource": "CascadeLog"
+            },
+            {
               "kind": "set",
               "resource": "@entity.headId"
             },
@@ -227,6 +232,10 @@
             {
               "kind": "set",
               "resource": "@entity.parentId"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.rowCount"
             }
           ],
           "emits": [
@@ -505,6 +514,16 @@
                     {
                       "parentId": "@entity.parentId"
                     }
+                  ],
+                  [
+                    "persist",
+                    "create",
+                    "CascadeLog",
+                    {
+                      "parentEntity": "@entity.parentEntity",
+                      "parentId": "@entity.parentId",
+                      "rowCount": "@entity.rowCount"
+                    }
                   ]
                 ],
                 "event": "DepsLoaded",
@@ -538,6 +557,15 @@
               },
               {
                 "effects": [
+                  [
+                    "set",
+                    "@entity.rowCount",
+                    [
+                      "+",
+                      "@entity.rowCount",
+                      1.0
+                    ]
+                  ],
                   [
                     "fetch",
                     "@config.dependentEntity",

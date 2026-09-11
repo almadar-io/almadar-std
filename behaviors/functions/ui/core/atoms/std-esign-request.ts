@@ -439,11 +439,12 @@ export function stdEsignRequestESignRequestOrbital(params: StdEsignRequestESignR
             'resource': 'ESignRequest',
           },
           {
-            'kind': 'notify',
+            'kind': 'render-ui',
+            'resource': 'main',
           },
           {
             'kind': 'render-ui',
-            'resource': 'main',
+            'resource': 'toast',
           },
           {
             'kind': 'set',
@@ -751,9 +752,14 @@ export function stdEsignRequestESignRequestOrbital(params: StdEsignRequestESignR
                   '@payload.id',
                 ],
                 [
-                  'notify',
-                  'Signature request sent',
-                  'success',
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': 'Signature request sent',
+                    'type': 'alert',
+                    'variant': 'success',
+                  },
                 ],
               ],
               'event': 'SEND_REQUEST',
@@ -768,9 +774,14 @@ export function stdEsignRequestESignRequestOrbital(params: StdEsignRequestESignR
                   '@payload.id',
                 ],
                 [
-                  'notify',
-                  'Signature request revoked',
-                  'info',
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': 'Signature request revoked',
+                    'type': 'alert',
+                    'variant': 'info',
+                  },
                 ],
               ],
               'event': 'REVOKE_REQUEST',

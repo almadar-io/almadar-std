@@ -478,12 +478,6 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
             'tier': 'domain',
           },
           {
-            'description': 'Opens the create-tag form (rendered only when allowEdit is on); the creation lands at the level currently open.',
-            'event': 'NEW_TAG',
-            'synonyms': 'add tag, create category, new category',
-            'tier': 'domain',
-          },
-          {
             'description': 'The new-category form committed; data carries the name and the parent level.',
             'event': 'COMMIT_TAG',
             'payloadSchema': [
@@ -685,10 +679,10 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
               'name': 'Show Root',
             },
             {
-              'description': 'Opens the create-tag form (rendered only when allowEdit is on); the creation lands at the level currently open.',
+              'description': 'The New-category affordance was clicked.',
               'key': 'NEW_TAG',
               'name': 'New Tag',
-              'synonyms': 'add tag, create category, new category',
+              'synonyms': 'add tag, create category',
               'tier': 'domain',
             },
             {

@@ -450,15 +450,16 @@ export function stdFormAdvancedFormEntryOrbital(params: StdFormAdvancedFormEntry
             'resource': 'FormEntry',
           },
           {
-            'kind': 'notify',
-          },
-          {
             'kind': 'persist',
             'resource': 'FormEntry',
           },
           {
             'kind': 'render-ui',
             'resource': 'main',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'toast',
           },
         ],
         'emits': [
@@ -899,9 +900,14 @@ export function stdFormAdvancedFormEntryOrbital(params: StdFormAdvancedFormEntry
             {
               'effects': [
                 [
-                  'notify',
-                  'error',
-                  'Failed to load form',
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': 'Failed to load form',
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
                 ],
               ],
               'event': 'FormEntryLoadFailed',
@@ -981,9 +987,14 @@ export function stdFormAdvancedFormEntryOrbital(params: StdFormAdvancedFormEntry
             {
               'effects': [
                 [
-                  'notify',
-                  'error',
-                  'Failed to save form entry',
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': 'Failed to save form entry',
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
                 ],
               ],
               'event': 'FormEntrySaveFailed',

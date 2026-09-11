@@ -1619,11 +1619,12 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
             'resource': 'esign.sendEnvelope',
           },
           {
-            'kind': 'notify',
-          },
-          {
             'kind': 'persist',
             'resource': 'SignatureSession',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'toast',
           },
           {
             'kind': 'set',
@@ -2096,9 +2097,14 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
             {
               'effects': [
                 [
-                  'notify',
-                  'info',
-                  'This request was never dispatched to the e-sign provider — send it first',
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': 'This request was never dispatched to the e-sign provider — send it first',
+                    'type': 'alert',
+                    'variant': 'info',
+                  },
                 ],
               ],
               'event': 'CHECK_ENVELOPE_STATUS',
@@ -2113,9 +2119,14 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
             {
               'effects': [
                 [
-                  'notify',
-                  'warning',
-                  'Could not record the envelope state on the request',
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': 'Could not record the envelope state on the request',
+                    'type': 'alert',
+                    'variant': 'warning',
+                  },
                 ],
               ],
               'event': 'ENVELOPE_STAMP_FAILED',
@@ -2142,9 +2153,14 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                   },
                 ],
                 [
-                  'notify',
-                  'success',
-                  'Signature request sent',
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': 'Signature request sent',
+                    'type': 'alert',
+                    'variant': 'success',
+                  },
                 ],
               ],
               'event': 'ENVELOPE_SENT',
@@ -2154,9 +2170,14 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
             {
               'effects': [
                 [
-                  'notify',
-                  'warning',
-                  'Could not send the signature request',
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': 'Could not send the signature request',
+                    'type': 'alert',
+                    'variant': 'warning',
+                  },
                 ],
               ],
               'event': 'ENVELOPE_SEND_FAILED',
@@ -2270,9 +2291,14 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
             {
               'effects': [
                 [
-                  'notify',
-                  'warning',
-                  'Could not read the envelope status',
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': 'Could not read the envelope status',
+                    'type': 'alert',
+                    'variant': 'warning',
+                  },
                 ],
               ],
               'event': 'ENVELOPE_STATUS_FAILED',

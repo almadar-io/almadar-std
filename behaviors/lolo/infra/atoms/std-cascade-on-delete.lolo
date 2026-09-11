@@ -18,7 +18,7 @@ orbital CascadeOnDeleteOrbital {
     parentId : string @description "Identifier of the deleted parent the cascade is clearing dependents for." @synonyms "parent, source, origin" = ""
     parentEntity : string @description "Identifies the parent entity of the cascade." @synonyms "related entity, source entity, parent" = ""
     rowCount : number @description "The number of rows deleted by the cascade." @synonyms "count, size, quantity" = 0
-    headId : string @description "Scratch: id of the dependent row the loop is currently deleting." @synonyms "current id, cursor" = ""
+    headId : string @intrinsic @description "Scratch: id of the dependent row the loop is currently deleting." @synonyms "current id, cursor" = ""
   }
 
   trait CascadeOnDeleteGate -> CascadeLog [lifecycle, instance, cascade-delete] {
@@ -43,7 +43,13 @@ orbital CascadeOnDeleteOrbital {
         })
       DepsLoaded -> idle when ["=", (array/len (array/filter ?data (fn row ["=", (object/get @row @config.foreignKeyField), @entity.parentId]))), 0]
         (emit CascadeCompleted { parentId: @entity.parentId })
+        (persist create CascadeLog {
+          parentId: @entity.parentId
+          parentEntity: @entity.parentEntity
+          rowCount: @entity.rowCount
+        })
       CascadeStepped -> scanning
+        (set @entity.rowCount (+ @entity.rowCount 1))
         (fetch @config.dependentEntity {
           emit: { failure: CascadeFailed, success: DepsLoaded }
         })

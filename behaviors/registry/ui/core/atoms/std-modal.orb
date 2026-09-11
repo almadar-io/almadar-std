@@ -266,12 +266,13 @@
               "resource": "ModalRecord"
             },
             {
-              "kind": "notify"
-            },
-            {
               "kind": "render-ui",
               "resolved": false,
               "resource": "@config.detailSlot"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "toast"
             },
             {
               "kind": "set",
@@ -387,6 +388,24 @@
                 "name": "Initialize"
               },
               {
+                "description": "Indicates a failure to load the record data.",
+                "id": "evt_01KXG04GVS0KS8WXT183DREMAC",
+                "key": "ModalRecordLoadFailed",
+                "name": "ModalRecord load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "error, failure, problem, unsuccessful",
+                "tier": "internal"
+              },
+              {
                 "description": "Stash the row an edit-mode OPEN will pre-fill from. Hosts route the owning surface's loaded event here (e.g. RecordItemLoaded from a document look) so an OPEN carrying only { id } still opens a fully seeded form.",
                 "id": "evt_01M15CRJ6RE1E1ZFKT9Y1PXNZK",
                 "key": "SEED",
@@ -496,24 +515,6 @@
                 "tier": "domain"
               },
               {
-                "description": "Indicates a failure to load the record data.",
-                "id": "evt_01KXG04GVS0KS8WXT183DREMAC",
-                "key": "ModalRecordLoadFailed",
-                "name": "ModalRecord load failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ],
-                "synonyms": "error, failure, problem, unsuccessful",
-                "tier": "internal"
-              },
-              {
                 "description": "Signals that the modal's data has been successfully loaded.",
                 "id": "evt_01KXG04GVS3BQFMQRN09N23MX6",
                 "key": "ModalRecordLoaded",
@@ -580,6 +581,28 @@
                 ],
                 "event": "INIT",
                 "eventId": "evt_01KXG04GVSS6QBKSCYWMBQWZMS",
+                "from": "closed",
+                "to": "closed"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "toast",
+                    {
+                      "dismissible": true,
+                      "message": [
+                        "str/concat",
+                        "Couldn't load the record — ",
+                        "@payload.error"
+                      ],
+                      "type": "alert",
+                      "variant": "error"
+                    }
+                  ]
+                ],
+                "event": "ModalRecordLoadFailed",
+                "eventId": "evt_01KXG04GVS0KS8WXT183DREMAC",
                 "from": "closed",
                 "to": "closed"
               },
@@ -707,9 +730,14 @@
                     null
                   ],
                   [
-                    "notify",
-                    "Cancelled",
-                    "info"
+                    "render-ui",
+                    "toast",
+                    {
+                      "dismissible": true,
+                      "message": "Cancelled",
+                      "type": "alert",
+                      "variant": "info"
+                    }
                   ]
                 ],
                 "event": "CLOSE",

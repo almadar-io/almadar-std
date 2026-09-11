@@ -28,6 +28,8 @@ orbital ConfirmActionOrbital {
         (fetch ConfirmAction {
           emit: { failure: ConfirmActionLoadFailed, success: ConfirmActionLoaded }
         })
+      ConfirmActionLoadFailed -> idle
+        (notify error (str/concat "Couldn't load the item to confirm — " ?error))
       ;; Guard: REQUEST is rejected if no `row` payload was provided.
       ;; "Confirm an action against X" is meaningless without X — a
       ;; confirmation dialog with no entity to display is a precondition

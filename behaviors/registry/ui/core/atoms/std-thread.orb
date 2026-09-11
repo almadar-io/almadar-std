@@ -1,5 +1,5 @@
 {
-  "description": "std-thread — forum-style nested replies with collapse + flat-mode toggle. Owns ThreadPost (persistent). flat:true covers 1:1 linear inquiry threads; flat:false renders forum-style nested. INIT fetches, scoped by @config.threadRootId when set (blank = every root, the default). REPLY persists a child post under @payload.parentId, stamped with the real @user identity. A consumer that mounts this as page comments forwards its own document-opened signal to SET_THREAD_ROOT { rootId }, which stamps the frame and refetches filtered by the payload; the after-create and after-select refetch arms keep filtering by @config.threadRootId, so a mutation re-widens the panel until the consumer re-fires SET_THREAD_ROOT. Layer 3 variants override `bodyContent` to deliver chat-bubble, email-threaded, or linear-comments UX while inheriting the same trait, state machine, emits, and listens. A non-empty sectionTitle switches the default bodyContent into titled-comments mode: header + post list + a standalone composer button (without it an empty thread has no REPLY emitter at all — the affordance only existed per-row).",
+  "description": "std-thread — forum-style nested replies with collapse + flat-mode toggle. Owns ThreadPost (persistent). flat:true covers 1:1 linear inquiry threads; flat:false renders forum-style nested. INIT fetches, scoped by @config.threadRootId when set (blank = every root, the default). REPLY persists a child post under @payload.parentId, stamped with the real @user identity. A consumer that mounts this as page comments forwards its own document-opened signal to SET_THREAD_ROOT { rootId }, which stamps @entity.replyRootId (scratch — the persisted threadRootId column is written only by the reply persist create) and refetches filtered by the payload; a plain INIT re-entry now also falls back through @entity.replyRootId before @config.threadRootId, so it stays scoped to the last SET_THREAD_ROOT instead of re-widening — only the after-create/after-select refetches still scope directly off their own event payload. Layer 3 variants override `bodyContent` to deliver chat-bubble, email-threaded, or linear-comments UX while inheriting the same trait, state machine, emits, and listens. A non-empty sectionTitle switches the default bodyContent into titled-comments mode: header + post list + a standalone composer button (without it an empty thread has no REPLY emitter at all — the affordance only existed per-row).",
   "ledger": {
     "entries": {
       "ent_01KXG04HSZB16HRNNZWKASR1J1": {
@@ -213,12 +213,34 @@
           {
             "default": {},
             "description": "The currently selected or active row within the thread.",
+            "intrinsic": true,
             "items": {
               "type": "scalar"
             },
             "name": "focusedRow",
             "synonyms": "selection, active, current",
             "type": "object"
+          },
+          {
+            "default": "",
+            "description": "Reply text being composed.",
+            "intrinsic": true,
+            "name": "replyDraft",
+            "type": "string"
+          },
+          {
+            "default": "",
+            "description": "Post the reply being composed answers.",
+            "intrinsic": true,
+            "name": "replyParentId",
+            "type": "string"
+          },
+          {
+            "default": "",
+            "description": "Thread root the reply being composed belongs to.",
+            "intrinsic": true,
+            "name": "replyRootId",
+            "type": "string"
           }
         ],
         "id": "ent_01KXG04HSZB16HRNNZWKASR1J1",
@@ -485,19 +507,19 @@
             },
             {
               "kind": "set",
-              "resource": "@entity.content"
-            },
-            {
-              "kind": "set",
               "resource": "@entity.focusedRow"
             },
             {
               "kind": "set",
-              "resource": "@entity.parentId"
+              "resource": "@entity.replyDraft"
             },
             {
               "kind": "set",
-              "resource": "@entity.threadRootId"
+              "resource": "@entity.replyParentId"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.replyRootId"
             }
           ],
           "emits": [
@@ -626,6 +648,18 @@
                     {
                       "name": "focusedRow",
                       "type": "Map<string,scalar>"
+                    },
+                    {
+                      "name": "replyDraft",
+                      "type": "string"
+                    },
+                    {
+                      "name": "replyParentId",
+                      "type": "string"
+                    },
+                    {
+                      "name": "replyRootId",
+                      "type": "string"
                     }
                   ],
                   "type": "[object]"
@@ -705,6 +739,18 @@
                 {
                   "name": "focusedRow",
                   "type": "Map<string,scalar>"
+                },
+                {
+                  "name": "replyDraft",
+                  "type": "string"
+                },
+                {
+                  "name": "replyParentId",
+                  "type": "string"
+                },
+                {
+                  "name": "replyRootId",
+                  "type": "string"
                 }
               ],
               "scope": "internal",
@@ -731,10 +777,10 @@
           ],
           "entityContract": {
             "provides": [
-              "content",
               "focusedRow",
-              "parentId",
-              "threadRootId"
+              "replyDraft",
+              "replyParentId",
+              "replyRootId"
             ],
             "requires": []
           },
@@ -812,6 +858,18 @@
                       {
                         "name": "focusedRow",
                         "type": "Map<string,scalar>"
+                      },
+                      {
+                        "name": "replyDraft",
+                        "type": "string"
+                      },
+                      {
+                        "name": "replyParentId",
+                        "type": "string"
+                      },
+                      {
+                        "name": "replyRootId",
+                        "type": "string"
                       }
                     ],
                     "type": "[object]"
@@ -930,6 +988,18 @@
                   {
                     "name": "focusedRow",
                     "type": "Map<string,scalar>"
+                  },
+                  {
+                    "name": "replyDraft",
+                    "type": "string"
+                  },
+                  {
+                    "name": "replyParentId",
+                    "type": "string"
+                  },
+                  {
+                    "name": "replyRootId",
+                    "type": "string"
                   }
                 ],
                 "synonyms": "new post, added, created",
@@ -1034,7 +1104,11 @@
                         "or",
                         [
                           "=",
-                          "@config.threadRootId",
+                          [
+                            "str/default",
+                            "@entity.replyRootId",
+                            "@config.threadRootId"
+                          ],
                           ""
                         ],
                         [
@@ -1044,7 +1118,11 @@
                             "@entity",
                             "threadRootId"
                           ],
-                          "@config.threadRootId"
+                          [
+                            "str/default",
+                            "@entity.replyRootId",
+                            "@config.threadRootId"
+                          ]
                         ]
                       ],
                       "include": [
@@ -1100,7 +1178,7 @@
                 "effects": [
                   [
                     "set",
-                    "@entity.threadRootId",
+                    "@entity.replyRootId",
                     "@payload.rootId"
                   ],
                   [
@@ -1161,7 +1239,11 @@
                         "or",
                         [
                           "=",
-                          "@config.threadRootId",
+                          [
+                            "str/default",
+                            "@entity.replyRootId",
+                            "@config.threadRootId"
+                          ],
                           ""
                         ],
                         [
@@ -1171,7 +1253,11 @@
                             "@entity",
                             "threadRootId"
                           ],
-                          "@config.threadRootId"
+                          [
+                            "str/default",
+                            "@entity.replyRootId",
+                            "@config.threadRootId"
+                          ]
                         ]
                       ],
                       "include": [
@@ -1226,7 +1312,7 @@
                         "@payload.parentNodeId",
                         [
                           "str/default",
-                          "@entity.threadRootId",
+                          "@entity.replyRootId",
                           [
                             "str/default",
                             "@config.threadRootId",
@@ -1264,7 +1350,7 @@
                 "effects": [
                   [
                     "set",
-                    "@entity.parentId",
+                    "@entity.replyParentId",
                     [
                       "str/default",
                       "@payload.parentNodeId",
@@ -1273,13 +1359,13 @@
                   ],
                   [
                     "set",
-                    "@entity.threadRootId",
+                    "@entity.replyRootId",
                     [
                       "str/default",
                       "@payload.parentNodeId",
                       [
                         "str/default",
-                        "@entity.threadRootId",
+                        "@entity.replyRootId",
                         [
                           "str/default",
                           "@config.threadRootId",
@@ -1348,12 +1434,12 @@
                 "effects": [
                   [
                     "set",
-                    "@entity.content",
+                    "@entity.replyDraft",
                     ""
                   ],
                   [
                     "set",
-                    "@entity.parentId",
+                    "@entity.replyParentId",
                     ""
                   ],
                   [
@@ -1439,7 +1525,7 @@
                 "effects": [
                   [
                     "set",
-                    "@entity.content",
+                    "@entity.replyDraft",
                     "@payload.value"
                   ]
                 ],
@@ -1457,15 +1543,15 @@
                     {
                       "authorId": "@user.id",
                       "authorName": "@user.name",
-                      "content": "@entity.content",
+                      "content": "@entity.replyDraft",
                       "parentId": [
                         "str/default",
-                        "@entity.parentId",
+                        "@entity.replyParentId",
                         ""
                       ],
                       "threadRootId": [
                         "str/default",
-                        "@entity.threadRootId",
+                        "@entity.replyRootId",
                         [
                           "str/default",
                           "@config.threadRootId",
@@ -1490,7 +1576,7 @@
                     "=",
                     [
                       "str/default",
-                      "@entity.content",
+                      "@entity.replyDraft",
                       ""
                     ],
                     ""
@@ -1502,12 +1588,12 @@
                 "effects": [
                   [
                     "set",
-                    "@entity.content",
+                    "@entity.replyDraft",
                     ""
                   ],
                   [
                     "set",
-                    "@entity.parentId",
+                    "@entity.replyParentId",
                     ""
                   ]
                 ],
@@ -1554,7 +1640,7 @@
                 "effects": [
                   [
                     "set",
-                    "@entity.threadRootId",
+                    "@entity.replyRootId",
                     "@payload.rootId"
                   ],
                   [
@@ -1605,7 +1691,7 @@
                 "effects": [
                   [
                     "set",
-                    "@entity.content",
+                    "@entity.replyDraft",
                     "@payload.value"
                   ]
                 ],
@@ -1623,15 +1709,15 @@
                     {
                       "authorId": "@user.id",
                       "authorName": "@user.name",
-                      "content": "@entity.content",
+                      "content": "@entity.replyDraft",
                       "parentId": [
                         "str/default",
-                        "@entity.parentId",
+                        "@entity.replyParentId",
                         ""
                       ],
                       "threadRootId": [
                         "str/default",
-                        "@entity.threadRootId",
+                        "@entity.replyRootId",
                         [
                           "str/default",
                           "@config.threadRootId",
@@ -1656,7 +1742,7 @@
                     "=",
                     [
                       "str/default",
-                      "@entity.content",
+                      "@entity.replyDraft",
                       ""
                     ],
                     ""
@@ -1668,12 +1754,12 @@
                 "effects": [
                   [
                     "set",
-                    "@entity.content",
+                    "@entity.replyDraft",
                     ""
                   ],
                   [
                     "set",
-                    "@entity.parentId",
+                    "@entity.replyParentId",
                     ""
                   ]
                 ],
@@ -1686,12 +1772,12 @@
                 "effects": [
                   [
                     "set",
-                    "@entity.content",
+                    "@entity.replyDraft",
                     ""
                   ],
                   [
                     "set",
-                    "@entity.parentId",
+                    "@entity.replyParentId",
                     ""
                   ],
                   [
@@ -1751,7 +1837,7 @@
                 "effects": [
                   [
                     "set",
-                    "@entity.threadRootId",
+                    "@entity.replyRootId",
                     "@payload.rootId"
                   ],
                   [
@@ -1812,7 +1898,11 @@
                         "or",
                         [
                           "=",
-                          "@config.threadRootId",
+                          [
+                            "str/default",
+                            "@entity.replyRootId",
+                            "@config.threadRootId"
+                          ],
                           ""
                         ],
                         [
@@ -1822,7 +1912,11 @@
                             "@entity",
                             "threadRootId"
                           ],
-                          "@config.threadRootId"
+                          [
+                            "str/default",
+                            "@entity.replyRootId",
+                            "@config.threadRootId"
+                          ]
                         ]
                       ],
                       "include": [
@@ -1848,7 +1942,7 @@
                 "effects": [
                   [
                     "set",
-                    "@entity.threadRootId",
+                    "@entity.replyRootId",
                     "@payload.rootId"
                   ],
                   [

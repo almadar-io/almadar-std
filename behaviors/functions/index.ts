@@ -221,6 +221,7 @@ export * from './ui/game/atoms/ui-draw-group.js';
 export * from './ui/game/atoms/ui-draw-mesh.js';
 export * from './ui/game/atoms/ui-draw-shape.js';
 export * from './ui/game/atoms/ui-draw-shape-layer.js';
+export * from './ui/game/atoms/ui-draw-skinned-mesh.js';
 export * from './ui/game/atoms/ui-draw-sprite.js';
 export * from './ui/game/atoms/ui-draw-sprite-layer.js';
 export * from './ui/game/atoms/ui-draw-text.js';

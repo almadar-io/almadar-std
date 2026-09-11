@@ -36,6 +36,8 @@ orbital ModalRecordOrbital {
         (fetch ModalRecord {
           emit: { failure: ModalRecordLoadFailed, success: ModalRecordLoaded }
         })
+      ModalRecordLoadFailed -> closed
+        (notify error (str/concat "Couldn't load the record — " ?error))
       ;; stash only — a SEED never opens anything; OPEN reads it on demand
       SEED -> closed
         (set @entity.seedRow (object/merge ?row {}))
@@ -78,7 +80,7 @@ orbital ModalRecordOrbital {
         (set @entity.seedRow (object/merge ?row {}))
       CLOSE -> closed
         (render-ui @config.detailSlot null)
-        (notify Cancelled info)
+        (notify info Cancelled)
       SAVE -> closed
         (render-ui @config.detailSlot null)
     }

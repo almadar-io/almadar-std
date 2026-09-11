@@ -287,6 +287,10 @@ export function stdConfirmationConfirmActionOrbital(params: StdConfirmationConfi
             'resource': 'modal',
           },
           {
+            'kind': 'render-ui',
+            'resource': 'toast',
+          },
+          {
             'kind': 'set',
             'resource': '@entity.name',
           },
@@ -390,6 +394,23 @@ export function stdConfirmationConfirmActionOrbital(params: StdConfirmationConfi
               'name': 'Initialize',
             },
             {
+              'description': 'Indicates failure to load the confirmation action.',
+              'key': 'ConfirmActionLoadFailed',
+              'name': 'ConfirmAction load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'error, failure, failed, problem',
+              'tier': 'internal',
+            },
+            {
               'description': 'A request for confirmation before proceeding.',
               'key': 'REQUEST',
               'name': 'Request',
@@ -462,23 +483,6 @@ export function stdConfirmationConfirmActionOrbital(params: StdConfirmationConfi
               'tier': 'domain',
             },
             {
-              'description': 'Indicates failure to load the confirmation action.',
-              'key': 'ConfirmActionLoadFailed',
-              'name': 'ConfirmAction load failed',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-              'synonyms': 'error, failure, failed, problem',
-              'tier': 'internal',
-            },
-            {
               'description': 'Indicates the confirmation action has been successfully loaded.',
               'key': 'ConfirmActionLoaded',
               'name': 'ConfirmAction loaded',
@@ -543,6 +547,27 @@ export function stdConfirmationConfirmActionOrbital(params: StdConfirmationConfi
                 ],
               ],
               'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': [
+                      'str/concat',
+                      'Couldn\'t load the item to confirm — ',
+                      '@payload.error',
+                    ],
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
+              'event': 'ConfirmActionLoadFailed',
               'from': 'idle',
               'to': 'idle',
             },

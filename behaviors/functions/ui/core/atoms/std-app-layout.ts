@@ -472,6 +472,10 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
             'kind': 'render-ui',
             'resource': 'main',
           },
+          {
+            'kind': 'render-ui',
+            'resource': 'toast',
+          },
         ],
         'emits': [
           {
@@ -693,6 +697,22 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
               'to': 'composing',
             },
             {
+              'effects': [
+                [
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': [
+                      'str/concat',
+                      'Couldn\'t load the layout — ',
+                      '@payload.error',
+                    ],
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
               'event': 'AppLayoutStateLoadFailed',
               'from': 'composing',
               'to': 'composing',

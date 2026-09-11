@@ -770,11 +770,12 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
             'resource': 'PushSubscription',
           },
           {
-            'kind': 'notify',
-          },
-          {
             'kind': 'persist',
             'resource': 'NotificationRecord',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'toast',
           },
           {
             'kind': 'set',
@@ -2199,9 +2200,14 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                             true,
                           ],
                           [
-                            'notify',
-                            '@config.severity',
-                            '@config.template',
+                            'render-ui',
+                            'toast',
+                            {
+                              'dismissible': true,
+                              'message': '@config.template',
+                              'type': 'alert',
+                              'variant': '@config.severity',
+                            },
                           ],
                         ],
                         [

@@ -37,22 +37,18 @@ export type StdBrowseListenKey = 'BrowseItemLoaded';
  * without modifying its state-machine topology.
  */
 export interface StdBrowseConfig {
-  /** Default: `"@config.cols"` */
-  cols?: unknown;
   /** Default: `"@config.fields"` */
   fields?: unknown;
-  /** Default: `"@config.gap"` */
-  gap?: unknown;
-  /** Default: `"@config.imageField"` */
-  imageField?: unknown;
   /** Default: `"@config.itemActions"` */
   itemActions?: unknown;
+  /** Default: `"@config.itemClickEvent"` */
+  itemClickEvent?: unknown;
   /** Default: `"@config.maxInlineActions"` */
   maxInlineActions?: unknown;
-  /** Default: `"@config.displayPageSize"` */
-  pageSize?: unknown;
   /** Default: `false` */
   selfFetch?: unknown;
+  /** Default: `"compact"` */
+  variant?: unknown;
 }
 
 /**
@@ -80,36 +76,6 @@ export interface StdBrowseParams {
   config?: StdBrowseConfig;
   /** URL path override for the (first) page. */
   pagePath?: string;
-}
-
-/** Trait descriptor: `Browse.traits.DataGrid1`. */
-export function stdBrowseDataGrid1Trait(params: StdBrowseParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.DataGrid1`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Browse.traits.DenseTableView`. */
-export function stdBrowseDenseTableViewTrait(params: StdBrowseParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.DenseTableView`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
 }
 
 /** Trait descriptor: `Browse.traits.MasterListView`. */
@@ -164,8 +130,6 @@ export function stdBrowse(params: StdBrowseParams): OrbitalDefinition {
     uses: [{ from: BEHAVIOR_PATH, as: ALIAS }],
     entity,
     traits: [
-      stdBrowseDataGrid1Trait(params),
-      stdBrowseDenseTableViewTrait(params),
       stdBrowseMasterListViewTrait(params),
       stdBrowseBrowseItemBrowseTrait(params),
     ],
@@ -175,8 +139,8 @@ export function stdBrowse(params: StdBrowseParams): OrbitalDefinition {
   });
 }
 
-type _StdBrowseEntityName = 'BrowseItem' | 'TypographyItem' | 'DataGridItem' | 'TableViewItem' | 'DataListItem';
-type _StdBrowseListenTraitName = 'DataGrid1' | 'DenseTableView' | 'MasterListView' | 'BrowseItemBrowse';
+type _StdBrowseEntityName = 'BrowseItem' | 'TypographyItem' | 'DataListItem';
+type _StdBrowseListenTraitName = 'MasterListView' | 'BrowseItemBrowse';
 
 /**
  * Tunable params for the BrowseItemOrbital orbital.
@@ -212,13 +176,13 @@ export interface StdBrowseBrowseItemOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'DataGrid1' | 'DenseTableView' | 'MasterListView' | 'BrowseItemBrowse',
+    'MasterListView' | 'BrowseItemBrowse',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** `'Alias.traits.TraitName'` literal union of every trait BrowseItemOrbital's `uses[]` exports. */
-type _StdBrowseBrowseItemOrbitalUsesRef = 'Typography.traits.TypographyRender' | 'DataGrid.traits.DataGridRender' | 'TableView.traits.TableViewRender' | 'DataList.traits.DataListRender';
+type _StdBrowseBrowseItemOrbitalUsesRef = 'Typography.traits.TypographyRender' | 'DataList.traits.DataListRender';
 
 /** Per-orbital factory: builds the BrowseItemOrbital orbital with consumer params. */
 export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalParams = {}): OrbitalDefinition {
@@ -228,14 +192,6 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
       {
         'as': 'Typography',
         'from': 'std/behaviors/ui-typography',
-      },
-      {
-        'as': 'DataGrid',
-        'from': 'std/behaviors/ui-data-grid',
-      },
-      {
-        'as': 'TableView',
-        'from': 'std/behaviors/ui-table-view',
       },
       {
         'as': 'DataList',
@@ -294,108 +250,6 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
       })(),
     } as Entity,
     traits: [
-      makeTraitRef({
-        'config': {
-          'cols': {
-            'default': '@config.cols',
-            'type': 'unknown',
-          },
-          'fields': {
-            'default': '@config.fields',
-            'type': 'unknown',
-          },
-          'gap': {
-            'default': '@config.gap',
-            'type': 'unknown',
-          },
-          'imageField': {
-            'default': '@config.imageField',
-            'type': 'unknown',
-          },
-          'itemActions': {
-            'default': '@config.itemActions',
-            'type': 'unknown',
-          },
-          'maxInlineActions': {
-            'default': '@config.maxInlineActions',
-            'type': 'unknown',
-          },
-          'pageSize': {
-            'default': '@config.displayPageSize',
-            'type': 'unknown',
-          },
-          'selfFetch': {
-            'default': false,
-            'type': 'unknown',
-          },
-        },
-        'linkedEntity': 'BrowseItem',
-        'listens': [
-          {
-            'event': 'BrowseItemLoaded',
-            'source': {
-              'kind': 'trait',
-              'trait': 'BrowseItemBrowse',
-            },
-            'triggers': 'DataGridLoaded',
-          },
-        ],
-        'name': 'DataGrid1',
-        'ref': ('DataGrid.traits.DataGridRender' satisfies _StdBrowseBrowseItemOrbitalUsesRef),
-      }),
-      makeTraitRef({
-        'config': {
-          'columns': {
-            'default': '@config.columns',
-            'type': 'unknown',
-          },
-          'emptyMessage': {
-            'default': 'No records',
-            'type': 'unknown',
-          },
-          'itemActions': {
-            'default': '@config.itemActions',
-            'type': 'unknown',
-          },
-          'itemClickEvent': {
-            'default': '@config.itemClickEvent',
-            'type': 'unknown',
-          },
-          'look': {
-            'default': 'dense',
-            'type': 'unknown',
-          },
-          'maxInlineActions': {
-            'default': '@config.maxInlineActions',
-            'type': 'unknown',
-          },
-          'pageSize': {
-            'default': '@config.displayPageSize',
-            'type': 'unknown',
-          },
-          'selectable': {
-            'default': '@config.selectable',
-            'type': 'unknown',
-          },
-          'selfFetch': {
-            'default': false,
-            'type': 'unknown',
-          },
-        },
-        'linkedEntity': 'BrowseItem',
-        'listens': [
-          {
-            'event': 'BrowseItemLoaded',
-            'source': {
-              'kind': 'trait',
-              'trait': 'BrowseItemBrowse',
-            },
-            'triggers': 'TableViewLoaded',
-          },
-        ],
-        'name': 'DenseTableView',
-        'ref': ('TableView.traits.TableViewRender' satisfies _StdBrowseBrowseItemOrbitalUsesRef),
-      }),
       makeTraitRef({
         'config': {
           'fields': {
@@ -510,15 +364,24 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                     'type': 'stack',
                   },
                 ],
-                '@trait.DataGrid1',
+                {
+                  'cols': '@config.cols',
+                  'entity': '@payload.data',
+                  'fields': '@config.fields',
+                  'gap': '@config.gap',
+                  'imageField': '@config.imageField',
+                  'itemActions': '@config.itemActions',
+                  'maxInlineActions': '@config.maxInlineActions',
+                  'pageSize': '@config.displayPageSize',
+                  'type': 'data-grid',
+                },
               ],
               'direction': 'vertical',
               'gap': 'md',
               'type': 'stack',
             },
-            'description': 'Render-ui SExpr rendered after rows load when browseLook = table (the default). Toolbar (search when bodySearch, filter bar when filters is non-empty) above the canonical data-grid call. Until 2026-08-27 this was the only one of the six looks with no search affordance at all. See denseBodyContent/feedBodyContent/galleryBodyContent for the other browseLook bodies; any may be overridden directly while inheriting the same trait, state machine, emits, and listens.',
+            'description': 'Render-ui SExpr rendered after rows load when browseLook = table (the default). Toolbar (search when bodySearch, filter bar when filters is non-empty) above the canonical data-grid call. Until 2026-08-27 this was the only one of the six looks with no search affordance at all. See denseBodyContent/feedBodyContent/galleryBodyContent for the other browseLook bodies; any may be overridden directly while inheriting the same trait, state machine, emits, and listens. Inlined directly (not via a composed sibling trait) 2026-09-08 — a separately-listening DataGrid1 sibling fired unconditionally on every BrowseItemLoaded regardless of browseLook, racing the correct body for slot main (a listens guard can\'t gate this: both the Rust interpreter and the TS codegen path restrict a listens guard\'s context to @payload only, so a browseLook config check there always evaluates undefined).',
             'label': 'Body content tree',
-            'tier': 'internal',
             'type': 'render-ui',
           },
           'bodySearch': {
@@ -715,7 +578,18 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                 ],
                 {
                   'children': [
-                    '@trait.DenseTableView',
+                    {
+                      'columns': '@config.columns',
+                      'emptyMessage': 'No records',
+                      'entity': '@payload.data',
+                      'itemActions': '@config.itemActions',
+                      'itemClickEvent': '@config.itemClickEvent',
+                      'look': 'dense',
+                      'maxInlineActions': '@config.maxInlineActions',
+                      'pageSize': '@config.displayPageSize',
+                      'selectable': '@config.selectable',
+                      'type': 'table-view',
+                    },
                   ],
                   'className': 'overflow-x-auto',
                   'direction': 'vertical',
@@ -728,7 +602,7 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
               'gap': 'none',
               'type': 'stack',
             },
-            'description': 'Render-ui SExpr rendered after rows load when browseLook = dense. Spreadsheet-style sticky-header data-table with a search bar; composes columns/itemActions/maxInlineActions/displayPageSize/searchPlaceholder. Folded from std-browse-dense (Phase 5.B).',
+            'description': 'Render-ui SExpr rendered after rows load when browseLook = dense. Spreadsheet-style sticky-header data-table with a search bar; composes columns/itemActions/maxInlineActions/displayPageSize/searchPlaceholder. Folded from std-browse-dense (Phase 5.B). Inlined directly (not via a composed sibling trait) 2026-09-08 — see the table-default body\'s note for why.',
             'label': 'Dense look body',
             'tier': 'internal',
             'type': 'render-ui',
@@ -1640,6 +1514,10 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
           {
             'kind': 'render-ui',
             'resource': 'main',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'toast',
           },
         ],
         'emits': [
@@ -2603,6 +2481,27 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
             {
               'effects': [
                 [
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': [
+                      'str/concat',
+                      'Couldn\'t refresh the list — ',
+                      '@payload.error',
+                    ],
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
+              'event': 'BrowseItemLoadFailed',
+              'from': 'browsing',
+              'to': 'browsing',
+            },
+            {
+              'effects': [
+                [
                   'fetch',
                   ('BrowseItem' satisfies _StdBrowseEntityName),
                   {
@@ -2745,8 +2644,6 @@ export const StdBrowseBrowseItemOrbitalManifest = {
     },
   ] as const,
   traitNames: [
-    'DataGrid1',
-    'DenseTableView',
     'MasterListView',
   ] as const,
   inlineTraitNames: [

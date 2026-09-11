@@ -490,11 +490,12 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
             'kind': 'browser/push-subscribe',
           },
           {
-            'kind': 'notify',
-          },
-          {
             'kind': 'persist',
             'resource': 'PushSubscription',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'toast',
           },
           {
             'kind': 'set',
@@ -683,9 +684,14 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
             {
               'effects': [
                 [
-                  'notify',
-                  'success',
-                  'Push notifications enabled on this browser',
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': 'Push notifications enabled on this browser',
+                    'type': 'alert',
+                    'variant': 'success',
+                  },
                 ],
               ],
               'event': 'PUSH_SAVED',
@@ -700,9 +706,14 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
                   '@payload.error',
                 ],
                 [
-                  'notify',
-                  'warning',
-                  'Could not enable push notifications',
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': 'Could not enable push notifications',
+                    'type': 'alert',
+                    'variant': 'warning',
+                  },
                 ],
               ],
               'event': 'PUSH_SUBSCRIBE_FAILED',
@@ -717,9 +728,14 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
                   '@payload.error',
                 ],
                 [
-                  'notify',
-                  'warning',
-                  'Could not save the push subscription',
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': 'Could not save the push subscription',
+                    'type': 'alert',
+                    'variant': 'warning',
+                  },
                 ],
               ],
               'event': 'PUSH_SAVE_FAILED',
@@ -733,11 +749,12 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
         'category': 'lifecycle',
         'effectRow': [
           {
-            'kind': 'notify',
-          },
-          {
             'kind': 'persist',
             'resource': 'NotificationPreference',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'toast',
           },
         ],
         'emits': [
@@ -970,9 +987,14 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
             {
               'effects': [
                 [
-                  'notify',
-                  'success',
-                  'Notification preference saved',
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': 'Notification preference saved',
+                    'type': 'alert',
+                    'variant': 'success',
+                  },
                 ],
               ],
               'event': 'PREFERENCE_SAVED',
@@ -982,9 +1004,14 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
             {
               'effects': [
                 [
-                  'notify',
-                  'info',
-                  'Notification preference removed',
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': 'Notification preference removed',
+                    'type': 'alert',
+                    'variant': 'info',
+                  },
                 ],
               ],
               'event': 'PREFERENCE_DELETED',
@@ -994,9 +1021,14 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
             {
               'effects': [
                 [
-                  'notify',
-                  'warning',
-                  'Could not save the notification preference',
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': 'Could not save the notification preference',
+                    'type': 'alert',
+                    'variant': 'warning',
+                  },
                 ],
               ],
               'event': 'PREFERENCE_SAVE_FAILED',

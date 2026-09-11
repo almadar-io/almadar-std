@@ -35,115 +35,6 @@
     ],
     "traits": [
       {
-        "name": "DataGrid1",
-        "emittedEvents": [],
-        "listenedEvents": [
-          "BrowseItemLoaded"
-        ],
-        "overridableConfigKeys": [
-          {
-            "key": "cols",
-            "type": "unknown",
-            "default": "@config.cols"
-          },
-          {
-            "key": "fields",
-            "type": "unknown",
-            "default": "@config.fields"
-          },
-          {
-            "key": "gap",
-            "type": "unknown",
-            "default": "@config.gap"
-          },
-          {
-            "key": "imageField",
-            "type": "unknown",
-            "default": "@config.imageField"
-          },
-          {
-            "key": "itemActions",
-            "type": "unknown",
-            "default": "@config.itemActions"
-          },
-          {
-            "key": "maxInlineActions",
-            "type": "unknown",
-            "default": "@config.maxInlineActions"
-          },
-          {
-            "key": "pageSize",
-            "type": "unknown",
-            "default": "@config.displayPageSize"
-          },
-          {
-            "key": "selfFetch",
-            "type": "unknown",
-            "default": false
-          }
-        ],
-        "capabilities": [],
-        "ref": "DataGrid.traits.DataGridRender",
-        "linkedEntity": "BrowseItem"
-      },
-      {
-        "name": "DenseTableView",
-        "emittedEvents": [],
-        "listenedEvents": [
-          "BrowseItemLoaded"
-        ],
-        "overridableConfigKeys": [
-          {
-            "key": "columns",
-            "type": "unknown",
-            "default": "@config.columns"
-          },
-          {
-            "key": "emptyMessage",
-            "type": "unknown",
-            "default": "No records"
-          },
-          {
-            "key": "itemActions",
-            "type": "unknown",
-            "default": "@config.itemActions"
-          },
-          {
-            "key": "itemClickEvent",
-            "type": "unknown",
-            "default": "@config.itemClickEvent"
-          },
-          {
-            "key": "look",
-            "type": "unknown",
-            "default": "dense"
-          },
-          {
-            "key": "maxInlineActions",
-            "type": "unknown",
-            "default": "@config.maxInlineActions"
-          },
-          {
-            "key": "pageSize",
-            "type": "unknown",
-            "default": "@config.displayPageSize"
-          },
-          {
-            "key": "selectable",
-            "type": "unknown",
-            "default": "@config.selectable"
-          },
-          {
-            "key": "selfFetch",
-            "type": "unknown",
-            "default": false
-          }
-        ],
-        "capabilities": [],
-        "ref": "TableView.traits.TableViewRender",
-        "linkedEntity": "BrowseItem"
-      },
-      {
         "name": "MasterListView",
         "emittedEvents": [],
         "listenedEvents": [
@@ -336,15 +227,24 @@
                     "type": "stack"
                   }
                 ],
-                "@trait.DataGrid1"
+                {
+                  "cols": "@config.cols",
+                  "entity": "@payload.data",
+                  "fields": "@config.fields",
+                  "gap": "@config.gap",
+                  "imageField": "@config.imageField",
+                  "itemActions": "@config.itemActions",
+                  "maxInlineActions": "@config.maxInlineActions",
+                  "pageSize": "@config.displayPageSize",
+                  "type": "data-grid"
+                }
               ],
               "direction": "vertical",
               "gap": "md",
               "type": "stack"
             },
             "label": "Body content tree",
-            "description": "Render-ui SExpr rendered after rows load when browseLook = table (the default). Toolbar (search when bodySearch, filter bar when filters is non-empty) above the canonical data-grid call. Until 2026-08-27 this was the only one of the six looks with no search affordance at all. See denseBodyContent/feedBodyContent/galleryBodyContent for the other browseLook bodies; any may be overridden directly while inheriting the same trait, state machine, emits, and listens.",
-            "tier": "internal"
+            "description": "Render-ui SExpr rendered after rows load when browseLook = table (the default). Toolbar (search when bodySearch, filter bar when filters is non-empty) above the canonical data-grid call. Until 2026-08-27 this was the only one of the six looks with no search affordance at all. See denseBodyContent/feedBodyContent/galleryBodyContent for the other browseLook bodies; any may be overridden directly while inheriting the same trait, state machine, emits, and listens. Inlined directly (not via a composed sibling trait) 2026-09-08 — a separately-listening DataGrid1 sibling fired unconditionally on every BrowseItemLoaded regardless of browseLook, racing the correct body for slot main (a listens guard can't gate this: both the Rust interpreter and the TS codegen path restrict a listens guard's context to @payload only, so a browseLook config check there always evaluates undefined)."
           },
           {
             "key": "bodySearch",
@@ -547,7 +447,18 @@
                 ],
                 {
                   "children": [
-                    "@trait.DenseTableView"
+                    {
+                      "columns": "@config.columns",
+                      "emptyMessage": "No records",
+                      "entity": "@payload.data",
+                      "itemActions": "@config.itemActions",
+                      "itemClickEvent": "@config.itemClickEvent",
+                      "look": "dense",
+                      "maxInlineActions": "@config.maxInlineActions",
+                      "pageSize": "@config.displayPageSize",
+                      "selectable": "@config.selectable",
+                      "type": "table-view"
+                    }
                   ],
                   "className": "overflow-x-auto",
                   "direction": "vertical",
@@ -561,7 +472,7 @@
               "type": "stack"
             },
             "label": "Dense look body",
-            "description": "Render-ui SExpr rendered after rows load when browseLook = dense. Spreadsheet-style sticky-header data-table with a search bar; composes columns/itemActions/maxInlineActions/displayPageSize/searchPlaceholder. Folded from std-browse-dense (Phase 5.B).",
+            "description": "Render-ui SExpr rendered after rows load when browseLook = dense. Spreadsheet-style sticky-header data-table with a search bar; composes columns/itemActions/maxInlineActions/displayPageSize/searchPlaceholder. Folded from std-browse-dense (Phase 5.B). Inlined directly (not via a composed sibling trait) 2026-09-08 — see the table-default body's note for why.",
             "tier": "internal"
           },
           {
@@ -1520,6 +1431,10 @@
           {
             "kind": "render-ui",
             "resource": "main"
+          },
+          {
+            "kind": "render-ui",
+            "resource": "toast"
           }
         ],
         "effectEntityRefs": [
@@ -1546,7 +1461,7 @@
     ],
     "exposure": "both",
     "provenance": "authored",
-    "substrateSignature": "42885d45c69deaf1",
+    "substrateSignature": "4af5aec7795b2ed7",
     "sourceValid": true
   }
 ]

@@ -490,6 +490,7 @@ export function stdCircuitBreakerServiceNodeOrbital(params: StdCircuitBreakerSer
           {
             'default': 0,
             'description': 'The number of times the circuit breaker has failed.',
+            'intrinsic': true,
             'name': 'failureCount',
             'synonyms': 'error count, failures, error occurrences',
             'type': 'number',
@@ -497,6 +498,7 @@ export function stdCircuitBreakerServiceNodeOrbital(params: StdCircuitBreakerSer
           {
             'default': 0,
             'description': 'Number of successful operations.',
+            'intrinsic': true,
             'name': 'successCount',
             'synonyms': 'successes, hits, completions',
             'type': 'number',
@@ -504,6 +506,7 @@ export function stdCircuitBreakerServiceNodeOrbital(params: StdCircuitBreakerSer
           {
             'default': 5,
             'description': 'Maximum value before triggering an action.',
+            'intrinsic': true,
             'name': 'threshold',
             'synonyms': 'limit, cap, boundary',
             'type': 'number',

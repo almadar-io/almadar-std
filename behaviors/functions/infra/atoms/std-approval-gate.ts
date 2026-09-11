@@ -712,9 +712,6 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
             'resource': 'ApprovalRequest',
           },
           {
-            'kind': 'notify',
-          },
-          {
             'kind': 'persist',
             'resource': 'ApprovalRequest',
           },
@@ -722,6 +719,10 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
             'kind': 'render-ui',
             'resolved': false,
             'resource': '@config.reviewSlot',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'toast',
           },
           {
             'kind': 'set',
@@ -1604,9 +1605,14 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
                   },
                 ],
                 [
-                  'notify',
-                  'Approval could not be applied — the request was reopened.',
-                  'error',
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': 'Approval could not be applied — the request was reopened.',
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
                 ],
               ],
               'event': 'APPROVAL_REPLAY_FAILED',
@@ -2017,9 +2023,14 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
                   },
                 ],
                 [
-                  'notify',
-                  'Approval could not be applied — the request was reopened.',
-                  'error',
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': 'Approval could not be applied — the request was reopened.',
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
                 ],
               ],
               'event': 'APPROVAL_REPLAY_FAILED',

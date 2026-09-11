@@ -1,0 +1,126 @@
+app ui-draw-skinned-mesh "1.0.0"
+"DrawSkinnedMesh — UI factory (1:1 with the @almadar/ui draw-skinned-mesh pattern)."
+orbital DrawSkinnedMeshOrbital {
+  type DrawSkinnedMeshPosition = {
+    x : number!
+    y : number!
+    z : number
+  }
+  type DrawSkinnedMeshAsset = {
+    url : asset!
+    role : string!
+    category : string!
+    animations : [string]
+    style : "pixel" | "vector" | "hd" | "1-bit" | "isometric"
+    variant : string
+    dimension : "2d" | "3d"
+    aspect : "1:1" | "16:9" | "5:7" | "8:1"
+    atlas : asset
+    sprite : string
+    name : string
+    thumbnailUrl : string
+  }
+  type DrawSkinnedMeshMesh = {
+    vertices : [DrawSkinnedMeshMeshVerticesItem]!
+    triangles : [[number]]!
+  }
+  type DrawSkinnedMeshMeshVerticesItem = {
+    x : number!
+    y : number!
+    u : number!
+    v : number!
+    weights : [DrawSkinnedMeshMeshVerticesItemWeightsItem]!
+  }
+  type DrawSkinnedMeshMeshVerticesItemWeightsItem = {
+    bone : number!
+    w : number!
+  }
+  type DrawSkinnedMeshBonesItem = {
+    name : string!
+    parent : string!
+    pivot : [number]!
+    tip : [number]!
+  }
+  type DrawSkinnedMeshClip = {
+    frames : [Map string number]!
+  }
+  type DrawSkinnedMeshGhost = {
+    frame : number!
+    opacity : number!
+  }
+
+  entity DrawSkinnedMeshItem [runtime] {
+    id : string!
+  }
+
+  trait DrawSkinnedMeshRender -> @rebindable DrawSkinnedMeshItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          position: @config.position
+          asset: @config.asset
+          mesh: @config.mesh
+          meshUrl: @config.meshUrl
+          bones: @config.bones
+          pose: @config.pose
+          clip: @config.clip
+          frame: @config.frame
+          opacity: @config.opacity
+          weightsOverlay: @config.weightsOverlay
+          ghost: @config.ghost
+          type: draw-skinned-mesh
+        })
+    }
+
+    config {
+      position : DrawSkinnedMeshPosition = { x: 1, y: 1, z: 1 }
+        @label "Position"
+        @description "Logical scene position; mesh local coords are world units relative to its projected top-left."
+        @tier "presentation"
+      asset : DrawSkinnedMeshAsset
+        @label "Asset"
+        @description "The texture the mesh UVs cut into."
+        @tier "presentation"
+      mesh : DrawSkinnedMeshMesh
+        @label "Mesh"
+        @description "Inline bind mesh; wins over `meshUrl`."
+        @tier "presentation"
+      meshUrl : string
+        @label "Mesh Url"
+        @description "URL of a JSON `SkinMesh` (fetched + cached); used when `mesh` is absent."
+        @tier "presentation"
+      bones : [DrawSkinnedMeshBonesItem] = [{ name: "Name", parent: "Parent", pivot: [1, 2], tip: [1, 2] }, { name: "Name 2", parent: "Parent 2", pivot: [1, 2], tip: [1, 2] }]
+        @label "Bones"
+        @description "The skeleton (bind pose; FK chain via `parent` names)."
+        @tier "presentation"
+      pose : Map string number = { item: 1 }
+        @label "Pose"
+        @description "Static pose (bone name → degrees relative to bind). Overridden by `clip` + `frame`."
+        @tier "presentation"
+      clip : DrawSkinnedMeshClip
+        @label "Clip"
+        @description "Pose animation clip; with `frame`, pose = `frames[frame % frames.length]`."
+        @tier "presentation"
+      frame : number
+        @label "Frame"
+        @description "Clip frame counter (host-driven paint clock frame)."
+        @tier "presentation"
+      opacity : number
+        @label "Opacity"
+        @description "0..1 opacity."
+        @tier "presentation"
+      weightsOverlay : boolean
+        @label "Weights Overlay"
+        @description "Paint per-triangle dominant-bone colors instead of the texture (rig inspection)."
+        @tier "presentation"
+      ghost : DrawSkinnedMeshGhost
+        @label "Ghost"
+        @description "Onion skin: render the mesh at this clip frame underneath, at this opacity."
+        @tier "presentation"
+    }
+  }
+
+  page "/draw-skinned-mesh" as DrawSkinnedMeshPage -> DrawSkinnedMeshRender
+}

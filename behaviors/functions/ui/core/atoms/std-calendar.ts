@@ -71,7 +71,7 @@ export interface StdCalendarConfig {
   agendaListBodyContent?: unknown;
   /** Default: `"@item.status"` */
   badgeBinding?: string;
-  /** Default: `{"children":[{"align":"center","children":[{"align":"center","children":[{"name":"calendar","type":"icon"},{"content":"@config.title","type":"typography","variant":"h2"}],"direction":"horizontal","gap":"sm","type":"stack"},{"onSelect":"SELECT_DAY","selected":"@entity.selectedRange","type":"date-range-selector"}],"direction":"horizontal","gap":"md","justify":"between","type":"stack"},["if","@config.bodySearch",{"children":[{"className":"w-full max-w-md","clearable":true,"event":"REFETCH_QUERY","placeholder":"@config.searchPlaceholder","type":"search-input"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if",[">",["array/len","@config.filters"],0],{"children":[{"entity":"CalendarEvent","event":"REFETCH_FILTER","filters":"@config.filters","look":"@config.filterBarLook","type":"filter-group"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],{"type":"divider"},{"events":"@payload.data","onEventClick":"@config.onEventClick","renderItem":["fn","item",{"content":"@config.titleBinding","type":"typography","variant":"small"}],"startField":"@config.startField","type":"calendar-grid"},{"type":"divider"},{"content":"Upcoming Events","type":"typography","variant":"h4"},{"entity":"@payload.data","fields":[{"icon":"calendar","label":"Event","name":"name","variant":"h4"},{"label":"Time","name":"time","variant":"badge"},{"format":"date","label":"Date","name":"date","variant":"caption"},{"label":"Status","name":"status","variant":"badge"}],"itemActions":"@config.agendaItemActions","look":"@config.tableLook","type":"data-list"}],"direction":"vertical","gap":"lg","type":"stack"}` */
+  /** Default: `{"children":[{"align":"center","children":[{"align":"center","children":[{"name":"calendar","type":"icon"},{"content":"@config.title","type":"typography","variant":"h2"}],"direction":"horizontal","gap":"sm","type":"stack"},{"onSelect":"SELECT_DAY","selected":"@entity.selectedRange","type":"date-range-selector"}],"direction":"horizontal","gap":"md","justify":"between","type":"stack"},["if","@config.bodySearch",{"children":[{"className":"w-full max-w-md","clearable":true,"event":"REFETCH_QUERY","placeholder":"@config.searchPlaceholder","type":"search-input"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if",[">",["array/len","@config.filters"],0],{"children":[{"entity":"CalendarEvent","event":"REFETCH_FILTER","filters":"@config.filters","look":"@config.filterBarLook","type":"filter-group"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],{"type":"divider"},{"events":"@payload.data","onEventClick":"@config.onEventClick","renderItem":["fn","item",{"content":"@config.titleBinding","type":"typography","variant":"small"}],"startField":"@config.startField","type":"calendar-grid"},{"type":"divider"},{"content":"Upcoming Events","type":"typography","variant":"h4"},{"entity":"@payload.data","fields":"@config.fields","itemActions":"@config.agendaItemActions","look":"@config.tableLook","type":"data-list"}],"direction":"vertical","gap":"lg","type":"stack"}` */
   bodyContent?: unknown;
   /** Default: `false` */
   bodySearch?: boolean;
@@ -79,6 +79,8 @@ export interface StdCalendarConfig {
   calendarLook?: 'month' | 'agenda-list' | 'week-timeline';
   /** Default: `"@item.description"` */
   descriptionBinding?: string;
+  /** Default: `[{"icon":"calendar","label":"Event","name":"name","variant":"h4"},{"label":"Time","name":"time","variant":"badge"},{"format":"date","label":"Date","name":"date","variant":"caption"},{"label":"Status","name":"status","variant":"badge"}]` */
+  fields?: EntityRow[];
   /** Default: `"toolbar"` */
   filterBarLook?: 'toolbar' | 'chips' | 'pills' | 'popover-trigger' | 'inline-column-header';
   /** Default: `[]` */
@@ -670,30 +672,7 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                 },
                 {
                   'entity': '@payload.data',
-                  'fields': [
-                    {
-                      'icon': 'calendar',
-                      'label': 'Event',
-                      'name': 'name',
-                      'variant': 'h4',
-                    },
-                    {
-                      'label': 'Time',
-                      'name': 'time',
-                      'variant': 'badge',
-                    },
-                    {
-                      'format': 'date',
-                      'label': 'Date',
-                      'name': 'date',
-                      'variant': 'caption',
-                    },
-                    {
-                      'label': 'Status',
-                      'name': 'status',
-                      'variant': 'badge',
-                    },
-                  ],
+                  'fields': '@config.fields',
                   'itemActions': '@config.agendaItemActions',
                   'look': '@config.tableLook',
                   'type': 'data-list',
@@ -734,6 +713,83 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
             'label': 'Description binding',
             'tier': 'presentation',
             'type': 'string',
+          },
+          'fields': {
+            'default': [
+              {
+                'icon': 'calendar',
+                'label': 'Event',
+                'name': 'name',
+                'variant': 'h4',
+              },
+              {
+                'label': 'Time',
+                'name': 'time',
+                'variant': 'badge',
+              },
+              {
+                'format': 'date',
+                'label': 'Date',
+                'name': 'date',
+                'variant': 'caption',
+              },
+              {
+                'label': 'Status',
+                'name': 'status',
+                'variant': 'badge',
+              },
+            ],
+            'description': 'Row field descriptors for the \'Upcoming Events\' data-list under calendarLook=\'month\'. Rebound hosts must override this — it is a literal entity[field.name] lookup, unlike titleBinding/timeBinding/descriptionBinding (expression bindings), so it does not follow a rebind automatically.',
+            'items': {
+              'properties': {
+                'format': {
+                  'name': 'format',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'date',
+                    'currency',
+                    'number',
+                    'boolean',
+                    'percent',
+                  ],
+                },
+                'icon': {
+                  'name': 'icon',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': false,
+                  'type': 'string',
+                },
+                'name': {
+                  'name': 'name',
+                  'required': true,
+                  'type': 'string',
+                },
+                'variant': {
+                  'name': 'variant',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'h3',
+                    'h4',
+                    'body',
+                    'caption',
+                    'badge',
+                    'small',
+                    'progress',
+                  ],
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Upcoming-events columns',
+            'synonyms': 'upcoming events columns, month view fields, event list columns',
+            'tier': 'presentation',
+            'type': '[FieldSpec]',
           },
           'filterBarLook': {
             'default': 'toolbar',

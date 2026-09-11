@@ -125,6 +125,7 @@ export function stdUiSplitPaneSplitPaneOrbital(params: StdUiSplitPaneSplitPaneOr
             'type': 'string',
           },
           {
+            'intrinsic': true,
             'name': 'ratio',
             'type': 'number',
           },

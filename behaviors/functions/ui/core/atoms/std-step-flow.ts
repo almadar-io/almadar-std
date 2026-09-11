@@ -302,7 +302,6 @@ export function stdStepFlowStepFlowOrbital(params: StdStepFlowStepFlowOrbitalPar
           },
           {
             'default': 0,
-            'intrinsic': true,
             'name': 'currentStepIndex',
             'type': 'number',
           },
@@ -366,7 +365,6 @@ export function stdStepFlowStepFlowOrbital(params: StdStepFlowStepFlowOrbitalPar
           },
           {
             'default': '',
-            'intrinsic': true,
             'name': 'finalStatus',
             'type': 'string',
             'values': [
@@ -378,7 +376,6 @@ export function stdStepFlowStepFlowOrbital(params: StdStepFlowStepFlowOrbitalPar
           },
           {
             'default': '',
-            'intrinsic': true,
             'name': 'rejectionReason',
             'type': 'string',
           },

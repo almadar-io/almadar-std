@@ -351,12 +351,13 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
             'resource': 'ModalRecord',
           },
           {
-            'kind': 'notify',
-          },
-          {
             'kind': 'render-ui',
             'resolved': false,
             'resource': '@config.detailSlot',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'toast',
           },
           {
             'kind': 'set',
@@ -460,6 +461,23 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
             {
               'key': 'INIT',
               'name': 'Initialize',
+            },
+            {
+              'description': 'Indicates a failure to load the record data.',
+              'key': 'ModalRecordLoadFailed',
+              'name': 'ModalRecord load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'error, failure, problem, unsuccessful',
+              'tier': 'internal',
             },
             {
               'description': 'Stash the row an edit-mode OPEN will pre-fill from. Hosts route the owning surface\'s loaded event here (e.g. RecordItemLoaded from a document look) so an OPEN carrying only { id } still opens a fully seeded form.',
@@ -567,23 +585,6 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
               'tier': 'domain',
             },
             {
-              'description': 'Indicates a failure to load the record data.',
-              'key': 'ModalRecordLoadFailed',
-              'name': 'ModalRecord load failed',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-              'synonyms': 'error, failure, problem, unsuccessful',
-              'tier': 'internal',
-            },
-            {
               'description': 'Signals that the modal\'s data has been successfully loaded.',
               'key': 'ModalRecordLoaded',
               'name': 'ModalRecord loaded',
@@ -648,6 +649,27 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
                 ],
               ],
               'event': 'INIT',
+              'from': 'closed',
+              'to': 'closed',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': [
+                      'str/concat',
+                      'Couldn\'t load the record — ',
+                      '@payload.error',
+                    ],
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
+              'event': 'ModalRecordLoadFailed',
               'from': 'closed',
               'to': 'closed',
             },
@@ -772,9 +794,14 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
                   null,
                 ],
                 [
-                  'notify',
-                  'Cancelled',
-                  'info',
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': 'Cancelled',
+                    'type': 'alert',
+                    'variant': 'info',
+                  },
                 ],
               ],
               'event': 'CLOSE',

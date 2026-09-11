@@ -207,6 +207,10 @@
               "resource": "modal"
             },
             {
+              "kind": "render-ui",
+              "resource": "toast"
+            },
+            {
               "kind": "set",
               "resource": "@entity.name"
             },
@@ -320,6 +324,24 @@
                 "name": "Initialize"
               },
               {
+                "description": "Indicates failure to load the confirmation action.",
+                "id": "evt_01KXG04FYCHXE5EC39ZKQW8ETA",
+                "key": "ConfirmActionLoadFailed",
+                "name": "ConfirmAction load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "error, failure, failed, problem",
+                "tier": "internal"
+              },
+              {
                 "description": "A request for confirmation before proceeding.",
                 "id": "evt_01KXG04FYC7ZGXXG1G3NDHJCX6",
                 "key": "REQUEST",
@@ -396,24 +418,6 @@
                 "tier": "domain"
               },
               {
-                "description": "Indicates failure to load the confirmation action.",
-                "id": "evt_01KXG04FYCHXE5EC39ZKQW8ETA",
-                "key": "ConfirmActionLoadFailed",
-                "name": "ConfirmAction load failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ],
-                "synonyms": "error, failure, failed, problem",
-                "tier": "internal"
-              },
-              {
                 "description": "Indicates the confirmation action has been successfully loaded.",
                 "id": "evt_01KXG04FYCT21KVC5HEBG1C4JP",
                 "key": "ConfirmActionLoaded",
@@ -480,6 +484,28 @@
                 ],
                 "event": "INIT",
                 "eventId": "evt_01KXG04FYBVF76N7HDV4519M58",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "toast",
+                    {
+                      "dismissible": true,
+                      "message": [
+                        "str/concat",
+                        "Couldn't load the item to confirm — ",
+                        "@payload.error"
+                      ],
+                      "type": "alert",
+                      "variant": "error"
+                    }
+                  ]
+                ],
+                "event": "ConfirmActionLoadFailed",
+                "eventId": "evt_01KXG04FYCHXE5EC39ZKQW8ETA",
                 "from": "idle",
                 "to": "idle"
               },

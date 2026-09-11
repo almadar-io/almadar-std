@@ -214,6 +214,7 @@ export function stdGraphsGraphItemOrbital(params: StdGraphsGraphItemOrbitalParam
           {
             'default': [],
             'description': 'The data points used to render the chart.',
+            'intrinsic': true,
             'items': {
               'properties': {
                 'label': {

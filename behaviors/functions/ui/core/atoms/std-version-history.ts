@@ -306,6 +306,7 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
           {
             'default': '',
             'description': 'The current search query the user submitted.',
+            'intrinsic': true,
             'name': 'searchTerm',
             'synonyms': 'query, term, q',
             'type': 'string',
