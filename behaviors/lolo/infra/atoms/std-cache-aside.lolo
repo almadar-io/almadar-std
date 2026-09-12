@@ -158,6 +158,12 @@ orbital CacheEntryOrbital {
           gap: md
           type: stack
         })
+      CacheEntryUpdateFailed -> loading
+        (notify error (str/concat "Couldn't update the cache entry — " ?error))
+      CacheEntryUpdated -> loading
+        (fetch CacheEntry {
+          emit: { failure: CacheEntryLoadFailed, success: CacheEntryLoaded }
+        })
     }
 
     state cached {

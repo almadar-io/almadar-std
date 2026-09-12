@@ -838,6 +838,10 @@ export function stdCircuitBreakerServiceNodeOrbital(params: StdCircuitBreakerSer
             'resource': 'main',
           },
           {
+            'kind': 'render-ui',
+            'resource': 'toast',
+          },
+          {
             'kind': 'set',
             'resource': '@entity.failureCount',
           },
@@ -933,6 +937,19 @@ export function stdCircuitBreakerServiceNodeOrbital(params: StdCircuitBreakerSer
               'name': 'Initialize',
             },
             {
+              'description': 'Indicates a node failed to load, potentially disrupting service.',
+              'key': 'ServiceNodeLoadFailed',
+              'name': 'ServiceNode load failed',
+              'payloadSchema': [
+                {
+                  'name': 'message',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'failure, error, unavailable, outage',
+              'tier': 'internal',
+            },
+            {
               'key': 'FAILURE',
               'name': 'Failure',
             },
@@ -994,19 +1011,6 @@ export function stdCircuitBreakerServiceNodeOrbital(params: StdCircuitBreakerSer
                 },
               ],
               'synonyms': 'loaded, initialized, ready',
-              'tier': 'internal',
-            },
-            {
-              'description': 'Indicates a node failed to load, potentially disrupting service.',
-              'key': 'ServiceNodeLoadFailed',
-              'name': 'ServiceNode load failed',
-              'payloadSchema': [
-                {
-                  'name': 'message',
-                  'type': 'string',
-                },
-              ],
-              'synonyms': 'failure, error, unavailable, outage',
               'tier': 'internal',
             },
           ],
@@ -1087,6 +1091,27 @@ export function stdCircuitBreakerServiceNodeOrbital(params: StdCircuitBreakerSer
                 ],
               ],
               'event': 'INIT',
+              'from': 'closed',
+              'to': 'closed',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': [
+                      'str/concat',
+                      'Couldn\'t load the service node — ',
+                      '@payload.message',
+                    ],
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
+              'event': 'ServiceNodeLoadFailed',
               'from': 'closed',
               'to': 'closed',
             },

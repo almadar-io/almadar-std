@@ -69,6 +69,7 @@ orbital CalendarSyncOrbital {
         (emit CAL_SYNCED { syncedAt: @entity.lastSyncedAt })
       CAL_SYNC_FAILED -> idle
         (set @entity.lastError ?error)
+        (notify error (str/concat "Couldn't sync the calendar — " ?error))
     }
 
     state pushing {
@@ -99,6 +100,7 @@ orbital CalendarSyncOrbital {
         } { emit: { failure: CAL_SYNC_FAILED, success: CAL_REMOTE_LISTED } })
       CAL_SYNC_FAILED -> idle
         (set @entity.lastError ?error)
+        (notify error (str/concat "Couldn't sync the calendar — " ?error))
     }
 
     state pulling {
@@ -137,6 +139,7 @@ orbital CalendarSyncOrbital {
         (emit CAL_SYNCED { syncedAt: @entity.lastSyncedAt })
       CAL_SYNC_FAILED -> idle
         (set @entity.lastError ?error)
+        (notify error (str/concat "Couldn't sync the calendar — " ?error))
     }
 
     emits {

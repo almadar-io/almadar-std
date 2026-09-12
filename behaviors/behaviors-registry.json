@@ -1,5 +1,5 @@
 {
-  "$generated": "2026-09-11T11:44:39.196Z",
+  "$generated": "2026-09-12T12:12:57.550Z",
   "$source": "tools/almadar-pattern-sync/behaviors",
   "$package": "@almadar/std",
   "totalBehaviors": 463,
@@ -3809,7 +3809,7 @@
       "complexity": {
         "states": 5,
         "events": 15,
-        "transitions": 22
+        "transitions": 23
       },
       "defaultEntity": {
         "name": "ApprovalRequest",
@@ -3908,16 +3908,21 @@
         "std-game-clock",
         "std-helpdesk-ticket",
         "std-integration-settings",
+        "std-inventory",
+        "std-iram",
         "std-lifecycle",
         "std-migration-job",
         "std-mod-queue",
         "std-modal",
+        "std-moderation-rule",
         "std-notification-center",
         "std-notification-panel",
         "std-notify-on-event",
         "std-purchase-order",
+        "std-question-bank",
         "std-rate-limiter",
         "std-reminder-scheduler",
+        "std-reorder-rule",
         "std-rfi",
         "std-row-access-control",
         "std-service-accounting",
@@ -3955,10 +3960,13 @@
         "std-service-youtube",
         "std-status-lifecycle",
         "std-status-lifecycle-control",
+        "std-stock-level",
         "std-submittal",
+        "std-tag-taxonomy",
         "std-ticket-tier",
         "std-timesheet",
         "std-trait-wars",
+        "std-warehouse",
         "ui-confirm-dialog",
         "ui-drawer",
         "ui-lightbox",
@@ -3970,13 +3978,13 @@
         "ApprovalRequestLoaded",
         "ApprovalRequestLoadFailed",
         "APPROVAL_REPLAY_FAILED",
+        "ApprovalRequestReviewFailed",
         "OPEN",
         "CLOSE",
         "APPROVE",
         "DENY",
         "OPEN_SUBJECT",
         "ApprovalRequestReviewed",
-        "ApprovalRequestReviewFailed",
         "CONFIRM_DENY",
         "CANCEL_DENY",
         "ApprovalGranted",
@@ -4880,7 +4888,7 @@
       "complexity": {
         "states": 5,
         "events": 9,
-        "transitions": 10
+        "transitions": 12
       },
       "defaultEntity": {
         "name": "CacheEntry",
@@ -4988,11 +4996,11 @@
         "FETCH",
         "CacheEntryLoaded",
         "CacheEntryLoadFailed",
+        "CacheEntryUpdateFailed",
+        "CacheEntryUpdated",
         "INVALIDATE",
         "CACHED",
-        "REFRESH",
-        "CacheEntryUpdated",
-        "CacheEntryUpdateFailed"
+        "REFRESH"
       ],
       "eventPayloads": {},
       "exposure": "both",
@@ -5268,12 +5276,18 @@
             {
               "kind": "render-ui",
               "resource": "main"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "toast"
             }
           ],
           "transitionEvents": [
             "CACHED",
             "CacheEntryLoadFailed",
             "CacheEntryLoaded",
+            "CacheEntryUpdateFailed",
+            "CacheEntryUpdated",
             "FETCH",
             "INIT",
             "INVALIDATE",
@@ -6190,7 +6204,7 @@
         {
           "name": "CalendarSync",
           "orbital": "CalendarSyncOrbital",
-          "role": "reactor",
+          "role": "renderer",
           "emittedEvents": [
             "CAL_SYNCED",
             "CAL_SYNC_FAILED",
@@ -6303,7 +6317,7 @@
               "interval": "*/15 * * * *"
             }
           ],
-          "rendersUi": false,
+          "rendersUi": true,
           "category": "lifecycle",
           "linkedEntity": "CalendarSyncRun",
           "effectRow": [
@@ -6346,6 +6360,10 @@
             {
               "kind": "persist",
               "resource": "CalendarEvent"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "toast"
             },
             {
               "kind": "set",
@@ -6457,7 +6475,7 @@
       ],
       "factoryPath": "behaviors/functions/infra/atoms/std-calendar-sync.ts",
       "roles": [
-        "reactor"
+        "renderer"
       ],
       "sourceValid": true
     },
@@ -6583,7 +6601,7 @@
         {
           "name": "CascadeOnDeleteGate",
           "orbital": "CascadeOnDeleteOrbital",
-          "role": "reactor",
+          "role": "renderer",
           "emittedEvents": [
             "CascadeRowDeleted",
             "CascadeCompleted",
@@ -6632,7 +6650,7 @@
             "cascade-delete"
           ],
           "ticks": [],
-          "rendersUi": false,
+          "rendersUi": true,
           "category": "lifecycle",
           "linkedEntity": "CascadeLog",
           "effectRow": [
@@ -6657,6 +6675,10 @@
             {
               "kind": "persist",
               "resource": "CascadeLog"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "toast"
             },
             {
               "kind": "set",
@@ -6717,7 +6739,7 @@
       ],
       "factoryPath": "behaviors/functions/infra/atoms/std-cascade-on-delete.ts",
       "roles": [
-        "reactor"
+        "renderer"
       ],
       "sourceValid": true
     },
@@ -6733,7 +6755,7 @@
       "complexity": {
         "states": 3,
         "events": 7,
-        "transitions": 8
+        "transitions": 9
       },
       "defaultEntity": {
         "name": "ServiceNode",
@@ -6912,12 +6934,12 @@
         "ui-sports-board"
       ],
       "connectableEvents": [
+        "ServiceNodeLoadFailed",
         "FAILURE",
         "SUCCESS",
         "TIMEOUT",
         "RESET",
-        "ServiceNodeLoaded",
-        "ServiceNodeLoadFailed"
+        "ServiceNodeLoaded"
       ],
       "eventPayloads": {},
       "exposure": "both",
@@ -7500,6 +7522,10 @@
               "resource": "main"
             },
             {
+              "kind": "render-ui",
+              "resource": "toast"
+            },
+            {
               "kind": "set",
               "resource": "@entity.failureCount"
             },
@@ -7517,6 +7543,7 @@
             "INIT",
             "RESET",
             "SUCCESS",
+            "ServiceNodeLoadFailed",
             "TIMEOUT"
           ],
           "events": [
@@ -7779,7 +7806,7 @@
       "complexity": {
         "states": 1,
         "events": 8,
-        "transitions": 4
+        "transitions": 5
       },
       "defaultEntity": {
         "name": "CrossRefLink",
@@ -7879,10 +7906,10 @@
         "UnlinkRequested",
         "FETCH_LINKS_FOR",
         "LinksFetched",
+        "LinkOpFailed",
         "LinkCreated",
         "LinkRemoved",
-        "LinksLoaded",
-        "LinkOpFailed"
+        "LinksLoaded"
       ],
       "eventPayloads": {},
       "exposure": "both",
@@ -7891,7 +7918,7 @@
         {
           "name": "CrossReferenceGate",
           "orbital": "CrossReferenceOrbital",
-          "role": "reactor",
+          "role": "renderer",
           "emittedEvents": [
             "LinkCreated",
             "LinkRemoved",
@@ -7903,7 +7930,7 @@
           "overridableConfigKeys": [],
           "capabilities": [],
           "ticks": [],
-          "rendersUi": false,
+          "rendersUi": true,
           "category": "lifecycle",
           "entityRebindable": true,
           "linkedEntity": "CrossRefLink",
@@ -7928,6 +7955,10 @@
               "resource": "CrossRefLink"
             },
             {
+              "kind": "render-ui",
+              "resource": "toast"
+            },
+            {
               "kind": "set",
               "resource": "@entity.filteredLinks"
             },
@@ -7938,6 +7969,7 @@
           ],
           "transitionEvents": [
             "FETCH_LINKS_FOR",
+            "LinkOpFailed",
             "LinkRequested",
             "LinksFetched",
             "UnlinkRequested"
@@ -7982,7 +8014,7 @@
       ],
       "factoryPath": "behaviors/functions/infra/atoms/std-cross-reference.ts",
       "roles": [
-        "reactor"
+        "renderer"
       ],
       "sourceValid": true
     },
@@ -8075,16 +8107,21 @@
         "std-game-clock",
         "std-helpdesk-ticket",
         "std-integration-settings",
+        "std-inventory",
+        "std-iram",
         "std-lifecycle",
         "std-migration-job",
         "std-mod-queue",
         "std-modal",
+        "std-moderation-rule",
         "std-notification-center",
         "std-notification-panel",
         "std-notify-on-event",
         "std-purchase-order",
+        "std-question-bank",
         "std-rate-limiter",
         "std-reminder-scheduler",
+        "std-reorder-rule",
         "std-rfi",
         "std-row-access-control",
         "std-service-accounting",
@@ -8122,8 +8159,11 @@
         "std-service-youtube",
         "std-status-lifecycle",
         "std-status-lifecycle-control",
+        "std-stock-level",
+        "std-tag-taxonomy",
         "std-ticket-tier",
         "std-trait-wars",
+        "std-warehouse",
         "ui-confirm-dialog",
         "ui-drawer",
         "ui-lightbox",
@@ -8499,6 +8539,10 @@
               "kind": "render-ui",
               "resolved": false,
               "resource": "@config.reviewSlot"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "toast"
             },
             {
               "kind": "set",
@@ -8957,7 +9001,7 @@
         {
           "name": "LifecycleScheduler",
           "orbital": "LifecycleOrbital",
-          "role": "authority",
+          "role": "renderer",
           "emittedEvents": [
             "LifecycleTransitioned",
             "ScanRecordsLoaded",
@@ -9036,7 +9080,7 @@
               "interval": "0 * * * *"
             }
           ],
-          "rendersUi": false,
+          "rendersUi": true,
           "category": "lifecycle",
           "entityRebindable": true,
           "linkedEntity": "LifecycleRunLog",
@@ -9067,6 +9111,10 @@
               "kind": "persist",
               "resolved": false,
               "resource": "@config.targetEntity"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "toast"
             },
             {
               "kind": "set",
@@ -9114,7 +9162,7 @@
       ],
       "factoryPath": "behaviors/functions/infra/atoms/std-lifecycle.ts",
       "roles": [
-        "authority"
+        "renderer"
       ],
       "sourceValid": true
     },
@@ -9129,8 +9177,8 @@
       "statePattern": "committing, done, failed, fetching, idle, mapping, reviewing",
       "complexity": {
         "states": 7,
-        "events": 18,
-        "transitions": 22
+        "events": 19,
+        "transitions": 23
       },
       "defaultEntity": {
         "name": "MigrationJob",
@@ -9210,6 +9258,7 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "kflow-learning-companion",
         "learning-algorithms",
         "learning-biology",
         "learning-chemistry",
@@ -9236,12 +9285,14 @@
         "std-astro-orbit-3d",
         "std-audit-capture",
         "std-bio-cell-3d",
+        "std-browse",
         "std-cache-aside",
         "std-calendar-sync",
         "std-cascade-on-delete",
         "std-circuit-breaker",
         "std-civics-electoral",
         "std-civics-gerrymander",
+        "std-confirmation",
         "std-cooldown",
         "std-cross-reference",
         "std-data-erasure",
@@ -9249,12 +9300,16 @@
         "std-econ-phillips",
         "std-escalating-decision",
         "std-form-advanced",
+        "std-gallery",
         "std-game-clock",
         "std-geo-vonthunen",
         "std-graph-builder",
+        "std-helpdesk-ticket",
         "std-hist-ccot",
         "std-hist-sourcing",
         "std-integration-settings",
+        "std-inventory",
+        "std-iram",
         "std-learn-coupled-sim",
         "std-learn-derivation",
         "std-learn-doser",
@@ -9280,7 +9335,10 @@
         "std-ml-lookup",
         "std-ml-similarity",
         "std-mod-queue",
+        "std-modal",
+        "std-moderation-rule",
         "std-notification-center",
+        "std-notification-panel",
         "std-notify-on-event",
         "std-physics-diagram",
         "std-physics-field-3d",
@@ -9292,8 +9350,12 @@
         "std-psych-operant",
         "std-psych-signal",
         "std-psych-stroop",
+        "std-purchase-order",
+        "std-question-bank",
         "std-rate-limiter",
         "std-reminder-scheduler",
+        "std-reorder-rule",
+        "std-rfi",
         "std-row-access-control",
         "std-service-accounting",
         "std-service-arxiv",
@@ -9333,9 +9395,20 @@
         "std-soc-network",
         "std-status-lifecycle",
         "std-status-lifecycle-control",
+        "std-stock-level",
+        "std-tag-taxonomy",
+        "std-ticket-tier",
         "std-tokenizer",
+        "std-trait-wars",
+        "std-warehouse",
         "std-weight-validator",
-        "ui-sports-board"
+        "ui-confirm-dialog",
+        "ui-drawer",
+        "ui-lightbox",
+        "ui-modal",
+        "ui-side-panel",
+        "ui-sports-board",
+        "ui-subagent-trace-panel"
       ],
       "connectableEvents": [
         "MIGRATION_START",
@@ -9350,6 +9423,7 @@
         "MIGRATION_APPROVED",
         "MIGRATION_REJECTED",
         "MIGRATION_REVIEW_READY",
+        "CLOSE",
         "COMMITTED",
         "RESET",
         "MIGRATION_COMPLETED",
@@ -9470,6 +9544,10 @@
               "resource": "@config.reviewSlot"
             },
             {
+              "kind": "render-ui",
+              "resource": "toast"
+            },
+            {
               "kind": "set",
               "resource": "@entity.createdAt"
             },
@@ -9519,6 +9597,7 @@
             }
           ],
           "transitionEvents": [
+            "CLOSE",
             "COMMITTED",
             "DOCUMENTS_LISTED",
             "DOCUMENT_FETCHED",
@@ -9641,6 +9720,10 @@
               "tier": "internal"
             },
             {
+              "name": "CLOSE",
+              "direction": "listen"
+            },
+            {
               "name": "RESET",
               "direction": "listen",
               "description": "Returns the job to idle from a terminal state",
@@ -9757,15 +9840,20 @@
         "std-game-clock",
         "std-helpdesk-ticket",
         "std-integration-settings",
+        "std-inventory",
+        "std-iram",
         "std-lifecycle",
         "std-migration-job",
         "std-modal",
+        "std-moderation-rule",
         "std-notification-center",
         "std-notification-panel",
         "std-notify-on-event",
         "std-purchase-order",
+        "std-question-bank",
         "std-rate-limiter",
         "std-reminder-scheduler",
+        "std-reorder-rule",
         "std-rfi",
         "std-row-access-control",
         "std-service-accounting",
@@ -9804,11 +9892,14 @@
         "std-status-lifecycle",
         "std-status-lifecycle-control",
         "std-step-flow",
+        "std-stock-level",
         "std-submittal",
+        "std-tag-taxonomy",
         "std-technician-dispatch",
         "std-ticket-tier",
         "std-timesheet",
         "std-trait-wars",
+        "std-warehouse",
         "ui-confirm-dialog",
         "ui-drawer",
         "ui-lightbox",
@@ -10138,6 +10229,10 @@
               "kind": "render-ui",
               "resolved": false,
               "resource": "@config.reviewSlot"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "toast"
             }
           ],
           "transitionEvents": [
@@ -10502,7 +10597,7 @@
         {
           "name": "DigestDrain",
           "orbital": "NotificationCenterOrbital",
-          "role": "reactor",
+          "role": "renderer",
           "emittedEvents": [
             "DIGEST_ROWS_LOADED",
             "DIGEST_ITEM_SENT",
@@ -10546,7 +10641,7 @@
               "interval": "0 * * * *"
             }
           ],
-          "rendersUi": false,
+          "rendersUi": true,
           "category": "lifecycle",
           "linkedEntity": "DigestRunView",
           "effectRow": [
@@ -10566,6 +10661,10 @@
             {
               "kind": "persist",
               "resource": "NotificationRecord"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "toast"
             },
             {
               "kind": "set",
@@ -10629,7 +10728,6 @@
       ],
       "factoryPath": "behaviors/functions/infra/atoms/std-notification-center.ts",
       "roles": [
-        "reactor",
         "renderer"
       ],
       "sourceValid": true
@@ -10814,7 +10912,7 @@
         {
           "name": "NotifyOnEventListener",
           "orbital": "NotifyOnEventOrbital",
-          "role": "reactor",
+          "role": "renderer",
           "emittedEvents": [
             "NotificationDispatched",
             "NOTIFY_PREFS_LOADED",
@@ -11047,7 +11145,7 @@
           ],
           "capabilities": [],
           "ticks": [],
-          "rendersUi": false,
+          "rendersUi": true,
           "category": "lifecycle",
           "linkedEntity": "NotificationRecord",
           "effectRow": [
@@ -11250,7 +11348,7 @@
       ],
       "factoryPath": "behaviors/functions/infra/atoms/std-notify-on-event.ts",
       "roles": [
-        "reactor"
+        "renderer"
       ],
       "sourceValid": true
     },
@@ -12190,7 +12288,7 @@
         {
           "name": "ReminderScheduler",
           "orbital": "ReminderSchedulerOrbital",
-          "role": "authority",
+          "role": "renderer",
           "emittedEvents": [
             "ReminderDue",
             "ScanRecordsLoaded",
@@ -12262,7 +12360,7 @@
               "interval": "*/15 * * * *"
             }
           ],
-          "rendersUi": false,
+          "rendersUi": true,
           "category": "lifecycle",
           "entityRebindable": true,
           "linkedEntity": "ReminderRunLog",
@@ -12292,6 +12390,10 @@
               "kind": "persist",
               "resolved": false,
               "resource": "@config.targetEntity"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "toast"
             },
             {
               "kind": "set",
@@ -12335,7 +12437,7 @@
       ],
       "factoryPath": "behaviors/functions/infra/atoms/std-reminder-scheduler.ts",
       "roles": [
-        "authority"
+        "renderer"
       ],
       "sourceValid": true
     },
@@ -12661,7 +12763,7 @@
         {
           "name": "StatusMachine",
           "orbital": "StatusLifecycleOrbital",
-          "role": "reactor",
+          "role": "renderer",
           "emittedEvents": [
             "StatusChanged",
             "StatusPersisted",
@@ -12771,7 +12873,7 @@
           ],
           "capabilities": [],
           "ticks": [],
-          "rendersUi": false,
+          "rendersUi": true,
           "category": "lifecycle",
           "entityRebindable": true,
           "linkedEntity": "StatusRecord",
@@ -12788,6 +12890,10 @@
               "kind": "persist",
               "resolved": false,
               "resource": "@config.targetEntity"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "toast"
             }
           ],
           "transitionEvents": [
@@ -12819,7 +12925,7 @@
       ],
       "factoryPath": "behaviors/functions/infra/atoms/std-status-lifecycle.ts",
       "roles": [
-        "reactor"
+        "renderer"
       ],
       "sourceValid": true
     },
@@ -13076,7 +13182,10 @@
                     "1:1",
                     "16:9",
                     "5:7",
-                    "8:1"
+                    "8:1",
+                    "4:1",
+                    "5:3",
+                    "1:2"
                   ]
                 },
                 "atlas": {
@@ -13765,7 +13874,7 @@
         {
           "name": "ClassifyRun",
           "orbital": "MlClassifyOrbital",
-          "role": "reactor",
+          "role": "renderer",
           "emittedEvents": [
             "CLASSIFIED_RAW",
             "CLASSIFY_CALL_FAILED",
@@ -13804,7 +13913,7 @@
           ],
           "capabilities": [],
           "ticks": [],
-          "rendersUi": false,
+          "rendersUi": true,
           "category": "lifecycle",
           "linkedEntity": "ClassifierVerdict",
           "effectRow": [
@@ -13819,6 +13928,10 @@
             {
               "kind": "emit",
               "resource": "CLASSIFY_FAILED"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "toast"
             },
             {
               "kind": "set",
@@ -13899,7 +14012,7 @@
       ],
       "factoryPath": "behaviors/functions/ml/atoms/std-ml-classify.ts",
       "roles": [
-        "reactor"
+        "renderer"
       ],
       "sourceValid": true
     },
@@ -14290,7 +14403,7 @@
         {
           "name": "InferenceRun",
           "orbital": "MlInferOrbital",
-          "role": "reactor",
+          "role": "renderer",
           "emittedEvents": [
             "INFERRED_RAW",
             "INFER_CALL_FAILED",
@@ -14358,7 +14471,7 @@
           ],
           "capabilities": [],
           "ticks": [],
-          "rendersUi": false,
+          "rendersUi": true,
           "category": "lifecycle",
           "linkedEntity": "Inference",
           "effectRow": [
@@ -14373,6 +14486,10 @@
             {
               "kind": "emit",
               "resource": "INFER_ABSTAINED"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "toast"
             },
             {
               "kind": "set",
@@ -14453,7 +14570,7 @@
       ],
       "factoryPath": "behaviors/functions/ml/atoms/std-ml-infer.ts",
       "roles": [
-        "reactor"
+        "renderer"
       ],
       "sourceValid": true
     },
@@ -16299,7 +16416,7 @@
         {
           "name": "InferRung",
           "orbital": "EscalatingDecisionOrbital",
-          "role": "reactor",
+          "role": "renderer",
           "emittedEvents": [],
           "listenedEvents": [
             "SIMILARITY_ABSTAINED"
@@ -16364,7 +16481,7 @@
           ],
           "capabilities": [],
           "ticks": [],
-          "rendersUi": false,
+          "rendersUi": true,
           "ref": "Rung4.traits.InferenceRun",
           "category": "lifecycle",
           "linkedEntity": "Inference",
@@ -16380,7 +16497,7 @@
         {
           "name": "ClassifyRung",
           "orbital": "EscalatingDecisionOrbital",
-          "role": "reactor",
+          "role": "renderer",
           "emittedEvents": [],
           "listenedEvents": [
             "INFER_ABSTAINED"
@@ -16416,7 +16533,7 @@
           ],
           "capabilities": [],
           "ticks": [],
-          "rendersUi": false,
+          "rendersUi": true,
           "ref": "Rung5.traits.ClassifyRun",
           "category": "lifecycle",
           "linkedEntity": "ClassifierVerdict",
@@ -16542,7 +16659,8 @@
       ],
       "factoryPath": "behaviors/functions/ml/organisms/std-escalating-decision.ts",
       "roles": [
-        "reactor"
+        "reactor",
+        "renderer"
       ],
       "sourceValid": true
     },
@@ -19900,7 +20018,7 @@
       "complexity": {
         "states": 5,
         "events": 19,
-        "transitions": 23
+        "transitions": 25
       },
       "defaultEntity": {
         "name": "BoardView",
@@ -21026,6 +21144,10 @@
               "resource": "main"
             },
             {
+              "kind": "render-ui",
+              "resource": "toast"
+            },
+            {
               "kind": "set",
               "resource": "@entity.boards"
             },
@@ -21300,22 +21422,28 @@
         "std-image-upload-multi",
         "std-import",
         "std-integration-settings",
+        "std-inventory",
+        "std-iram",
         "std-kekec",
         "std-ledger-entry-form",
         "std-list",
         "std-menu",
+        "std-migration-job",
         "std-mod-queue",
         "std-modal",
         "std-modal-editor",
+        "std-moderation-rule",
         "std-modifier-group",
         "std-multi-party-flow",
         "std-notification-panel",
         "std-pagination",
         "std-purchase-order",
+        "std-question-bank",
         "std-rating-review",
         "std-record-detail",
         "std-recurrence",
         "std-related",
+        "std-reorder-rule",
         "std-rfi",
         "std-saved-search",
         "std-scatter",
@@ -21358,6 +21486,7 @@
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
+        "std-stock-level",
         "std-tabs",
         "std-tag-strip",
         "std-tag-taxonomy",
@@ -21367,6 +21496,7 @@
         "std-tree",
         "std-version-history",
         "std-vote",
+        "std-warehouse",
         "std-winning-11",
         "std-wizard",
         "ui-accordion",
@@ -22784,6 +22914,15 @@
               "tier": "policy"
             },
             {
+              "key": "searchField",
+              "type": "string",
+              "default": "name",
+              "label": "Which column does the search box match against?",
+              "description": "Name the field on this entity the search box's str/includes filter matches against. Declared, never inferred: an entity with no `name` column must set this to a real field (e.g. title, content) or the search box can never match a row.",
+              "synonyms": "search column, search on field, match field, search key",
+              "tier": "policy"
+            },
+            {
               "key": "searchPlaceholder",
               "type": "string",
               "default": "Search…",
@@ -23965,6 +24104,15 @@
               "tier": "presentation"
             },
             {
+              "key": "searchField",
+              "type": "string",
+              "default": "name",
+              "label": "Which column does the search box match against?",
+              "description": "Name the field on this entity the search box's str/includes filter matches against. Declared, never inferred: an entity with no `name` column must set this to a real field (e.g. title, description) or the search box can never match a row.",
+              "synonyms": "search column, search on field, match field, search key",
+              "tier": "policy"
+            },
+            {
               "key": "searchPlaceholder",
               "type": "string",
               "default": "Search…",
@@ -24382,21 +24530,27 @@
         "std-image-upload-multi",
         "std-import",
         "std-integration-settings",
+        "std-inventory",
+        "std-iram",
         "std-list",
         "std-market-board-3d",
+        "std-migration-job",
         "std-mod-queue",
         "std-modal",
         "std-modal-editor",
+        "std-moderation-rule",
         "std-multi-party-flow",
         "std-notification-panel",
         "std-objective-board-3d",
         "std-pagination",
         "std-purchase-order",
+        "std-question-bank",
         "std-rate-limiter",
         "std-rating-review",
         "std-record-detail",
         "std-recurrence",
         "std-related",
+        "std-reorder-rule",
         "std-rfi",
         "std-saved-search",
         "std-scatter",
@@ -24439,6 +24593,7 @@
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
+        "std-stock-level",
         "std-survival-board-3d",
         "std-tabs",
         "std-tactics-board-2d",
@@ -24450,9 +24605,11 @@
         "std-trade-order",
         "std-trait-wars",
         "std-tree",
+        "std-vendor-onboarding",
         "std-version-history",
         "std-vote",
         "std-waitlist",
+        "std-warehouse",
         "std-wizard",
         "std-work-order",
         "ui-accordion",
@@ -27667,7 +27824,7 @@
       "complexity": {
         "states": 4,
         "events": 12,
-        "transitions": 15
+        "transitions": 16
       },
       "defaultEntity": {
         "name": "EventLogView",
@@ -28296,6 +28453,10 @@
             {
               "kind": "render-ui",
               "resource": "main"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "toast"
             },
             {
               "kind": "set",
@@ -31110,7 +31271,7 @@
       "complexity": {
         "states": 4,
         "events": 8,
-        "transitions": 11
+        "transitions": 12
       },
       "defaultEntity": {
         "name": "GalleryItem",
@@ -31181,20 +31342,26 @@
         "std-image-upload-multi",
         "std-import",
         "std-integration-settings",
+        "std-inventory",
+        "std-iram",
         "std-kekec",
         "std-ledger-entry-form",
         "std-list",
+        "std-migration-job",
         "std-mod-queue",
         "std-modal",
         "std-modal-editor",
+        "std-moderation-rule",
         "std-multi-party-flow",
         "std-notification-panel",
         "std-pagination",
         "std-purchase-order",
+        "std-question-bank",
         "std-rating-review",
         "std-record-detail",
         "std-recurrence",
         "std-related",
+        "std-reorder-rule",
         "std-rfi",
         "std-saved-search",
         "std-scatter",
@@ -31237,6 +31404,7 @@
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
+        "std-stock-level",
         "std-tabs",
         "std-tag-strip",
         "std-tag-taxonomy",
@@ -31246,6 +31414,7 @@
         "std-tree",
         "std-version-history",
         "std-vote",
+        "std-warehouse",
         "std-winning-11",
         "std-wizard",
         "ui-accordion",
@@ -31782,6 +31951,15 @@
               "tier": "presentation"
             },
             {
+              "key": "searchField",
+              "type": "string",
+              "default": "name",
+              "label": "Which column does the search box match against?",
+              "description": "Name the field on this entity the search box's str/includes filter matches against. Declared, never inferred: an entity with no `name` column must set this to a real field (e.g. title, caption) or the search box can never match a row.",
+              "synonyms": "search column, search on field, match field, search key",
+              "tier": "policy"
+            },
+            {
               "key": "searchPlaceholder",
               "type": "string",
               "default": "Search…",
@@ -31821,6 +31999,10 @@
             {
               "kind": "render-ui",
               "resource": "modal"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "toast"
             },
             {
               "kind": "set",
@@ -34101,7 +34283,7 @@
       "complexity": {
         "states": 3,
         "events": 10,
-        "transitions": 10
+        "transitions": 11
       },
       "defaultEntity": {
         "name": "ListItem",
@@ -34589,6 +34771,15 @@
               "tier": "presentation"
             },
             {
+              "key": "searchField",
+              "type": "string",
+              "default": "name",
+              "label": "Which column does the search box match against?",
+              "description": "Name the field on this entity the search box's str/includes filter matches against. Declared, never inferred: an entity with no `name` column must set this to a real field (e.g. title, label) or the search box can never match a row.",
+              "synonyms": "search column, search on field, match field, search key",
+              "tier": "policy"
+            },
+            {
               "key": "searchPlaceholder",
               "type": "string",
               "default": "Search…",
@@ -34616,6 +34807,10 @@
             {
               "kind": "render-ui",
               "resource": "main"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "toast"
             }
           ],
           "transitionEvents": [
@@ -35940,17 +36135,23 @@
         "std-image-upload-multi",
         "std-import",
         "std-integration-settings",
+        "std-inventory",
+        "std-iram",
         "std-list",
+        "std-migration-job",
         "std-mod-queue",
         "std-modal-editor",
+        "std-moderation-rule",
         "std-multi-party-flow",
         "std-notification-panel",
         "std-pagination",
         "std-purchase-order",
+        "std-question-bank",
         "std-rating-review",
         "std-record-detail",
         "std-recurrence",
         "std-related",
+        "std-reorder-rule",
         "std-rfi",
         "std-saved-search",
         "std-scatter",
@@ -35993,6 +36194,7 @@
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
+        "std-stock-level",
         "std-tabs",
         "std-tag-strip",
         "std-tag-taxonomy",
@@ -36002,6 +36204,7 @@
         "std-tree",
         "std-version-history",
         "std-vote",
+        "std-warehouse",
         "std-wizard",
         "studio-canvas",
         "ui-accordion",
@@ -37414,17 +37617,23 @@
         "std-image-upload-multi",
         "std-import",
         "std-integration-settings",
+        "std-inventory",
+        "std-iram",
         "std-list",
+        "std-migration-job",
         "std-mod-queue",
         "std-modal",
         "std-modal-editor",
+        "std-moderation-rule",
         "std-multi-party-flow",
         "std-pagination",
         "std-purchase-order",
+        "std-question-bank",
         "std-rating-review",
         "std-record-detail",
         "std-recurrence",
         "std-related",
+        "std-reorder-rule",
         "std-rfi",
         "std-saved-search",
         "std-scatter",
@@ -37467,6 +37676,7 @@
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
+        "std-stock-level",
         "std-tabs",
         "std-tag-strip",
         "std-tag-taxonomy",
@@ -37476,6 +37686,7 @@
         "std-tree",
         "std-version-history",
         "std-vote",
+        "std-warehouse",
         "std-wizard",
         "ui-accordion",
         "ui-activation-block",
@@ -40640,6 +40851,7 @@
         "std-market-flow",
         "std-modal",
         "std-modal-editor",
+        "std-moderation-rule",
         "std-motion-body",
         "std-multi-party-flow",
         "std-notification-panel",
@@ -40658,6 +40870,7 @@
         "std-rating-review",
         "std-record-detail",
         "std-related",
+        "std-reorder-rule",
         "std-saved-search",
         "std-scatter",
         "std-search",
@@ -41845,6 +42058,7 @@
         "std-thread",
         "std-trade-order",
         "std-tree",
+        "std-vendor-onboarding",
         "std-version-history",
         "std-vote",
         "std-waitlist",
@@ -43099,7 +43313,7 @@
       "complexity": {
         "states": 5,
         "events": 10,
-        "transitions": 13
+        "transitions": 14
       },
       "defaultEntity": {
         "name": "SelectableItem",
@@ -43527,6 +43741,15 @@
               "tier": "presentation"
             },
             {
+              "key": "searchField",
+              "type": "string",
+              "default": "name",
+              "label": "Which column does the search box match against?",
+              "description": "Name the field on this entity the search box's str/includes filter matches against. Declared, never inferred: an entity with no `name` column must set this to a real field (e.g. title, label) or the search box can never match a row.",
+              "synonyms": "search column, search on field, match field, search key",
+              "tier": "policy"
+            },
+            {
               "key": "searchPlaceholder",
               "type": "string",
               "default": "Search…",
@@ -43569,6 +43792,10 @@
             {
               "kind": "render-ui",
               "resource": "main"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "toast"
             }
           ],
           "transitionEvents": [
@@ -46943,6 +47170,10 @@
               "resource": "main"
             },
             {
+              "kind": "render-ui",
+              "resource": "toast"
+            },
+            {
               "kind": "set",
               "resource": "@entity.docId"
             },
@@ -47054,8 +47285,8 @@
       "statePattern": "browsing, creating, editing, error, loading",
       "complexity": {
         "states": 5,
-        "events": 12,
-        "transitions": 20
+        "events": 13,
+        "transitions": 21
       },
       "defaultEntity": {
         "name": "Tag",
@@ -47101,14 +47332,17 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "kflow-learning-companion",
         "std-app-layout",
         "std-app-search",
+        "std-approval-gate",
         "std-billable-hour",
         "std-board",
         "std-browse",
         "std-calendar",
         "std-confirmation",
         "std-dashboard-grid-embedded",
+        "std-data-erasure",
         "std-date-range",
         "std-detail-layout",
         "std-esign-flow",
@@ -47121,19 +47355,29 @@
         "std-gallery",
         "std-geosearch",
         "std-graphs",
+        "std-helpdesk-ticket",
         "std-image-upload-multi",
         "std-import",
         "std-integration-settings",
+        "std-inventory",
+        "std-iram",
         "std-list",
+        "std-migration-job",
+        "std-mod-queue",
         "std-modal",
         "std-modal-editor",
+        "std-moderation-rule",
         "std-multi-party-flow",
         "std-notification-panel",
         "std-pagination",
+        "std-purchase-order",
+        "std-question-bank",
         "std-rating-review",
         "std-record-detail",
         "std-recurrence",
         "std-related",
+        "std-reorder-rule",
+        "std-rfi",
         "std-saved-search",
         "std-scatter",
         "std-search",
@@ -47175,12 +47419,16 @@
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
+        "std-stock-level",
         "std-tabs",
         "std-tag-strip",
         "std-thread",
+        "std-ticket-tier",
+        "std-trait-wars",
         "std-tree",
         "std-version-history",
         "std-vote",
+        "std-warehouse",
         "std-wizard",
         "ui-accordion",
         "ui-activation-block",
@@ -47387,6 +47635,7 @@
         "NEW_TAG",
         "COMMIT_TAG",
         "CANCEL_TAG",
+        "CLOSE",
         "TagCreated",
         "TagCreateFailed",
         "TagSelected"
@@ -47503,6 +47752,7 @@
           ],
           "transitionEvents": [
             "CANCEL_TAG",
+            "CLOSE",
             "COMMIT_TAG",
             "INIT",
             "LEVEL_RELOAD",
@@ -47593,6 +47843,10 @@
               "description": "The New-category affordance was clicked.",
               "synonyms": "add tag, create category",
               "tier": "domain"
+            },
+            {
+              "name": "CLOSE",
+              "direction": "listen"
             }
           ],
           "definerKnobs": []
@@ -50158,7 +50412,7 @@
       "complexity": {
         "states": 5,
         "events": 9,
-        "transitions": 12
+        "transitions": 14
       },
       "defaultEntity": {
         "name": "WizardView",
@@ -50422,6 +50676,7 @@
         "std-trade-order",
         "std-tree",
         "std-velocity-gate",
+        "std-vendor-onboarding",
         "std-version-history",
         "std-vote",
         "std-waitlist",
@@ -50806,6 +51061,10 @@
             {
               "kind": "render-ui",
               "resource": "main"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "toast"
             },
             {
               "kind": "set",
@@ -53063,7 +53322,10 @@
                     "1:1",
                     "16:9",
                     "5:7",
-                    "8:1"
+                    "8:1",
+                    "4:1",
+                    "5:3",
+                    "1:2"
                   ]
                 },
                 "atlas": {
@@ -54255,7 +54517,10 @@
                     "1:1",
                     "16:9",
                     "5:7",
-                    "8:1"
+                    "8:1",
+                    "4:1",
+                    "5:3",
+                    "1:2"
                   ]
                 },
                 "atlas": {
@@ -55340,8 +55605,8 @@
       "statePattern": "idle",
       "complexity": {
         "states": 1,
-        "events": 2,
-        "transitions": 1
+        "events": 3,
+        "transitions": 2
       },
       "defaultEntity": {
         "name": "CheckboxItem",
@@ -55351,6 +55616,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "checked",
+            "type": "boolean"
           }
         ]
       },
@@ -55639,6 +55908,7 @@
         "ui-wizard-progress"
       ],
       "connectableEvents": [
+        "CHANGE",
         "@config.onChange"
       ],
       "eventPayloads": {},
@@ -55699,15 +55969,22 @@
           "linkedEntity": "CheckboxItem",
           "entityContract": {
             "requires": [],
-            "provides": []
+            "provides": [
+              "checked"
+            ]
           },
           "effectRow": [
             {
               "kind": "render-ui",
               "resource": "main"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.checked"
             }
           ],
           "transitionEvents": [
+            "CHANGE",
             "INIT"
           ],
           "events": [
@@ -59145,7 +59422,10 @@
                     "1:1",
                     "16:9",
                     "5:7",
-                    "8:1"
+                    "8:1",
+                    "4:1",
+                    "5:3",
+                    "1:2"
                   ]
                 },
                 "atlas": {
@@ -83495,34 +83775,7 @@
             {
               "key": "commands",
               "type": "[CommandPaletteCommandsItem]",
-              "default": [
-                {
-                  "action": "INIT",
-                  "disabled": false,
-                  "group": "Group",
-                  "icon": "circle",
-                  "id": "Id",
-                  "keywords": [
-                    "Item",
-                    "Item 2"
-                  ],
-                  "label": "Label",
-                  "shortcut": "Shortcut"
-                },
-                {
-                  "action": "INIT",
-                  "disabled": true,
-                  "group": "Group 2",
-                  "icon": "circle",
-                  "id": "Id 2",
-                  "keywords": [
-                    "Item",
-                    "Item 2"
-                  ],
-                  "label": "Label 2",
-                  "shortcut": "Shortcut 2"
-                }
-              ],
+              "default": [],
               "label": "Commands",
               "description": "Commands listed in the palette, filtered as the user types",
               "tier": "presentation",
@@ -83742,18 +83995,24 @@
         "std-image-upload-multi",
         "std-import",
         "std-integration-settings",
+        "std-inventory",
+        "std-iram",
         "std-list",
+        "std-migration-job",
         "std-mod-queue",
         "std-modal",
         "std-modal-editor",
+        "std-moderation-rule",
         "std-multi-party-flow",
         "std-notification-panel",
         "std-pagination",
         "std-purchase-order",
+        "std-question-bank",
         "std-rating-review",
         "std-record-detail",
         "std-recurrence",
         "std-related",
+        "std-reorder-rule",
         "std-rfi",
         "std-saved-search",
         "std-scatter",
@@ -83796,6 +84055,7 @@
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
+        "std-stock-level",
         "std-tabs",
         "std-tag-strip",
         "std-tag-taxonomy",
@@ -83805,6 +84065,7 @@
         "std-tree",
         "std-version-history",
         "std-vote",
+        "std-warehouse",
         "std-wizard",
         "ui-accordion",
         "ui-activation-block",
@@ -91866,18 +92127,24 @@
         "std-image-upload-multi",
         "std-import",
         "std-integration-settings",
+        "std-inventory",
+        "std-iram",
         "std-list",
+        "std-migration-job",
         "std-mod-queue",
         "std-modal",
         "std-modal-editor",
+        "std-moderation-rule",
         "std-multi-party-flow",
         "std-notification-panel",
         "std-pagination",
         "std-purchase-order",
+        "std-question-bank",
         "std-rating-review",
         "std-record-detail",
         "std-recurrence",
         "std-related",
+        "std-reorder-rule",
         "std-rfi",
         "std-saved-search",
         "std-scatter",
@@ -91920,6 +92187,7 @@
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
+        "std-stock-level",
         "std-tabs",
         "std-tag-strip",
         "std-tag-taxonomy",
@@ -91929,6 +92197,7 @@
         "std-tree",
         "std-version-history",
         "std-vote",
+        "std-warehouse",
         "std-wizard",
         "ui-accordion",
         "ui-activation-block",
@@ -97710,26 +97979,7 @@
             {
               "key": "items",
               "type": "[FloatingToolbarItemsItem]",
-              "default": [
-                {
-                  "action": "INIT",
-                  "active": false,
-                  "disabled": false,
-                  "icon": "circle",
-                  "id": "Id",
-                  "label": "Label",
-                  "testId": "Test Id"
-                },
-                {
-                  "action": "INIT",
-                  "active": true,
-                  "disabled": true,
-                  "icon": "circle",
-                  "id": "Id 2",
-                  "label": "Label 2",
-                  "testId": "Test Id 2"
-                }
-              ],
+              "default": [],
               "label": "Items",
               "description": "Tool items rendered as icon buttons",
               "tier": "presentation",
@@ -103490,20 +103740,7 @@
             {
               "key": "units",
               "type": "[ImportPreviewTreeUnitsItem]",
-              "default": [
-                {
-                  "fields": {},
-                  "parentRef": "Parent Ref",
-                  "ref": "Ref",
-                  "targetEntity": "Target Entity"
-                },
-                {
-                  "fields": {},
-                  "parentRef": "Parent Ref 2",
-                  "ref": "Ref 2",
-                  "targetEntity": "Target Entity 2"
-                }
-              ],
+              "default": [],
               "label": "Units",
               "description": "Staged units to preview",
               "tier": "presentation",
@@ -105573,18 +105810,24 @@
         "std-image-upload-multi",
         "std-import",
         "std-integration-settings",
+        "std-inventory",
+        "std-iram",
         "std-list",
+        "std-migration-job",
         "std-mod-queue",
         "std-modal",
         "std-modal-editor",
+        "std-moderation-rule",
         "std-multi-party-flow",
         "std-notification-panel",
         "std-pagination",
         "std-purchase-order",
+        "std-question-bank",
         "std-rating-review",
         "std-record-detail",
         "std-recurrence",
         "std-related",
+        "std-reorder-rule",
         "std-rfi",
         "std-saved-search",
         "std-scatter",
@@ -105627,6 +105870,7 @@
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
+        "std-stock-level",
         "std-tabs",
         "std-tag-strip",
         "std-tag-taxonomy",
@@ -105636,6 +105880,7 @@
         "std-tree",
         "std-version-history",
         "std-vote",
+        "std-warehouse",
         "std-wizard",
         "ui-accordion",
         "ui-activation-block",
@@ -109089,30 +109334,7 @@
             {
               "key": "items",
               "type": "[MenuItemsItem]",
-              "default": [
-                {
-                  "badge": "Badge",
-                  "disabled": false,
-                  "icon": "circle",
-                  "id": "Id",
-                  "label": "Label",
-                  "subMenu": [],
-                  "title": "Title",
-                  "url": "Url",
-                  "variant": "default"
-                },
-                {
-                  "badge": "Badge 2",
-                  "disabled": true,
-                  "icon": "circle",
-                  "id": "Id 2",
-                  "label": "Label 2",
-                  "subMenu": [],
-                  "title": "Title 2",
-                  "url": "Url 2",
-                  "variant": "danger"
-                }
-              ],
+              "default": [],
               "label": "Items",
               "description": "Menu items",
               "tier": "presentation",
@@ -109848,18 +110070,24 @@
         "std-image-upload-multi",
         "std-import",
         "std-integration-settings",
+        "std-inventory",
+        "std-iram",
         "std-list",
+        "std-migration-job",
         "std-mod-queue",
         "std-modal",
         "std-modal-editor",
+        "std-moderation-rule",
         "std-multi-party-flow",
         "std-notification-panel",
         "std-pagination",
         "std-purchase-order",
+        "std-question-bank",
         "std-rating-review",
         "std-record-detail",
         "std-recurrence",
         "std-related",
+        "std-reorder-rule",
         "std-rfi",
         "std-saved-search",
         "std-scatter",
@@ -109902,6 +110130,7 @@
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
+        "std-stock-level",
         "std-tabs",
         "std-tag-strip",
         "std-tag-taxonomy",
@@ -109911,6 +110140,7 @@
         "std-tree",
         "std-version-history",
         "std-vote",
+        "std-warehouse",
         "std-wizard",
         "ui-accordion",
         "ui-activation-block",
@@ -120633,18 +120863,24 @@
         "std-image-upload-multi",
         "std-import",
         "std-integration-settings",
+        "std-inventory",
+        "std-iram",
         "std-list",
+        "std-migration-job",
         "std-mod-queue",
         "std-modal",
         "std-modal-editor",
+        "std-moderation-rule",
         "std-multi-party-flow",
         "std-notification-panel",
         "std-pagination",
         "std-purchase-order",
+        "std-question-bank",
         "std-rating-review",
         "std-record-detail",
         "std-recurrence",
         "std-related",
+        "std-reorder-rule",
         "std-rfi",
         "std-saved-search",
         "std-scatter",
@@ -120687,6 +120923,7 @@
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
+        "std-stock-level",
         "std-tabs",
         "std-tag-strip",
         "std-tag-taxonomy",
@@ -120696,6 +120933,7 @@
         "std-tree",
         "std-version-history",
         "std-vote",
+        "std-warehouse",
         "std-wizard",
         "ui-accordion",
         "ui-activation-block",
@@ -127099,7 +127337,10 @@
                           "1:1",
                           "16:9",
                           "5:7",
-                          "8:1"
+                          "8:1",
+                          "4:1",
+                          "5:3",
+                          "1:2"
                         ]
                       },
                       "atlas": {
@@ -127272,7 +127513,10 @@
                           "1:1",
                           "16:9",
                           "5:7",
-                          "8:1"
+                          "8:1",
+                          "4:1",
+                          "5:3",
+                          "1:2"
                         ]
                       },
                       "atlas": {
@@ -146170,18 +146414,24 @@
         "std-image-upload-multi",
         "std-import",
         "std-integration-settings",
+        "std-inventory",
+        "std-iram",
         "std-list",
+        "std-migration-job",
         "std-mod-queue",
         "std-modal",
         "std-modal-editor",
+        "std-moderation-rule",
         "std-multi-party-flow",
         "std-notification-panel",
         "std-pagination",
         "std-purchase-order",
+        "std-question-bank",
         "std-rating-review",
         "std-record-detail",
         "std-recurrence",
         "std-related",
+        "std-reorder-rule",
         "std-rfi",
         "std-saved-search",
         "std-scatter",
@@ -146224,6 +146474,7 @@
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
+        "std-stock-level",
         "std-tabs",
         "std-tag-strip",
         "std-tag-taxonomy",
@@ -146233,6 +146484,7 @@
         "std-tree",
         "std-version-history",
         "std-vote",
+        "std-warehouse",
         "std-wizard",
         "ui-accordion",
         "ui-activation-block",
@@ -164249,6 +164501,7 @@
             }
           ],
           "transitionEvents": [
+            "CLOSE",
             "INIT",
             "SHOW",
             "TUT_AUTO",
@@ -164307,6 +164560,10 @@
             },
             {
               "name": "INIT",
+              "direction": "listen"
+            },
+            {
+              "name": "CLOSE",
               "direction": "listen"
             }
           ],
@@ -165692,7 +165949,10 @@
                           "1:1",
                           "16:9",
                           "5:7",
-                          "8:1"
+                          "8:1",
+                          "4:1",
+                          "5:3",
+                          "1:2"
                         ]
                       },
                       "atlas": {
@@ -166182,7 +166442,10 @@
                         "1:1",
                         "16:9",
                         "5:7",
-                        "8:1"
+                        "8:1",
+                        "4:1",
+                        "5:3",
+                        "1:2"
                       ]
                     },
                     "atlas": {
@@ -168090,7 +168353,10 @@
                     "1:1",
                     "16:9",
                     "5:7",
-                    "8:1"
+                    "8:1",
+                    "4:1",
+                    "5:3",
+                    "1:2"
                   ]
                 },
                 "atlas": {
@@ -168461,7 +168727,10 @@
                     "1:1",
                     "16:9",
                     "5:7",
-                    "8:1"
+                    "8:1",
+                    "4:1",
+                    "5:3",
+                    "1:2"
                   ]
                 },
                 "atlas": {
@@ -168873,7 +169142,10 @@
                           "1:1",
                           "16:9",
                           "5:7",
-                          "8:1"
+                          "8:1",
+                          "4:1",
+                          "5:3",
+                          "1:2"
                         ]
                       },
                       "atlas": {
@@ -169010,7 +169282,10 @@
                       "1:1",
                       "16:9",
                       "5:7",
-                      "8:1"
+                      "8:1",
+                      "4:1",
+                      "5:3",
+                      "1:2"
                     ]
                   },
                   "atlas": {
@@ -169447,7 +169722,10 @@
                     "1:1",
                     "16:9",
                     "5:7",
-                    "8:1"
+                    "8:1",
+                    "4:1",
+                    "5:3",
+                    "1:2"
                   ]
                 },
                 "atlas": {
@@ -170061,7 +170339,10 @@
                       "1:1",
                       "16:9",
                       "5:7",
-                      "8:1"
+                      "8:1",
+                      "4:1",
+                      "5:3",
+                      "1:2"
                     ]
                   },
                   "atlas": {
@@ -173250,7 +173531,10 @@
                     "1:1",
                     "16:9",
                     "5:7",
-                    "8:1"
+                    "8:1",
+                    "4:1",
+                    "5:3",
+                    "1:2"
                   ]
                 },
                 "atlas": {
@@ -173346,7 +173630,7 @@
                 }
               ],
               "label": "Bones",
-              "description": "The skeleton (bind pose; FK chain via `parent` names).",
+              "description": "The skeleton (bind pose; FK chain via `parent` names). Falls back to the rigbundle's `bones` when empty.",
               "tier": "presentation",
               "items": {
                 "properties": {
@@ -173399,6 +173683,13 @@
                   }
                 }
               }
+            },
+            {
+              "key": "clipName",
+              "type": "string",
+              "label": "Clip Name",
+              "description": "Named clip inside the rigbundle at `meshUrl` (`clips[clipName].frames`); used when `clip` is absent. Empty/unknown = no clip.",
+              "tier": "presentation"
             },
             {
               "key": "frame",
@@ -173889,7 +174180,10 @@
                           "1:1",
                           "16:9",
                           "5:7",
-                          "8:1"
+                          "8:1",
+                          "4:1",
+                          "5:3",
+                          "1:2"
                         ]
                       },
                       "atlas": {
@@ -174312,7 +174606,10 @@
                     "1:1",
                     "16:9",
                     "5:7",
-                    "8:1"
+                    "8:1",
+                    "4:1",
+                    "5:3",
+                    "1:2"
                   ]
                 },
                 "atlas": {
@@ -175712,7 +176009,10 @@
                     "1:1",
                     "16:9",
                     "5:7",
-                    "8:1"
+                    "8:1",
+                    "4:1",
+                    "5:3",
+                    "1:2"
                   ]
                 },
                 "atlas": {
@@ -175801,7 +176101,10 @@
                     "1:1",
                     "16:9",
                     "5:7",
-                    "8:1"
+                    "8:1",
+                    "4:1",
+                    "5:3",
+                    "1:2"
                   ]
                 },
                 "atlas": {
@@ -176127,7 +176430,10 @@
                           "1:1",
                           "16:9",
                           "5:7",
-                          "8:1"
+                          "8:1",
+                          "4:1",
+                          "5:3",
+                          "1:2"
                         ]
                       },
                       "atlas": {
@@ -176267,7 +176573,10 @@
                           "1:1",
                           "16:9",
                           "5:7",
-                          "8:1"
+                          "8:1",
+                          "4:1",
+                          "5:3",
+                          "1:2"
                         ]
                       },
                       "atlas": {
@@ -176374,7 +176683,10 @@
                           "1:1",
                           "16:9",
                           "5:7",
-                          "8:1"
+                          "8:1",
+                          "4:1",
+                          "5:3",
+                          "1:2"
                         ]
                       },
                       "atlas": {
@@ -176519,7 +176831,10 @@
                           "1:1",
                           "16:9",
                           "5:7",
-                          "8:1"
+                          "8:1",
+                          "4:1",
+                          "5:3",
+                          "1:2"
                         ]
                       },
                       "atlas": {
@@ -176626,7 +176941,10 @@
                           "1:1",
                           "16:9",
                           "5:7",
-                          "8:1"
+                          "8:1",
+                          "4:1",
+                          "5:3",
+                          "1:2"
                         ]
                       },
                       "atlas": {
@@ -176982,7 +177300,10 @@
                     "1:1",
                     "16:9",
                     "5:7",
-                    "8:1"
+                    "8:1",
+                    "4:1",
+                    "5:3",
+                    "1:2"
                   ]
                 },
                 "atlas": {
@@ -177416,7 +177737,10 @@
                     "1:1",
                     "16:9",
                     "5:7",
-                    "8:1"
+                    "8:1",
+                    "4:1",
+                    "5:3",
+                    "1:2"
                   ]
                 },
                 "atlas": {
@@ -177519,7 +177843,10 @@
                     "1:1",
                     "16:9",
                     "5:7",
-                    "8:1"
+                    "8:1",
+                    "4:1",
+                    "5:3",
+                    "1:2"
                   ]
                 },
                 "atlas": {
@@ -177846,7 +178173,10 @@
                     "1:1",
                     "16:9",
                     "5:7",
-                    "8:1"
+                    "8:1",
+                    "4:1",
+                    "5:3",
+                    "1:2"
                   ]
                 },
                 "atlas": {
@@ -178416,7 +178746,10 @@
                           "1:1",
                           "16:9",
                           "5:7",
-                          "8:1"
+                          "8:1",
+                          "4:1",
+                          "5:3",
+                          "1:2"
                         ]
                       },
                       "atlas": {
@@ -178790,7 +179123,10 @@
                     "1:1",
                     "16:9",
                     "5:7",
-                    "8:1"
+                    "8:1",
+                    "4:1",
+                    "5:3",
+                    "1:2"
                   ]
                 },
                 "atlas": {
@@ -178908,7 +179244,10 @@
                     "1:1",
                     "16:9",
                     "5:7",
-                    "8:1"
+                    "8:1",
+                    "4:1",
+                    "5:3",
+                    "1:2"
                   ]
                 },
                 "atlas": {
@@ -180316,7 +180655,10 @@
                         "1:1",
                         "16:9",
                         "5:7",
-                        "8:1"
+                        "8:1",
+                        "4:1",
+                        "5:3",
+                        "1:2"
                       ]
                     },
                     "atlas": {
@@ -180618,7 +180960,10 @@
                     "1:1",
                     "16:9",
                     "5:7",
-                    "8:1"
+                    "8:1",
+                    "4:1",
+                    "5:3",
+                    "1:2"
                   ]
                 },
                 "atlas": {
@@ -181099,6 +181444,7 @@
         "std-vector-platformer",
         "std-vector-tactics",
         "std-velocity-gate",
+        "std-vendor-onboarding",
         "std-waitlist",
         "std-wizard",
         "std-work-order",
@@ -182863,6 +183209,7 @@
         "std-vector-platformer",
         "std-vector-tactics",
         "std-velocity-gate",
+        "std-vendor-onboarding",
         "std-waitlist",
         "std-wizard",
         "std-work-order",
@@ -187922,6 +188269,7 @@
         "std-vector-platformer",
         "std-vector-tactics",
         "std-velocity-gate",
+        "std-vendor-onboarding",
         "std-waitlist",
         "std-wizard",
         "std-work-order",
@@ -190242,6 +190590,7 @@
         "std-vector-platformer",
         "std-vector-tactics",
         "std-velocity-gate",
+        "std-vendor-onboarding",
         "std-waitlist",
         "std-wizard",
         "std-work-order",
@@ -195102,6 +195451,7 @@
             ]
           },
           "transitionEvents": [
+            "CLOSE",
             "INIT",
             "SHOW",
             "TUT_AUTO",
@@ -195982,6 +196332,7 @@
         "std-vector-platformer",
         "std-vector-tactics",
         "std-velocity-gate",
+        "std-vendor-onboarding",
         "std-waitlist",
         "std-wizard",
         "std-work-order",
@@ -197760,6 +198111,7 @@
         "std-vector-platformer",
         "std-vector-tactics",
         "std-velocity-gate",
+        "std-vendor-onboarding",
         "std-waitlist",
         "std-wizard",
         "std-work-order",
@@ -199850,6 +200202,7 @@
         "std-vector-platformer",
         "std-vector-tactics",
         "std-velocity-gate",
+        "std-vendor-onboarding",
         "std-waitlist",
         "std-wizard",
         "std-work-order",

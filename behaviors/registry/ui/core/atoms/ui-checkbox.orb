@@ -28,6 +28,15 @@
         "parent": "trt_01KXG04JGEXTHGH6TFDM7MTF2W",
         "renames": []
       },
+      "evt_01M2A97BRV1BNSJ2YB8W8GP3MF": {
+        "bakedName": "CHANGE",
+        "curName": "CHANGE",
+        "id": "evt_01M2A97BRV1BNSJ2YB8W8GP3MF",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04JGEXTHGH6TFDM7MTF2W",
+        "renames": []
+      },
       "orb_01KXG04JGE96272KFF3FYFNX2B": {
         "bakedName": "CheckboxOrbital",
         "curName": "CheckboxOrbital",
@@ -64,6 +73,11 @@
             "name": "id",
             "required": true,
             "type": "string"
+          },
+          {
+            "intrinsic": true,
+            "name": "checked",
+            "type": "boolean"
           }
         ],
         "id": "ent_01KXG04JGEVAZR42EX4689Q31A",
@@ -125,6 +139,10 @@
             {
               "kind": "render-ui",
               "resource": "main"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.checked"
             }
           ],
           "emits": [
@@ -133,12 +151,21 @@
               "description": "onChange handler or declarative event key for trait dispatch",
               "event": "@config.onChange",
               "eventId": "evt_01KXG04JGJ94SZFCQV805BKJ3E",
+              "payloadSchema": [
+                {
+                  "name": "checked",
+                  "required": true,
+                  "type": "boolean"
+                }
+              ],
               "scope": "external",
               "tier": "essential"
             }
           ],
           "entityContract": {
-            "provides": [],
+            "provides": [
+              "checked"
+            ],
             "requires": []
           },
           "entityRebindable": true,
@@ -158,10 +185,29 @@
                 "name": "Initialize"
               },
               {
+                "id": "evt_01M2A97BRV1BNSJ2YB8W8GP3MF",
+                "key": "CHANGE",
+                "name": "Change",
+                "payloadSchema": [
+                  {
+                    "name": "checked",
+                    "required": true,
+                    "type": "boolean"
+                  }
+                ]
+              },
+              {
                 "description": "onChange handler or declarative event key for trait dispatch",
                 "id": "evt_01KXG04JGJ94SZFCQV805BKJ3E",
                 "key": "@config.onChange",
                 "name": "@config.on change",
+                "payloadSchema": [
+                  {
+                    "name": "checked",
+                    "required": true,
+                    "type": "boolean"
+                  }
+                ],
                 "tier": "essential"
               }
             ],
@@ -175,10 +221,15 @@
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.checked",
+                    "@config.checked"
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "checked": "@config.checked",
+                      "checked": "@entity.checked",
                       "className": "@config.className",
                       "defaultChecked": "@config.defaultChecked",
                       "label": "@config.label",
@@ -189,6 +240,31 @@
                 ],
                 "event": "INIT",
                 "eventId": "evt_01KXG04JGFD52GXHCSC5MJPKSG",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.checked",
+                    "@payload.checked"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "checked": "@entity.checked",
+                      "className": "@config.className",
+                      "defaultChecked": "@config.defaultChecked",
+                      "label": "@config.label",
+                      "onChange": "@config.onChange",
+                      "type": "checkbox"
+                    }
+                  ]
+                ],
+                "event": "CHANGE",
+                "eventId": "evt_01M2A97BRV1BNSJ2YB8W8GP3MF",
                 "from": "idle",
                 "to": "idle"
               }

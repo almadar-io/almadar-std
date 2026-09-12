@@ -366,6 +366,10 @@ export function stdLifecycleLifecycleOrbital(params: StdLifecycleLifecycleOrbita
             'resource': '@config.targetEntity',
           },
           {
+            'kind': 'render-ui',
+            'resource': 'toast',
+          },
+          {
             'kind': 'set',
             'resource': '@entity.headId',
           },
@@ -578,6 +582,22 @@ export function stdLifecycleLifecycleOrbital(params: StdLifecycleLifecycleOrbita
               'to': 'idle',
             },
             {
+              'effects': [
+                [
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': [
+                      'str/concat',
+                      'Couldn\'t scan for lifecycle transitions — ',
+                      '@payload.error',
+                    ],
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
               'event': 'ScanFailed',
               'from': 'idle',
               'to': 'idle',
@@ -696,6 +716,22 @@ export function stdLifecycleLifecycleOrbital(params: StdLifecycleLifecycleOrbita
               'to': 'idle',
             },
             {
+              'effects': [
+                [
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': [
+                      'str/concat',
+                      'Couldn\'t scan for lifecycle transitions — ',
+                      '@payload.error',
+                    ],
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
               'event': 'ScanFailed',
               'from': 'scanning',
               'to': 'idle',

@@ -1170,6 +1170,10 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
             'resource': 'main',
           },
           {
+            'kind': 'render-ui',
+            'resource': 'toast',
+          },
+          {
             'kind': 'set',
             'resource': '@entity.boards',
           },
@@ -2505,6 +2509,58 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                 ],
               ],
               'event': 'BoardItemsLoaded',
+              'from': 'viewing_board',
+              'to': 'viewing_board',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.errorMessage',
+                  '@payload.error',
+                ],
+                [
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': [
+                      'str/concat',
+                      'Couldn\'t save the board — ',
+                      '@payload.error',
+                    ],
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
+              'event': 'BoardItemsSaveFailed',
+              'from': 'viewing_board',
+              'to': 'viewing_board',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.errorMessage',
+                  '@payload.error',
+                ],
+                [
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': [
+                      'str/concat',
+                      'Couldn\'t refresh the board — ',
+                      '@payload.error',
+                    ],
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
+              'event': 'BoardItemsLoadFailed',
               'from': 'viewing_board',
               'to': 'viewing_board',
             },

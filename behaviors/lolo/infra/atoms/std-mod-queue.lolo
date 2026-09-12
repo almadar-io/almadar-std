@@ -90,6 +90,7 @@ orbital ModQueueItemOrbital {
         })
       ModQueueItemLoaded -> idle
       ModQueueItemLoadFailed -> idle
+        (notify error (str/concat "Couldn't load the moderation queue — " ?error))
       OPEN -> loading when @config.enabled
         (fetch ModQueueItem {
           emit: { failure: ModQueueItemLoadFailed, success: ModQueueItemLoaded }

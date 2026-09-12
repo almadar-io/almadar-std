@@ -97,6 +97,7 @@ orbital DataErasureOrbital {
         })
       ErasureLoaded -> idle
       ErasureLoadFailed -> idle
+        (notify error (str/concat "Couldn't load the erasure queue — " ?error))
       OPEN -> loading when @config.enabled
         (fetch ErasureRequest {
           emit: { failure: ErasureLoadFailed, success: ErasureLoaded }
@@ -127,6 +128,7 @@ orbital DataErasureOrbital {
         })
       ExecScanLoaded -> idle when ["=", (array/len ?data), 0]
       ExecScanFailed -> idle
+        (notify error (str/concat "Couldn't scan for erasures to execute — " ?error))
     }
 
     state execScanning {
@@ -153,6 +155,7 @@ orbital DataErasureOrbital {
         })
       ExecScanLoaded -> idle when ["=", (array/len ?data), 0]
       ExecScanFailed -> idle
+        (notify error (str/concat "Couldn't scan for erasures to execute — " ?error))
     }
 
     state loading {

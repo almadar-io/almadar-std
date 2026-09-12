@@ -54,7 +54,7 @@ export interface StdUiCommandPaletteSelectPayload {
  */
 export interface StdUiCommandPaletteConfig {
   className?: string;
-  /** Default: `[{"action":"INIT","disabled":false,"group":"Group","icon":"circle","id":"Id","keywords":["Item","Item 2"],"label":"Label","shortcut":"Shortcut"},{"action":"INIT","disabled":true,"group":"Group 2","icon":"circle","id":"Id 2","keywords":["Item","Item 2"],"label":"Label 2","shortcut":"Shortcut 2"}]` */
+  /** Default: `[]` */
   commands?: EntityRow[];
   /** Default: `"No matching commands"` */
   emptyLabel?: string;

@@ -433,6 +433,10 @@ export function stdMlInferMlInferOrbital(params: StdMlInferMlInferOrbitalParams 
             'resource': 'INFER_ABSTAINED',
           },
           {
+            'kind': 'render-ui',
+            'resource': 'toast',
+          },
+          {
             'kind': 'set',
             'resource': '@entity.confidence',
           },
@@ -908,6 +912,20 @@ export function stdMlInferMlInferOrbital(params: StdMlInferMlInferOrbitalParams 
                     'reason': 'unavailable',
                     'request': '@entity.request',
                     'violations': '@entity.violations',
+                  },
+                ],
+                [
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': [
+                      'str/concat',
+                      'Couldn\'t run inference — ',
+                      '@payload.error',
+                    ],
+                    'type': 'alert',
+                    'variant': 'error',
                   },
                 ],
               ],

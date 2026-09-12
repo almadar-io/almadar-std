@@ -68,6 +68,7 @@ orbital MigrationJobOrbital {
           target: @entity.target
         })
         (emit MIGRATION_FAILED { error: @entity.error })
+        (notify error (str/concat "Couldn't list the source documents — " ?error))
     }
 
     state mapping {
@@ -114,6 +115,7 @@ orbital MigrationJobOrbital {
           target: @entity.target
         })
         (emit MIGRATION_FAILED { error: @entity.error })
+        (notify error (str/concat "Couldn't fetch the document — " ?error))
     }
 
     state reviewing {
@@ -127,6 +129,15 @@ orbital MigrationJobOrbital {
         (render-ui @config.reviewSlot null)
       MIGRATION_REVIEW_READY -> reviewing
       MIGRATION_DISCARDED -> idle
+        (set @entity.status idle)
+        (set @entity.documents [])
+        (set @entity.document {})
+        (set @entity.stats {})
+        (set @entity.units [])
+        (set @entity.skipped [])
+        (set @entity.validationErrors [])
+        (render-ui @config.reviewSlot null)
+      CLOSE -> idle
         (set @entity.status idle)
         (set @entity.documents [])
         (set @entity.document {})
@@ -162,6 +173,7 @@ orbital MigrationJobOrbital {
           target: @entity.target
         })
         (emit MIGRATION_FAILED { error: @entity.error })
+        (notify error (str/concat "Couldn't commit the import — " ?error))
     }
 
     state done {

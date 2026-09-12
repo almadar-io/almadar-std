@@ -86,6 +86,8 @@ export interface StdListConfig {
   filters?: EntityRow[];
   /** Default: `20` */
   pageSize?: number;
+  /** Default: `"name"` */
+  searchField?: string;
   /** Default: `"Search…"` */
   searchPlaceholder?: string;
 }
@@ -424,6 +426,14 @@ export function stdListListItemOrbital(params: StdListListItemOrbitalParams = {}
             'tier': 'presentation',
             'type': 'number',
           },
+          'searchField': {
+            'default': 'name',
+            'description': 'Name the field on this entity the search box\'s str/includes filter matches against. Declared, never inferred: an entity with no `name` column must set this to a real field (e.g. title, label) or the search box can never match a row.',
+            'label': 'Which column does the search box match against?',
+            'synonyms': 'search column, search on field, match field, search key',
+            'tier': 'policy',
+            'type': 'string',
+          },
           'searchPlaceholder': {
             'default': 'Search…',
             'description': 'Hint text inside the list search box.',
@@ -441,6 +451,10 @@ export function stdListListItemOrbital(params: StdListListItemOrbitalParams = {}
           {
             'kind': 'render-ui',
             'resource': 'main',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'toast',
           },
         ],
         'emits': [
@@ -1115,7 +1129,7 @@ export function stdListListItemOrbital(params: StdListListItemOrbitalParams = {}
                         [
                           'object/get',
                           '@entity',
-                          'name',
+                          '@config.searchField',
                         ],
                         '@payload.searchTerm',
                       ],
@@ -1185,6 +1199,27 @@ export function stdListListItemOrbital(params: StdListListItemOrbitalParams = {}
                 ],
               ],
               'event': 'REFETCH_PAGE',
+              'from': 'browsing',
+              'to': 'browsing',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': [
+                      'str/concat',
+                      'Couldn\'t refresh the list — ',
+                      '@payload.error',
+                    ],
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
+              'event': 'ListItemLoadFailed',
               'from': 'browsing',
               'to': 'browsing',
             },

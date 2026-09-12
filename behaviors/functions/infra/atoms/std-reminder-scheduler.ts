@@ -359,6 +359,10 @@ export function stdReminderSchedulerReminderSchedulerOrbital(params: StdReminder
             'resource': '@config.targetEntity',
           },
           {
+            'kind': 'render-ui',
+            'resource': 'toast',
+          },
+          {
             'kind': 'set',
             'resource': '@entity.headId',
           },
@@ -570,6 +574,22 @@ export function stdReminderSchedulerReminderSchedulerOrbital(params: StdReminder
               'to': 'idle',
             },
             {
+              'effects': [
+                [
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': [
+                      'str/concat',
+                      'Couldn\'t scan for reminders — ',
+                      '@payload.error',
+                    ],
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
               'event': 'ScanFailed',
               'from': 'idle',
               'to': 'idle',
@@ -699,6 +719,22 @@ export function stdReminderSchedulerReminderSchedulerOrbital(params: StdReminder
               'to': 'idle',
             },
             {
+              'effects': [
+                [
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': [
+                      'str/concat',
+                      'Couldn\'t scan for reminders — ',
+                      '@payload.error',
+                    ],
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
               'event': 'ScanFailed',
               'from': 'scanning',
               'to': 'idle',

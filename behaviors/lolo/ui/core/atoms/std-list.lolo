@@ -179,7 +179,7 @@ orbital ListItemOrbital {
       REFETCH_QUERY -> browsing
         (fetch ListItem {
           emit: { failure: ListItemLoadFailed, success: ListItemLoaded }
-          filter: (or ["=", ?searchTerm, ""] (str/includes (object/get @entity name) ?searchTerm))
+          filter: (or ["=", ?searchTerm, ""] (str/includes (object/get @entity @config.searchField) ?searchTerm))
         })
       REFETCH_FILTER -> browsing
         (fetch ListItem {
@@ -193,6 +193,8 @@ orbital ListItemOrbital {
           limit: @config.pageSize
           offset: ["*", ["-", ?page, 1], @config.pageSize]
         })
+      ListItemLoadFailed -> browsing
+        (notify error (str/concat "Couldn't refresh the list — " ?error))
       ListItemLoaded -> browsing
         (render-ui main {
           children: [{
@@ -354,6 +356,11 @@ orbital ListItemOrbital {
     }
 
     config {
+      searchField : string = "name"
+        @label "Which column does the search box match against?"
+        @description "Name the field on this entity the search box's str/includes filter matches against. Declared, never inferred: an entity with no `name` column must set this to a real field (e.g. title, label) or the search box can never match a row."
+        @synonyms "search column, search on field, match field, search key"
+        @tier "policy"
       bodySearch : boolean = false
         @label "Show the list's own search box?"
         @description "Embeds a search box above the grid. Set true only when the page has no other search affordance (e.g. no page-level std-search), so the surface shows one search box instead of two. False is the default — this atom has never had a search box (0 consumers today)."

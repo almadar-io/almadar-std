@@ -326,6 +326,10 @@ export function stdCascadeOnDeleteCascadeOnDeleteOrbital(params: StdCascadeOnDel
             'resource': 'CascadeLog',
           },
           {
+            'kind': 'render-ui',
+            'resource': 'toast',
+          },
+          {
             'kind': 'set',
             'resource': '@entity.headId',
           },
@@ -665,6 +669,22 @@ export function stdCascadeOnDeleteCascadeOnDeleteOrbital(params: StdCascadeOnDel
               'to': 'scanning',
             },
             {
+              'effects': [
+                [
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': [
+                      'str/concat',
+                      'Couldn\'t cascade the delete — ',
+                      '@payload.error',
+                    ],
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
               'event': 'CascadeFailed',
               'from': 'scanning',
               'to': 'idle',

@@ -666,6 +666,10 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
             'resource': 'main',
           },
           {
+            'kind': 'render-ui',
+            'resource': 'toast',
+          },
+          {
             'kind': 'set',
             'resource': '@entity.allEntries',
           },
@@ -1732,6 +1736,27 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                 ],
               ],
               'event': 'REFETCH_PAGE',
+              'from': 'viewing',
+              'to': 'viewing',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': [
+                      'str/concat',
+                      'Couldn\'t refresh the event log — ',
+                      '@payload.error',
+                    ],
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
+              'event': 'EventLogLoadFailed',
               'from': 'viewing',
               'to': 'viewing',
             },

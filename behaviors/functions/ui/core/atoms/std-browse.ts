@@ -1390,6 +1390,14 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
             'tier': 'policy',
             'type': 'string',
           },
+          'searchField': {
+            'default': 'name',
+            'description': 'Name the field on this entity the search box\'s str/includes filter matches against. Declared, never inferred: an entity with no `name` column must set this to a real field (e.g. title, content) or the search box can never match a row.',
+            'label': 'Which column does the search box match against?',
+            'synonyms': 'search column, search on field, match field, search key',
+            'tier': 'policy',
+            'type': 'string',
+          },
           'searchPlaceholder': {
             'default': 'Search…',
             'description': 'Hint text inside the list search box (e.g. \'Search orders…\').',
@@ -2249,7 +2257,7 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                           [
                             'object/get',
                             '@entity',
-                            'name',
+                            '@config.searchField',
                           ],
                           '@payload.searchTerm',
                         ],

@@ -342,6 +342,10 @@ export function stdStatusLifecycleStatusLifecycleOrbital(params: StdStatusLifecy
             'resolved': false,
             'resource': '@config.targetEntity',
           },
+          {
+            'kind': 'render-ui',
+            'resource': 'toast',
+          },
         ],
         'emits': [
           {
@@ -561,6 +565,22 @@ export function stdStatusLifecycleStatusLifecycleOrbital(params: StdStatusLifecy
               'to': 'idle',
             },
             {
+              'effects': [
+                [
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': [
+                      'str/concat',
+                      'Couldn\'t change the status — ',
+                      '@payload.error',
+                    ],
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
               'event': 'StatusChangeFailed',
               'from': 'idle',
               'to': 'idle',

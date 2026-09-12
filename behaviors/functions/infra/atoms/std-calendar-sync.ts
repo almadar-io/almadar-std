@@ -560,6 +560,10 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
             'resource': 'CalendarEvent',
           },
           {
+            'kind': 'render-ui',
+            'resource': 'toast',
+          },
+          {
             'kind': 'set',
             'resource': '@entity.headId',
           },
@@ -1280,6 +1284,20 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
                   '@entity.lastError',
                   '@payload.error',
                 ],
+                [
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': [
+                      'str/concat',
+                      'Couldn\'t sync the calendar — ',
+                      '@payload.error',
+                    ],
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
               ],
               'event': 'CAL_SYNC_FAILED',
               'from': 'idle',
@@ -1495,6 +1513,20 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
                   'set',
                   '@entity.lastError',
                   '@payload.error',
+                ],
+                [
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': [
+                      'str/concat',
+                      'Couldn\'t sync the calendar — ',
+                      '@payload.error',
+                    ],
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
                 ],
               ],
               'event': 'CAL_SYNC_FAILED',
@@ -1774,6 +1806,20 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
                   'set',
                   '@entity.lastError',
                   '@payload.error',
+                ],
+                [
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': [
+                      'str/concat',
+                      'Couldn\'t sync the calendar — ',
+                      '@payload.error',
+                    ],
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
                 ],
               ],
               'event': 'CAL_SYNC_FAILED',

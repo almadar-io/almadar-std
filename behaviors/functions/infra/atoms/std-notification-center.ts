@@ -1085,6 +1085,10 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
             'resource': 'NotificationRecord',
           },
           {
+            'kind': 'render-ui',
+            'resource': 'toast',
+          },
+          {
             'kind': 'set',
             'resource': '@entity.drainedCount',
           },
@@ -1396,6 +1400,20 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
                   '@entity.lastError',
                   '@payload.error',
                 ],
+                [
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': [
+                      'str/concat',
+                      'Couldn\'t send the notification digest — ',
+                      '@payload.error',
+                    ],
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
               ],
               'event': 'DIGEST_FAILED',
               'from': 'idle',
@@ -1586,6 +1604,20 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
                   'set',
                   '@entity.lastError',
                   '@payload.error',
+                ],
+                [
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': [
+                      'str/concat',
+                      'Couldn\'t send the notification digest — ',
+                      '@payload.error',
+                    ],
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
                 ],
               ],
               'event': 'DIGEST_FAILED',

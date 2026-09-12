@@ -661,6 +661,10 @@
               "resource": "main"
             },
             {
+              "kind": "render-ui",
+              "resource": "toast"
+            },
+            {
               "kind": "set",
               "resource": "@entity.failureCount"
             },
@@ -767,6 +771,20 @@
                 "name": "Initialize"
               },
               {
+                "description": "Indicates a node failed to load, potentially disrupting service.",
+                "id": "evt_01KXG04F8878857RJNEK9AY9JM",
+                "key": "ServiceNodeLoadFailed",
+                "name": "ServiceNode load failed",
+                "payloadSchema": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "failure, error, unavailable, outage",
+                "tier": "internal"
+              },
+              {
                 "id": "evt_01KXG04F88QWV0JSGSNP4QG30A",
                 "key": "FAILURE",
                 "name": "Failure"
@@ -833,20 +851,6 @@
                   }
                 ],
                 "synonyms": "loaded, initialized, ready",
-                "tier": "internal"
-              },
-              {
-                "description": "Indicates a node failed to load, potentially disrupting service.",
-                "id": "evt_01KXG04F8878857RJNEK9AY9JM",
-                "key": "ServiceNodeLoadFailed",
-                "name": "ServiceNode load failed",
-                "payloadSchema": [
-                  {
-                    "name": "message",
-                    "type": "string"
-                  }
-                ],
-                "synonyms": "failure, error, unavailable, outage",
                 "tier": "internal"
               }
             ],
@@ -928,6 +932,28 @@
                 ],
                 "event": "INIT",
                 "eventId": "evt_01KXG04F8877XF63PYX6V587PZ",
+                "from": "closed",
+                "to": "closed"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "toast",
+                    {
+                      "dismissible": true,
+                      "message": [
+                        "str/concat",
+                        "Couldn't load the service node — ",
+                        "@payload.message"
+                      ],
+                      "type": "alert",
+                      "variant": "error"
+                    }
+                  ]
+                ],
+                "event": "ServiceNodeLoadFailed",
+                "eventId": "evt_01KXG04F8878857RJNEK9AY9JM",
                 "from": "closed",
                 "to": "closed"
               },

@@ -64,6 +64,8 @@ export interface StdSelectionConfig {
   filters?: EntityRow[];
   /** Default: `20` */
   pageSize?: number;
+  /** Default: `"name"` */
+  searchField?: string;
   /** Default: `"Search…"` */
   searchPlaceholder?: string;
   /** Default: `"dense"` */
@@ -312,6 +314,14 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
             'tier': 'presentation',
             'type': 'number',
           },
+          'searchField': {
+            'default': 'name',
+            'description': 'Name the field on this entity the search box\'s str/includes filter matches against. Declared, never inferred: an entity with no `name` column must set this to a real field (e.g. title, label) or the search box can never match a row.',
+            'label': 'Which column does the search box match against?',
+            'synonyms': 'search column, search on field, match field, search key',
+            'tier': 'policy',
+            'type': 'string',
+          },
           'searchPlaceholder': {
             'default': 'Search…',
             'description': 'Hint text inside the pick-list search box.',
@@ -343,6 +353,10 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
           {
             'kind': 'render-ui',
             'resource': 'main',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'toast',
           },
         ],
         'emits': [
@@ -815,7 +829,7 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
                         [
                           'object/get',
                           '@entity',
-                          'name',
+                          '@config.searchField',
                         ],
                         '@payload.searchTerm',
                       ],
@@ -885,6 +899,27 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
                 ],
               ],
               'event': 'REFETCH_PAGE',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': [
+                      'str/concat',
+                      'Couldn\'t refresh the list — ',
+                      '@payload.error',
+                    ],
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
+              'event': 'SelectableItemLoadFailed',
               'from': 'idle',
               'to': 'idle',
             },

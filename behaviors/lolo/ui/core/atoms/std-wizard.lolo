@@ -444,6 +444,42 @@ orbital WizardOrbital {
     }
 
     state completed {
+      WizardSaved -> completed
+        (render-ui main {
+          align: center
+          children: [{
+            name: check-circle
+            size: lg
+            type: icon
+          }, {
+            align: center
+            content: Complete
+            type: typography
+            variant: h2
+          }, {
+            align: center
+            color: muted
+            content: @entity.completionMessage
+            type: typography
+            variant: body
+          }, {
+            allowNavigation: false
+            currentStep: @entity.totalSteps
+            steps: @entity.wizardSteps
+            type: wizard-progress
+          }, {
+            action: RESTART
+            icon: rotate-ccw
+            label: "Start a new wizard"
+            type: button
+            variant: secondary
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
+      WizardSaveFailed -> completed
+        (notify error (str/concat "Couldn't save the wizard — " ?error))
       RESTART -> loading
         (set @entity.currentStepIndex 0)
         (set @entity.completionMessage "")

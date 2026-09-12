@@ -160,7 +160,7 @@ orbital GalleryItemOrbital {
       REFETCH_QUERY -> browsing
         (fetch GalleryItem {
           emit: { failure: GalleryItemLoadFailed, success: GalleryItemLoaded }
-          filter: (or ["=", ?searchTerm, ""] (str/includes (object/get @entity name) ?searchTerm))
+          filter: (or ["=", ?searchTerm, ""] (str/includes (object/get @entity @config.searchField) ?searchTerm))
           limit: @config.pageSize
           offset: 0
         })
@@ -177,6 +177,8 @@ orbital GalleryItemOrbital {
           limit: @config.pageSize
           offset: ["*", ["-", ?page, 1], @config.pageSize]
         })
+      GalleryItemLoadFailed -> browsing
+        (notify error (str/concat "Couldn't refresh the gallery — " ?error))
       GalleryItemLoaded -> browsing
         (render-ui main {
           children: [{
@@ -360,6 +362,11 @@ orbital GalleryItemOrbital {
         @description "Entity field holding the image URL shown in the lightbox for the selected item"
         @synonyms "image url field, thumbnail field, src field"
         @tier "presentation"
+      searchField : string = "name"
+        @label "Which column does the search box match against?"
+        @description "Name the field on this entity the search box's str/includes filter matches against. Declared, never inferred: an entity with no `name` column must set this to a real field (e.g. title, caption) or the search box can never match a row."
+        @synonyms "search column, search on field, match field, search key"
+        @tier "policy"
       bodySearch : boolean = false
         @label "Show the gallery's own search box?"
         @description "Embeds a search box above the gallery grid. Set false (the default) when the page already provides a search affordance (a toolbar Search molecule), so the surface shows one search box instead of two."

@@ -30,7 +30,7 @@ const ALIAS = 'MigrationJob';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdMigrationJobEventKey = 'COMMITTED' | 'DOCUMENTS_LISTED' | 'DOCUMENT_FETCHED' | 'FETCH_DOCUMENT' | 'INIT' | 'MIGRATION_APPROVED' | 'MIGRATION_CALL_FAILED' | 'MIGRATION_COMPLETED' | 'MIGRATION_DISCARDED' | 'MIGRATION_DOCUMENT' | 'MIGRATION_FAILED' | 'MIGRATION_FETCHED' | 'MIGRATION_REJECTED' | 'MIGRATION_RETRY' | 'MIGRATION_REVIEW_READY' | 'MIGRATION_STAGED' | 'MIGRATION_START' | 'RESET';
+export type StdMigrationJobEventKey = 'CLOSE' | 'COMMITTED' | 'DOCUMENTS_LISTED' | 'DOCUMENT_FETCHED' | 'FETCH_DOCUMENT' | 'INIT' | 'MIGRATION_APPROVED' | 'MIGRATION_CALL_FAILED' | 'MIGRATION_COMPLETED' | 'MIGRATION_DISCARDED' | 'MIGRATION_DOCUMENT' | 'MIGRATION_FAILED' | 'MIGRATION_FETCHED' | 'MIGRATION_REJECTED' | 'MIGRATION_RETRY' | 'MIGRATION_REVIEW_READY' | 'MIGRATION_STAGED' | 'MIGRATION_START' | 'RESET';
 
 /**
  * Payload shape for the `DOCUMENTS_LISTED` event.
@@ -542,6 +542,10 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
             'kind': 'render-ui',
             'resolved': false,
             'resource': '@config.reviewSlot',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'toast',
           },
           {
             'kind': 'set',
@@ -1129,6 +1133,10 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
               'tier': 'domain',
             },
             {
+              'key': 'CLOSE',
+              'name': 'Close',
+            },
+            {
               'description': 'migration.commit service result — committed count plus per-unit failures',
               'key': 'COMMITTED',
               'name': 'Committed',
@@ -1385,6 +1393,20 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                     'error': '@entity.error',
                   },
                 ],
+                [
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': [
+                      'str/concat',
+                      'Couldn\'t list the source documents — ',
+                      '@payload.error',
+                    ],
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
               ],
               'event': 'MIGRATION_CALL_FAILED',
               'from': 'fetching',
@@ -1574,6 +1596,20 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                     'error': '@entity.error',
                   },
                 ],
+                [
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': [
+                      'str/concat',
+                      'Couldn\'t fetch the document — ',
+                      '@payload.error',
+                    ],
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
               ],
               'event': 'MIGRATION_CALL_FAILED',
               'from': 'mapping',
@@ -1688,6 +1724,53 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
               'effects': [
                 [
                   'set',
+                  '@entity.status',
+                  'idle',
+                ],
+                [
+                  'set',
+                  '@entity.documents',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.document',
+                  {},
+                ],
+                [
+                  'set',
+                  '@entity.stats',
+                  {},
+                ],
+                [
+                  'set',
+                  '@entity.units',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.skipped',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.validationErrors',
+                  [],
+                ],
+                [
+                  'render-ui',
+                  '@config.reviewSlot',
+                  null,
+                ],
+              ],
+              'event': 'CLOSE',
+              'from': 'reviewing',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'set',
                   '@entity.stats',
                   [
                     'object/merge',
@@ -1758,6 +1841,20 @@ export function stdMigrationJobMigrationJobOrbital(params: StdMigrationJobMigrat
                   'MIGRATION_FAILED',
                   {
                     'error': '@entity.error',
+                  },
+                ],
+                [
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': [
+                      'str/concat',
+                      'Couldn\'t commit the import — ',
+                      '@payload.error',
+                    ],
+                    'type': 'alert',
+                    'variant': 'error',
                   },
                 ],
               ],

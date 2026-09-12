@@ -43,6 +43,7 @@ export interface StdUiDrawSkinnedMeshConfig {
   /** Default: `[{"name":"Name","parent":"Parent","pivot":[1,2],"tip":[1,2]},{"name":"Name 2","parent":"Parent 2","pivot":[1,2],"tip":[1,2]}]` */
   bones?: EntityRow[];
   clip?: EntityRow;
+  clipName?: string;
   frame?: number;
   ghost?: EntityRow;
   mesh?: EntityRow;

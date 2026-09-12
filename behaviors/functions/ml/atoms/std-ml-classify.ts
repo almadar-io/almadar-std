@@ -324,6 +324,10 @@ export function stdMlClassifyMlClassifyOrbital(params: StdMlClassifyMlClassifyOr
             'resource': 'CLASSIFY_FAILED',
           },
           {
+            'kind': 'render-ui',
+            'resource': 'toast',
+          },
+          {
             'kind': 'set',
             'resource': '@entity.category',
           },
@@ -708,6 +712,20 @@ export function stdMlClassifyMlClassifyOrbital(params: StdMlClassifyMlClassifyOr
                   'CLASSIFY_FAILED',
                   {
                     'error': '@entity.errorMessage',
+                  },
+                ],
+                [
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': [
+                      'str/concat',
+                      'Couldn\'t classify — ',
+                      '@payload.error',
+                    ],
+                    'type': 'alert',
+                    'variant': 'error',
                   },
                 ],
               ],

@@ -931,6 +931,10 @@ export function stdCacheAsideCacheEntryOrbital(params: StdCacheAsideCacheEntryOr
             'kind': 'render-ui',
             'resource': 'main',
           },
+          {
+            'kind': 'render-ui',
+            'resource': 'toast',
+          },
         ],
         'emits': [
           {
@@ -1138,6 +1142,36 @@ export function stdCacheAsideCacheEntryOrbital(params: StdCacheAsideCacheEntryOr
               'tier': 'internal',
             },
             {
+              'description': 'Indicates a failure to update a cached entry.',
+              'key': 'CacheEntryUpdateFailed',
+              'name': 'CacheEntry update failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'error, failure, problem, unsuccessful',
+              'tier': 'internal',
+            },
+            {
+              'description': 'Signals that a cached entry\'s data has been modified.',
+              'key': 'CacheEntryUpdated',
+              'name': 'CacheEntry updated',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'modified, refreshed, changed, updated',
+              'tier': 'presentation',
+            },
+            {
               'key': 'INVALIDATE',
               'name': 'Invalidate',
             },
@@ -1190,36 +1224,6 @@ export function stdCacheAsideCacheEntryOrbital(params: StdCacheAsideCacheEntryOr
             {
               'key': 'REFRESH',
               'name': 'Refresh',
-            },
-            {
-              'description': 'Signals that a cached entry\'s data has been modified.',
-              'key': 'CacheEntryUpdated',
-              'name': 'CacheEntry updated',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-              'synonyms': 'modified, refreshed, changed, updated',
-              'tier': 'presentation',
-            },
-            {
-              'description': 'Indicates a failure to update a cached entry.',
-              'key': 'CacheEntryUpdateFailed',
-              'name': 'CacheEntry update failed',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-              'synonyms': 'error, failure, problem, unsuccessful',
-              'tier': 'internal',
             },
           ],
           'states': [
@@ -1417,6 +1421,44 @@ export function stdCacheAsideCacheEntryOrbital(params: StdCacheAsideCacheEntryOr
               'event': 'CacheEntryLoadFailed',
               'from': 'loading',
               'to': 'error',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': [
+                      'str/concat',
+                      'Couldn\'t update the cache entry — ',
+                      '@payload.error',
+                    ],
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
+              'event': 'CacheEntryUpdateFailed',
+              'from': 'loading',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('CacheEntry' satisfies _StdCacheAsideEntityName),
+                  {
+                    'emit': {
+                      'failure': 'CacheEntryLoadFailed',
+                      'success': 'CacheEntryLoaded',
+                    },
+                  },
+                ],
+              ],
+              'event': 'CacheEntryUpdated',
+              'from': 'loading',
+              'to': 'loading',
             },
             {
               'effects': [

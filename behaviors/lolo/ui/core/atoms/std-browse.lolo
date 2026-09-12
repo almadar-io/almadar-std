@@ -105,7 +105,7 @@ orbital BrowseItemOrbital {
       REFETCH_QUERY -> browsing
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
-          filter: (and (or ["=", @config.scopeField, ""] ["=", (object/get @entity @config.scopeField), @user.id]) (or ["=", ?searchTerm, ""] (str/includes (object/get @entity name) ?searchTerm)))
+          filter: (and (or ["=", @config.scopeField, ""] ["=", (object/get @entity @config.scopeField), @user.id]) (or ["=", ?searchTerm, ""] (str/includes (object/get @entity @config.searchField) ?searchTerm)))
           include: @config.include
           limit: @config.pageSize
           offset: 0
@@ -376,6 +376,11 @@ orbital BrowseItemOrbital {
         @description "Adds a checkbox column with select-all to the dense table. Enable only when the surface offers bulk actions — checkboxes with nothing to act on are a dead affordance."
         @synonyms "row checkboxes, multi-select, bulk select, selection column"
         @tier "presentation"
+      searchField : string = "name"
+        @label "Which column does the search box match against?"
+        @description "Name the field on this entity the search box's str/includes filter matches against. Declared, never inferred: an entity with no `name` column must set this to a real field (e.g. title, content) or the search box can never match a row."
+        @synonyms "search column, search on field, match field, search key"
+        @tier "policy"
       bodySearch : boolean = true
         @label "Show the list's own search box?"
         @description "The dense/feed/gallery looks embed their own search box above the rows. Set false when the page already provides a search affordance (a toolbar Search molecule), so the surface shows one search box instead of two."

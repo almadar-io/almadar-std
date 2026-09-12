@@ -1236,6 +1236,23 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
               'tier': 'domain',
             },
             {
+              'description': 'Indicates a failure to load or process an approval request for review.',
+              'key': 'ApprovalRequestReviewFailed',
+              'name': 'ApprovalRequest review failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'load error, failed review, processing failure',
+              'tier': 'internal',
+            },
+            {
               'description': 'Summons the review queue (host nav/affordance requests it).',
               'key': 'OPEN',
               'name': 'Open',
@@ -1433,23 +1450,6 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
               'tier': 'internal',
             },
             {
-              'description': 'Indicates a failure to load or process an approval request for review.',
-              'key': 'ApprovalRequestReviewFailed',
-              'name': 'ApprovalRequest review failed',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-              'synonyms': 'load error, failed review, processing failure',
-              'tier': 'internal',
-            },
-            {
               'description': 'The deny form committed; data carries the request id + the written reason.',
               'key': 'CONFIRM_DENY',
               'name': 'Confirm Deny',
@@ -1566,6 +1566,22 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
               'to': 'idle',
             },
             {
+              'effects': [
+                [
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': [
+                      'str/concat',
+                      'Couldn\'t load the approval request — ',
+                      '@payload.error',
+                    ],
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
               'event': 'ApprovalRequestLoadFailed',
               'from': 'idle',
               'to': 'idle',
@@ -1616,6 +1632,27 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
                 ],
               ],
               'event': 'APPROVAL_REPLAY_FAILED',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': [
+                      'str/concat',
+                      'Couldn\'t reopen the approval request — ',
+                      '@payload.error',
+                    ],
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
+              'event': 'ApprovalRequestReviewFailed',
               'from': 'idle',
               'to': 'idle',
             },

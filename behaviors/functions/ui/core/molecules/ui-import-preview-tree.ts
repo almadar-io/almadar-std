@@ -54,7 +54,7 @@ export interface StdUiImportPreviewTreeConfig {
   onConfirm?: string;
   /** Default: `[]` */
   skipped?: EntityRow[];
-  /** Default: `[{"fields":{},"parentRef":"Parent Ref","ref":"Ref","targetEntity":"Target Entity"},{"fields":{},"parentRef":"Parent Ref 2","ref":"Ref 2","targetEntity":"Target Entity 2"}]` */
+  /** Default: `[]` */
   units?: EntityRow[];
 }
 

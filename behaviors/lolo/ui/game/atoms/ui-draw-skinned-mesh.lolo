@@ -14,7 +14,7 @@ orbital DrawSkinnedMeshOrbital {
     style : "pixel" | "vector" | "hd" | "1-bit" | "isometric"
     variant : string
     dimension : "2d" | "3d"
-    aspect : "1:1" | "16:9" | "5:7" | "8:1"
+    aspect : "1:1" | "16:9" | "5:7" | "8:1" | "4:1" | "5:3" | "1:2"
     atlas : asset
     sprite : string
     name : string
@@ -66,6 +66,7 @@ orbital DrawSkinnedMeshOrbital {
           bones: @config.bones
           pose: @config.pose
           clip: @config.clip
+          clipName: @config.clipName
           frame: @config.frame
           opacity: @config.opacity
           weightsOverlay: @config.weightsOverlay
@@ -93,7 +94,7 @@ orbital DrawSkinnedMeshOrbital {
         @tier "presentation"
       bones : [DrawSkinnedMeshBonesItem] = [{ name: "Name", parent: "Parent", pivot: [1, 2], tip: [1, 2] }, { name: "Name 2", parent: "Parent 2", pivot: [1, 2], tip: [1, 2] }]
         @label "Bones"
-        @description "The skeleton (bind pose; FK chain via `parent` names)."
+        @description "The skeleton (bind pose; FK chain via `parent` names). Falls back to the rigbundle's `bones` when empty."
         @tier "presentation"
       pose : Map string number = { item: 1 }
         @label "Pose"
@@ -102,6 +103,10 @@ orbital DrawSkinnedMeshOrbital {
       clip : DrawSkinnedMeshClip
         @label "Clip"
         @description "Pose animation clip; with `frame`, pose = `frames[frame % frames.length]`."
+        @tier "presentation"
+      clipName : string
+        @label "Clip Name"
+        @description "Named clip inside the rigbundle at `meshUrl` (`clips[clipName].frames`); used when `clip` is absent. Empty/unknown = no clip."
         @tier "presentation"
       frame : number
         @label "Frame"

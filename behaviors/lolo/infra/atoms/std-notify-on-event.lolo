@@ -176,6 +176,7 @@ orbital NotifyOnEventOrbital {
           recordedAt: @now
           severity: @entity.severity
         })
+        (notify error (str/concat "Couldn't send the email notification — " ?error))
       NOTIFY_SMS_SENT -> idle
         (set @entity.dispatched true)
         (persist create NotificationRecord {
@@ -198,6 +199,7 @@ orbital NotifyOnEventOrbital {
           recordedAt: @now
           severity: @entity.severity
         })
+        (notify error (str/concat "Couldn't send the text message — " ?error))
       NOTIFY_WEBHOOK_SENT -> idle
         (set @entity.dispatched true)
         (persist create NotificationRecord {
@@ -220,6 +222,7 @@ orbital NotifyOnEventOrbital {
           recordedAt: @now
           severity: @entity.severity
         })
+        (notify error (str/concat "Couldn't send the webhook notification — " ?error))
       NOTIFY_PUSH_SENT -> idle
         (set @entity.dispatched true)
         (persist create NotificationRecord {
@@ -242,6 +245,7 @@ orbital NotifyOnEventOrbital {
           recordedAt: @now
           severity: @entity.severity
         })
+        (notify error (str/concat "Couldn't send the push notification — " ?error))
       NOTIFY_LOOKUP_FAILED -> idle
         (set @entity.dispatched false)
         (set @entity.error ?error)
@@ -254,6 +258,7 @@ orbital NotifyOnEventOrbital {
           recordedAt: @now
           severity: @entity.severity
         })
+        (notify error (str/concat "Couldn't look up notification preferences — " ?error))
     }
 
     emits {

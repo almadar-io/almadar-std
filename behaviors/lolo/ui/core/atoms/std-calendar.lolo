@@ -116,7 +116,7 @@ orbital CalendarEventOrbital {
         (fetch CalendarEvent {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
           include: @config.include
-          filter: (or ["=", ?searchTerm, ""] (str/includes (object/get @entity name) ?searchTerm))
+          filter: (or ["=", ?searchTerm, ""] (str/includes (object/get @entity @config.searchField) ?searchTerm))
         })
       REFETCH_FILTER -> loading
         (fetch CalendarEvent {
@@ -283,6 +283,11 @@ orbital CalendarEventOrbital {
         @description "Row field the agenda list groups its day sections by. Rebound hosts point this at their own timestamp column (e.g. startTime, scheduledAt)."
         @synonyms "group field, section field, day field"
         @tier "presentation"
+      searchField : string = "name"
+        @label "Which column does the search box match against?"
+        @description "Name the field on this entity the search box's str/includes filter matches against. Declared, never inferred: an entity with no `name` column must set this to a real field (e.g. title, description) or the search box can never match a row."
+        @synonyms "search column, search on field, match field, search key"
+        @tier "policy"
       bodySearch : boolean = false
         @label "Show the calendar's own search box?"
         @description "Embeds a title search box in the toolbar above the calendar body (all three calendarLook trees). Defaults false: std-calendar has never had a search box, so an untouched consumer's surface is unchanged; the primary path is composing std-search beside this atom and wiring XSearch.SEARCH -> REFETCH_QUERY. Set true only for a standalone calendar with no page-level search affordance."

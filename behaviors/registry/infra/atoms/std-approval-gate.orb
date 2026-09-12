@@ -1198,6 +1198,24 @@
                 "tier": "domain"
               },
               {
+                "description": "Indicates a failure to load or process an approval request for review.",
+                "id": "evt_01KXG04EZ0HX0YV7MH4PXFQCM0",
+                "key": "ApprovalRequestReviewFailed",
+                "name": "ApprovalRequest review failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "load error, failed review, processing failure",
+                "tier": "internal"
+              },
+              {
                 "description": "Summons the review queue (host nav/affordance requests it).",
                 "id": "evt_01KXG04EZ05HP9JSWYNV5XV2QW",
                 "key": "OPEN",
@@ -1401,24 +1419,6 @@
                 "tier": "internal"
               },
               {
-                "description": "Indicates a failure to load or process an approval request for review.",
-                "id": "evt_01KXG04EZ0HX0YV7MH4PXFQCM0",
-                "key": "ApprovalRequestReviewFailed",
-                "name": "ApprovalRequest review failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ],
-                "synonyms": "load error, failed review, processing failure",
-                "tier": "internal"
-              },
-              {
                 "description": "The deny form committed; data carries the request id + the written reason.",
                 "id": "evt_01M169J81GZWG6Q9MYCQT7F92E",
                 "key": "CONFIRM_DENY",
@@ -1541,6 +1541,22 @@
                 "to": "idle"
               },
               {
+                "effects": [
+                  [
+                    "render-ui",
+                    "toast",
+                    {
+                      "dismissible": true,
+                      "message": [
+                        "str/concat",
+                        "Couldn't load the approval request — ",
+                        "@payload.error"
+                      ],
+                      "type": "alert",
+                      "variant": "error"
+                    }
+                  ]
+                ],
                 "event": "ApprovalRequestLoadFailed",
                 "eventId": "evt_01KXG04EZ0ZFHMHXT4NN21VK6N",
                 "from": "idle",
@@ -1593,6 +1609,28 @@
                 ],
                 "event": "APPROVAL_REPLAY_FAILED",
                 "eventId": "evt_01M169J81G3QNKWFZEEWM8N90Z",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "toast",
+                    {
+                      "dismissible": true,
+                      "message": [
+                        "str/concat",
+                        "Couldn't reopen the approval request — ",
+                        "@payload.error"
+                      ],
+                      "type": "alert",
+                      "variant": "error"
+                    }
+                  ]
+                ],
+                "event": "ApprovalRequestReviewFailed",
+                "eventId": "evt_01KXG04EZ0HX0YV7MH4PXFQCM0",
                 "from": "idle",
                 "to": "idle"
               },

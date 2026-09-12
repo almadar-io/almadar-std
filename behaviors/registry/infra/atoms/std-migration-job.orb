@@ -172,6 +172,15 @@
         "parent": "trt_01KYEH1JHZFRWA4GSJPS78WGXK",
         "renames": []
       },
+      "evt_01M2AFR5W3YPQTCR6YVEQ368M5": {
+        "bakedName": "CLOSE",
+        "curName": "CLOSE",
+        "id": "evt_01M2AFR5W3YPQTCR6YVEQ368M5",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KYEH1JHZFRWA4GSJPS78WGXK",
+        "renames": []
+      },
       "orb_01KYEH1JHZPWD4MVJ22QXP4X62": {
         "bakedName": "MigrationJobOrbital",
         "curName": "MigrationJobOrbital",
@@ -507,6 +516,10 @@
               "kind": "render-ui",
               "resolved": false,
               "resource": "@config.reviewSlot"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "toast"
             },
             {
               "kind": "set",
@@ -1121,6 +1134,11 @@
                 "tier": "domain"
               },
               {
+                "id": "evt_01M2AFR5W3YPQTCR6YVEQ368M5",
+                "key": "CLOSE",
+                "name": "Close"
+              },
+              {
                 "description": "migration.commit service result — committed count plus per-unit failures",
                 "id": "evt_01KYEH1JHZMFZQV6JQ7BF49TGJ",
                 "key": "COMMITTED",
@@ -1386,6 +1404,20 @@
                     {
                       "error": "@entity.error"
                     }
+                  ],
+                  [
+                    "render-ui",
+                    "toast",
+                    {
+                      "dismissible": true,
+                      "message": [
+                        "str/concat",
+                        "Couldn't list the source documents — ",
+                        "@payload.error"
+                      ],
+                      "type": "alert",
+                      "variant": "error"
+                    }
                   ]
                 ],
                 "event": "MIGRATION_CALL_FAILED",
@@ -1580,6 +1612,20 @@
                     {
                       "error": "@entity.error"
                     }
+                  ],
+                  [
+                    "render-ui",
+                    "toast",
+                    {
+                      "dismissible": true,
+                      "message": [
+                        "str/concat",
+                        "Couldn't fetch the document — ",
+                        "@payload.error"
+                      ],
+                      "type": "alert",
+                      "variant": "error"
+                    }
                   ]
                 ],
                 "event": "MIGRATION_CALL_FAILED",
@@ -1700,6 +1746,54 @@
                 "effects": [
                   [
                     "set",
+                    "@entity.status",
+                    "idle"
+                  ],
+                  [
+                    "set",
+                    "@entity.documents",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.document",
+                    {}
+                  ],
+                  [
+                    "set",
+                    "@entity.stats",
+                    {}
+                  ],
+                  [
+                    "set",
+                    "@entity.units",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.skipped",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.validationErrors",
+                    []
+                  ],
+                  [
+                    "render-ui",
+                    "@config.reviewSlot",
+                    null
+                  ]
+                ],
+                "event": "CLOSE",
+                "eventId": "evt_01M2AFR5W3YPQTCR6YVEQ368M5",
+                "from": "reviewing",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
                     "@entity.stats",
                     [
                       "object/merge",
@@ -1771,6 +1865,20 @@
                     "MIGRATION_FAILED",
                     {
                       "error": "@entity.error"
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "toast",
+                    {
+                      "dismissible": true,
+                      "message": [
+                        "str/concat",
+                        "Couldn't commit the import — ",
+                        "@payload.error"
+                      ],
+                      "type": "alert",
+                      "variant": "error"
                     }
                   ]
                 ],

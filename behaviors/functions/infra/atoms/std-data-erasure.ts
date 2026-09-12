@@ -595,6 +595,10 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
             'resource': '@config.reviewSlot',
           },
           {
+            'kind': 'render-ui',
+            'resource': 'toast',
+          },
+          {
             'kind': 'set',
             'resource': '@entity.id',
           },
@@ -1284,6 +1288,22 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
               'to': 'idle',
             },
             {
+              'effects': [
+                [
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': [
+                      'str/concat',
+                      'Couldn\'t load the erasure queue — ',
+                      '@payload.error',
+                    ],
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
               'event': 'ErasureLoadFailed',
               'from': 'idle',
               'to': 'idle',
@@ -1415,6 +1435,22 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
               'to': 'idle',
             },
             {
+              'effects': [
+                [
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': [
+                      'str/concat',
+                      'Couldn\'t scan for erasures to execute — ',
+                      '@payload.error',
+                    ],
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
               'event': 'ExecScanFailed',
               'from': 'idle',
               'to': 'idle',
@@ -1547,6 +1583,22 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
               'to': 'idle',
             },
             {
+              'effects': [
+                [
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': [
+                      'str/concat',
+                      'Couldn\'t scan for erasures to execute — ',
+                      '@payload.error',
+                    ],
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
               'event': 'ExecScanFailed',
               'from': 'execScanning',
               'to': 'idle',

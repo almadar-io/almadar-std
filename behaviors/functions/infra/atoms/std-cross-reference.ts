@@ -284,6 +284,10 @@ export function stdCrossReferenceCrossReferenceOrbital(params: StdCrossReference
             'resource': 'CrossRefLink',
           },
           {
+            'kind': 'render-ui',
+            'resource': 'toast',
+          },
+          {
             'kind': 'set',
             'resource': '@entity.filteredLinks',
           },
@@ -463,6 +467,20 @@ export function stdCrossReferenceCrossReferenceOrbital(params: StdCrossReference
               ],
             },
             {
+              'key': 'LinkOpFailed',
+              'name': 'Link op failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
               'key': 'LinkCreated',
               'name': 'Link created',
               'payloadSchema': [
@@ -511,20 +529,6 @@ export function stdCrossReferenceCrossReferenceOrbital(params: StdCrossReference
                     },
                   ],
                   'type': '[object]',
-                },
-              ],
-            },
-            {
-              'key': 'LinkOpFailed',
-              'name': 'Link op failed',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
                 },
               ],
             },
@@ -632,6 +636,27 @@ export function stdCrossReferenceCrossReferenceOrbital(params: StdCrossReference
                 ],
               ],
               'event': 'LinksFetched',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': [
+                      'str/concat',
+                      'Couldn\'t update the link — ',
+                      '@payload.error',
+                    ],
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
+              'event': 'LinkOpFailed',
               'from': 'idle',
               'to': 'idle',
             },

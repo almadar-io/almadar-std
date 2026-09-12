@@ -438,6 +438,10 @@
               "resource": "main"
             },
             {
+              "kind": "render-ui",
+              "resource": "toast"
+            },
+            {
               "kind": "set",
               "resource": "@entity.cancelReason"
             },
@@ -1789,6 +1793,79 @@
                 "eventId": "evt_01KXG04HYZBYQHY84BBG8M2BWY",
                 "from": "running",
                 "to": "cancelled"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "name": "check-circle",
+                          "size": "lg",
+                          "type": "icon"
+                        },
+                        {
+                          "align": "center",
+                          "content": "Complete",
+                          "type": "typography",
+                          "variant": "h2"
+                        },
+                        {
+                          "align": "center",
+                          "color": "muted",
+                          "content": "@entity.completionMessage",
+                          "type": "typography",
+                          "variant": "body"
+                        },
+                        {
+                          "allowNavigation": false,
+                          "currentStep": "@entity.totalSteps",
+                          "steps": "@entity.wizardSteps",
+                          "type": "wizard-progress"
+                        },
+                        {
+                          "action": "RESTART",
+                          "icon": "rotate-ccw",
+                          "label": "Start a new wizard",
+                          "type": "button",
+                          "variant": "secondary"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "WizardSaved",
+                "eventId": "evt_01KXG04HYZC94YTRGQEVS53T5M",
+                "from": "completed",
+                "to": "completed"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "toast",
+                    {
+                      "dismissible": true,
+                      "message": [
+                        "str/concat",
+                        "Couldn't save the wizard — ",
+                        "@payload.error"
+                      ],
+                      "type": "alert",
+                      "variant": "error"
+                    }
+                  ]
+                ],
+                "event": "WizardSaveFailed",
+                "eventId": "evt_01KXG04HYZ9CJ2XSJH7A472NNE",
+                "from": "completed",
+                "to": "completed"
               },
               {
                 "effects": [

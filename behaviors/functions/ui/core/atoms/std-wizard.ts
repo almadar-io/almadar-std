@@ -520,6 +520,10 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
             'resource': 'main',
           },
           {
+            'kind': 'render-ui',
+            'resource': 'toast',
+          },
+          {
             'kind': 'set',
             'resource': '@entity.cancelReason',
           },
@@ -1840,6 +1844,77 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
               'event': 'CANCEL',
               'from': 'running',
               'to': 'cancelled',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'name': 'check-circle',
+                        'size': 'lg',
+                        'type': 'icon',
+                      },
+                      {
+                        'align': 'center',
+                        'content': 'Complete',
+                        'type': 'typography',
+                        'variant': 'h2',
+                      },
+                      {
+                        'align': 'center',
+                        'color': 'muted',
+                        'content': '@entity.completionMessage',
+                        'type': 'typography',
+                        'variant': 'body',
+                      },
+                      {
+                        'allowNavigation': false,
+                        'currentStep': '@entity.totalSteps',
+                        'steps': '@entity.wizardSteps',
+                        'type': 'wizard-progress',
+                      },
+                      {
+                        'action': 'RESTART',
+                        'icon': 'rotate-ccw',
+                        'label': 'Start a new wizard',
+                        'type': 'button',
+                        'variant': 'secondary',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'WizardSaved',
+              'from': 'completed',
+              'to': 'completed',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': [
+                      'str/concat',
+                      'Couldn\'t save the wizard — ',
+                      '@payload.error',
+                    ],
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
+              'event': 'WizardSaveFailed',
+              'from': 'completed',
+              'to': 'completed',
             },
             {
               'effects': [

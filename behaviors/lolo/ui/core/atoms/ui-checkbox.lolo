@@ -3,6 +3,7 @@ app ui-checkbox "1.0.0"
 orbital CheckboxOrbital {
   entity CheckboxItem [runtime] {
     id : string!
+    checked : boolean @intrinsic
   }
 
   trait CheckboxRender -> @rebindable CheckboxItem [interaction, instance] {
@@ -10,9 +11,20 @@ orbital CheckboxOrbital {
 
     state idle {
       INIT -> idle
+        (set @entity.checked @config.checked)
         (render-ui main {
           className: @config.className
-          checked: @config.checked
+          checked: @entity.checked
+          defaultChecked: @config.defaultChecked
+          label: @config.label
+          onChange: @config.onChange
+          type: checkbox
+        })
+      CHANGE -> idle
+        (set @entity.checked ?checked)
+        (render-ui main {
+          className: @config.className
+          checked: @entity.checked
           defaultChecked: @config.defaultChecked
           label: @config.label
           onChange: @config.onChange
@@ -21,9 +33,17 @@ orbital CheckboxOrbital {
     }
 
     emits {
-      @config.onChange -> external { }
+      @config.onChange -> external {
+        checked : boolean!
+      }
         @description "onChange handler or declarative event key for trait dispatch"
         @tier "essential"
+    }
+
+    listens {
+      CHANGE {
+        checked : boolean!
+      }
     }
 
     config {

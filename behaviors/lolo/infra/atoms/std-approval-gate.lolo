@@ -127,6 +127,7 @@ orbital ApprovalGateOrbital {
         })
       ApprovalRequestLoaded -> idle
       ApprovalRequestLoadFailed -> idle
+        (notify error (str/concat "Couldn't load the approval request — " ?error))
       ;; A replay failure can also arrive while the queue is closed.
       APPROVAL_REPLAY_FAILED -> idle
         (set @entity.id ?requestId)
@@ -137,6 +138,8 @@ orbital ApprovalGateOrbital {
           emit: { failure: ApprovalRequestReviewFailed, success: ApprovalRequestReviewed }
         })
         (notify error "Approval could not be applied — the request was reopened.")
+      ApprovalRequestReviewFailed -> idle
+        (notify error (str/concat "Couldn't reopen the approval request — " ?error))
       OPEN -> loading when @config.enabled
         (fetch ApprovalRequest {
           filter: ["=", (object/get @entity status), "pending"]

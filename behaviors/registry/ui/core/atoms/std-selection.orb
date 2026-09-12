@@ -260,6 +260,14 @@
               "tier": "presentation",
               "type": "number"
             },
+            "searchField": {
+              "default": "name",
+              "description": "Name the field on this entity the search box's str/includes filter matches against. Declared, never inferred: an entity with no `name` column must set this to a real field (e.g. title, label) or the search box can never match a row.",
+              "label": "Which column does the search box match against?",
+              "synonyms": "search column, search on field, match field, search key",
+              "tier": "policy",
+              "type": "string"
+            },
             "searchPlaceholder": {
               "default": "Search…",
               "description": "Hint text inside the pick-list search box.",
@@ -291,6 +299,10 @@
             {
               "kind": "render-ui",
               "resource": "main"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "toast"
             }
           ],
           "emits": [
@@ -783,7 +795,7 @@
                           [
                             "object/get",
                             "@entity",
-                            "name"
+                            "@config.searchField"
                           ],
                           "@payload.searchTerm"
                         ]
@@ -856,6 +868,28 @@
                 ],
                 "event": "REFETCH_PAGE",
                 "eventId": "evt_01M11H7B3JKPSJZP3X1HY8R9F1",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "toast",
+                    {
+                      "dismissible": true,
+                      "message": [
+                        "str/concat",
+                        "Couldn't refresh the list — ",
+                        "@payload.error"
+                      ],
+                      "type": "alert",
+                      "variant": "error"
+                    }
+                  ]
+                ],
+                "event": "SelectableItemLoadFailed",
+                "eventId": "evt_01KXG04HJXHFX7K8J0D6QDFY2G",
                 "from": "idle",
                 "to": "idle"
               },

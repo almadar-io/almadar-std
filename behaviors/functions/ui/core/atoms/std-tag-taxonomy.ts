@@ -30,7 +30,7 @@ const ALIAS = 'TagTaxonomy';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdTagTaxonomyEventKey = 'CANCEL_TAG' | 'COMMIT_TAG' | 'INIT' | 'LEVEL_RELOAD' | 'NEW_TAG' | 'SELECT_TAG' | 'SHOW_ROOT' | 'TagCreateFailed' | 'TagCreated' | 'TagLoadFailed' | 'TagLoaded' | 'TagSelected';
+export type StdTagTaxonomyEventKey = 'CANCEL_TAG' | 'CLOSE' | 'COMMIT_TAG' | 'INIT' | 'LEVEL_RELOAD' | 'NEW_TAG' | 'SELECT_TAG' | 'SHOW_ROOT' | 'TagCreateFailed' | 'TagCreated' | 'TagLoadFailed' | 'TagLoaded' | 'TagSelected';
 
 /**
  * Payload shape for the `SELECT_TAG` event.
@@ -715,6 +715,10 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
               'name': 'Cancel Tag',
               'synonyms': 'cancel, back',
               'tier': 'internal',
+            },
+            {
+              'key': 'CLOSE',
+              'name': 'Close',
             },
             {
               'description': 'A new tag row persisted; the open level refetches to show it.',
@@ -1490,6 +1494,47 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                 ],
               ],
               'event': 'CANCEL_TAG',
+              'from': 'creating',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Loading…',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+                [
+                  'emit',
+                  'LEVEL_RELOAD',
+                  {
+                    'tagId': '@entity.id',
+                  },
+                ],
+              ],
+              'event': 'CLOSE',
               'from': 'creating',
               'to': 'loading',
             },

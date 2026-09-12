@@ -552,6 +552,14 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
             'tier': 'presentation',
             'type': 'number',
           },
+          'searchField': {
+            'default': 'name',
+            'description': 'Name the field on this entity the search box\'s str/includes filter matches against. Declared, never inferred: an entity with no `name` column must set this to a real field (e.g. title, caption) or the search box can never match a row.',
+            'label': 'Which column does the search box match against?',
+            'synonyms': 'search column, search on field, match field, search key',
+            'tier': 'policy',
+            'type': 'string',
+          },
           'searchPlaceholder': {
             'default': 'Search…',
             'description': 'Hint text inside the gallery search box (e.g. \'Search photos…\').',
@@ -580,6 +588,10 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
           {
             'kind': 'render-ui',
             'resource': 'modal',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'toast',
           },
           {
             'kind': 'set',
@@ -1069,7 +1081,7 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
                         [
                           'object/get',
                           '@entity',
-                          'name',
+                          '@config.searchField',
                         ],
                         '@payload.searchTerm',
                       ],
@@ -1143,6 +1155,27 @@ export function stdGalleryGalleryItemOrbital(params: StdGalleryGalleryItemOrbita
                 ],
               ],
               'event': 'REFETCH_PAGE',
+              'from': 'browsing',
+              'to': 'browsing',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': [
+                      'str/concat',
+                      'Couldn\'t refresh the gallery — ',
+                      '@payload.error',
+                    ],
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
+              'event': 'GalleryItemLoadFailed',
               'from': 'browsing',
               'to': 'browsing',
             },

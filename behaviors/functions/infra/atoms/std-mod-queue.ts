@@ -573,6 +573,10 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
             'resolved': false,
             'resource': '@config.reviewSlot',
           },
+          {
+            'kind': 'render-ui',
+            'resource': 'toast',
+          },
         ],
         'emits': [
           {
@@ -1325,6 +1329,22 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
               'to': 'idle',
             },
             {
+              'effects': [
+                [
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': [
+                      'str/concat',
+                      'Couldn\'t load the moderation queue — ',
+                      '@payload.error',
+                    ],
+                    'type': 'alert',
+                    'variant': 'error',
+                  },
+                ],
+              ],
               'event': 'ModQueueItemLoadFailed',
               'from': 'idle',
               'to': 'idle',

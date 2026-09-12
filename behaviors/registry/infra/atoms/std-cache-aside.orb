@@ -729,6 +729,10 @@
             {
               "kind": "render-ui",
               "resource": "main"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "toast"
             }
           ],
           "emits": [
@@ -962,6 +966,38 @@
                 "tier": "internal"
               },
               {
+                "description": "Indicates a failure to update a cached entry.",
+                "id": "evt_01KXG04F59V9CZZME6DBPAT052",
+                "key": "CacheEntryUpdateFailed",
+                "name": "CacheEntry update failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "error, failure, problem, unsuccessful",
+                "tier": "internal"
+              },
+              {
+                "description": "Signals that a cached entry's data has been modified.",
+                "id": "evt_01KXG04F59YV599S886ZN4BA5E",
+                "key": "CacheEntryUpdated",
+                "name": "CacheEntry updated",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "modified, refreshed, changed, updated",
+                "tier": "presentation"
+              },
+              {
                 "id": "evt_01KXG04F59871HBKNA1CFXHGC8",
                 "key": "INVALIDATE",
                 "name": "Invalidate"
@@ -1017,38 +1053,6 @@
                 "id": "evt_01KXG04F59548SN2QBGQCZG3PS",
                 "key": "REFRESH",
                 "name": "Refresh"
-              },
-              {
-                "description": "Signals that a cached entry's data has been modified.",
-                "id": "evt_01KXG04F59YV599S886ZN4BA5E",
-                "key": "CacheEntryUpdated",
-                "name": "CacheEntry updated",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ],
-                "synonyms": "modified, refreshed, changed, updated",
-                "tier": "presentation"
-              },
-              {
-                "description": "Indicates a failure to update a cached entry.",
-                "id": "evt_01KXG04F59V9CZZME6DBPAT052",
-                "key": "CacheEntryUpdateFailed",
-                "name": "CacheEntry update failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ],
-                "synonyms": "error, failure, problem, unsuccessful",
-                "tier": "internal"
               }
             ],
             "states": [
@@ -1250,6 +1254,46 @@
                 "eventId": "evt_01KXG04F59MV2P5038PWDJ0DR2",
                 "from": "loading",
                 "to": "error"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "toast",
+                    {
+                      "dismissible": true,
+                      "message": [
+                        "str/concat",
+                        "Couldn't update the cache entry — ",
+                        "@payload.error"
+                      ],
+                      "type": "alert",
+                      "variant": "error"
+                    }
+                  ]
+                ],
+                "event": "CacheEntryUpdateFailed",
+                "eventId": "evt_01KXG04F59V9CZZME6DBPAT052",
+                "from": "loading",
+                "to": "loading"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "CacheEntry",
+                    {
+                      "emit": {
+                        "failure": "CacheEntryLoadFailed",
+                        "success": "CacheEntryLoaded"
+                      }
+                    }
+                  ]
+                ],
+                "event": "CacheEntryUpdated",
+                "eventId": "evt_01KXG04F59YV599S886ZN4BA5E",
+                "from": "loading",
+                "to": "loading"
               },
               {
                 "effects": [

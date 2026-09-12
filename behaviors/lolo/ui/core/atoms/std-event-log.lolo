@@ -256,6 +256,8 @@ orbital EventLogOrbital {
           limit: @config.pageSize
           offset: ["*", ["-", ?page, 1], @config.pageSize]
         })
+      EventLogLoadFailed -> viewing
+        (notify error (str/concat "Couldn't refresh the event log — " ?error))
       EventLogLoaded -> viewing
         (set @entity.filterChips (array/prepend (array/map @config.kindOptions (fn k {
           icon: (object/get @k icon circle)

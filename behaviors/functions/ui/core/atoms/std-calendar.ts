@@ -89,6 +89,8 @@ export interface StdCalendarConfig {
   include?: string[];
   /** Default: `""` */
   onEventClick?: string;
+  /** Default: `"name"` */
+  searchField?: string;
   /** Default: `"Search…"` */
   searchPlaceholder?: string;
   /** Default: `"date"` */
@@ -855,6 +857,14 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
             'synonyms': 'open event, event click, select event, chip click',
             'tier': 'presentation',
             'type': 'event',
+          },
+          'searchField': {
+            'default': 'name',
+            'description': 'Name the field on this entity the search box\'s str/includes filter matches against. Declared, never inferred: an entity with no `name` column must set this to a real field (e.g. title, description) or the search box can never match a row.',
+            'label': 'Which column does the search box match against?',
+            'synonyms': 'search column, search on field, match field, search key',
+            'tier': 'policy',
+            'type': 'string',
           },
           'searchPlaceholder': {
             'default': 'Search…',
@@ -1711,7 +1721,7 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                         [
                           'object/get',
                           '@entity',
-                          'name',
+                          '@config.searchField',
                         ],
                         '@payload.searchTerm',
                       ],
