@@ -3,6 +3,8 @@ app std-notification-center "1.0.0"
 type NotifRow = { id : string, recipient : string, channel : string, message : string, severity : string, dispatched : boolean, error : string, recordedAt : number }
 type PushCreds = { endpoint : string, p256dh : string, auth : string }
 orbital NotificationCenterOrbital {
+    uses Button from "std/behaviors/ui-button"
+
     type PUSH_SUBSCRIBED = Event { endpoint : string, p256dh : string, auth : string } "browser/push-subscribe resolved — the credentials arrive FLAT on the payload (?endpoint, ?p256dh, ?auth), not wrapped in a `result` field."
 
   entity NotificationPreference [persistent: notificationPreferences] {
@@ -101,10 +103,26 @@ orbital NotificationCenterOrbital {
     }
   }
 
+  trait PreferenceEditorButtonSubscribe = Button.traits.ButtonRender -> NotificationPreference { config { label: "Enable push notifications", action: OPEN_SUBSCRIBE } }
+
+  trait PreferenceEditorButtonDigest = Button.traits.ButtonRender -> NotificationPreference { config { label: "View notification digest", action: OPEN_DIGEST } }
+
   trait PreferenceEditor -> NotificationPreference [lifecycle, instance] {
     initial: idle
 
     state idle {
+      INIT -> idle
+        (fetch NotificationPreference)
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: md
+          children: [@trait.PreferenceEditorButtonSubscribe, @trait.PreferenceEditorButtonDigest]
+        })
+      OPEN_SUBSCRIBE -> idle
+        (navigate "/notifications/subscribe")
+      OPEN_DIGEST -> idle
+        (navigate "/notifications/digest")
       SAVE_PREFERENCE -> idle
         (persist create NotificationPreference {
           channel: ?channel
@@ -288,7 +306,7 @@ orbital NotificationCenterOrbital {
     }
   }
 
-  page "/notifications/preferences" as NotificationPreferencesPage -> PreferenceEditor
+  page "/notifications/preferences" as NotificationPreferencesPage -> PreferenceEditor, PreferenceEditorButtonSubscribe, PreferenceEditorButtonDigest
   page "/notifications/subscribe" as PushSubscribePage -> PushSubscriber
   page "/notifications/digest" as NotificationDigestPage -> DigestDrain
 }

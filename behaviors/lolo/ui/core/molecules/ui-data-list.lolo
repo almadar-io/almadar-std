@@ -38,6 +38,12 @@ orbital DataListOrbital {
     icon : icon
     variant : "primary" | "secondary" | "danger" | "ghost"
   }
+  type DataListRelationsDataValueItem = {
+    value : string!
+    label : string!
+    description : string
+    disabled : boolean
+  }
 
   entity DataListItem [runtime] {
     id : string!
@@ -87,6 +93,7 @@ orbital DataListOrbital {
           sortBy: @config.sortBy
           sortDirection: @config.sortDirection
           look: @config.look
+          relationsData: @config.relationsData
           type: data-list
         })
       INIT -> idle when (not @config.selfFetch)
@@ -128,6 +135,7 @@ orbital DataListOrbital {
           sortBy: @config.sortBy
           sortDirection: @config.sortDirection
           look: @config.look
+          relationsData: @config.relationsData
           type: data-list
         })
       DataListLoaded -> idle
@@ -169,6 +177,7 @@ orbital DataListOrbital {
           sortBy: @config.sortBy
           sortDirection: @config.sortDirection
           look: @config.look
+          relationsData: @config.relationsData
           type: data-list
         })
     }
@@ -351,6 +360,10 @@ orbital DataListOrbital {
       look : "dense" | "spacious" | "striped" | "borderless" | "card-rows" = dense
         @label "Look"
         @description "Layer 2 visual treatment — mirrors the `entity-table` look enum so data-grid / data-list / entity-table share one knob name from authors."
+        @tier "presentation"
+      relationsData : Map string [DataListRelationsDataValueItem] = {}
+        @label "Relations Data"
+        @description "Relation display data: { fieldName: [{value, label}] } — injected server-side by the runtime (relation-option injection) or bound by compiled codegen; resolves stored foreign ids to display names for a field whose type is relation. Same contract DetailPanel takes."
         @tier "presentation"
       selfFetch : boolean = true
         @label "Fetch its own rows on mount?"

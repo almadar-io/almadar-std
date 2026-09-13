@@ -94,6 +94,8 @@ export interface StdUiTableViewConfig {
   /** Default: `0` */
   pageSize?: number;
   positionEvent?: string;
+  /** Default: `{}` */
+  relationsData?: Record<string, TraitConfig>;
   reorderEvent?: string;
   /** Default: `"SELECT"` */
   selectEvent?: string;

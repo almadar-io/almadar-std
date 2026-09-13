@@ -108,9 +108,9 @@ export interface StdUiCanvasConfig {
   /** Default: `[]` */
   fogOfWar?: unknown;
   isLoading?: boolean;
-  /** Default: `{"item":"Item"}` */
+  /** Default: `{"item":"INIT"}` */
   keyMap?: Record<string, TraitConfig>;
-  /** Default: `{"item":"Item"}` */
+  /** Default: `{"item":"INIT"}` */
   keyUpMap?: Record<string, TraitConfig>;
   lighting?: EntityRow;
   /** Default: `"2d"` */

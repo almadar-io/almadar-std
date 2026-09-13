@@ -881,9 +881,189 @@ orbital RatingReviewOrbital {
           type: stack
         })
       MARK_HELPFUL -> viewing
+        (set @entity.reviews (array/map @entity.reviews (fn row (if ["=", (object/get @row id ""), ?id] (object/merge @row { helpful: ["+", (object/get @row helpful 0), 1] }) @row))))
+        (set @entity.reviewsSource (array/map @entity.reviewsSource (fn row (if ["=", (object/get @row id ""), ?id] (object/merge @row { helpful: ["+", (object/get @row helpful 0), 1] }) @row))))
         (render-ui main {
-          title: "Recording…"
-          type: loading-state
+          children: [{
+            align: center
+            children: [{
+              children: [{
+                align: center
+                children: [{ name: star, type: icon }, {
+                  content: Reviews
+                  type: typography
+                  variant: h3
+                }, {
+                  color: muted
+                  content: "·"
+                  type: typography
+                }, {
+                  content: @entity.averageRating
+                  type: typography
+                  variant: h3
+                }, {
+                  color: warning
+                  name: star
+                  type: icon
+                }, {
+                  color: muted
+                  content: "·"
+                  type: typography
+                }, {
+                  color: muted
+                  content: @entity.totalReviews
+                  type: typography
+                  variant: h4
+                }, {
+                  color: muted
+                  content: reviews
+                  type: typography
+                  variant: h4
+                }]
+                direction: horizontal
+                gap: sm
+                type: stack
+              }, {
+                color: muted
+                content: @config.subjectTitle
+                type: typography
+                variant: caption
+              }]
+              direction: vertical
+              gap: xs
+              type: stack
+            }, {
+              action: WRITE_REVIEW
+              icon: edit
+              label: @config.writeLabel
+              type: button
+              variant: primary
+            }]
+            direction: horizontal
+            gap: md
+            justify: between
+            type: stack
+          }, {
+            children: [{
+              children: [{
+                content: "Rating distribution"
+                type: typography
+                variant: h4
+              }, {
+                entity: @entity.starDistribution
+                fields: []
+                gap: sm
+                renderItem: (fn bar {
+                  align: center
+                  children: [{
+                    content: @bar.label
+                    type: typography
+                    variant: caption
+                  }, {
+                    max: 100
+                    type: progress-bar
+                    value: @bar.percentage
+                    variant: primary
+                  }, {
+                    color: muted
+                    content: @bar.percentage
+                    type: typography
+                    variant: caption
+                  }, {
+                    color: muted
+                    content: "%"
+                    type: typography
+                    variant: caption
+                  }]
+                  direction: horizontal
+                  gap: md
+                  type: stack
+                })
+                type: data-list
+              }]
+              direction: vertical
+              gap: sm
+              type: stack
+            }]
+            look: @config.cardLook
+            type: card
+          }, {
+            activeTab: @entity.currentSort
+            tabChangeEvent: CHANGE_SORT
+            tabs: @config.sortOptions
+            type: tabs
+          }, {
+            entity: @entity.reviews
+            fields: []
+            gap: md
+            renderItem: (fn review {
+              children: [{
+                children: [{
+                  align: center
+                  children: [{ name: @review.avatarIcon, type: icon }, {
+                    content: @review.authorName
+                    type: typography
+                    weight: bold
+                  }, {
+                    color: muted
+                    content: "·"
+                    type: typography
+                  }, {
+                    color: warning
+                    name: star
+                    type: icon
+                  }, {
+                    content: @review.rating
+                    type: typography
+                    weight: bold
+                  }, {
+                    color: muted
+                    content: "·"
+                    type: typography
+                  }, {
+                    color: muted
+                    content: @review.createdAt
+                    type: typography
+                    variant: caption
+                  }]
+                  direction: horizontal
+                  gap: sm
+                  type: stack
+                }, {
+                  content: @review.comment
+                  type: typography
+                  variant: body
+                }, {
+                  align: center
+                  children: [{
+                    action: MARK_HELPFUL
+                    actionPayload: { id: @review.id }
+                    icon: thumbs-up
+                    label: Helpful
+                    type: button
+                    variant: ghost
+                  }, {
+                    color: muted
+                    content: @review.helpful
+                    type: typography
+                    variant: caption
+                  }]
+                  direction: horizontal
+                  gap: sm
+                  type: stack
+                }]
+                direction: vertical
+                gap: sm
+                type: stack
+              }]
+              look: @config.cardLook
+              type: card
+            })
+            type: data-list
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
         })
     }
 
@@ -1539,7 +1719,38 @@ orbital RatingReviewOrbital {
     }
   }
 
-  page "/reviews" as RatingReviewPage -> RatingReviewBoard
+  trait RatingReviewPageNav -> ReviewView [interaction, instance] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+        (render-ui main {
+          action: OPEN_REVIEW_FORM
+          icon: external-link
+          label: "Open review form"
+          type: button
+          variant: ghost
+        })
+      OPEN_REVIEW_FORM -> ready
+        (navigate "/reviews/new")
+    }
+
+    emits {
+      OPEN_REVIEW_FORM
+        @description "Opens the standalone review-submission page."
+        @synonyms "open form, new page, direct link"
+        @tier "presentation"
+    }
+
+    listens {
+      OPEN_REVIEW_FORM
+        @description "Opens the standalone review-submission page in place of the inline composer."
+        @synonyms "open form, new page, direct link"
+        @tier "presentation"
+    }
+  }
+
+  page "/reviews" as RatingReviewPage -> RatingReviewBoard, RatingReviewPageNav
 
   page "/reviews/new" as RatingReviewSubmitPage -> RatingReviewSubmit
 }

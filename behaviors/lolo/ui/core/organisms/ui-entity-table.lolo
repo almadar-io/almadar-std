@@ -48,6 +48,12 @@ orbital EntityTableOrbital {
     variant : "default" | "danger"
     event : event
   }
+  type EntityTableRelationsDataValueItem = {
+    value : string!
+    label : string!
+    description : string
+    disabled : boolean
+  }
 
   entity EntityTableItem [runtime] {
     id : string!
@@ -87,6 +93,7 @@ orbital EntityTableOrbital {
           headerActions: @config.headerActions
           showTotal: @config.showTotal
           look: @config.look
+          relationsData: @config.relationsData
           type: entity-table
         })
       INIT -> idle when (not @config.selfFetch)
@@ -118,6 +125,7 @@ orbital EntityTableOrbital {
           headerActions: @config.headerActions
           showTotal: @config.showTotal
           look: @config.look
+          relationsData: @config.relationsData
           type: entity-table
         })
       EntityTableLoaded -> idle
@@ -149,6 +157,7 @@ orbital EntityTableOrbital {
           headerActions: @config.headerActions
           showTotal: @config.showTotal
           look: @config.look
+          relationsData: @config.relationsData
           type: entity-table
         })
     }
@@ -271,6 +280,10 @@ orbital EntityTableOrbital {
       look : "dense" | "spacious" | "striped" | "borderless" | "card-rows" = dense
         @label "Look"
         @description "Layer 2 visual treatment — orthogonal to the semantic variant."
+        @tier "presentation"
+      relationsData : Map string [EntityTableRelationsDataValueItem] = {}
+        @label "Relations Data"
+        @description "Relation display data: { fieldName: [{value, label}] } — injected server-side by the runtime (relation-option injection) or bound by compiled codegen; resolves stored foreign ids to display names for a column whose field is relation-typed. Same contract DetailPanel takes."
         @tier "presentation"
       selfFetch : boolean = true
         @label "Fetch its own rows on mount?"

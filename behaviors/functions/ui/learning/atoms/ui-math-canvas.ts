@@ -75,9 +75,9 @@ export interface StdUiMathCanvasConfig {
   /** Default: `false` */
   interactive?: boolean;
   isLoading?: boolean;
-  /** Default: `{"item":"Item"}` */
+  /** Default: `{"item":"INIT"}` */
   keyMap?: Record<string, TraitConfig>;
-  /** Default: `{"item":"Item"}` */
+  /** Default: `{"item":"INIT"}` */
   keyUpMap?: Record<string, TraitConfig>;
   /** Default: `12` */
   labelFontSize?: number;

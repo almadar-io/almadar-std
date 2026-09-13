@@ -181,6 +181,21 @@ export function stdRatingReviewRatingReviewSubmitTrait(params: StdRatingReviewPa
   });
 }
 
+/** Trait descriptor: `RatingReview.traits.RatingReviewPageNav`. */
+export function stdRatingReviewRatingReviewPageNavTrait(params: StdRatingReviewParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.RatingReviewPageNav`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
 /** Page descriptor: `RatingReview.pages.RatingReviewPage`. */
 export function stdRatingReviewRatingReviewPagePage(params: StdRatingReviewParams): PageRefObject {
   return makePageRef({
@@ -215,6 +230,7 @@ export function stdRatingReview(params: StdRatingReviewParams): OrbitalDefinitio
     traits: [
       stdRatingReviewRatingReviewBoardTrait(params),
       stdRatingReviewRatingReviewSubmitTrait(params),
+      stdRatingReviewRatingReviewPageNavTrait(params),
     ],
     pages: [
       stdRatingReviewRatingReviewPagePage(params),
@@ -224,7 +240,7 @@ export function stdRatingReview(params: StdRatingReviewParams): OrbitalDefinitio
 }
 
 type _StdRatingReviewEntityName = 'ReviewView';
-type _StdRatingReviewListenTraitName = 'RatingReviewBoard' | 'RatingReviewSubmit';
+type _StdRatingReviewListenTraitName = 'RatingReviewBoard' | 'RatingReviewSubmit' | 'RatingReviewPageNav';
 
 /**
  * Tunable params for the RatingReviewOrbital orbital.
@@ -260,7 +276,7 @@ export interface StdRatingReviewRatingReviewOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'RatingReviewBoard' | 'RatingReviewSubmit',
+    'RatingReviewBoard' | 'RatingReviewSubmit' | 'RatingReviewPageNav',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -2584,11 +2600,336 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
             {
               'effects': [
                 [
+                  'set',
+                  '@entity.reviews',
+                  [
+                    'array/map',
+                    '@entity.reviews',
+                    [
+                      'fn',
+                      'row',
+                      [
+                        'if',
+                        [
+                          '=',
+                          [
+                            'object/get',
+                            '@row',
+                            'id',
+                            '',
+                          ],
+                          '@payload.id',
+                        ],
+                        [
+                          'object/merge',
+                          '@row',
+                          {
+                            'helpful': [
+                              '+',
+                              [
+                                'object/get',
+                                '@row',
+                                'helpful',
+                                0,
+                              ],
+                              1,
+                            ],
+                          },
+                        ],
+                        '@row',
+                      ],
+                    ],
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.reviewsSource',
+                  [
+                    'array/map',
+                    '@entity.reviewsSource',
+                    [
+                      'fn',
+                      'row',
+                      [
+                        'if',
+                        [
+                          '=',
+                          [
+                            'object/get',
+                            '@row',
+                            'id',
+                            '',
+                          ],
+                          '@payload.id',
+                        ],
+                        [
+                          'object/merge',
+                          '@row',
+                          {
+                            'helpful': [
+                              '+',
+                              [
+                                'object/get',
+                                '@row',
+                                'helpful',
+                                0,
+                              ],
+                              1,
+                            ],
+                          },
+                        ],
+                        '@row',
+                      ],
+                    ],
+                  ],
+                ],
+                [
                   'render-ui',
                   'main',
                   {
-                    'title': 'Recording…',
-                    'type': 'loading-state',
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'align': 'center',
+                                'children': [
+                                  {
+                                    'name': 'star',
+                                    'type': 'icon',
+                                  },
+                                  {
+                                    'content': 'Reviews',
+                                    'type': 'typography',
+                                    'variant': 'h3',
+                                  },
+                                  {
+                                    'color': 'muted',
+                                    'content': '·',
+                                    'type': 'typography',
+                                  },
+                                  {
+                                    'content': '@entity.averageRating',
+                                    'type': 'typography',
+                                    'variant': 'h3',
+                                  },
+                                  {
+                                    'color': 'warning',
+                                    'name': 'star',
+                                    'type': 'icon',
+                                  },
+                                  {
+                                    'color': 'muted',
+                                    'content': '·',
+                                    'type': 'typography',
+                                  },
+                                  {
+                                    'color': 'muted',
+                                    'content': '@entity.totalReviews',
+                                    'type': 'typography',
+                                    'variant': 'h4',
+                                  },
+                                  {
+                                    'color': 'muted',
+                                    'content': 'reviews',
+                                    'type': 'typography',
+                                    'variant': 'h4',
+                                  },
+                                ],
+                                'direction': 'horizontal',
+                                'gap': 'sm',
+                                'type': 'stack',
+                              },
+                              {
+                                'color': 'muted',
+                                'content': '@config.subjectTitle',
+                                'type': 'typography',
+                                'variant': 'caption',
+                              },
+                            ],
+                            'direction': 'vertical',
+                            'gap': 'xs',
+                            'type': 'stack',
+                          },
+                          {
+                            'action': 'WRITE_REVIEW',
+                            'icon': 'edit',
+                            'label': '@config.writeLabel',
+                            'type': 'button',
+                            'variant': 'primary',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'justify': 'between',
+                        'type': 'stack',
+                      },
+                      {
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'content': 'Rating distribution',
+                                'type': 'typography',
+                                'variant': 'h4',
+                              },
+                              {
+                                'entity': '@entity.starDistribution',
+                                'fields': [],
+                                'gap': 'sm',
+                                'renderItem': [
+                                  'fn',
+                                  'bar',
+                                  {
+                                    'align': 'center',
+                                    'children': [
+                                      {
+                                        'content': '@bar.label',
+                                        'type': 'typography',
+                                        'variant': 'caption',
+                                      },
+                                      {
+                                        'max': 100,
+                                        'type': 'progress-bar',
+                                        'value': '@bar.percentage',
+                                        'variant': 'primary',
+                                      },
+                                      {
+                                        'color': 'muted',
+                                        'content': '@bar.percentage',
+                                        'type': 'typography',
+                                        'variant': 'caption',
+                                      },
+                                      {
+                                        'color': 'muted',
+                                        'content': '%',
+                                        'type': 'typography',
+                                        'variant': 'caption',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                    'gap': 'md',
+                                    'type': 'stack',
+                                  },
+                                ],
+                                'type': 'data-list',
+                              },
+                            ],
+                            'direction': 'vertical',
+                            'gap': 'sm',
+                            'type': 'stack',
+                          },
+                        ],
+                        'look': '@config.cardLook',
+                        'type': 'card',
+                      },
+                      {
+                        'activeTab': '@entity.currentSort',
+                        'tabChangeEvent': 'CHANGE_SORT',
+                        'tabs': '@config.sortOptions',
+                        'type': 'tabs',
+                      },
+                      {
+                        'entity': '@entity.reviews',
+                        'fields': [],
+                        'gap': 'md',
+                        'renderItem': [
+                          'fn',
+                          'review',
+                          {
+                            'children': [
+                              {
+                                'children': [
+                                  {
+                                    'align': 'center',
+                                    'children': [
+                                      {
+                                        'name': '@review.avatarIcon',
+                                        'type': 'icon',
+                                      },
+                                      {
+                                        'content': '@review.authorName',
+                                        'type': 'typography',
+                                        'weight': 'bold',
+                                      },
+                                      {
+                                        'color': 'muted',
+                                        'content': '·',
+                                        'type': 'typography',
+                                      },
+                                      {
+                                        'color': 'warning',
+                                        'name': 'star',
+                                        'type': 'icon',
+                                      },
+                                      {
+                                        'content': '@review.rating',
+                                        'type': 'typography',
+                                        'weight': 'bold',
+                                      },
+                                      {
+                                        'color': 'muted',
+                                        'content': '·',
+                                        'type': 'typography',
+                                      },
+                                      {
+                                        'color': 'muted',
+                                        'content': '@review.createdAt',
+                                        'type': 'typography',
+                                        'variant': 'caption',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                    'gap': 'sm',
+                                    'type': 'stack',
+                                  },
+                                  {
+                                    'content': '@review.comment',
+                                    'type': 'typography',
+                                    'variant': 'body',
+                                  },
+                                  {
+                                    'align': 'center',
+                                    'children': [
+                                      {
+                                        'action': 'MARK_HELPFUL',
+                                        'actionPayload': {
+                                          'id': '@review.id',
+                                        },
+                                        'icon': 'thumbs-up',
+                                        'label': 'Helpful',
+                                        'type': 'button',
+                                        'variant': 'ghost',
+                                      },
+                                      {
+                                        'color': 'muted',
+                                        'content': '@review.helpful',
+                                        'type': 'typography',
+                                        'variant': 'caption',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                    'gap': 'sm',
+                                    'type': 'stack',
+                                  },
+                                ],
+                                'direction': 'vertical',
+                                'gap': 'sm',
+                                'type': 'stack',
+                              },
+                            ],
+                            'look': '@config.cardLook',
+                            'type': 'card',
+                          },
+                        ],
+                        'type': 'data-list',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -3721,6 +4062,82 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
           ],
         },
       } satisfies Trait,
+      {
+        'category': 'interaction',
+        'effectRow': [
+          {
+            'kind': 'navigate',
+            'resource': '/reviews/new',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
+          },
+        ],
+        'emits': [
+          {
+            'description': 'Opens the standalone review-submission page.',
+            'event': 'OPEN_REVIEW_FORM',
+            'synonyms': 'open form, new page, direct link',
+            'tier': 'presentation',
+          },
+        ],
+        'linkedEntity': 'ReviewView',
+        'name': 'RatingReviewPageNav',
+        'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'description': 'Opens the standalone review-submission page.',
+              'key': 'OPEN_REVIEW_FORM',
+              'name': 'Open Review Form',
+              'synonyms': 'open form, new page, direct link',
+              'tier': 'presentation',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'ready',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'action': 'OPEN_REVIEW_FORM',
+                    'icon': 'external-link',
+                    'label': 'Open review form',
+                    'type': 'button',
+                    'variant': 'ghost',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'ready',
+              'to': 'ready',
+            },
+            {
+              'effects': [
+                [
+                  'navigate',
+                  '/reviews/new',
+                ],
+              ],
+              'event': 'OPEN_REVIEW_FORM',
+              'from': 'ready',
+              'to': 'ready',
+            },
+          ],
+        },
+      } satisfies Trait,
     ],
     pages: [
       {
@@ -3729,6 +4146,9 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
         'traits': [
           {
             'ref': 'RatingReviewBoard',
+          },
+          {
+            'ref': 'RatingReviewPageNav',
           },
         ],
       } satisfies Page,
@@ -3811,6 +4231,7 @@ export const StdRatingReviewRatingReviewOrbitalManifest = {
   inlineTraitNames: [
     'RatingReviewBoard',
     'RatingReviewSubmit',
+    'RatingReviewPageNav',
   ] as const,
 };
 

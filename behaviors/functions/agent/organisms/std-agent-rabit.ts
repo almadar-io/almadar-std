@@ -111,6 +111,12 @@ export function stdAgentRabitCoordinatorOrbital(params: StdAgentRabitCoordinator
   const built = makeOrbitalWithUses({
     name: 'CoordinatorOrbital',
     uses: [],
+    expects: [
+      {
+        'kind': 'page',
+        'path': '/rabit/process',
+      },
+    ],
     entity: {
       name: 'Coordinator',
       persistence: 'runtime',
@@ -220,6 +226,10 @@ export function stdAgentRabitCoordinatorOrbital(params: StdAgentRabitCoordinator
           },
           {
             'kind': 'llm/generate',
+          },
+          {
+            'kind': 'navigate',
+            'resource': '/rabit/process',
           },
           {
             'kind': 'session/write-spec',
@@ -520,6 +530,10 @@ export function stdAgentRabitCoordinatorOrbital(params: StdAgentRabitCoordinator
                     'plan': '@entity.plan',
                     'totalOrbitals': '@entity.totalOrbitals',
                   },
+                ],
+                [
+                  'navigate',
+                  '/rabit/process',
                 ],
               ],
               'event': 'PLANNED',

@@ -41,6 +41,12 @@ orbital TableViewOrbital {
     code : string
     stack : string
   }
+  type TableViewRelationsDataValueItem = {
+    value : string!
+    label : string!
+    description : string
+    disabled : boolean
+  }
 
   entity TableViewItem [runtime] {
     id : string!
@@ -80,6 +86,7 @@ orbital TableViewOrbital {
           groupBy: @config.groupBy
           pageSize: @config.pageSize
           look: @config.look
+          relationsData: @config.relationsData
           type: table-view
         })
       INIT -> idle when (not @config.selfFetch)
@@ -111,6 +118,7 @@ orbital TableViewOrbital {
           groupBy: @config.groupBy
           pageSize: @config.pageSize
           look: @config.look
+          relationsData: @config.relationsData
           type: table-view
         })
       TableViewLoaded -> idle
@@ -142,6 +150,7 @@ orbital TableViewOrbital {
           groupBy: @config.groupBy
           pageSize: @config.pageSize
           look: @config.look
+          relationsData: @config.relationsData
           type: table-view
         })
     }
@@ -274,6 +283,10 @@ orbital TableViewOrbital {
       look : "dense" | "spacious" | "striped" | "borderless" | "bordered" = dense
         @label "Look"
         @description "Layer 2 visual treatment — mirrors the data-list / entity-table look enum so authors share one knob name across row renderers."
+        @tier "presentation"
+      relationsData : Map string [TableViewRelationsDataValueItem] = {}
+        @label "Relations Data"
+        @description "Relation display data: { fieldName: [{value, label}] } — injected server-side by the runtime (relation-option injection) or bound by compiled codegen; resolves stored foreign ids to display names for a column whose field is relation-typed. Same contract DetailPanel takes."
         @tier "presentation"
       selfFetch : boolean = true
         @label "Fetch its own rows on mount?"

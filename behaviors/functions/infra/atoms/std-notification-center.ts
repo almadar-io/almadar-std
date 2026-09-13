@@ -107,6 +107,36 @@ export function stdNotificationCenterPushSubscriberTrait(params: StdNotification
   });
 }
 
+/** Trait descriptor: `NotificationCenter.traits.PreferenceEditorButtonSubscribe`. */
+export function stdNotificationCenterPreferenceEditorButtonSubscribeTrait(params: StdNotificationCenterParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.PreferenceEditorButtonSubscribe`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `NotificationCenter.traits.PreferenceEditorButtonDigest`. */
+export function stdNotificationCenterPreferenceEditorButtonDigestTrait(params: StdNotificationCenterParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.PreferenceEditorButtonDigest`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
 /** Trait descriptor: `NotificationCenter.traits.PreferenceEditor`. */
 export function stdNotificationCenterPreferenceEditorTrait(params: StdNotificationCenterParams): TraitReference {
   return makeTraitRef({
@@ -180,6 +210,8 @@ export function stdNotificationCenter(params: StdNotificationCenterParams): Orbi
     entity,
     traits: [
       stdNotificationCenterPushSubscriberTrait(params),
+      stdNotificationCenterPreferenceEditorButtonSubscribeTrait(params),
+      stdNotificationCenterPreferenceEditorButtonDigestTrait(params),
       stdNotificationCenterPreferenceEditorTrait(params),
       stdNotificationCenterDigestDrainTrait(params),
     ],
@@ -191,8 +223,8 @@ export function stdNotificationCenter(params: StdNotificationCenterParams): Orbi
   });
 }
 
-type _StdNotificationCenterEntityName = 'NotificationPreference' | 'PushSubscription' | 'NotificationRecord' | 'DigestRunView';
-type _StdNotificationCenterListenTraitName = 'PushSubscriber' | 'PreferenceEditor' | 'DigestDrain';
+type _StdNotificationCenterEntityName = 'NotificationPreference' | 'PushSubscription' | 'NotificationRecord' | 'DigestRunView' | 'ButtonItem';
+type _StdNotificationCenterListenTraitName = 'PushSubscriber' | 'PreferenceEditorButtonSubscribe' | 'PreferenceEditorButtonDigest' | 'PreferenceEditor' | 'DigestDrain';
 
 /**
  * Tunable params for the NotificationCenterOrbital orbital.
@@ -234,13 +266,13 @@ export interface StdNotificationCenterNotificationCenterOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'PushSubscriber' | 'PreferenceEditor' | 'DigestDrain',
+    'PreferenceEditorButtonSubscribe' | 'PreferenceEditorButtonDigest' | 'PushSubscriber' | 'PreferenceEditor' | 'DigestDrain',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** `'Alias.traits.TraitName'` literal union of every trait NotificationCenterOrbital's `uses[]` exports. */
-type _StdNotificationCenterNotificationCenterOrbitalUsesRef = never;
+type _StdNotificationCenterNotificationCenterOrbitalUsesRef = 'Button.traits.ButtonRender';
 
 /** Per-orbital factory: builds the NotificationCenterOrbital orbital with consumer params. */
 export function stdNotificationCenterNotificationCenterOrbital(params: StdNotificationCenterNotificationCenterOrbitalParams = {}): OrbitalDefinition {
@@ -248,7 +280,12 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
     ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'notificationPreferences');
   const built = makeOrbitalWithUses({
     name: 'NotificationCenterOrbital',
-    uses: [],
+    uses: [
+      {
+        'as': 'Button',
+        'from': 'std/behaviors/ui-button',
+      },
+    ],
     expects: [
       {
         'kind': 'identity',
@@ -745,12 +782,58 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
           ],
         },
       } satisfies Trait,
+      makeTraitRef({
+        'config': {
+          'action': {
+            'default': 'OPEN_SUBSCRIBE',
+            'type': 'unknown',
+          },
+          'label': {
+            'default': 'Enable push notifications',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'NotificationPreference',
+        'name': 'PreferenceEditorButtonSubscribe',
+        'ref': ('Button.traits.ButtonRender' satisfies _StdNotificationCenterNotificationCenterOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'action': {
+            'default': 'OPEN_DIGEST',
+            'type': 'unknown',
+          },
+          'label': {
+            'default': 'View notification digest',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'NotificationPreference',
+        'name': 'PreferenceEditorButtonDigest',
+        'ref': ('Button.traits.ButtonRender' satisfies _StdNotificationCenterNotificationCenterOrbitalUsesRef),
+      }),
       {
         'category': 'lifecycle',
         'effectRow': [
           {
+            'kind': 'fetch',
+            'resource': 'NotificationPreference',
+          },
+          {
+            'kind': 'navigate',
+            'resource': '/notifications/digest',
+          },
+          {
+            'kind': 'navigate',
+            'resource': '/notifications/subscribe',
+          },
+          {
             'kind': 'persist',
             'resource': 'NotificationPreference',
+          },
+          {
+            'kind': 'render-ui',
+            'resource': 'main',
           },
           {
             'kind': 'render-ui',
@@ -800,6 +883,18 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
         'scope': 'instance',
         'stateMachine': {
           'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'OPEN_SUBSCRIBE',
+              'name': 'Open Subscribe',
+            },
+            {
+              'key': 'OPEN_DIGEST',
+              'name': 'Open Digest',
+            },
             {
               'key': 'SAVE_PREFERENCE',
               'name': 'Save Preference',
@@ -913,6 +1008,52 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
             },
           ],
           'transitions': [
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('NotificationPreference' satisfies _StdNotificationCenterEntityName),
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      '@trait.PreferenceEditorButtonSubscribe',
+                      '@trait.PreferenceEditorButtonDigest',
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'navigate',
+                  '/notifications/subscribe',
+                ],
+              ],
+              'event': 'OPEN_SUBSCRIBE',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'navigate',
+                  '/notifications/digest',
+                ],
+              ],
+              'event': 'OPEN_DIGEST',
+              'from': 'idle',
+              'to': 'idle',
+            },
             {
               'effects': [
                 [
@@ -1704,6 +1845,12 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
           {
             'ref': 'PreferenceEditor',
           },
+          {
+            'ref': 'PreferenceEditorButtonSubscribe',
+          },
+          {
+            'ref': 'PreferenceEditorButtonDigest',
+          },
         ],
       } satisfies Page,
       {
@@ -1800,6 +1947,8 @@ export const StdNotificationCenterNotificationCenterOrbitalManifest = {
     },
   ] as const,
   traitNames: [
+    'PreferenceEditorButtonSubscribe',
+    'PreferenceEditorButtonDigest',
   ] as const,
   inlineTraitNames: [
     'PushSubscriber',

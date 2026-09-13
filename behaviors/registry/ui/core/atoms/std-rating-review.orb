@@ -181,6 +181,24 @@
         "parent": "trt_01KXG04H76D176PFTAKJ1PSJSJ",
         "renames": []
       },
+      "evt_01M2BCSHJ549GYP8Y28K0K95VW": {
+        "bakedName": "OPEN_REVIEW_FORM",
+        "curName": "OPEN_REVIEW_FORM",
+        "id": "evt_01M2BCSHJ549GYP8Y28K0K95VW",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M2BCSHJ5JVERT7630C32RZS4",
+        "renames": []
+      },
+      "evt_01M2BCSHJ5TAC7JB5QFH4W4BXC": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01M2BCSHJ5TAC7JB5QFH4W4BXC",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M2BCSHJ5JVERT7630C32RZS4",
+        "renames": []
+      },
       "orb_01KXG04H769YBDQ0YZNSNB9NB2": {
         "bakedName": "RatingReviewOrbital",
         "curName": "RatingReviewOrbital",
@@ -217,6 +235,14 @@
         "bakedName": "RatingReviewSubmit",
         "curName": "RatingReviewSubmit",
         "id": "trt_01KXG04H76WV4Q0YCCF5VMWSGF",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M2BCSHJ5JVERT7630C32RZS4": {
+        "bakedName": "RatingReviewPageNav",
+        "curName": "RatingReviewPageNav",
+        "id": "trt_01M2BCSHJ5JVERT7630C32RZS4",
         "kind": "trait",
         "owner": "workspace",
         "renames": []
@@ -413,6 +439,10 @@
             {
               "ref": "RatingReviewBoard",
               "refId": "trt_01KXG04H76D176PFTAKJ1PSJSJ"
+            },
+            {
+              "ref": "RatingReviewPageNav",
+              "refId": "trt_01M2BCSHJ5JVERT7630C32RZS4"
             }
           ]
         },
@@ -2596,11 +2626,336 @@
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.reviews",
+                    [
+                      "array/map",
+                      "@entity.reviews",
+                      [
+                        "fn",
+                        "row",
+                        [
+                          "if",
+                          [
+                            "=",
+                            [
+                              "object/get",
+                              "@row",
+                              "id",
+                              ""
+                            ],
+                            "@payload.id"
+                          ],
+                          [
+                            "object/merge",
+                            "@row",
+                            {
+                              "helpful": [
+                                "+",
+                                [
+                                  "object/get",
+                                  "@row",
+                                  "helpful",
+                                  0.0
+                                ],
+                                1.0
+                              ]
+                            }
+                          ],
+                          "@row"
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.reviewsSource",
+                    [
+                      "array/map",
+                      "@entity.reviewsSource",
+                      [
+                        "fn",
+                        "row",
+                        [
+                          "if",
+                          [
+                            "=",
+                            [
+                              "object/get",
+                              "@row",
+                              "id",
+                              ""
+                            ],
+                            "@payload.id"
+                          ],
+                          [
+                            "object/merge",
+                            "@row",
+                            {
+                              "helpful": [
+                                "+",
+                                [
+                                  "object/get",
+                                  "@row",
+                                  "helpful",
+                                  0.0
+                                ],
+                                1.0
+                              ]
+                            }
+                          ],
+                          "@row"
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "title": "Recording…",
-                      "type": "loading-state"
+                      "children": [
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "name": "star",
+                                      "type": "icon"
+                                    },
+                                    {
+                                      "content": "Reviews",
+                                      "type": "typography",
+                                      "variant": "h3"
+                                    },
+                                    {
+                                      "color": "muted",
+                                      "content": "·",
+                                      "type": "typography"
+                                    },
+                                    {
+                                      "content": "@entity.averageRating",
+                                      "type": "typography",
+                                      "variant": "h3"
+                                    },
+                                    {
+                                      "color": "warning",
+                                      "name": "star",
+                                      "type": "icon"
+                                    },
+                                    {
+                                      "color": "muted",
+                                      "content": "·",
+                                      "type": "typography"
+                                    },
+                                    {
+                                      "color": "muted",
+                                      "content": "@entity.totalReviews",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    {
+                                      "color": "muted",
+                                      "content": "reviews",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "type": "stack"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": "@config.subjectTitle",
+                                  "type": "typography",
+                                  "variant": "caption"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "xs",
+                              "type": "stack"
+                            },
+                            {
+                              "action": "WRITE_REVIEW",
+                              "icon": "edit",
+                              "label": "@config.writeLabel",
+                              "type": "button",
+                              "variant": "primary"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "between",
+                          "type": "stack"
+                        },
+                        {
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "content": "Rating distribution",
+                                  "type": "typography",
+                                  "variant": "h4"
+                                },
+                                {
+                                  "entity": "@entity.starDistribution",
+                                  "fields": [],
+                                  "gap": "sm",
+                                  "renderItem": [
+                                    "fn",
+                                    "bar",
+                                    {
+                                      "align": "center",
+                                      "children": [
+                                        {
+                                          "content": "@bar.label",
+                                          "type": "typography",
+                                          "variant": "caption"
+                                        },
+                                        {
+                                          "max": 100.0,
+                                          "type": "progress-bar",
+                                          "value": "@bar.percentage",
+                                          "variant": "primary"
+                                        },
+                                        {
+                                          "color": "muted",
+                                          "content": "@bar.percentage",
+                                          "type": "typography",
+                                          "variant": "caption"
+                                        },
+                                        {
+                                          "color": "muted",
+                                          "content": "%",
+                                          "type": "typography",
+                                          "variant": "caption"
+                                        }
+                                      ],
+                                      "direction": "horizontal",
+                                      "gap": "md",
+                                      "type": "stack"
+                                    }
+                                  ],
+                                  "type": "data-list"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "type": "stack"
+                            }
+                          ],
+                          "look": "@config.cardLook",
+                          "type": "card"
+                        },
+                        {
+                          "activeTab": "@entity.currentSort",
+                          "tabChangeEvent": "CHANGE_SORT",
+                          "tabs": "@config.sortOptions",
+                          "type": "tabs"
+                        },
+                        {
+                          "entity": "@entity.reviews",
+                          "fields": [],
+                          "gap": "md",
+                          "renderItem": [
+                            "fn",
+                            "review",
+                            {
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "align": "center",
+                                      "children": [
+                                        {
+                                          "name": "@review.avatarIcon",
+                                          "type": "icon"
+                                        },
+                                        {
+                                          "content": "@review.authorName",
+                                          "type": "typography",
+                                          "weight": "bold"
+                                        },
+                                        {
+                                          "color": "muted",
+                                          "content": "·",
+                                          "type": "typography"
+                                        },
+                                        {
+                                          "color": "warning",
+                                          "name": "star",
+                                          "type": "icon"
+                                        },
+                                        {
+                                          "content": "@review.rating",
+                                          "type": "typography",
+                                          "weight": "bold"
+                                        },
+                                        {
+                                          "color": "muted",
+                                          "content": "·",
+                                          "type": "typography"
+                                        },
+                                        {
+                                          "color": "muted",
+                                          "content": "@review.createdAt",
+                                          "type": "typography",
+                                          "variant": "caption"
+                                        }
+                                      ],
+                                      "direction": "horizontal",
+                                      "gap": "sm",
+                                      "type": "stack"
+                                    },
+                                    {
+                                      "content": "@review.comment",
+                                      "type": "typography",
+                                      "variant": "body"
+                                    },
+                                    {
+                                      "align": "center",
+                                      "children": [
+                                        {
+                                          "action": "MARK_HELPFUL",
+                                          "actionPayload": {
+                                            "id": "@review.id"
+                                          },
+                                          "icon": "thumbs-up",
+                                          "label": "Helpful",
+                                          "type": "button",
+                                          "variant": "ghost"
+                                        },
+                                        {
+                                          "color": "muted",
+                                          "content": "@review.helpful",
+                                          "type": "typography",
+                                          "variant": "caption"
+                                        }
+                                      ],
+                                      "direction": "horizontal",
+                                      "gap": "sm",
+                                      "type": "stack"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "type": "stack"
+                                }
+                              ],
+                              "look": "@config.cardLook",
+                              "type": "card"
+                            }
+                          ],
+                          "type": "data-list"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
                 ],
@@ -3763,6 +4118,92 @@
                 "eventId": "evt_01KXG04H7A4K8XAS92BCSVWM7P",
                 "from": "error",
                 "to": "composing"
+              }
+            ]
+          }
+        },
+        {
+          "category": "interaction",
+          "effectRow": [
+            {
+              "kind": "navigate",
+              "resource": "/reviews/new"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "main"
+            }
+          ],
+          "emits": [
+            {
+              "description": "Opens the standalone review-submission page.",
+              "event": "OPEN_REVIEW_FORM",
+              "eventId": "evt_01M2BCSHJ549GYP8Y28K0K95VW",
+              "synonyms": "open form, new page, direct link",
+              "tier": "presentation"
+            }
+          ],
+          "entityRefIds": {
+            "ReviewView": "ent_01KXG04H76C6R5TQKSKV251STQ"
+          },
+          "id": "trt_01M2BCSHJ5JVERT7630C32RZS4",
+          "linkedEntity": "ReviewView",
+          "linkedEntityId": "ent_01KXG04H76C6R5TQKSKV251STQ",
+          "name": "RatingReviewPageNav",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "id": "evt_01M2BCSHJ5TAC7JB5QFH4W4BXC",
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Opens the standalone review-submission page.",
+                "id": "evt_01M2BCSHJ549GYP8Y28K0K95VW",
+                "key": "OPEN_REVIEW_FORM",
+                "name": "Open Review Form",
+                "synonyms": "open form, new page, direct link",
+                "tier": "presentation"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "ready"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "action": "OPEN_REVIEW_FORM",
+                      "icon": "external-link",
+                      "label": "Open review form",
+                      "type": "button",
+                      "variant": "ghost"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01M2BCSHJ5TAC7JB5QFH4W4BXC",
+                "from": "ready",
+                "to": "ready"
+              },
+              {
+                "effects": [
+                  [
+                    "navigate",
+                    "/reviews/new"
+                  ]
+                ],
+                "event": "OPEN_REVIEW_FORM",
+                "eventId": "evt_01M2BCSHJ549GYP8Y28K0K95VW",
+                "from": "ready",
+                "to": "ready"
               }
             ]
           }

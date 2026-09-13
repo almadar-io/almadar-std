@@ -169,6 +169,33 @@
         "parent": "trt_01M0M65FFF9APPJEKH9Y561YA4",
         "renames": []
       },
+      "evt_01M2BBM09D1EGWWTFQ7KBXNCRQ": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01M2BBM09D1EGWWTFQ7KBXNCRQ",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M0M65FFFH69MBB0G62CE4NHC",
+        "renames": []
+      },
+      "evt_01M2BBM09D80TYXT01NKWG60CV": {
+        "bakedName": "OPEN_DIGEST",
+        "curName": "OPEN_DIGEST",
+        "id": "evt_01M2BBM09D80TYXT01NKWG60CV",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M0M65FFFH69MBB0G62CE4NHC",
+        "renames": []
+      },
+      "evt_01M2BBM09DTHEB42R4QPNGNXFN": {
+        "bakedName": "OPEN_SUBSCRIBE",
+        "curName": "OPEN_SUBSCRIBE",
+        "id": "evt_01M2BBM09DTHEB42R4QPNGNXFN",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M0M65FFFH69MBB0G62CE4NHC",
+        "renames": []
+      },
       "orb_01M0M65FFF1A3816MJVC21AJN9": {
         "bakedName": "NotificationCenterOrbital",
         "curName": "NotificationCenterOrbital",
@@ -221,6 +248,22 @@
         "bakedName": "PreferenceEditor",
         "curName": "PreferenceEditor",
         "id": "trt_01M0M65FFFH69MBB0G62CE4NHC",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M2BBM09DD6N4EZDAZRYTEGV8": {
+        "bakedName": "PreferenceEditorButtonDigest",
+        "curName": "PreferenceEditorButtonDigest",
+        "id": "trt_01M2BBM09DD6N4EZDAZRYTEGV8",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M2BBM09DW78BXQDGMHY05CJ3": {
+        "bakedName": "PreferenceEditorButtonSubscribe",
+        "curName": "PreferenceEditorButtonSubscribe",
+        "id": "trt_01M2BBM09DW78BXQDGMHY05CJ3",
         "kind": "trait",
         "owner": "workspace",
         "renames": []
@@ -468,6 +511,14 @@
             {
               "ref": "PreferenceEditor",
               "refId": "trt_01M0M65FFFH69MBB0G62CE4NHC"
+            },
+            {
+              "ref": "PreferenceEditorButtonSubscribe",
+              "refId": "trt_01M2BBM09DW78BXQDGMHY05CJ3"
+            },
+            {
+              "ref": "PreferenceEditorButtonDigest",
+              "refId": "trt_01M2BBM09DD6N4EZDAZRYTEGV8"
             }
           ]
         },
@@ -777,11 +828,61 @@
           }
         },
         {
+          "config": {
+            "action": {
+              "default": "OPEN_SUBSCRIBE",
+              "type": "unknown"
+            },
+            "label": {
+              "default": "Enable push notifications",
+              "type": "unknown"
+            }
+          },
+          "id": "trt_01M2BBM09DW78BXQDGMHY05CJ3",
+          "linkedEntity": "NotificationPreference",
+          "linkedEntityId": "ent_01M0M65FFF0G1ZEE15D76BK6XK",
+          "name": "PreferenceEditorButtonSubscribe",
+          "ref": "Button.traits.ButtonRender"
+        },
+        {
+          "config": {
+            "action": {
+              "default": "OPEN_DIGEST",
+              "type": "unknown"
+            },
+            "label": {
+              "default": "View notification digest",
+              "type": "unknown"
+            }
+          },
+          "id": "trt_01M2BBM09DD6N4EZDAZRYTEGV8",
+          "linkedEntity": "NotificationPreference",
+          "linkedEntityId": "ent_01M0M65FFF0G1ZEE15D76BK6XK",
+          "name": "PreferenceEditorButtonDigest",
+          "ref": "Button.traits.ButtonRender"
+        },
+        {
           "category": "lifecycle",
           "effectRow": [
             {
+              "kind": "fetch",
+              "resource": "NotificationPreference"
+            },
+            {
+              "kind": "navigate",
+              "resource": "/notifications/digest"
+            },
+            {
+              "kind": "navigate",
+              "resource": "/notifications/subscribe"
+            },
+            {
               "kind": "persist",
               "resource": "NotificationPreference"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "main"
             },
             {
               "kind": "render-ui",
@@ -839,6 +940,21 @@
           "scope": "instance",
           "stateMachine": {
             "events": [
+              {
+                "id": "evt_01M2BBM09D1EGWWTFQ7KBXNCRQ",
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "id": "evt_01M2BBM09DTHEB42R4QPNGNXFN",
+                "key": "OPEN_SUBSCRIBE",
+                "name": "Open Subscribe"
+              },
+              {
+                "id": "evt_01M2BBM09D80TYXT01NKWG60CV",
+                "key": "OPEN_DIGEST",
+                "name": "Open Digest"
+              },
               {
                 "id": "evt_01M0M65FFFD1RTHPARJ5HZCKGZ",
                 "key": "SAVE_PREFERENCE",
@@ -958,6 +1074,55 @@
               }
             ],
             "transitions": [
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "NotificationPreference"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        "@trait.PreferenceEditorButtonSubscribe",
+                        "@trait.PreferenceEditorButtonDigest"
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01M2BBM09D1EGWWTFQ7KBXNCRQ",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "navigate",
+                    "/notifications/subscribe"
+                  ]
+                ],
+                "event": "OPEN_SUBSCRIBE",
+                "eventId": "evt_01M2BBM09DTHEB42R4QPNGNXFN",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "navigate",
+                    "/notifications/digest"
+                  ]
+                ],
+                "event": "OPEN_DIGEST",
+                "eventId": "evt_01M2BBM09D80TYXT01NKWG60CV",
+                "from": "idle",
+                "to": "idle"
+              },
               {
                 "effects": [
                   [
@@ -1087,6 +1252,10 @@
                 "to": "idle"
               }
             ]
+          },
+          "traitEmbedIds": {
+            "PreferenceEditorButtonDigest": "trt_01M2BBM09DD6N4EZDAZRYTEGV8",
+            "PreferenceEditorButtonSubscribe": "trt_01M2BBM09DW78BXQDGMHY05CJ3"
           }
         },
         {
@@ -1818,7 +1987,13 @@
             "type": "string"
           }
         ]
-      }
+      },
+      "uses": [
+        {
+          "as": "Button",
+          "from": "std/behaviors/ui-button"
+        }
+      ]
     }
   ],
   "schemaVersion": 1,

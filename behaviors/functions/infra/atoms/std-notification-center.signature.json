@@ -127,6 +127,46 @@
         ]
       },
       {
+        "name": "PreferenceEditorButtonSubscribe",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "action",
+            "type": "unknown",
+            "default": "OPEN_SUBSCRIBE"
+          },
+          {
+            "key": "label",
+            "type": "unknown",
+            "default": "Enable push notifications"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Button.traits.ButtonRender",
+        "linkedEntity": "NotificationPreference"
+      },
+      {
+        "name": "PreferenceEditorButtonDigest",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "action",
+            "type": "unknown",
+            "default": "OPEN_DIGEST"
+          },
+          {
+            "key": "label",
+            "type": "unknown",
+            "default": "View notification digest"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Button.traits.ButtonRender",
+        "linkedEntity": "NotificationPreference"
+      },
+      {
         "name": "PreferenceEditor",
         "emittedEvents": [
           "PREFERENCE_SAVED",
@@ -154,6 +194,18 @@
             "tier": "secondary"
           },
           {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "OPEN_SUBSCRIBE",
+            "direction": "listen"
+          },
+          {
+            "name": "OPEN_DIGEST",
+            "direction": "listen"
+          },
+          {
             "name": "SAVE_PREFERENCE",
             "direction": "listen"
           },
@@ -171,6 +223,9 @@
         "linkedEntity": "NotificationPreference",
         "transitionEvents": [
           "DELETE_PREFERENCE",
+          "INIT",
+          "OPEN_DIGEST",
+          "OPEN_SUBSCRIBE",
           "PREFERENCE_DELETED",
           "PREFERENCE_SAVED",
           "PREFERENCE_SAVE_FAILED",
@@ -180,8 +235,24 @@
         "definerKnobs": [],
         "effectRow": [
           {
+            "kind": "fetch",
+            "resource": "NotificationPreference"
+          },
+          {
+            "kind": "navigate",
+            "resource": "/notifications/digest"
+          },
+          {
+            "kind": "navigate",
+            "resource": "/notifications/subscribe"
+          },
+          {
             "kind": "persist",
             "resource": "NotificationPreference"
+          },
+          {
+            "kind": "render-ui",
+            "resource": "main"
           },
           {
             "kind": "render-ui",

@@ -96,6 +96,8 @@ export interface StdUiDataListConfig {
   /** Default: `5` */
   pageSize?: number;
   positionEvent?: string;
+  /** Default: `{}` */
+  relationsData?: Record<string, TraitConfig>;
   /** Default: `"REORDER"` */
   reorderEvent?: string;
   reorderable?: boolean;

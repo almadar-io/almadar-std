@@ -64,9 +64,9 @@ export interface StdUiControlGridConfig {
   directionAssets?: Record<string, TraitConfig>;
   /** Default: `"DIRECTION"` */
   directionEvent?: string;
-  /** Default: `{"item":"Item"}` */
+  /** Default: `{"item":"INIT"}` */
   directionEvents?: Record<string, TraitConfig>;
-  /** Default: `{"item":"Item"}` */
+  /** Default: `{"item":"INIT"}` */
   directionReleaseEvents?: Record<string, TraitConfig>;
   disabled?: boolean;
   /** Default: `false` */

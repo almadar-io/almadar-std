@@ -32,6 +32,12 @@ orbital DataGridOrbital {
     code : string
     stack : string
   }
+  type DataGridRelationsDataValueItem = {
+    value : string!
+    label : string!
+    description : string
+    disabled : boolean
+  }
 
   entity DataGridItem [runtime] {
     id : string!
@@ -72,6 +78,7 @@ orbital DataGridOrbital {
           hasMore: @config.hasMore
           pageSize: @config.pageSize
           look: @config.look
+          relationsData: @config.relationsData
           type: data-grid
         })
       INIT -> idle when (not @config.selfFetch)
@@ -104,6 +111,7 @@ orbital DataGridOrbital {
           hasMore: @config.hasMore
           pageSize: @config.pageSize
           look: @config.look
+          relationsData: @config.relationsData
           type: data-grid
         })
       DataGridLoaded -> idle
@@ -136,6 +144,7 @@ orbital DataGridOrbital {
           hasMore: @config.hasMore
           pageSize: @config.pageSize
           look: @config.look
+          relationsData: @config.relationsData
           type: data-grid
         })
     }
@@ -269,6 +278,10 @@ orbital DataGridOrbital {
       look : "dense" | "spacious" | "striped" | "borderless" | "card-rows" = dense
         @label "Look"
         @description "Layer 2 visual treatment — mirrors the `entity-table` look enum so data-grid / data-list / entity-table share one knob name from authors."
+        @tier "presentation"
+      relationsData : Map string [DataGridRelationsDataValueItem] = {}
+        @label "Relations Data"
+        @description "Relation display data: { fieldName: [{value, label}] } — injected server-side by the runtime (relation-option injection) or bound by compiled codegen; resolves stored foreign ids to display names for a field whose type is relation. Same contract DetailPanel takes."
         @tier "presentation"
       selfFetch : boolean = true
         @label "Fetch its own rows on mount?"

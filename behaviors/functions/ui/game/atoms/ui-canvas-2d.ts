@@ -95,9 +95,9 @@ export interface StdUiCanvas2dConfig {
   followTarget?: EntityRow;
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `{"item":"Item"}` */
+  /** Default: `{"item":"INIT"}` */
   keyMap?: Record<string, TraitConfig>;
-  /** Default: `{"item":"Item"}` */
+  /** Default: `{"item":"INIT"}` */
   keyUpMap?: Record<string, TraitConfig>;
   /** Default: `"MOVE"` */
   moveEvent?: string;

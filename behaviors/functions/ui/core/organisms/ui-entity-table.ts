@@ -77,6 +77,8 @@ export interface StdUiEntityTableConfig {
   look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
   pageProp?: number;
   pageSize?: number;
+  /** Default: `{}` */
+  relationsData?: Record<string, TraitConfig>;
   /** Default: `[]` */
   rowActions?: EntityRow[];
   searchPlaceholder?: string;
@@ -473,6 +475,41 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
             'tier': 'presentation',
             'type': 'number',
           },
+          'relationsData': {
+            'default': {},
+            'description': 'Relation display data: { fieldName: [{value, label}] } — injected server-side by the runtime (relation-option injection) or bound by compiled codegen; resolves stored foreign ids to display names for a column whose field is relation-typed. Same contract DetailPanel takes.',
+            'items': {
+              'items': {
+                'properties': {
+                  'description': {
+                    'name': 'description',
+                    'required': false,
+                    'type': 'string',
+                  },
+                  'disabled': {
+                    'name': 'disabled',
+                    'required': false,
+                    'type': 'boolean',
+                  },
+                  'label': {
+                    'name': 'label',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  'value': {
+                    'name': 'value',
+                    'required': true,
+                    'type': 'string',
+                  },
+                },
+                'type': 'object',
+              },
+              'type': 'array',
+            },
+            'label': 'Relations Data',
+            'tier': 'presentation',
+            'type': 'Map<string,[EntityTableRelationsDataValueItem]>',
+          },
           'rowActions': {
             'default': [],
             'description': 'Row actions',
@@ -727,6 +764,7 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
                     'look': '@config.look',
                     'page': '@config.pageProp',
                     'pageSize': '@config.pageSize',
+                    'relationsData': '@config.relationsData',
                     'rowActions': '@config.rowActions',
                     'searchPlaceholder': '@config.searchPlaceholder',
                     'searchValue': '@config.searchValue',
@@ -769,6 +807,7 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
                     'look': '@config.look',
                     'page': '@config.pageProp',
                     'pageSize': '@config.pageSize',
+                    'relationsData': '@config.relationsData',
                     'rowActions': '@config.rowActions',
                     'searchPlaceholder': '@config.searchPlaceholder',
                     'searchValue': '@config.searchValue',
@@ -814,6 +853,7 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
                     'look': '@config.look',
                     'page': '@config.pageProp',
                     'pageSize': '@config.pageSize',
+                    'relationsData': '@config.relationsData',
                     'rowActions': '@config.rowActions',
                     'searchPlaceholder': '@config.searchPlaceholder',
                     'searchValue': '@config.searchValue',

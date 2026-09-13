@@ -92,6 +92,8 @@ export interface StdUiDataGridConfig {
   /** Default: `0` */
   pageSize?: number;
   positionEvent?: string;
+  /** Default: `{}` */
+  relationsData?: Record<string, TraitConfig>;
   reorderEvent?: string;
   /** Default: `false` */
   scrollX?: boolean;
