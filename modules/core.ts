@@ -596,15 +596,19 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     example: '["fetch", "Task", { "id": "t1", "emit": { "success": "TASK_LOADED" } }]',
     effect: {
       kind: 'fetch',
-      // Call-site-discriminated union: options.id present -> single entity;
-      // otherwise -> array of entity. The compiler narrows at the call site
-      // when checking emit.success against the declared event payload.
       produces: {
-        kind: 'union',
-        of: [
-          { kind: 'entity' },
-          { kind: 'array', of: { kind: 'entity' } },
-        ],
+        kind: 'object',
+        fields: {
+          data: {
+            kind: 'union',
+            of: [
+              { kind: 'entity' },
+              { kind: 'array', of: { kind: 'entity' } },
+            ],
+          },
+          totalCount: 'number',
+        },
+        open: false,
       },
     },
   },
@@ -688,14 +692,21 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     example: '["ref", "Task"]',
     effect: {
       kind: 'ref',
-      // Same call-site shape as fetch. Kept for the V2 transition period;
+      // Same wrapper fetch emits. Kept for the V2 transition period;
       // scheduled for deprecation in a later phase (see Almadar_Entity_V2_Plan.md).
       produces: {
-        kind: 'union',
-        of: [
-          { kind: 'entity' },
-          { kind: 'array', of: { kind: 'entity' } },
-        ],
+        kind: 'object',
+        fields: {
+          data: {
+            kind: 'union',
+            of: [
+              { kind: 'entity' },
+              { kind: 'array', of: { kind: 'entity' } },
+            ],
+          },
+          totalCount: 'number',
+        },
+        open: false,
       },
     },
   },
