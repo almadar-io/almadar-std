@@ -31,7 +31,7 @@ export const WORKSPACE_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'name', type: 'string', description: 'Orbital name' },
       { name: 'def', type: { kind: 'entityRef' }, description: 'Orbital definition to write' },
     ],
-    example: '["workspace/write-orbital", "ProductOrbital", @entity.def]',
+    example: '["workspace/write-orbital", "ProductOrbital", {"name": "ProductOrbital"}]',
   },
   'workspace/read-file': {
     module: 'workspace',
@@ -54,7 +54,7 @@ export const WORKSPACE_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'path', type: 'string', description: 'File path relative to workspace root' },
       { name: 'content', type: 'string', description: 'File content' },
     ],
-    example: '["workspace/write-file", "orbitals/Product.orb", @entity.orbJson]',
+    example: '["workspace/write-file", "orbitals/Product.orb", {"orbitals": []}]',
   },
   'workspace/exists': {
     module: 'workspace',
@@ -74,7 +74,7 @@ export const WORKSPACE_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'array',
     params: [],
-    example: '["workspace/list-orbitals"] => ["ProductOrbital", "CartOrbital"]',
+    example: '["workspace/list-orbitals"] // => ["ProductOrbital", "CartOrbital"]',
   },
   'workspace/read-schema': {
     module: 'workspace',
@@ -94,7 +94,7 @@ export const WORKSPACE_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: true,
     returnType: 'void',
     params: [{ name: 'schema', type: { kind: 'entityRef' }, description: 'Composed schema' }],
-    example: '["workspace/write-schema", @entity.composed]',
+    example: '["workspace/write-schema", {"orbitals": [{"name": "ProductOrbital"}]}]',
   },
   'workspace/read-plan': {
     module: 'workspace',
@@ -114,7 +114,7 @@ export const WORKSPACE_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: true,
     returnType: 'void',
     params: [{ name: 'snapshot', type: { kind: 'object', fields: { id: 'string', status: 'string' } }, description: 'Plan snapshot' }],
-    example: '["workspace/write-plan", @entity.plan]',
+    example: '["workspace/write-plan", ["create entity", "add list page"]]',
   },
   'workspace/archive-orbital': {
     module: 'workspace',

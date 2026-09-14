@@ -100,7 +100,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [
       { name: 'tensor', type: 'tensor', description: 'The tensor' },
     ],
-    example: '["tensor/shape", "@entity.sensors"] // => [16]',
+    example: '["tensor/shape", [[1, 2], [3, 4]]] // => [2, 2]',
   },
   'tensor/get': {
     module: 'tensor',
@@ -114,7 +114,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'tensor', type: 'tensor', description: 'The tensor' },
       { name: 'index', type: 'number | number[]', description: 'Index (single for 1D, array for multi-D)' },
     ],
-    example: '["tensor/get", "@entity.output", 3] // Get 4th element',
+    example: '["tensor/get", [10, 20, 30, 40], 3] // Get 4th element',
   },
   'tensor/slice': {
     module: 'tensor',
@@ -129,7 +129,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'start', type: 'number', description: 'Start index' },
       { name: 'end', type: 'number', description: 'End index (exclusive)' },
     ],
-    example: '["tensor/slice", "@entity.output", 0, 3] // First 3 elements',
+    example: '["tensor/slice", [10, 20, 30, 40], 0, 3] // First 3 elements',
   },
   'tensor/reshape': {
     module: 'tensor',
@@ -143,7 +143,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'tensor', type: 'tensor', description: 'The tensor' },
       { name: 'shape', type: 'number[]', description: 'New shape' },
     ],
-    example: '["tensor/reshape", "@entity.data", [4, 4]] // Reshape to 4x4',
+    example: '["tensor/reshape", [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16], [4, 4]] // Reshape to 4x4',
   },
   'tensor/flatten': {
     module: 'tensor',
@@ -156,7 +156,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [
       { name: 'tensor', type: 'tensor', description: 'The tensor' },
     ],
-    example: '["tensor/flatten", "@entity.data"]',
+    example: '["tensor/flatten", [[1, 2], [3, 4]]]',
   },
 
   // ============================================================================
@@ -175,7 +175,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'a', type: 'tensor', description: 'First tensor' },
       { name: 'b', type: 'tensor | number', description: 'Second tensor or scalar' },
     ],
-    example: '["tensor/add", "@entity.a", "@entity.b"]',
+    example: '["tensor/add", [1, 2], [3, 4]]',
   },
   'tensor/sub': {
     module: 'tensor',
@@ -189,7 +189,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'a', type: 'tensor', description: 'First tensor' },
       { name: 'b', type: 'tensor | number', description: 'Second tensor or scalar' },
     ],
-    example: '["tensor/sub", "@entity.a", "@entity.b"]',
+    example: '["tensor/sub", [1, 2], [3, 4]]',
   },
   'tensor/mul': {
     module: 'tensor',
@@ -203,7 +203,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'a', type: 'tensor', description: 'First tensor' },
       { name: 'b', type: 'tensor | number', description: 'Second tensor or scalar' },
     ],
-    example: '["tensor/mul", "@entity.weights", 0.99] // Decay weights',
+    example: '["tensor/mul", [0.5, 0.7], 0.99] // Decay weights',
   },
   'tensor/div': {
     module: 'tensor',
@@ -217,7 +217,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'a', type: 'tensor', description: 'First tensor' },
       { name: 'b', type: 'tensor | number', description: 'Second tensor or scalar' },
     ],
-    example: '["tensor/div", "@entity.gradient", "@entity.batchSize"]',
+    example: '["tensor/div", [10, 20], 2]',
   },
   'tensor/matmul': {
     module: 'tensor',
@@ -231,7 +231,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'a', type: 'tensor', description: 'First tensor (NxM)' },
       { name: 'b', type: 'tensor', description: 'Second tensor (MxK)' },
     ],
-    example: '["tensor/matmul", "@entity.input", "@entity.weights"]',
+    example: '["tensor/matmul", [[1, 2], [3, 4]], [[5, 6], [7, 8]]]',
   },
   'tensor/dot': {
     module: 'tensor',
@@ -245,7 +245,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'a', type: 'tensor', description: 'First vector' },
       { name: 'b', type: 'tensor', description: 'Second vector' },
     ],
-    example: '["tensor/dot", "@entity.a", "@entity.b"]',
+    example: '["tensor/dot", [1, 2], [3, 4]]',
   },
 
   // ============================================================================
@@ -264,7 +264,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'tensor', type: 'tensor', description: 'The tensor' },
       { name: 'dim', type: 'number', description: 'Dimension to reduce', optional: true },
     ],
-    example: '["tensor/sum", "@entity.rewards"] // Total reward',
+    example: '["tensor/sum", [1, 0, 1]] // Total reward',
   },
   'tensor/mean': {
     module: 'tensor',
@@ -278,7 +278,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'tensor', type: 'tensor', description: 'The tensor' },
       { name: 'dim', type: 'number', description: 'Dimension to reduce', optional: true },
     ],
-    example: '["tensor/mean", "@entity.losses"]',
+    example: '["tensor/mean", [0.2, 0.4, 0.6]]',
   },
   'tensor/max': {
     module: 'tensor',
@@ -292,7 +292,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'tensor', type: 'tensor', description: 'The tensor' },
       { name: 'dim', type: 'number', description: 'Dimension to reduce', optional: true },
     ],
-    example: '["tensor/max", "@entity.qValues"]',
+    example: '["tensor/max", [0.1, 0.9, 0.3]]',
   },
   'tensor/min': {
     module: 'tensor',
@@ -306,7 +306,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'tensor', type: 'tensor', description: 'The tensor' },
       { name: 'dim', type: 'number', description: 'Dimension to reduce', optional: true },
     ],
-    example: '["tensor/min", "@entity.distances"]',
+    example: '["tensor/min", [3, 1, 2]]',
   },
   'tensor/argmax': {
     module: 'tensor',
@@ -320,7 +320,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'tensor', type: 'tensor', description: 'The tensor' },
       { name: 'dim', type: 'number', description: 'Dimension to reduce', optional: true },
     ],
-    example: '["tensor/argmax", "@entity.qValues"] // Best action index',
+    example: '["tensor/argmax", [0.1, 0.9, 0.3]] // Best action index',
   },
   'tensor/norm': {
     module: 'tensor',
@@ -334,7 +334,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'tensor', type: 'tensor', description: 'The tensor' },
       { name: 'p', type: 'number', description: 'Norm order (default 2)', optional: true, defaultValue: 2 },
     ],
-    example: '["tensor/norm", "@entity.gradient"]',
+    example: '["tensor/norm", [3, 4]]',
   },
 
   // ============================================================================
@@ -353,7 +353,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'tensor', type: 'tensor', description: 'The tensor' },
       { name: 'range', type: '[number, number]', description: 'Range as [min, max]' },
     ],
-    example: '["tensor/allInRange", "@payload.input", [-1.0, 1.0]]',
+    example: '["tensor/allInRange", [0.5, -0.2], [-1.0, 1.0]]',
   },
   'tensor/outOfRangeIndices': {
     module: 'tensor',
@@ -367,7 +367,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'tensor', type: 'tensor', description: 'The tensor' },
       { name: 'range', type: '[number, number]', description: 'Range as [min, max]' },
     ],
-    example: '["tensor/outOfRangeIndices", "@payload.input", [-1.0, 1.0]]',
+    example: '["tensor/outOfRangeIndices", [0.5, 1.5], [-1.0, 1.0]]',
   },
   'tensor/clamp': {
     module: 'tensor',
@@ -382,7 +382,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'min', type: 'number', description: 'Minimum value' },
       { name: 'max', type: 'number', description: 'Maximum value' },
     ],
-    example: '["tensor/clamp", "@entity.output", -10.0, 10.0]',
+    example: '["tensor/clamp", [5, -15, 3], -10.0, 10.0]',
   },
   'tensor/clampPerDim': {
     module: 'tensor',
@@ -396,7 +396,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'tensor', type: 'tensor', description: 'The tensor' },
       { name: 'ranges', type: 'object', description: 'Per-dimension ranges { "0": {min, max}, ... }' },
     ],
-    example: '["tensor/clampPerDim", "@entity.rawOutput", "@entity.outputContract.ranges"]',
+    example: '["tensor/clampPerDim", [5, -15], {"0": {"min": 0, "max": 10}, "1": {"min": -10, "max": 10}}]',
   },
   'tensor/outOfRangeDims': {
     module: 'tensor',
@@ -410,7 +410,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'tensor', type: 'tensor', description: 'The tensor' },
       { name: 'ranges', type: 'object', description: 'Per-dimension ranges { "0": {min, max}, ... }' },
     ],
-    example: '["tensor/outOfRangeDims", "@entity.rawOutput", "@entity.outputContract.ranges"]',
+    example: '["tensor/outOfRangeDims", [5, -15], {"0": {"min": 0, "max": 10}, "1": {"min": -10, "max": 10}}]',
   },
 
   // ============================================================================
@@ -428,7 +428,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [
       { name: 'tensor', type: 'tensor', description: 'The tensor' },
     ],
-    example: '["tensor/toArray", "@entity.output"]',
+    example: '["tensor/toArray", [[1, 2], [3, 4]]]',
   },
   'tensor/toList': {
     module: 'tensor',
@@ -441,7 +441,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [
       { name: 'tensor', type: 'tensor', description: 'The tensor (must be 1D)' },
     ],
-    example: '["tensor/toList", "@entity.output"]',
+    example: '["tensor/toList", [1, 2, 3]]',
   },
 
   // ============================================================================
@@ -460,7 +460,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'a', type: 'tensor', description: 'First tensor' },
       { name: 'b', type: 'tensor', description: 'Second tensor' },
     ],
-    example: '["tensor/cat", "@entity.a", "@entity.b"]',
+    example: '["tensor/cat", [1, 2], [3, 4]]',
   },
   'tensor/stack': {
     module: 'tensor',
@@ -474,7 +474,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'a', type: 'tensor', description: 'First tensor' },
       { name: 'b', type: 'tensor', description: 'Second tensor' },
     ],
-    example: '["tensor/stack", "@entity.a", "@entity.b"]',
+    example: '["tensor/stack", [1, 2], [3, 4]]',
   },
   'tensor/transpose': {
     module: 'tensor',
@@ -489,7 +489,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'dim0', type: 'number', description: 'First dimension to swap (optional)' },
       { name: 'dim1', type: 'number', description: 'Second dimension to swap (optional)' },
     ],
-    example: '["tensor/transpose", "@entity.matrix", 0, 1]',
+    example: '["tensor/transpose", [[1, 2], [3, 4]], 0, 1]',
   },
   'tensor/unsqueeze': {
     module: 'tensor',
@@ -503,7 +503,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'tensor', type: 'tensor', description: 'The tensor' },
       { name: 'dim', type: 'number', description: 'Position to insert the new dimension' },
     ],
-    example: '["tensor/unsqueeze", "@entity.vector", 0]',
+    example: '["tensor/unsqueeze", [1, 2, 3], 0]',
   },
   'tensor/squeeze': {
     module: 'tensor',
@@ -516,7 +516,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [
       { name: 'tensor', type: 'tensor', description: 'The tensor' },
     ],
-    example: '["tensor/squeeze", "@entity.output"]',
+    example: '["tensor/squeeze", [[1, 2, 3]]]',
   },
 };
 

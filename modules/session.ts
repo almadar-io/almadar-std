@@ -29,7 +29,7 @@ export const SESSION_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'orbitalName', type: 'string', description: 'Orbital name' },
       { name: 'spec', type: { kind: 'object', fields: { orbitalName: 'string', organism: 'string', method: 'string' } }, description: 'Orbital spec' },
     ],
-    example: '["session/write-spec", "ProductOrbital", @entity.spec]',
+    example: '["session/write-spec", "ProductOrbital", {"goal": "manage products"}]',
   },
   'session/read-memory': {
     module: 'session', category: 'std-session',
@@ -49,7 +49,7 @@ export const SESSION_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'orbitalName', type: 'string', description: 'Orbital name' },
       { name: 'memory', type: { kind: 'object', fields: { entityName: 'string', notes: { kind: 'array', of: 'string' } }, open: true }, description: 'Orbital memory' },
     ],
-    example: '["session/write-memory", "ProductOrbital", @entity.memory]',
+    example: '["session/write-memory", "ProductOrbital", {"notes": ["initial draft"]}]',
   },
   'session/read-history': {
     module: 'session', category: 'std-session',
@@ -69,7 +69,7 @@ export const SESSION_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'orbitalName', type: 'string', description: 'Orbital name' },
       { name: 'entry', type: { kind: 'object', fields: { role: 'string', content: 'string' } }, description: 'History entry' },
     ],
-    example: '["session/append-history", "ProductOrbital", { role: "user", content: "Add a search bar" }]',
+    example: '["session/append-history", "ProductOrbital", { "role": "user", "content": "Add a search bar" }]',
   },
   'session/read-errors': {
     module: 'session', category: 'std-session',
@@ -89,7 +89,7 @@ export const SESSION_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'orbitalName', type: 'string', description: 'Orbital name' },
       { name: 'errors', type: { kind: 'array', of: 'ValidationError' }, description: 'Validation errors' },
     ],
-    example: '["session/write-errors", "ProductOrbital", @entity.errors]',
+    example: '["session/write-errors", "ProductOrbital", []]',
   },
   'session/read-analysis': {
     module: 'session', category: 'std-session',

@@ -20,7 +20,7 @@
  *   npx tsx packages/almadar-std/scripts/generate-rust.ts --rs-only
  */
 
-import { writeFileSync, mkdirSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { STD_OPERATORS, STD_OPERATORS_BY_MODULE } from '../registry.js';
@@ -120,9 +120,52 @@ interface CanonicalOperatorEntry {
      * wrong-arg-order class (e.g. `(array/reduce arr (fn …) init)`).
      */
     lambdaArgPosition?: number;
+    /** Enrichment (docs): human title, parameter docs, lolo examples, provenance. */
+    title?: string;
+    params?: { name: string; type: unknown; description?: string }[];
+    examples?: string[];
+    docsSource?: string;
 }
 
-function toCanonicalEntry(meta: StdOperatorMeta): CanonicalOperatorEntry {
+interface ExistingCanonicalFile {
+    operators?: Record<string, CanonicalOperatorEntry>;
+}
+
+function readExistingOperators(): Record<string, CanonicalOperatorEntry> {
+    if (!existsSync(JSON_OUT)) return {};
+    try {
+        const parsed = JSON.parse(readFileSync(JSON_OUT, 'utf8')) as ExistingCanonicalFile;
+        return parsed.operators ?? {};
+    } catch {
+        return {};
+    }
+}
+
+/** Convert a module-source JSON-array example (`["math/abs", -5] // => 5`) to the lolo form the enriched registry and the playground use (`(math/abs -5) // => 5`). */
+function jsonExampleToLolo(example: string): string | undefined {
+    const commentIdx = example.indexOf(' //');
+    const exprPart = commentIdx > 0 ? example.slice(0, commentIdx).trim() : example.trim();
+    const suffix = commentIdx > 0 ? example.slice(commentIdx) : '';
+    let arr: unknown;
+    try {
+        arr = JSON.parse(exprPart);
+    } catch {
+        return undefined;
+    }
+    if (!Array.isArray(arr) || arr.length === 0 || typeof arr[0] !== 'string') return undefined;
+    const arg = (a: unknown): string => {
+        if (typeof a === 'string') return a.startsWith('@') ? a : JSON.stringify(a);
+        if (a !== null && typeof a === 'object') return JSON.stringify(a);
+        return String(a);
+    };
+    const args = arr.slice(1).map(arg);
+    return `(${arr[0]}${args.length ? ' ' + args.join(' ') : ''})${suffix}`;
+}
+
+function toCanonicalEntry(
+    meta: StdOperatorMeta,
+    existing?: CanonicalOperatorEntry
+): CanonicalOperatorEntry {
     const entry: CanonicalOperatorEntry = {
         category: meta.category,
         minArity: meta.minArity,
@@ -137,14 +180,30 @@ function toCanonicalEntry(meta: StdOperatorMeta): CanonicalOperatorEntry {
     if (meta.acceptsLambda && meta.lambdaArgPosition != null) {
         entry.lambdaArgPosition = meta.lambdaArgPosition;
     }
+    // Docs enrichment: existing curated fields win; the module source's
+    // `example` is the fallback so regeneration never drops enrichment.
+    const title = existing?.title;
+    if (title) entry.title = title;
+    const params = existing?.params ?? meta.params;
+    if (params && params.length > 0) entry.params = params;
+    const examples =
+        existing?.examples && existing.examples.length > 0
+            ? existing.examples
+            : meta.example
+              ? [jsonExampleToLolo(meta.example) ?? meta.example]
+              : undefined;
+    if (examples) entry.examples = examples;
+    const docsSource = existing?.docsSource ?? (examples && !existing?.examples ? 'generated' : undefined);
+    if (docsSource) entry.docsSource = docsSource;
     return entry;
 }
 
 function writeCanonicalJson(): number {
+    const existing = readExistingOperators();
     const operators: Record<string, CanonicalOperatorEntry> = {};
     const sortedNames = Object.keys(STD_OPERATORS).sort();
     for (const name of sortedNames) {
-        operators[name] = toCanonicalEntry(STD_OPERATORS[name]);
+        operators[name] = toCanonicalEntry(STD_OPERATORS[name], existing[name]);
     }
 
     const schema = {

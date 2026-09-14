@@ -64,7 +64,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'date', type: 'number', description: 'Timestamp' },
       { name: 'format', type: 'string', description: 'Format pattern' },
     ],
-    example: '["time/format", "@entity.createdAt", "MMM DD, YYYY"]',
+    example: '["time/format", 1700000000000, "MMM DD, YYYY"]',
   },
   'time/year': {
     module: 'time',
@@ -75,7 +75,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'number',
     params: [{ name: 'date', type: 'number', description: 'Timestamp' }],
-    example: '["time/year", "@entity.createdAt"] // => 2024',
+    example: '["time/year", 1700000000000] // => 2023',
   },
   'time/month': {
     module: 'time',
@@ -86,7 +86,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'number',
     params: [{ name: 'date', type: 'number', description: 'Timestamp' }],
-    example: '["time/month", "@entity.createdAt"] // => 1',
+    example: '["time/month", 1700000000000] // => 11',
   },
   'time/day': {
     module: 'time',
@@ -97,7 +97,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'number',
     params: [{ name: 'date', type: 'number', description: 'Timestamp' }],
-    example: '["time/day", "@entity.createdAt"] // => 18',
+    example: '["time/day", 1700000000000] // => 14',
   },
   'time/weekday': {
     module: 'time',
@@ -108,7 +108,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'number',
     params: [{ name: 'date', type: 'number', description: 'Timestamp' }],
-    example: '["time/weekday", "@entity.createdAt"] // => 4 (Thursday)',
+    example: '["time/weekday", 1700000000000] // => 2 (Tuesday)',
   },
   'time/hour': {
     module: 'time',
@@ -119,7 +119,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'number',
     params: [{ name: 'date', type: 'number', description: 'Timestamp' }],
-    example: '["time/hour", "@entity.createdAt"] // => 14',
+    example: '["time/hour", 1700000000000]',
   },
   'time/minute': {
     module: 'time',
@@ -130,7 +130,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'number',
     params: [{ name: 'date', type: 'number', description: 'Timestamp' }],
-    example: '["time/minute", "@entity.createdAt"] // => 30',
+    example: '["time/minute", 1700000000000]',
   },
   'time/second': {
     module: 'time',
@@ -141,7 +141,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'number',
     params: [{ name: 'date', type: 'number', description: 'Timestamp' }],
-    example: '["time/second", "@entity.createdAt"] // => 45',
+    example: '["time/second", 1700000000000]',
   },
   'time/add': {
     module: 'time',
@@ -186,7 +186,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'b', type: 'number', description: 'Second timestamp' },
       { name: 'unit', type: 'string', description: 'Result unit', optional: true, defaultValue: 'ms' },
     ],
-    example: '["time/diff", "@entity.birthDate", ["time/now"], "year"]',
+    example: '["time/diff", 1700000000000, ["time/now"], "year"]',
   },
   'time/startOf': {
     module: 'time',
@@ -228,7 +228,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'a', type: 'number', description: 'First timestamp' },
       { name: 'b', type: 'number', description: 'Second timestamp' },
     ],
-    example: '["time/isBefore", "@entity.startDate", "@entity.endDate"]',
+    example: '["time/isBefore", 1700000000000, 1700086400000]',
   },
   'time/isAfter': {
     module: 'time',
@@ -242,7 +242,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'a', type: 'number', description: 'First timestamp' },
       { name: 'b', type: 'number', description: 'Second timestamp' },
     ],
-    example: '["time/isAfter", ["time/now"], "@entity.deadline"]',
+    example: '["time/isAfter", ["time/now"], 1700000000000]',
   },
   'time/isBetween': {
     module: 'time',
@@ -257,7 +257,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'start', type: 'number', description: 'Range start' },
       { name: 'end', type: 'number', description: 'Range end' },
     ],
-    example: '["time/isBetween", ["time/now"], "@entity.startDate", "@entity.endDate"]',
+    example: '["time/isBetween", ["time/now"], 1700000000000, 2000000000000]',
   },
   'time/isSame': {
     module: 'time',
@@ -272,7 +272,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'b', type: 'number', description: 'Second timestamp' },
       { name: 'unit', type: 'string', description: 'Comparison unit', optional: true },
     ],
-    example: '["time/isSame", "@a", "@b", "day"]',
+    example: '["time/isSame", 1700000000000, 1700001000000, "day"]',
   },
   'time/isPast': {
     module: 'time',
@@ -283,7 +283,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'boolean',
     params: [{ name: 'date', type: 'number', description: 'Timestamp' }],
-    example: '["time/isPast", "@entity.expiresAt"]',
+    example: '["time/isPast", 1700000000000]',
   },
   'time/isFuture': {
     module: 'time',
@@ -294,7 +294,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'boolean',
     params: [{ name: 'date', type: 'number', description: 'Timestamp' }],
-    example: '["time/isFuture", "@entity.scheduledAt"]',
+    example: '["time/isFuture", 2000000000000]',
   },
   'time/isToday': {
     module: 'time',
@@ -305,7 +305,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'boolean',
     params: [{ name: 'date', type: 'number', description: 'Timestamp' }],
-    example: '["time/isToday", "@entity.createdAt"]',
+    example: '["time/isToday", ["time/now"]]',
   },
   'time/relative': {
     module: 'time',
@@ -316,7 +316,7 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'string',
     params: [{ name: 'date', type: 'number', description: 'Timestamp' }],
-    example: '["time/relative", "@entity.lastActivityAt"] // => "2 hours ago"',
+    example: '["time/relative", 1700000000000] // => "2 years ago"',
   },
   'time/duration': {
     module: 'time',

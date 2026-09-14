@@ -151,7 +151,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'a', type: ANY, description: 'Left operand' },
       { name: 'b', type: ANY, description: 'Right operand' },
     ],
-    example: '["=", "@entity.status", "active"]',
+    example: '["=", "active", "active"]',
   },
   '==': {
     module: 'core',
@@ -165,7 +165,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'a', type: ANY, description: 'Left operand' },
       { name: 'b', type: ANY, description: 'Right operand' },
     ],
-    example: '["==", "@entity.status", "active"]',
+    example: '["==", "active", "active"]',
   },
   '!=': {
     module: 'core',
@@ -179,7 +179,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'a', type: ANY, description: 'Left operand' },
       { name: 'b', type: ANY, description: 'Right operand' },
     ],
-    example: '["!=", "@entity.id", null]',
+    example: '["!=", 1, null]',
   },
   '<': {
     module: 'core',
@@ -193,7 +193,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'a', type: NUMBER, description: 'Left operand' },
       { name: 'b', type: NUMBER, description: 'Right operand' },
     ],
-    example: '["<", "@entity.health", 10]',
+    example: '["<", 5, 10]',
   },
   '>': {
     module: 'core',
@@ -207,7 +207,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'a', type: NUMBER, description: 'Left operand' },
       { name: 'b', type: NUMBER, description: 'Right operand' },
     ],
-    example: '[">", "@entity.score", 0]',
+    example: '[">", 10, 0]',
   },
   '<=': {
     module: 'core',
@@ -221,7 +221,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'a', type: NUMBER, description: 'Left operand' },
       { name: 'b', type: NUMBER, description: 'Right operand' },
     ],
-    example: '["<=", "@entity.count", 100]',
+    example: '["<=", 100, 100]',
   },
   '>=': {
     module: 'core',
@@ -235,7 +235,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'a', type: NUMBER, description: 'Left operand' },
       { name: 'b', type: NUMBER, description: 'Right operand' },
     ],
-    example: '[">=", "@entity.age", 18]',
+    example: '[">=", 18, 18]',
   },
 
   // --- logic ------------------------------------------------------------------
@@ -250,7 +250,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     returnType: 'boolean',
     returnSemantics: 'last-truthy-of-args',
     params: [{ name: '...conds', type: BOOLEAN, description: 'Boolean expressions to AND' }],
-    example: '["and", ["=", "@entity.active", true], [">", "@entity.score", 0]]',
+    example: '["and", ["=", "active", "active"], [">", 5, 0]]',
   },
   or: {
     module: 'core',
@@ -262,7 +262,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     returnType: 'boolean',
     returnSemantics: 'first-truthy-of-args',
     params: [{ name: '...conds', type: BOOLEAN, description: 'Boolean expressions to OR' }],
-    example: '["or", ["=", "@entity.role", "admin"], ["=", "@entity.role", "owner"]]',
+    example: '["or", ["=", "admin", "user"], ["=", "admin", "owner"]]',
   },
   not: {
     module: 'core',
@@ -273,7 +273,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'boolean',
     params: [{ name: 'cond', type: BOOLEAN, description: 'Boolean to negate' }],
-    example: '["not", "@entity.disabled"]',
+    example: '["not", false]',
   },
   if: {
     module: 'core',
@@ -289,7 +289,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'then', type: ANY, description: 'Value or effect if true' },
       { name: 'else', type: ANY, description: 'Value or effect if false' },
     ],
-    example: '["if", [">", "@entity.health", 0], "alive", "dead"]',
+    example: '["if", [">", 5, 0], "alive", "dead"]',
   },
 
   // --- control ----------------------------------------------------------------
@@ -401,7 +401,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'event', type: EVENT_KEY, description: 'Event key' },
       { name: 'payload', type: ENTITY_REF, description: 'Optional payload', optional: true },
     ],
-    example: '["emit", "PLAYER_DIED", { "playerId": "@entity.id" }]',
+    example: '["emit", "PLAYER_DIED", { "playerId": "p1" }]',
     effect: {
       kind: 'emit',
       produces: {
@@ -436,7 +436,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
         optional: true,
       },
     ],
-    example: '["persist", "create", "Task", { "title": "@payload.title" }, { "emit": { "success": "TASK_CREATED" } }]',
+    example: '["persist", "create", "Task", { "title": "Buy milk" }, { "emit": { "success": "TASK_CREATED" } }]',
     effect: {
       kind: 'persist',
       // Action-discriminated union. The compiler narrows at the call site
@@ -491,7 +491,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
         optional: true,
       },
     ],
-    example: '["navigate", "/tasks/:id", { "id": "@entity.id" }]',
+    example: '["navigate", "/tasks/:id", { "id": "t1" }]',
     effect: { kind: 'navigate' },
   },
   'navigate-back': {
@@ -548,7 +548,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
         optional: true,
       },
     ],
-    example: '["spawn", "Bullet", { "x": "@entity.x", "y": "@entity.y" }]',
+    example: '["spawn", "Bullet", { "x": 10, "y": 20 }]',
     effect: { kind: 'spawn' },
   },
   despawn: {
@@ -593,7 +593,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
         optional: true,
       },
     ],
-    example: '["fetch", "Task", { "id": "@payload.taskId", "emit": { "success": "TASK_LOADED" } }]',
+    example: '["fetch", "Task", { "id": "t1", "emit": { "success": "TASK_LOADED" } }]',
     effect: {
       kind: 'fetch',
       // Call-site-discriminated union: options.id present -> single entity;
@@ -656,7 +656,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
         optional: true,
       },
     ],
-    example: '["send-server", "CHAT_MESSAGE", { "text": "@input.text" }]',
+    example: '["send-server", "CHAT_MESSAGE", { "text": "hello" }]',
     effect: { kind: 'send-server' },
   },
   ref: {
@@ -725,7 +725,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
         optional: true,
       },
     ],
-    example: '["call-service", "llm", "generate", { "userPrompt": "@entity.inputText" }, { "emit": { "success": "LlmCompleted", "failure": "LlmFailed" } }]',
+    example: '["call-service", "llm", "generate", { "userPrompt": "Hello" }, { "emit": { "success": "LlmCompleted", "failure": "LlmFailed" } }]',
     effect: {
       kind: 'call-service',
       // TODO(entity-v2): narrow to the declared service return type once

@@ -72,7 +72,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'path', type: 'string', description: 'Dot-separated path (e.g., "user.name")' },
       { name: 'default', type: 'any', description: 'Default if path not found', optional: true },
     ],
-    example: '["object/get", "@user", "profile.name", "Anonymous"]',
+    example: '["object/get", {"profile": {"name": "Ann"}}, "profile.name", "Anonymous"]',
   },
   'object/set': {
     module: 'object',
@@ -87,7 +87,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'path', type: 'string', description: 'Dot-separated path' },
       { name: 'value', type: 'any', description: 'Value to set' },
     ],
-    example: '["object/set", "@user", "profile.name", "John"]',
+    example: '["object/set", {"profile": {"name": "Ann"}}, "profile.name", "John"]',
   },
   'object/has': {
     module: 'object',
@@ -101,7 +101,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'obj', type: 'object', description: 'The object' },
       { name: 'path', type: 'string', description: 'Dot-separated path' },
     ],
-    example: '["object/has", "@user", "profile.name"]',
+    example: '["object/has", {"profile": {"name": "Ann"}}, "profile.name"]',
   },
   'object/merge': {
     module: 'object',
@@ -138,7 +138,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'obj', type: 'object', description: 'The object' },
       { name: 'keys', type: 'array', description: 'Keys to keep' },
     ],
-    example: '["object/pick", "@entity", ["name", "email"]]',
+    example: '["object/pick", {"name": "Ann", "email": "ann@example.com", "age": 30}, ["name", "email"]]',
   },
   'object/omit': {
     module: 'object',
@@ -152,7 +152,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'obj', type: 'object', description: 'The object' },
       { name: 'keys', type: 'array', description: 'Keys to exclude' },
     ],
-    example: '["object/omit", "@entity", ["password", "secret"]]',
+    example: '["object/omit", {"name": "Ann", "password": "x"}, ["password"]]',
   },
   'object/mapValues': {
     module: 'object',
@@ -168,7 +168,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'obj', type: 'object', description: 'The object' },
       { name: 'fn', type: 'lambda', description: 'Transform function' },
     ],
-    example: '["object/mapValues", "@stats", ["fn", "v", ["*", "@v", 100]]]',
+    example: '["object/mapValues", {"a": 0.5, "b": 0.25}, ["fn", "v", ["*", "@v", 100]]]',
   },
   'object/mapKeys': {
     module: 'object',
@@ -184,7 +184,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'obj', type: 'object', description: 'The object' },
       { name: 'fn', type: 'lambda', description: 'Transform function' },
     ],
-    example: '["object/mapKeys", "@data", ["fn", "k", ["str/upper", "@k"]]]',
+    example: '["object/mapKeys", {"a": 1, "b": 2}, ["fn", "k", ["str/upper", "@k"]]]',
   },
   'object/filter': {
     module: 'object',
@@ -200,7 +200,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'obj', type: 'object', description: 'The object' },
       { name: 'pred', type: 'lambda', description: 'Predicate (key, value) => boolean' },
     ],
-    example: '["object/filter", "@data", ["fn", ["k", "v"], ["!=", "@v", null]]]',
+    example: '["object/filter", {"a": 1, "b": null}, ["fn", ["k", "v"], ["!=", "@v", null]]]',
   },
   'object/equals': {
     module: 'object',
@@ -225,7 +225,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'any',
     params: [{ name: 'obj', type: 'object', description: 'The object' }],
-    example: '["object/clone", "@entity"]',
+    example: '["object/clone", {"a": 1, "b": 2}]',
   },
   'object/deepClone': {
     module: 'object',
@@ -236,7 +236,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'any',
     params: [{ name: 'obj', type: 'object', description: 'The object' }],
-    example: '["object/deepClone", "@entity"]',
+    example: '["object/deepClone", {"a": {"b": 2}}]',
   },
   'path': {
     module: 'object',
@@ -249,7 +249,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [
       { name: '...segments', type: 'string[]', description: 'Path segments to join with dots' },
     ],
-    example: '["path", "formValues", "@payload.fieldId"] // => "formValues.customerName"',
+    example: '["path", "formValues", "customerName"] // => "formValues.customerName"',
   },
 };
 

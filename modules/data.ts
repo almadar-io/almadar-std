@@ -30,7 +30,7 @@ export const DATA_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'entities', type: 'array', description: 'Entity collection' },
       { name: 'contracts', type: 'object', description: 'Input/output contract pair' },
     ],
-    example: '["data/dataset", "@entity.trainingData", "@entity.contracts"]',
+    example: '["data/dataset", [{"x": 1, "y": 2}], {"input": {"fields": ["x"]}, "output": {"fields": ["y"]}}]',
   },
   'data/dataloader': {
     module: 'data',
@@ -44,7 +44,7 @@ export const DATA_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'dataset', type: 'object', description: 'Dataset' },
       { name: 'config', type: 'object', description: 'Config with batch_size, shuffle, etc.' },
     ],
-    example: '["data/dataloader", "@entity.dataset", { "batch-size": 32, "shuffle": true }]',
+    example: '["data/dataloader", ["data/dataset", [[1, 2], [3, 4], [5, 6]], {}], { "batch-size": 2, "shuffle": true }]',
   },
   'data/split': {
     module: 'data',
@@ -58,7 +58,7 @@ export const DATA_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'dataset', type: 'object', description: 'Dataset' },
       { name: 'config', type: 'object', description: 'Split config, e.g. { trainRatio: 0.8 }' },
     ],
-    example: '["data/split", "@entity.dataset", { "trainRatio": 0.8 }]',
+    example: '["data/split", ["data/dataset", [1, 2, 3, 4, 5], {}], { "trainRatio": 0.8 }]',
   },
 
   // ============================================================================
@@ -77,7 +77,7 @@ export const DATA_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'tensor', type: 'tensor', description: 'Feature tensor' },
       { name: 'config', type: 'object', description: 'Normalization config (method, per_dim, etc.)' },
     ],
-    example: '["data/normalize", "@entity.features", { "method": "standard" }]',
+    example: '["data/normalize", [[1, 2], [3, 4]], { "method": "standard" }]',
   },
   'data/augment': {
     module: 'data',
@@ -91,7 +91,7 @@ export const DATA_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'dataset', type: 'object', description: 'Dataset' },
       { name: 'config', type: 'object', description: 'Augmentation config' },
     ],
-    example: '["data/augment", "@entity.dataset", { "flip": true, "rotate": 15 }]',
+    example: '["data/augment", [[1.0, 2.0], [3.0, 4.0]], { "flip": true, "rotate": 15 }]',
   },
 
   // ============================================================================
@@ -110,7 +110,7 @@ export const DATA_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'text', type: 'string', description: 'Text to tokenize' },
       { name: 'config', type: 'object', description: 'Tokenizer config (method, vocab_size, max_length)' },
     ],
-    example: '["data/tokenize", "@entity.text", { "method": "bpe", "max-length": 512 }]',
+    example: '["data/tokenize", "hello world", { "method": "bpe", "max-length": 512 }]',
   },
   'data/pad': {
     module: 'data',
@@ -124,7 +124,7 @@ export const DATA_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'sequences', type: 'array', description: 'List of token sequences' },
       { name: 'config', type: 'object', description: 'Padding config (max_length, pad_value)' },
     ],
-    example: '["data/pad", "@entity.sequences", { "max-length": 512, "pad-value": 0 }]',
+    example: '["data/pad", [[1, 2, 3], [4, 5]], { "max-length": 4, "pad-value": 0 }]',
   },
 };
 

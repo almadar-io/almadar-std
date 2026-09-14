@@ -45,7 +45,7 @@ export const BEHAVIOR_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'orbitalName', type: 'string', description: 'Canonical orbital name to instantiate' },
       { name: 'overrides', type: { kind: 'object', fields: { linkedEntity: 'string', method: 'string' }, open: true }, description: 'Override surface: linkedEntity, events, config, fields', optional: true },
     ],
-    example: '["behavior/instantiate", "std-ecommerce", "ProductOrbital", { linkedEntity: "Product" }]',
+    example: '["behavior/instantiate", "std-ecommerce", "ProductOrbital", { "linkedEntity": "Product" }]',
   },
   'behavior/call': {
     module: 'behavior', category: 'std-behavior',
@@ -71,7 +71,7 @@ export const BEHAVIOR_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'palette', type: { kind: 'object', fields: { topics: { kind: 'array', of: 'string' }, hints: { kind: 'array', of: 'string' } } }, description: 'Topic-tree palette + primitive hints' },
       { name: 'deltaPrompt', type: 'string', description: 'Per-orbital instruction prompt' },
     ],
-    example: '["lolo/emit-body", "PlayerOrbital", { topics: ["game/2d"] }, "player ship with movement"]',
+    example: '["lolo/emit-body", "PlayerOrbital", { "topics": ["game/2d"] }, "player ship with movement"]',
   },
   'validate/validate': {
     module: 'behavior', category: 'std-behavior',

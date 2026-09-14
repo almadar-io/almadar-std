@@ -30,7 +30,7 @@ export const CONTRACT_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'tensor', type: 'tensor', description: 'Input tensor' },
       { name: 'contract', type: 'object', description: 'Input contract spec' },
     ],
-    example: '["contract/validate-input", "@payload.input", "@entity.inputContract"]',
+    example: '["contract/validate-input", [0.5, 0.7], {"ranges": {"0": {"min": 0, "max": 1}, "1": {"min": 0, "max": 1}}}]',
   },
   'contract/validate-output': {
     module: 'contract',
@@ -44,7 +44,7 @@ export const CONTRACT_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'tensor', type: 'tensor', description: 'Output tensor' },
       { name: 'contract', type: 'object', description: 'Output contract spec' },
     ],
-    example: '["contract/validate-output", "@entity.output", "@entity.outputContract"]',
+    example: '["contract/validate-output", [0.5, 0.7], {"ranges": {"0": {"min": 0, "max": 1}, "1": {"min": 0, "max": 1}}}]',
   },
   'contract/clamp-output': {
     module: 'contract',
@@ -58,7 +58,7 @@ export const CONTRACT_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'tensor', type: 'tensor', description: 'Output tensor' },
       { name: 'contract', type: 'object', description: 'Output contract spec' },
     ],
-    example: '["contract/clamp-output", "@entity.output", "@entity.outputContract"]',
+    example: '["contract/clamp-output", [0.5, 1.7], {"ranges": {"0": {"min": 0, "max": 1}, "1": {"min": 0, "max": 1}}}]',
   },
   'contract/violations': {
     module: 'contract',
@@ -72,7 +72,7 @@ export const CONTRACT_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'tensor', type: 'tensor', description: 'Tensor to check' },
       { name: 'contract', type: 'object', description: 'Contract spec' },
     ],
-    example: '["contract/violations", "@entity.output", "@entity.outputContract"]',
+    example: '["contract/violations", [0.5, 1.7], {"ranges": {"0": {"min": 0, "max": 1}, "1": {"min": 0, "max": 1}}}]',
   },
 
   // ============================================================================
@@ -91,7 +91,7 @@ export const CONTRACT_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'entity', type: 'object', description: 'Entity data' },
       { name: 'contract', type: 'object', description: 'Input contract mapping fields to dims' },
     ],
-    example: '["contract/entity-to-tensor", "@entity", "@entity.inputContract"]',
+    example: '["contract/entity-to-tensor", {"price": 10, "qty": 2}, {"fields": ["price", "qty"]}]',
   },
   'contract/tensor-to-payload': {
     module: 'contract',
@@ -105,7 +105,7 @@ export const CONTRACT_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'tensor', type: 'tensor', description: 'Output tensor' },
       { name: 'contract', type: 'object', description: 'Output contract mapping dims to fields' },
     ],
-    example: '["contract/tensor-to-payload", "@entity.output", "@entity.outputContract"]',
+    example: '["contract/tensor-to-payload", [0.5, 0.7], {"fields": ["price", "qty"]}]',
   },
 };
 

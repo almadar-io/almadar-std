@@ -118,7 +118,7 @@ export const PROB_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: true,
     returnType: 'void',
     params: [{ name: 'predicate', type: 'boolean', description: 'Condition that must hold' }],
-    example: '["prob/condition", [">", "@entity.x", 0]]',
+    example: '["prob/condition", [">", 5, 0]]',
   },
   'prob/sample': {
     module: 'prob',
@@ -148,7 +148,7 @@ export const PROB_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'query', type: 'SExpr', description: 'Query expression (lazy, value to collect)' },
       { name: 'n', type: 'number', description: 'Number of samples to attempt' },
     ],
-    example: '["prob/posterior", model, evidence, query, 5000]',
+    example: '["prob/posterior", ["prob/gaussian", 0, 1], [0.5], "mu", 5000]',
   },
   'prob/infer': {
     module: 'prob',
@@ -164,7 +164,7 @@ export const PROB_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'query', type: 'SExpr', description: 'Query expression (lazy)' },
       { name: 'n', type: 'number', description: 'Number of samples to attempt' },
     ],
-    example: '["prob/infer", model, evidence, query, 5000]',
+    example: '["prob/infer", ["prob/gaussian", 0, 1], [0.5], "mu", 5000]',
   },
 
   // ========================================
@@ -232,7 +232,7 @@ export const PROB_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'samples', type: 'number[]', description: 'Array of numeric samples' },
       { name: 'alpha', type: 'number', description: 'Significance level (e.g., 0.05 for 95% interval)' },
     ],
-    example: '["prob/credible-interval", samples, 0.05] // => [lo, hi]',
+    example: '["prob/credible-interval", [1, 2, 3, 4, 5], 0.05] // => [lo, hi]',
   },
 };
 

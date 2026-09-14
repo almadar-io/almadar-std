@@ -88,7 +88,7 @@ export const BROWSER_OPERATORS: Record<string, StdOperatorMeta> = {
       kind: 'custom',
       produces: 'string',
     },
-    example: '["browser/clipboard-write", "@entity.inviteUrl", { "emit": { "success": "COPIED", "failure": "COPY_DENIED" } }]',
+    example: '["browser/clipboard-write", "https://example.com/invite/abc", { "emit": { "success": "COPIED", "failure": "COPY_DENIED" } }]',
   },
   'browser/push-subscribe': {
     module: 'browser',

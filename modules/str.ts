@@ -33,7 +33,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'string',
     params: [{ name: 'strings', type: 'string', description: 'Strings to concatenate' }],
-    example: '["str/concat", "/users/", "@entity.id"] // => "/users/123"',
+    example: '["str/concat", "/users/", "123"] // => "/users/123"',
   },
   'str/upper': {
     module: 'str',

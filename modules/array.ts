@@ -202,7 +202,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'key', type: 'string', description: 'Field to sort by (for objects)', optional: true },
       { name: 'dir', type: 'string', description: '"asc" or "desc"', optional: true, defaultValue: 'asc' },
     ],
-    example: '["array/sort", "@items", "price", "desc"]',
+    example: '["array/sort", [{"price": 3}, {"price": 9}, {"price": 5}], "price", "desc"]',
   },
   'array/shuffle': {
     module: 'array',
@@ -294,7 +294,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'arr', type: 'array', description: 'The array' },
       { name: 'pred', type: 'lambda', description: 'Predicate function' },
     ],
-    example: '["array/find", "@items", ["fn", "x", ["=", "@x.status", "active"]]]',
+    example: '["array/find", [{"status": "active"}, {"status": "archived"}], ["fn", "x", ["=", "@x.status", "active"]]]',
   },
   'array/findIndex': {
     module: 'array',
@@ -310,7 +310,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'arr', type: 'array', description: 'The array' },
       { name: 'pred', type: 'lambda', description: 'Predicate function' },
     ],
-    example: '["array/findIndex", "@items", ["fn", "x", ["=", "@x.status", "active"]]]',
+    example: '["array/findIndex", [{"status": "active"}, {"status": "archived"}], ["fn", "x", ["=", "@x.status", "active"]]]',
   },
   'array/filter': {
     module: 'array',
@@ -327,7 +327,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'arr', type: 'array', description: 'The array' },
       { name: 'pred', type: 'lambda', description: 'Predicate function' },
     ],
-    example: '["array/filter", "@items", ["fn", "x", [">", "@x.price", 100]]]',
+    example: '["array/filter", [{"price": 50}, {"price": 150}], ["fn", "x", [">", "@x.price", 100]]]',
   },
   'array/reject': {
     module: 'array',
@@ -344,7 +344,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'arr', type: 'array', description: 'The array' },
       { name: 'pred', type: 'lambda', description: 'Predicate function' },
     ],
-    example: '["array/reject", "@items", ["fn", "x", ["=", "@x.status", "deleted"]]]',
+    example: '["array/reject", [{"status": "active"}, {"status": "deleted"}], ["fn", "x", ["=", "@x.status", "deleted"]]]',
   },
   'array/map': {
     module: 'array',
@@ -361,7 +361,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'arr', type: 'array', description: 'The array' },
       { name: 'fn', type: 'lambda', description: 'Transform function' },
     ],
-    example: '["array/map", "@items", ["fn", "x", ["*", "@x.price", 1.1]]]',
+    example: '["array/map", [{"price": 100}, {"price": 200}], ["fn", "x", ["*", "@x.price", 1.1]]]',
   },
   'array/reduce': {
     module: 'array',
@@ -379,7 +379,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'init', type: 'any', description: 'Initial accumulator value' },
       { name: 'fn', type: 'lambda', description: 'Reducer function (acc, item) => newAcc' },
     ],
-    example: '["array/reduce", "@items", 0, ["fn", ["acc", "x"], ["+", "@acc", "@x.price"]]]',
+    example: '["array/reduce", [{"price": 10}, {"price": 25}], 0, ["fn", ["acc", "x"], ["+", "@acc", "@x.price"]]]',
   },
   'array/every': {
     module: 'array',
@@ -395,7 +395,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'arr', type: 'array', description: 'The array' },
       { name: 'pred', type: 'lambda', description: 'Predicate function' },
     ],
-    example: '["array/every", "@items", ["fn", "x", [">", "@x.price", 0]]]',
+    example: '["array/every", [{"price": 5}, {"price": 10}], ["fn", "x", [">", "@x.price", 0]]]',
   },
   'array/some': {
     module: 'array',
@@ -411,7 +411,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'arr', type: 'array', description: 'The array' },
       { name: 'pred', type: 'lambda', description: 'Predicate function' },
     ],
-    example: '["array/some", "@items", ["fn", "x", ["=", "@x.status", "active"]]]',
+    example: '["array/some", [{"status": "archived"}, {"status": "active"}], ["fn", "x", ["=", "@x.status", "active"]]]',
   },
   'array/count': {
     module: 'array',
@@ -427,7 +427,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'arr', type: 'array', description: 'The array' },
       { name: 'pred', type: 'lambda', description: 'Predicate function', optional: true },
     ],
-    example: '["array/count", "@tasks", ["fn", "t", ["=", "@t.status", "done"]]]',
+    example: '["array/count", [{"status": "done"}, {"status": "todo"}], ["fn", "t", ["=", "@t.status", "done"]]]',
   },
   'array/sum': {
     module: 'array',
@@ -441,7 +441,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'arr', type: 'array', description: 'The array' },
       { name: 'key', type: 'string', description: 'Field to sum', optional: true },
     ],
-    example: '["array/sum", "@cart.items", "price"]',
+    example: '["array/sum", [{"price": 10}, {"price": 25}], "price"]',
   },
   'array/avg': {
     module: 'array',
@@ -455,7 +455,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'arr', type: 'array', description: 'The array' },
       { name: 'key', type: 'string', description: 'Field to average', optional: true },
     ],
-    example: '["array/avg", "@ratings", "score"]',
+    example: '["array/avg", [{"score": 80}, {"score": 90}], "score"]',
   },
   'array/min': {
     module: 'array',
@@ -469,7 +469,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'arr', type: 'array', description: 'The array' },
       { name: 'key', type: 'string', description: 'Field to compare', optional: true },
     ],
-    example: '["array/min", "@products", "price"]',
+    example: '["array/min", [{"price": 3}, {"price": 9}], "price"]',
   },
   'array/max': {
     module: 'array',
@@ -483,7 +483,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'arr', type: 'array', description: 'The array' },
       { name: 'key', type: 'string', description: 'Field to compare', optional: true },
     ],
-    example: '["array/max", "@products", "price"]',
+    example: '["array/max", [{"price": 3}, {"price": 9}], "price"]',
   },
   'array/groupBy': {
     module: 'array',
@@ -497,7 +497,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'arr', type: 'array', description: 'The array' },
       { name: 'key', type: 'string', description: 'Field to group by' },
     ],
-    example: '["array/groupBy", "@orders", "status"]',
+    example: '["array/groupBy", [{"status": "new"}, {"status": "done"}], "status"]',
   },
   'array/partition': {
     module: 'array',
@@ -513,7 +513,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'arr', type: 'array', description: 'The array' },
       { name: 'pred', type: 'lambda', description: 'Predicate function' },
     ],
-    example: '["array/partition", "@items", ["fn", "x", [">", "@x.price", 50]]]',
+    example: '["array/partition", [{"price": 30}, {"price": 80}], ["fn", "x", [">", "@x.price", 50]]]',
   },
   'array/take': {
     module: 'array',
@@ -527,7 +527,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'arr', type: 'array', description: 'The array' },
       { name: 'n', type: 'number', description: 'Number of elements' },
     ],
-    example: '["array/take", "@items", 5]',
+    example: '["array/take", [1, 2, 3, 4, 5, 6, 7], 5]',
   },
   'array/drop': {
     module: 'array',
@@ -541,7 +541,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'arr', type: 'array', description: 'The array' },
       { name: 'n', type: 'number', description: 'Number of elements to skip' },
     ],
-    example: '["array/drop", "@items", 5]',
+    example: '["array/drop", [1, 2, 3, 4, 5, 6, 7], 5]',
   },
   'array/takeLast': {
     module: 'array',
@@ -555,7 +555,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'arr', type: 'array', description: 'The array' },
       { name: 'n', type: 'number', description: 'Number of elements' },
     ],
-    example: '["array/takeLast", "@items", 3]',
+    example: '["array/takeLast", [1, 2, 3, 4, 5], 3]',
   },
   'array/dropLast': {
     module: 'array',
@@ -569,7 +569,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'arr', type: 'array', description: 'The array' },
       { name: 'n', type: 'number', description: 'Number of elements to skip' },
     ],
-    example: '["array/dropLast", "@items", 2]',
+    example: '["array/dropLast", [1, 2, 3, 4, 5], 2]',
   },
   'array/cosine': {
     module: 'array',
@@ -583,7 +583,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'a', type: { kind: 'array', of: 'number' }, description: 'First vector' },
       { name: 'b', type: { kind: 'array', of: 'number' }, description: 'Second vector' },
     ],
-    example: '["array/cosine", "@entity.answerEmbedding", "@entity.referenceEmbedding"]',
+    example: '["array/cosine", [1, 0], [0, 1]]',
   },
   'array/nearest': {
     module: 'array',
@@ -597,7 +597,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'query', type: { kind: 'array', of: 'number' }, description: 'Query vector' },
       { name: 'candidates', type: { kind: 'array', of: { kind: 'array', of: 'number' } }, description: 'Candidate vectors to search' },
     ],
-    example: '["array/nearest", "@entity.queryEmbedding", "@entity.candidateEmbeddings"]',
+    example: '["array/nearest", [1, 0], [[1, 0], [0, 1]]]',
   },
 };
 

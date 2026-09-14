@@ -26,7 +26,7 @@ export const INTEGRATION_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'responseSchema', type: { kind: 'object', fields: {}, open: true }, description: 'JSON Schema the response must satisfy' },
       { name: 'body', type: { kind: 'object', fields: {}, open: true }, description: 'Request body (for POST/PUT)', optional: true },
     ],
-    example: '["integration/http", "GET", "https://api.github.com/repos/foo/bar", { name: "string", stars: "number" }]',
+    example: '["integration/http", "GET", "https://api.github.com/repos/foo/bar", { "name": "string", "stars": "number" }]',
   },
   'integration/github-get-repo': {
     module: 'integration', category: 'std-integration',

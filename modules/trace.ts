@@ -20,7 +20,7 @@ export const TRACE_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'event', type: 'string', description: 'Event type name' },
       { name: 'payload', type: { kind: 'object', fields: {}, open: true }, description: 'Event payload', optional: true },
     ],
-    example: '["trace/emit", "coordinator_state_changed", { phase: @entity.phase }]',
+    example: '["trace/emit", "coordinator_state_changed", {"phase": "planning"}]',
   },
   'trace/log': {
     module: 'trace', category: 'std-trace',

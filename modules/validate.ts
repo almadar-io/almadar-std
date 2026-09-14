@@ -24,7 +24,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'boolean',
     params: [{ name: 'value', type: 'any', description: 'Value to check' }],
-    example: '["validate/required", "@payload.name"]',
+    example: '["validate/required", "Ann"]',
   },
   'validate/string': {
     module: 'validate',
@@ -35,7 +35,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'boolean',
     params: [{ name: 'value', type: 'any', description: 'Value to check' }],
-    example: '["validate/string", "@payload.name"]',
+    example: '["validate/string", "Ann"]',
   },
   'validate/number': {
     module: 'validate',
@@ -46,7 +46,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'boolean',
     params: [{ name: 'value', type: 'any', description: 'Value to check' }],
-    example: '["validate/number", "@payload.age"]',
+    example: '["validate/number", 42]',
   },
   'validate/boolean': {
     module: 'validate',
@@ -57,7 +57,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'boolean',
     params: [{ name: 'value', type: 'any', description: 'Value to check' }],
-    example: '["validate/boolean", "@payload.active"]',
+    example: '["validate/boolean", true]',
   },
   'validate/array': {
     module: 'validate',
@@ -68,7 +68,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'boolean',
     params: [{ name: 'value', type: 'any', description: 'Value to check' }],
-    example: '["validate/array", "@payload.items"]',
+    example: '["validate/array", [1, 2]]',
   },
   'validate/object': {
     module: 'validate',
@@ -79,7 +79,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'boolean',
     params: [{ name: 'value', type: 'any', description: 'Value to check' }],
-    example: '["validate/object", "@payload.data"]',
+    example: '["validate/object", {"a": 1}]',
   },
   'validate/email': {
     module: 'validate',
@@ -90,7 +90,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'boolean',
     params: [{ name: 'value', type: 'string', description: 'Email to validate' }],
-    example: '["validate/email", "@payload.email"]',
+    example: '["validate/email", "ann@example.com"]',
   },
   'validate/url': {
     module: 'validate',
@@ -101,7 +101,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'boolean',
     params: [{ name: 'value', type: 'string', description: 'URL to validate' }],
-    example: '["validate/url", "@payload.website"]',
+    example: '["validate/url", "https://example.com"]',
   },
   'validate/uuid': {
     module: 'validate',
@@ -112,7 +112,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'boolean',
     params: [{ name: 'value', type: 'string', description: 'UUID to validate' }],
-    example: '["validate/uuid", "@payload.id"]',
+    example: '["validate/uuid", "550e8400-e29b-41d4-a716-446655440000"]',
   },
   'validate/phone': {
     module: 'validate',
@@ -123,7 +123,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'boolean',
     params: [{ name: 'value', type: 'string', description: 'Phone number to validate' }],
-    example: '["validate/phone", "@payload.phone"]',
+    example: '["validate/phone", "+15551234567"]',
   },
   'validate/creditCard': {
     module: 'validate',
@@ -134,7 +134,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'boolean',
     params: [{ name: 'value', type: 'string', description: 'Card number to validate' }],
-    example: '["validate/creditCard", "@payload.cardNumber"]',
+    example: '["validate/creditCard", "4111111111111111"]',
   },
   'validate/date': {
     module: 'validate',
@@ -145,7 +145,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'boolean',
     params: [{ name: 'value', type: 'any', description: 'Value to check' }],
-    example: '["validate/date", "@payload.birthDate"]',
+    example: '["validate/date", "2024-01-18"]',
   },
   'validate/minLength': {
     module: 'validate',
@@ -159,7 +159,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'value', type: 'string | array', description: 'Value to check' },
       { name: 'min', type: 'number', description: 'Minimum length' },
     ],
-    example: '["validate/minLength", "@payload.password", 8]',
+    example: '["validate/minLength", "password123", 8]',
   },
   'validate/maxLength': {
     module: 'validate',
@@ -173,7 +173,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'value', type: 'string | array', description: 'Value to check' },
       { name: 'max', type: 'number', description: 'Maximum length' },
     ],
-    example: '["validate/maxLength", "@payload.name", 50]',
+    example: '["validate/maxLength", "Ann", 50]',
   },
   'validate/length': {
     module: 'validate',
@@ -187,7 +187,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'value', type: 'string | array', description: 'Value to check' },
       { name: 'exact', type: 'number', description: 'Required length' },
     ],
-    example: '["validate/length", "@payload.code", 6]',
+    example: '["validate/length", "ABC123", 6]',
   },
   'validate/min': {
     module: 'validate',
@@ -201,7 +201,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'value', type: 'number', description: 'Number to check' },
       { name: 'min', type: 'number', description: 'Minimum value' },
     ],
-    example: '["validate/min", "@payload.age", 18]',
+    example: '["validate/min", 21, 18]',
   },
   'validate/max': {
     module: 'validate',
@@ -215,7 +215,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'value', type: 'number', description: 'Number to check' },
       { name: 'max', type: 'number', description: 'Maximum value' },
     ],
-    example: '["validate/max", "@payload.quantity", 100]',
+    example: '["validate/max", 50, 100]',
   },
   'validate/range': {
     module: 'validate',
@@ -230,7 +230,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'min', type: 'number', description: 'Minimum value' },
       { name: 'max', type: 'number', description: 'Maximum value' },
     ],
-    example: '["validate/range", "@payload.rating", 1, 5]',
+    example: '["validate/range", 4, 1, 5]',
   },
   'validate/pattern': {
     module: 'validate',
@@ -244,7 +244,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'value', type: 'string', description: 'String to check' },
       { name: 'regex', type: 'string', description: 'Regex pattern' },
     ],
-    example: '["validate/pattern", "@payload.code", "^[A-Z]{3}[0-9]{3}$"]',
+    example: '["validate/pattern", "ABC123", "^[A-Z]{3}[0-9]{3}$"]',
   },
   'validate/oneOf': {
     module: 'validate',
@@ -258,7 +258,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'value', type: 'any', description: 'Value to check' },
       { name: 'options', type: 'array', description: 'Allowed values' },
     ],
-    example: '["validate/oneOf", "@payload.role", ["admin", "user", "guest"]]',
+    example: '["validate/oneOf", "admin", ["admin", "user", "guest"]]',
   },
   'validate/noneOf': {
     module: 'validate',
@@ -272,7 +272,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'value', type: 'any', description: 'Value to check' },
       { name: 'options', type: 'array', description: 'Disallowed values' },
     ],
-    example: '["validate/noneOf", "@payload.username", ["admin", "root", "system"]]',
+    example: '["validate/noneOf", "alice", ["admin", "root", "system"]]',
   },
   'validate/equals': {
     module: 'validate',
@@ -286,7 +286,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'a', type: 'any', description: 'First value' },
       { name: 'b', type: 'any', description: 'Second value' },
     ],
-    example: '["validate/equals", "@payload.password", "@payload.confirmPassword"]',
+    example: '["validate/equals", "secret", "secret"]',
   },
   'validate/check': {
     module: 'validate',
@@ -300,11 +300,7 @@ export const VALIDATE_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'value', type: 'any', description: 'Value or object to validate' },
       { name: 'rules', type: 'object', description: 'Validation rules by field' },
     ],
-    example: `["validate/check", "@payload.data", {
-  "name": [["required"], ["minLength", 2], ["maxLength", 50]],
-  "email": [["required"], ["email"]],
-  "age": [["number"], ["min", 18]]
-}]`,
+    example: '["validate/check", {"name": "Ann", "email": "ann@example.com", "age": 20}, {"name": [["required"], ["minLength", 2], ["maxLength", 50]], "email": [["required"], ["email"]], "age": [["number"]]}]',
   },
 };
 

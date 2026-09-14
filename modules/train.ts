@@ -32,7 +32,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'data', type: 'array', description: 'Training data (array of {input, target} or experiences)' },
       { name: 'config', type: 'train/config', description: 'Training configuration with constraints' },
     ],
-    example: '["train/loop", "@entity.architecture", "@entity.buffer", "@entity.trainingConfig"]',
+    example: '["train/loop", {"layers": [{"type": "dense", "units": 2}]}, [{"state": [0], "action": 1, "reward": 1}], {"epochs": 10}]',
   },
   'train/step': {
     module: 'train',
@@ -48,7 +48,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'target', type: 'tensor', description: 'Target tensor' },
       { name: 'config', type: 'train/config', description: 'Training configuration' },
     ],
-    example: '["train/step", "@entity.architecture", "@batch.input", "@batch.target", "@entity.config"]',
+    example: '["train/step", {"layers": [{"type": "dense", "units": 2}]}, [0.1, 0.2], [1], {"lr": 0.01}]',
   },
 
   // ============================================================================
@@ -67,7 +67,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'module', type: 'nn/module', description: 'The neural network' },
       { name: 'testCases', type: 'array', description: 'Array of {input, expected, tolerance?}' },
     ],
-    example: '["train/validate", "@entity.architecture", "@entity.validationSet"]',
+    example: '["train/validate", {"layers": [{"type": "dense", "units": 2}]}, [{"input": [0], "expected": [1]}]]',
   },
   'train/checkRegression': {
     module: 'train',
@@ -82,7 +82,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'oldModule', type: 'nn/module', description: 'Previous network' },
       { name: 'invariants', type: 'array', description: 'Test cases that must not regress' },
     ],
-    example: '["train/checkRegression", "@payload.newWeights", "@entity.architecture", "@entity.requiredInvariants"]',
+    example: '["train/checkRegression", [0.1, 0.2], {"layers": [{"type": "dense", "units": 2}]}, [{"input": [0], "expected": [1]}]]',
   },
 
   // ============================================================================
@@ -101,7 +101,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'module', type: 'nn/module', description: 'The neural network' },
       { name: 'constraints', type: 'train/constraints', description: 'Constraint specification' },
     ],
-    example: '["train/checkConstraints", "@payload.newWeights", "@entity.constraints"]',
+    example: '["train/checkConstraints", [0.1, 0.2], {"maxMagnitude": 10}]',
   },
   'train/checkWeightMagnitude': {
     module: 'train',
@@ -115,7 +115,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'module', type: 'nn/module', description: 'The neural network' },
       { name: 'maxMagnitude', type: 'number', description: 'Maximum allowed weight magnitude' },
     ],
-    example: '["train/checkWeightMagnitude", "@entity.architecture", 10.0]',
+    example: '["train/checkWeightMagnitude", {"layers": [{"type": "dense", "units": 2}]}, 10.0]',
   },
   'train/checkForbiddenOutputs': {
     module: 'train',
@@ -130,7 +130,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'testInputs', type: 'array', description: 'Inputs to test' },
       { name: 'forbiddenRegions', type: 'array', description: 'Forbidden output regions' },
     ],
-    example: '["train/checkForbiddenOutputs", "@entity.architecture", "@entity.testInputs", "@entity.forbiddenOutputRegions"]',
+    example: '["train/checkForbiddenOutputs", {"layers": [{"type": "dense", "units": 2}]}, [[0], [1]], {"0": {"min": 100, "max": 200}}]',
   },
 
   // ============================================================================
@@ -149,7 +149,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'module', type: 'nn/module', description: 'The neural network' },
       { name: 'maxNorm', type: 'number', description: 'Maximum gradient norm' },
     ],
-    example: '["train/clipGradients", "@entity.architecture", 1.0]',
+    example: '["train/clipGradients", {"layers": [{"type": "dense", "units": 2}]}, 1.0]',
   },
   'train/getGradientNorm': {
     module: 'train',
@@ -162,7 +162,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [
       { name: 'module', type: 'nn/module', description: 'The neural network' },
     ],
-    example: '["train/getGradientNorm", "@entity.architecture"]',
+    example: '["train/getGradientNorm", {"layers": [{"type": "dense", "units": 2}]}]',
   },
 
   // ============================================================================
@@ -181,7 +181,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'module', type: 'nn/module', description: 'The neural network' },
       { name: 'maxMagnitude', type: 'number', description: 'Maximum weight magnitude' },
     ],
-    example: '["train/clipWeights", "@entity.architecture", 10.0]',
+    example: '["train/clipWeights", {"layers": [{"type": "dense", "units": 2}]}, 10.0]',
   },
   'train/getMaxWeightMagnitude': {
     module: 'train',
@@ -194,7 +194,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [
       { name: 'module', type: 'nn/module', description: 'The neural network' },
     ],
-    example: '["train/getMaxWeightMagnitude", "@entity.architecture"]',
+    example: '["train/getMaxWeightMagnitude", {"layers": [{"type": "dense", "units": 2}]}]',
   },
 
   // ============================================================================
@@ -213,7 +213,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'predicted', type: 'tensor', description: 'Predicted values' },
       { name: 'target', type: 'tensor', description: 'Target values' },
     ],
-    example: '["train/mse", "@entity.output", "@batch.target"]',
+    example: '["train/mse", [0.5, 0.7], [1, 0]]',
   },
   'train/crossEntropy': {
     module: 'train',
@@ -227,7 +227,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'logits', type: 'tensor', description: 'Raw model outputs (logits)' },
       { name: 'labels', type: 'tensor', description: 'Target class labels' },
     ],
-    example: '["train/crossEntropy", "@entity.logits", "@batch.labels"]',
+    example: '["train/crossEntropy", [2.0, 0.5], [1, 0]]',
   },
   'train/huber': {
     module: 'train',
@@ -242,7 +242,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'target', type: 'tensor', description: 'Target values' },
       { name: 'delta', type: 'number', description: 'Threshold for quadratic vs linear', optional: true, defaultValue: 1.0 },
     ],
-    example: '["train/huber", "@entity.qValues", "@batch.targets", 1.0]',
+    example: '["train/huber", [0.5, 1.2], [1, 0], 1.0]',
   },
 
   // ============================================================================
@@ -262,7 +262,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'lr', type: 'number', description: 'Learning rate' },
       { name: 'momentum', type: 'number', description: 'Momentum factor', optional: true, defaultValue: 0 },
     ],
-    example: '["train/sgd", "@entity.architecture", 0.01, 0.9]',
+    example: '["train/sgd", {"layers": [{"type": "dense", "units": 2}]}, 0.01, 0.9]',
   },
   'train/adam': {
     module: 'train',
@@ -278,7 +278,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'beta1', type: 'number', description: 'First moment decay', optional: true, defaultValue: 0.9 },
       { name: 'beta2', type: 'number', description: 'Second moment decay', optional: true, defaultValue: 0.999 },
     ],
-    example: '["train/adam", "@entity.architecture", 0.001]',
+    example: '["train/adam", {"layers": [{"type": "dense", "units": 2}]}, 0.001]',
   },
 
   // ============================================================================
@@ -297,7 +297,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'buffer', type: 'array', description: 'Experience buffer' },
       { name: 'batchSize', type: 'number', description: 'Number of samples' },
     ],
-    example: '["train/sampleBatch", "@entity.experienceBuffer", 32]',
+    example: '["train/sampleBatch", [{"state": [0], "reward": 1}, {"state": [1], "reward": 0}], 2]',
   },
   'train/computeReturns': {
     module: 'train',
@@ -311,7 +311,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'rewards', type: 'array', description: 'Array of rewards' },
       { name: 'gamma', type: 'number', description: 'Discount factor' },
     ],
-    example: '["train/computeReturns", "@episode.rewards", 0.99]',
+    example: '["train/computeReturns", [1, 0, 1], 0.99]',
   },
   'train/computeAdvantages': {
     module: 'train',
@@ -326,7 +326,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'values', type: 'tensor', description: 'Value estimates' },
       { name: 'config', type: 'object', description: 'Config with gamma, lambda' },
     ],
-    example: '["train/computeAdvantages", "@episode.rewards", "@episode.values", { "gamma": 0.99, "lambda": 0.95 }]',
+    example: '["train/computeAdvantages", [1, 0, 1], [0.5, 0.4, 0.3], { "gamma": 0.99, "lambda": 0.95 }]',
   },
 
   // ============================================================================
@@ -346,7 +346,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'data', type: 'array', description: 'Training data (optional)' },
       { name: 'config', type: 'object', description: 'Training config (optional)' },
     ],
-    example: '["train", "@entity.model", "@entity.data", { "epochs": 100 }]',
+    example: '["train", {"layers": [{"type": "dense", "units": 2}]}, [[0, 1], [1, 0]], { "epochs": 100 }]',
   },
   'evaluate': {
     module: 'train',
@@ -360,7 +360,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'model', type: 'nn/module', description: 'The neural network module' },
       { name: 'testCases', type: 'array', description: 'Test cases (optional)' },
     ],
-    example: '["evaluate", "@entity.model", "@entity.testCases"]',
+    example: '["evaluate", {"layers": [{"type": "dense", "units": 2}]}, [{"input": [0], "expected": [1]}]]',
   },
   'checkpoint/save': {
     module: 'train',
@@ -374,7 +374,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'model', type: 'nn/module', description: 'The neural network module' },
       { name: 'key', type: 'string', description: 'Checkpoint identifier' },
     ],
-    example: '["checkpoint/save", "@entity.model", "@entity.checkpointKey"]',
+    example: '["checkpoint/save", {"layers": [{"type": "dense", "units": 2}]}, "ckpt-1"]',
   },
   'checkpoint/load': {
     module: 'train',
@@ -387,7 +387,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [
       { name: 'key', type: 'string', description: 'Checkpoint identifier' },
     ],
-    example: '["checkpoint/load", "@entity.checkpointKey"]',
+    example: '["checkpoint/load", "ckpt-1"]',
   },
 };
 

@@ -139,7 +139,7 @@ export const NN_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'module', type: 'nn/module', description: 'The neural network module' },
       { name: 'input', type: 'tensor', description: 'Input tensor' },
     ],
-    example: '["nn/forward", "@entity.architecture", "@entity.sensors"]',
+    example: '["nn/forward", {"layers": [{"type": "dense", "units": 2}]}, [0.1, 0.2]]',
   },
   'nn/getWeights': {
     module: 'nn',
@@ -152,7 +152,7 @@ export const NN_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [
       { name: 'module', type: 'nn/module', description: 'The neural network module' },
     ],
-    example: '["nn/getWeights", "@entity.architecture"]',
+    example: '["nn/getWeights", {"layers": [{"type": "dense", "units": 2}]}]',
   },
   'nn/setWeights': {
     module: 'nn',
@@ -166,7 +166,7 @@ export const NN_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'module', type: 'nn/module', description: 'The neural network module' },
       { name: 'weights', type: 'tensor', description: 'New weights as flat tensor' },
     ],
-    example: '["nn/setWeights", "@entity.architecture", "@payload.newWeights"]',
+    example: '["nn/setWeights", {"layers": [{"type": "dense", "units": 2}]}, [0.1, 0.2, 0.3]]',
   },
   'nn/paramCount': {
     module: 'nn',
@@ -179,7 +179,7 @@ export const NN_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [
       { name: 'module', type: 'nn/module', description: 'The neural network module' },
     ],
-    example: '["nn/paramCount", "@entity.architecture"] // => 3300',
+    example: '["nn/paramCount", {"layers": [{"type": "dense", "units": 2}]}]',
   },
   'nn/clone': {
     module: 'nn',
@@ -192,7 +192,7 @@ export const NN_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [
       { name: 'module', type: 'nn/module', description: 'The neural network module to clone' },
     ],
-    example: '["nn/clone", "@entity.architecture"]',
+    example: '["nn/clone", {"layers": [{"type": "dense", "units": 2}]}]',
   },
 
   // ============================================================================
@@ -211,7 +211,7 @@ export const NN_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'model', type: 'nn/module', description: 'The neural network module' },
       { name: 'input', type: 'tensor', description: 'Input tensor' },
     ],
-    example: '["forward", "@entity.model", "@entity.input"]',
+    example: '["forward", {"layers": [{"type": "dense", "units": 2}]}, [0.5]]',
   },
 };
 

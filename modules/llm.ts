@@ -36,7 +36,7 @@ export const LLM_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'messages', type: { kind: 'array', of: 'LlmMessage' }, description: 'Conversation messages' },
       { name: 'tools', type: { kind: 'array', of: 'LlmToolDef' }, description: 'Tool definitions available to the LLM' },
     ],
-    example: '["llm/call-tools", @entity.messages, @entity.tools]',
+    example: '["llm/call-tools", [{"role": "user", "content": "What time is it?"}], [{"name": "getTime", "description": "Get current time", "parameters": {}}]]',
   },
   'llm/embed': {
     module: 'llm',
@@ -60,7 +60,7 @@ export const LLM_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: false,
     returnType: 'number',
     params: [],
-    example: '["llm/token-count"] => 12450',
+    example: '["llm/token-count"] // => 12450',
   },
   'llm/switch': {
     module: 'llm',

@@ -30,7 +30,7 @@ export const GRAPH_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [
       { name: 'config', type: 'object', description: 'Graph construction config (nodes, edges, node-features, edge-features, directed)' },
     ],
-    example: '["graph/from-entities", { "nodes": "User", "edges": "Follows" }]',
+    example: '["graph/from-entities", [{ "age": 30, "score": 0.5 }, { "age": 25, "score": 0.7 }]]',
   },
   'graph/from-adjacency': {
     module: 'graph',
@@ -44,7 +44,7 @@ export const GRAPH_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'adjacency', type: 'tensor', description: 'Adjacency matrix' },
       { name: 'features', type: 'tensor', description: 'Node feature matrix' },
     ],
-    example: '["graph/from-adjacency", "@entity.adj", "@entity.features"]',
+    example: '["graph/from-adjacency", [[0, 1], [1, 0]], [[1.0], [2.0]]]',
   },
   'graph/from-edge-list': {
     module: 'graph',
@@ -58,7 +58,7 @@ export const GRAPH_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'edges', type: 'tensor', description: 'Edge index tensor [2, num_edges]' },
       { name: 'features', type: 'tensor', description: 'Node feature matrix' },
     ],
-    example: '["graph/from-edge-list", "@entity.edges", "@entity.features"]',
+    example: '["graph/from-edge-list", [[0, 1]], [[1.0], [2.0]]]',
   },
 
   // ============================================================================
@@ -76,7 +76,7 @@ export const GRAPH_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [
       { name: 'graph', type: 'graph', description: 'Input graph' },
     ],
-    example: '["graph/add-self-loops", "@entity.graph"]',
+    example: '["graph/add-self-loops", ["graph/from-adjacency", [[0, 1], [1, 0]], [[1.0], [2.0]]]]',
   },
   'graph/to-undirected': {
     module: 'graph',
@@ -89,7 +89,7 @@ export const GRAPH_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [
       { name: 'graph', type: 'graph', description: 'Input graph' },
     ],
-    example: '["graph/to-undirected", "@entity.graph"]',
+    example: '["graph/to-undirected", ["graph/from-adjacency", [[0, 1], [1, 0]], [[1.0], [2.0]]]]',
   },
   'graph/subgraph': {
     module: 'graph',
@@ -103,7 +103,7 @@ export const GRAPH_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'graph', type: 'graph', description: 'Input graph' },
       { name: 'mask', type: 'tensor', description: 'Boolean node mask' },
     ],
-    example: '["graph/subgraph", "@entity.graph", "@entity.mask"]',
+    example: '["graph/subgraph", ["graph/from-adjacency", [[0, 1], [1, 0]], [[1.0], [2.0]]], [true, false]]',
   },
   'graph/k-hop': {
     module: 'graph',
@@ -118,7 +118,7 @@ export const GRAPH_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'node', type: 'number', description: 'Center node index' },
       { name: 'k', type: 'number', description: 'Number of hops' },
     ],
-    example: '["graph/k-hop", "@entity.graph", 0, 2]',
+    example: '["graph/k-hop", ["graph/from-adjacency", [[0, 1], [1, 0]], [[1.0], [2.0]]], 0, 2]',
   },
 
   // ============================================================================
@@ -136,7 +136,7 @@ export const GRAPH_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [
       { name: 'graph', type: 'graph', description: 'Input graph' },
     ],
-    example: '["graph/node-features", "@entity.graph"]',
+    example: '["graph/node-features", ["graph/from-adjacency", [[0, 1], [1, 0]], [[1.0], [2.0]]]]',
   },
   'graph/edge-index': {
     module: 'graph',
@@ -149,7 +149,7 @@ export const GRAPH_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [
       { name: 'graph', type: 'graph', description: 'Input graph' },
     ],
-    example: '["graph/edge-index", "@entity.graph"]',
+    example: '["graph/edge-index", ["graph/from-adjacency", [[0, 1], [1, 0]], [[1.0], [2.0]]]]',
   },
   'graph/edge-features': {
     module: 'graph',
@@ -162,7 +162,7 @@ export const GRAPH_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [
       { name: 'graph', type: 'graph', description: 'Input graph' },
     ],
-    example: '["graph/edge-features", "@entity.graph"]',
+    example: '["graph/edge-features", ["graph/from-adjacency", [[0, 1], [1, 0]], [[1.0], [2.0]]]]',
   },
   'graph/num-nodes': {
     module: 'graph',
@@ -175,7 +175,7 @@ export const GRAPH_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [
       { name: 'graph', type: 'graph', description: 'Input graph' },
     ],
-    example: '["graph/num-nodes", "@entity.graph"]',
+    example: '["graph/num-nodes", ["graph/from-adjacency", [[0, 1], [1, 0]], [[1.0], [2.0]]]]',
   },
   'graph/num-edges': {
     module: 'graph',
@@ -188,7 +188,7 @@ export const GRAPH_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [
       { name: 'graph', type: 'graph', description: 'Input graph' },
     ],
-    example: '["graph/num-edges", "@entity.graph"]',
+    example: '["graph/num-edges", ["graph/from-adjacency", [[0, 1], [1, 0]], [[1.0], [2.0]]]]',
   },
   'graph/degree': {
     module: 'graph',
@@ -201,7 +201,7 @@ export const GRAPH_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [
       { name: 'graph', type: 'graph', description: 'Input graph' },
     ],
-    example: '["graph/degree", "@entity.graph"]',
+    example: '["graph/degree", ["graph/from-adjacency", [[0, 1], [1, 0]], [[1.0], [2.0]]]]',
   },
 
   // ============================================================================
@@ -219,7 +219,7 @@ export const GRAPH_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [
       { name: 'graphs', type: 'array', description: 'List of graphs' },
     ],
-    example: '["graph/batch", "@entity.graphs"]',
+    example: '["graph/batch", [["graph/from-adjacency", [[0, 1], [1, 0]], [[1.0], [2.0]]]]]',
   },
 };
 
