@@ -1216,6 +1216,7 @@ export function stdFileStoreStoredFileOrbital(params: StdFileStoreStoredFileOrbi
                         'children': [
                           {
                             'name': '@config.headerIcon',
+                            'size': 'lg',
                             'type': 'icon',
                           },
                           {
@@ -1358,6 +1359,7 @@ export function stdFileStoreStoredFileOrbital(params: StdFileStoreStoredFileOrbi
                           },
                           {
                             'name': '@config.headerIcon',
+                            'size': 'lg',
                             'type': 'icon',
                           },
                           {

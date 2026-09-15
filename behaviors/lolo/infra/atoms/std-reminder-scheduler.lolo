@@ -1,5 +1,5 @@
 app std-reminder-scheduler "1.1.0"
-"std-reminder-scheduler — deadline reminders for a target entity. A periodic tick scans the target for records whose `dateField` deadline (a ms-epoch number or an ISO datetime string) is within `offsetHours` of now and that have not been reminded yet, and emits `ReminderDue` for each — every matching record, via a self-driving scan loop. Marks each record `remindedAt` so it isn't reminded twice. Compose alongside std-notify-on-event to deliver the reminder."
+"std-reminder-scheduler — deadline reminders for a target entity. A periodic tick scans the target for records whose `dateField` deadline (a ms-epoch number or an ISO datetime string) is within `offsetHours` of now and that have not been reminded yet, and emits `ReminderDue` for each — every matching record, via a self-driving scan loop. `direction` picks which side of now the scan matches: 'future' (default) fires for deadlines up to `offsetHours` ahead; 'past' fires once a record's date is at least `offsetHours` behind now. Marks each record `remindedAt` so it isn't reminded twice — and only when the record actually matched the scan, so records outside the window stay eligible for later passes. Compose alongside std-notify-on-event to deliver the reminder."
 orbital ReminderSchedulerOrbital {
     type ScanRecordsLoaded = Event { data : [@entity @config.targetEntity] } "Internal: target records due for a reminder."
 
@@ -36,6 +36,9 @@ orbital ReminderSchedulerOrbital {
           emit: { failure: ScanFailed, success: ReminderStepped }
         })
       ScanRecordsLoaded -> idle when ["=", (array/len ?data), 0]
+      ;; A disabled scan acknowledges the batch without marking anything —
+      ;; the dedup write fires only for a record that actually matched.
+      ScanRecordsLoaded -> idle when ["=", @config.enabled, false]
       ScanFailed -> idle
         (notify error (str/concat "Couldn't scan for reminders — " ?error))
     }
@@ -44,7 +47,7 @@ orbital ReminderSchedulerOrbital {
       ReminderStepped -> scanning
         (fetch @config.targetEntity {
           emit: { failure: ScanFailed, success: ScanRecordsLoaded }
-          filter: (and ["=", (object/get @entity remindedAt), 0] [">", (time/parse (object/get @entity @config.dateField)), @now] ["<", ["-", (time/parse (object/get @entity @config.dateField)), @now], ["*", @config.offsetHours, 3600000]])
+          filter: (and ["=", (object/get @entity remindedAt), 0] (or (and ["=", @config.direction, "future"] [">", (time/parse (object/get @entity @config.dateField)), @now] ["<", ["-", (time/parse (object/get @entity @config.dateField)), @now], ["*", @config.offsetHours, 3600000]]) (and ["=", @config.direction, "past"] [">", ["-", @now, (time/parse (object/get @entity @config.dateField))], ["*", @config.offsetHours, 3600000]])))
         })
       ScanRecordsLoaded -> scanning when [">", (array/len ?data), 0]
         (set @entity.headId (object/get (array/first ?data) id))
@@ -96,7 +99,7 @@ orbital ReminderSchedulerOrbital {
       scanCycle every "*/15 * * * *"
         (fetch @config.targetEntity {
           emit: { failure: ScanFailed, success: ScanRecordsLoaded }
-          filter: (and ["=", (object/get @entity remindedAt), 0] [">", (time/parse (object/get @entity @config.dateField)), @now] ["<", ["-", (time/parse (object/get @entity @config.dateField)), @now], ["*", @config.offsetHours, 3600000]])
+          filter: (and ["=", (object/get @entity remindedAt), 0] (or (and ["=", @config.direction, "future"] [">", (time/parse (object/get @entity @config.dateField)), @now] ["<", ["-", (time/parse (object/get @entity @config.dateField)), @now], ["*", @config.offsetHours, 3600000]]) (and ["=", @config.direction, "past"] [">", ["-", @now, (time/parse (object/get @entity @config.dateField))], ["*", @config.offsetHours, 3600000]])))
         })
       
     }
@@ -121,6 +124,11 @@ orbital ReminderSchedulerOrbital {
         @label "How many hours before the deadline to remind?"
         @description "A reminder fires once the deadline is within this many hours of now."
         @synonyms "advance notice, lead time, heads up, early warning hours, how far ahead"
+        @tier "infra"
+      direction : "future" | "past" = "future"
+        @label "Scan which side of now?"
+        @description "'future' (default) matches records whose dateField is still ahead, up to offsetHours out — upcoming-deadline reminders. 'past' matches records whose dateField is at least offsetHours behind now — act-after-the-fact policies. The emitted event and the dedup marker are identical either way."
+        @synonyms "direction, past due, overdue, after the deadline, look back, backward scan, past-window"
         @tier "infra"
       severity : string = info
         @label "How urgent are the reminders?"

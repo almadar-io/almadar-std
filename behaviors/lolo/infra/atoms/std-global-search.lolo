@@ -1,0 +1,248 @@
+app std-global-search "1.0.0"
+"std-global-search — cross-module federated search. Use when a user voices that one search box should query several modules at once (global search, search everything, unified search, cross-module search, federated search, search across records, omnisearch, one search box, aggregated results, grouped results). One SEARCH event fans out to every module key listed in the `modules` config (comma-separated, deterministic — no registry magic): the trait walks the parsed key list with an internal FAN_OUT_STEP sentinel and emits one scoped MODULE_SEARCH_REQUESTED { moduleKey, queryText, typeFilter, scopeJson } -> external per key, so modules respond in parallel rather than in sequence. Modules answer with SEARCH_RESULTS { moduleKey, resultsJson }; each answer appends a SearchResultGroup to the entity, so the merged view stays grouped by module. Client/person/date/type filters ride `scopeJson` — the atom never interprets them. Every query persists as a SearchQuery row (recent/saved searches) when `saveHistory` is on. The input is the mapped `search-input` type rendered inline with event renamed to SEARCH (the std-geosearch idiom); its native {searchTerm}/{value} payloads are bridged via str/default, so programmatic SEARCH { queryText, typeFilter, scopeJson } emitters and the UI box drive the same arm."
+type SearchResultGroup = { moduleKey : string, resultsJson : string, receivedAt : number }
+orbital GlobalSearchOrbital {
+    uses Typography from "std/behaviors/ui-typography"
+    uses Spinner from "std/behaviors/ui-spinner"
+
+    type SEARCH = Event { queryText : string, typeFilter : string, scopeJson : string, value : string, searchTerm : string } "Run a federated query. Canonical payload is { queryText, typeFilter, scopeJson }; value/searchTerm are accepted for the composed search-input's native emissions."
+
+    type MODULE_SEARCH_REQUESTED = Event { moduleKey : string, queryText : string, typeFilter : string, scopeJson : string } "Scoped fan-out request, one per configured module key. Modules subscribe by moduleKey and answer with SEARCH_RESULTS."
+
+    type SEARCH_RESULTS = Event { moduleKey : string, resultsJson : string } "One module's answer; resultsJson is the module's serialized hit list, merged into the grouped view under moduleKey."
+
+    type GLOBAL_SEARCH_COMPLETED = Event { queryText : string, moduleCount : number, respondedCount : number } "Fired when every requested module has answered."
+
+    type QUERY_SAVED = Event { id : string! } "The SearchQuery row persisted."
+
+    type QUERY_SAVE_FAILED = Event { error : string! } "Persisting the SearchQuery row failed."
+
+    type FAN_OUT_STEP = Event { remaining : number } "Internal sentinel: drains pendingModules, one MODULE_SEARCH_REQUESTED per pass. Carries the post-seed/post-drop queue length so the loop guard reads the payload (walker-provable), not the config-seeded entity field."
+
+  entity SearchQuery [persistent: search_queries] {
+    id : string!
+    personId : string @description "Owner of this query — the user who ran it." @synonyms "user, owner, searcher, account" = ""
+    queryText : string @description "The search text the user typed." @synonyms "query, search term, keywords, search string" = ""
+    typeFilter : string @description "Record-type filter applied to the query; blank = all types." @synonyms "type, kind, category filter, record type" = ""
+    scopeJson : string @description "Serialized scope filters (client/person/date/type) passed through to modules uninterpreted." @synonyms "filters, scope, search filters, filter json" = ""
+    createdAt : number @description "When the query was run." @synonyms "timestamp, searched at, date" = 0
+    pendingModules : [string] @description "Scratch: configured module keys still awaiting a fan-out request." @synonyms "remaining modules, queue" = []
+    requestedCount : number @description "How many module requests have been emitted for the current query." @synonyms "fanned out, requests sent" = 0
+    respondedCount : number @description "How many modules have answered the current query." @synonyms "answers received, responses" = 0
+    fanOutDone : boolean @description "Scratch: true once every configured module has been sent its request." @synonyms "fan-out complete, all requested" = false
+    searching : boolean @description "True while a query is in flight." @synonyms "loading, in progress, busy" = false
+    results : [SearchResultGroup] @description "Merged answers, one entry per responding module, grouped by moduleKey." @synonyms "grouped results, hits, matches, answers" = []
+    resultsSummary : string @description "Display rendering of the grouped results: one \"moduleKey: resultsJson\" line per answering module." @synonyms "results text, summary, grouped display" = ""
+    savedQueryId : string @description "Id of the persisted SearchQuery row for the current query; blank until saved." @synonyms "query id, saved search id" = ""
+    lastError : string @description "Scratch: last failure shown to the user; blank = none." @synonyms "error, failure reason" = ""
+  }
+
+  trait GlobalSearch -> @rebindable SearchQuery [lifecycle, instance, search, discovery] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch SearchQuery)
+        (render-ui main {
+          children: [{
+            event: SEARCH
+            placeholder: @config.placeholder
+            type: search-input
+          }, <Typography.traits.TypographyRender color={muted} content={"Search across every connected module — results group by module."} linkedEntity={SearchQuery} variant={caption} />]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      SEARCH -> searching
+        (set @entity.queryText (str/default ?queryText (str/default ?value ?searchTerm)))
+        (set @entity.typeFilter (str/default ?typeFilter ""))
+        (set @entity.scopeJson (str/default ?scopeJson ""))
+        (set @entity.personId @user.id)
+        (set @entity.createdAt @now)
+        (set @entity.pendingModules (array/filter (array/map (str/split @config.modules ",") (fn m (str/trim @m))) (fn m (!= @m ""))))
+        (set @entity.requestedCount 0)
+        (set @entity.respondedCount 0)
+        (set @entity.fanOutDone false)
+        (set @entity.searching true)
+        (set @entity.results [])
+        (set @entity.resultsSummary "")
+        (set @entity.lastError "")
+        (when @config.saveHistory
+          (persist create SearchQuery {
+            createdAt: @entity.createdAt
+            personId: @entity.personId
+            queryText: @entity.queryText
+            scopeJson: @entity.scopeJson
+            typeFilter: @entity.typeFilter
+          } { emit: { failure: QUERY_SAVE_FAILED, success: QUERY_SAVED } }))
+        (when [">", (array/len @entity.pendingModules), 0]
+          (emit FAN_OUT_STEP { remaining: (array/len @entity.pendingModules) }))
+        (render-ui main {
+          children: [{
+            event: SEARCH
+            placeholder: @config.placeholder
+            type: search-input
+          }, {
+            align: center
+            children: [<Spinner.traits.SpinnerRender linkedEntity={SearchQuery} />, <Typography.traits.TypographyRender color={muted} content={"Searching…"} linkedEntity={SearchQuery} variant={caption} />]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+    }
+
+    state searching {
+      SEARCH -> searching
+        (set @entity.queryText (str/default ?queryText (str/default ?value ?searchTerm)))
+        (set @entity.typeFilter (str/default ?typeFilter ""))
+        (set @entity.scopeJson (str/default ?scopeJson ""))
+        (set @entity.personId @user.id)
+        (set @entity.createdAt @now)
+        (set @entity.pendingModules (array/filter (array/map (str/split @config.modules ",") (fn m (str/trim @m))) (fn m (!= @m ""))))
+        (set @entity.requestedCount 0)
+        (set @entity.respondedCount 0)
+        (set @entity.fanOutDone false)
+        (set @entity.searching true)
+        (set @entity.results [])
+        (set @entity.resultsSummary "")
+        (set @entity.lastError "")
+        (when @config.saveHistory
+          (persist create SearchQuery {
+            createdAt: @entity.createdAt
+            personId: @entity.personId
+            queryText: @entity.queryText
+            scopeJson: @entity.scopeJson
+            typeFilter: @entity.typeFilter
+          } { emit: { failure: QUERY_SAVE_FAILED, success: QUERY_SAVED } }))
+        (when [">", (array/len @entity.pendingModules), 0]
+          (emit FAN_OUT_STEP { remaining: (array/len @entity.pendingModules) }))
+      FAN_OUT_STEP -> searching when [">", ?remaining, 0]
+        (emit MODULE_SEARCH_REQUESTED {
+          moduleKey: (array/first @entity.pendingModules)
+          queryText: @entity.queryText
+          scopeJson: @entity.scopeJson
+          typeFilter: @entity.typeFilter
+        })
+        (set @entity.requestedCount ["+", @entity.requestedCount, 1])
+        (set @entity.pendingModules (array/drop @entity.pendingModules 1))
+        (when ["=", (array/len @entity.pendingModules), 0]
+          (set @entity.fanOutDone true))
+        (when [">", (array/len @entity.pendingModules), 0]
+          (emit FAN_OUT_STEP { remaining: (array/len @entity.pendingModules) }))
+      SEARCH_RESULTS -> searching
+        (set @entity.respondedCount ["+", @entity.respondedCount, 1])
+        (set @entity.results (array/append @entity.results {
+          moduleKey: ?moduleKey
+          receivedAt: @now
+          resultsJson: ?resultsJson
+        }))
+        (set @entity.resultsSummary (str/concat @entity.resultsSummary (str/concat ?moduleKey (str/concat ": " (str/concat ?resultsJson "\n")))))
+        (render-ui main {
+          children: [{
+            event: SEARCH
+            placeholder: @config.placeholder
+            type: search-input
+          }, <Typography.traits.TypographyRender content={@entity.resultsSummary} linkedEntity={SearchQuery} variant={body} />]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+        (when (and @entity.fanOutDone [">=", @entity.respondedCount, @entity.requestedCount])
+          (do
+            (set @entity.searching false)
+            (emit GLOBAL_SEARCH_COMPLETED {
+              moduleCount: @entity.requestedCount
+              queryText: @entity.queryText
+              respondedCount: @entity.respondedCount
+            })))
+      QUERY_SAVED -> searching
+        (set @entity.savedQueryId ?id)
+      QUERY_SAVE_FAILED -> searching
+        (set @entity.lastError ?error)
+        (notify warning "Could not save the search to history")
+    }
+
+    emits {
+      SEARCH -> external {
+        queryText : string
+        typeFilter : string
+        scopeJson : string
+        value : string
+        searchTerm : string
+      }
+        @description "The query as submitted — re-broadcast so downstream listeners (recent-searches trays, analytics) can react without intercepting the input"
+        @tier "essential"
+      MODULE_SEARCH_REQUESTED -> external {
+        moduleKey : string
+        queryText : string
+        typeFilter : string
+        scopeJson : string
+      }
+        @description "One per configured module key — the module owning that key runs its own search and answers with SEARCH_RESULTS"
+        @tier "essential"
+      GLOBAL_SEARCH_COMPLETED -> external {
+        queryText : string
+        moduleCount : number
+        respondedCount : number
+      }
+        @description "Every requested module has answered; the grouped view is final"
+        @tier "secondary"
+      QUERY_SAVED -> external {
+        id : string!
+      }
+        @description "The query persisted to search history"
+        @tier "secondary"
+      QUERY_SAVE_FAILED -> external {
+        error : string!
+      }
+        @description "Persisting the query failed — the search itself is unaffected"
+        @tier "secondary"
+      FAN_OUT_STEP {
+        remaining : number
+      }
+        @description "Internal sentinel draining the module queue, one MODULE_SEARCH_REQUESTED per pass; `remaining` is the queue length after the last seed/drop"
+        @tier "internal"
+    }
+
+    listens {
+      SEARCH {
+        queryText : string
+        typeFilter : string
+        scopeJson : string
+        value : string
+        searchTerm : string
+      }
+      SEARCH_RESULTS {
+        moduleKey : string
+        resultsJson : string
+      }
+      FAN_OUT_STEP {
+        remaining : number
+      }
+    }
+
+    config {
+      modules : string = ""
+        @label "Modules to search"
+        @description "Comma-separated module keys to fan each query out to (e.g. \"contacts,projects,invoices\"). Each key gets one scoped MODULE_SEARCH_REQUESTED; the module owning a key subscribes to it and answers with SEARCH_RESULTS. Empty = no fan-out (the query is still persisted to history)."
+        @synonyms "search modules, search scope, sources, providers, search providers, indexes, search targets, modules"
+        @tier "internal"
+      saveHistory : boolean = true
+        @label "Keep recent searches"
+        @description "Persist each query as a SearchQuery row so recent and saved searches survive reloads."
+        @synonyms "search history, recent searches, saved searches, remember searches, keep history"
+        @tier "policy"
+      placeholder : string = "Search across modules…"
+        @label "Search placeholder"
+        @description "Hint text in the search input."
+        @synonyms "placeholder, hint text, input hint"
+        @tier "presentation"
+    }
+  }
+
+  page "/global-search" as GlobalSearchPage -> GlobalSearch
+}

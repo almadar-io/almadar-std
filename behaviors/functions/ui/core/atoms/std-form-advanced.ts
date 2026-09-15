@@ -752,6 +752,7 @@ export function stdFormAdvancedFormEntryOrbital(params: StdFormAdvancedFormEntry
                         'children': [
                           {
                             'name': '@config.icon',
+                            'size': 'xl',
                             'type': 'icon',
                           },
                           {
@@ -807,6 +808,7 @@ export function stdFormAdvancedFormEntryOrbital(params: StdFormAdvancedFormEntry
                         'children': [
                           {
                             'name': '@config.icon',
+                            'size': 'xl',
                             'type': 'icon',
                           },
                           {
@@ -862,6 +864,7 @@ export function stdFormAdvancedFormEntryOrbital(params: StdFormAdvancedFormEntry
                     'children': [
                       {
                         'name': 'check-circle',
+                        'size': 'xl',
                         'type': 'icon',
                       },
                       {
@@ -946,6 +949,7 @@ export function stdFormAdvancedFormEntryOrbital(params: StdFormAdvancedFormEntry
                         'children': [
                           {
                             'name': '@config.icon',
+                            'size': 'xl',
                             'type': 'icon',
                           },
                           {

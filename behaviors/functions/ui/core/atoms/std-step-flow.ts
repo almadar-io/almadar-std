@@ -92,7 +92,7 @@ export interface StdStepFlowStepItemsLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdStepFlowConfig {
-  /** Default: `{"children":[{"align":"center","children":[{"name":"shield-check","type":"icon"},{"content":"@config.title","type":"typography","variant":"h3"}],"direction":"horizontal","gap":"sm","type":"stack"},{"allowNavigation":false,"currentStep":"@entity.currentStepIndex","steps":"@entity.wizardSteps","type":"wizard-progress"},{"children":[{"children":[{"align":"center","children":[{"name":"@entity.currentStepIcon","size":"lg","type":"icon"},{"children":[{"content":"@entity.currentStepLabel","type":"typography","variant":"h2"},{"color":"muted","content":"@entity.currentStepDescription","type":"typography","variant":"body"}],"direction":"vertical","gap":"xs","type":"stack"}],"direction":"horizontal","gap":"sm","type":"stack"}],"direction":"vertical","gap":"md","type":"stack"}],"look":"@config.cardLook","type":"card"},{"align":"center","children":[{"action":"BACK","actionPayload":{"id":"@entity.id"},"disabled":"@entity.isFirstStep","icon":"chevron-left","label":"Back","type":"button","variant":"ghost"},{"action":"REJECT","actionPayload":{"id":"@entity.id"},"icon":"x","label":"Reject","type":"button","variant":"ghost"},{"action":"ESCALATE","actionPayload":{"id":"@entity.id"},"icon":"alert-triangle","label":"Escalate","type":"button","variant":"ghost"},{"action":"ADVANCE","actionPayload":{"id":"@entity.id"},"icon":"@entity.primaryActionIcon","label":"@entity.primaryActionLabel","type":"button","variant":"primary"}],"direction":"horizontal","gap":"sm","type":"stack"}],"direction":"vertical","gap":"lg","type":"stack"}` */
+  /** Default: `{"children":[{"align":"center","children":[{"name":"shield-check","size":"lg","type":"icon"},{"content":"@config.title","type":"typography","variant":"h3"}],"direction":"horizontal","gap":"sm","type":"stack"},{"allowNavigation":false,"currentStep":"@entity.currentStepIndex","steps":"@entity.wizardSteps","type":"wizard-progress"},{"children":[{"children":[{"align":"center","children":[{"name":"@entity.currentStepIcon","size":"xl","type":"icon"},{"children":[{"content":"@entity.currentStepLabel","type":"typography","variant":"h2"},{"color":"muted","content":"@entity.currentStepDescription","type":"typography","variant":"body"}],"direction":"vertical","gap":"xs","type":"stack"}],"direction":"horizontal","gap":"sm","type":"stack"}],"direction":"vertical","gap":"md","type":"stack"}],"look":"@config.cardLook","type":"card"},{"align":"center","children":[{"action":"BACK","actionPayload":{"id":"@entity.id"},"disabled":"@entity.isFirstStep","icon":"chevron-left","label":"Back","type":"button","variant":"ghost"},{"action":"REJECT","actionPayload":{"id":"@entity.id"},"icon":"x","label":"Reject","type":"button","variant":"ghost"},{"action":"ESCALATE","actionPayload":{"id":"@entity.id"},"icon":"alert-triangle","label":"Escalate","type":"button","variant":"ghost"},{"action":"ADVANCE","actionPayload":{"id":"@entity.id"},"icon":"@entity.primaryActionIcon","label":"@entity.primaryActionLabel","type":"button","variant":"primary"}],"direction":"horizontal","gap":"sm","type":"stack"}],"direction":"vertical","gap":"lg","type":"stack"}` */
   bodyContent?: unknown;
   /** Default: `"elevated"` */
   cardLook?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
@@ -404,6 +404,7 @@ export function stdStepFlowStepFlowOrbital(params: StdStepFlowStepFlowOrbitalPar
                   'children': [
                     {
                       'name': 'shield-check',
+                      'size': 'lg',
                       'type': 'icon',
                     },
                     {
@@ -431,7 +432,7 @@ export function stdStepFlowStepFlowOrbital(params: StdStepFlowStepFlowOrbitalPar
                           'children': [
                             {
                               'name': '@entity.currentStepIcon',
-                              'size': 'lg',
+                              'size': 'xl',
                               'type': 'icon',
                             },
                             {
@@ -1609,7 +1610,7 @@ export function stdStepFlowStepFlowOrbital(params: StdStepFlowStepFlowOrbitalPar
                     'children': [
                       {
                         'name': 'check-circle',
-                        'size': 'lg',
+                        'size': 'xl',
                         'type': 'icon',
                       },
                       {
@@ -1933,7 +1934,7 @@ export function stdStepFlowStepFlowOrbital(params: StdStepFlowStepFlowOrbitalPar
                     'children': [
                       {
                         'name': 'x-circle',
-                        'size': 'lg',
+                        'size': 'xl',
                         'type': 'icon',
                       },
                       {
@@ -2002,7 +2003,7 @@ export function stdStepFlowStepFlowOrbital(params: StdStepFlowStepFlowOrbitalPar
                     'children': [
                       {
                         'name': 'alert-triangle',
-                        'size': 'lg',
+                        'size': 'xl',
                         'type': 'icon',
                       },
                       {

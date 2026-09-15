@@ -1228,6 +1228,7 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                         'children': [
                           {
                             'name': 'history',
+                            'size': 'lg',
                             'type': 'icon',
                           },
                           {
@@ -1575,6 +1576,7 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                           },
                           {
                             'name': 'file-text',
+                            'size': 'lg',
                             'type': 'icon',
                           },
                           {
@@ -1888,6 +1890,7 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                           },
                           {
                             'name': 'git-compare',
+                            'size': 'lg',
                             'type': 'icon',
                           },
                           {

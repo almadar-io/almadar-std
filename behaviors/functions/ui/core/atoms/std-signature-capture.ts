@@ -957,6 +957,7 @@ export function stdSignatureCaptureSignatureCaptureOrbital(params: StdSignatureC
                       {
                         'color': 'success',
                         'name': 'check-circle',
+                        'size': 'lg',
                         'type': 'icon',
                       },
                       {

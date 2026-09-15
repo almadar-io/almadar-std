@@ -1038,6 +1038,7 @@ export function stdRecurrenceRecurrenceOrbital(params: StdRecurrenceRecurrenceOr
                         'children': [
                           {
                             'name': 'repeat',
+                            'size': 'lg',
                             'type': 'icon',
                           },
                           {
@@ -1265,6 +1266,7 @@ export function stdRecurrenceRecurrenceOrbital(params: StdRecurrenceRecurrenceOr
                           },
                           {
                             'name': 'settings',
+                            'size': 'lg',
                             'type': 'icon',
                           },
                           {
@@ -1336,6 +1338,7 @@ export function stdRecurrenceRecurrenceOrbital(params: StdRecurrenceRecurrenceOr
                           },
                           {
                             'name': 'calendar-clock',
+                            'size': 'lg',
                             'type': 'icon',
                           },
                           {
@@ -1420,7 +1423,7 @@ export function stdRecurrenceRecurrenceOrbital(params: StdRecurrenceRecurrenceOr
                     'children': [
                       {
                         'name': 'x-circle',
-                        'size': 'lg',
+                        'size': 'xl',
                         'type': 'icon',
                       },
                       {

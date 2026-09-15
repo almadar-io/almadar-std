@@ -1,0 +1,399 @@
+[
+  {
+    "organism": "std-notification-preferences",
+    "orbital": "NotificationPreferencesOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/infra/atoms/std-notification-preferences.ts",
+    "entities": [
+      {
+        "name": "NotificationPreference",
+        "fields": [
+          {
+            "name": "personId",
+            "type": "string",
+            "required": true,
+            "description": "The person this preference row belongs to.",
+            "synonyms": "user, recipient, owner, account"
+          },
+          {
+            "name": "eventKey",
+            "type": "string",
+            "required": true,
+            "description": "Event key this preference applies to (matches a notify listener's eventKey); blank = all events.",
+            "synonyms": "event, trigger, topic, subscription"
+          },
+          {
+            "name": "channel",
+            "type": "string",
+            "required": false,
+            "description": "Delivery channel override for this person.",
+            "synonyms": "preferred channel, delivery method"
+          },
+          {
+            "name": "mode",
+            "type": "string",
+            "required": false,
+            "description": "Delivery mode: instant (default) or digest (deferred to a batch cycle).",
+            "synonyms": "delivery mode, frequency, cadence, defer"
+          },
+          {
+            "name": "quietHours",
+            "type": "string",
+            "required": false,
+            "description": "Quiet-hours window as \"HH:MM-HH:MM\" (e.g. 22:00-07:00); blank or equal start/end = disabled.",
+            "synonyms": "do not disturb, quiet window, night mode"
+          }
+        ],
+        "persistence": "persistent"
+      }
+    ],
+    "traits": [
+      {
+        "name": "PreferencesManage",
+        "emittedEvents": [
+          "NEW",
+          "EDIT",
+          "DELETE",
+          "SAVE",
+          "CANCEL",
+          "SET_PERSON_ID",
+          "SET_EVENT_KEY",
+          "SET_CHANNEL",
+          "SET_MODE",
+          "SET_QUIET_HOURS",
+          "PreferencesLoaded",
+          "PreferencesLoadFailed",
+          "PreferenceSaved",
+          "PreferenceSaveFailed",
+          "PreferenceDeleted"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "NEW",
+            "direction": "emit",
+            "description": "Opens the blank preference form.",
+            "synonyms": "add, create, new preference",
+            "tier": "presentation"
+          },
+          {
+            "name": "EDIT",
+            "direction": "emit",
+            "description": "Opens a preference row in the edit form.",
+            "synonyms": "modify, update, change",
+            "tier": "presentation"
+          },
+          {
+            "name": "DELETE",
+            "direction": "emit",
+            "description": "Removes a preference row.",
+            "synonyms": "remove, discard, clear",
+            "tier": "presentation"
+          },
+          {
+            "name": "SAVE",
+            "direction": "emit",
+            "description": "Persists the preference form.",
+            "synonyms": "persist, store, commit",
+            "tier": "domain"
+          },
+          {
+            "name": "CANCEL",
+            "direction": "emit",
+            "description": "Aborts the preference form.",
+            "synonyms": "abort, dismiss, undo",
+            "tier": "domain"
+          },
+          {
+            "name": "SET_PERSON_ID",
+            "direction": "emit",
+            "description": "Preference form: person id changed.",
+            "tier": "internal"
+          },
+          {
+            "name": "SET_EVENT_KEY",
+            "direction": "emit",
+            "description": "Preference form: event key changed.",
+            "tier": "internal"
+          },
+          {
+            "name": "SET_CHANNEL",
+            "direction": "emit",
+            "description": "Preference form: channel changed.",
+            "tier": "internal"
+          },
+          {
+            "name": "SET_MODE",
+            "direction": "emit",
+            "description": "Preference form: delivery mode changed.",
+            "tier": "internal"
+          },
+          {
+            "name": "SET_QUIET_HOURS",
+            "direction": "emit",
+            "description": "Preference form: quiet-hours window changed.",
+            "tier": "internal"
+          },
+          {
+            "name": "PreferencesLoaded",
+            "direction": "emit",
+            "description": "The preference collection finished loading.",
+            "synonyms": "loaded, fetched, retrieved",
+            "tier": "domain"
+          },
+          {
+            "name": "PreferencesLoadFailed",
+            "direction": "emit",
+            "description": "The preference collection failed to load.",
+            "synonyms": "error, failure, load error",
+            "tier": "internal"
+          },
+          {
+            "name": "PreferenceSaved",
+            "direction": "emit",
+            "description": "A preference row persisted (create or update).",
+            "synonyms": "created, updated, persisted",
+            "tier": "domain"
+          },
+          {
+            "name": "PreferenceSaveFailed",
+            "direction": "emit",
+            "description": "A preference persist failed.",
+            "synonyms": "failed, error, unsuccessful",
+            "tier": "internal"
+          },
+          {
+            "name": "PreferenceDeleted",
+            "direction": "emit",
+            "description": "A preference row was deleted.",
+            "synonyms": "removed, purged, discarded",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "tableLook",
+            "type": "string",
+            "default": "dense",
+            "label": "Table look",
+            "description": "Layer 2 visual treatment for the preference data table rendered by this atom.",
+            "tier": "presentation",
+            "enumValues": [
+              "dense",
+              "spacious",
+              "striped",
+              "borderless",
+              "card-rows"
+            ]
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Notification preferences",
+            "label": "Section title",
+            "description": "Heading shown above the preference list",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "NotificationPreference",
+        "transitionEvents": [
+          "CANCEL",
+          "DELETE",
+          "EDIT",
+          "INIT",
+          "NEW",
+          "PreferenceDeleted",
+          "PreferenceSaveFailed",
+          "PreferenceSaved",
+          "PreferencesLoadFailed",
+          "PreferencesLoaded",
+          "SAVE",
+          "SET_CHANNEL",
+          "SET_EVENT_KEY",
+          "SET_MODE",
+          "SET_PERSON_ID",
+          "SET_QUIET_HOURS"
+        ],
+        "definerKnobs": [],
+        "effectRow": [
+          {
+            "kind": "fetch",
+            "resource": "NotificationPreference"
+          },
+          {
+            "kind": "persist",
+            "resource": "NotificationPreference"
+          },
+          {
+            "kind": "render-ui",
+            "resource": "main"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.channel"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.createdAt"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.eventKey"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.id"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.mode"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.personId"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.quietHours"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.updatedAt"
+          }
+        ],
+        "effectEntityRefs": [
+          "NotificationPreference"
+        ]
+      },
+      {
+        "name": "PreferenceGate",
+        "emittedEvents": [
+          "PREFERENCE_RESOLVED",
+          "PREFERENCE_ROWS_LOADED",
+          "PREFERENCE_CHECK_FAILED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "PREFERENCE_RESOLVED",
+            "direction": "emit",
+            "description": "The gate's verdict for a CHECK_PREFERENCE consult: resolved channel and mode, and whether quiet hours suppress delivery right now. Fail-open: no row or failed lookup = { channel: in_app, mode: instant, suppressed: false }.",
+            "synonyms": "verdict, preference answer, gate result, resolved preference",
+            "tier": "domain"
+          },
+          {
+            "name": "PREFERENCE_ROWS_LOADED",
+            "direction": "emit",
+            "description": "NotificationPreference rows loaded; the arm filters to the (personId, eventKey) match and resolves the verdict",
+            "tier": "internal"
+          },
+          {
+            "name": "PREFERENCE_CHECK_FAILED",
+            "direction": "emit",
+            "description": "The preference fetch failed — the arm emits the fail-open verdict",
+            "tier": "internal"
+          },
+          {
+            "name": "CHECK_PREFERENCE",
+            "direction": "listen",
+            "description": "Consult the gate for a person's effective notification preference.",
+            "synonyms": "check preference, resolve preference, should notify, gate notification",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "eventKey",
+            "type": "string",
+            "default": "",
+            "label": "Event key",
+            "description": "Stable key naming the event this gate checks preferences for (e.g. 'BudgetThreshold' — the std-finance-tracker NotifyOnEventListener convention). A blank CHECK_PREFERENCE payload eventKey falls back to this value. Preference rows whose eventKey is blank apply to every event.",
+            "synonyms": "preference key, event name, subscription key, notification topic",
+            "tier": "policy"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "GateView",
+        "transitionEvents": [
+          "CHECK_PREFERENCE",
+          "PREFERENCE_CHECK_FAILED",
+          "PREFERENCE_ROWS_LOADED"
+        ],
+        "definerKnobs": [],
+        "effectRow": [
+          {
+            "kind": "emit",
+            "resource": "PREFERENCE_RESOLVED"
+          },
+          {
+            "kind": "fetch",
+            "resource": "NotificationPreference"
+          },
+          {
+            "kind": "render-ui",
+            "resource": "toast"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.channel"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.eventKey"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.mode"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.personId"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.quietHours"
+          }
+        ],
+        "effectEntityRefs": [
+          "NotificationPreference"
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "name": "NotificationPreferencesPage",
+        "defaultPath": "/notification-preferences",
+        "primaryEntity": "NotificationPreference"
+      }
+    ],
+    "emittedEvents": [
+      "CANCEL",
+      "DELETE",
+      "EDIT",
+      "NEW",
+      "PREFERENCE_CHECK_FAILED",
+      "PREFERENCE_RESOLVED",
+      "PREFERENCE_ROWS_LOADED",
+      "PreferenceDeleted",
+      "PreferenceSaveFailed",
+      "PreferenceSaved",
+      "PreferencesLoadFailed",
+      "PreferencesLoaded",
+      "SAVE",
+      "SET_CHANNEL",
+      "SET_EVENT_KEY",
+      "SET_MODE",
+      "SET_PERSON_ID",
+      "SET_QUIET_HOURS"
+    ],
+    "listenedEvents": [],
+    "exposure": "both",
+    "provenance": "authored",
+    "sourceValid": true
+  }
+]

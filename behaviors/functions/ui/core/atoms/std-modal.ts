@@ -705,6 +705,7 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
                         'children': [
                           {
                             'name': '@config.icon',
+                            'size': 'lg',
                             'type': 'icon',
                           },
                           {

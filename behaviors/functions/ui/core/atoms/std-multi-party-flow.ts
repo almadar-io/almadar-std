@@ -1274,6 +1274,7 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                         'children': [
                           {
                             'name': 'git-pull-request',
+                            'size': 'lg',
                             'type': 'icon',
                           },
                           {
@@ -1787,6 +1788,7 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                         'children': [
                           {
                             'name': 'git-pull-request',
+                            'size': 'lg',
                             'type': 'icon',
                           },
                           {
@@ -2155,6 +2157,7 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                         'children': [
                           {
                             'name': 'lock',
+                            'size': 'lg',
                             'type': 'icon',
                           },
                           {
@@ -2254,7 +2257,7 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                             'children': [
                               {
                                 'name': 'check-circle',
-                                'size': 'lg',
+                                'size': 'xl',
                                 'type': 'icon',
                               },
                               {
@@ -2362,6 +2365,7 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                           },
                           {
                             'name': 'alert-triangle',
+                            'size': 'lg',
                             'type': 'icon',
                           },
                           {
@@ -2437,6 +2441,7 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                           },
                           {
                             'name': 'x-circle',
+                            'size': 'lg',
                             'type': 'icon',
                           },
                           {
@@ -2527,6 +2532,7 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                         'children': [
                           {
                             'name': 'alert-triangle',
+                            'size': 'lg',
                             'type': 'icon',
                           },
                           {
@@ -2675,6 +2681,7 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                         'children': [
                           {
                             'name': 'x-circle',
+                            'size': 'lg',
                             'type': 'icon',
                           },
                           {
@@ -2817,6 +2824,7 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                         'children': [
                           {
                             'name': 'check-circle',
+                            'size': 'lg',
                             'type': 'icon',
                           },
                           {
@@ -2841,7 +2849,7 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                             'children': [
                               {
                                 'name': 'check-circle',
-                                'size': 'lg',
+                                'size': 'xl',
                                 'type': 'icon',
                               },
                               {
@@ -2930,6 +2938,7 @@ export function stdMultiPartyFlowMultiPartyFlowOrbital(params: StdMultiPartyFlow
                           },
                           {
                             'name': 'alert-triangle',
+                            'size': 'lg',
                             'type': 'icon',
                           },
                           {

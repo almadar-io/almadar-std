@@ -765,6 +765,7 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
                           'children': [
                             {
                               'name': 'list-tree',
+                              'size': 'lg',
                               'type': 'icon',
                             },
                             {
@@ -1173,6 +1174,7 @@ export function stdTreeTreeNodeOrbital(params: StdTreeTreeNodeOrbitalParams = {}
                           'children': [
                             {
                               'name': 'list-tree',
+                              'size': 'lg',
                               'type': 'icon',
                             },
                             {

@@ -976,6 +976,7 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
                         'children': [
                           {
                             'name': 'image-plus',
+                            'size': 'lg',
                             'type': 'icon',
                           },
                           {
@@ -1211,6 +1212,7 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
                       {
                         'color': 'success',
                         'name': 'check-circle',
+                        'size': 'lg',
                         'type': 'icon',
                       },
                       {
@@ -1258,6 +1260,7 @@ export function stdImageUploadMultiUploadedImageOrbital(params: StdImageUploadMu
                         'children': [
                           {
                             'name': 'image-plus',
+                            'size': 'lg',
                             'type': 'icon',
                           },
                           {

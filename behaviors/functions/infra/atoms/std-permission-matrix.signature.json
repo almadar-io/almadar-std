@@ -1,0 +1,586 @@
+[
+  {
+    "organism": "std-permission-matrix",
+    "orbital": "PermissionMatrixOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/infra/atoms/std-permission-matrix.ts",
+    "entities": [
+      {
+        "name": "PermissionGrant",
+        "fields": [
+          {
+            "name": "workspaceId",
+            "type": "string",
+            "required": false,
+            "description": "Workspace the grant applies to; blank = applies to every workspace.",
+            "synonyms": "workspace, tenant, org, organization"
+          },
+          {
+            "name": "role",
+            "type": "string",
+            "required": true,
+            "description": "The role the grant applies to (e.g. admin, manager, contractor).",
+            "synonyms": "user role, group, team role"
+          },
+          {
+            "name": "module",
+            "type": "string",
+            "required": true,
+            "description": "The module or feature area the grant governs.",
+            "synonyms": "feature, area, section, screen"
+          },
+          {
+            "name": "canReadFinance",
+            "type": "boolean",
+            "required": false,
+            "description": "Whether the role may read finance data in this module.",
+            "synonyms": "see finance, read financials, view finance, finance access"
+          },
+          {
+            "name": "canSeeOthersHours",
+            "type": "boolean",
+            "required": false,
+            "description": "Whether the role may see other people's logged hours in this module.",
+            "synonyms": "see others hours, view team hours, timesheet visibility, other people's time"
+          },
+          {
+            "name": "canSeeMargins",
+            "type": "boolean",
+            "required": false,
+            "description": "Whether the role may see margin / profit figures in this module.",
+            "synonyms": "see margins, view profit, margin visibility, profitability"
+          }
+        ],
+        "persistence": "persistent"
+      }
+    ],
+    "traits": [
+      {
+        "name": "LoadingSpinner",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [],
+        "capabilities": [],
+        "ref": "Spinner.traits.SpinnerRender",
+        "linkedEntity": "PermissionGrant"
+      },
+      {
+        "name": "ErrorSpinner",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "size",
+            "type": "unknown",
+            "default": "sm"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Spinner.traits.SpinnerRender",
+        "linkedEntity": "PermissionGrant"
+      },
+      {
+        "name": "LoadingText",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "color",
+            "type": "unknown",
+            "default": "muted"
+          },
+          {
+            "key": "content",
+            "type": "unknown",
+            "default": "Loading permission grants…"
+          },
+          {
+            "key": "variant",
+            "type": "unknown",
+            "default": "caption"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Typography.traits.TypographyRender",
+        "linkedEntity": "PermissionGrant"
+      },
+      {
+        "name": "ShieldCheckIcon",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "name",
+            "type": "unknown",
+            "default": "shield-check"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Icon.traits.IconRender",
+        "linkedEntity": "PermissionGrant"
+      },
+      {
+        "name": "PermissionMatrixTitle",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "content",
+            "type": "unknown",
+            "default": "Permission matrix"
+          },
+          {
+            "key": "variant",
+            "type": "unknown",
+            "default": "h3"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Typography.traits.TypographyRender",
+        "linkedEntity": "PermissionGrant"
+      },
+      {
+        "name": "NewGrantButton",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "action",
+            "type": "unknown",
+            "default": "NEW"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus"
+          },
+          {
+            "key": "label",
+            "type": "unknown",
+            "default": "New grant"
+          },
+          {
+            "key": "variant",
+            "type": "unknown",
+            "default": "primary"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Button.traits.ButtonRender",
+        "linkedEntity": "PermissionGrant"
+      },
+      {
+        "name": "BackButton",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "action",
+            "type": "unknown",
+            "default": "CANCEL_GRANT"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "x"
+          },
+          {
+            "key": "label",
+            "type": "unknown",
+            "default": "Cancel"
+          },
+          {
+            "key": "variant",
+            "type": "unknown",
+            "default": "ghost"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Button.traits.ButtonRender",
+        "linkedEntity": "PermissionGrant"
+      },
+      {
+        "name": "GrantDivider",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [],
+        "capabilities": [],
+        "ref": "Divider.traits.DividerRender",
+        "linkedEntity": "PermissionGrant"
+      },
+      {
+        "name": "ErrorAlert",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "message",
+            "type": "unknown",
+            "default": "@payload.error"
+          },
+          {
+            "key": "variant",
+            "type": "unknown",
+            "default": "error"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Alert.traits.AlertRender",
+        "linkedEntity": "PermissionGrant"
+      },
+      {
+        "name": "PermissionMatrixAdmin",
+        "emittedEvents": [
+          "NEW",
+          "EDIT",
+          "DELETE",
+          "CREATE_GRANT",
+          "SAVE_GRANT",
+          "CANCEL_GRANT",
+          "CLOSE",
+          "PermissionGrantLoaded",
+          "PermissionGrantLoadFailed",
+          "PermissionGrantSaved",
+          "PermissionGrantSaveFailed",
+          "PermissionGrantDeleted",
+          "PermissionGrantDeleteFailed"
+        ],
+        "listenedEvents": [
+          "NEW",
+          "CANCEL_GRANT"
+        ],
+        "events": [
+          {
+            "name": "NEW",
+            "direction": "emit",
+            "description": "Opens the create-grant form.",
+            "synonyms": "add grant, new permission, create grant",
+            "tier": "domain"
+          },
+          {
+            "name": "EDIT",
+            "direction": "emit",
+            "description": "Opens the edit form for a grant row.",
+            "synonyms": "modify grant, change permission, update grant",
+            "tier": "domain"
+          },
+          {
+            "name": "DELETE",
+            "direction": "emit",
+            "description": "Deletes a grant row (persisted; the grid refetches on success).",
+            "synonyms": "remove grant, revoke permission, delete grant",
+            "tier": "domain"
+          },
+          {
+            "name": "CREATE_GRANT",
+            "direction": "emit",
+            "description": "The create-grant form committed; data carries the new grant's fields.",
+            "synonyms": "submit grant, confirm create",
+            "tier": "internal"
+          },
+          {
+            "name": "SAVE_GRANT",
+            "direction": "emit",
+            "description": "The edit-grant form committed; data carries the grant id + updated fields.",
+            "synonyms": "submit edit, confirm update",
+            "tier": "internal"
+          },
+          {
+            "name": "CANCEL_GRANT",
+            "direction": "emit",
+            "description": "The grant form was dismissed without committing; the grid repaints.",
+            "synonyms": "cancel, back to matrix, dismiss form",
+            "tier": "internal"
+          },
+          {
+            "name": "CLOSE",
+            "direction": "emit",
+            "description": "Dismisses the grant form overlay (the modal shell's own X / Escape / overlay-click).",
+            "synonyms": "dismiss, hide, close form, done",
+            "tier": "domain"
+          },
+          {
+            "name": "PermissionGrantLoaded",
+            "direction": "emit",
+            "description": "Indicates the permission-grant collection has been successfully loaded.",
+            "synonyms": "loaded, fetched, retrieved",
+            "tier": "internal"
+          },
+          {
+            "name": "PermissionGrantLoadFailed",
+            "direction": "emit",
+            "description": "Indicates failure to load the permission-grant collection.",
+            "synonyms": "load error, failed load, request failure",
+            "tier": "internal"
+          },
+          {
+            "name": "PermissionGrantSaved",
+            "direction": "emit",
+            "description": "Signals that a permission grant has been persisted (create / update).",
+            "synonyms": "saved, created, updated, persisted",
+            "tier": "internal"
+          },
+          {
+            "name": "PermissionGrantSaveFailed",
+            "direction": "emit",
+            "description": "Indicates a failure to persist a permission grant.",
+            "synonyms": "save error, failed save, persist failure",
+            "tier": "internal"
+          },
+          {
+            "name": "PermissionGrantDeleted",
+            "direction": "emit",
+            "description": "Signals that a permission grant has been deleted.",
+            "synonyms": "deleted, removed, revoked",
+            "tier": "internal"
+          },
+          {
+            "name": "PermissionGrantDeleteFailed",
+            "direction": "emit",
+            "description": "Indicates a failure to delete a permission grant.",
+            "synonyms": "delete error, failed delete",
+            "tier": "internal"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "adminRoles",
+            "type": "[string]",
+            "default": [],
+            "label": "Who can manage grants?",
+            "description": "Roles eligible to create, edit, or delete grants. ENFORCED by the NEW/EDIT/DELETE/CREATE_GRANT/SAVE_GRANT transition guards: a viewer whose @user.role is not listed cannot fire a mutation, from the button or from the bus. Empty = every signed-in viewer may manage grants (ungated).",
+            "synonyms": "admin roles, permission managers, who edits permissions, grant admins",
+            "tier": "policy",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "enabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Manage role permissions",
+            "description": "Allow creating, editing, and deleting permission grants from this surface. Off by default.",
+            "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, permission matrix, role permissions, capability matrix, permission grants, access matrix, manage permissions, who can see finance, hide margins, module-level permissions",
+            "tier": "policy"
+          }
+        ],
+        "capabilities": [
+          "access"
+        ],
+        "linkedEntity": "PermissionGrant",
+        "transitionEvents": [
+          "CANCEL_GRANT",
+          "CLOSE",
+          "CREATE_GRANT",
+          "DELETE",
+          "EDIT",
+          "INIT",
+          "NEW",
+          "PermissionGrantDeleteFailed",
+          "PermissionGrantDeleted",
+          "PermissionGrantLoadFailed",
+          "PermissionGrantLoaded",
+          "PermissionGrantSaveFailed",
+          "PermissionGrantSaved",
+          "SAVE_GRANT"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "canReadFinance",
+            "canSeeMargins",
+            "canSeeOthersHours",
+            "module",
+            "role",
+            "workspaceId"
+          ]
+        },
+        "effectRow": [
+          {
+            "kind": "fetch",
+            "resource": "PermissionGrant"
+          },
+          {
+            "kind": "persist",
+            "resource": "PermissionGrant"
+          },
+          {
+            "kind": "render-ui",
+            "resource": "main"
+          },
+          {
+            "kind": "render-ui",
+            "resource": "modal"
+          },
+          {
+            "kind": "render-ui",
+            "resource": "toast"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.canReadFinance"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.canSeeMargins"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.canSeeOthersHours"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.id"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.module"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.role"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.workspaceId"
+          }
+        ],
+        "effectEntityRefs": [
+          "PermissionGrant"
+        ]
+      },
+      {
+        "name": "PermissionGrantQuery",
+        "emittedEvents": [
+          "GRANT_RESOLVED",
+          "GrantCheckLoaded",
+          "GrantCheckFailed"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "GRANT_RESOLVED",
+            "direction": "emit",
+            "description": "Answers a CHECK_GRANT: the capability flags of the first matching grant row, with found=false (and all flags false) when no row matches. Rename to wire the downstream listener; default-deny on found=false is the consumer's choice.",
+            "synonyms": "grant resolved, permission answer, capabilities returned, access decision data",
+            "tier": "domain"
+          },
+          {
+            "name": "GrantCheckLoaded",
+            "direction": "emit",
+            "description": "Indicates the grant lookup for a CHECK_GRANT has been successfully loaded.",
+            "synonyms": "loaded, fetched, retrieved",
+            "tier": "internal"
+          },
+          {
+            "name": "GrantCheckFailed",
+            "direction": "emit",
+            "description": "Indicates the grant lookup for a CHECK_GRANT failed.",
+            "synonyms": "lookup error, failed lookup, request failure",
+            "tier": "internal"
+          },
+          {
+            "name": "CHECK_GRANT",
+            "direction": "listen",
+            "description": "Asks which capabilities a role holds in a module; the answer arrives as GRANT_RESOLVED (asynchronous — correlate by the echoed role/module).",
+            "synonyms": "check grant, lookup permission, resolve capabilities, can this role see",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "enabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Answer permission lookups",
+            "description": "Answer CHECK_GRANT lookups with GRANT_RESOLVED from the persisted grant table. Off by default.",
+            "synonyms": "enable, turn on, activate, permission lookup, grant query, resolve capabilities",
+            "tier": "policy"
+          }
+        ],
+        "capabilities": [
+          "access"
+        ],
+        "linkedEntity": "PermissionGrant",
+        "transitionEvents": [
+          "CHECK_GRANT",
+          "GrantCheckFailed",
+          "GrantCheckLoaded"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "module",
+            "role"
+          ]
+        },
+        "effectRow": [
+          {
+            "kind": "emit",
+            "resource": "GRANT_RESOLVED"
+          },
+          {
+            "kind": "fetch",
+            "resource": "PermissionGrant"
+          },
+          {
+            "kind": "render-ui",
+            "resource": "toast"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.module"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.role"
+          }
+        ],
+        "effectEntityRefs": [
+          "PermissionGrant"
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "name": "PermissionMatrixPage",
+        "defaultPath": "/admin/permissions",
+        "primaryEntity": "PermissionGrant"
+      }
+    ],
+    "emittedEvents": [
+      "CANCEL_GRANT",
+      "CLOSE",
+      "CREATE_GRANT",
+      "DELETE",
+      "EDIT",
+      "GRANT_RESOLVED",
+      "GrantCheckFailed",
+      "GrantCheckLoaded",
+      "NEW",
+      "PermissionGrantDeleteFailed",
+      "PermissionGrantDeleted",
+      "PermissionGrantLoadFailed",
+      "PermissionGrantLoaded",
+      "PermissionGrantSaveFailed",
+      "PermissionGrantSaved",
+      "SAVE_GRANT"
+    ],
+    "listenedEvents": [
+      "CANCEL_GRANT",
+      "NEW"
+    ],
+    "exposure": "both",
+    "provenance": "authored",
+    "sourceValid": true
+  }
+]

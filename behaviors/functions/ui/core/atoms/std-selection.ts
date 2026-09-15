@@ -648,6 +648,7 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
                         'children': [
                           {
                             'name': 'check-square',
+                            'size': 'xl',
                             'type': 'icon',
                           },
                           {
@@ -775,6 +776,7 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
                       {
                         'color': 'error',
                         'name': 'alert-triangle',
+                        'size': 'lg',
                         'type': 'icon',
                       },
                       {
@@ -935,6 +937,7 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
                         'children': [
                           {
                             'name': 'check-square',
+                            'size': 'xl',
                             'type': 'icon',
                           },
                           {
@@ -1066,6 +1069,7 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
                             'children': [
                               {
                                 'name': 'check-square',
+                                'size': 'xl',
                                 'type': 'icon',
                               },
                               {
@@ -1154,6 +1158,7 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
                             'children': [
                               {
                                 'name': 'check-circle',
+                                'size': 'xl',
                                 'type': 'icon',
                               },
                               {

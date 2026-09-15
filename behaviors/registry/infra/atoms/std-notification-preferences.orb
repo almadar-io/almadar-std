@@ -1,0 +1,2404 @@
+{
+  "description": "std-notification-preferences — per-person notification preference store plus a consultable gate. Owns NotificationPreference rows (one per person + event key: channel override in_app/email/push/slack, mode instant/digest, quiet-hours window 'HH:MM-HH:MM' such as 22:00-07:00). The PreferencesManage trait is standard CRUD over the store (list / create / update / delete, persisted, success/failure cascade arms): a data-grid browse plus ModalRecordModal create/edit forms whose SAVE carries the full row payload (std-list daisy-chain idiom). The PreferenceGate trait is the consult half other notify traits call: emit CHECK_PREFERENCE { personId, eventKey } and the gate fetches the matching row (a row whose eventKey is blank applies to every event) and answers PREFERENCE_RESOLVED { personId, eventKey, channel, mode, suppressed } — suppressed is true only when the row's quietHours window covers the current hour; mode 'digest' rides on the verdict for the caller to defer. Default policy: no matching row — or a failed lookup — resolves fail-open to { channel: in_app, mode: instant, suppressed: false }; the absence of a preference never silences a notification.",
+  "ledger": {
+    "entries": {
+      "ent_01M2HEX5N29SFAW1SYFN346B12": {
+        "bakedName": "NotificationPreference",
+        "curName": "NotificationPreference",
+        "id": "ent_01M2HEX5N29SFAW1SYFN346B12",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "ent_01M2HEX5N2Y7H9B3PH0ZSSH9QR": {
+        "bakedName": "GateView",
+        "curName": "GateView",
+        "id": "ent_01M2HEX5N2Y7H9B3PH0ZSSH9QR",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "evt_01M2HEX5N246QSGGDXMFT09QJ6": {
+        "bakedName": "PREFERENCE_CHECK_FAILED",
+        "curName": "PREFERENCE_CHECK_FAILED",
+        "id": "evt_01M2HEX5N246QSGGDXMFT09QJ6",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M2HEX5N2Q3KM3X5DEBAS6RV6",
+        "renames": []
+      },
+      "evt_01M2HEX5N285MJJBPVPTC5CC31": {
+        "bakedName": "PreferenceSaveFailed",
+        "curName": "PreferenceSaveFailed",
+        "id": "evt_01M2HEX5N285MJJBPVPTC5CC31",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M2HEX5N2M0FS7QBQECCJBK9X",
+        "renames": []
+      },
+      "evt_01M2HEX5N2BXMHCTQZSM2CZ8EF": {
+        "bakedName": "PreferenceDeleted",
+        "curName": "PreferenceDeleted",
+        "id": "evt_01M2HEX5N2BXMHCTQZSM2CZ8EF",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M2HEX5N2M0FS7QBQECCJBK9X",
+        "renames": []
+      },
+      "evt_01M2HEX5N2C20G8DKMNNETXXV8": {
+        "bakedName": "CHECK_PREFERENCE",
+        "curName": "CHECK_PREFERENCE",
+        "id": "evt_01M2HEX5N2C20G8DKMNNETXXV8",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M2HEX5N2Q3KM3X5DEBAS6RV6",
+        "renames": []
+      },
+      "evt_01M2HEX5N2CK3GB34396QDTF77": {
+        "bakedName": "PreferencesLoadFailed",
+        "curName": "PreferencesLoadFailed",
+        "id": "evt_01M2HEX5N2CK3GB34396QDTF77",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M2HEX5N2M0FS7QBQECCJBK9X",
+        "renames": []
+      },
+      "evt_01M2HEX5N2J0G7WR4H4MF89J1K": {
+        "bakedName": "PREFERENCE_ROWS_LOADED",
+        "curName": "PREFERENCE_ROWS_LOADED",
+        "id": "evt_01M2HEX5N2J0G7WR4H4MF89J1K",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M2HEX5N2Q3KM3X5DEBAS6RV6",
+        "renames": []
+      },
+      "evt_01M2HEX5N2NRGS7RER3F5EVBEY": {
+        "bakedName": "PREFERENCE_RESOLVED",
+        "curName": "PREFERENCE_RESOLVED",
+        "id": "evt_01M2HEX5N2NRGS7RER3F5EVBEY",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M2HEX5N2Q3KM3X5DEBAS6RV6",
+        "renames": []
+      },
+      "evt_01M2HEX5N2PYWA1JGBVPEV3YYY": {
+        "bakedName": "DELETE",
+        "curName": "DELETE",
+        "id": "evt_01M2HEX5N2PYWA1JGBVPEV3YYY",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M2HEX5N2M0FS7QBQECCJBK9X",
+        "renames": []
+      },
+      "evt_01M2HEX5N2TVADH0YB19NFRW15": {
+        "bakedName": "PreferencesLoaded",
+        "curName": "PreferencesLoaded",
+        "id": "evt_01M2HEX5N2TVADH0YB19NFRW15",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M2HEX5N2M0FS7QBQECCJBK9X",
+        "renames": []
+      },
+      "evt_01M2HEX5N2WPK2RGK1VGFNP6MP": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01M2HEX5N2WPK2RGK1VGFNP6MP",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M2HEX5N2M0FS7QBQECCJBK9X",
+        "renames": []
+      },
+      "evt_01M2HEX5N2Y4V8B010WJDPPY13": {
+        "bakedName": "EDIT",
+        "curName": "EDIT",
+        "id": "evt_01M2HEX5N2Y4V8B010WJDPPY13",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M2HEX5N2M0FS7QBQECCJBK9X",
+        "renames": []
+      },
+      "evt_01M2HEX5N2ZPEFS633G0S54KA1": {
+        "bakedName": "PreferenceSaved",
+        "curName": "PreferenceSaved",
+        "id": "evt_01M2HEX5N2ZPEFS633G0S54KA1",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M2HEX5N2M0FS7QBQECCJBK9X",
+        "renames": []
+      },
+      "evt_01M2J1EARY3G1EG29PWVNZZYMM": {
+        "bakedName": "RETRY",
+        "curName": "RETRY",
+        "id": "evt_01M2J1EARY3G1EG29PWVNZZYMM",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M2HEX5N2M0FS7QBQECCJBK9X",
+        "renames": []
+      },
+      "evt_01M2J1EARYBKD6GTS10VF710DN": {
+        "bakedName": "DO_UPDATE",
+        "curName": "DO_UPDATE",
+        "id": "evt_01M2J1EARYBKD6GTS10VF710DN",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M2HEX5N2M0FS7QBQECCJBK9X",
+        "renames": []
+      },
+      "evt_01M2J1EARYVZMZ0NNS1CZND3GK": {
+        "bakedName": "CREATE",
+        "curName": "CREATE",
+        "id": "evt_01M2J1EARYVZMZ0NNS1CZND3GK",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M2HEX5N2M0FS7QBQECCJBK9X",
+        "renames": []
+      },
+      "evt_01M2J1EARYX2SMTRQ0MQ8WFJHS": {
+        "bakedName": "DO_CREATE",
+        "curName": "DO_CREATE",
+        "id": "evt_01M2J1EARYX2SMTRQ0MQ8WFJHS",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M2HEX5N2M0FS7QBQECCJBK9X",
+        "renames": []
+      },
+      "orb_01M2HEX5N2DRQ9NPHZKE4R9DBJ": {
+        "bakedName": "NotificationPreferencesOrbital",
+        "curName": "NotificationPreferencesOrbital",
+        "id": "orb_01M2HEX5N2DRQ9NPHZKE4R9DBJ",
+        "kind": "orbital",
+        "owner": "workspace",
+        "renames": []
+      },
+      "pag_01M2HEX5N34514K7WAZHT6K9WP": {
+        "bakedName": "NotificationPreferencesPage",
+        "curName": "NotificationPreferencesPage",
+        "id": "pag_01M2HEX5N34514K7WAZHT6K9WP",
+        "kind": "page",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M2HEX5N2M0FS7QBQECCJBK9X": {
+        "bakedName": "PreferencesManage",
+        "curName": "PreferencesManage",
+        "id": "trt_01M2HEX5N2M0FS7QBQECCJBK9X",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M2HEX5N2Q3KM3X5DEBAS6RV6": {
+        "bakedName": "PreferenceGate",
+        "curName": "PreferenceGate",
+        "id": "trt_01M2HEX5N2Q3KM3X5DEBAS6RV6",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M2J1EARYFYA9YZM5WFH8DZZK": {
+        "bakedName": "PreferenceCreate",
+        "curName": "PreferenceCreate",
+        "id": "trt_01M2J1EARYFYA9YZM5WFH8DZZK",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M2J1EARYVZKT8FP35Z1B5C4Q": {
+        "bakedName": "PreferenceEdit",
+        "curName": "PreferenceEdit",
+        "id": "trt_01M2J1EARYVZKT8FP35Z1B5C4Q",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      }
+    },
+    "schemaVersion": 1
+  },
+  "name": "std-notification-preferences",
+  "orbitals": [
+    {
+      "auxiliaryEntities": [
+        {
+          "fields": [
+            {
+              "name": "id",
+              "required": true,
+              "type": "string"
+            },
+            {
+              "default": "",
+              "description": "Scratch: personId of the consult currently in flight.",
+              "name": "personId",
+              "synonyms": "current person",
+              "type": "string"
+            },
+            {
+              "default": "",
+              "description": "Scratch: effective event key of the consult currently in flight (payload eventKey, or the configured eventKey when the payload is blank).",
+              "name": "eventKey",
+              "synonyms": "current event key",
+              "type": "string"
+            },
+            {
+              "default": "",
+              "description": "Scratch: resolved channel for the current consult.",
+              "name": "channel",
+              "synonyms": "resolved channel",
+              "type": "string"
+            },
+            {
+              "default": "",
+              "description": "Scratch: resolved delivery mode for the current consult.",
+              "name": "mode",
+              "synonyms": "resolved mode",
+              "type": "string"
+            },
+            {
+              "default": "",
+              "description": "Scratch: quiet-hours window of the matched row for the current consult; blank = none.",
+              "name": "quietHours",
+              "synonyms": "resolved quiet hours",
+              "type": "string"
+            }
+          ],
+          "id": "ent_01M2HEX5N2Y7H9B3PH0ZSSH9QR",
+          "name": "GateView",
+          "persistence": "runtime"
+        }
+      ],
+      "entity": {
+        "collection": "notification_preferences",
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "The person this preference row belongs to.",
+            "name": "personId",
+            "required": true,
+            "synonyms": "user, recipient, owner, account",
+            "type": "string"
+          },
+          {
+            "description": "Event key this preference applies to (matches a notify listener's eventKey); blank = all events.",
+            "name": "eventKey",
+            "required": true,
+            "synonyms": "event, trigger, topic, subscription",
+            "type": "string"
+          },
+          {
+            "default": "in_app",
+            "description": "Delivery channel override for this person.",
+            "name": "channel",
+            "synonyms": "preferred channel, delivery method",
+            "type": "string",
+            "values": [
+              "in_app",
+              "email",
+              "push",
+              "slack"
+            ]
+          },
+          {
+            "default": "instant",
+            "description": "Delivery mode: instant (default) or digest (deferred to a batch cycle).",
+            "name": "mode",
+            "synonyms": "delivery mode, frequency, cadence, defer",
+            "type": "string",
+            "values": [
+              "instant",
+              "digest"
+            ]
+          },
+          {
+            "default": "",
+            "description": "Quiet-hours window as \"HH:MM-HH:MM\" (e.g. 22:00-07:00); blank or equal start/end = disabled.",
+            "name": "quietHours",
+            "synonyms": "do not disturb, quiet window, night mode",
+            "type": "string"
+          },
+          {
+            "default": 0.0,
+            "description": "Timestamp indicating when this preference row was created.",
+            "name": "createdAt",
+            "synonyms": "creation time, created",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "description": "Timestamp indicating when this preference row was last updated.",
+            "name": "updatedAt",
+            "synonyms": "modified, last updated",
+            "type": "number"
+          }
+        ],
+        "id": "ent_01M2HEX5N29SFAW1SYFN346B12",
+        "name": "NotificationPreference",
+        "persistence": "persistent"
+      },
+      "id": "orb_01M2HEX5N2DRQ9NPHZKE4R9DBJ",
+      "name": "NotificationPreferencesOrbital",
+      "pages": [
+        {
+          "id": "pag_01M2HEX5N34514K7WAZHT6K9WP",
+          "name": "NotificationPreferencesPage",
+          "path": "/notification-preferences",
+          "traits": [
+            {
+              "ref": "PreferencesManage",
+              "refId": "trt_01M2HEX5N2M0FS7QBQECCJBK9X"
+            },
+            {
+              "ref": "PreferenceCreate",
+              "refId": "trt_01M2J1EARYFYA9YZM5WFH8DZZK"
+            },
+            {
+              "ref": "PreferenceEdit",
+              "refId": "trt_01M2J1EARYVZKT8FP35Z1B5C4Q"
+            },
+            {
+              "ref": "PreferenceGate",
+              "refId": "trt_01M2HEX5N2Q3KM3X5DEBAS6RV6"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "tableLook": {
+              "default": "dense",
+              "description": "Layer 2 visual treatment for the preference data table rendered by this atom.",
+              "label": "Table look",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "dense",
+                "spacious",
+                "striped",
+                "borderless",
+                "card-rows"
+              ]
+            },
+            "title": {
+              "default": "Notification preferences",
+              "description": "Heading shown above the preference list",
+              "label": "Section title",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
+          "effectRow": [
+            {
+              "kind": "fetch",
+              "resource": "NotificationPreference"
+            },
+            {
+              "kind": "persist",
+              "resource": "NotificationPreference"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "main"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "toast"
+            }
+          ],
+          "emits": [
+            {
+              "description": "Opens the blank preference modal.",
+              "event": "CREATE",
+              "eventId": "evt_01M2J1EARYVZMZ0NNS1CZND3GK",
+              "synonyms": "add, new, insert",
+              "tier": "domain"
+            },
+            {
+              "description": "Opens a preference row in the edit modal.",
+              "event": "EDIT",
+              "eventId": "evt_01M2HEX5N2Y4V8B010WJDPPY13",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "entity": "NotificationPreference",
+                  "name": "row",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "personId",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "eventKey",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "channel",
+                      "type": "string"
+                    },
+                    {
+                      "name": "mode",
+                      "type": "string"
+                    },
+                    {
+                      "name": "quietHours",
+                      "type": "string"
+                    },
+                    {
+                      "name": "createdAt",
+                      "type": "number"
+                    },
+                    {
+                      "name": "updatedAt",
+                      "type": "number"
+                    }
+                  ],
+                  "type": "object"
+                }
+              ],
+              "synonyms": "modify, update, change",
+              "tier": "domain"
+            },
+            {
+              "description": "Removes a preference row.",
+              "event": "DELETE",
+              "eventId": "evt_01M2HEX5N2PYWA1JGBVPEV3YYY",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "entity": "NotificationPreference",
+                  "name": "row",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "personId",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "eventKey",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "channel",
+                      "type": "string"
+                    },
+                    {
+                      "name": "mode",
+                      "type": "string"
+                    },
+                    {
+                      "name": "quietHours",
+                      "type": "string"
+                    },
+                    {
+                      "name": "createdAt",
+                      "type": "number"
+                    },
+                    {
+                      "name": "updatedAt",
+                      "type": "number"
+                    }
+                  ],
+                  "type": "object"
+                }
+              ],
+              "synonyms": "remove, discard, clear",
+              "tier": "domain"
+            },
+            {
+              "description": "The preference collection finished loading.",
+              "event": "PreferencesLoaded",
+              "eventId": "evt_01M2HEX5N2TVADH0YB19NFRW15",
+              "payloadSchema": [
+                {
+                  "entity": "NotificationPreference",
+                  "name": "data",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "personId",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "eventKey",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "channel",
+                      "type": "string"
+                    },
+                    {
+                      "name": "mode",
+                      "type": "string"
+                    },
+                    {
+                      "name": "quietHours",
+                      "type": "string"
+                    },
+                    {
+                      "name": "createdAt",
+                      "type": "number"
+                    },
+                    {
+                      "name": "updatedAt",
+                      "type": "number"
+                    }
+                  ],
+                  "type": "[object]"
+                }
+              ],
+              "synonyms": "loaded, fetched, retrieved",
+              "tier": "domain"
+            },
+            {
+              "description": "The preference collection failed to load.",
+              "event": "PreferencesLoadFailed",
+              "eventId": "evt_01M2HEX5N2CK3GB34396QDTF77",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ],
+              "synonyms": "error, failure, load error",
+              "tier": "internal"
+            },
+            {
+              "description": "A preference row persisted (create or update).",
+              "event": "PreferenceSaved",
+              "eventId": "evt_01M2HEX5N2ZPEFS633G0S54KA1",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "synonyms": "created, updated, persisted",
+              "tier": "domain"
+            },
+            {
+              "description": "A preference persist failed.",
+              "event": "PreferenceSaveFailed",
+              "eventId": "evt_01M2HEX5N285MJJBPVPTC5CC31",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ],
+              "synonyms": "failed, error, unsuccessful",
+              "tier": "internal"
+            },
+            {
+              "description": "A preference row was deleted.",
+              "event": "PreferenceDeleted",
+              "eventId": "evt_01M2HEX5N2BXMHCTQZSM2CZ8EF",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "synonyms": "removed, purged, discarded",
+              "tier": "domain"
+            }
+          ],
+          "entityRefIds": {
+            "NotificationPreference": "ent_01M2HEX5N29SFAW1SYFN346B12"
+          },
+          "id": "trt_01M2HEX5N2M0FS7QBQECCJBK9X",
+          "linkedEntity": "NotificationPreference",
+          "linkedEntityId": "ent_01M2HEX5N29SFAW1SYFN346B12",
+          "listens": [
+            {
+              "event": "PREFERENCE_CREATED",
+              "source": {
+                "kind": "trait",
+                "trait": "PreferenceCreate",
+                "traitId": "trt_01M2J1EARYFYA9YZM5WFH8DZZK"
+              },
+              "triggers": "DO_CREATE",
+              "triggersId": "evt_01M2J1EARYX2SMTRQ0MQ8WFJHS"
+            },
+            {
+              "event": "PREFERENCE_UPDATED",
+              "source": {
+                "kind": "trait",
+                "trait": "PreferenceEdit",
+                "traitId": "trt_01M2J1EARYVZKT8FP35Z1B5C4Q"
+              },
+              "triggers": "DO_UPDATE",
+              "triggersId": "evt_01M2J1EARYBKD6GTS10VF710DN"
+            }
+          ],
+          "name": "PreferencesManage",
+          "scope": "collection",
+          "stateMachine": {
+            "events": [
+              {
+                "id": "evt_01M2HEX5N2WPK2RGK1VGFNP6MP",
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "The preference collection finished loading.",
+                "id": "evt_01M2HEX5N2TVADH0YB19NFRW15",
+                "key": "PreferencesLoaded",
+                "name": "Preferences loaded",
+                "payloadSchema": [
+                  {
+                    "entity": "NotificationPreference",
+                    "name": "data",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "personId",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "eventKey",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "channel",
+                        "type": "string"
+                      },
+                      {
+                        "name": "mode",
+                        "type": "string"
+                      },
+                      {
+                        "name": "quietHours",
+                        "type": "string"
+                      },
+                      {
+                        "name": "createdAt",
+                        "type": "number"
+                      },
+                      {
+                        "name": "updatedAt",
+                        "type": "number"
+                      }
+                    ],
+                    "type": "[object]"
+                  }
+                ],
+                "synonyms": "loaded, fetched, retrieved",
+                "tier": "domain"
+              },
+              {
+                "description": "The preference collection failed to load.",
+                "id": "evt_01M2HEX5N2CK3GB34396QDTF77",
+                "key": "PreferencesLoadFailed",
+                "name": "Preferences load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "error, failure, load error",
+                "tier": "internal"
+              },
+              {
+                "description": "Removes a preference row.",
+                "id": "evt_01M2HEX5N2PYWA1JGBVPEV3YYY",
+                "key": "DELETE",
+                "name": "Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "entity": "NotificationPreference",
+                    "name": "row",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "personId",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "eventKey",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "channel",
+                        "type": "string"
+                      },
+                      {
+                        "name": "mode",
+                        "type": "string"
+                      },
+                      {
+                        "name": "quietHours",
+                        "type": "string"
+                      },
+                      {
+                        "name": "createdAt",
+                        "type": "number"
+                      },
+                      {
+                        "name": "updatedAt",
+                        "type": "number"
+                      }
+                    ],
+                    "type": "object"
+                  }
+                ],
+                "synonyms": "remove, discard, clear",
+                "tier": "domain"
+              },
+              {
+                "description": "Create persist requested; the modal's SAVE payload carries the full form row.",
+                "id": "evt_01M2J1EARYX2SMTRQ0MQ8WFJHS",
+                "key": "DO_CREATE",
+                "name": "Do Create",
+                "payloadSchema": [
+                  {
+                    "entity": "NotificationPreference",
+                    "name": "data",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "personId",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "eventKey",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "channel",
+                        "type": "string"
+                      },
+                      {
+                        "name": "mode",
+                        "type": "string"
+                      },
+                      {
+                        "name": "quietHours",
+                        "type": "string"
+                      },
+                      {
+                        "name": "createdAt",
+                        "type": "number"
+                      },
+                      {
+                        "name": "updatedAt",
+                        "type": "number"
+                      }
+                    ],
+                    "required": true,
+                    "type": "object"
+                  }
+                ],
+                "synonyms": "add, new, insert",
+                "tier": "internal"
+              },
+              {
+                "description": "Update persist requested; the modal's SAVE payload carries the full form row.",
+                "id": "evt_01M2J1EARYBKD6GTS10VF710DN",
+                "key": "DO_UPDATE",
+                "name": "Do Update",
+                "payloadSchema": [
+                  {
+                    "entity": "NotificationPreference",
+                    "name": "data",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "personId",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "eventKey",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "channel",
+                        "type": "string"
+                      },
+                      {
+                        "name": "mode",
+                        "type": "string"
+                      },
+                      {
+                        "name": "quietHours",
+                        "type": "string"
+                      },
+                      {
+                        "name": "createdAt",
+                        "type": "number"
+                      },
+                      {
+                        "name": "updatedAt",
+                        "type": "number"
+                      }
+                    ],
+                    "required": true,
+                    "type": "object"
+                  }
+                ],
+                "synonyms": "modified, changed, refreshed",
+                "tier": "internal"
+              },
+              {
+                "description": "A preference row persisted (create or update).",
+                "id": "evt_01M2HEX5N2ZPEFS633G0S54KA1",
+                "key": "PreferenceSaved",
+                "name": "Preference saved",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "created, updated, persisted",
+                "tier": "domain"
+              },
+              {
+                "description": "A preference row was deleted.",
+                "id": "evt_01M2HEX5N2BXMHCTQZSM2CZ8EF",
+                "key": "PreferenceDeleted",
+                "name": "Preference deleted",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "removed, purged, discarded",
+                "tier": "domain"
+              },
+              {
+                "description": "A preference persist failed.",
+                "id": "evt_01M2HEX5N285MJJBPVPTC5CC31",
+                "key": "PreferenceSaveFailed",
+                "name": "Preference save failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "failed, error, unsuccessful",
+                "tier": "internal"
+              },
+              {
+                "description": "Retries loading the preference collection after a failure.",
+                "id": "evt_01M2J1EARY3G1EG29PWVNZZYMM",
+                "key": "RETRY",
+                "name": "Retry",
+                "synonyms": "try again, reload",
+                "tier": "presentation"
+              },
+              {
+                "description": "Opens the blank preference modal.",
+                "id": "evt_01M2J1EARYVZMZ0NNS1CZND3GK",
+                "key": "CREATE",
+                "name": "Create",
+                "synonyms": "add, new, insert",
+                "tier": "domain"
+              },
+              {
+                "description": "Opens a preference row in the edit modal.",
+                "id": "evt_01M2HEX5N2Y4V8B010WJDPPY13",
+                "key": "EDIT",
+                "name": "Edit",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "entity": "NotificationPreference",
+                    "name": "row",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "personId",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "eventKey",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "channel",
+                        "type": "string"
+                      },
+                      {
+                        "name": "mode",
+                        "type": "string"
+                      },
+                      {
+                        "name": "quietHours",
+                        "type": "string"
+                      },
+                      {
+                        "name": "createdAt",
+                        "type": "number"
+                      },
+                      {
+                        "name": "updatedAt",
+                        "type": "number"
+                      }
+                    ],
+                    "type": "object"
+                  }
+                ],
+                "synonyms": "modify, update, change",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "loading"
+              },
+              {
+                "name": "browsing"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "NotificationPreference",
+                    {
+                      "emit": {
+                        "failure": "PreferencesLoadFailed",
+                        "success": "PreferencesLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Loading notification preferences…",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ],
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01M2HEX5N2WPK2RGK1VGFNP6MP",
+                "from": "loading",
+                "to": "loading"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "name": "bell",
+                                  "size": "lg",
+                                  "type": "icon"
+                                },
+                                {
+                                  "content": "@config.title",
+                                  "type": "typography",
+                                  "variant": "h3"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "action": "CREATE",
+                              "icon": "plus",
+                              "label": "New preference",
+                              "type": "button",
+                              "variant": "primary"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "between",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "cols": 1.0,
+                          "entity": "@payload.data",
+                          "fields": [
+                            {
+                              "label": "Person",
+                              "name": "personId",
+                              "variant": "h4"
+                            },
+                            {
+                              "label": "Event",
+                              "name": "eventKey",
+                              "variant": "caption"
+                            },
+                            {
+                              "label": "Channel",
+                              "name": "channel",
+                              "variant": "badge"
+                            },
+                            {
+                              "label": "Mode",
+                              "name": "mode",
+                              "variant": "badge"
+                            },
+                            {
+                              "label": "Quiet hours",
+                              "name": "quietHours",
+                              "variant": "caption"
+                            }
+                          ],
+                          "gap": "sm",
+                          "itemActions": [
+                            {
+                              "event": "EDIT",
+                              "icon": "pencil",
+                              "label": "Edit",
+                              "variant": "secondary"
+                            },
+                            {
+                              "event": "DELETE",
+                              "icon": "trash-2",
+                              "label": "Delete",
+                              "variant": "danger"
+                            }
+                          ],
+                          "look": "@config.tableLook",
+                          "type": "data-grid"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "PreferencesLoaded",
+                "eventId": "evt_01M2HEX5N2TVADH0YB19NFRW15",
+                "from": "loading",
+                "to": "browsing"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "message": "@payload.error",
+                          "type": "alert",
+                          "variant": "error"
+                        },
+                        {
+                          "action": "RETRY",
+                          "icon": "rotate-ccw",
+                          "label": "Retry",
+                          "type": "button",
+                          "variant": "primary"
+                        }
+                      ],
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "PreferencesLoadFailed",
+                "eventId": "evt_01M2HEX5N2CK3GB34396QDTF77",
+                "from": "loading",
+                "to": "error"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "NotificationPreference",
+                    {
+                      "emit": {
+                        "failure": "PreferencesLoadFailed",
+                        "success": "PreferencesLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "sm",
+                      "type": "spinner"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01M2HEX5N2WPK2RGK1VGFNP6MP",
+                "from": "browsing",
+                "to": "loading"
+              },
+              {
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "NotificationPreference",
+                    "@payload.id",
+                    {
+                      "emit": {
+                        "failure": "PreferenceSaveFailed",
+                        "success": "PreferenceDeleted"
+                      }
+                    }
+                  ]
+                ],
+                "event": "DELETE",
+                "eventId": "evt_01M2HEX5N2PYWA1JGBVPEV3YYY",
+                "from": "browsing",
+                "to": "browsing"
+              },
+              {
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "NotificationPreference",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "failure": "PreferenceSaveFailed",
+                        "success": "PreferenceSaved"
+                      }
+                    }
+                  ]
+                ],
+                "event": "DO_CREATE",
+                "eventId": "evt_01M2J1EARYX2SMTRQ0MQ8WFJHS",
+                "from": "browsing",
+                "to": "browsing"
+              },
+              {
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "NotificationPreference",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "failure": "PreferenceSaveFailed",
+                        "success": "PreferenceSaved"
+                      }
+                    }
+                  ]
+                ],
+                "event": "DO_UPDATE",
+                "eventId": "evt_01M2J1EARYBKD6GTS10VF710DN",
+                "from": "browsing",
+                "to": "browsing"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "toast",
+                    {
+                      "dismissible": true,
+                      "message": "Notification preference saved",
+                      "type": "alert",
+                      "variant": "success"
+                    }
+                  ],
+                  [
+                    "fetch",
+                    "NotificationPreference",
+                    {
+                      "emit": {
+                        "failure": "PreferencesLoadFailed",
+                        "success": "PreferencesLoaded"
+                      }
+                    }
+                  ]
+                ],
+                "event": "PreferenceSaved",
+                "eventId": "evt_01M2HEX5N2ZPEFS633G0S54KA1",
+                "from": "browsing",
+                "to": "loading"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "toast",
+                    {
+                      "dismissible": true,
+                      "message": "Notification preference removed",
+                      "type": "alert",
+                      "variant": "info"
+                    }
+                  ],
+                  [
+                    "fetch",
+                    "NotificationPreference",
+                    {
+                      "emit": {
+                        "failure": "PreferencesLoadFailed",
+                        "success": "PreferencesLoaded"
+                      }
+                    }
+                  ]
+                ],
+                "event": "PreferenceDeleted",
+                "eventId": "evt_01M2HEX5N2BXMHCTQZSM2CZ8EF",
+                "from": "browsing",
+                "to": "loading"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "toast",
+                    {
+                      "dismissible": true,
+                      "message": "Could not save the notification preference",
+                      "type": "alert",
+                      "variant": "warning"
+                    }
+                  ]
+                ],
+                "event": "PreferenceSaveFailed",
+                "eventId": "evt_01M2HEX5N285MJJBPVPTC5CC31",
+                "from": "browsing",
+                "to": "browsing"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "message": "@payload.error",
+                          "type": "alert",
+                          "variant": "error"
+                        },
+                        {
+                          "action": "RETRY",
+                          "icon": "rotate-ccw",
+                          "label": "Retry",
+                          "type": "button",
+                          "variant": "primary"
+                        }
+                      ],
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "PreferencesLoadFailed",
+                "eventId": "evt_01M2HEX5N2CK3GB34396QDTF77",
+                "from": "browsing",
+                "to": "error"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "NotificationPreference",
+                    {
+                      "emit": {
+                        "failure": "PreferencesLoadFailed",
+                        "success": "PreferencesLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "sm",
+                      "type": "spinner"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01M2HEX5N2WPK2RGK1VGFNP6MP",
+                "from": "error",
+                "to": "loading"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "NotificationPreference",
+                    {
+                      "emit": {
+                        "failure": "PreferencesLoadFailed",
+                        "success": "PreferencesLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "sm",
+                      "type": "spinner"
+                    }
+                  ]
+                ],
+                "event": "RETRY",
+                "eventId": "evt_01M2J1EARY3G1EG29PWVNZZYMM",
+                "from": "error",
+                "to": "loading"
+              }
+            ]
+          }
+        },
+        {
+          "config": {
+            "fields": {
+              "default": [
+                "personId",
+                "eventKey",
+                "channel",
+                "mode",
+                "quietHours"
+              ],
+              "type": "unknown"
+            },
+            "icon": {
+              "default": "plus-circle",
+              "type": "unknown"
+            },
+            "mode": {
+              "default": "create",
+              "type": "unknown"
+            },
+            "title": {
+              "default": "New notification preference",
+              "type": "unknown"
+            }
+          },
+          "events": {
+            "OPEN": "CREATE",
+            "SAVE": "PREFERENCE_CREATED"
+          },
+          "id": "trt_01M2J1EARYFYA9YZM5WFH8DZZK",
+          "linkedEntity": "NotificationPreference",
+          "linkedEntityId": "ent_01M2HEX5N29SFAW1SYFN346B12",
+          "listens": [
+            {
+              "event": "CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "PreferencesManage"
+              },
+              "triggers": "CREATE"
+            }
+          ],
+          "name": "PreferenceCreate",
+          "ref": "Modal.traits.ModalRecordModal"
+        },
+        {
+          "config": {
+            "fields": {
+              "default": [
+                "personId",
+                "eventKey",
+                "channel",
+                "mode",
+                "quietHours"
+              ],
+              "type": "unknown"
+            },
+            "icon": {
+              "default": "pencil",
+              "type": "unknown"
+            },
+            "mode": {
+              "default": "edit",
+              "type": "unknown"
+            },
+            "title": {
+              "default": "Edit notification preference",
+              "type": "unknown"
+            }
+          },
+          "events": {
+            "OPEN": "EDIT",
+            "SAVE": "PREFERENCE_UPDATED"
+          },
+          "id": "trt_01M2J1EARYVZKT8FP35Z1B5C4Q",
+          "linkedEntity": "NotificationPreference",
+          "linkedEntityId": "ent_01M2HEX5N29SFAW1SYFN346B12",
+          "listens": [
+            {
+              "event": "EDIT",
+              "source": {
+                "kind": "trait",
+                "trait": "PreferencesManage"
+              },
+              "triggers": "EDIT"
+            }
+          ],
+          "name": "PreferenceEdit",
+          "ref": "Modal.traits.ModalRecordModal"
+        },
+        {
+          "category": "lifecycle",
+          "config": {
+            "eventKey": {
+              "default": "",
+              "description": "Stable key naming the event this gate checks preferences for (e.g. 'BudgetThreshold' — the std-finance-tracker NotifyOnEventListener convention). A blank CHECK_PREFERENCE payload eventKey falls back to this value. Preference rows whose eventKey is blank apply to every event.",
+              "label": "Event key",
+              "synonyms": "preference key, event name, subscription key, notification topic",
+              "tier": "policy",
+              "type": "string"
+            }
+          },
+          "effectRow": [
+            {
+              "kind": "emit",
+              "resource": "PREFERENCE_RESOLVED"
+            },
+            {
+              "kind": "fetch",
+              "resource": "NotificationPreference"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "toast"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.channel"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.eventKey"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.mode"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.personId"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.quietHours"
+            }
+          ],
+          "emits": [
+            {
+              "description": "The gate's verdict for a CHECK_PREFERENCE consult: resolved channel and mode, and whether quiet hours suppress delivery right now. Fail-open: no row or failed lookup = { channel: in_app, mode: instant, suppressed: false }.",
+              "event": "PREFERENCE_RESOLVED",
+              "eventId": "evt_01M2HEX5N2NRGS7RER3F5EVBEY",
+              "payloadSchema": [
+                {
+                  "name": "personId",
+                  "type": "string"
+                },
+                {
+                  "name": "eventKey",
+                  "type": "string"
+                },
+                {
+                  "name": "channel",
+                  "type": "string"
+                },
+                {
+                  "name": "mode",
+                  "type": "string"
+                },
+                {
+                  "name": "suppressed",
+                  "type": "boolean"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "verdict, preference answer, gate result, resolved preference",
+              "tier": "domain"
+            },
+            {
+              "description": "NotificationPreference rows loaded; the arm filters to the (personId, eventKey) match and resolves the verdict",
+              "event": "PREFERENCE_ROWS_LOADED",
+              "eventId": "evt_01M2HEX5N2J0G7WR4H4MF89J1K",
+              "payloadSchema": [
+                {
+                  "entity": "NotificationPreference",
+                  "name": "data",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "personId",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "eventKey",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "channel",
+                      "type": "string"
+                    },
+                    {
+                      "name": "mode",
+                      "type": "string"
+                    },
+                    {
+                      "name": "quietHours",
+                      "type": "string"
+                    },
+                    {
+                      "name": "createdAt",
+                      "type": "number"
+                    },
+                    {
+                      "name": "updatedAt",
+                      "type": "number"
+                    }
+                  ],
+                  "type": "[object]"
+                }
+              ],
+              "tier": "internal"
+            },
+            {
+              "description": "The preference fetch failed — the arm emits the fail-open verdict",
+              "event": "PREFERENCE_CHECK_FAILED",
+              "eventId": "evt_01M2HEX5N246QSGGDXMFT09QJ6",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "tier": "internal"
+            }
+          ],
+          "entityRefIds": {
+            "GateView": "ent_01M2HEX5N2Y7H9B3PH0ZSSH9QR",
+            "NotificationPreference": "ent_01M2HEX5N29SFAW1SYFN346B12"
+          },
+          "id": "trt_01M2HEX5N2Q3KM3X5DEBAS6RV6",
+          "linkedEntity": "GateView",
+          "linkedEntityId": "ent_01M2HEX5N2Y7H9B3PH0ZSSH9QR",
+          "name": "PreferenceGate",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "description": "Consult the gate for a person's effective notification preference.",
+                "id": "evt_01M2HEX5N2C20G8DKMNNETXXV8",
+                "key": "CHECK_PREFERENCE",
+                "name": "Check Preference",
+                "payloadSchema": [
+                  {
+                    "name": "personId",
+                    "type": "string"
+                  },
+                  {
+                    "name": "eventKey",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "check preference, resolve preference, should notify, gate notification",
+                "tier": "domain"
+              },
+              {
+                "description": "NotificationPreference rows loaded; the arm filters to the (personId, eventKey) match and resolves the verdict",
+                "id": "evt_01M2HEX5N2J0G7WR4H4MF89J1K",
+                "key": "PREFERENCE_ROWS_LOADED",
+                "name": "Preference Rows Loaded",
+                "payloadSchema": [
+                  {
+                    "entity": "NotificationPreference",
+                    "name": "data",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "personId",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "eventKey",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "channel",
+                        "type": "string"
+                      },
+                      {
+                        "name": "mode",
+                        "type": "string"
+                      },
+                      {
+                        "name": "quietHours",
+                        "type": "string"
+                      },
+                      {
+                        "name": "createdAt",
+                        "type": "number"
+                      },
+                      {
+                        "name": "updatedAt",
+                        "type": "number"
+                      }
+                    ],
+                    "type": "[object]"
+                  }
+                ],
+                "tier": "internal"
+              },
+              {
+                "description": "The preference fetch failed — the arm emits the fail-open verdict",
+                "id": "evt_01M2HEX5N246QSGGDXMFT09QJ6",
+                "key": "PREFERENCE_CHECK_FAILED",
+                "name": "Preference Check Failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "internal"
+              },
+              {
+                "description": "The gate's verdict for a CHECK_PREFERENCE consult: resolved channel and mode, and whether quiet hours suppress delivery right now. Fail-open: no row or failed lookup = { channel: in_app, mode: instant, suppressed: false }.",
+                "id": "evt_01M2HEX5N2NRGS7RER3F5EVBEY",
+                "key": "PREFERENCE_RESOLVED",
+                "name": "Preference Resolved",
+                "payloadSchema": [
+                  {
+                    "name": "personId",
+                    "type": "string"
+                  },
+                  {
+                    "name": "eventKey",
+                    "type": "string"
+                  },
+                  {
+                    "name": "channel",
+                    "type": "string"
+                  },
+                  {
+                    "name": "mode",
+                    "type": "string"
+                  },
+                  {
+                    "name": "suppressed",
+                    "type": "boolean"
+                  }
+                ],
+                "synonyms": "verdict, preference answer, gate result, resolved preference",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.personId",
+                    "@payload.personId"
+                  ],
+                  [
+                    "set",
+                    "@entity.eventKey",
+                    [
+                      "if",
+                      [
+                        "=",
+                        "@payload.eventKey",
+                        ""
+                      ],
+                      "@config.eventKey",
+                      "@payload.eventKey"
+                    ]
+                  ],
+                  [
+                    "fetch",
+                    "NotificationPreference",
+                    {
+                      "emit": {
+                        "failure": "PREFERENCE_CHECK_FAILED",
+                        "success": "PREFERENCE_ROWS_LOADED"
+                      }
+                    }
+                  ]
+                ],
+                "event": "CHECK_PREFERENCE",
+                "eventId": "evt_01M2HEX5N2C20G8DKMNNETXXV8",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.channel",
+                    [
+                      "if",
+                      [
+                        "=",
+                        [
+                          "array/len",
+                          [
+                            "array/filter",
+                            "@payload.data",
+                            [
+                              "fn",
+                              "p",
+                              [
+                                "and",
+                                [
+                                  "=",
+                                  [
+                                    "object/get",
+                                    "@p",
+                                    "personId"
+                                  ],
+                                  "@entity.personId"
+                                ],
+                                [
+                                  "or",
+                                  [
+                                    "=",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "eventKey"
+                                    ],
+                                    ""
+                                  ],
+                                  [
+                                    "=",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "eventKey"
+                                    ],
+                                    "@entity.eventKey"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ],
+                        0.0
+                      ],
+                      "in_app",
+                      [
+                        "object/get",
+                        [
+                          "array/first",
+                          [
+                            "array/filter",
+                            "@payload.data",
+                            [
+                              "fn",
+                              "p",
+                              [
+                                "and",
+                                [
+                                  "=",
+                                  [
+                                    "object/get",
+                                    "@p",
+                                    "personId"
+                                  ],
+                                  "@entity.personId"
+                                ],
+                                [
+                                  "or",
+                                  [
+                                    "=",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "eventKey"
+                                    ],
+                                    ""
+                                  ],
+                                  [
+                                    "=",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "eventKey"
+                                    ],
+                                    "@entity.eventKey"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ],
+                        "channel"
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.mode",
+                    [
+                      "if",
+                      [
+                        "=",
+                        [
+                          "array/len",
+                          [
+                            "array/filter",
+                            "@payload.data",
+                            [
+                              "fn",
+                              "p",
+                              [
+                                "and",
+                                [
+                                  "=",
+                                  [
+                                    "object/get",
+                                    "@p",
+                                    "personId"
+                                  ],
+                                  "@entity.personId"
+                                ],
+                                [
+                                  "or",
+                                  [
+                                    "=",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "eventKey"
+                                    ],
+                                    ""
+                                  ],
+                                  [
+                                    "=",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "eventKey"
+                                    ],
+                                    "@entity.eventKey"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ],
+                        0.0
+                      ],
+                      "instant",
+                      [
+                        "object/get",
+                        [
+                          "array/first",
+                          [
+                            "array/filter",
+                            "@payload.data",
+                            [
+                              "fn",
+                              "p",
+                              [
+                                "and",
+                                [
+                                  "=",
+                                  [
+                                    "object/get",
+                                    "@p",
+                                    "personId"
+                                  ],
+                                  "@entity.personId"
+                                ],
+                                [
+                                  "or",
+                                  [
+                                    "=",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "eventKey"
+                                    ],
+                                    ""
+                                  ],
+                                  [
+                                    "=",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "eventKey"
+                                    ],
+                                    "@entity.eventKey"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ],
+                        "mode"
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.quietHours",
+                    [
+                      "if",
+                      [
+                        "=",
+                        [
+                          "array/len",
+                          [
+                            "array/filter",
+                            "@payload.data",
+                            [
+                              "fn",
+                              "p",
+                              [
+                                "and",
+                                [
+                                  "=",
+                                  [
+                                    "object/get",
+                                    "@p",
+                                    "personId"
+                                  ],
+                                  "@entity.personId"
+                                ],
+                                [
+                                  "or",
+                                  [
+                                    "=",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "eventKey"
+                                    ],
+                                    ""
+                                  ],
+                                  [
+                                    "=",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "eventKey"
+                                    ],
+                                    "@entity.eventKey"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ],
+                        0.0
+                      ],
+                      "",
+                      [
+                        "object/get",
+                        [
+                          "array/first",
+                          [
+                            "array/filter",
+                            "@payload.data",
+                            [
+                              "fn",
+                              "p",
+                              [
+                                "and",
+                                [
+                                  "=",
+                                  [
+                                    "object/get",
+                                    "@p",
+                                    "personId"
+                                  ],
+                                  "@entity.personId"
+                                ],
+                                [
+                                  "or",
+                                  [
+                                    "=",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "eventKey"
+                                    ],
+                                    ""
+                                  ],
+                                  [
+                                    "=",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "eventKey"
+                                    ],
+                                    "@entity.eventKey"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ],
+                        "quietHours"
+                      ]
+                    ]
+                  ],
+                  [
+                    "emit",
+                    "PREFERENCE_RESOLVED",
+                    {
+                      "channel": "@entity.channel",
+                      "eventKey": "@entity.eventKey",
+                      "mode": "@entity.mode",
+                      "personId": "@entity.personId",
+                      "suppressed": [
+                        "and",
+                        [
+                          "str/includes",
+                          "@entity.quietHours",
+                          "-"
+                        ],
+                        [
+                          "!=",
+                          [
+                            "str/slice",
+                            [
+                              "array/first",
+                              [
+                                "str/split",
+                                "@entity.quietHours",
+                                "-"
+                              ]
+                            ],
+                            0.0,
+                            2.0
+                          ],
+                          [
+                            "str/slice",
+                            [
+                              "array/nth",
+                              [
+                                "str/split",
+                                "@entity.quietHours",
+                                "-"
+                              ],
+                              1.0
+                            ],
+                            0.0,
+                            2.0
+                          ]
+                        ],
+                        [
+                          "if",
+                          [
+                            "<",
+                            [
+                              "str/slice",
+                              [
+                                "array/first",
+                                [
+                                  "str/split",
+                                  "@entity.quietHours",
+                                  "-"
+                                ]
+                              ],
+                              0.0,
+                              2.0
+                            ],
+                            [
+                              "str/slice",
+                              [
+                                "array/nth",
+                                [
+                                  "str/split",
+                                  "@entity.quietHours",
+                                  "-"
+                                ],
+                                1.0
+                              ],
+                              0.0,
+                              2.0
+                            ]
+                          ],
+                          [
+                            "and",
+                            [
+                              ">=",
+                              [
+                                "time/hour",
+                                "@now"
+                              ],
+                              [
+                                "str/slice",
+                                [
+                                  "array/first",
+                                  [
+                                    "str/split",
+                                    "@entity.quietHours",
+                                    "-"
+                                  ]
+                                ],
+                                0.0,
+                                2.0
+                              ]
+                            ],
+                            [
+                              "<",
+                              [
+                                "time/hour",
+                                "@now"
+                              ],
+                              [
+                                "str/slice",
+                                [
+                                  "array/nth",
+                                  [
+                                    "str/split",
+                                    "@entity.quietHours",
+                                    "-"
+                                  ],
+                                  1.0
+                                ],
+                                0.0,
+                                2.0
+                              ]
+                            ]
+                          ],
+                          [
+                            "or",
+                            [
+                              ">=",
+                              [
+                                "time/hour",
+                                "@now"
+                              ],
+                              [
+                                "str/slice",
+                                [
+                                  "array/first",
+                                  [
+                                    "str/split",
+                                    "@entity.quietHours",
+                                    "-"
+                                  ]
+                                ],
+                                0.0,
+                                2.0
+                              ]
+                            ],
+                            [
+                              "<",
+                              [
+                                "time/hour",
+                                "@now"
+                              ],
+                              [
+                                "str/slice",
+                                [
+                                  "array/nth",
+                                  [
+                                    "str/split",
+                                    "@entity.quietHours",
+                                    "-"
+                                  ],
+                                  1.0
+                                ],
+                                0.0,
+                                2.0
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    }
+                  ]
+                ],
+                "event": "PREFERENCE_ROWS_LOADED",
+                "eventId": "evt_01M2HEX5N2J0G7WR4H4MF89J1K",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "PREFERENCE_RESOLVED",
+                    {
+                      "channel": "in_app",
+                      "eventKey": "@entity.eventKey",
+                      "mode": "instant",
+                      "personId": "@entity.personId",
+                      "suppressed": false
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "toast",
+                    {
+                      "message": "@payload.error",
+                      "type": "alert",
+                      "variant": "error"
+                    }
+                  ]
+                ],
+                "event": "PREFERENCE_CHECK_FAILED",
+                "eventId": "evt_01M2HEX5N246QSGGDXMFT09QJ6",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ],
+      "uses": [
+        {
+          "as": "Modal",
+          "from": "std/behaviors/std-modal"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 1,
+  "version": "1.0.0"
+}

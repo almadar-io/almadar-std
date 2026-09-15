@@ -1367,6 +1367,7 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
                                 'children': [
                                   {
                                     'name': 'star',
+                                    'size': 'lg',
                                     'type': 'icon',
                                   },
                                   {
@@ -1702,6 +1703,7 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
                           },
                           {
                             'name': 'edit',
+                            'size': 'lg',
                             'type': 'icon',
                           },
                           {
@@ -1801,6 +1803,7 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
                                 'children': [
                                   {
                                     'name': 'star',
+                                    'size': 'lg',
                                     'type': 'icon',
                                   },
                                   {
@@ -2077,6 +2080,7 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
                                 'children': [
                                   {
                                     'name': 'star',
+                                    'size': 'lg',
                                     'type': 'icon',
                                   },
                                   {
@@ -2353,6 +2357,7 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
                                 'children': [
                                   {
                                     'name': 'star',
+                                    'size': 'lg',
                                     'type': 'icon',
                                   },
                                   {
@@ -2698,6 +2703,7 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
                                 'children': [
                                   {
                                     'name': 'star',
+                                    'size': 'lg',
                                     'type': 'icon',
                                   },
                                   {
@@ -2961,6 +2967,7 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
                           },
                           {
                             'name': 'edit',
+                            'size': 'lg',
                             'type': 'icon',
                           },
                           {
@@ -3107,7 +3114,7 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
                     'children': [
                       {
                         'name': 'check-circle',
-                        'size': 'lg',
+                        'size': 'xl',
                         'type': 'icon',
                       },
                       {
@@ -3910,7 +3917,7 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
                     'children': [
                       {
                         'name': 'check-circle',
-                        'size': 'lg',
+                        'size': 'xl',
                         'type': 'icon',
                       },
                       {

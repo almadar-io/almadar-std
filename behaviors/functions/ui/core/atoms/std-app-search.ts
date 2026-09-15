@@ -763,6 +763,7 @@ export function stdAppSearchAppSearchOrbital(params: StdAppSearchAppSearchOrbita
                         'children': [
                           {
                             'name': 'search',
+                            'size': 'xl',
                             'type': 'icon',
                           },
                           {

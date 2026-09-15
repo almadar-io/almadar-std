@@ -894,6 +894,7 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
                         'children': [
                           {
                             'name': 'bookmark',
+                            'size': 'lg',
                             'type': 'icon',
                           },
                           {
@@ -1093,6 +1094,7 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
                         'children': [
                           {
                             'name': 'pencil',
+                            'size': 'lg',
                             'type': 'icon',
                           },
                           {

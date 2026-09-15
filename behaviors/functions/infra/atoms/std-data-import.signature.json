@@ -1,0 +1,272 @@
+[
+  {
+    "organism": "std-data-import",
+    "orbital": "DataImportOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/infra/atoms/std-data-import.ts",
+    "entities": [
+      {
+        "name": "ImportBatch",
+        "fields": [
+          {
+            "name": "sourceName",
+            "type": "string",
+            "required": false,
+            "description": "Free-form name of the upstream source this run imported from.",
+            "synonyms": "source, origin, provider name"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false,
+            "description": "Lifecycle position of the import run."
+          },
+          {
+            "name": "rowCount",
+            "type": "number",
+            "required": false,
+            "description": "Number of rows staged for review.",
+            "synonyms": "rows, staged count, record count"
+          },
+          {
+            "name": "errorCount",
+            "type": "number",
+            "required": false,
+            "description": "Number of rows the host parser flagged with errors during staging.",
+            "synonyms": "errors, failed rows, parse errors"
+          },
+          {
+            "name": "mappingJson",
+            "type": "string",
+            "required": false,
+            "description": "Source-column → target-field mapping (JSON string), recorded verbatim from config for provenance; the consumer's mapping layer applies it.",
+            "synonyms": "field mapping, column mapping, mapping"
+          }
+        ],
+        "persistence": "persistent"
+      }
+    ],
+    "traits": [
+      {
+        "name": "DataImportLifecycle",
+        "emittedEvents": [
+          "BATCH_CREATED",
+          "ROWS_STAGED",
+          "IMPORT_PERSIST_FAILED",
+          "IMPORT_CONFIRMED",
+          "IMPORT_FAILED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "BATCH_CREATED",
+            "direction": "emit",
+            "description": "import_batches persist-create success — the payload carries the created row's id, captured onto the trait entity so staged rows can reference batchId",
+            "tier": "secondary"
+          },
+          {
+            "name": "ROWS_STAGED",
+            "direction": "emit",
+            "description": "import_rows bulk persist-create success signal — payload carries the persisted rows flat; the atom never reads it (self-loop only)",
+            "tier": "secondary"
+          },
+          {
+            "name": "IMPORT_PERSIST_FAILED",
+            "direction": "emit",
+            "description": "Any import_batches / import_rows persist failure — lands the run in failed, never a silent swallow",
+            "tier": "secondary"
+          },
+          {
+            "name": "IMPORT_CONFIRMED",
+            "direction": "emit",
+            "description": "The user confirmed the staged review and the batch row is persisted as confirmed. Consumers listen, fetch import_rows where batchId matches, map each rowJson through their field mapping, and persist into their own target entity.",
+            "synonyms": "import confirmed, commit import, accept staged rows, approve import",
+            "tier": "domain"
+          },
+          {
+            "name": "IMPORT_FAILED",
+            "direction": "emit",
+            "description": "The run failed (persist failure or empty staging); error carries the detail and the batch row was updated to failed",
+            "synonyms": "import failed, upload failed, staging failed",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "UPLOAD_CSV",
+            "direction": "listen",
+            "description": "Starts an import run for a CSV file upload. The host's file UI (e.g. a sibling std-import menu) only announces the upload — parsing is host work and arrives as STAGE_ROWS.",
+            "synonyms": "upload csv, import csv, start import, import file, bulk import",
+            "tier": "domain"
+          },
+          {
+            "name": "STAGE_ROWS",
+            "direction": "listen",
+            "description": "Host-side CSV parsing finished: rows carries one JSON string per parsed row (raw source shape, pre-mapping); errorCount counts rows the parser flagged. The atom bulk-persists them into import_rows and opens the staged review.",
+            "tier": "internal"
+          },
+          {
+            "name": "DISCARD_IMPORT",
+            "direction": "listen",
+            "description": "The user discarded the staged run before confirm; the batch row stays for provenance.",
+            "tier": "internal"
+          },
+          {
+            "name": "CONFIRM_IMPORT",
+            "direction": "listen",
+            "description": "The user approved the staged review; the batch is marked confirmed and IMPORT_CONFIRMED fires for the consumer's mapping+persist half.",
+            "synonyms": "confirm import, approve staged rows, accept import",
+            "tier": "domain"
+          },
+          {
+            "name": "RESET",
+            "direction": "listen",
+            "description": "Returns the atom to idle from a terminal state",
+            "tier": "internal"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "fieldMappingJson",
+            "type": "string",
+            "default": "{}",
+            "label": "Field mapping (JSON)",
+            "description": "JSON object mapping source CSV column names to target field names. Stored verbatim on the batch row (mappingJson) so the consumer's mapping layer applies the same mapping when it persists staged rows into the target entity.",
+            "synonyms": "field mapping, column mapping, map columns, remap fields, csv columns",
+            "tier": "domain"
+          },
+          {
+            "key": "historyWindowDays",
+            "type": "number",
+            "default": 0,
+            "label": "Historical data range (days)",
+            "description": "How many days back an import may reach (0 = unbounded). A declared import-config knob for the consumer's staging/mapping layer — the atom stages whatever rows it is handed and never filters by date.",
+            "synonyms": "history window, historical range, import range, days back, lookback period",
+            "tier": "policy"
+          },
+          {
+            "key": "sourceName",
+            "type": "string",
+            "default": "",
+            "label": "Source name",
+            "description": "Free-form name of the upstream source this import pulls from — whatever tool or file export the user names. Recorded on the batch row for provenance and echoed on IMPORT_CONFIRMED.",
+            "synonyms": "source, origin, import from, provider name, data source",
+            "tier": "domain"
+          },
+          {
+            "key": "targetEntity",
+            "type": "string",
+            "default": "",
+            "label": "Target entity",
+            "description": "Name of the consumer organism's entity the staged rows land in after confirm. Declarative contract only — the atom never writes the target entity; the consumer persists on IMPORT_CONFIRMED.",
+            "synonyms": "destination, import into, target type",
+            "tier": "domain"
+          }
+        ],
+        "capabilities": [
+          "import"
+        ],
+        "linkedEntity": "ImportBatch",
+        "transitionEvents": [
+          "BATCH_CREATED",
+          "CONFIRM_IMPORT",
+          "DISCARD_IMPORT",
+          "IMPORT_CONFIRMED",
+          "IMPORT_FAILED",
+          "IMPORT_PERSIST_FAILED",
+          "INIT",
+          "RESET",
+          "ROWS_STAGED",
+          "STAGE_ROWS",
+          "UPLOAD_CSV"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "errorCount",
+            "mappingJson",
+            "rowCount",
+            "sourceName",
+            "status"
+          ]
+        },
+        "effectRow": [
+          {
+            "kind": "emit",
+            "resource": "IMPORT_CONFIRMED"
+          },
+          {
+            "kind": "emit",
+            "resource": "IMPORT_FAILED"
+          },
+          {
+            "kind": "persist",
+            "resource": "ImportBatch"
+          },
+          {
+            "kind": "persist",
+            "resource": "ImportRow"
+          },
+          {
+            "kind": "render-ui",
+            "resource": "main"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.createdAt"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.errorCount"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.id"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.mappingJson"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.rowCount"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.sourceName"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.status"
+          }
+        ],
+        "effectEntityRefs": [
+          "ImportBatch",
+          "ImportRow"
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "name": "DataImportPage",
+        "defaultPath": "/data-import",
+        "primaryEntity": "ImportBatch"
+      }
+    ],
+    "emittedEvents": [
+      "BATCH_CREATED",
+      "IMPORT_CONFIRMED",
+      "IMPORT_FAILED",
+      "IMPORT_PERSIST_FAILED",
+      "ROWS_STAGED"
+    ],
+    "listenedEvents": [],
+    "exposure": "both",
+    "provenance": "authored",
+    "sourceValid": true
+  }
+]

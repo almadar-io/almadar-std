@@ -1274,6 +1274,7 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                         'children': [
                           {
                             'name': 'history',
+                            'size': 'lg',
                             'type': 'icon',
                           },
                           {
@@ -1504,6 +1505,7 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                         'children': [
                           {
                             'name': 'history',
+                            'size': 'lg',
                             'type': 'icon',
                           },
                           {
@@ -1980,6 +1982,7 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                         'children': [
                           {
                             'name': 'history',
+                            'size': 'lg',
                             'type': 'icon',
                           },
                           {
@@ -2119,6 +2122,7 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                           },
                           {
                             'name': 'plus-circle',
+                            'size': 'lg',
                             'type': 'icon',
                           },
                           {
@@ -2198,6 +2202,7 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                         'children': [
                           {
                             'name': 'history',
+                            'size': 'lg',
                             'type': 'icon',
                           },
                           {

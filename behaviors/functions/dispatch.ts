@@ -180,6 +180,11 @@ import {
   isStdDataErasureDataErasureOrbitalParams,
 } from './infra/atoms/std-data-erasure.js';
 import {
+  stdDataImportDataImportOrbital,
+  StdDataImportDataImportOrbitalManifest,
+  isStdDataImportDataImportOrbitalParams,
+} from './infra/atoms/std-data-import.js';
+import {
   stdDateRangeDateRangeOrbital,
   StdDateRangeDateRangeOrbitalManifest,
   isStdDateRangeDateRangeOrbitalParams,
@@ -244,6 +249,11 @@ import {
   StdGeosearchGeoSearchResultOrbitalManifest,
   isStdGeosearchGeoSearchResultOrbitalParams,
 } from './ui/core/atoms/std-geosearch.js';
+import {
+  stdGlobalSearchGlobalSearchOrbital,
+  StdGlobalSearchGlobalSearchOrbitalManifest,
+  isStdGlobalSearchGlobalSearchOrbitalParams,
+} from './infra/atoms/std-global-search.js';
 import {
   stdGraphBuilderGraphBuilderOrbital,
   StdGraphBuilderGraphBuilderOrbitalManifest,
@@ -340,6 +350,11 @@ import {
   isStdNotificationCenterNotificationCenterOrbitalParams,
 } from './infra/atoms/std-notification-center.js';
 import {
+  stdNotificationPreferencesNotificationPreferencesOrbital,
+  StdNotificationPreferencesNotificationPreferencesOrbitalManifest,
+  isStdNotificationPreferencesNotificationPreferencesOrbitalParams,
+} from './infra/atoms/std-notification-preferences.js';
+import {
   stdNotifyOnEventNotifyOnEventOrbital,
   StdNotifyOnEventNotifyOnEventOrbitalManifest,
   isStdNotifyOnEventNotifyOnEventOrbitalParams,
@@ -354,6 +369,11 @@ import {
   StdPaginationPagedItemOrbitalManifest,
   isStdPaginationPagedItemOrbitalParams,
 } from './ui/core/atoms/std-pagination.js';
+import {
+  stdPermissionMatrixPermissionMatrixOrbital,
+  StdPermissionMatrixPermissionMatrixOrbitalManifest,
+  isStdPermissionMatrixPermissionMatrixOrbitalParams,
+} from './infra/atoms/std-permission-matrix.js';
 import {
   stdPlatformerBoard2dPlatformerBoard2DOrbital,
   StdPlatformerBoard2dPlatformerBoard2DOrbitalManifest,
@@ -1005,6 +1025,15 @@ REGISTRY_MUT.set('std-data-erasure::DataErasureOrbital', {
   },
   manifest: StdDataErasureDataErasureOrbitalManifest,
 });
+REGISTRY_MUT.set('std-data-import::DataImportOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdDataImportDataImportOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-data-import::DataImportOrbital');
+    }
+    return stdDataImportDataImportOrbital(p);
+  },
+  manifest: StdDataImportDataImportOrbitalManifest,
+});
 REGISTRY_MUT.set('std-date-range::DateRangeOrbital', {
   factory: (p: object): OrbitalDefinition => {
     if (!isStdDateRangeDateRangeOrbitalParams(p)) {
@@ -1121,6 +1150,15 @@ REGISTRY_MUT.set('std-geosearch::GeoSearchResultOrbital', {
     return stdGeosearchGeoSearchResultOrbital(p);
   },
   manifest: StdGeosearchGeoSearchResultOrbitalManifest,
+});
+REGISTRY_MUT.set('std-global-search::GlobalSearchOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdGlobalSearchGlobalSearchOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-global-search::GlobalSearchOrbital');
+    }
+    return stdGlobalSearchGlobalSearchOrbital(p);
+  },
+  manifest: StdGlobalSearchGlobalSearchOrbitalManifest,
 });
 REGISTRY_MUT.set('std-graph-builder::GraphBuilderOrbital', {
   factory: (p: object): OrbitalDefinition => {
@@ -1293,6 +1331,15 @@ REGISTRY_MUT.set('std-notification-center::NotificationCenterOrbital', {
   },
   manifest: StdNotificationCenterNotificationCenterOrbitalManifest,
 });
+REGISTRY_MUT.set('std-notification-preferences::NotificationPreferencesOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdNotificationPreferencesNotificationPreferencesOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-notification-preferences::NotificationPreferencesOrbital');
+    }
+    return stdNotificationPreferencesNotificationPreferencesOrbital(p);
+  },
+  manifest: StdNotificationPreferencesNotificationPreferencesOrbitalManifest,
+});
 REGISTRY_MUT.set('std-notify-on-event::NotifyOnEventOrbital', {
   factory: (p: object): OrbitalDefinition => {
     if (!isStdNotifyOnEventNotifyOnEventOrbitalParams(p)) {
@@ -1319,6 +1366,15 @@ REGISTRY_MUT.set('std-pagination::PagedItemOrbital', {
     return stdPaginationPagedItemOrbital(p);
   },
   manifest: StdPaginationPagedItemOrbitalManifest,
+});
+REGISTRY_MUT.set('std-permission-matrix::PermissionMatrixOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdPermissionMatrixPermissionMatrixOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-permission-matrix::PermissionMatrixOrbital');
+    }
+    return stdPermissionMatrixPermissionMatrixOrbital(p);
+  },
+  manifest: StdPermissionMatrixPermissionMatrixOrbitalManifest,
 });
 REGISTRY_MUT.set('std-platformer-board-2d::PlatformerBoard2DOrbital', {
   factory: (p: object): OrbitalDefinition => {

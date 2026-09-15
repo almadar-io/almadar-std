@@ -558,6 +558,7 @@ export function stdRelatedRelatedItemOrbital(params: StdRelatedRelatedItemOrbita
                         'children': [
                           {
                             'name': 'link',
+                            'size': 'lg',
                             'type': 'icon',
                           },
                           {

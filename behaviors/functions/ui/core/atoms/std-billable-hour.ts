@@ -1026,6 +1026,7 @@ export function stdBillableHourBillableHourOrbital(params: StdBillableHourBillab
                         'children': [
                           {
                             'name': 'clock',
+                            'size': 'lg',
                             'type': 'icon',
                           },
                           {
@@ -1175,6 +1176,7 @@ export function stdBillableHourBillableHourOrbital(params: StdBillableHourBillab
                           },
                           {
                             'name': 'clock',
+                            'size': 'lg',
                             'type': 'icon',
                           },
                           {

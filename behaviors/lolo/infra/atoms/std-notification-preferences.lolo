@@ -1,0 +1,526 @@
+app std-notification-preferences "1.0.0"
+"std-notification-preferences — per-person notification preference store plus a consultable gate. Owns NotificationPreference rows (one per person + event key: channel override in_app/email/push/slack, mode instant/digest, quiet-hours window 'HH:MM-HH:MM' such as 22:00-07:00). The PreferencesManage trait is standard CRUD over the store (list / create / update / delete, persisted, success/failure cascade arms): a data-grid browse plus ModalRecordModal create/edit forms whose SAVE carries the full row payload (std-list daisy-chain idiom). The PreferenceGate trait is the consult half other notify traits call: emit CHECK_PREFERENCE { personId, eventKey } and the gate fetches the matching row (a row whose eventKey is blank applies to every event) and answers PREFERENCE_RESOLVED { personId, eventKey, channel, mode, suppressed } — suppressed is true only when the row's quietHours window covers the current hour; mode 'digest' rides on the verdict for the caller to defer. Default policy: no matching row — or a failed lookup — resolves fail-open to { channel: in_app, mode: instant, suppressed: false }; the absence of a preference never silences a notification."
+orbital NotificationPreferencesOrbital {
+    uses Modal from "std/behaviors/std-modal"
+
+    type CHECK_PREFERENCE = Event { personId : string, eventKey : string } "Consult the gate: which channel/mode applies to this person for this event, and is delivery suppressed right now? Blank eventKey falls back to the gate's configured eventKey."
+
+    type PREFERENCE_RESOLVED = Event { personId : string, eventKey : string, channel : string, mode : string, suppressed : boolean } "The gate's verdict. Fail-open defaults: no matching row or a failed lookup resolves { channel: in_app, mode: instant, suppressed: false } — absence of a preference never silences a notification."
+
+  entity NotificationPreference [persistent: notification_preferences] {
+    id : string!
+    personId : string! @description "The person this preference row belongs to." @synonyms "user, recipient, owner, account"
+    eventKey : string! @description "Event key this preference applies to (matches a notify listener's eventKey); blank = all events." @synonyms "event, trigger, topic, subscription"
+    channel : "in_app" | "email" | "push" | "slack" @description "Delivery channel override for this person." @synonyms "preferred channel, delivery method" = in_app
+    mode : "instant" | "digest" @description "Delivery mode: instant (default) or digest (deferred to a batch cycle)." @synonyms "delivery mode, frequency, cadence, defer" = instant
+    quietHours : string @description "Quiet-hours window as \"HH:MM-HH:MM\" (e.g. 22:00-07:00); blank or equal start/end = disabled." @synonyms "do not disturb, quiet window, night mode" = ""
+    createdAt : number @description "Timestamp indicating when this preference row was created." @synonyms "creation time, created" = 0
+    updatedAt : number @description "Timestamp indicating when this preference row was last updated." @synonyms "modified, last updated" = 0
+  }
+
+  entity GateView [runtime] {
+    id : string!
+    personId : string @description "Scratch: personId of the consult currently in flight." @synonyms "current person" = ""
+    eventKey : string @description "Scratch: effective event key of the consult currently in flight (payload eventKey, or the configured eventKey when the payload is blank)." @synonyms "current event key" = ""
+    channel : string @description "Scratch: resolved channel for the current consult." @synonyms "resolved channel" = ""
+    mode : string @description "Scratch: resolved delivery mode for the current consult." @synonyms "resolved mode" = ""
+    quietHours : string @description "Scratch: quiet-hours window of the matched row for the current consult; blank = none." @synonyms "resolved quiet hours" = ""
+  }
+
+  ;; Browse + coordinator in one trait (std-notification-center's
+  ;; PreferenceEditor shape): the grid owns list/delete, the modal trait refs
+  ;; own the create/edit forms, and the DO_CREATE/DO_UPDATE arms own the
+  ;; persist side-effects triggered by the modals' payload-carrying SAVE
+  ;; (renamed PREFERENCE_CREATED/PREFERENCE_UPDATED so create and edit stay
+  ;; distinguishable without source-scoped listens — the std-list idiom).
+  trait PreferencesManage -> NotificationPreference [interaction, collection] {
+    initial: loading
+
+    state loading {
+      INIT -> loading
+        (fetch NotificationPreference {
+          emit: { failure: PreferencesLoadFailed, success: PreferencesLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading notification preferences…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      PreferencesLoaded -> browsing
+        (render-ui main {
+          children: [{
+            children: [{
+              children: [{ name: bell, size: lg, type: icon }, {
+                content: @config.title
+                type: typography
+                variant: h3
+              }]
+              direction: horizontal
+              gap: sm
+              type: stack
+            }, {
+              action: CREATE
+              icon: plus
+              label: "New preference"
+              type: button
+              variant: primary
+            }]
+            direction: horizontal
+            gap: sm
+            justify: between
+            type: stack
+          }, { type: divider }, {
+            cols: 1
+            entity: ?data
+            fields: [{
+              label: Person
+              name: personId
+              variant: h4
+            }, {
+              label: Event
+              name: eventKey
+              variant: caption
+            }, {
+              label: Channel
+              name: channel
+              variant: badge
+            }, {
+              label: Mode
+              name: mode
+              variant: badge
+            }, {
+              label: "Quiet hours"
+              name: quietHours
+              variant: caption
+            }]
+            gap: sm
+            itemActions: [{
+              event: EDIT
+              icon: pencil
+              label: Edit
+              variant: secondary
+            }, {
+              event: DELETE
+              icon: trash-2
+              label: Delete
+              variant: danger
+            }]
+            look: @config.tableLook
+            type: data-grid
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      PreferencesLoadFailed -> error
+        (render-ui main {
+          align: center
+          children: [{
+            message: ?error
+            type: alert
+            variant: error
+          }, {
+            action: RETRY
+            icon: rotate-ccw
+            label: Retry
+            type: button
+            variant: primary
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
+    }
+
+    state browsing {
+      INIT -> loading
+        (fetch NotificationPreference {
+          emit: { failure: PreferencesLoadFailed, success: PreferencesLoaded }
+        })
+        (render-ui main { size: sm, type: spinner })
+      ;; CREATE/EDIT open the modal trait refs (modal slot) — the grid stays
+      ;; mounted behind them, so no arm here.
+      DELETE -> browsing
+        (persist delete NotificationPreference ?id {
+          emit: { failure: PreferenceSaveFailed, success: PreferenceDeleted }
+        })
+      ;; The modal SAVE payload carries the whole form row (std-list
+      ;; persistor shape): the bare ?data pointer is what lets a walk bind the
+      ;; target row from this step's own payload — a literal field map with a
+      ;; nested (object/get ?data id) is deliberately not that shape.
+      ;; createdAt/updatedAt ride the payload when the edit prefill carries
+      ;; them; the modal idiom cannot stamp @now at submit time.
+      DO_CREATE -> browsing
+        (persist create NotificationPreference ?data {
+          emit: { failure: PreferenceSaveFailed, success: PreferenceSaved }
+        })
+      DO_UPDATE -> browsing
+        (persist update NotificationPreference ?data {
+          emit: { failure: PreferenceSaveFailed, success: PreferenceSaved }
+        })
+      PreferenceSaved -> loading
+        (notify success "Notification preference saved")
+        (fetch NotificationPreference {
+          emit: { failure: PreferencesLoadFailed, success: PreferencesLoaded }
+        })
+      PreferenceDeleted -> loading
+        (notify info "Notification preference removed")
+        (fetch NotificationPreference {
+          emit: { failure: PreferencesLoadFailed, success: PreferencesLoaded }
+        })
+      PreferenceSaveFailed -> browsing
+        (notify warning "Could not save the notification preference")
+      ;; A load failure lands on the error state (std-saved-search shape), not
+      ;; a stay-in-browsing toast: `error` must be reachable from the stable
+      ;; browsing state — `loading` is transient (the fetch cascade leaves it
+      ;; immediately), so no walk can park the runtime there to dispatch the
+      ;; failure event from.
+      PreferencesLoadFailed -> error
+        (render-ui main {
+          align: center
+          children: [{
+            message: ?error
+            type: alert
+            variant: error
+          }, {
+            action: RETRY
+            icon: rotate-ccw
+            label: Retry
+            type: button
+            variant: primary
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
+    }
+
+    state error {
+      INIT -> loading
+        (fetch NotificationPreference {
+          emit: { failure: PreferencesLoadFailed, success: PreferencesLoaded }
+        })
+        (render-ui main { size: sm, type: spinner })
+      ;; the error screen's Retry button: INIT is lifecycle-only and the bus
+      ;; never delivers it, so the affordance must target a first-class event
+      RETRY -> loading
+        (fetch NotificationPreference {
+          emit: { failure: PreferencesLoadFailed, success: PreferencesLoaded }
+        })
+        (render-ui main { size: sm, type: spinner })
+    }
+
+    emits {
+      CREATE
+        @description "Opens the blank preference modal."
+        @synonyms "add, new, insert"
+        @tier "domain"
+      EDIT {
+        id : string!
+        row : NotificationPreference
+      }
+        @description "Opens a preference row in the edit modal."
+        @synonyms "modify, update, change"
+        @tier "domain"
+      DELETE {
+        id : string!
+        row : NotificationPreference
+      }
+        @description "Removes a preference row."
+        @synonyms "remove, discard, clear"
+        @tier "domain"
+      PreferencesLoaded {
+        data : [NotificationPreference]
+      }
+        @description "The preference collection finished loading."
+        @synonyms "loaded, fetched, retrieved"
+        @tier "domain"
+      PreferencesLoadFailed {
+        error : string
+        code : string
+      }
+        @description "The preference collection failed to load."
+        @synonyms "error, failure, load error"
+        @tier "internal"
+      PreferenceSaved {
+        id : string!
+      }
+        @description "A preference row persisted (create or update)."
+        @synonyms "created, updated, persisted"
+        @tier "domain"
+      PreferenceSaveFailed {
+        error : string
+        code : string
+      }
+        @description "A preference persist failed."
+        @synonyms "failed, error, unsuccessful"
+        @tier "internal"
+      PreferenceDeleted {
+        id : string!
+      }
+        @description "A preference row was deleted."
+        @synonyms "removed, purged, discarded"
+        @tier "domain"
+    }
+
+    listens {
+      DO_CREATE {
+        data : NotificationPreference!
+      }
+        @description "Create persist requested; the modal's SAVE payload carries the full form row."
+        @synonyms "add, new, insert"
+        @tier "internal"
+      DO_UPDATE {
+        data : NotificationPreference!
+      }
+        @description "Update persist requested; the modal's SAVE payload carries the full form row."
+        @synonyms "modified, changed, refreshed"
+        @tier "internal"
+      PreferenceCreate.PREFERENCE_CREATED -> DO_CREATE
+      PreferenceEdit.PREFERENCE_UPDATED -> DO_UPDATE
+      DELETE {
+        id : string!
+        row : NotificationPreference
+      }
+        @description "Removes a preference row."
+        @synonyms "remove, discard, clear"
+        @tier "domain"
+      RETRY
+        @description "Retries loading the preference collection after a failure."
+        @synonyms "try again, reload"
+        @tier "presentation"
+      PreferencesLoaded {
+        data : [NotificationPreference]
+      }
+        @description "The preference collection finished loading."
+        @synonyms "loaded, fetched, retrieved"
+        @tier "domain"
+      PreferencesLoadFailed {
+        error : string
+        code : string
+      }
+        @description "The preference collection failed to load."
+        @synonyms "error, failure, load error"
+        @tier "internal"
+      PreferenceSaved {
+        id : string!
+      }
+        @description "A preference row persisted (create or update)."
+        @synonyms "created, updated, persisted"
+        @tier "domain"
+      PreferenceSaveFailed {
+        error : string
+        code : string
+      }
+        @description "A preference persist failed."
+        @synonyms "failed, error, unsuccessful"
+        @tier "internal"
+      PreferenceDeleted {
+        id : string!
+      }
+        @description "A preference row was deleted."
+        @synonyms "removed, purged, discarded"
+        @tier "domain"
+    }
+
+    config {
+      title : string = "Notification preferences"
+        @label "Section title"
+        @description "Heading shown above the preference list"
+        @tier "presentation"
+      tableLook : "dense" | "spacious" | "striped" | "borderless" | "card-rows" = dense
+        @label "Table look"
+        @description "Layer 2 visual treatment for the preference data table rendered by this atom."
+        @tier "presentation"
+    }
+  }
+
+  ;; Create modal: configured via `config`, no effects overrides. SAVE is
+  ;; renamed to PREFERENCE_CREATED so PreferencesManage distinguishes
+  ;; Create-SAVE from Edit-SAVE without source-scoped listens. Form field
+  ;; types/options/required-ness are entity-schema-driven (channel/mode render
+  ;; as selects from the entity enums).
+  trait PreferenceCreate = Modal.traits.ModalRecordModal -> NotificationPreference {
+    events {
+      OPEN: CREATE
+      SAVE: PREFERENCE_CREATED
+    }
+
+    config {
+      icon: plus-circle
+      title: "New notification preference"
+      fields: (personId eventKey channel mode quietHours)
+      mode: create
+    }
+
+    listens {
+      PreferencesManage.CREATE -> CREATE
+      CREATE {
+        id : string
+        row : NotificationPreference
+      }
+        @description "Opens the blank preference modal."
+        @synonyms "add, new, insert"
+        @tier "domain"
+      SAVE {
+        data : @entity!
+      }
+        @description "The preference form was submitted; the payload carries the full row."
+        @synonyms "persist, store, commit"
+        @tier "domain"
+      ModalRecordLoadFailed {
+        error : string
+        code : string
+      }
+        @description "Indicates failure to load a record for a modal."
+        @synonyms "error, failure, problem, unsuccessful"
+        @tier "internal"
+    }
+  }
+
+  ;; Edit modal: same composition, mode edit — OPEN pre-fills from the grid
+  ;; row payload and the row id rides into the SAVE payload so the update
+  ;; persist finds the right row.
+  trait PreferenceEdit = Modal.traits.ModalRecordModal -> NotificationPreference {
+    events {
+      OPEN: EDIT
+      SAVE: PREFERENCE_UPDATED
+    }
+
+    config {
+      icon: pencil
+      title: "Edit notification preference"
+      fields: (personId eventKey channel mode quietHours)
+      mode: edit
+    }
+
+    listens {
+      PreferencesManage.EDIT -> EDIT
+      EDIT {
+        id : string
+        row : NotificationPreference
+      }
+        @description "Opens a preference row in the edit modal."
+        @synonyms "modify, update, change"
+        @tier "domain"
+      SAVE {
+        data : @entity!
+      }
+        @description "The preference form was submitted; the payload carries the full row."
+        @synonyms "persist, store, commit, update"
+        @tier "domain"
+      ModalRecordLoadFailed {
+        error : string
+        code : string
+      }
+        @description "Indicates failure to load a record for a modal."
+        @synonyms "error, failure, problem, unsuccessful"
+        @tier "internal"
+    }
+  }
+
+  trait PreferenceGate -> GateView [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      CHECK_PREFERENCE -> idle
+        (set @entity.personId ?personId)
+        (set @entity.eventKey (if ["=", ?eventKey, ""] @config.eventKey ?eventKey))
+        (fetch NotificationPreference {
+          emit: { failure: PREFERENCE_CHECK_FAILED, success: PREFERENCE_ROWS_LOADED }
+        })
+      PREFERENCE_ROWS_LOADED -> idle
+        ;; Fail-open default policy: no matching row resolves channel in_app /
+        ;; mode instant / suppressed false — absence of a preference never
+        ;; silences a notification.
+        (set @entity.channel (if ["=", (array/len (array/filter ?data (fn p (and ["=", (object/get @p personId), @entity.personId] (or ["=", (object/get @p eventKey), ""] ["=", (object/get @p eventKey), @entity.eventKey]))))), 0] in_app (object/get (array/first (array/filter ?data (fn p (and ["=", (object/get @p personId), @entity.personId] (or ["=", (object/get @p eventKey), ""] ["=", (object/get @p eventKey), @entity.eventKey]))))) channel)))
+        (set @entity.mode (if ["=", (array/len (array/filter ?data (fn p (and ["=", (object/get @p personId), @entity.personId] (or ["=", (object/get @p eventKey), ""] ["=", (object/get @p eventKey), @entity.eventKey]))))), 0] instant (object/get (array/first (array/filter ?data (fn p (and ["=", (object/get @p personId), @entity.personId] (or ["=", (object/get @p eventKey), ""] ["=", (object/get @p eventKey), @entity.eventKey]))))) mode)))
+        (set @entity.quietHours (if ["=", (array/len (array/filter ?data (fn p (and ["=", (object/get @p personId), @entity.personId] (or ["=", (object/get @p eventKey), ""] ["=", (object/get @p eventKey), @entity.eventKey]))))), 0] "" (object/get (array/first (array/filter ?data (fn p (and ["=", (object/get @p personId), @entity.personId] (or ["=", (object/get @p eventKey), ""] ["=", (object/get @p eventKey), @entity.eventKey]))))) quietHours)))
+        (emit PREFERENCE_RESOLVED {
+          channel: @entity.channel
+          eventKey: @entity.eventKey
+          mode: @entity.mode
+          personId: @entity.personId
+          suppressed: (and (str/includes @entity.quietHours "-") ["!=", (str/slice (array/first (str/split @entity.quietHours "-")) 0 2), (str/slice (array/nth (str/split @entity.quietHours "-") 1) 0 2)] (if ["<", (str/slice (array/first (str/split @entity.quietHours "-")) 0 2), (str/slice (array/nth (str/split @entity.quietHours "-") 1) 0 2)] (and [">=", (time/hour @now), (str/slice (array/first (str/split @entity.quietHours "-")) 0 2)] ["<", (time/hour @now), (str/slice (array/nth (str/split @entity.quietHours "-") 1) 0 2)]) (or [">=", (time/hour @now), (str/slice (array/first (str/split @entity.quietHours "-")) 0 2)] ["<", (time/hour @now), (str/slice (array/nth (str/split @entity.quietHours "-") 1) 0 2)])))
+        })
+      ;; Lookup failure is fail-open too: a broken preference store must not
+      ;; mute notifications.
+      PREFERENCE_CHECK_FAILED -> idle
+        (emit PREFERENCE_RESOLVED {
+          channel: in_app
+          eventKey: @entity.eventKey
+          mode: instant
+          personId: @entity.personId
+          suppressed: false
+        })
+        (render-ui toast {
+          message: ?error
+          type: alert
+          variant: error
+        })
+    }
+
+    emits {
+      PREFERENCE_RESOLVED -> external {
+        personId : string
+        eventKey : string
+        channel : string
+        mode : string
+        suppressed : boolean
+      }
+        @description "The gate's verdict for a CHECK_PREFERENCE consult: resolved channel and mode, and whether quiet hours suppress delivery right now. Fail-open: no row or failed lookup = { channel: in_app, mode: instant, suppressed: false }."
+        @synonyms "verdict, preference answer, gate result, resolved preference"
+        @tier "domain"
+      PREFERENCE_ROWS_LOADED {
+        data : [NotificationPreference]
+      }
+        @description "NotificationPreference rows loaded; the arm filters to the (personId, eventKey) match and resolves the verdict"
+        @tier "internal"
+      PREFERENCE_CHECK_FAILED {
+        error : string!
+      }
+        @description "The preference fetch failed — the arm emits the fail-open verdict"
+        @tier "internal"
+    }
+
+    listens {
+      CHECK_PREFERENCE {
+        personId : string
+        eventKey : string
+      }
+        @description "Consult the gate for a person's effective notification preference."
+        @synonyms "check preference, resolve preference, should notify, gate notification"
+        @tier "domain"
+      PREFERENCE_ROWS_LOADED {
+        data : [NotificationPreference]
+      }
+        @description "NotificationPreference rows loaded; the arm resolves the verdict"
+        @tier "internal"
+      PREFERENCE_CHECK_FAILED {
+        error : string!
+      }
+        @description "The preference fetch failed"
+        @tier "internal"
+    }
+
+    config {
+      eventKey : string = ""
+        @label "Event key"
+        @description "Stable key naming the event this gate checks preferences for (e.g. 'BudgetThreshold' — the std-finance-tracker NotifyOnEventListener convention). A blank CHECK_PREFERENCE payload eventKey falls back to this value. Preference rows whose eventKey is blank apply to every event."
+        @synonyms "preference key, event name, subscription key, notification topic"
+        @tier "policy"
+    }
+  }
+
+  page "/notification-preferences" as NotificationPreferencesPage -> PreferencesManage, PreferenceCreate, PreferenceEdit, PreferenceGate
+}

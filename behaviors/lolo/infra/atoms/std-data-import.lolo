@@ -1,0 +1,272 @@
+app std-data-import "1.0.0"
+"std-data-import — staged CSV import run, source-agnostic: upload → staged review → confirm → handoff. UPLOAD_CSV opens a run and persists an ImportBatch row (status uploaded, fieldMappingJson recorded verbatim for provenance); the host's file UI parses the CSV and answers with STAGE_ROWS, one JSON string per raw row, which the atom bulk-persists into import_rows against the batch id and presents as a staged review (row/error counts + Confirm/Discard). CONFIRM_IMPORT marks the batch confirmed and emits IMPORT_CONFIRMED { batchId, sourceName, rowCount } — the mapping+persist half is the CONSUMER organism's: it listens for IMPORT_CONFIRMED, fetches import_rows where batchId matches, maps each rowJson through its own field mapping, and persists into its own target entity (cross-atom persist into a consumer's entity is not expressible from here). This is deliberately the CSV-file path: the atom never calls a source service — sourceName/fieldMappingJson/targetEntity/historyWindowDays are declarative consumer configs, and any persist failure marks the batch row failed and fires IMPORT_FAILED, never a silent swallow. Compose with std-import for the file-picker menu."
+orbital DataImportOrbital {
+
+  entity ImportBatch [persistent: import_batches] {
+    id : string!
+    sourceName : string @description "Free-form name of the upstream source this run imported from." @synonyms "source, origin, provider name" = ""
+    status : "uploaded" | "staged" | "confirmed" | "failed" @description "Lifecycle position of the import run." = uploaded
+    rowCount : number @description "Number of rows staged for review." @synonyms "rows, staged count, record count" = 0
+    errorCount : number @description "Number of rows the host parser flagged with errors during staging." @synonyms "errors, failed rows, parse errors" = 0
+    mappingJson : string @description "Source-column → target-field mapping (JSON string), recorded verbatim from config for provenance; the consumer's mapping layer applies it." @synonyms "field mapping, column mapping, mapping" = "{}"
+    createdAt : number @description "Run start timestamp." = 0
+  }
+
+  entity ImportRow [persistent: import_rows] {
+    id : string!
+    batchId : string @description "ImportBatch id this staged row belongs to." @synonyms "batch, import run, parent batch" = ""
+    rowJson : string @description "The raw parsed CSV row as a JSON string (source shape, pre-mapping). The consumer maps it into its own entity shape after confirm." @synonyms "row, raw row, staged row, record json" = "{}"
+    status : "staged" | "imported" | "failed" @description "staged = awaiting confirm; imported = the consumer persisted it into the target entity; failed = rejected." = staged
+  }
+
+  trait DataImportLifecycle -> @rebindable ImportBatch [lifecycle, instance, import] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.sourceName @config.sourceName)
+        (set @entity.status uploaded)
+        (set @entity.rowCount 0)
+        (set @entity.errorCount 0)
+        (set @entity.mappingJson @config.fieldMappingJson)
+        (set @entity.createdAt 0)
+      UPLOAD_CSV -> uploaded
+        (set @entity.id ?batchId)
+        (set @entity.sourceName (or ?sourceName @config.sourceName))
+        (set @entity.status uploaded)
+        (set @entity.mappingJson @config.fieldMappingJson)
+        (set @entity.rowCount 0)
+        (set @entity.errorCount 0)
+        (set @entity.createdAt (time/now))
+        (persist create ImportBatch {
+          createdAt: @entity.createdAt
+          errorCount: 0
+          id: @entity.id
+          mappingJson: @entity.mappingJson
+          rowCount: 0
+          sourceName: @entity.sourceName
+          status: uploaded
+        } {
+          emit: { failure: IMPORT_PERSIST_FAILED, success: BATCH_CREATED }
+        })
+    }
+
+    state uploaded {
+      BATCH_CREATED -> uploaded
+        (set @entity.id ?id)
+      STAGE_ROWS -> staged when [">", (array/len ?rows), 0]
+        (set @entity.rowCount (array/len ?rows))
+        (set @entity.errorCount (or ?errorCount 0))
+        (set @entity.status staged)
+        (persist create ImportRow (array/map ?rows (fn r { batchId: @entity.id, rowJson: @r, status: staged })) {
+          emit: { failure: IMPORT_PERSIST_FAILED, success: ROWS_STAGED }
+        })
+        (persist update ImportBatch {
+          errorCount: @entity.errorCount
+          id: @entity.id
+          rowCount: @entity.rowCount
+          status: staged
+        })
+        (render-ui main {
+          children: [{
+            content: (str/concat "Review staged import — " @entity.sourceName)
+            type: typography
+            variant: h3
+          }, {
+            label: "Rows staged"
+            type: stat-display
+            value: @entity.rowCount
+          }, {
+            label: "Rows with errors"
+            type: stat-display
+            value: @entity.errorCount
+          }, {
+            children: [{
+              action: CONFIRM_IMPORT
+              label: "Confirm import"
+              type: button
+              variant: primary
+            }, {
+              action: DISCARD_IMPORT
+              label: Discard
+              type: button
+              variant: ghost
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      ;; Empty staging is a failed run, not a silent no-op. `< 1` (not
+      ;; `= 0`) so guard-payload synthesis can steer both arms.
+      STAGE_ROWS -> failed when ["<", (array/len ?rows), 1]
+        (set @entity.status failed)
+        (persist update ImportBatch { id: @entity.id, status: failed })
+        (emit IMPORT_FAILED { batchId: @entity.id, error: "The file parsed to zero rows — nothing to stage." })
+        (render-ui main {
+          message: "The file parsed to zero rows — nothing to stage."
+          type: alert
+          variant: error
+        })
+      ;; Persist failure is transient: stay in `uploaded` (the user can
+      ;; re-stage or discard) while the batch row records `failed` —
+      ;; std-data-erasure's ErasureSaveFailed -> browsing idiom. Keeping this
+      ;; a self-loop also leaves `failed` reachable only via dispatchable
+      ;; edges, so the runtime walk's reconcile genuinely settles there.
+      IMPORT_PERSIST_FAILED -> uploaded
+        (set @entity.status failed)
+        (set @entity.errorCount 1)
+        (persist update ImportBatch { errorCount: 1, id: @entity.id, status: failed })
+        (emit IMPORT_FAILED { batchId: @entity.id, error: ?error })
+        (render-ui main {
+          message: ?error
+          type: alert
+          variant: error
+        })
+      DISCARD_IMPORT -> idle
+        (set @entity.status uploaded)
+        (set @entity.rowCount 0)
+        (set @entity.errorCount 0)
+    }
+
+    state staged {
+      ;; Self-loop so the validator sees an in-atom listener for the
+      ;; bulk-persist success signal.
+      ROWS_STAGED -> staged
+      CONFIRM_IMPORT -> confirmed
+        (set @entity.status confirmed)
+        (persist update ImportBatch { id: @entity.id, status: confirmed })
+        (render-ui main {
+          message: "Import confirmed — staged rows are ready for mapping."
+          type: alert
+          variant: success
+        })
+        (emit IMPORT_CONFIRMED { batchId: @entity.id, rowCount: @entity.rowCount, sourceName: @entity.sourceName })
+      ;; Same transient-failure self-loop as in `uploaded`.
+      IMPORT_PERSIST_FAILED -> staged
+        (set @entity.status failed)
+        (set @entity.errorCount 1)
+        (persist update ImportBatch { errorCount: 1, id: @entity.id, status: failed })
+        (emit IMPORT_FAILED { batchId: @entity.id, error: ?error })
+        (render-ui main {
+          message: ?error
+          type: alert
+          variant: error
+        })
+      ;; The batch row stays (status staged) for provenance; staged rows are
+      ;; left in import_rows for the host to clean up or re-run.
+      DISCARD_IMPORT -> idle
+        (set @entity.status uploaded)
+        (set @entity.rowCount 0)
+        (set @entity.errorCount 0)
+        (render-ui main null)
+    }
+
+    state confirmed {
+      RESET -> idle
+        (set @entity.status uploaded)
+        (set @entity.rowCount 0)
+        (set @entity.errorCount 0)
+        (render-ui main null)
+      ;; Self-loop so the validator sees an in-atom listener for the
+      ;; externally-consumed confirmation event.
+      IMPORT_CONFIRMED -> confirmed
+    }
+
+    state failed {
+      RESET -> idle
+        (set @entity.status uploaded)
+        (set @entity.rowCount 0)
+        (set @entity.errorCount 0)
+        (render-ui main null)
+      ;; Mirrors the confirmed self-loop: IMPORT_FAILED is emitted for
+      ;; downstream consumers and listened to here for the validator.
+      IMPORT_FAILED -> failed
+    }
+
+    emits {
+      BATCH_CREATED {
+        id : string!
+      }
+        @description "import_batches persist-create success — rebinds @entity.id to the server-issued id, the fallback for when the host didn't mint a client-side batchId on UPLOAD_CSV"
+        @tier "secondary"
+      ROWS_STAGED
+        @description "import_rows bulk persist-create success signal — payload carries the persisted rows flat; the atom never reads it (self-loop only)"
+        @tier "secondary"
+      IMPORT_PERSIST_FAILED {
+        error : string!
+      }
+        @description "Any import_batches / import_rows persist failure — the batch row is updated to failed and IMPORT_FAILED emitted, never a silent swallow; the trait stays put so the user can retry or discard"
+        @tier "secondary"
+      IMPORT_CONFIRMED -> external {
+        batchId : string!
+        sourceName : string
+        rowCount : number
+      }
+        @description "The user confirmed the staged review and the batch row is persisted as confirmed. Consumers listen, fetch import_rows where batchId matches, map each rowJson through their field mapping, and persist into their own target entity."
+        @synonyms "import confirmed, commit import, accept staged rows, approve import"
+        @tier "domain"
+      IMPORT_FAILED -> external {
+        batchId : string
+        error : string!
+      }
+        @description "The run failed (persist failure or empty staging); error carries the detail and the batch row was updated to failed"
+        @synonyms "import failed, upload failed, staging failed"
+        @tier "domain"
+    }
+
+    listens {
+      UPLOAD_CSV {
+        batchId : string
+        sourceName : string
+      }
+        @description "Starts an import run for a CSV file upload. batchId is the client-minted batch id (idempotent upload — the host generates it so a retry never double-creates a batch); when omitted, the server-issued id is bound on BATCH_CREATED instead. The host's file UI (e.g. a sibling std-import menu) only announces the upload — parsing is host work and arrives as STAGE_ROWS."
+        @synonyms "upload csv, import csv, start import, import file, bulk import"
+        @tier "domain"
+      STAGE_ROWS {
+        rows : [string]!
+        errorCount : number
+      }
+        @description "Host-side CSV parsing finished: rows carries one JSON string per parsed row (raw source shape, pre-mapping); errorCount counts rows the parser flagged. The atom bulk-persists them into import_rows and opens the staged review."
+        @tier "internal"
+      CONFIRM_IMPORT
+        @description "The user approved the staged review; the batch is marked confirmed and IMPORT_CONFIRMED fires for the consumer's mapping+persist half."
+        @synonyms "confirm import, approve staged rows, accept import"
+        @tier "domain"
+      DISCARD_IMPORT
+        @description "The user discarded the staged run before confirm; the batch row stays for provenance."
+        @tier "internal"
+      RESET
+        @description "Returns the atom to idle from a terminal state"
+        @tier "internal"
+    }
+
+    config {
+      sourceName : string = ""
+        @label "Source name"
+        @description "Free-form name of the upstream source this import pulls from — whatever tool or file export the user names. Recorded on the batch row for provenance and echoed on IMPORT_CONFIRMED."
+        @synonyms "source, origin, import from, provider name, data source"
+        @tier "domain"
+      fieldMappingJson : string = "{}"
+        @label "Field mapping (JSON)"
+        @description "JSON object mapping source CSV column names to target field names. Stored verbatim on the batch row (mappingJson) so the consumer's mapping layer applies the same mapping when it persists staged rows into the target entity."
+        @synonyms "field mapping, column mapping, map columns, remap fields, csv columns"
+        @tier "domain"
+      targetEntity : string = ""
+        @label "Target entity"
+        @description "Name of the consumer organism's entity the staged rows land in after confirm. Declarative contract only — the atom never writes the target entity; the consumer persists on IMPORT_CONFIRMED."
+        @synonyms "destination, import into, target type"
+        @tier "domain"
+      historyWindowDays : number = 0
+        @label "Historical data range (days)"
+        @description "How many days back an import may reach (0 = unbounded). A declared import-config knob for the consumer's staging/mapping layer — the atom stages whatever rows it is handed and never filters by date."
+        @synonyms "history window, historical range, import range, days back, lookback period"
+        @tier "policy"
+    }
+  }
+
+  page "/data-import" as DataImportPage -> DataImportLifecycle
+}

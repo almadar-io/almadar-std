@@ -1090,6 +1090,7 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                             'children': [
                               {
                                 'name': 'file-signature',
+                                'size': 'xl',
                                 'type': 'icon',
                               },
                               {
@@ -1189,6 +1190,7 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                       {
                         'color': 'error',
                         'name': 'alert-triangle',
+                        'size': 'lg',
                         'type': 'icon',
                       },
                       {

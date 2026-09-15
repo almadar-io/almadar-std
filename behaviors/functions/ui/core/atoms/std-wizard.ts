@@ -1041,6 +1041,7 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                         'children': [
                           {
                             'name': 'list-checks',
+                            'size': 'lg',
                             'type': 'icon',
                           },
                           {
@@ -1068,7 +1069,7 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                                 'children': [
                                   {
                                     'name': '@entity.currentStepIcon',
-                                    'size': 'lg',
+                                    'size': 'xl',
                                     'type': 'icon',
                                   },
                                   {
@@ -1358,6 +1359,7 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                         'children': [
                           {
                             'name': 'list-checks',
+                            'size': 'lg',
                             'type': 'icon',
                           },
                           {
@@ -1385,7 +1387,7 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                                 'children': [
                                   {
                                     'name': '@entity.currentStepIcon',
-                                    'size': 'lg',
+                                    'size': 'xl',
                                     'type': 'icon',
                                   },
                                   {
@@ -1505,7 +1507,7 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                     'children': [
                       {
                         'name': 'check-circle',
-                        'size': 'lg',
+                        'size': 'xl',
                         'type': 'icon',
                       },
                       {
@@ -1680,6 +1682,7 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                         'children': [
                           {
                             'name': 'list-checks',
+                            'size': 'lg',
                             'type': 'icon',
                           },
                           {
@@ -1707,7 +1710,7 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                                 'children': [
                                   {
                                     'name': '@entity.currentStepIcon',
-                                    'size': 'lg',
+                                    'size': 'xl',
                                     'type': 'icon',
                                   },
                                   {
@@ -1811,7 +1814,7 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                     'children': [
                       {
                         'name': 'x-circle',
-                        'size': 'lg',
+                        'size': 'xl',
                         'type': 'icon',
                       },
                       {
@@ -1855,7 +1858,7 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                     'children': [
                       {
                         'name': 'check-circle',
-                        'size': 'lg',
+                        'size': 'xl',
                         'type': 'icon',
                       },
                       {

@@ -912,6 +912,7 @@ export function stdListListItemOrbital(params: StdListListItemOrbitalParams = {}
                             'children': [
                               {
                                 'name': 'list',
+                                'size': 'xl',
                                 'type': 'icon',
                               },
                               {
@@ -1051,6 +1052,7 @@ export function stdListListItemOrbital(params: StdListListItemOrbitalParams = {}
                       {
                         'color': 'error',
                         'name': 'alert-triangle',
+                        'size': 'lg',
                         'type': 'icon',
                       },
                       {
@@ -1236,6 +1238,7 @@ export function stdListListItemOrbital(params: StdListListItemOrbitalParams = {}
                             'children': [
                               {
                                 'name': 'list',
+                                'size': 'xl',
                                 'type': 'icon',
                               },
                               {

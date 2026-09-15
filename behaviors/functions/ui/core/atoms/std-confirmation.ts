@@ -593,6 +593,7 @@ export function stdConfirmationConfirmActionOrbital(params: StdConfirmationConfi
                         'children': [
                           {
                             'name': '@config.icon',
+                            'size': 'lg',
                             'type': 'icon',
                           },
                           {

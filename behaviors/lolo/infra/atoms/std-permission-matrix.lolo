@@ -1,0 +1,522 @@
+app std-permission-matrix "1.0.0"
+"std-permission-matrix — role × module permission grant table / capability matrix admin surface. Use when a user voices that permissions must be managed per role and module (permission matrix, role permissions, capability matrix, permission grants, access matrix, who can see finance, hide margins, module-level permissions, admin permission screen, grant management, finance visibility by role, restrict modules by role). Persists PermissionGrant rows (workspaceId + role + module + capability flags canReadFinance / canSeeOthersHours / canSeeMargins) with full CRUD on an admin page mounted at /admin/permissions — create/edit forms are the std-modal ModalRecordModal substrate (the corpus's two-trait CRUD shape, mirroring std-list), persists live in a sibling coordinator trait, and adminRoles is ENFORCED at the persist boundary (a viewer whose role is not listed cannot fire a write, from the button or from the bus). Ships a query trait other traits consult event-wise: CHECK_GRANT { role, module } fetches the matching grant(s) and re-emits GRANT_RESOLVED { role, module, canReadFinance, canSeeOthersHours, canSeeMargins, found }. Grant SURFACE only — entity-layer @read/@update gate integration is a recorded core gap (gates are pure @entity/@user S-expressions and cannot consult another entity's rows), so enforcement stays with the consumer until that core lands."
+orbital PermissionMatrixOrbital {
+    uses Modal from "std/behaviors/std-modal"
+    uses Spinner from "std/behaviors/ui-spinner"
+    uses Typography from "std/behaviors/ui-typography"
+    uses Icon from "std/behaviors/ui-icon"
+    uses Divider from "std/behaviors/ui-divider"
+    uses Alert from "std/behaviors/ui-alert"
+
+    type PermissionGrantLoaded = Event { data : [PermissionGrant] } "Fired when the permission-grant collection finishes loading"
+
+    type PermissionGrantLoadFailed = Event { error : string, code : string } "Fired when the permission-grant collection fails to load"
+
+    ;; Narrow id-only contract (std-list's ITEM_CREATED idiom), NOT a whole-row
+    ;; @entity flatten: the composed std-modal traits carry the intrinsic
+    ;; `seedRow` stash on this entity, which a row-flattened event would leak
+    ;; into the payload schema (always empty on real persist echoes).
+    type PermissionGrantSaved = Event { id : string! } "Fired after a grant row persists (create / update); carries the persisted row's id"
+
+    type PermissionGrantSaveFailed = Event { error : string, code : string } "Fired when a grant persist (create / update) fails"
+
+    type PermissionGrantDeleted = Event { id : string, deleted : boolean } "Fired after a grant row is deleted — persist delete emits the deleted row's id and a deleted flag, not the row"
+
+    type PermissionGrantDeleteFailed = Event { error : string, code : string } "Fired when a grant delete fails"
+
+    type GrantCheckLoaded = Event { data : [PermissionGrant] } "Fired when the grant lookup for a CHECK_GRANT finishes loading"
+
+    type GrantCheckFailed = Event { error : string, code : string } "Fired when the grant lookup for a CHECK_GRANT fails"
+
+  ;; Grant SURFACE only: entity-layer @read/@update gates are pure
+  ;; S-expressions over @entity (candidate row) + @user and cannot consult
+  ;; this table (orbital-core entity_access); gate-side enforcement is a
+  ;; recorded core gap, owner decision pending. Consumers consult event-wise
+  ;; via PermissionGrantQuery's CHECK_GRANT -> GRANT_RESOLVED below.
+  entity PermissionGrant [persistent: permission_grants] {
+    id : string!
+    workspaceId : string @description "Workspace the grant applies to; blank = applies to every workspace." @synonyms "workspace, tenant, org, organization" = ""
+    role : string! @description "The role the grant applies to (e.g. admin, manager, contractor)." @synonyms "user role, group, team role"
+    module : string! @description "The module or feature area the grant governs." @synonyms "feature, area, section, screen"
+    canReadFinance : boolean @description "Whether the role may read finance data in this module." @synonyms "see finance, read financials, view finance, finance access" = false
+    canSeeOthersHours : boolean @description "Whether the role may see other people's logged hours in this module." @synonyms "see others hours, view team hours, timesheet visibility, other people's time" = false
+    canSeeMargins : boolean @description "Whether the role may see margin / profit figures in this module." @synonyms "see margins, view profit, margin visibility, profitability" = false
+    createdAt : number @description "Timestamp indicating when the grant was created." @synonyms "creation time, created, date added" = 0
+  }
+
+  trait LoadingSpinner = Spinner.traits.SpinnerRender -> PermissionGrant {
+    config {}
+  }
+
+  trait ErrorSpinner = Spinner.traits.SpinnerRender -> PermissionGrant {
+    config {
+      size: sm
+    }
+  }
+
+  trait LoadingText = Typography.traits.TypographyRender -> PermissionGrant {
+    config {
+      color: muted
+      content: "Loading permission grants…"
+      variant: caption
+    }
+  }
+
+  trait ShieldCheckIcon = Icon.traits.IconRender -> PermissionGrant {
+    config {
+      name: shield-check
+    }
+  }
+
+  trait PermissionMatrixTitle = Typography.traits.TypographyRender -> PermissionGrant {
+    config {
+      content: "Permission matrix"
+      variant: h3
+    }
+  }
+
+  trait GrantDivider = Divider.traits.DividerRender -> PermissionGrant {
+    config {}
+  }
+
+  trait ErrorAlert = Alert.traits.AlertRender -> PermissionGrant {
+    config {
+      message: ?error
+      variant: error
+    }
+  }
+
+  ;; The admin browse surface: fetch + grid + the NEW/EDIT/DELETE broadcasts
+  ;; the composed modals and the persistor listen for. No form rendering here
+  ;; — the std-modal substrate owns open/submit/cancel/close (verified at
+  ;; source); a hand-rolled modal here put a form-submit affordance in a
+  ;; state this trait owned and stranded its cancel/close arms (runtime
+  ;; verify walk, 2026-09-15).
+  trait PermissionMatrixAdmin -> @rebindable PermissionGrant [interaction, collection, access] {
+    initial: loading
+
+    state loading {
+      INIT -> loading
+        (fetch PermissionGrant {
+          emit: { failure: PermissionGrantLoadFailed, success: PermissionGrantLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [@trait.LoadingSpinner, @trait.LoadingText]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      PermissionGrantLoaded -> listing
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{
+              align: center
+              children: [@trait.ShieldCheckIcon, @trait.PermissionMatrixTitle]
+              direction: horizontal
+              gap: sm
+              type: stack
+            }, {
+              action: NEW
+              icon: plus
+              label: "New grant"
+              type: button
+              variant: primary
+            }]
+            direction: horizontal
+            gap: sm
+            justify: between
+            type: stack
+          }, @trait.GrantDivider, {
+            cols: 1
+            entity: ?data
+            fields: [{
+              label: Role
+              name: role
+              variant: h4
+            }, {
+              label: Module
+              name: module
+              variant: badge
+            }, {
+              label: Workspace
+              name: workspaceId
+              variant: caption
+            }, {
+              format: boolean
+              label: "Read finance"
+              name: canReadFinance
+              variant: caption
+            }, {
+              format: boolean
+              label: "Others' hours"
+              name: canSeeOthersHours
+              variant: caption
+            }, {
+              format: boolean
+              label: Margins
+              name: canSeeMargins
+              variant: caption
+            }]
+            gap: sm
+            itemActions: [{
+              event: EDIT
+              icon: pencil
+              label: Edit
+              variant: ghost
+            }, {
+              event: DELETE
+              icon: trash
+              label: Delete
+              variant: danger
+            }]
+            type: data-grid
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      PermissionGrantLoadFailed -> error
+        (render-ui main {
+          children: [@trait.ErrorAlert]
+          type: stack
+        })
+    }
+
+    state listing {
+      ;; Refetch target for the persistor's PermissionGrantSaved /
+      ;; PermissionGrantDeleted broadcasts (listens maps them onto INIT).
+      ;; Persist failures notify at the persistor itself — single notifier,
+      ;; no duplicate toasts here.
+      INIT -> loading
+        (fetch PermissionGrant {
+          emit: { failure: PermissionGrantLoadFailed, success: PermissionGrantLoaded }
+        })
+    }
+
+    state error {
+      INIT -> loading
+        (fetch PermissionGrant {
+          emit: { failure: PermissionGrantLoadFailed, success: PermissionGrantLoaded }
+        })
+        (render-ui main {
+          align: center
+          children: [@trait.ErrorSpinner]
+          type: stack
+        })
+    }
+
+    emits {
+      NEW
+        @description "Requests the create-grant form (the create modal listens)."
+        @synonyms "add grant, new permission, create grant"
+        @tier "domain"
+      EDIT {
+        id : string!
+        row : PermissionGrant
+      }
+        @description "Requests the edit form for a grant row (the edit modal listens)."
+        @synonyms "modify grant, change permission, update grant"
+        @tier "domain"
+      DELETE {
+        id : string!
+        row : PermissionGrant
+      }
+        @description "Requests deletion of a grant row (the persistor listens; adminRoles-guarded there)."
+        @synonyms "remove grant, revoke permission, delete grant"
+        @tier "domain"
+      PermissionGrantLoaded {
+        data : [PermissionGrant]
+      }
+        @description "Indicates the permission-grant collection has been successfully loaded."
+        @synonyms "loaded, fetched, retrieved"
+        @tier "internal"
+      PermissionGrantLoadFailed {
+        error : string
+        code : string
+      }
+        @description "Indicates failure to load the permission-grant collection."
+        @synonyms "load error, failed load, request failure"
+        @tier "internal"
+    }
+
+    listens {
+      PermissionGrantLoadFailed {
+        error : string
+        code : string
+      }
+        @description "Indicates failure to load the permission-grant collection."
+        @synonyms "load error, failed load"
+        @tier "internal"
+      PermissionGrantPersistor.PermissionGrantSaved -> INIT
+      PermissionGrantPersistor.PermissionGrantDeleted -> INIT
+    }
+
+    config {}
+  }
+
+  ;; Create modal: configured via `config`, no effects overrides (std-list
+  ;; idiom). SAVE is renamed GRANT_CREATED so the persistor distinguishes
+  ;; Create-SAVE from Edit-SAVE without source-scoped listens.
+  trait PermissionGrantCreate = Modal.traits.ModalRecordModal -> PermissionGrant {
+    events {
+      OPEN: NEW
+      SAVE: GRANT_CREATED
+    }
+
+    config {
+      icon: plus-circle
+      title: "Create grant"
+      fields: (workspaceId role module canReadFinance canSeeOthersHours canSeeMargins)
+      mode: create
+    }
+
+    listens {
+      PermissionMatrixAdmin.NEW -> NEW
+      NEW
+        @description "Opens the create-grant form."
+        @synonyms "add grant, new permission, create grant"
+        @tier "domain"
+      SAVE {
+        data : @entity!
+      }
+        @description "The create-grant form committed; data carries the new grant's fields."
+        @synonyms "submit grant, confirm create, persist"
+        @tier "domain"
+      ModalRecordLoadFailed {
+        error : string
+        code : string
+      }
+        @description "Indicates a failure to load a record for a modal."
+        @synonyms "error, failure, problem, unsuccessful"
+        @tier "internal"
+    }
+  }
+
+  ;; Edit modal: configured via `config`, no effects overrides. SAVE is
+  ;; renamed GRANT_UPDATED.
+  trait PermissionGrantEdit = Modal.traits.ModalRecordModal -> PermissionGrant {
+    events {
+      OPEN: EDIT
+      SAVE: GRANT_UPDATED
+    }
+
+    config {
+      icon: pencil
+      title: "Edit grant"
+      fields: (workspaceId role module canReadFinance canSeeOthersHours canSeeMargins)
+      mode: edit
+    }
+
+    listens {
+      PermissionMatrixAdmin.EDIT -> EDIT
+      EDIT {
+        id : string
+        row : PermissionGrant
+      }
+        @description "Opens the edit form for a grant row; the grid supplies the row."
+        @synonyms "modify grant, change permission, update grant"
+        @tier "domain"
+      SAVE {
+        data : @entity!
+      }
+        @description "The edit-grant form committed; data carries the grant id + updated fields."
+        @synonyms "submit edit, confirm update, persist"
+        @tier "domain"
+      ModalRecordLoadFailed {
+        error : string
+        code : string
+      }
+        @description "Indicates a failure to load a record into a modal window."
+        @synonyms "error, failure, problem, unsuccessful"
+        @tier "internal"
+    }
+  }
+
+  ;; Coordinator trait: owns the persist side-effects triggered by the modal
+  ;; emits and the grid's DELETE. adminRoles is ENFORCED here, at the persist
+  ;; boundary — both execution paths honor transition guards, for the form
+  ;; submit and for a bus-delivered event alike: empty = ungated, otherwise
+  ;; the viewer's role must be listed or the write does not fire. (A blocked
+  ;; viewer can still OPEN a form — the substrate modal owns open/close —
+  ;; but their submit is a no-op; route-level gating of /admin/permissions
+  ;; stays the host's job.)
+  trait PermissionGrantPersistor -> PermissionGrant [lifecycle, instance, access] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      DO_CREATE -> idle when (or ["=", (array/len @config.adminRoles), 0] (array/includes @config.adminRoles @user.role))
+        (persist create PermissionGrant ?data {
+          emit: { failure: PermissionGrantSaveFailed, success: PermissionGrantSaved }
+        })
+      DO_UPDATE -> idle when (or ["=", (array/len @config.adminRoles), 0] (array/includes @config.adminRoles @user.role))
+        (persist update PermissionGrant ?data {
+          emit: { failure: PermissionGrantSaveFailed, success: PermissionGrantSaved }
+        })
+      DO_DELETE -> idle when (or ["=", (array/len @config.adminRoles), 0] (array/includes @config.adminRoles @user.role))
+        (persist delete PermissionGrant ?id {
+          emit: { failure: PermissionGrantDeleteFailed, success: PermissionGrantDeleted }
+        })
+      PermissionGrantSaveFailed -> idle
+        (notify error (str/concat "Couldn't save the permission grant — " ?error))
+      PermissionGrantDeleteFailed -> idle
+        (notify error (str/concat "Couldn't delete the permission grant — " ?error))
+    }
+
+    emits {
+      PermissionGrantSaved -> external {
+        id : string!
+      }
+        @description "Signals that a permission grant has been persisted (create / update); carries the persisted row's id."
+        @synonyms "saved, created, updated, persisted"
+        @tier "domain"
+      PermissionGrantSaveFailed -> external {
+        error : string
+        code : string
+      }
+        @description "Indicates a failure to persist a permission grant."
+        @synonyms "save error, failed save, persist failure"
+        @tier "internal"
+      PermissionGrantDeleted -> external {
+        id : string
+        deleted : boolean
+      }
+        @description "Signals that a permission grant has been deleted."
+        @synonyms "deleted, removed, revoked"
+        @tier "domain"
+      PermissionGrantDeleteFailed -> external {
+        error : string
+        code : string
+      }
+        @description "Indicates a failure to delete a permission grant."
+        @synonyms "delete error, failed delete"
+        @tier "internal"
+    }
+
+    listens {
+      DO_CREATE {
+        data : PermissionGrant!
+      }
+        @description "Indicates a request to create a grant row."
+        @synonyms "add, new, insert"
+        @tier "domain"
+      DO_UPDATE {
+        data : PermissionGrant!
+      }
+        @description "Indicates a grant row has been modified."
+        @synonyms "modify, update, change"
+        @tier "domain"
+      DO_DELETE {
+        id : string!
+      }
+        @description "Indicates a request to delete a grant row."
+        @synonyms "remove, discard, erase"
+        @tier "domain"
+      PermissionGrantCreate.GRANT_CREATED -> DO_CREATE
+      PermissionGrantEdit.GRANT_UPDATED -> DO_UPDATE
+      PermissionMatrixAdmin.DELETE -> DO_DELETE
+    }
+
+    config {
+      adminRoles : [string] = []
+        @label "Who can manage grants?"
+        @description "Roles eligible to create, edit, or delete grants. ENFORCED by the DO_CREATE/DO_UPDATE/DO_DELETE transition guards: a viewer whose @user.role is not listed cannot fire a write, from the form submit or from the bus. Empty = every signed-in viewer may manage grants (ungated). Mounting the page is the opt-in — there is deliberately no separate enable flag (a default-off flag made the whole page's affordances dead on a fresh mount)."
+        @synonyms "admin roles, permission managers, who edits permissions, grant admins, permission matrix, role permissions, capability matrix, permission grants, access matrix, manage permissions"
+        @tier "policy"
+    }
+  }
+
+  trait PermissionGrantQuery -> @rebindable PermissionGrant [lifecycle, instance, access] {
+    initial: idle
+
+    state idle {
+      ;; The fetch filter binds @entity to the candidate ROW, so the queried
+      ;; role/module travel by payload (?role/?module) in the filter and are
+      ;; remembered on the trait instance for the GRANT_RESOLVED echo.
+      CHECK_GRANT -> idle when @config.enabled
+        (set @entity.role ?role)
+        (set @entity.module ?module)
+        (fetch PermissionGrant {
+          filter: (and ["=", (object/get @entity role), ?role] ["=", (object/get @entity module), ?module])
+          emit: { failure: GrantCheckFailed, success: GrantCheckLoaded }
+        })
+      ;; found: false = no matching row — whether that denies or permits is
+      ;; the CONSUMER's choice (default-deny is the consumer's decision); this
+      ;; atom reports, it never decides.
+      GrantCheckLoaded -> idle
+        (emit GRANT_RESOLVED {
+          role: @entity.role
+          module: @entity.module
+          canReadFinance: (if [">", (array/len ?data), 0] (object/get (array/first ?data) canReadFinance false) false)
+          canSeeOthersHours: (if [">", (array/len ?data), 0] (object/get (array/first ?data) canSeeOthersHours false) false)
+          canSeeMargins: (if [">", (array/len ?data), 0] (object/get (array/first ?data) canSeeMargins false) false)
+          found: [">", (array/len ?data), 0]
+        })
+      GrantCheckFailed -> idle
+        (notify error (str/concat "Couldn't resolve the permission grant — " ?error))
+    }
+
+    emits {
+      GRANT_RESOLVED -> external {
+        role : string
+        module : string
+        canReadFinance : boolean
+        canSeeOthersHours : boolean
+        canSeeMargins : boolean
+        found : boolean
+      }
+        @description "Answers a CHECK_GRANT: the capability flags of the first matching grant row, with found=false (and all flags false) when no row matches. Rename to wire the downstream listener; default-deny on found=false is the consumer's choice."
+        @synonyms "grant resolved, permission answer, capabilities returned, access decision data"
+        @tier "domain"
+      GrantCheckLoaded {
+        data : [PermissionGrant]
+      }
+        @description "Indicates the grant lookup for a CHECK_GRANT has been successfully loaded."
+        @synonyms "loaded, fetched, retrieved"
+        @tier "internal"
+      GrantCheckFailed {
+        error : string
+        code : string
+      }
+        @description "Indicates the grant lookup for a CHECK_GRANT failed."
+        @synonyms "lookup error, failed lookup, request failure"
+        @tier "internal"
+    }
+
+    listens {
+      CHECK_GRANT {
+        role : string!
+        module : string!
+      }
+        @description "Asks which capabilities a role holds in a module; the answer arrives as GRANT_RESOLVED (asynchronous — correlate by the echoed role/module)."
+        @synonyms "check grant, lookup permission, resolve capabilities, can this role see"
+        @tier "domain"
+      GrantCheckLoaded {
+        data : [PermissionGrant]
+      }
+        @description "Indicates the grant lookup has been successfully retrieved."
+        @synonyms "loaded, fetched, retrieved"
+        @tier "internal"
+      GrantCheckFailed {
+        error : string
+        code : string
+      }
+        @description "Indicates the grant lookup failed."
+        @synonyms "lookup error, failed lookup"
+        @tier "internal"
+    }
+
+    config {
+      enabled : boolean = false
+        @label "Answer permission lookups"
+        @description "Answer CHECK_GRANT lookups with GRANT_RESOLVED from the persisted grant table. Off by default."
+        @synonyms "enable, turn on, activate, permission lookup, grant query, resolve capabilities"
+        @tier "policy"
+    }
+  }
+
+  page "/admin/permissions" as PermissionMatrixPage -> PermissionMatrixAdmin, PermissionGrantCreate, PermissionGrantEdit, PermissionGrantPersistor, PermissionGrantQuery
+}

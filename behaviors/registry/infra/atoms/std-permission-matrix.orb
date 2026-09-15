@@ -1,0 +1,2229 @@
+{
+  "description": "std-permission-matrix — role × module permission grant table / capability matrix admin surface. Use when a user voices that permissions must be managed per role and module (permission matrix, role permissions, capability matrix, permission grants, access matrix, who can see finance, hide margins, module-level permissions, admin permission screen, grant management, finance visibility by role, restrict modules by role). Persists PermissionGrant rows (workspaceId + role + module + capability flags canReadFinance / canSeeOthersHours / canSeeMargins) with full CRUD on an admin page mounted at /admin/permissions — create/edit forms are the std-modal ModalRecordModal substrate (the corpus's two-trait CRUD shape, mirroring std-list), persists live in a sibling coordinator trait, and adminRoles is ENFORCED at the persist boundary (a viewer whose role is not listed cannot fire a write, from the button or from the bus). Ships a query trait other traits consult event-wise: CHECK_GRANT { role, module } fetches the matching grant(s) and re-emits GRANT_RESOLVED { role, module, canReadFinance, canSeeOthersHours, canSeeMargins, found }. Grant SURFACE only — entity-layer @read/@update gate integration is a recorded core gap (gates are pure @entity/@user S-expressions and cannot consult another entity's rows), so enforcement stays with the consumer until that core lands.",
+  "ledger": {
+    "entries": {
+      "ent_01M2HEYQZMYFHR14P4RKB46K51": {
+        "bakedName": "PermissionGrant",
+        "curName": "PermissionGrant",
+        "id": "ent_01M2HEYQZMYFHR14P4RKB46K51",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "evt_01M2HEYQZM24QM0A2ERYSYN7P1": {
+        "bakedName": "CHECK_GRANT",
+        "curName": "CHECK_GRANT",
+        "id": "evt_01M2HEYQZM24QM0A2ERYSYN7P1",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M2HEYQZMAE7G04QDC54C9G1J",
+        "renames": []
+      },
+      "evt_01M2HEYQZM9DM2K7FGY74WKBBT": {
+        "bakedName": "PermissionGrantLoadFailed",
+        "curName": "PermissionGrantLoadFailed",
+        "id": "evt_01M2HEYQZM9DM2K7FGY74WKBBT",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M2HEYQZMJ2XVG13CS09YSQZG",
+        "renames": []
+      },
+      "evt_01M2HEYQZMEN5KMN1S2P458NWV": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01M2HEYQZMEN5KMN1S2P458NWV",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M2HEYQZMJ2XVG13CS09YSQZG",
+        "renames": []
+      },
+      "evt_01M2HEYQZMNXE0Q2CRE9GJDF8C": {
+        "bakedName": "NEW",
+        "curName": "NEW",
+        "id": "evt_01M2HEYQZMNXE0Q2CRE9GJDF8C",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M2HEYQZMJ2XVG13CS09YSQZG",
+        "renames": []
+      },
+      "evt_01M2HEYQZMPARRK5AP79C66MS0": {
+        "bakedName": "GRANT_RESOLVED",
+        "curName": "GRANT_RESOLVED",
+        "id": "evt_01M2HEYQZMPARRK5AP79C66MS0",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M2HEYQZMAE7G04QDC54C9G1J",
+        "renames": []
+      },
+      "evt_01M2HEYQZMT7BCD58DZH8CJCC4": {
+        "bakedName": "GrantCheckFailed",
+        "curName": "GrantCheckFailed",
+        "id": "evt_01M2HEYQZMT7BCD58DZH8CJCC4",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M2HEYQZMAE7G04QDC54C9G1J",
+        "renames": []
+      },
+      "evt_01M2HEYQZMVNZ5YTXXR38WPM6R": {
+        "bakedName": "PermissionGrantLoaded",
+        "curName": "PermissionGrantLoaded",
+        "id": "evt_01M2HEYQZMVNZ5YTXXR38WPM6R",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M2HEYQZMJ2XVG13CS09YSQZG",
+        "renames": []
+      },
+      "evt_01M2HEYQZMWK4TZVSSZS3093ZG": {
+        "bakedName": "DELETE",
+        "curName": "DELETE",
+        "id": "evt_01M2HEYQZMWK4TZVSSZS3093ZG",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M2HEYQZMJ2XVG13CS09YSQZG",
+        "renames": []
+      },
+      "evt_01M2HEYQZMXWXQ5M0JAD911R8X": {
+        "bakedName": "EDIT",
+        "curName": "EDIT",
+        "id": "evt_01M2HEYQZMXWXQ5M0JAD911R8X",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M2HEYQZMJ2XVG13CS09YSQZG",
+        "renames": []
+      },
+      "evt_01M2HEYQZMZJWHEXPD8YKCP48D": {
+        "bakedName": "GrantCheckLoaded",
+        "curName": "GrantCheckLoaded",
+        "id": "evt_01M2HEYQZMZJWHEXPD8YKCP48D",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M2HEYQZMAE7G04QDC54C9G1J",
+        "renames": []
+      },
+      "evt_01M2JCDX8H82D6D1V7RTZ6CMY1": {
+        "bakedName": "PermissionGrantSaved",
+        "curName": "PermissionGrantSaved",
+        "id": "evt_01M2JCDX8H82D6D1V7RTZ6CMY1",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M2JCDX8HJFRR69J2HRX0450S",
+        "renames": []
+      },
+      "evt_01M2JCDX8HDS4691JHRXJ401PT": {
+        "bakedName": "PermissionGrantDeleteFailed",
+        "curName": "PermissionGrantDeleteFailed",
+        "id": "evt_01M2JCDX8HDS4691JHRXJ401PT",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M2JCDX8HJFRR69J2HRX0450S",
+        "renames": []
+      },
+      "evt_01M2JCDX8HFPEBTZF91HFFKT10": {
+        "bakedName": "PermissionGrantSaveFailed",
+        "curName": "PermissionGrantSaveFailed",
+        "id": "evt_01M2JCDX8HFPEBTZF91HFFKT10",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M2JCDX8HJFRR69J2HRX0450S",
+        "renames": []
+      },
+      "evt_01M2JCDX8HG5S847YTMPZ2NMPN": {
+        "bakedName": "DO_UPDATE",
+        "curName": "DO_UPDATE",
+        "id": "evt_01M2JCDX8HG5S847YTMPZ2NMPN",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M2JCDX8HJFRR69J2HRX0450S",
+        "renames": []
+      },
+      "evt_01M2JCDX8HH16NM9P3NDPX5Y31": {
+        "bakedName": "DO_DELETE",
+        "curName": "DO_DELETE",
+        "id": "evt_01M2JCDX8HH16NM9P3NDPX5Y31",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M2JCDX8HJFRR69J2HRX0450S",
+        "renames": []
+      },
+      "evt_01M2JCDX8HSG3NXK4ECZY8FH33": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01M2JCDX8HSG3NXK4ECZY8FH33",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M2JCDX8HJFRR69J2HRX0450S",
+        "renames": []
+      },
+      "evt_01M2JCDX8HSZYBRKTW58856G6X": {
+        "bakedName": "DO_CREATE",
+        "curName": "DO_CREATE",
+        "id": "evt_01M2JCDX8HSZYBRKTW58856G6X",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M2JCDX8HJFRR69J2HRX0450S",
+        "renames": []
+      },
+      "evt_01M2JCDX8HYHAHKQHTFSBAF5MN": {
+        "bakedName": "PermissionGrantDeleted",
+        "curName": "PermissionGrantDeleted",
+        "id": "evt_01M2JCDX8HYHAHKQHTFSBAF5MN",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M2JCDX8HJFRR69J2HRX0450S",
+        "renames": []
+      },
+      "orb_01M2HEYQZME0WVSVJ3G64KQBJF": {
+        "bakedName": "PermissionMatrixOrbital",
+        "curName": "PermissionMatrixOrbital",
+        "id": "orb_01M2HEYQZME0WVSVJ3G64KQBJF",
+        "kind": "orbital",
+        "owner": "workspace",
+        "renames": []
+      },
+      "pag_01M2HEYQZMA80XV7ZFHG4981XG": {
+        "bakedName": "PermissionMatrixPage",
+        "curName": "PermissionMatrixPage",
+        "id": "pag_01M2HEYQZMA80XV7ZFHG4981XG",
+        "kind": "page",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M2HEYQZM136RV41RKCDE1XVT": {
+        "bakedName": "ErrorAlert",
+        "curName": "ErrorAlert",
+        "id": "trt_01M2HEYQZM136RV41RKCDE1XVT",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M2HEYQZM4C5E4AARRCTKK9GC": {
+        "bakedName": "ErrorSpinner",
+        "curName": "ErrorSpinner",
+        "id": "trt_01M2HEYQZM4C5E4AARRCTKK9GC",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M2HEYQZM938N2V00VDF2K0XJ": {
+        "bakedName": "GrantDivider",
+        "curName": "GrantDivider",
+        "id": "trt_01M2HEYQZM938N2V00VDF2K0XJ",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M2HEYQZMA43G4PA24BEP3K3A": {
+        "bakedName": "LoadingSpinner",
+        "curName": "LoadingSpinner",
+        "id": "trt_01M2HEYQZMA43G4PA24BEP3K3A",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M2HEYQZMAE7G04QDC54C9G1J": {
+        "bakedName": "PermissionGrantQuery",
+        "curName": "PermissionGrantQuery",
+        "id": "trt_01M2HEYQZMAE7G04QDC54C9G1J",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M2HEYQZMBC4GABK9BV5Z4PVH": {
+        "bakedName": "PermissionMatrixTitle",
+        "curName": "PermissionMatrixTitle",
+        "id": "trt_01M2HEYQZMBC4GABK9BV5Z4PVH",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M2HEYQZMD1A2NASDVFHAH83A": {
+        "bakedName": "ShieldCheckIcon",
+        "curName": "ShieldCheckIcon",
+        "id": "trt_01M2HEYQZMD1A2NASDVFHAH83A",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M2HEYQZMJ2XVG13CS09YSQZG": {
+        "bakedName": "PermissionMatrixAdmin",
+        "curName": "PermissionMatrixAdmin",
+        "id": "trt_01M2HEYQZMJ2XVG13CS09YSQZG",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M2HEYQZMVQRQFSVXKB1RVNR2": {
+        "bakedName": "LoadingText",
+        "curName": "LoadingText",
+        "id": "trt_01M2HEYQZMVQRQFSVXKB1RVNR2",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M2JCDX8HHAZN1S4Q1QYN78H5": {
+        "bakedName": "PermissionGrantEdit",
+        "curName": "PermissionGrantEdit",
+        "id": "trt_01M2JCDX8HHAZN1S4Q1QYN78H5",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M2JCDX8HJFRR69J2HRX0450S": {
+        "bakedName": "PermissionGrantPersistor",
+        "curName": "PermissionGrantPersistor",
+        "id": "trt_01M2JCDX8HJFRR69J2HRX0450S",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M2JCDX8HQFZ924VC3E15FY0J": {
+        "bakedName": "PermissionGrantCreate",
+        "curName": "PermissionGrantCreate",
+        "id": "trt_01M2JCDX8HQFZ924VC3E15FY0J",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      }
+    },
+    "schemaVersion": 1
+  },
+  "name": "std-permission-matrix",
+  "orbitals": [
+    {
+      "entity": {
+        "collection": "permission_grants",
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": "",
+            "description": "Workspace the grant applies to; blank = applies to every workspace.",
+            "name": "workspaceId",
+            "synonyms": "workspace, tenant, org, organization",
+            "type": "string"
+          },
+          {
+            "description": "The role the grant applies to (e.g. admin, manager, contractor).",
+            "name": "role",
+            "required": true,
+            "synonyms": "user role, group, team role",
+            "type": "string"
+          },
+          {
+            "description": "The module or feature area the grant governs.",
+            "name": "module",
+            "required": true,
+            "synonyms": "feature, area, section, screen",
+            "type": "string"
+          },
+          {
+            "default": false,
+            "description": "Whether the role may read finance data in this module.",
+            "name": "canReadFinance",
+            "synonyms": "see finance, read financials, view finance, finance access",
+            "type": "boolean"
+          },
+          {
+            "default": false,
+            "description": "Whether the role may see other people's logged hours in this module.",
+            "name": "canSeeOthersHours",
+            "synonyms": "see others hours, view team hours, timesheet visibility, other people's time",
+            "type": "boolean"
+          },
+          {
+            "default": false,
+            "description": "Whether the role may see margin / profit figures in this module.",
+            "name": "canSeeMargins",
+            "synonyms": "see margins, view profit, margin visibility, profitability",
+            "type": "boolean"
+          },
+          {
+            "default": 0.0,
+            "description": "Timestamp indicating when the grant was created.",
+            "name": "createdAt",
+            "synonyms": "creation time, created, date added",
+            "type": "number"
+          }
+        ],
+        "id": "ent_01M2HEYQZMYFHR14P4RKB46K51",
+        "name": "PermissionGrant",
+        "persistence": "persistent"
+      },
+      "id": "orb_01M2HEYQZME0WVSVJ3G64KQBJF",
+      "name": "PermissionMatrixOrbital",
+      "pages": [
+        {
+          "id": "pag_01M2HEYQZMA80XV7ZFHG4981XG",
+          "name": "PermissionMatrixPage",
+          "path": "/admin/permissions",
+          "traits": [
+            {
+              "ref": "PermissionMatrixAdmin",
+              "refId": "trt_01M2HEYQZMJ2XVG13CS09YSQZG"
+            },
+            {
+              "ref": "PermissionGrantCreate",
+              "refId": "trt_01M2JCDX8HQFZ924VC3E15FY0J"
+            },
+            {
+              "ref": "PermissionGrantEdit",
+              "refId": "trt_01M2JCDX8HHAZN1S4Q1QYN78H5"
+            },
+            {
+              "ref": "PermissionGrantPersistor",
+              "refId": "trt_01M2JCDX8HJFRR69J2HRX0450S"
+            },
+            {
+              "ref": "PermissionGrantQuery",
+              "refId": "trt_01M2HEYQZMAE7G04QDC54C9G1J"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "id": "trt_01M2HEYQZMA43G4PA24BEP3K3A",
+          "linkedEntity": "PermissionGrant",
+          "linkedEntityId": "ent_01M2HEYQZMYFHR14P4RKB46K51",
+          "name": "LoadingSpinner",
+          "ref": "Spinner.traits.SpinnerRender"
+        },
+        {
+          "config": {
+            "size": {
+              "default": "sm",
+              "type": "unknown"
+            }
+          },
+          "id": "trt_01M2HEYQZM4C5E4AARRCTKK9GC",
+          "linkedEntity": "PermissionGrant",
+          "linkedEntityId": "ent_01M2HEYQZMYFHR14P4RKB46K51",
+          "name": "ErrorSpinner",
+          "ref": "Spinner.traits.SpinnerRender"
+        },
+        {
+          "config": {
+            "color": {
+              "default": "muted",
+              "type": "unknown"
+            },
+            "content": {
+              "default": "Loading permission grants…",
+              "type": "unknown"
+            },
+            "variant": {
+              "default": "caption",
+              "type": "unknown"
+            }
+          },
+          "id": "trt_01M2HEYQZMVQRQFSVXKB1RVNR2",
+          "linkedEntity": "PermissionGrant",
+          "linkedEntityId": "ent_01M2HEYQZMYFHR14P4RKB46K51",
+          "name": "LoadingText",
+          "ref": "Typography.traits.TypographyRender"
+        },
+        {
+          "config": {
+            "name": {
+              "default": "shield-check",
+              "type": "unknown"
+            }
+          },
+          "id": "trt_01M2HEYQZMD1A2NASDVFHAH83A",
+          "linkedEntity": "PermissionGrant",
+          "linkedEntityId": "ent_01M2HEYQZMYFHR14P4RKB46K51",
+          "name": "ShieldCheckIcon",
+          "ref": "Icon.traits.IconRender"
+        },
+        {
+          "config": {
+            "content": {
+              "default": "Permission matrix",
+              "type": "unknown"
+            },
+            "variant": {
+              "default": "h3",
+              "type": "unknown"
+            }
+          },
+          "id": "trt_01M2HEYQZMBC4GABK9BV5Z4PVH",
+          "linkedEntity": "PermissionGrant",
+          "linkedEntityId": "ent_01M2HEYQZMYFHR14P4RKB46K51",
+          "name": "PermissionMatrixTitle",
+          "ref": "Typography.traits.TypographyRender"
+        },
+        {
+          "id": "trt_01M2HEYQZM938N2V00VDF2K0XJ",
+          "linkedEntity": "PermissionGrant",
+          "linkedEntityId": "ent_01M2HEYQZMYFHR14P4RKB46K51",
+          "name": "GrantDivider",
+          "ref": "Divider.traits.DividerRender"
+        },
+        {
+          "config": {
+            "message": {
+              "default": "@payload.error",
+              "type": "unknown"
+            },
+            "variant": {
+              "default": "error",
+              "type": "unknown"
+            }
+          },
+          "id": "trt_01M2HEYQZM136RV41RKCDE1XVT",
+          "linkedEntity": "PermissionGrant",
+          "linkedEntityId": "ent_01M2HEYQZMYFHR14P4RKB46K51",
+          "name": "ErrorAlert",
+          "ref": "Alert.traits.AlertRender"
+        },
+        {
+          "capabilities": [
+            "access"
+          ],
+          "category": "interaction",
+          "effectRow": [
+            {
+              "kind": "fetch",
+              "resource": "PermissionGrant"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "main"
+            }
+          ],
+          "emits": [
+            {
+              "description": "Requests the create-grant form (the create modal listens).",
+              "event": "NEW",
+              "eventId": "evt_01M2HEYQZMNXE0Q2CRE9GJDF8C",
+              "synonyms": "add grant, new permission, create grant",
+              "tier": "domain"
+            },
+            {
+              "description": "Requests the edit form for a grant row (the edit modal listens).",
+              "event": "EDIT",
+              "eventId": "evt_01M2HEYQZMXWXQ5M0JAD911R8X",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "entity": "PermissionGrant",
+                  "name": "row",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "workspaceId",
+                      "type": "string"
+                    },
+                    {
+                      "name": "role",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "module",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "canReadFinance",
+                      "type": "boolean"
+                    },
+                    {
+                      "name": "canSeeOthersHours",
+                      "type": "boolean"
+                    },
+                    {
+                      "name": "canSeeMargins",
+                      "type": "boolean"
+                    },
+                    {
+                      "name": "createdAt",
+                      "type": "number"
+                    }
+                  ],
+                  "type": "object"
+                }
+              ],
+              "synonyms": "modify grant, change permission, update grant",
+              "tier": "domain"
+            },
+            {
+              "description": "Requests deletion of a grant row (the persistor listens; adminRoles-guarded there).",
+              "event": "DELETE",
+              "eventId": "evt_01M2HEYQZMWK4TZVSSZS3093ZG",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "entity": "PermissionGrant",
+                  "name": "row",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "workspaceId",
+                      "type": "string"
+                    },
+                    {
+                      "name": "role",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "module",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "canReadFinance",
+                      "type": "boolean"
+                    },
+                    {
+                      "name": "canSeeOthersHours",
+                      "type": "boolean"
+                    },
+                    {
+                      "name": "canSeeMargins",
+                      "type": "boolean"
+                    },
+                    {
+                      "name": "createdAt",
+                      "type": "number"
+                    }
+                  ],
+                  "type": "object"
+                }
+              ],
+              "synonyms": "remove grant, revoke permission, delete grant",
+              "tier": "domain"
+            },
+            {
+              "description": "Indicates the permission-grant collection has been successfully loaded.",
+              "event": "PermissionGrantLoaded",
+              "eventId": "evt_01M2HEYQZMVNZ5YTXXR38WPM6R",
+              "payloadSchema": [
+                {
+                  "entity": "PermissionGrant",
+                  "name": "data",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "workspaceId",
+                      "type": "string"
+                    },
+                    {
+                      "name": "role",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "module",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "canReadFinance",
+                      "type": "boolean"
+                    },
+                    {
+                      "name": "canSeeOthersHours",
+                      "type": "boolean"
+                    },
+                    {
+                      "name": "canSeeMargins",
+                      "type": "boolean"
+                    },
+                    {
+                      "name": "createdAt",
+                      "type": "number"
+                    }
+                  ],
+                  "type": "[object]"
+                }
+              ],
+              "synonyms": "loaded, fetched, retrieved",
+              "tier": "internal"
+            },
+            {
+              "description": "Indicates failure to load the permission-grant collection.",
+              "event": "PermissionGrantLoadFailed",
+              "eventId": "evt_01M2HEYQZM9DM2K7FGY74WKBBT",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ],
+              "synonyms": "load error, failed load, request failure",
+              "tier": "internal"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "entityRefIds": {
+            "PermissionGrant": "ent_01M2HEYQZMYFHR14P4RKB46K51"
+          },
+          "id": "trt_01M2HEYQZMJ2XVG13CS09YSQZG",
+          "linkedEntity": "PermissionGrant",
+          "linkedEntityId": "ent_01M2HEYQZMYFHR14P4RKB46K51",
+          "listens": [
+            {
+              "event": "PermissionGrantSaved",
+              "eventId": "evt_01M2JCDX8H82D6D1V7RTZ6CMY1",
+              "source": {
+                "kind": "trait",
+                "trait": "PermissionGrantPersistor",
+                "traitId": "trt_01M2JCDX8HJFRR69J2HRX0450S"
+              },
+              "triggers": "INIT",
+              "triggersId": "evt_01M2HEYQZMEN5KMN1S2P458NWV"
+            },
+            {
+              "event": "PermissionGrantDeleted",
+              "eventId": "evt_01M2JCDX8HYHAHKQHTFSBAF5MN",
+              "source": {
+                "kind": "trait",
+                "trait": "PermissionGrantPersistor",
+                "traitId": "trt_01M2JCDX8HJFRR69J2HRX0450S"
+              },
+              "triggers": "INIT",
+              "triggersId": "evt_01M2HEYQZMEN5KMN1S2P458NWV"
+            }
+          ],
+          "name": "PermissionMatrixAdmin",
+          "scope": "collection",
+          "stateMachine": {
+            "events": [
+              {
+                "id": "evt_01M2HEYQZMEN5KMN1S2P458NWV",
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Indicates the permission-grant collection has been successfully loaded.",
+                "id": "evt_01M2HEYQZMVNZ5YTXXR38WPM6R",
+                "key": "PermissionGrantLoaded",
+                "name": "PermissionGrant loaded",
+                "payloadSchema": [
+                  {
+                    "entity": "PermissionGrant",
+                    "name": "data",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "workspaceId",
+                        "type": "string"
+                      },
+                      {
+                        "name": "role",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "module",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "canReadFinance",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "canSeeOthersHours",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "canSeeMargins",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "createdAt",
+                        "type": "number"
+                      }
+                    ],
+                    "type": "[object]"
+                  }
+                ],
+                "synonyms": "loaded, fetched, retrieved",
+                "tier": "internal"
+              },
+              {
+                "description": "Indicates failure to load the permission-grant collection.",
+                "id": "evt_01M2HEYQZM9DM2K7FGY74WKBBT",
+                "key": "PermissionGrantLoadFailed",
+                "name": "PermissionGrant load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "load error, failed load, request failure",
+                "tier": "internal"
+              },
+              {
+                "description": "Requests the create-grant form (the create modal listens).",
+                "id": "evt_01M2HEYQZMNXE0Q2CRE9GJDF8C",
+                "key": "NEW",
+                "name": "New",
+                "synonyms": "add grant, new permission, create grant",
+                "tier": "domain"
+              },
+              {
+                "description": "Requests the edit form for a grant row (the edit modal listens).",
+                "id": "evt_01M2HEYQZMXWXQ5M0JAD911R8X",
+                "key": "EDIT",
+                "name": "Edit",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "entity": "PermissionGrant",
+                    "name": "row",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "workspaceId",
+                        "type": "string"
+                      },
+                      {
+                        "name": "role",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "module",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "canReadFinance",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "canSeeOthersHours",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "canSeeMargins",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "createdAt",
+                        "type": "number"
+                      }
+                    ],
+                    "type": "object"
+                  }
+                ],
+                "synonyms": "modify grant, change permission, update grant",
+                "tier": "domain"
+              },
+              {
+                "description": "Requests deletion of a grant row (the persistor listens; adminRoles-guarded there).",
+                "id": "evt_01M2HEYQZMWK4TZVSSZS3093ZG",
+                "key": "DELETE",
+                "name": "Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "entity": "PermissionGrant",
+                    "name": "row",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "workspaceId",
+                        "type": "string"
+                      },
+                      {
+                        "name": "role",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "module",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "canReadFinance",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "canSeeOthersHours",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "canSeeMargins",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "createdAt",
+                        "type": "number"
+                      }
+                    ],
+                    "type": "object"
+                  }
+                ],
+                "synonyms": "remove grant, revoke permission, delete grant",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "loading"
+              },
+              {
+                "name": "listing"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "PermissionGrant",
+                    {
+                      "emit": {
+                        "failure": "PermissionGrantLoadFailed",
+                        "success": "PermissionGrantLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "children": [
+                        "@trait.LoadingSpinner",
+                        "@trait.LoadingText"
+                      ],
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01M2HEYQZMEN5KMN1S2P458NWV",
+                "from": "loading",
+                "to": "loading"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "align": "center",
+                              "children": [
+                                "@trait.ShieldCheckIcon",
+                                "@trait.PermissionMatrixTitle"
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "action": "NEW",
+                              "icon": "plus",
+                              "label": "New grant",
+                              "type": "button",
+                              "variant": "primary"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "between",
+                          "type": "stack"
+                        },
+                        "@trait.GrantDivider",
+                        {
+                          "cols": 1.0,
+                          "entity": "@payload.data",
+                          "fields": [
+                            {
+                              "label": "Role",
+                              "name": "role",
+                              "variant": "h4"
+                            },
+                            {
+                              "label": "Module",
+                              "name": "module",
+                              "variant": "badge"
+                            },
+                            {
+                              "label": "Workspace",
+                              "name": "workspaceId",
+                              "variant": "caption"
+                            },
+                            {
+                              "format": "boolean",
+                              "label": "Read finance",
+                              "name": "canReadFinance",
+                              "variant": "caption"
+                            },
+                            {
+                              "format": "boolean",
+                              "label": "Others' hours",
+                              "name": "canSeeOthersHours",
+                              "variant": "caption"
+                            },
+                            {
+                              "format": "boolean",
+                              "label": "Margins",
+                              "name": "canSeeMargins",
+                              "variant": "caption"
+                            }
+                          ],
+                          "gap": "sm",
+                          "itemActions": [
+                            {
+                              "event": "EDIT",
+                              "icon": "pencil",
+                              "label": "Edit",
+                              "variant": "ghost"
+                            },
+                            {
+                              "event": "DELETE",
+                              "icon": "trash",
+                              "label": "Delete",
+                              "variant": "danger"
+                            }
+                          ],
+                          "type": "data-grid"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "PermissionGrantLoaded",
+                "eventId": "evt_01M2HEYQZMVNZ5YTXXR38WPM6R",
+                "from": "loading",
+                "to": "listing"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        "@trait.ErrorAlert"
+                      ],
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "PermissionGrantLoadFailed",
+                "eventId": "evt_01M2HEYQZM9DM2K7FGY74WKBBT",
+                "from": "loading",
+                "to": "error"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "PermissionGrant",
+                    {
+                      "emit": {
+                        "failure": "PermissionGrantLoadFailed",
+                        "success": "PermissionGrantLoaded"
+                      }
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01M2HEYQZMEN5KMN1S2P458NWV",
+                "from": "listing",
+                "to": "loading"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "PermissionGrant",
+                    {
+                      "emit": {
+                        "failure": "PermissionGrantLoadFailed",
+                        "success": "PermissionGrantLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "children": [
+                        "@trait.ErrorSpinner"
+                      ],
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01M2HEYQZMEN5KMN1S2P458NWV",
+                "from": "error",
+                "to": "loading"
+              }
+            ]
+          },
+          "traitEmbedIds": {
+            "ErrorAlert": "trt_01M2HEYQZM136RV41RKCDE1XVT",
+            "ErrorSpinner": "trt_01M2HEYQZM4C5E4AARRCTKK9GC",
+            "GrantDivider": "trt_01M2HEYQZM938N2V00VDF2K0XJ",
+            "LoadingSpinner": "trt_01M2HEYQZMA43G4PA24BEP3K3A",
+            "LoadingText": "trt_01M2HEYQZMVQRQFSVXKB1RVNR2",
+            "PermissionMatrixTitle": "trt_01M2HEYQZMBC4GABK9BV5Z4PVH",
+            "ShieldCheckIcon": "trt_01M2HEYQZMD1A2NASDVFHAH83A"
+          }
+        },
+        {
+          "config": {
+            "fields": {
+              "default": [
+                "workspaceId",
+                "role",
+                "module",
+                "canReadFinance",
+                "canSeeOthersHours",
+                "canSeeMargins"
+              ],
+              "type": "unknown"
+            },
+            "icon": {
+              "default": "plus-circle",
+              "type": "unknown"
+            },
+            "mode": {
+              "default": "create",
+              "type": "unknown"
+            },
+            "title": {
+              "default": "Create grant",
+              "type": "unknown"
+            }
+          },
+          "events": {
+            "OPEN": "NEW",
+            "SAVE": "GRANT_CREATED"
+          },
+          "id": "trt_01M2JCDX8HQFZ924VC3E15FY0J",
+          "linkedEntity": "PermissionGrant",
+          "linkedEntityId": "ent_01M2HEYQZMYFHR14P4RKB46K51",
+          "listens": [
+            {
+              "event": "NEW",
+              "source": {
+                "kind": "trait",
+                "trait": "PermissionMatrixAdmin"
+              },
+              "triggers": "NEW"
+            }
+          ],
+          "name": "PermissionGrantCreate",
+          "ref": "Modal.traits.ModalRecordModal"
+        },
+        {
+          "config": {
+            "fields": {
+              "default": [
+                "workspaceId",
+                "role",
+                "module",
+                "canReadFinance",
+                "canSeeOthersHours",
+                "canSeeMargins"
+              ],
+              "type": "unknown"
+            },
+            "icon": {
+              "default": "pencil",
+              "type": "unknown"
+            },
+            "mode": {
+              "default": "edit",
+              "type": "unknown"
+            },
+            "title": {
+              "default": "Edit grant",
+              "type": "unknown"
+            }
+          },
+          "events": {
+            "OPEN": "EDIT",
+            "SAVE": "GRANT_UPDATED"
+          },
+          "id": "trt_01M2JCDX8HHAZN1S4Q1QYN78H5",
+          "linkedEntity": "PermissionGrant",
+          "linkedEntityId": "ent_01M2HEYQZMYFHR14P4RKB46K51",
+          "listens": [
+            {
+              "event": "EDIT",
+              "source": {
+                "kind": "trait",
+                "trait": "PermissionMatrixAdmin"
+              },
+              "triggers": "EDIT"
+            }
+          ],
+          "name": "PermissionGrantEdit",
+          "ref": "Modal.traits.ModalRecordModal"
+        },
+        {
+          "capabilities": [
+            "access"
+          ],
+          "category": "lifecycle",
+          "config": {
+            "adminRoles": {
+              "default": [],
+              "description": "Roles eligible to create, edit, or delete grants. ENFORCED by the DO_CREATE/DO_UPDATE/DO_DELETE transition guards: a viewer whose @user.role is not listed cannot fire a write, from the form submit or from the bus. Empty = every signed-in viewer may manage grants (ungated). Mounting the page is the opt-in — there is deliberately no separate enable flag (a default-off flag made the whole page's affordances dead on a fresh mount).",
+              "items": {
+                "type": "string"
+              },
+              "label": "Who can manage grants?",
+              "synonyms": "admin roles, permission managers, who edits permissions, grant admins, permission matrix, role permissions, capability matrix, permission grants, access matrix, manage permissions",
+              "tier": "policy",
+              "type": "[string]"
+            }
+          },
+          "effectRow": [
+            {
+              "kind": "persist",
+              "resource": "PermissionGrant"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "toast"
+            }
+          ],
+          "emits": [
+            {
+              "description": "Signals that a permission grant has been persisted (create / update); carries the persisted row's id.",
+              "event": "PermissionGrantSaved",
+              "eventId": "evt_01M2JCDX8H82D6D1V7RTZ6CMY1",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "saved, created, updated, persisted",
+              "tier": "domain"
+            },
+            {
+              "description": "Indicates a failure to persist a permission grant.",
+              "event": "PermissionGrantSaveFailed",
+              "eventId": "evt_01M2JCDX8HFPEBTZF91HFFKT10",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "save error, failed save, persist failure",
+              "tier": "internal"
+            },
+            {
+              "description": "Signals that a permission grant has been deleted.",
+              "event": "PermissionGrantDeleted",
+              "eventId": "evt_01M2JCDX8HYHAHKQHTFSBAF5MN",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "deleted",
+                  "type": "boolean"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "deleted, removed, revoked",
+              "tier": "domain"
+            },
+            {
+              "description": "Indicates a failure to delete a permission grant.",
+              "event": "PermissionGrantDeleteFailed",
+              "eventId": "evt_01M2JCDX8HDS4691JHRXJ401PT",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "delete error, failed delete",
+              "tier": "internal"
+            }
+          ],
+          "entityRefIds": {
+            "PermissionGrant": "ent_01M2HEYQZMYFHR14P4RKB46K51"
+          },
+          "id": "trt_01M2JCDX8HJFRR69J2HRX0450S",
+          "linkedEntity": "PermissionGrant",
+          "linkedEntityId": "ent_01M2HEYQZMYFHR14P4RKB46K51",
+          "listens": [
+            {
+              "event": "GRANT_CREATED",
+              "source": {
+                "kind": "trait",
+                "trait": "PermissionGrantCreate",
+                "traitId": "trt_01M2JCDX8HQFZ924VC3E15FY0J"
+              },
+              "triggers": "DO_CREATE",
+              "triggersId": "evt_01M2JCDX8HSZYBRKTW58856G6X"
+            },
+            {
+              "event": "GRANT_UPDATED",
+              "source": {
+                "kind": "trait",
+                "trait": "PermissionGrantEdit",
+                "traitId": "trt_01M2JCDX8HHAZN1S4Q1QYN78H5"
+              },
+              "triggers": "DO_UPDATE",
+              "triggersId": "evt_01M2JCDX8HG5S847YTMPZ2NMPN"
+            },
+            {
+              "event": "DELETE",
+              "eventId": "evt_01M2HEYQZMWK4TZVSSZS3093ZG",
+              "source": {
+                "kind": "trait",
+                "trait": "PermissionMatrixAdmin",
+                "traitId": "trt_01M2HEYQZMJ2XVG13CS09YSQZG"
+              },
+              "triggers": "DO_DELETE",
+              "triggersId": "evt_01M2JCDX8HH16NM9P3NDPX5Y31"
+            }
+          ],
+          "name": "PermissionGrantPersistor",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "id": "evt_01M2JCDX8HSG3NXK4ECZY8FH33",
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Indicates a request to create a grant row.",
+                "id": "evt_01M2JCDX8HSZYBRKTW58856G6X",
+                "key": "DO_CREATE",
+                "name": "Do Create",
+                "payloadSchema": [
+                  {
+                    "entity": "PermissionGrant",
+                    "name": "data",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "workspaceId",
+                        "type": "string"
+                      },
+                      {
+                        "name": "role",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "module",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "canReadFinance",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "canSeeOthersHours",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "canSeeMargins",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "createdAt",
+                        "type": "number"
+                      }
+                    ],
+                    "required": true,
+                    "type": "object"
+                  }
+                ],
+                "synonyms": "add, new, insert",
+                "tier": "domain"
+              },
+              {
+                "description": "Indicates a grant row has been modified.",
+                "id": "evt_01M2JCDX8HG5S847YTMPZ2NMPN",
+                "key": "DO_UPDATE",
+                "name": "Do Update",
+                "payloadSchema": [
+                  {
+                    "entity": "PermissionGrant",
+                    "name": "data",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "workspaceId",
+                        "type": "string"
+                      },
+                      {
+                        "name": "role",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "module",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "canReadFinance",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "canSeeOthersHours",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "canSeeMargins",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "createdAt",
+                        "type": "number"
+                      }
+                    ],
+                    "required": true,
+                    "type": "object"
+                  }
+                ],
+                "synonyms": "modify, update, change",
+                "tier": "domain"
+              },
+              {
+                "description": "Indicates a request to delete a grant row.",
+                "id": "evt_01M2JCDX8HH16NM9P3NDPX5Y31",
+                "key": "DO_DELETE",
+                "name": "Do Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "remove, discard, erase",
+                "tier": "domain"
+              },
+              {
+                "description": "Indicates a failure to persist a permission grant.",
+                "id": "evt_01M2JCDX8HFPEBTZF91HFFKT10",
+                "key": "PermissionGrantSaveFailed",
+                "name": "PermissionGrant save failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "save error, failed save, persist failure",
+                "tier": "internal"
+              },
+              {
+                "description": "Indicates a failure to delete a permission grant.",
+                "id": "evt_01M2JCDX8HDS4691JHRXJ401PT",
+                "key": "PermissionGrantDeleteFailed",
+                "name": "PermissionGrant delete failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "delete error, failed delete",
+                "tier": "internal"
+              },
+              {
+                "description": "Signals that a permission grant has been persisted (create / update); carries the persisted row's id.",
+                "id": "evt_01M2JCDX8H82D6D1V7RTZ6CMY1",
+                "key": "PermissionGrantSaved",
+                "name": "PermissionGrant saved",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "saved, created, updated, persisted",
+                "tier": "domain"
+              },
+              {
+                "description": "Signals that a permission grant has been deleted.",
+                "id": "evt_01M2JCDX8HYHAHKQHTFSBAF5MN",
+                "key": "PermissionGrantDeleted",
+                "name": "PermissionGrant deleted",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  },
+                  {
+                    "name": "deleted",
+                    "type": "boolean"
+                  }
+                ],
+                "synonyms": "deleted, removed, revoked",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "event": "INIT",
+                "eventId": "evt_01M2JCDX8HSG3NXK4ECZY8FH33",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "PermissionGrant",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "failure": "PermissionGrantSaveFailed",
+                        "success": "PermissionGrantSaved"
+                      }
+                    }
+                  ]
+                ],
+                "event": "DO_CREATE",
+                "eventId": "evt_01M2JCDX8HSZYBRKTW58856G6X",
+                "from": "idle",
+                "guard": [
+                  "or",
+                  [
+                    "=",
+                    [
+                      "array/len",
+                      "@config.adminRoles"
+                    ],
+                    0.0
+                  ],
+                  [
+                    "array/includes",
+                    "@config.adminRoles",
+                    "@user.role"
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "PermissionGrant",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "failure": "PermissionGrantSaveFailed",
+                        "success": "PermissionGrantSaved"
+                      }
+                    }
+                  ]
+                ],
+                "event": "DO_UPDATE",
+                "eventId": "evt_01M2JCDX8HG5S847YTMPZ2NMPN",
+                "from": "idle",
+                "guard": [
+                  "or",
+                  [
+                    "=",
+                    [
+                      "array/len",
+                      "@config.adminRoles"
+                    ],
+                    0.0
+                  ],
+                  [
+                    "array/includes",
+                    "@config.adminRoles",
+                    "@user.role"
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "PermissionGrant",
+                    "@payload.id",
+                    {
+                      "emit": {
+                        "failure": "PermissionGrantDeleteFailed",
+                        "success": "PermissionGrantDeleted"
+                      }
+                    }
+                  ]
+                ],
+                "event": "DO_DELETE",
+                "eventId": "evt_01M2JCDX8HH16NM9P3NDPX5Y31",
+                "from": "idle",
+                "guard": [
+                  "or",
+                  [
+                    "=",
+                    [
+                      "array/len",
+                      "@config.adminRoles"
+                    ],
+                    0.0
+                  ],
+                  [
+                    "array/includes",
+                    "@config.adminRoles",
+                    "@user.role"
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "toast",
+                    {
+                      "dismissible": true,
+                      "message": [
+                        "str/concat",
+                        "Couldn't save the permission grant — ",
+                        "@payload.error"
+                      ],
+                      "type": "alert",
+                      "variant": "error"
+                    }
+                  ]
+                ],
+                "event": "PermissionGrantSaveFailed",
+                "eventId": "evt_01M2JCDX8HFPEBTZF91HFFKT10",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "toast",
+                    {
+                      "dismissible": true,
+                      "message": [
+                        "str/concat",
+                        "Couldn't delete the permission grant — ",
+                        "@payload.error"
+                      ],
+                      "type": "alert",
+                      "variant": "error"
+                    }
+                  ]
+                ],
+                "event": "PermissionGrantDeleteFailed",
+                "eventId": "evt_01M2JCDX8HDS4691JHRXJ401PT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        },
+        {
+          "capabilities": [
+            "access"
+          ],
+          "category": "lifecycle",
+          "config": {
+            "enabled": {
+              "default": false,
+              "description": "Answer CHECK_GRANT lookups with GRANT_RESOLVED from the persisted grant table. Off by default.",
+              "label": "Answer permission lookups",
+              "synonyms": "enable, turn on, activate, permission lookup, grant query, resolve capabilities",
+              "tier": "policy",
+              "type": "boolean"
+            }
+          },
+          "effectRow": [
+            {
+              "kind": "emit",
+              "resource": "GRANT_RESOLVED"
+            },
+            {
+              "kind": "fetch",
+              "resource": "PermissionGrant"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "toast"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.module"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.role"
+            }
+          ],
+          "emits": [
+            {
+              "description": "Answers a CHECK_GRANT: the capability flags of the first matching grant row, with found=false (and all flags false) when no row matches. Rename to wire the downstream listener; default-deny on found=false is the consumer's choice.",
+              "event": "GRANT_RESOLVED",
+              "eventId": "evt_01M2HEYQZMPARRK5AP79C66MS0",
+              "payloadSchema": [
+                {
+                  "name": "role",
+                  "type": "string"
+                },
+                {
+                  "name": "module",
+                  "type": "string"
+                },
+                {
+                  "name": "canReadFinance",
+                  "type": "boolean"
+                },
+                {
+                  "name": "canSeeOthersHours",
+                  "type": "boolean"
+                },
+                {
+                  "name": "canSeeMargins",
+                  "type": "boolean"
+                },
+                {
+                  "name": "found",
+                  "type": "boolean"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "grant resolved, permission answer, capabilities returned, access decision data",
+              "tier": "domain"
+            },
+            {
+              "description": "Indicates the grant lookup for a CHECK_GRANT has been successfully loaded.",
+              "event": "GrantCheckLoaded",
+              "eventId": "evt_01M2HEYQZMZJWHEXPD8YKCP48D",
+              "payloadSchema": [
+                {
+                  "entity": "PermissionGrant",
+                  "name": "data",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "workspaceId",
+                      "type": "string"
+                    },
+                    {
+                      "name": "role",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "module",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "canReadFinance",
+                      "type": "boolean"
+                    },
+                    {
+                      "name": "canSeeOthersHours",
+                      "type": "boolean"
+                    },
+                    {
+                      "name": "canSeeMargins",
+                      "type": "boolean"
+                    },
+                    {
+                      "name": "createdAt",
+                      "type": "number"
+                    }
+                  ],
+                  "type": "[object]"
+                }
+              ],
+              "synonyms": "loaded, fetched, retrieved",
+              "tier": "internal"
+            },
+            {
+              "description": "Indicates the grant lookup for a CHECK_GRANT failed.",
+              "event": "GrantCheckFailed",
+              "eventId": "evt_01M2HEYQZMT7BCD58DZH8CJCC4",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ],
+              "synonyms": "lookup error, failed lookup, request failure",
+              "tier": "internal"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "module",
+              "role"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "entityRefIds": {
+            "PermissionGrant": "ent_01M2HEYQZMYFHR14P4RKB46K51"
+          },
+          "id": "trt_01M2HEYQZMAE7G04QDC54C9G1J",
+          "linkedEntity": "PermissionGrant",
+          "linkedEntityId": "ent_01M2HEYQZMYFHR14P4RKB46K51",
+          "name": "PermissionGrantQuery",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "description": "Asks which capabilities a role holds in a module; the answer arrives as GRANT_RESOLVED (asynchronous — correlate by the echoed role/module).",
+                "id": "evt_01M2HEYQZM24QM0A2ERYSYN7P1",
+                "key": "CHECK_GRANT",
+                "name": "Check Grant",
+                "payloadSchema": [
+                  {
+                    "name": "role",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "module",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "check grant, lookup permission, resolve capabilities, can this role see",
+                "tier": "domain"
+              },
+              {
+                "description": "Indicates the grant lookup for a CHECK_GRANT has been successfully loaded.",
+                "id": "evt_01M2HEYQZMZJWHEXPD8YKCP48D",
+                "key": "GrantCheckLoaded",
+                "name": "Grant check loaded",
+                "payloadSchema": [
+                  {
+                    "entity": "PermissionGrant",
+                    "name": "data",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "workspaceId",
+                        "type": "string"
+                      },
+                      {
+                        "name": "role",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "module",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "canReadFinance",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "canSeeOthersHours",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "canSeeMargins",
+                        "type": "boolean"
+                      },
+                      {
+                        "name": "createdAt",
+                        "type": "number"
+                      }
+                    ],
+                    "type": "[object]"
+                  }
+                ],
+                "synonyms": "loaded, fetched, retrieved",
+                "tier": "internal"
+              },
+              {
+                "description": "Indicates the grant lookup for a CHECK_GRANT failed.",
+                "id": "evt_01M2HEYQZMT7BCD58DZH8CJCC4",
+                "key": "GrantCheckFailed",
+                "name": "Grant check failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "lookup error, failed lookup, request failure",
+                "tier": "internal"
+              },
+              {
+                "description": "Answers a CHECK_GRANT: the capability flags of the first matching grant row, with found=false (and all flags false) when no row matches. Rename to wire the downstream listener; default-deny on found=false is the consumer's choice.",
+                "id": "evt_01M2HEYQZMPARRK5AP79C66MS0",
+                "key": "GRANT_RESOLVED",
+                "name": "Grant Resolved",
+                "payloadSchema": [
+                  {
+                    "name": "role",
+                    "type": "string"
+                  },
+                  {
+                    "name": "module",
+                    "type": "string"
+                  },
+                  {
+                    "name": "canReadFinance",
+                    "type": "boolean"
+                  },
+                  {
+                    "name": "canSeeOthersHours",
+                    "type": "boolean"
+                  },
+                  {
+                    "name": "canSeeMargins",
+                    "type": "boolean"
+                  },
+                  {
+                    "name": "found",
+                    "type": "boolean"
+                  }
+                ],
+                "synonyms": "grant resolved, permission answer, capabilities returned, access decision data",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.role",
+                    "@payload.role"
+                  ],
+                  [
+                    "set",
+                    "@entity.module",
+                    "@payload.module"
+                  ],
+                  [
+                    "fetch",
+                    "PermissionGrant",
+                    {
+                      "emit": {
+                        "failure": "GrantCheckFailed",
+                        "success": "GrantCheckLoaded"
+                      },
+                      "filter": [
+                        "and",
+                        [
+                          "=",
+                          [
+                            "object/get",
+                            "@entity",
+                            "role"
+                          ],
+                          "@payload.role"
+                        ],
+                        [
+                          "=",
+                          [
+                            "object/get",
+                            "@entity",
+                            "module"
+                          ],
+                          "@payload.module"
+                        ]
+                      ]
+                    }
+                  ]
+                ],
+                "event": "CHECK_GRANT",
+                "eventId": "evt_01M2HEYQZM24QM0A2ERYSYN7P1",
+                "from": "idle",
+                "guard": "@config.enabled",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "GRANT_RESOLVED",
+                    {
+                      "canReadFinance": [
+                        "if",
+                        [
+                          ">",
+                          [
+                            "array/len",
+                            "@payload.data"
+                          ],
+                          0.0
+                        ],
+                        [
+                          "object/get",
+                          [
+                            "array/first",
+                            "@payload.data"
+                          ],
+                          "canReadFinance",
+                          false
+                        ],
+                        false
+                      ],
+                      "canSeeMargins": [
+                        "if",
+                        [
+                          ">",
+                          [
+                            "array/len",
+                            "@payload.data"
+                          ],
+                          0.0
+                        ],
+                        [
+                          "object/get",
+                          [
+                            "array/first",
+                            "@payload.data"
+                          ],
+                          "canSeeMargins",
+                          false
+                        ],
+                        false
+                      ],
+                      "canSeeOthersHours": [
+                        "if",
+                        [
+                          ">",
+                          [
+                            "array/len",
+                            "@payload.data"
+                          ],
+                          0.0
+                        ],
+                        [
+                          "object/get",
+                          [
+                            "array/first",
+                            "@payload.data"
+                          ],
+                          "canSeeOthersHours",
+                          false
+                        ],
+                        false
+                      ],
+                      "found": [
+                        ">",
+                        [
+                          "array/len",
+                          "@payload.data"
+                        ],
+                        0.0
+                      ],
+                      "module": "@entity.module",
+                      "role": "@entity.role"
+                    }
+                  ]
+                ],
+                "event": "GrantCheckLoaded",
+                "eventId": "evt_01M2HEYQZMZJWHEXPD8YKCP48D",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "toast",
+                    {
+                      "dismissible": true,
+                      "message": [
+                        "str/concat",
+                        "Couldn't resolve the permission grant — ",
+                        "@payload.error"
+                      ],
+                      "type": "alert",
+                      "variant": "error"
+                    }
+                  ]
+                ],
+                "event": "GrantCheckFailed",
+                "eventId": "evt_01M2HEYQZMT7BCD58DZH8CJCC4",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ],
+      "uses": [
+        {
+          "as": "Modal",
+          "from": "std/behaviors/std-modal"
+        },
+        {
+          "as": "Spinner",
+          "from": "std/behaviors/ui-spinner"
+        },
+        {
+          "as": "Typography",
+          "from": "std/behaviors/ui-typography"
+        },
+        {
+          "as": "Icon",
+          "from": "std/behaviors/ui-icon"
+        },
+        {
+          "as": "Divider",
+          "from": "std/behaviors/ui-divider"
+        },
+        {
+          "as": "Alert",
+          "from": "std/behaviors/ui-alert"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 1,
+  "version": "1.0.0"
+}
