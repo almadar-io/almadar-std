@@ -61,7 +61,7 @@
           {
             "name": "BATCH_CREATED",
             "direction": "emit",
-            "description": "import_batches persist-create success — the payload carries the created row's id, captured onto the trait entity so staged rows can reference batchId",
+            "description": "import_batches persist-create success — rebinds @entity.id to the server-issued id, the fallback for when the host didn't mint a client-side batchId on UPLOAD_CSV",
             "tier": "secondary"
           },
           {
@@ -73,7 +73,7 @@
           {
             "name": "IMPORT_PERSIST_FAILED",
             "direction": "emit",
-            "description": "Any import_batches / import_rows persist failure — lands the run in failed, never a silent swallow",
+            "description": "Any import_batches / import_rows persist failure — the batch row is updated to failed and IMPORT_FAILED emitted, never a silent swallow; the trait stays put so the user can retry or discard",
             "tier": "secondary"
           },
           {
@@ -97,7 +97,7 @@
           {
             "name": "UPLOAD_CSV",
             "direction": "listen",
-            "description": "Starts an import run for a CSV file upload. The host's file UI (e.g. a sibling std-import menu) only announces the upload — parsing is host work and arrives as STAGE_ROWS.",
+            "description": "Starts an import run for a CSV file upload. batchId is the client-minted batch id (idempotent upload — the host generates it so a retry never double-creates a batch); when omitted, the server-issued id is bound on BATCH_CREATED instead. The host's file UI (e.g. a sibling std-import menu) only announces the upload — parsing is host work and arrives as STAGE_ROWS.",
             "synonyms": "upload csv, import csv, start import, import file, bulk import",
             "tier": "domain"
           },

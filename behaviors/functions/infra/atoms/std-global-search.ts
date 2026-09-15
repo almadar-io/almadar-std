@@ -77,6 +77,13 @@ export interface StdGlobalSearchQuerySaveFailedPayload {
 }
 
 /**
+ * Payload shape for the `FAN_OUT_STEP` event.
+ */
+export interface StdGlobalSearchFanOutStepPayload {
+  remaining?: number;
+}
+
+/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
@@ -660,10 +667,14 @@ export function stdGlobalSearchGlobalSearchOrbital(params: StdGlobalSearchGlobal
             'tier': 'secondary',
           },
           {
-            'description': 'Internal sentinel draining the module queue, one MODULE_SEARCH_REQUESTED per pass',
+            'description': 'Internal sentinel draining the module queue, one MODULE_SEARCH_REQUESTED per pass; `remaining` is the queue length after the last seed/drop',
             'event': 'FAN_OUT_STEP',
-            'payloadSchema': [],
-            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'remaining',
+                'type': 'number',
+              },
+            ],
             'tier': 'internal',
           },
         ],
@@ -724,10 +735,15 @@ export function stdGlobalSearchGlobalSearchOrbital(params: StdGlobalSearchGlobal
               'tier': 'essential',
             },
             {
-              'description': 'Internal sentinel draining the module queue, one MODULE_SEARCH_REQUESTED per pass',
+              'description': 'Internal sentinel draining the module queue, one MODULE_SEARCH_REQUESTED per pass; `remaining` is the queue length after the last seed/drop',
               'key': 'FAN_OUT_STEP',
               'name': 'Fan Out Step',
-              'payloadSchema': [],
+              'payloadSchema': [
+                {
+                  'name': 'remaining',
+                  'type': 'number',
+                },
+              ],
               'tier': 'internal',
             },
             {
@@ -986,9 +1002,25 @@ export function stdGlobalSearchGlobalSearchOrbital(params: StdGlobalSearchGlobal
                   ],
                 ],
                 [
-                  'emit',
-                  'FAN_OUT_STEP',
-                  {},
+                  'when',
+                  [
+                    '>',
+                    [
+                      'array/len',
+                      '@entity.pendingModules',
+                    ],
+                    0,
+                  ],
+                  [
+                    'emit',
+                    'FAN_OUT_STEP',
+                    {
+                      'remaining': [
+                        'array/len',
+                        '@entity.pendingModules',
+                      ],
+                    },
+                  ],
                 ],
                 [
                   'render-ui',
@@ -1154,9 +1186,25 @@ export function stdGlobalSearchGlobalSearchOrbital(params: StdGlobalSearchGlobal
                   ],
                 ],
                 [
-                  'emit',
-                  'FAN_OUT_STEP',
-                  {},
+                  'when',
+                  [
+                    '>',
+                    [
+                      'array/len',
+                      '@entity.pendingModules',
+                    ],
+                    0,
+                  ],
+                  [
+                    'emit',
+                    'FAN_OUT_STEP',
+                    {
+                      'remaining': [
+                        'array/len',
+                        '@entity.pendingModules',
+                      ],
+                    },
+                  ],
                 ],
               ],
               'event': 'SEARCH',
@@ -1197,33 +1245,50 @@ export function stdGlobalSearchGlobalSearchOrbital(params: StdGlobalSearchGlobal
                   ],
                 ],
                 [
-                  'emit',
-                  'FAN_OUT_STEP',
-                  {},
+                  'when',
+                  [
+                    '=',
+                    [
+                      'array/len',
+                      '@entity.pendingModules',
+                    ],
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.fanOutDone',
+                    true,
+                  ],
+                ],
+                [
+                  'when',
+                  [
+                    '>',
+                    [
+                      'array/len',
+                      '@entity.pendingModules',
+                    ],
+                    0,
+                  ],
+                  [
+                    'emit',
+                    'FAN_OUT_STEP',
+                    {
+                      'remaining': [
+                        'array/len',
+                        '@entity.pendingModules',
+                      ],
+                    },
+                  ],
                 ],
               ],
               'event': 'FAN_OUT_STEP',
               'from': 'searching',
               'guard': [
                 '>',
-                [
-                  'array/len',
-                  '@entity.pendingModules',
-                ],
+                '@payload.remaining',
                 0,
               ],
-              'to': 'searching',
-            },
-            {
-              'effects': [
-                [
-                  'set',
-                  '@entity.fanOutDone',
-                  true,
-                ],
-              ],
-              'event': 'FAN_OUT_STEP',
-              'from': 'searching',
               'to': 'searching',
             },
             {

@@ -1,5 +1,5 @@
 {
-  "$generated": "2026-09-15T07:17:39.933Z",
+  "$generated": "2026-09-15T15:18:01.053Z",
   "$source": "tools/almadar-pattern-sync/behaviors",
   "$package": "@almadar/std",
   "totalBehaviors": 467,
@@ -2936,6 +2936,7 @@
         "std-ml-infer",
         "std-ml-lookup",
         "std-ml-similarity",
+        "std-notification-preferences",
         "std-physics-diagram",
         "std-physics-field-3d",
         "std-physics-orbit-3d",
@@ -8665,7 +8666,7 @@
       "topic": "infra",
       "family": "infra",
       "layer": "UI Patterns",
-      "description": "std-data-import — staged CSV import run, source-agnostic: upload → staged review → confirm → handoff. UPLOAD_CSV opens a run and persists an ImportBatch row (status uploaded, fieldMappingJson recorded verbatim for provenance); the host's file UI parses the CSV and answers with STAGE_ROWS, one JSON string per raw row, which the atom bulk-persists into import_rows against the batch id and presents as a staged review (row/error counts + Confirm/Discard). CONFIRM_IMPORT marks the batch confirmed and emits IMPORT_CONFIRMED { batchId, sourceName, rowCount } — the mapping+persist half is the CONSUMER organism's: it listens for IMPORT_CONFIRMED, fetches import_rows where batchId matches, maps each rowJson through its own field mapping, and persists into its own target entity (cross-atom persist into a consumer's entity is not expressible from here). This is deliberately the CSV-file path: the atom never calls a source service — sourceName/fieldMappingJson/targetEntity/historyWindowDays are declarative consumer configs, and any persist failure lands in failed with IMPORT_FAILED, never a silent swallow. Compose with std-import for the file-picker menu.",
+      "description": "std-data-import — staged CSV import run, source-agnostic: upload → staged review → confirm → handoff. UPLOAD_CSV opens a run and persists an ImportBatch row (status uploaded, fieldMappingJson recorded verbatim for provenance); the host's file UI parses the CSV and answers with STAGE_ROWS, one JSON string per raw row, which the atom bulk-persists into import_rows against the batch id and presents as a staged review (row/error counts + Confirm/Discard). CONFIRM_IMPORT marks the batch confirmed and emits IMPORT_CONFIRMED { batchId, sourceName, rowCount } — the mapping+persist half is the CONSUMER organism's: it listens for IMPORT_CONFIRMED, fetches import_rows where batchId matches, maps each rowJson through its own field mapping, and persists into its own target entity (cross-atom persist into a consumer's entity is not expressible from here). This is deliberately the CSV-file path: the atom never calls a source service — sourceName/fieldMappingJson/targetEntity/historyWindowDays are declarative consumer configs, and any persist failure marks the batch row failed and fires IMPORT_FAILED, never a silent swallow. Compose with std-import for the file-picker menu.",
       "defaultOrbitalName": "DataImportOrbital",
       "statePattern": "confirmed, failed, idle, staged, uploaded",
       "complexity": {
@@ -8998,7 +8999,7 @@
             {
               "name": "BATCH_CREATED",
               "direction": "emit",
-              "description": "import_batches persist-create success — the payload carries the created row's id, captured onto the trait entity so staged rows can reference batchId",
+              "description": "import_batches persist-create success — rebinds @entity.id to the server-issued id, the fallback for when the host didn't mint a client-side batchId on UPLOAD_CSV",
               "tier": "secondary"
             },
             {
@@ -9010,7 +9011,7 @@
             {
               "name": "IMPORT_PERSIST_FAILED",
               "direction": "emit",
-              "description": "Any import_batches / import_rows persist failure — lands the run in failed, never a silent swallow",
+              "description": "Any import_batches / import_rows persist failure — the batch row is updated to failed and IMPORT_FAILED emitted, never a silent swallow; the trait stays put so the user can retry or discard",
               "tier": "secondary"
             },
             {
@@ -9034,7 +9035,7 @@
             {
               "name": "UPLOAD_CSV",
               "direction": "listen",
-              "description": "Starts an import run for a CSV file upload. The host's file UI (e.g. a sibling std-import menu) only announces the upload — parsing is host work and arrives as STAGE_ROWS.",
+              "description": "Starts an import run for a CSV file upload. batchId is the client-minted batch id (idempotent upload — the host generates it so a retry never double-creates a batch); when omitted, the server-issued id is bound on BATCH_CREATED instead. The host's file UI (e.g. a sibling std-import menu) only announces the upload — parsing is host work and arrives as STAGE_ROWS.",
               "synonyms": "upload csv, import csv, start import, import file, bulk import",
               "tier": "domain"
             },
@@ -9285,7 +9286,7 @@
       "complexity": {
         "states": 2,
         "events": 8,
-        "transitions": 8
+        "transitions": 7
       },
       "defaultEntity": {
         "name": "SearchQuery",
@@ -9647,7 +9648,7 @@
             {
               "name": "FAN_OUT_STEP",
               "direction": "emit",
-              "description": "Internal sentinel draining the module queue, one MODULE_SEARCH_REQUESTED per pass",
+              "description": "Internal sentinel draining the module queue, one MODULE_SEARCH_REQUESTED per pass; `remaining` is the queue length after the last seed/drop",
               "tier": "internal"
             },
             {
@@ -11758,13 +11759,13 @@
       "topic": "infra",
       "family": "infra",
       "layer": "UI Patterns",
-      "description": "std-notification-preferences — per-person notification preference store plus a consultable gate. Owns NotificationPreference rows (one per person + event key: channel override in_app/email/push/slack, mode instant/digest, quiet-hours window 'HH:MM-HH:MM' such as 22:00-07:00). The PreferencesManage trait is standard CRUD over the store (list / create / update / delete, persisted, success/failure cascade arms). The PreferenceGate trait is the consult half other notify traits call: emit CHECK_PREFERENCE { personId, eventKey } and the gate fetches the matching row (a row whose eventKey is blank applies to every event) and answers PREFERENCE_RESOLVED { personId, eventKey, channel, mode, suppressed } — suppressed is true only when the row's quietHours window covers the current hour; mode 'digest' rides on the verdict for the caller to defer. Default policy: no matching row — or a failed lookup — resolves fail-open to { channel: in_app, mode: instant, suppressed: false }; the absence of a preference never silences a notification.",
+      "description": "std-notification-preferences — per-person notification preference store plus a consultable gate. Owns NotificationPreference rows (one per person + event key: channel override in_app/email/push/slack, mode instant/digest, quiet-hours window 'HH:MM-HH:MM' such as 22:00-07:00). The PreferencesManage trait is standard CRUD over the store (list / create / update / delete, persisted, success/failure cascade arms): a data-grid browse plus ModalRecordModal create/edit forms whose SAVE carries the full row payload (std-list daisy-chain idiom). The PreferenceGate trait is the consult half other notify traits call: emit CHECK_PREFERENCE { personId, eventKey } and the gate fetches the matching row (a row whose eventKey is blank applies to every event) and answers PREFERENCE_RESOLVED { personId, eventKey, channel, mode, suppressed } — suppressed is true only when the row's quietHours window covers the current hour; mode 'digest' rides on the verdict for the caller to defer. Default policy: no matching row — or a failed lookup — resolves fail-open to { channel: in_app, mode: instant, suppressed: false }; the absence of a preference never silences a notification.",
       "defaultOrbitalName": "NotificationPreferencesOrbital",
-      "statePattern": "browsing, creating, editing, error, loading",
+      "statePattern": "browsing, error, loading",
       "complexity": {
-        "states": 5,
-        "events": 16,
-        "transitions": 26
+        "states": 3,
+        "events": 12,
+        "transitions": 13
       },
       "defaultEntity": {
         "name": "NotificationPreference",
@@ -11819,50 +11820,89 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "std-accounting",
+        "std-agent-builder",
+        "std-alummaalraqamia",
         "std-anim-tick",
+        "std-api-gateway",
+        "std-applicant-form",
         "std-application",
         "std-approval-gate",
         "std-approval-request",
-        "std-arcade-board-3d",
+        "std-ats-recruiting",
         "std-audit-capture",
+        "std-booking-system",
         "std-broadcast-builder",
         "std-browse",
         "std-builder",
         "std-cache-aside",
+        "std-calendar",
         "std-calendar-sync",
         "std-cascade-on-delete",
+        "std-cicd-pipeline",
         "std-circuit-breaker",
-        "std-confirmation",
+        "std-construction-pm",
+        "std-contract",
         "std-cooldown",
-        "std-crew-board-2d",
+        "std-crm",
         "std-cross-reference",
+        "std-customer-success",
         "std-data-erasure",
         "std-data-import",
-        "std-event",
-        "std-form-advanced",
+        "std-devops-dashboard",
+        "std-document-mgmt",
+        "std-ecommerce",
+        "std-esign-flow",
+        "std-event-ticketing",
+        "std-field-service",
+        "std-finance-tracker",
+        "std-fitness-studio",
+        "std-fleet-mgmt",
+        "std-form-builder",
+        "std-forum",
         "std-game-clock",
         "std-global-search",
+        "std-healthcare",
+        "std-helpdesk",
+        "std-hr-portal",
         "std-image-upload-multi",
+        "std-inspection-system",
         "std-integration-settings",
+        "std-learn-arrangement",
+        "std-learn-classify",
+        "std-learn-estimate",
+        "std-learn-hotspot",
+        "std-learn-predict",
+        "std-learn-speed-drill",
+        "std-ledger-entry-form",
+        "std-legal-case",
         "std-lifecycle",
+        "std-ling-phonology",
         "std-list",
-        "std-market-board-3d",
+        "std-listings",
+        "std-lms",
+        "std-logic-fallacy",
+        "std-marketing-campaign",
+        "std-marketplace",
         "std-menu",
         "std-migration-job",
         "std-mod-queue",
-        "std-modal",
-        "std-modal-editor",
         "std-modifier-group",
+        "std-nonprofit-donations",
         "std-notification-center",
         "std-notify-on-event",
-        "std-objective-board-3d",
         "std-permission-matrix",
-        "std-purchase-order",
+        "std-property-mgmt",
+        "std-public-help-center",
         "std-rate-limiter",
         "std-record-detail",
+        "std-related",
         "std-reminder-scheduler",
+        "std-restaurant-pos",
+        "std-retail-pos",
         "std-row-access-control",
         "std-saved-search",
+        "std-selection",
         "std-service-accounting",
         "std-service-arxiv",
         "std-service-banking",
@@ -11896,37 +11936,31 @@
         "std-service-webhook",
         "std-service-wikimedia",
         "std-service-youtube",
+        "std-soc-deviance",
+        "std-social-feed",
         "std-status-lifecycle",
         "std-status-lifecycle-control",
-        "std-survival-board-3d",
-        "std-tactics-board-2d",
-        "std-tactics-board-3d",
-        "std-trade-order",
-        "std-vendor-onboarding",
-        "std-waitlist",
-        "std-wizard",
-        "std-work-order",
-        "studio-canvas",
-        "ui-code-block",
-        "ui-minigolf-board-3d",
-        "ui-pirate-board"
+        "std-stock-adjustment",
+        "std-subscription-billing",
+        "std-survey",
+        "std-time-tracking",
+        "std-timeline",
+        "std-trading-dashboard",
+        "std-tree",
+        "std-winning-11"
       ],
       "connectableEvents": [
         "PreferencesLoaded",
         "PreferencesLoadFailed",
-        "NEW",
-        "EDIT",
         "DELETE",
+        "DO_CREATE",
+        "DO_UPDATE",
         "PreferenceSaved",
         "PreferenceDeleted",
         "PreferenceSaveFailed",
-        "SET_PERSON_ID",
-        "SET_EVENT_KEY",
-        "SET_CHANNEL",
-        "SET_MODE",
-        "SET_QUIET_HOURS",
-        "SAVE",
-        "CANCEL"
+        "RETRY",
+        "CREATE",
+        "EDIT"
       ],
       "eventPayloads": {},
       "exposure": "both",
@@ -11937,23 +11971,19 @@
           "orbital": "NotificationPreferencesOrbital",
           "role": "renderer",
           "emittedEvents": [
-            "NEW",
+            "CREATE",
             "EDIT",
             "DELETE",
-            "SAVE",
-            "CANCEL",
-            "SET_PERSON_ID",
-            "SET_EVENT_KEY",
-            "SET_CHANNEL",
-            "SET_MODE",
-            "SET_QUIET_HOURS",
             "PreferencesLoaded",
             "PreferencesLoadFailed",
             "PreferenceSaved",
             "PreferenceSaveFailed",
             "PreferenceDeleted"
           ],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "PREFERENCE_CREATED",
+            "PREFERENCE_UPDATED"
+          ],
           "overridableConfigKeys": [
             {
               "key": "tableLook",
@@ -11998,121 +12028,43 @@
               "resource": "main"
             },
             {
-              "kind": "set",
-              "resource": "@entity.channel"
-            },
-            {
-              "kind": "set",
-              "resource": "@entity.createdAt"
-            },
-            {
-              "kind": "set",
-              "resource": "@entity.eventKey"
-            },
-            {
-              "kind": "set",
-              "resource": "@entity.id"
-            },
-            {
-              "kind": "set",
-              "resource": "@entity.mode"
-            },
-            {
-              "kind": "set",
-              "resource": "@entity.personId"
-            },
-            {
-              "kind": "set",
-              "resource": "@entity.quietHours"
-            },
-            {
-              "kind": "set",
-              "resource": "@entity.updatedAt"
+              "kind": "render-ui",
+              "resource": "toast"
             }
           ],
           "transitionEvents": [
-            "CANCEL",
             "DELETE",
-            "EDIT",
+            "DO_CREATE",
+            "DO_UPDATE",
             "INIT",
-            "NEW",
             "PreferenceDeleted",
             "PreferenceSaveFailed",
             "PreferenceSaved",
             "PreferencesLoadFailed",
             "PreferencesLoaded",
-            "SAVE",
-            "SET_CHANNEL",
-            "SET_EVENT_KEY",
-            "SET_MODE",
-            "SET_PERSON_ID",
-            "SET_QUIET_HOURS"
+            "RETRY"
           ],
           "events": [
             {
-              "name": "NEW",
+              "name": "CREATE",
               "direction": "emit",
-              "description": "Opens the blank preference form.",
-              "synonyms": "add, create, new preference",
-              "tier": "presentation"
+              "description": "Opens the blank preference modal.",
+              "synonyms": "add, new, insert",
+              "tier": "domain"
             },
             {
               "name": "EDIT",
               "direction": "emit",
-              "description": "Opens a preference row in the edit form.",
+              "description": "Opens a preference row in the edit modal.",
               "synonyms": "modify, update, change",
-              "tier": "presentation"
+              "tier": "domain"
             },
             {
               "name": "DELETE",
               "direction": "emit",
               "description": "Removes a preference row.",
               "synonyms": "remove, discard, clear",
-              "tier": "presentation"
-            },
-            {
-              "name": "SAVE",
-              "direction": "emit",
-              "description": "Persists the preference form.",
-              "synonyms": "persist, store, commit",
               "tier": "domain"
-            },
-            {
-              "name": "CANCEL",
-              "direction": "emit",
-              "description": "Aborts the preference form.",
-              "synonyms": "abort, dismiss, undo",
-              "tier": "domain"
-            },
-            {
-              "name": "SET_PERSON_ID",
-              "direction": "emit",
-              "description": "Preference form: person id changed.",
-              "tier": "internal"
-            },
-            {
-              "name": "SET_EVENT_KEY",
-              "direction": "emit",
-              "description": "Preference form: event key changed.",
-              "tier": "internal"
-            },
-            {
-              "name": "SET_CHANNEL",
-              "direction": "emit",
-              "description": "Preference form: channel changed.",
-              "tier": "internal"
-            },
-            {
-              "name": "SET_MODE",
-              "direction": "emit",
-              "description": "Preference form: delivery mode changed.",
-              "tier": "internal"
-            },
-            {
-              "name": "SET_QUIET_HOURS",
-              "direction": "emit",
-              "description": "Preference form: quiet-hours window changed.",
-              "tier": "internal"
             },
             {
               "name": "PreferencesLoaded",
@@ -12152,7 +12104,132 @@
             {
               "name": "INIT",
               "direction": "listen"
+            },
+            {
+              "name": "DO_CREATE",
+              "direction": "listen",
+              "description": "Create persist requested; the modal's SAVE payload carries the full form row.",
+              "synonyms": "add, new, insert",
+              "tier": "internal"
+            },
+            {
+              "name": "DO_UPDATE",
+              "direction": "listen",
+              "description": "Update persist requested; the modal's SAVE payload carries the full form row.",
+              "synonyms": "modified, changed, refreshed",
+              "tier": "internal"
+            },
+            {
+              "name": "RETRY",
+              "direction": "listen",
+              "description": "Retries loading the preference collection after a failure.",
+              "synonyms": "try again, reload",
+              "tier": "presentation"
             }
+          ],
+          "definerKnobs": []
+        },
+        {
+          "name": "PreferenceCreate",
+          "orbital": "NotificationPreferencesOrbital",
+          "role": "renderer",
+          "emittedEvents": [],
+          "listenedEvents": [
+            "CREATE"
+          ],
+          "overridableConfigKeys": [
+            {
+              "key": "fields",
+              "type": "unknown",
+              "default": [
+                "personId",
+                "eventKey",
+                "channel",
+                "mode",
+                "quietHours"
+              ]
+            },
+            {
+              "key": "icon",
+              "type": "unknown",
+              "default": "plus-circle"
+            },
+            {
+              "key": "mode",
+              "type": "unknown",
+              "default": "create"
+            },
+            {
+              "key": "title",
+              "type": "unknown",
+              "default": "New notification preference"
+            }
+          ],
+          "capabilities": [],
+          "ticks": [],
+          "rendersUi": true,
+          "ref": "Modal.traits.ModalRecordModal",
+          "category": "interaction",
+          "linkedEntity": "NotificationPreference",
+          "transitionEvents": [
+            "CLOSE",
+            "CREATE",
+            "INIT",
+            "ModalRecordLoadFailed",
+            "PREFERENCE_CREATED",
+            "SEED"
+          ],
+          "definerKnobs": []
+        },
+        {
+          "name": "PreferenceEdit",
+          "orbital": "NotificationPreferencesOrbital",
+          "role": "renderer",
+          "emittedEvents": [],
+          "listenedEvents": [
+            "EDIT"
+          ],
+          "overridableConfigKeys": [
+            {
+              "key": "fields",
+              "type": "unknown",
+              "default": [
+                "personId",
+                "eventKey",
+                "channel",
+                "mode",
+                "quietHours"
+              ]
+            },
+            {
+              "key": "icon",
+              "type": "unknown",
+              "default": "pencil"
+            },
+            {
+              "key": "mode",
+              "type": "unknown",
+              "default": "edit"
+            },
+            {
+              "key": "title",
+              "type": "unknown",
+              "default": "Edit notification preference"
+            }
+          ],
+          "capabilities": [],
+          "ticks": [],
+          "rendersUi": true,
+          "ref": "Modal.traits.ModalRecordModal",
+          "category": "interaction",
+          "linkedEntity": "NotificationPreference",
+          "transitionEvents": [
+            "CLOSE",
+            "EDIT",
+            "INIT",
+            "ModalRecordLoadFailed",
+            "PREFERENCE_UPDATED",
+            "SEED"
           ],
           "definerKnobs": []
         },
@@ -12888,13 +12965,13 @@
       "topic": "infra",
       "family": "infra",
       "layer": "UI Patterns",
-      "description": "std-permission-matrix — role × module permission grant table / capability matrix admin surface. Use when a user voices that permissions must be managed per role and module (permission matrix, role permissions, capability matrix, permission grants, access matrix, who can see finance, hide margins, module-level permissions, admin permission screen, grant management, finance visibility by role, restrict modules by role). Persists PermissionGrant rows (workspaceId + role + module + capability flags canReadFinance / canSeeOthersHours / canSeeMargins) with full CRUD on an admin page mounted at /admin/permissions, and ships a query trait other traits consult event-wise: CHECK_GRANT { role, module } fetches the matching grant(s) and re-emits GRANT_RESOLVED { role, module, canReadFinance, canSeeOthersHours, canSeeMargins, found }. Grant SURFACE only — entity-layer @read/@update gate integration is a recorded core gap (gates are pure @entity/@user S-expressions and cannot consult another entity's rows), so enforcement stays with the consumer until that core lands.",
+      "description": "std-permission-matrix — role × module permission grant table / capability matrix admin surface. Use when a user voices that permissions must be managed per role and module (permission matrix, role permissions, capability matrix, permission grants, access matrix, who can see finance, hide margins, module-level permissions, admin permission screen, grant management, finance visibility by role, restrict modules by role). Persists PermissionGrant rows (workspaceId + role + module + capability flags canReadFinance / canSeeOthersHours / canSeeMargins) with full CRUD on an admin page mounted at /admin/permissions — create/edit forms are the std-modal ModalRecordModal substrate (the corpus's two-trait CRUD shape, mirroring std-list), persists live in a sibling coordinator trait, and adminRoles is ENFORCED at the persist boundary (a viewer whose role is not listed cannot fire a write, from the button or from the bus). Ships a query trait other traits consult event-wise: CHECK_GRANT { role, module } fetches the matching grant(s) and re-emits GRANT_RESOLVED { role, module, canReadFinance, canSeeOthersHours, canSeeMargins, found }. Grant SURFACE only — entity-layer @read/@update gate integration is a recorded core gap (gates are pure @entity/@user S-expressions and cannot consult another entity's rows), so enforcement stays with the consumer until that core lands.",
       "defaultOrbitalName": "PermissionMatrixOrbital",
-      "statePattern": "editing, error, listing, loading",
+      "statePattern": "error, listing, loading",
       "complexity": {
-        "states": 4,
-        "events": 14,
-        "transitions": 16
+        "states": 3,
+        "events": 6,
+        "transitions": 5
       },
       "defaultEntity": {
         "name": "PermissionGrant",
@@ -12949,7 +13026,6 @@
       },
       "defaultIcons": [],
       "composableWith": [
-        "kflow-learning-companion",
         "std-anim-tick",
         "std-application",
         "std-approval-gate",
@@ -12962,38 +13038,26 @@
         "std-calendar-sync",
         "std-cascade-on-delete",
         "std-circuit-breaker",
-        "std-confirmation",
         "std-cooldown",
         "std-cross-reference",
         "std-data-erasure",
         "std-data-import",
-        "std-gallery",
         "std-game-clock",
         "std-global-search",
-        "std-helpdesk-ticket",
         "std-image-upload-multi",
         "std-integration-settings",
-        "std-inventory",
-        "std-iram",
         "std-lifecycle",
         "std-list",
         "std-menu",
         "std-migration-job",
         "std-mod-queue",
-        "std-modal",
-        "std-moderation-rule",
         "std-modifier-group",
         "std-notification-center",
-        "std-notification-panel",
         "std-notification-preferences",
         "std-notify-on-event",
-        "std-purchase-order",
-        "std-question-bank",
         "std-rate-limiter",
         "std-record-detail",
         "std-reminder-scheduler",
-        "std-reorder-rule",
-        "std-rfi",
         "std-row-access-control",
         "std-saved-search",
         "std-service-accounting",
@@ -13030,33 +13094,14 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-status-lifecycle",
-        "std-status-lifecycle-control",
-        "std-stock-level",
-        "std-tag-taxonomy",
-        "std-ticket-tier",
-        "std-trait-wars",
-        "std-warehouse",
-        "ui-confirm-dialog",
-        "ui-drawer",
-        "ui-lightbox",
-        "ui-modal",
-        "ui-side-panel",
-        "ui-subagent-trace-panel"
+        "std-status-lifecycle-control"
       ],
       "connectableEvents": [
         "PermissionGrantLoaded",
         "PermissionGrantLoadFailed",
         "NEW",
         "EDIT",
-        "DELETE",
-        "PermissionGrantDeleted",
-        "PermissionGrantDeleteFailed",
-        "CREATE_GRANT",
-        "SAVE_GRANT",
-        "CANCEL_GRANT",
-        "PermissionGrantSaved",
-        "PermissionGrantSaveFailed",
-        "CLOSE"
+        "DELETE"
       ],
       "eventPayloads": {},
       "exposure": "both",
@@ -13192,88 +13237,6 @@
           "definerKnobs": []
         },
         {
-          "name": "NewGrantButton",
-          "orbital": "PermissionMatrixOrbital",
-          "role": "renderer",
-          "emittedEvents": [],
-          "listenedEvents": [],
-          "overridableConfigKeys": [
-            {
-              "key": "action",
-              "type": "unknown",
-              "default": "NEW"
-            },
-            {
-              "key": "icon",
-              "type": "unknown",
-              "default": "plus"
-            },
-            {
-              "key": "label",
-              "type": "unknown",
-              "default": "New grant"
-            },
-            {
-              "key": "variant",
-              "type": "unknown",
-              "default": "primary"
-            }
-          ],
-          "capabilities": [],
-          "ticks": [],
-          "rendersUi": true,
-          "ref": "Button.traits.ButtonRender",
-          "category": "interaction",
-          "linkedEntity": "PermissionGrant",
-          "transitionEvents": [
-            "INIT"
-          ],
-          "definerKnobs": [
-            "action"
-          ]
-        },
-        {
-          "name": "BackButton",
-          "orbital": "PermissionMatrixOrbital",
-          "role": "renderer",
-          "emittedEvents": [],
-          "listenedEvents": [],
-          "overridableConfigKeys": [
-            {
-              "key": "action",
-              "type": "unknown",
-              "default": "CANCEL_GRANT"
-            },
-            {
-              "key": "icon",
-              "type": "unknown",
-              "default": "x"
-            },
-            {
-              "key": "label",
-              "type": "unknown",
-              "default": "Cancel"
-            },
-            {
-              "key": "variant",
-              "type": "unknown",
-              "default": "ghost"
-            }
-          ],
-          "capabilities": [],
-          "ticks": [],
-          "rendersUi": true,
-          "ref": "Button.traits.ButtonRender",
-          "category": "interaction",
-          "linkedEntity": "PermissionGrant",
-          "transitionEvents": [
-            "INIT"
-          ],
-          "definerKnobs": [
-            "action"
-          ]
-        },
-        {
           "name": "GrantDivider",
           "orbital": "PermissionMatrixOrbital",
           "role": "renderer",
@@ -13331,44 +13294,14 @@
             "NEW",
             "EDIT",
             "DELETE",
-            "CREATE_GRANT",
-            "SAVE_GRANT",
-            "CANCEL_GRANT",
-            "CLOSE",
             "PermissionGrantLoaded",
-            "PermissionGrantLoadFailed",
-            "PermissionGrantSaved",
-            "PermissionGrantSaveFailed",
-            "PermissionGrantDeleted",
-            "PermissionGrantDeleteFailed"
+            "PermissionGrantLoadFailed"
           ],
           "listenedEvents": [
-            "NEW",
-            "CANCEL_GRANT"
+            "PermissionGrantSaved",
+            "PermissionGrantDeleted"
           ],
-          "overridableConfigKeys": [
-            {
-              "key": "adminRoles",
-              "type": "[string]",
-              "default": [],
-              "label": "Who can manage grants?",
-              "description": "Roles eligible to create, edit, or delete grants. ENFORCED by the NEW/EDIT/DELETE/CREATE_GRANT/SAVE_GRANT transition guards: a viewer whose @user.role is not listed cannot fire a mutation, from the button or from the bus. Empty = every signed-in viewer may manage grants (ungated).",
-              "synonyms": "admin roles, permission managers, who edits permissions, grant admins",
-              "tier": "policy",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "key": "enabled",
-              "type": "boolean",
-              "default": false,
-              "label": "Manage role permissions",
-              "description": "Allow creating, editing, and deleting permission grants from this surface. Off by default.",
-              "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, permission matrix, role permissions, capability matrix, permission grants, access matrix, manage permissions, who can see finance, hide margins, module-level permissions",
-              "tier": "policy"
-            }
-          ],
+          "overridableConfigKeys": [],
           "capabilities": [
             "access"
           ],
@@ -13379,14 +13312,7 @@
           "linkedEntity": "PermissionGrant",
           "entityContract": {
             "requires": [],
-            "provides": [
-              "canReadFinance",
-              "canSeeMargins",
-              "canSeeOthersHours",
-              "module",
-              "role",
-              "workspaceId"
-            ]
+            "provides": []
           },
           "effectRow": [
             {
@@ -13394,114 +13320,35 @@
               "resource": "PermissionGrant"
             },
             {
-              "kind": "persist",
-              "resource": "PermissionGrant"
-            },
-            {
               "kind": "render-ui",
               "resource": "main"
-            },
-            {
-              "kind": "render-ui",
-              "resource": "modal"
-            },
-            {
-              "kind": "render-ui",
-              "resource": "toast"
-            },
-            {
-              "kind": "set",
-              "resource": "@entity.canReadFinance"
-            },
-            {
-              "kind": "set",
-              "resource": "@entity.canSeeMargins"
-            },
-            {
-              "kind": "set",
-              "resource": "@entity.canSeeOthersHours"
-            },
-            {
-              "kind": "set",
-              "resource": "@entity.id"
-            },
-            {
-              "kind": "set",
-              "resource": "@entity.module"
-            },
-            {
-              "kind": "set",
-              "resource": "@entity.role"
-            },
-            {
-              "kind": "set",
-              "resource": "@entity.workspaceId"
             }
           ],
           "transitionEvents": [
-            "CANCEL_GRANT",
-            "CLOSE",
-            "CREATE_GRANT",
-            "DELETE",
-            "EDIT",
             "INIT",
-            "NEW",
-            "PermissionGrantDeleteFailed",
-            "PermissionGrantDeleted",
             "PermissionGrantLoadFailed",
-            "PermissionGrantLoaded",
-            "PermissionGrantSaveFailed",
-            "PermissionGrantSaved",
-            "SAVE_GRANT"
+            "PermissionGrantLoaded"
           ],
           "events": [
             {
               "name": "NEW",
               "direction": "emit",
-              "description": "Opens the create-grant form.",
+              "description": "Requests the create-grant form (the create modal listens).",
               "synonyms": "add grant, new permission, create grant",
               "tier": "domain"
             },
             {
               "name": "EDIT",
               "direction": "emit",
-              "description": "Opens the edit form for a grant row.",
+              "description": "Requests the edit form for a grant row (the edit modal listens).",
               "synonyms": "modify grant, change permission, update grant",
               "tier": "domain"
             },
             {
               "name": "DELETE",
               "direction": "emit",
-              "description": "Deletes a grant row (persisted; the grid refetches on success).",
+              "description": "Requests deletion of a grant row (the persistor listens; adminRoles-guarded there).",
               "synonyms": "remove grant, revoke permission, delete grant",
-              "tier": "domain"
-            },
-            {
-              "name": "CREATE_GRANT",
-              "direction": "emit",
-              "description": "The create-grant form committed; data carries the new grant's fields.",
-              "synonyms": "submit grant, confirm create",
-              "tier": "internal"
-            },
-            {
-              "name": "SAVE_GRANT",
-              "direction": "emit",
-              "description": "The edit-grant form committed; data carries the grant id + updated fields.",
-              "synonyms": "submit edit, confirm update",
-              "tier": "internal"
-            },
-            {
-              "name": "CANCEL_GRANT",
-              "direction": "emit",
-              "description": "The grant form was dismissed without committing; the grid repaints.",
-              "synonyms": "cancel, back to matrix, dismiss form",
-              "tier": "internal"
-            },
-            {
-              "name": "CLOSE",
-              "direction": "emit",
-              "description": "Dismisses the grant form overlay (the modal shell's own X / Escape / overlay-click).",
-              "synonyms": "dismiss, hide, close form, done",
               "tier": "domain"
             },
             {
@@ -13519,11 +13366,179 @@
               "tier": "internal"
             },
             {
+              "name": "INIT",
+              "direction": "listen"
+            }
+          ],
+          "definerKnobs": []
+        },
+        {
+          "name": "PermissionGrantCreate",
+          "orbital": "PermissionMatrixOrbital",
+          "role": "renderer",
+          "emittedEvents": [],
+          "listenedEvents": [
+            "NEW"
+          ],
+          "overridableConfigKeys": [
+            {
+              "key": "fields",
+              "type": "unknown",
+              "default": [
+                "workspaceId",
+                "role",
+                "module",
+                "canReadFinance",
+                "canSeeOthersHours",
+                "canSeeMargins"
+              ]
+            },
+            {
+              "key": "icon",
+              "type": "unknown",
+              "default": "plus-circle"
+            },
+            {
+              "key": "mode",
+              "type": "unknown",
+              "default": "create"
+            },
+            {
+              "key": "title",
+              "type": "unknown",
+              "default": "Create grant"
+            }
+          ],
+          "capabilities": [],
+          "ticks": [],
+          "rendersUi": true,
+          "ref": "Modal.traits.ModalRecordModal",
+          "category": "interaction",
+          "linkedEntity": "PermissionGrant",
+          "transitionEvents": [
+            "CLOSE",
+            "GRANT_CREATED",
+            "INIT",
+            "ModalRecordLoadFailed",
+            "NEW",
+            "SEED"
+          ],
+          "definerKnobs": []
+        },
+        {
+          "name": "PermissionGrantEdit",
+          "orbital": "PermissionMatrixOrbital",
+          "role": "renderer",
+          "emittedEvents": [],
+          "listenedEvents": [
+            "EDIT"
+          ],
+          "overridableConfigKeys": [
+            {
+              "key": "fields",
+              "type": "unknown",
+              "default": [
+                "workspaceId",
+                "role",
+                "module",
+                "canReadFinance",
+                "canSeeOthersHours",
+                "canSeeMargins"
+              ]
+            },
+            {
+              "key": "icon",
+              "type": "unknown",
+              "default": "pencil"
+            },
+            {
+              "key": "mode",
+              "type": "unknown",
+              "default": "edit"
+            },
+            {
+              "key": "title",
+              "type": "unknown",
+              "default": "Edit grant"
+            }
+          ],
+          "capabilities": [],
+          "ticks": [],
+          "rendersUi": true,
+          "ref": "Modal.traits.ModalRecordModal",
+          "category": "interaction",
+          "linkedEntity": "PermissionGrant",
+          "transitionEvents": [
+            "CLOSE",
+            "EDIT",
+            "GRANT_UPDATED",
+            "INIT",
+            "ModalRecordLoadFailed",
+            "SEED"
+          ],
+          "definerKnobs": []
+        },
+        {
+          "name": "PermissionGrantPersistor",
+          "orbital": "PermissionMatrixOrbital",
+          "role": "renderer",
+          "emittedEvents": [
+            "PermissionGrantSaved",
+            "PermissionGrantSaveFailed",
+            "PermissionGrantDeleted",
+            "PermissionGrantDeleteFailed"
+          ],
+          "listenedEvents": [
+            "GRANT_CREATED",
+            "GRANT_UPDATED",
+            "DELETE"
+          ],
+          "overridableConfigKeys": [
+            {
+              "key": "adminRoles",
+              "type": "[string]",
+              "default": [],
+              "label": "Who can manage grants?",
+              "description": "Roles eligible to create, edit, or delete grants. ENFORCED by the DO_CREATE/DO_UPDATE/DO_DELETE transition guards: a viewer whose @user.role is not listed cannot fire a write, from the form submit or from the bus. Empty = every signed-in viewer may manage grants (ungated). Mounting the page is the opt-in — there is deliberately no separate enable flag (a default-off flag made the whole page's affordances dead on a fresh mount).",
+              "synonyms": "admin roles, permission managers, who edits permissions, grant admins, permission matrix, role permissions, capability matrix, permission grants, access matrix, manage permissions",
+              "tier": "policy",
+              "items": {
+                "type": "string"
+              }
+            }
+          ],
+          "capabilities": [
+            "access"
+          ],
+          "ticks": [],
+          "rendersUi": true,
+          "category": "lifecycle",
+          "linkedEntity": "PermissionGrant",
+          "effectRow": [
+            {
+              "kind": "persist",
+              "resource": "PermissionGrant"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "toast"
+            }
+          ],
+          "transitionEvents": [
+            "DO_CREATE",
+            "DO_DELETE",
+            "DO_UPDATE",
+            "INIT",
+            "PermissionGrantDeleteFailed",
+            "PermissionGrantSaveFailed"
+          ],
+          "events": [
+            {
               "name": "PermissionGrantSaved",
               "direction": "emit",
-              "description": "Signals that a permission grant has been persisted (create / update).",
+              "description": "Signals that a permission grant has been persisted (create / update); carries the persisted row's id.",
               "synonyms": "saved, created, updated, persisted",
-              "tier": "internal"
+              "tier": "domain"
             },
             {
               "name": "PermissionGrantSaveFailed",
@@ -13537,7 +13552,7 @@
               "direction": "emit",
               "description": "Signals that a permission grant has been deleted.",
               "synonyms": "deleted, removed, revoked",
-              "tier": "internal"
+              "tier": "domain"
             },
             {
               "name": "PermissionGrantDeleteFailed",
@@ -13549,6 +13564,27 @@
             {
               "name": "INIT",
               "direction": "listen"
+            },
+            {
+              "name": "DO_CREATE",
+              "direction": "listen",
+              "description": "Indicates a request to create a grant row.",
+              "synonyms": "add, new, insert",
+              "tier": "domain"
+            },
+            {
+              "name": "DO_UPDATE",
+              "direction": "listen",
+              "description": "Indicates a grant row has been modified.",
+              "synonyms": "modify, update, change",
+              "tier": "domain"
+            },
+            {
+              "name": "DO_DELETE",
+              "direction": "listen",
+              "description": "Indicates a request to delete a grant row.",
+              "synonyms": "remove, discard, erase",
+              "tier": "domain"
             }
           ],
           "definerKnobs": []
@@ -14460,13 +14496,13 @@
       "topic": "infra",
       "family": "infra",
       "layer": "UI Patterns",
-      "description": "std-reminder-scheduler — deadline reminders for a target entity. A periodic tick scans the target for records whose `dateField` deadline (a ms-epoch number or an ISO datetime string) is within `offsetHours` of now and that have not been reminded yet, and emits `ReminderDue` for each — every matching record, via a self-driving scan loop. Marks each record `remindedAt` so it isn't reminded twice. Compose alongside std-notify-on-event to deliver the reminder.",
+      "description": "std-reminder-scheduler — deadline reminders for a target entity. A periodic tick scans the target for records whose `dateField` deadline (a ms-epoch number or an ISO datetime string) is within `offsetHours` of now and that have not been reminded yet, and emits `ReminderDue` for each — every matching record, via a self-driving scan loop. `direction` picks which side of now the scan matches: 'future' (default) fires for deadlines up to `offsetHours` ahead; 'past' fires once a record's date is at least `offsetHours` behind now. Marks each record `remindedAt` so it isn't reminded twice — and only when the record actually matched the scan, so records outside the window stay eligible for later passes. Compose alongside std-notify-on-event to deliver the reminder.",
       "defaultOrbitalName": "ReminderSchedulerOrbital",
       "statePattern": "idle, scanning",
       "complexity": {
         "states": 2,
         "events": 5,
-        "transitions": 8
+        "transitions": 9
       },
       "defaultEntity": {
         "name": "ReminderRunLog",
@@ -14610,6 +14646,19 @@
               "description": "Field on the target entity holding the deadline (e.g. 'dueAt', 'startsAt'). Accepts a ms-epoch number or an ISO datetime string; both are coerced to ms-epoch for comparison.",
               "synonyms": "due date field, timestamp field, cutoff field, expiry field, when it's due",
               "tier": "internal"
+            },
+            {
+              "key": "direction",
+              "type": "string",
+              "default": "future",
+              "label": "Scan which side of now?",
+              "description": "'future' (default) matches records whose dateField is still ahead, up to offsetHours out — upcoming-deadline reminders. 'past' matches records whose dateField is at least offsetHours behind now — act-after-the-fact policies. The emitted event and the dedup marker are identical either way.",
+              "synonyms": "direction, past due, overdue, after the deadline, look back, backward scan, past-window",
+              "tier": "infra",
+              "enumValues": [
+                "future",
+                "past"
+              ]
             },
             {
               "key": "enabled",
@@ -25538,6 +25587,7 @@
         "std-modal-editor",
         "std-multi-party-flow",
         "std-notification-panel",
+        "std-notification-preferences",
         "std-pagination",
         "std-rating-review",
         "std-record-detail",
@@ -26821,10 +26871,8 @@
         "std-moderation-rule",
         "std-multi-party-flow",
         "std-notification-panel",
-        "std-notification-preferences",
         "std-objective-board-3d",
         "std-pagination",
-        "std-permission-matrix",
         "std-purchase-order",
         "std-question-bank",
         "std-rate-limiter",
@@ -28817,6 +28865,7 @@
         "std-nonprofit-donations",
         "std-note",
         "std-notification-panel",
+        "std-notification-preferences",
         "std-pagination",
         "std-property-mgmt",
         "std-public-help-center",
@@ -32980,7 +33029,6 @@
         "std-modal-editor",
         "std-multi-party-flow",
         "std-notification-panel",
-        "std-notification-preferences",
         "std-objective-board-3d",
         "std-pagination",
         "std-physics-diagram",
@@ -33633,7 +33681,6 @@
         "std-multi-party-flow",
         "std-notification-panel",
         "std-pagination",
-        "std-permission-matrix",
         "std-purchase-order",
         "std-question-bank",
         "std-rating-review",
@@ -37503,7 +37550,6 @@
         "std-modal",
         "std-multi-party-flow",
         "std-notification-panel",
-        "std-notification-preferences",
         "std-pagination",
         "std-rating-review",
         "std-record-detail",
@@ -38429,9 +38475,7 @@
         "std-moderation-rule",
         "std-multi-party-flow",
         "std-notification-panel",
-        "std-notification-preferences",
         "std-pagination",
-        "std-permission-matrix",
         "std-purchase-order",
         "std-question-bank",
         "std-rating-review",
@@ -39914,7 +39958,6 @@
         "std-moderation-rule",
         "std-multi-party-flow",
         "std-pagination",
-        "std-permission-matrix",
         "std-purchase-order",
         "std-question-bank",
         "std-rating-review",
@@ -43838,6 +43881,7 @@
         "std-multi-party-flow",
         "std-notes",
         "std-notification-panel",
+        "std-notification-preferences",
         "std-pagination",
         "std-rating-review",
         "std-record-detail",
@@ -45724,6 +45768,7 @@
         "std-modal-editor",
         "std-multi-party-flow",
         "std-notification-panel",
+        "std-notification-preferences",
         "std-pagination",
         "std-rating-review",
         "std-record-detail",
@@ -49707,7 +49752,6 @@
         "std-multi-party-flow",
         "std-notification-panel",
         "std-pagination",
-        "std-permission-matrix",
         "std-purchase-order",
         "std-question-bank",
         "std-rating-review",
@@ -51078,6 +51122,7 @@
         "std-modal-editor",
         "std-multi-party-flow",
         "std-notification-panel",
+        "std-notification-preferences",
         "std-pagination",
         "std-rating-review",
         "std-record-detail",
@@ -52941,7 +52986,6 @@
         "std-motion-body",
         "std-multi-party-flow",
         "std-notification-panel",
-        "std-notification-preferences",
         "std-objective-board-3d",
         "std-objective-flow",
         "std-objective-reach",
@@ -84909,7 +84953,6 @@
         "std-modal-editor",
         "std-multi-party-flow",
         "std-notification-panel",
-        "std-notification-preferences",
         "std-pagination",
         "std-rating-review",
         "std-record-detail",
@@ -86346,7 +86389,6 @@
         "std-multi-party-flow",
         "std-notification-panel",
         "std-pagination",
-        "std-permission-matrix",
         "std-purchase-order",
         "std-question-bank",
         "std-rating-review",
@@ -94551,7 +94593,6 @@
         "std-multi-party-flow",
         "std-notification-panel",
         "std-pagination",
-        "std-permission-matrix",
         "std-purchase-order",
         "std-question-bank",
         "std-rating-review",
@@ -108235,7 +108276,6 @@
         "std-multi-party-flow",
         "std-notification-panel",
         "std-pagination",
-        "std-permission-matrix",
         "std-purchase-order",
         "std-question-bank",
         "std-rating-review",
@@ -112496,7 +112536,6 @@
         "std-multi-party-flow",
         "std-notification-panel",
         "std-pagination",
-        "std-permission-matrix",
         "std-purchase-order",
         "std-question-bank",
         "std-rating-review",
@@ -123291,7 +123330,6 @@
         "std-multi-party-flow",
         "std-notification-panel",
         "std-pagination",
-        "std-permission-matrix",
         "std-purchase-order",
         "std-question-bank",
         "std-rating-review",
@@ -148915,7 +148953,6 @@
         "std-multi-party-flow",
         "std-notification-panel",
         "std-pagination",
-        "std-permission-matrix",
         "std-purchase-order",
         "std-question-bank",
         "std-rating-review",
@@ -183867,7 +183904,6 @@
         "std-mesh-tactics",
         "std-motion-body",
         "std-multi-party-flow",
-        "std-notification-preferences",
         "std-objective-board-3d",
         "std-objective-flow",
         "std-objective-reach",
@@ -185640,7 +185676,6 @@
         "std-mesh-asset-art",
         "std-mesh-tactics",
         "std-motion-body",
-        "std-notification-preferences",
         "std-objective-board-3d",
         "std-objective-flow",
         "std-objective-reach",
@@ -190694,7 +190729,6 @@
         "std-mesh-tactics",
         "std-motion-body",
         "std-multi-party-flow",
-        "std-notification-preferences",
         "std-objective-board-3d",
         "std-objective-flow",
         "std-objective-reach",
@@ -193017,7 +193051,6 @@
         "std-mesh-tactics",
         "std-motion-body",
         "std-multi-party-flow",
-        "std-notification-preferences",
         "std-objective-flow",
         "std-objective-reach",
         "std-pad-lock",
@@ -198760,7 +198793,6 @@
         "std-mesh-tactics",
         "std-motion-body",
         "std-multi-party-flow",
-        "std-notification-preferences",
         "std-objective-board-3d",
         "std-objective-flow",
         "std-objective-reach",
@@ -200547,7 +200579,6 @@
         "std-mesh-asset-art",
         "std-mesh-tactics",
         "std-motion-body",
-        "std-notification-preferences",
         "std-objective-board-3d",
         "std-objective-flow",
         "std-objective-reach",
@@ -202639,7 +202670,6 @@
         "std-mesh-asset-art",
         "std-mesh-tactics",
         "std-motion-body",
-        "std-notification-preferences",
         "std-objective-board-3d",
         "std-objective-flow",
         "std-objective-reach",
@@ -206988,6 +207018,7 @@
         "std-math-vectors-3d",
         "std-ml-exact-check",
         "std-motion-body",
+        "std-notification-preferences",
         "std-physics-circular",
         "std-physics-collision",
         "std-physics-diagram",
@@ -207728,6 +207759,7 @@
         "std-math-unitcircle",
         "std-math-vectors",
         "std-math-vectors-3d",
+        "std-notification-preferences",
         "std-physics-circular",
         "std-physics-collision",
         "std-physics-diagram",
@@ -212263,6 +212295,7 @@
         "std-math-unitcircle",
         "std-math-vectors",
         "std-math-vectors-3d",
+        "std-notification-preferences",
         "std-physics-circular",
         "std-physics-collision",
         "std-physics-diagram",
@@ -215177,6 +215210,7 @@
         "std-math-unitcircle",
         "std-math-vectors",
         "std-math-vectors-3d",
+        "std-notification-preferences",
         "std-physics-circular",
         "std-physics-collision",
         "std-physics-diagram",
@@ -218646,6 +218680,7 @@
         "std-math-unitcircle",
         "std-math-vectors",
         "std-math-vectors-3d",
+        "std-notification-preferences",
         "std-physics-circular",
         "std-physics-collision",
         "std-physics-diagram",
@@ -223491,6 +223526,7 @@
         "std-math-unitcircle",
         "std-math-vectors",
         "std-math-vectors-3d",
+        "std-notification-preferences",
         "std-physics-circular",
         "std-physics-collision",
         "std-physics-diagram",

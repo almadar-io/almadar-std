@@ -51,88 +51,40 @@
       {
         "name": "PreferencesManage",
         "emittedEvents": [
-          "NEW",
+          "CREATE",
           "EDIT",
           "DELETE",
-          "SAVE",
-          "CANCEL",
-          "SET_PERSON_ID",
-          "SET_EVENT_KEY",
-          "SET_CHANNEL",
-          "SET_MODE",
-          "SET_QUIET_HOURS",
           "PreferencesLoaded",
           "PreferencesLoadFailed",
           "PreferenceSaved",
           "PreferenceSaveFailed",
           "PreferenceDeleted"
         ],
-        "listenedEvents": [],
+        "listenedEvents": [
+          "PREFERENCE_CREATED",
+          "PREFERENCE_UPDATED"
+        ],
         "events": [
           {
-            "name": "NEW",
+            "name": "CREATE",
             "direction": "emit",
-            "description": "Opens the blank preference form.",
-            "synonyms": "add, create, new preference",
-            "tier": "presentation"
+            "description": "Opens the blank preference modal.",
+            "synonyms": "add, new, insert",
+            "tier": "domain"
           },
           {
             "name": "EDIT",
             "direction": "emit",
-            "description": "Opens a preference row in the edit form.",
+            "description": "Opens a preference row in the edit modal.",
             "synonyms": "modify, update, change",
-            "tier": "presentation"
+            "tier": "domain"
           },
           {
             "name": "DELETE",
             "direction": "emit",
             "description": "Removes a preference row.",
             "synonyms": "remove, discard, clear",
-            "tier": "presentation"
-          },
-          {
-            "name": "SAVE",
-            "direction": "emit",
-            "description": "Persists the preference form.",
-            "synonyms": "persist, store, commit",
             "tier": "domain"
-          },
-          {
-            "name": "CANCEL",
-            "direction": "emit",
-            "description": "Aborts the preference form.",
-            "synonyms": "abort, dismiss, undo",
-            "tier": "domain"
-          },
-          {
-            "name": "SET_PERSON_ID",
-            "direction": "emit",
-            "description": "Preference form: person id changed.",
-            "tier": "internal"
-          },
-          {
-            "name": "SET_EVENT_KEY",
-            "direction": "emit",
-            "description": "Preference form: event key changed.",
-            "tier": "internal"
-          },
-          {
-            "name": "SET_CHANNEL",
-            "direction": "emit",
-            "description": "Preference form: channel changed.",
-            "tier": "internal"
-          },
-          {
-            "name": "SET_MODE",
-            "direction": "emit",
-            "description": "Preference form: delivery mode changed.",
-            "tier": "internal"
-          },
-          {
-            "name": "SET_QUIET_HOURS",
-            "direction": "emit",
-            "description": "Preference form: quiet-hours window changed.",
-            "tier": "internal"
           },
           {
             "name": "PreferencesLoaded",
@@ -172,6 +124,27 @@
           {
             "name": "INIT",
             "direction": "listen"
+          },
+          {
+            "name": "DO_CREATE",
+            "direction": "listen",
+            "description": "Create persist requested; the modal's SAVE payload carries the full form row.",
+            "synonyms": "add, new, insert",
+            "tier": "internal"
+          },
+          {
+            "name": "DO_UPDATE",
+            "direction": "listen",
+            "description": "Update persist requested; the modal's SAVE payload carries the full form row.",
+            "synonyms": "modified, changed, refreshed",
+            "tier": "internal"
+          },
+          {
+            "name": "RETRY",
+            "direction": "listen",
+            "description": "Retries loading the preference collection after a failure.",
+            "synonyms": "try again, reload",
+            "tier": "presentation"
           }
         ],
         "overridableConfigKeys": [
@@ -202,22 +175,16 @@
         "capabilities": [],
         "linkedEntity": "NotificationPreference",
         "transitionEvents": [
-          "CANCEL",
           "DELETE",
-          "EDIT",
+          "DO_CREATE",
+          "DO_UPDATE",
           "INIT",
-          "NEW",
           "PreferenceDeleted",
           "PreferenceSaveFailed",
           "PreferenceSaved",
           "PreferencesLoadFailed",
           "PreferencesLoaded",
-          "SAVE",
-          "SET_CHANNEL",
-          "SET_EVENT_KEY",
-          "SET_MODE",
-          "SET_PERSON_ID",
-          "SET_QUIET_HOURS"
+          "RETRY"
         ],
         "definerKnobs": [],
         "effectRow": [
@@ -234,41 +201,97 @@
             "resource": "main"
           },
           {
-            "kind": "set",
-            "resource": "@entity.channel"
-          },
-          {
-            "kind": "set",
-            "resource": "@entity.createdAt"
-          },
-          {
-            "kind": "set",
-            "resource": "@entity.eventKey"
-          },
-          {
-            "kind": "set",
-            "resource": "@entity.id"
-          },
-          {
-            "kind": "set",
-            "resource": "@entity.mode"
-          },
-          {
-            "kind": "set",
-            "resource": "@entity.personId"
-          },
-          {
-            "kind": "set",
-            "resource": "@entity.quietHours"
-          },
-          {
-            "kind": "set",
-            "resource": "@entity.updatedAt"
+            "kind": "render-ui",
+            "resource": "toast"
           }
         ],
         "effectEntityRefs": [
           "NotificationPreference"
         ]
+      },
+      {
+        "name": "PreferenceCreate",
+        "emittedEvents": [],
+        "listenedEvents": [
+          "CREATE"
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "personId",
+              "eventKey",
+              "channel",
+              "mode",
+              "quietHours"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "New notification preference"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Modal.traits.ModalRecordModal",
+        "linkedEntity": "NotificationPreference",
+        "eventRenames": {
+          "OPEN": "CREATE",
+          "SAVE": "PREFERENCE_CREATED"
+        }
+      },
+      {
+        "name": "PreferenceEdit",
+        "emittedEvents": [],
+        "listenedEvents": [
+          "EDIT"
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "personId",
+              "eventKey",
+              "channel",
+              "mode",
+              "quietHours"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "pencil"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Edit notification preference"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Modal.traits.ModalRecordModal",
+        "linkedEntity": "NotificationPreference",
+        "eventRenames": {
+          "OPEN": "EDIT",
+          "SAVE": "PREFERENCE_UPDATED"
+        }
       },
       {
         "name": "PreferenceGate",
@@ -372,10 +395,9 @@
       }
     ],
     "emittedEvents": [
-      "CANCEL",
+      "CREATE",
       "DELETE",
       "EDIT",
-      "NEW",
       "PREFERENCE_CHECK_FAILED",
       "PREFERENCE_RESOLVED",
       "PREFERENCE_ROWS_LOADED",
@@ -383,15 +405,14 @@
       "PreferenceSaveFailed",
       "PreferenceSaved",
       "PreferencesLoadFailed",
-      "PreferencesLoaded",
-      "SAVE",
-      "SET_CHANNEL",
-      "SET_EVENT_KEY",
-      "SET_MODE",
-      "SET_PERSON_ID",
-      "SET_QUIET_HOURS"
+      "PreferencesLoaded"
     ],
-    "listenedEvents": [],
+    "listenedEvents": [
+      "CREATE",
+      "EDIT",
+      "PREFERENCE_CREATED",
+      "PREFERENCE_UPDATED"
+    ],
     "exposure": "both",
     "provenance": "authored",
     "sourceValid": true
