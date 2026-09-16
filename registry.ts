@@ -15,6 +15,7 @@ import { MATH_OPERATORS } from './modules/math.js';
 import { STR_OPERATORS } from './modules/str.js';
 import { ARRAY_OPERATORS } from './modules/array.js';
 import { OBJECT_OPERATORS } from './modules/object.js';
+import { JSON_OPERATORS } from './modules/json.js';
 import { TIME_OPERATORS } from './modules/time.js';
 import { VALIDATE_OPERATORS } from './modules/validate.js';
 import { FORMAT_OPERATORS } from './modules/format.js';
@@ -59,6 +60,7 @@ export const STD_OPERATORS: Record<string, StdOperatorMeta> = {
   ...STR_OPERATORS,
   ...ARRAY_OPERATORS,
   ...OBJECT_OPERATORS,
+  ...JSON_OPERATORS,
   ...TIME_OPERATORS,
   ...VALIDATE_OPERATORS,
   ...FORMAT_OPERATORS,

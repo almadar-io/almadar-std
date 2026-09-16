@@ -1,0 +1,280 @@
+[
+  {
+    "organism": "std-gantt-schedule",
+    "orbital": "GanttScheduleOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/core/atoms/std-gantt-schedule.ts",
+    "entities": [
+      {
+        "name": "Task",
+        "fields": [
+          {
+            "name": "title",
+            "type": "string",
+            "required": false,
+            "description": "task label shown on the bar",
+            "synonyms": "name, label, summary, subject"
+          },
+          {
+            "name": "start",
+            "type": "datetime",
+            "required": false,
+            "description": "task start timestamp the bar is placed from",
+            "synonyms": "starts, begins, start date, from"
+          },
+          {
+            "name": "end",
+            "type": "datetime",
+            "required": false,
+            "description": "task end timestamp the bar is placed to; when absent, duration days are used",
+            "synonyms": "finish, due, end date, until"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false,
+            "description": "task lifecycle status, drives bar colour",
+            "synonyms": "state, stage, phase"
+          },
+          {
+            "name": "group",
+            "type": "string",
+            "required": false,
+            "description": "group/section the task renders under a header row for",
+            "synonyms": "team, swimlane, section, project"
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "TaskGanttSchedule",
+        "emittedEvents": [
+          "TaskLoaded",
+          "TaskLoadFailed",
+          ""
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "TaskLoaded",
+            "direction": "emit",
+            "description": "Indicates that schedule tasks have been successfully retrieved.",
+            "synonyms": "loaded, fetched, retrieved, populated",
+            "tier": "domain"
+          },
+          {
+            "name": "TaskLoadFailed",
+            "direction": "emit",
+            "description": "Indicates a failure to load schedule tasks.",
+            "synonyms": "error, failed, problem, loading issue",
+            "tier": "internal"
+          },
+          {
+            "name": "",
+            "direction": "emit",
+            "description": "Emitted when a gantt bar is clicked; { id } carries the clicked task row's id.",
+            "tier": "presentation"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "RETRY",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "dayWidth",
+            "type": "number",
+            "default": 28,
+            "label": "Day width",
+            "description": "Pixels per day on the time axis.",
+            "tier": "presentation"
+          },
+          {
+            "key": "durationField",
+            "type": "string",
+            "default": "",
+            "label": "Duration field",
+            "description": "Row column holding the task length in days, used when the row has no end value. Empty = bars always read endField.",
+            "synonyms": "duration column, length field, days field",
+            "tier": "presentation"
+          },
+          {
+            "key": "endField",
+            "type": "string",
+            "default": "end",
+            "label": "End field",
+            "description": "Row column holding the end timestamp each bar is placed to. When a row has no end, durationField (days) is used instead.",
+            "synonyms": "end column, due field, finish field",
+            "tier": "presentation"
+          },
+          {
+            "key": "groupField",
+            "type": "string",
+            "default": "",
+            "label": "Group field",
+            "description": "Row column rows are grouped under header rows by (e.g. team, project). Empty (default) = flat list, no group headers.",
+            "synonyms": "group column, swimlane field, section field",
+            "tier": "presentation"
+          },
+          {
+            "key": "include",
+            "type": "[string]",
+            "default": [],
+            "label": "Which relation fields to hydrate?",
+            "description": "Entity relation field names to hydrate on fetch, so field mappings can use dot-paths like assignee.name. Empty = no hydration, the default.",
+            "synonyms": "relation hydration, populate relations, joined fields",
+            "tier": "internal",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "labelField",
+            "type": "string",
+            "default": "title",
+            "label": "Label field",
+            "description": "Row column holding the bar label. Rebound hosts point this at their own column (e.g. name, summary).",
+            "synonyms": "title field, label column, name field",
+            "tier": "presentation"
+          },
+          {
+            "key": "links",
+            "type": "[GanttLinkSpec]",
+            "default": [],
+            "label": "Dependency links",
+            "description": "Dependency arrows between task ids ({ from, to }); the host derives them from its own relation field and passes them here.",
+            "synonyms": "dependencies, dependency arrows, precedences",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "from": {
+                  "name": "from",
+                  "required": true,
+                  "type": "string"
+                },
+                "to": {
+                  "name": "to",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "onBarClick",
+            "type": "event",
+            "default": "",
+            "label": "On bar click",
+            "description": "Event emitted when a bar is clicked: UI:{onBarClick} with { id } carrying the clicked row's id. Empty means bars are not clickable.",
+            "synonyms": "bar click, task click, select task, open task",
+            "tier": "presentation"
+          },
+          {
+            "key": "rangeEnd",
+            "type": "string",
+            "default": "",
+            "label": "Range end",
+            "description": "Last visible day (ISO date). Empty (default) = 2 days after the latest task end.",
+            "synonyms": "window end, axis end, to date",
+            "tier": "presentation"
+          },
+          {
+            "key": "rangeStart",
+            "type": "string",
+            "default": "",
+            "label": "Range start",
+            "description": "First visible day (ISO date). Empty (default) = 2 days before the earliest task.",
+            "synonyms": "window start, axis start, from date",
+            "tier": "presentation"
+          },
+          {
+            "key": "showToday",
+            "type": "boolean",
+            "default": true,
+            "label": "Show today marker",
+            "description": "Paint the today marker line when today falls inside the visible range.",
+            "tier": "presentation"
+          },
+          {
+            "key": "startField",
+            "type": "string",
+            "default": "start",
+            "label": "Start field",
+            "description": "Row column holding the start timestamp each bar is placed from (e.g. startTime, startsAt, beginsAt).",
+            "synonyms": "start column, from field, begin field",
+            "tier": "presentation"
+          },
+          {
+            "key": "statusField",
+            "type": "string",
+            "default": "status",
+            "label": "Status field",
+            "description": "Row column holding the status value that drives bar colour.",
+            "synonyms": "status column, state field, stage field",
+            "tier": "presentation"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Schedule",
+            "label": "Title",
+            "description": "Header text shown above the gantt chart.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "Task",
+        "transitionEvents": [
+          "INIT",
+          "RETRY",
+          "TaskLoadFailed",
+          "TaskLoaded"
+        ],
+        "definerKnobs": [
+          "onBarClick"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        },
+        "effectRow": [
+          {
+            "kind": "fetch",
+            "resource": "Task"
+          },
+          {
+            "kind": "render-ui",
+            "resource": "main"
+          }
+        ],
+        "effectEntityRefs": [
+          "Task"
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "name": "TaskGanttSchedulePage",
+        "defaultPath": "/tasks/gantt",
+        "primaryEntity": "Task"
+      }
+    ],
+    "emittedEvents": [
+      "",
+      "TaskLoadFailed",
+      "TaskLoaded"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

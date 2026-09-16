@@ -1,5 +1,5 @@
 {
-  "description": "std-data-import — staged CSV import run, source-agnostic: upload → staged review → confirm → handoff. UPLOAD_CSV opens a run and persists an ImportBatch row (status uploaded, fieldMappingJson recorded verbatim for provenance); the host's file UI parses the CSV and answers with STAGE_ROWS, one JSON string per raw row, which the atom bulk-persists into import_rows against the batch id and presents as a staged review (row/error counts + Confirm/Discard). CONFIRM_IMPORT marks the batch confirmed and emits IMPORT_CONFIRMED { batchId, sourceName, rowCount } — the mapping+persist half is the CONSUMER organism's: it listens for IMPORT_CONFIRMED, fetches import_rows where batchId matches, maps each rowJson through its own field mapping, and persists into its own target entity (cross-atom persist into a consumer's entity is not expressible from here). This is deliberately the CSV-file path: the atom never calls a source service — sourceName/fieldMappingJson/targetEntity/historyWindowDays are declarative consumer configs, and any persist failure marks the batch row failed and fires IMPORT_FAILED, never a silent swallow. Compose with std-import for the file-picker menu.",
+  "description": "std-data-import — staged CSV import run, source-agnostic: upload → staged review → confirm → parse+map → handoff. UPLOAD_CSV opens a run and persists an ImportBatch row (status uploaded, fieldMappingJson recorded verbatim for provenance); the host's file UI parses the CSV and answers with STAGE_ROWS, one JSON string per raw row, which the atom bulk-persists into import_rows against the batch id and presents as a staged review (row/error counts + Confirm/Discard). CONFIRM_IMPORT marks the batch confirmed, emits IMPORT_CONFIRMED { batchId, sourceName, rowCount }, and fetches the batch's staged rows; on fetch success the atom parses each rowJson via json/parse, remaps keys through the batch's mappingJson, and emits IMPORT_ROWS_PARSED { batchId, rows, failed } — the persist half is the CONSUMER organism's: it listens for IMPORT_ROWS_PARSED and persists the mapped rows into its own target entity (cross-atom persist into a consumer's entity is not expressible from here). This is deliberately the CSV-file path: the atom never calls a source service — sourceName/fieldMappingJson/targetEntity/historyWindowDays are declarative consumer configs, and any persist failure marks the batch row failed and fires IMPORT_FAILED, never a silent swallow. Compose with std-import for the file-picker menu.",
   "ledger": {
     "entries": {
       "ent_01M2HEYJ1VH5AKFRTFBSJVKWA9": {
@@ -112,6 +112,24 @@
         "bakedName": "IMPORT_FAILED",
         "curName": "IMPORT_FAILED",
         "id": "evt_01M2HEYJ1VWSGJ1ZZXZSZ4Q023",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M2HEYJ1V70M3EEV69G6ZRGF9",
+        "renames": []
+      },
+      "evt_01M2M6Z8VSNDXCMS9C6CJSNFMV": {
+        "bakedName": "IMPORT_ROWS_PARSED",
+        "curName": "IMPORT_ROWS_PARSED",
+        "id": "evt_01M2M6Z8VSNDXCMS9C6CJSNFMV",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M2HEYJ1V70M3EEV69G6ZRGF9",
+        "renames": []
+      },
+      "evt_01M2M6Z8VSYMZZH7DW4QZMTW1T": {
+        "bakedName": "IMPORT_ROWS_FETCHED",
+        "curName": "IMPORT_ROWS_FETCHED",
+        "id": "evt_01M2M6Z8VSYMZZH7DW4QZMTW1T",
         "kind": "event",
         "owner": "workspace",
         "parent": "trt_01M2HEYJ1V70M3EEV69G6ZRGF9",
@@ -230,7 +248,7 @@
           },
           {
             "default": "{}",
-            "description": "Source-column → target-field mapping (JSON string), recorded verbatim from config for provenance; the consumer's mapping layer applies it.",
+            "description": "Source-column → target-field mapping (JSON string), recorded verbatim from config for provenance; the atom applies it when parsing staged rows on confirm.",
             "name": "mappingJson",
             "synonyms": "field mapping, column mapping, mapping",
             "type": "string"
@@ -270,7 +288,7 @@
           "config": {
             "fieldMappingJson": {
               "default": "{}",
-              "description": "JSON object mapping source CSV column names to target field names. Stored verbatim on the batch row (mappingJson) so the consumer's mapping layer applies the same mapping when it persists staged rows into the target entity.",
+              "description": "JSON object mapping source CSV column names to target field names. Stored verbatim on the batch row (mappingJson); the atom applies it when it parses staged rows into IMPORT_ROWS_PARSED, so the consumer persists already-mapped rows into the target entity.",
               "label": "Field mapping (JSON)",
               "synonyms": "field mapping, column mapping, map columns, remap fields, csv columns",
               "tier": "domain",
@@ -309,6 +327,14 @@
             {
               "kind": "emit",
               "resource": "IMPORT_FAILED"
+            },
+            {
+              "kind": "emit",
+              "resource": "IMPORT_ROWS_PARSED"
+            },
+            {
+              "kind": "fetch",
+              "resource": "ImportRow"
             },
             {
               "kind": "persist",
@@ -385,7 +411,7 @@
               "tier": "secondary"
             },
             {
-              "description": "The user confirmed the staged review and the batch row is persisted as confirmed. Consumers listen, fetch import_rows where batchId matches, map each rowJson through their field mapping, and persist into their own target entity.",
+              "description": "The user confirmed the staged review and the batch row is persisted as confirmed. The atom then fetches the batch's staged rows, parses and key-maps them, and emits IMPORT_ROWS_PARSED for the consumer's persist half.",
               "event": "IMPORT_CONFIRMED",
               "eventId": "evt_01M2HEYJ1VS7SGS9STXQGS2V2J",
               "payloadSchema": [
@@ -405,6 +431,61 @@
               ],
               "scope": "external",
               "synonyms": "import confirmed, commit import, accept staged rows, approve import",
+              "tier": "domain"
+            },
+            {
+              "description": "import_rows collection-fetch success on confirm — payload carries every staged row flat; the atom filters to @entity.id by batchId in the IMPORT_ROWS_PARSED arm (self-loop only)",
+              "event": "IMPORT_ROWS_FETCHED",
+              "eventId": "evt_01M2M6Z8VSYMZZH7DW4QZMTW1T",
+              "payloadSchema": [
+                {
+                  "entity": "ImportRow",
+                  "name": "data",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "batchId",
+                      "type": "string"
+                    },
+                    {
+                      "name": "rowJson",
+                      "type": "string"
+                    },
+                    {
+                      "name": "status",
+                      "type": "string"
+                    }
+                  ],
+                  "type": "[object]"
+                }
+              ],
+              "tier": "secondary"
+            },
+            {
+              "description": "Confirmed rows parsed and key-mapped: each staged row's rowJson was parsed via json/parse and remapped through the batch's mappingJson; failed counts rows whose rowJson did not parse to an object (surfaced, never dropped). The consumer persists rows into its own target entity and marks them imported.",
+              "event": "IMPORT_ROWS_PARSED",
+              "eventId": "evt_01M2M6Z8VSNDXCMS9C6CJSNFMV",
+              "payloadSchema": [
+                {
+                  "name": "batchId",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "failed",
+                  "type": "number"
+                },
+                {
+                  "name": "rows",
+                  "type": "[Map<string,scalar>]"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "rows parsed, rows mapped, import rows ready",
               "tier": "domain"
             },
             {
@@ -533,12 +614,45 @@
                 "tier": "secondary"
               },
               {
-                "description": "The user approved the staged review; the batch is marked confirmed and IMPORT_CONFIRMED fires for the consumer's mapping+persist half.",
+                "description": "The user approved the staged review; the batch is marked confirmed, IMPORT_CONFIRMED fires, and the atom parses+maps the staged rows into IMPORT_ROWS_PARSED for the consumer's persist half.",
                 "id": "evt_01M2HEYJ1VBJXS0KEXTX9QWJM5",
                 "key": "CONFIRM_IMPORT",
                 "name": "Confirm Import",
                 "synonyms": "confirm import, approve staged rows, accept import",
                 "tier": "domain"
+              },
+              {
+                "description": "import_rows collection-fetch success on confirm — payload carries every staged row flat; the atom filters to @entity.id by batchId in the IMPORT_ROWS_PARSED arm (self-loop only)",
+                "id": "evt_01M2M6Z8VSYMZZH7DW4QZMTW1T",
+                "key": "IMPORT_ROWS_FETCHED",
+                "name": "Import Rows Fetched",
+                "payloadSchema": [
+                  {
+                    "entity": "ImportRow",
+                    "name": "data",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "batchId",
+                        "type": "string"
+                      },
+                      {
+                        "name": "rowJson",
+                        "type": "string"
+                      },
+                      {
+                        "name": "status",
+                        "type": "string"
+                      }
+                    ],
+                    "type": "[object]"
+                  }
+                ],
+                "tier": "secondary"
               },
               {
                 "description": "Returns the atom to idle from a terminal state",
@@ -548,7 +662,7 @@
                 "tier": "internal"
               },
               {
-                "description": "The user confirmed the staged review and the batch row is persisted as confirmed. Consumers listen, fetch import_rows where batchId matches, map each rowJson through their field mapping, and persist into their own target entity.",
+                "description": "The user confirmed the staged review and the batch row is persisted as confirmed. The atom then fetches the batch's staged rows, parses and key-maps them, and emits IMPORT_ROWS_PARSED for the consumer's persist half.",
                 "id": "evt_01M2HEYJ1VS7SGS9STXQGS2V2J",
                 "key": "IMPORT_CONFIRMED",
                 "name": "Import Confirmed",
@@ -568,6 +682,29 @@
                   }
                 ],
                 "synonyms": "import confirmed, commit import, accept staged rows, approve import",
+                "tier": "domain"
+              },
+              {
+                "description": "Confirmed rows parsed and key-mapped: each staged row's rowJson was parsed via json/parse and remapped through the batch's mappingJson; failed counts rows whose rowJson did not parse to an object (surfaced, never dropped). The consumer persists rows into its own target entity and marks them imported.",
+                "id": "evt_01M2M6Z8VSNDXCMS9C6CJSNFMV",
+                "key": "IMPORT_ROWS_PARSED",
+                "name": "Import Rows Parsed",
+                "payloadSchema": [
+                  {
+                    "name": "batchId",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "failed",
+                    "type": "number"
+                  },
+                  {
+                    "name": "rows",
+                    "type": "[Map<string,scalar>]"
+                  }
+                ],
+                "synonyms": "rows parsed, rows mapped, import rows ready",
                 "tier": "domain"
               },
               {
@@ -1005,6 +1142,16 @@
                       "rowCount": "@entity.rowCount",
                       "sourceName": "@entity.sourceName"
                     }
+                  ],
+                  [
+                    "fetch",
+                    "ImportRow",
+                    {
+                      "emit": {
+                        "failure": "IMPORT_PERSIST_FAILED",
+                        "success": "IMPORT_ROWS_FETCHED"
+                      }
+                    }
                   ]
                 ],
                 "event": "CONFIRM_IMPORT",
@@ -1088,6 +1235,176 @@
               {
                 "effects": [
                   [
+                    "emit",
+                    "IMPORT_ROWS_PARSED",
+                    {
+                      "batchId": "@entity.id",
+                      "failed": [
+                        "array/len",
+                        [
+                          "array/filter",
+                          "@payload.data",
+                          [
+                            "fn",
+                            "row",
+                            [
+                              "and",
+                              [
+                                "=",
+                                [
+                                  "object/get",
+                                  "@row",
+                                  "batchId"
+                                ],
+                                "@entity.id"
+                              ],
+                              [
+                                "not",
+                                [
+                                  "validate/object",
+                                  [
+                                    "json/parse",
+                                    [
+                                      "object/get",
+                                      "@row",
+                                      "rowJson"
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      "rows": [
+                        "array/map",
+                        [
+                          "array/filter",
+                          "@payload.data",
+                          [
+                            "fn",
+                            "row",
+                            [
+                              "and",
+                              [
+                                "=",
+                                [
+                                  "object/get",
+                                  "@row",
+                                  "batchId"
+                                ],
+                                "@entity.id"
+                              ],
+                              [
+                                "validate/object",
+                                [
+                                  "json/parse",
+                                  [
+                                    "object/get",
+                                    "@row",
+                                    "rowJson"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ],
+                        [
+                          "fn",
+                          "row",
+                          [
+                            "object/mapKeys",
+                            [
+                              "json/parse",
+                              [
+                                "object/get",
+                                "@row",
+                                "rowJson"
+                              ]
+                            ],
+                            [
+                              "fn",
+                              "k",
+                              [
+                                "if",
+                                [
+                                  "object/has",
+                                  [
+                                    "json/parse",
+                                    "@entity.mappingJson"
+                                  ],
+                                  "@k"
+                                ],
+                                [
+                                  "object/get",
+                                  [
+                                    "json/parse",
+                                    "@entity.mappingJson"
+                                  ],
+                                  "@k"
+                                ],
+                                "@k"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    }
+                  ]
+                ],
+                "event": "IMPORT_ROWS_FETCHED",
+                "eventId": "evt_01M2M6Z8VSYMZZH7DW4QZMTW1T",
+                "from": "confirmed",
+                "to": "confirmed"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "failed"
+                  ],
+                  [
+                    "set",
+                    "@entity.errorCount",
+                    1.0
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "ImportBatch",
+                    {
+                      "errorCount": 1.0,
+                      "id": "@entity.id",
+                      "status": "failed"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "IMPORT_FAILED",
+                    {
+                      "batchId": "@entity.id",
+                      "error": "@payload.error"
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "@payload.error",
+                      "type": "alert",
+                      "variant": "error"
+                    }
+                  ]
+                ],
+                "event": "IMPORT_PERSIST_FAILED",
+                "eventId": "evt_01M2HEYJ1V7M6C8DP88H0Z23F1",
+                "from": "confirmed",
+                "to": "confirmed"
+              },
+              {
+                "effects": [
+                  [
                     "set",
                     "@entity.status",
                     "uploaded"
@@ -1116,6 +1433,12 @@
               {
                 "event": "IMPORT_CONFIRMED",
                 "eventId": "evt_01M2HEYJ1VS7SGS9STXQGS2V2J",
+                "from": "confirmed",
+                "to": "confirmed"
+              },
+              {
+                "event": "IMPORT_ROWS_PARSED",
+                "eventId": "evt_01M2M6Z8VSNDXCMS9C6CJSNFMV",
                 "from": "confirmed",
                 "to": "confirmed"
               },

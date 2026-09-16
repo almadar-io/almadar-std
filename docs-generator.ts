@@ -52,6 +52,12 @@ export const MODULE_DESCRIPTIONS: Record<StdModule, ModuleInfo> = {
         description: 'Access and manipulate object properties safely.',
         icon: '🔑',
     },
+    json: {
+        name: 'JSON',
+        displayName: 'JSON Operations',
+        description: 'Parse and serialize JSON values.',
+        icon: '🧾',
+    },
     time: {
         name: 'Time',
         displayName: 'Date & Time',

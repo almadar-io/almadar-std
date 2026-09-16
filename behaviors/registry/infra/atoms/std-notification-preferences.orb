@@ -1,5 +1,5 @@
 {
-  "description": "std-notification-preferences — per-person notification preference store plus a consultable gate. Owns NotificationPreference rows (one per person + event key: channel override in_app/email/push/slack, mode instant/digest, quiet-hours window 'HH:MM-HH:MM' such as 22:00-07:00). The PreferencesManage trait is standard CRUD over the store (list / create / update / delete, persisted, success/failure cascade arms): a data-grid browse plus ModalRecordModal create/edit forms whose SAVE carries the full row payload (std-list daisy-chain idiom). The PreferenceGate trait is the consult half other notify traits call: emit CHECK_PREFERENCE { personId, eventKey } and the gate fetches the matching row (a row whose eventKey is blank applies to every event) and answers PREFERENCE_RESOLVED { personId, eventKey, channel, mode, suppressed } — suppressed is true only when the row's quietHours window covers the current hour; mode 'digest' rides on the verdict for the caller to defer. Default policy: no matching row — or a failed lookup — resolves fail-open to { channel: in_app, mode: instant, suppressed: false }; the absence of a preference never silences a notification.",
+  "description": "std-notification-preferences — per-person notification preference store plus a consultable gate. Owns NotificationPreference rows (one per person + event key: channel override in_app/email/push/slack/sms/webhook, mode instant/digest/off, quiet-hours window 'HH:MM-HH:MM' such as 22:00-07:00). The PreferencesManage trait is standard CRUD over the store (list / create / update / delete, persisted, success/failure cascade arms): a data-grid browse plus ModalRecordModal create/edit forms whose SAVE carries the full row payload (std-list daisy-chain idiom). The PreferenceGate trait is the consult half other notify traits call: emit CHECK_PREFERENCE { personId, eventKey } and the gate fetches the matching row (a row whose eventKey is blank applies to every event) and answers PREFERENCE_RESOLVED { personId, eventKey, channel, mode, suppressed } — suppressed is true only when the row's quietHours window covers the current hour; mode 'digest' rides on the verdict for the caller to defer. Default policy: no matching row — or a failed lookup — resolves fail-open to { channel: in_app, mode: instant, suppressed: false }; the absence of a preference never silences a notification.",
   "ledger": {
     "entries": {
       "ent_01M2HEX5N29SFAW1SYFN346B12": {
@@ -266,7 +266,7 @@
         }
       ],
       "entity": {
-        "collection": "notification_preferences",
+        "collection": "notificationPreferences",
         "fields": [
           {
             "name": "id",
@@ -281,9 +281,9 @@
             "type": "string"
           },
           {
+            "default": "",
             "description": "Event key this preference applies to (matches a notify listener's eventKey); blank = all events.",
             "name": "eventKey",
-            "required": true,
             "synonyms": "event, trigger, topic, subscription",
             "type": "string"
           },
@@ -297,18 +297,21 @@
               "in_app",
               "email",
               "push",
-              "slack"
+              "slack",
+              "sms",
+              "webhook"
             ]
           },
           {
             "default": "instant",
-            "description": "Delivery mode: instant (default) or digest (deferred to a batch cycle).",
+            "description": "Delivery mode: instant (default), digest (deferred to a batch cycle), or off (muted).",
             "name": "mode",
-            "synonyms": "delivery mode, frequency, cadence, defer",
+            "synonyms": "delivery mode, frequency, cadence, mute, defer",
             "type": "string",
             "values": [
               "instant",
-              "digest"
+              "digest",
+              "off"
             ]
           },
           {
@@ -442,7 +445,6 @@
                     },
                     {
                       "name": "eventKey",
-                      "required": true,
                       "type": "string"
                     },
                     {
@@ -498,7 +500,6 @@
                     },
                     {
                       "name": "eventKey",
-                      "required": true,
                       "type": "string"
                     },
                     {
@@ -549,7 +550,6 @@
                     },
                     {
                       "name": "eventKey",
-                      "required": true,
                       "type": "string"
                     },
                     {
@@ -701,7 +701,6 @@
                       },
                       {
                         "name": "eventKey",
-                        "required": true,
                         "type": "string"
                       },
                       {
@@ -776,7 +775,6 @@
                       },
                       {
                         "name": "eventKey",
-                        "required": true,
                         "type": "string"
                       },
                       {
@@ -828,7 +826,6 @@
                       },
                       {
                         "name": "eventKey",
-                        "required": true,
                         "type": "string"
                       },
                       {
@@ -881,7 +878,6 @@
                       },
                       {
                         "name": "eventKey",
-                        "required": true,
                         "type": "string"
                       },
                       {
@@ -1003,7 +999,6 @@
                       },
                       {
                         "name": "eventKey",
-                        "required": true,
                         "type": "string"
                       },
                       {
@@ -1658,7 +1653,6 @@
                     },
                     {
                       "name": "eventKey",
-                      "required": true,
                       "type": "string"
                     },
                     {
@@ -1752,7 +1746,6 @@
                       },
                       {
                         "name": "eventKey",
-                        "required": true,
                         "type": "string"
                       },
                       {

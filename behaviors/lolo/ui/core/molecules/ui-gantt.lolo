@@ -1,0 +1,169 @@
+app ui-gantt "1.0.0"
+"Gantt — view-only task schedule rendering rows as bars on a day axis. — UI factory (1:1 with the @almadar/ui gantt pattern)."
+;; @capabilities "gantt chart, project timeline, schedule view, task bars, dependency arrows, roadmap, milestone plan"
+orbital GanttOrbital {
+    type GanttLoaded = Event { data : [GanttItem] } "Gantt rows finished loading; payload.data holds the collection"
+  type GanttLinksItem = {
+    from : string!
+    to : string!
+  }
+  type GanttError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
+  }
+
+  entity GanttItem [runtime] {
+    id : string!
+  }
+
+  trait GanttRender -> @rebindable GanttItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when @config.selfFetch
+        (fetch GanttItem { emit: { success: GanttLoaded } })
+        (render-ui main {
+          tasks: @entity
+          links: @config.links
+          titleField: @config.titleField
+          startField: @config.startField
+          endField: @config.endField
+          durationField: @config.durationField
+          statusField: @config.statusField
+          groupField: @config.groupField
+          rangeStart: @config.rangeStart
+          rangeEnd: @config.rangeEnd
+          showToday: @config.showToday
+          dayWidth: @config.dayWidth
+          barClickEvent: @config.barClickEvent
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          type: gantt
+        })
+      INIT -> idle when (not @config.selfFetch)
+        (render-ui main {
+          tasks: @entity
+          links: @config.links
+          titleField: @config.titleField
+          startField: @config.startField
+          endField: @config.endField
+          durationField: @config.durationField
+          statusField: @config.statusField
+          groupField: @config.groupField
+          rangeStart: @config.rangeStart
+          rangeEnd: @config.rangeEnd
+          showToday: @config.showToday
+          dayWidth: @config.dayWidth
+          barClickEvent: @config.barClickEvent
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          type: gantt
+        })
+      GanttLoaded -> idle
+        (render-ui main {
+          tasks: @payload.data
+          links: @config.links
+          titleField: @config.titleField
+          startField: @config.startField
+          endField: @config.endField
+          durationField: @config.durationField
+          statusField: @config.statusField
+          groupField: @config.groupField
+          rangeStart: @config.rangeStart
+          rangeEnd: @config.rangeEnd
+          showToday: @config.showToday
+          dayWidth: @config.dayWidth
+          barClickEvent: @config.barClickEvent
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          type: gantt
+        })
+    }
+
+    emits {
+      @config.barClickEvent -> external {
+        id : string!
+      }
+        @description "Event emitted when a bar is clicked: UI:{barClickEvent} with { id }"
+        @tier "essential"
+      GanttLoaded
+        @description "Gantt rows finished loading; payload.data holds the collection."
+        @synonyms "loaded, fetched, retrieved"
+        @tier "essential"
+    }
+
+    config {
+      links : [GanttLinksItem] = []
+        @label "Links"
+        @description "Dependency arrows between task ids"
+        @tier "presentation"
+      titleField : string = title
+        @label "Title Field"
+        @description "Row field holding the bar label. Defaults to `title`."
+        @tier "presentation"
+      startField : string = start
+        @label "Start Field"
+        @description "Row field holding the start timestamp (ISO or epoch). Defaults to `start`."
+        @tier "presentation"
+      endField : string = end
+        @label "End Field"
+        @description "Row field holding the end timestamp (ISO or epoch). Defaults to `end`. When absent, `durationField` (days) is used instead."
+        @tier "presentation"
+      durationField : string
+        @label "Duration Field"
+        @description "Row field holding the task length in days, used when the row has no end."
+        @tier "presentation"
+      statusField : string = status
+        @label "Status Field"
+        @description "Row field holding the bar status (drives bar colour). Defaults to `status`."
+        @tier "presentation"
+      groupField : string
+        @label "Group Field"
+        @description "Row field rows are grouped under header rows by. Empty (default) = flat list."
+        @tier "presentation"
+      rangeStart : date = "2024-01-01"
+        @label "Range Start"
+        @description "First visible day (ISO or Date). Defaults to 2 days before the earliest task."
+        @tier "presentation"
+      rangeEnd : date = "2024-01-01"
+        @label "Range End"
+        @description "Last visible day (ISO or Date). Defaults to 2 days after the latest task end."
+        @tier "presentation"
+      showToday : boolean = true
+        @label "Show Today"
+        @description "Paint the today marker line when today falls inside the range (default true)."
+        @tier "presentation"
+      dayWidth : number = 28
+        @label "Day Width"
+        @description "Pixels per day on the axis (default 28)"
+        @tier "presentation"
+      barClickEvent : event = "BAR_CLICK"
+        @label "Bar Click Event"
+        @description "Event emitted when a bar is clicked: UI:{barClickEvent} with { id }"
+        @tier "presentation"
+      className : string
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state"
+        @tier "presentation"
+      error : GanttError
+        @label "Error"
+        @description "Error state"
+        @tier "presentation"
+      selfFetch : boolean = true
+        @label "Fetch its own rows on mount?"
+        @description "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's."
+        @tier "internal"
+    }
+  }
+
+  page "/gantt" as GanttPage -> GanttRender
+}

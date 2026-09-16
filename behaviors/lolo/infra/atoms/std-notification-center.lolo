@@ -9,12 +9,13 @@ orbital NotificationCenterOrbital {
 
   entity NotificationPreference [persistent: notificationPreferences] {
     id : string!
-    userId : string @description "Owner of this preference row — rows are meant to be private to their owner. Access predicates need an [identity] roster, so the binding organism (which declares one) owns the @read/@update scoping; the generic atom cannot." @synonyms "user, owner, account" = ""
-    eventType : string @description "Event key this preference applies to (matches a listener's eventKey); blank = all events." @synonyms "event, trigger, subscription, topic" = ""
+    personId : string! @description "Owner of this preference row — rows are meant to be private to their owner. Access predicates need an [identity] roster, so the binding organism (which declares one) owns the @read/@update scoping; the generic atom cannot." @synonyms "user, owner, account"
+    eventKey : string @description "Event key this preference applies to (matches a listener's eventKey); blank = all events." @synonyms "event, trigger, subscription, topic" = ""
+    channel : "in_app" | "email" | "push" | "slack" | "sms" | "webhook" @description "Channel override for this user." @synonyms "preferred channel, delivery method" = in_app
     mode : "instant" | "digest" | "off" @description "Delivery mode: instant (default), digest (deferred to the drain cycle), or off (muted)." @synonyms "delivery mode, frequency, cadence, mute, defer" = instant
-    channel : string @description "Channel override for this user (in-app/email/sms/push/webhook); blank = the listener's configured channel." @synonyms "preferred channel, delivery method" = ""
-    quietStartHour : number @description "Per-user quiet-hours start (hour 0-23); equal to quietEndHour = disabled." @synonyms "quiet start, do not disturb from" = 0
-    quietEndHour : number @description "Per-user quiet-hours end (hour 0-23); equal to quietStartHour = disabled." @synonyms "quiet end, do not disturb until" = 0
+    quietHours : string @description "Per-user quiet-hours window as \"HH:MM-HH:MM\" (e.g. 22:00-07:00); blank = disabled." @synonyms "do not disturb, quiet window, night mode" = ""
+    createdAt : number @description "Timestamp indicating when this preference row was created." @synonyms "creation time, created" = 0
+    updatedAt : number @description "Timestamp indicating when this preference row was last updated." @synonyms "modified, last updated" = 0
   }
 
   entity PushSubscription [persistent: pushSubscriptions] {
@@ -126,20 +127,21 @@ orbital NotificationCenterOrbital {
       SAVE_PREFERENCE -> idle
         (persist create NotificationPreference {
           channel: ?channel
-          eventType: ?eventType
+          createdAt: @now
+          eventKey: ?eventKey
           mode: ?mode
-          quietEndHour: ?quietEndHour
-          quietStartHour: ?quietStartHour
-          userId: @user.id
+          personId: @user.id
+          quietHours: ?quietHours
+          updatedAt: @now
         } { emit: { failure: PREFERENCE_SAVE_FAILED, success: PREFERENCE_SAVED } })
       UPDATE_PREFERENCE -> idle
         (persist update NotificationPreference {
           id: ?id
           channel: ?channel
-          eventType: ?eventType
+          eventKey: ?eventKey
           mode: ?mode
-          quietEndHour: ?quietEndHour
-          quietStartHour: ?quietStartHour
+          quietHours: ?quietHours
+          updatedAt: @now
         } { emit: { failure: PREFERENCE_SAVE_FAILED, success: PREFERENCE_SAVED } })
       DELETE_PREFERENCE -> idle
         (persist delete NotificationPreference ?id { emit: { failure: PREFERENCE_SAVE_FAILED, success: PREFERENCE_DELETED } })
@@ -171,19 +173,17 @@ orbital NotificationCenterOrbital {
 
     listens {
       SAVE_PREFERENCE {
-        eventType : string
+        eventKey : string
         mode : string
         channel : string
-        quietStartHour : number
-        quietEndHour : number
+        quietHours : string
       }
       UPDATE_PREFERENCE {
         id : string
-        eventType : string
+        eventKey : string
         mode : string
         channel : string
-        quietStartHour : number
-        quietEndHour : number
+        quietHours : string
       }
       DELETE_PREFERENCE {
         id : string

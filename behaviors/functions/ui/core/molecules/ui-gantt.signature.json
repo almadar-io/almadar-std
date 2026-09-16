@@ -1,0 +1,253 @@
+[
+  {
+    "organism": "ui-gantt",
+    "orbital": "GanttOrbital",
+    "tier": "molecules",
+    "factoryPath": "behaviors/functions/ui/core/molecules/ui-gantt.ts",
+    "entities": [
+      {
+        "name": "GanttItem",
+        "fields": [],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "GanttRender",
+        "emittedEvents": [
+          "BAR_CLICK",
+          "GanttLoaded"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "BAR_CLICK",
+            "direction": "emit",
+            "description": "Event emitted when a bar is clicked: UI:{barClickEvent} with { id }",
+            "tier": "essential"
+          },
+          {
+            "name": "GanttLoaded",
+            "direction": "emit",
+            "description": "Gantt rows finished loading; payload.data holds the collection.",
+            "synonyms": "loaded, fetched, retrieved",
+            "tier": "essential"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "barClickEvent",
+            "type": "event",
+            "default": "BAR_CLICK",
+            "label": "Bar Click Event",
+            "description": "Event emitted when a bar is clicked: UI:{barClickEvent} with { id }",
+            "tier": "presentation"
+          },
+          {
+            "key": "className",
+            "type": "string",
+            "label": "Class Name",
+            "description": "Additional CSS classes",
+            "tier": "presentation"
+          },
+          {
+            "key": "dayWidth",
+            "type": "number",
+            "default": 28,
+            "label": "Day Width",
+            "description": "Pixels per day on the axis (default 28)",
+            "tier": "presentation"
+          },
+          {
+            "key": "durationField",
+            "type": "string",
+            "label": "Duration Field",
+            "description": "Row field holding the task length in days, used when the row has no end.",
+            "tier": "presentation"
+          },
+          {
+            "key": "endField",
+            "type": "string",
+            "default": "end",
+            "label": "End Field",
+            "description": "Row field holding the end timestamp (ISO or epoch). Defaults to `end`. When absent, `durationField` (days) is used instead.",
+            "tier": "presentation"
+          },
+          {
+            "key": "error",
+            "type": "GanttError",
+            "label": "Error",
+            "description": "Error state",
+            "tier": "presentation",
+            "properties": {
+              "code": {
+                "name": "code",
+                "required": false,
+                "type": "string"
+              },
+              "message": {
+                "name": "message",
+                "required": true,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "stack": {
+                "name": "stack",
+                "required": false,
+                "type": "string"
+              }
+            }
+          },
+          {
+            "key": "groupField",
+            "type": "string",
+            "label": "Group Field",
+            "description": "Row field rows are grouped under header rows by. Empty (default) = flat list.",
+            "tier": "presentation"
+          },
+          {
+            "key": "isLoading",
+            "type": "boolean",
+            "default": false,
+            "label": "Is Loading",
+            "description": "Loading state",
+            "tier": "presentation"
+          },
+          {
+            "key": "links",
+            "type": "[GanttLinksItem]",
+            "default": [],
+            "label": "Links",
+            "description": "Dependency arrows between task ids",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "from": {
+                  "name": "from",
+                  "required": true,
+                  "type": "string"
+                },
+                "to": {
+                  "name": "to",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "rangeEnd",
+            "type": "date",
+            "default": "2024-01-01",
+            "label": "Range End",
+            "description": "Last visible day (ISO or Date). Defaults to 2 days after the latest task end.",
+            "tier": "presentation"
+          },
+          {
+            "key": "rangeStart",
+            "type": "date",
+            "default": "2024-01-01",
+            "label": "Range Start",
+            "description": "First visible day (ISO or Date). Defaults to 2 days before the earliest task.",
+            "tier": "presentation"
+          },
+          {
+            "key": "selfFetch",
+            "type": "boolean",
+            "default": true,
+            "label": "Fetch its own rows on mount?",
+            "description": "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's.",
+            "tier": "internal"
+          },
+          {
+            "key": "showToday",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Today",
+            "description": "Paint the today marker line when today falls inside the range (default true).",
+            "tier": "presentation"
+          },
+          {
+            "key": "startField",
+            "type": "string",
+            "default": "start",
+            "label": "Start Field",
+            "description": "Row field holding the start timestamp (ISO or epoch). Defaults to `start`.",
+            "tier": "presentation"
+          },
+          {
+            "key": "statusField",
+            "type": "string",
+            "default": "status",
+            "label": "Status Field",
+            "description": "Row field holding the bar status (drives bar colour). Defaults to `status`.",
+            "tier": "presentation"
+          },
+          {
+            "key": "titleField",
+            "type": "string",
+            "default": "title",
+            "label": "Title Field",
+            "description": "Row field holding the bar label. Defaults to `title`.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "GanttItem",
+        "transitionEvents": [
+          "GanttLoaded",
+          "INIT"
+        ],
+        "definerKnobs": [
+          "barClickEvent"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        },
+        "effectRow": [
+          {
+            "kind": "fetch",
+            "resource": "GanttItem"
+          },
+          {
+            "kind": "render-ui",
+            "resource": "main"
+          }
+        ],
+        "effectEntityRefs": [
+          "GanttItem"
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "name": "GanttPage",
+        "defaultPath": "/gantt",
+        "primaryEntity": "GanttItem"
+      }
+    ],
+    "emittedEvents": [
+      "BAR_CLICK",
+      "GanttLoaded"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "capabilities": "gantt chart, project timeline, schedule view, task bars, dependency arrows, roadmap, milestone plan",
+    "sourceValid": false,
+    "sourceErrors": [
+      "orb validate reported invalid: [{\"code\":\"ORB_RUI_INVALID_PATTERN\",\"path\":\"orbitals[0 (GanttOrbital)].traits[0 (GanttRender)].stateMachine.transitions[0].effects[1]\",\"message\":\"Pattern 'gantt' is not in patterns-registry.json (cross-registry check)\",\"suggestion\":\"Either add the pattern to almadar-patterns or declare it in projects/<name>/patterns.json\"},{\"code\":\"ORB_RUI_INVALID_PATTERN\",\"path\":\"orbitals[0 (GanttOrbital)].traits[0 (GanttRender)].stateMachine.transitions[1].effects[0]\",\"message\":\"Pattern 'gantt' is not in patter"
+    ]
+  }
+]

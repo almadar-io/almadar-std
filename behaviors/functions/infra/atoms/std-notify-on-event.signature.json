@@ -72,18 +72,11 @@
             "synonyms": "channel override"
           },
           {
-            "name": "prefQuietStart",
-            "type": "number",
+            "name": "prefQuietHours",
+            "type": "string",
             "required": false,
-            "description": "Scratch: per-user quiet-hours start (hour 0-23) from the matched preference row.",
-            "synonyms": "user quiet start"
-          },
-          {
-            "name": "prefQuietEnd",
-            "type": "number",
-            "required": false,
-            "description": "Scratch: per-user quiet-hours end (hour 0-23) from the matched preference row.",
-            "synonyms": "user quiet end"
+            "description": "Scratch: per-user quiet-hours window \"HH:MM-HH:MM\" from the matched preference row; blank = none.",
+            "synonyms": "user quiet hours"
           },
           {
             "name": "pushEndpoint",
@@ -226,7 +219,7 @@
             "type": "string",
             "default": "",
             "label": "Event key for preferences",
-            "description": "Stable key naming the upstream event this listener is bound to (e.g. 'OrderPlaced'). NotificationPreference rows (std-notification-center) whose eventType equals this key — or is blank — apply to this listener's dispatches.",
+            "description": "Stable key naming the upstream event this listener is bound to (e.g. 'OrderPlaced'). NotificationPreference rows (std-notification-center) whose eventKey equals this key — or is blank — apply to this listener's dispatches.",
             "synonyms": "preference key, event name, subscription key, notification topic",
             "tier": "policy"
           },
@@ -299,7 +292,7 @@
             "type": "string",
             "default": "in-app",
             "label": "Channel",
-            "description": "Delivery channel. `in-app` (default) emits the in-app `notify` toast. `email`/`sms`/`webhook` dispatch through call-service at event time (email.send / twilio.sendSMS / webhook.send) and persist a NotificationRecord audit row with an honest `dispatched` flag: true only once the service call succeeds, false plus the failure detail in `error` otherwise. `push` looks up the recipient's PushSubscription row (captured by std-notification-center's subscribe flow) and dispatches web-push via push.send — a recipient with no subscription records the audit row undispatched (`no-push-subscription`). `webhook` requires `webhookUrl` to actually dispatch; a blank `webhookUrl` still records the audit row undispatched rather than failing. A per-user NotificationPreference row with a non-blank `channel` overrides this value for that recipient.",
+            "description": "Delivery channel. `in-app` (default) emits the in-app `notify` toast. `email`/`sms`/`webhook` dispatch through call-service at event time (email.send / twilio.sendSMS / webhook.send) and persist a NotificationRecord audit row with an honest `dispatched` flag: true only once the service call succeeds, false plus the failure detail in `error` otherwise. `push` looks up the recipient's PushSubscription row (captured by std-notification-center's subscribe flow) and dispatches web-push via push.send — a recipient with no subscription records the audit row undispatched (`no-push-subscription`). `webhook` requires `webhookUrl` to actually dispatch; a blank `webhookUrl` still records the audit row undispatched rather than failing. A per-user NotificationPreference row's `channel` overrides this value for that recipient.",
             "synonyms": "delivery method, notification channel, send via, dispatch through, push notification, web push",
             "tier": "policy",
             "enumValues": [
@@ -510,11 +503,7 @@
           },
           {
             "kind": "set",
-            "resource": "@entity.prefQuietEnd"
-          },
-          {
-            "kind": "set",
-            "resource": "@entity.prefQuietStart"
+            "resource": "@entity.prefQuietHours"
           },
           {
             "kind": "set",

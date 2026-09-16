@@ -1,5 +1,5 @@
 {
-  "description": "std-notify-on-event — cross-orbital wiring atom. Subscribes to events from another orbital (e.g. CheckoutOrbital emits OrderPlaced, OrderRecordOrbital reacts via this atom) and dispatches a notification. Use when one orbital needs to react to or be notified about events that happen in another orbital — the wiring goes through this atom's `EventOccurred` listener which the molecule renames via traitOverrides.events to the upstream event name. Dispatch gates on `guardOp`: `eq` (default) does string-equality on `triggerStatus` against the upstream event's `status` field; `gt`/`lt`/`gte`/`lte` instead numerically compare `guardField` (read from the event's `data` payload) against `guardValue`, for threshold-crossing asks such as low-stock alerts. Resolves recipient from `recipients` (first entry; multi-recipient fan-out is a future extension), falling back to `fallbackRecipient` when set, or `@user.id` otherwise. Skips dispatch when the recipient is in `suppressionList`. Delivery consults std-notification-center data before dispatching: per-user NotificationPreference rows (matched on `userId` = recipient and `eventType` = this listener's `eventKey`, blank = all) can mute (`mode: off`), defer to the digest drain (`mode: digest`), override the channel, or impose per-user quiet hours; the atom-level `quietStartHour`/`quietEndHour` window and the `frequencyCapPerWeek` rolling cap (counted against dispatched NotificationRecord audit rows for the same recipient + channel) suppress likewise. Every suppression persists an honest audit row (`dispatched: false` with the reason in `error`: quiet-hours / digest-deferred / muted-by-preference / frequency-cap / no-push-subscription) which std-notification-center's digest cycle drains later. Channels: `in-app` emits the `notify` toast; `email`/`sms`/`webhook` dispatch through call-service (email.send / twilio.sendSMS / webhook.send); `push` looks up the recipient's PushSubscription row (owned by std-notification-center) and dispatches web-push via push.send (`pushTitle` falls back to `template`; `pushDeepLink`/`pushIcon` optional). The audit row's `dispatched` flag is honest — true only once the service call succeeds.",
+  "description": "std-notify-on-event — cross-orbital wiring atom. Subscribes to events from another orbital (e.g. CheckoutOrbital emits OrderPlaced, OrderRecordOrbital reacts via this atom) and dispatches a notification. Use when one orbital needs to react to or be notified about events that happen in another orbital — the wiring goes through this atom's `EventOccurred` listener which the molecule renames via traitOverrides.events to the upstream event name. Dispatch gates on `guardOp`: `eq` (default) does string-equality on `triggerStatus` against the upstream event's `status` field; `gt`/`lt`/`gte`/`lte` instead numerically compare `guardField` (read from the event's `data` payload) against `guardValue`, for threshold-crossing asks such as low-stock alerts. Resolves recipient from `recipients` (first entry; multi-recipient fan-out is a future extension), falling back to `fallbackRecipient` when set, or `@user.id` otherwise. Skips dispatch when the recipient is in `suppressionList`. Delivery consults std-notification-center data before dispatching: per-person NotificationPreference rows (matched on `personId` = recipient and `eventKey` = this listener's `eventKey`, blank = all) can mute (`mode: off`), defer to the digest drain (`mode: digest`), override the channel, or impose per-user quiet hours (a 'HH:MM-HH:MM' window, blank = none); the atom-level `quietStartHour`/`quietEndHour` window and the `frequencyCapPerWeek` rolling cap (counted against dispatched NotificationRecord audit rows for the same recipient + channel) suppress likewise. Every suppression persists an honest audit row (`dispatched: false` with the reason in `error`: quiet-hours / digest-deferred / muted-by-preference / frequency-cap / no-push-subscription) which std-notification-center's digest cycle drains later. Channels: `in-app` emits the `notify` toast; `email`/`sms`/`webhook` dispatch through call-service (email.send / twilio.sendSMS / webhook.send); `push` looks up the recipient's PushSubscription row (owned by std-notification-center) and dispatches web-push via push.send (`pushTitle` falls back to `template`; `pushDeepLink`/`pushIcon` optional). The audit row's `dispatched` flag is honest — true only once the service call succeeds.",
   "ledger": {
     "entries": {
       "ent_01KXG04FE9SA0FVQV9VJC8915N": {
@@ -192,45 +192,65 @@
               "type": "string"
             },
             {
-              "default": "",
               "description": "Owner of this preference row.",
-              "name": "userId",
+              "name": "personId",
+              "required": true,
               "synonyms": "user, owner, account",
               "type": "string"
             },
             {
               "default": "",
               "description": "Event key this preference applies to (matches the listener's eventKey); blank = all events.",
-              "name": "eventType",
+              "name": "eventKey",
               "synonyms": "event, trigger, subscription",
               "type": "string"
+            },
+            {
+              "default": "in_app",
+              "description": "Channel override for this user.",
+              "name": "channel",
+              "synonyms": "preferred channel, delivery method",
+              "type": "string",
+              "values": [
+                "in_app",
+                "email",
+                "push",
+                "slack",
+                "sms",
+                "webhook"
+              ]
             },
             {
               "default": "instant",
               "description": "Delivery mode: instant, digest, or off.",
               "name": "mode",
               "synonyms": "delivery mode, frequency, cadence",
-              "type": "string"
+              "type": "string",
+              "values": [
+                "instant",
+                "digest",
+                "off"
+              ]
             },
             {
               "default": "",
-              "description": "Channel override for this user (in-app/email/sms/push/webhook); blank = the listener's configured channel.",
-              "name": "channel",
-              "synonyms": "preferred channel, delivery method",
+              "description": "Per-user quiet-hours window as \"HH:MM-HH:MM\" (e.g. 22:00-07:00); blank = disabled.",
+              "name": "quietHours",
+              "synonyms": "do not disturb, quiet window, night mode",
               "type": "string"
             },
             {
               "default": 0.0,
-              "description": "Per-user quiet-hours start (hour 0-23); equal to quietEndHour = disabled.",
-              "name": "quietStartHour",
-              "synonyms": "quiet start, do not disturb from",
+              "description": "Timestamp indicating when this preference row was created.",
+              "name": "createdAt",
+              "synonyms": "creation time, created",
               "type": "number"
             },
             {
               "default": 0.0,
-              "description": "Per-user quiet-hours end (hour 0-23); equal to quietStartHour = disabled.",
-              "name": "quietEndHour",
-              "synonyms": "quiet end, do not disturb until",
+              "description": "Timestamp indicating when this preference row was last updated.",
+              "name": "updatedAt",
+              "synonyms": "modified, last updated",
               "type": "number"
             }
           ],
@@ -359,18 +379,11 @@
             "type": "string"
           },
           {
-            "default": 0.0,
-            "description": "Scratch: per-user quiet-hours start (hour 0-23) from the matched preference row.",
-            "name": "prefQuietStart",
-            "synonyms": "user quiet start",
-            "type": "number"
-          },
-          {
-            "default": 0.0,
-            "description": "Scratch: per-user quiet-hours end (hour 0-23) from the matched preference row.",
-            "name": "prefQuietEnd",
-            "synonyms": "user quiet end",
-            "type": "number"
+            "default": "",
+            "description": "Scratch: per-user quiet-hours window \"HH:MM-HH:MM\" from the matched preference row; blank = none.",
+            "name": "prefQuietHours",
+            "synonyms": "user quiet hours",
+            "type": "string"
           },
           {
             "default": "",
@@ -427,7 +440,7 @@
             },
             "eventKey": {
               "default": "",
-              "description": "Stable key naming the upstream event this listener is bound to (e.g. 'OrderPlaced'). NotificationPreference rows (std-notification-center) whose eventType equals this key — or is blank — apply to this listener's dispatches.",
+              "description": "Stable key naming the upstream event this listener is bound to (e.g. 'OrderPlaced'). NotificationPreference rows (std-notification-center) whose eventKey equals this key — or is blank — apply to this listener's dispatches.",
               "label": "Event key for preferences",
               "synonyms": "preference key, event name, subscription key, notification topic",
               "tier": "policy",
@@ -493,7 +506,7 @@
             },
             "notifyChannel": {
               "default": "in-app",
-              "description": "Delivery channel. `in-app` (default) emits the in-app `notify` toast. `email`/`sms`/`webhook` dispatch through call-service at event time (email.send / twilio.sendSMS / webhook.send) and persist a NotificationRecord audit row with an honest `dispatched` flag: true only once the service call succeeds, false plus the failure detail in `error` otherwise. `push` looks up the recipient's PushSubscription row (captured by std-notification-center's subscribe flow) and dispatches web-push via push.send — a recipient with no subscription records the audit row undispatched (`no-push-subscription`). `webhook` requires `webhookUrl` to actually dispatch; a blank `webhookUrl` still records the audit row undispatched rather than failing. A per-user NotificationPreference row with a non-blank `channel` overrides this value for that recipient.",
+              "description": "Delivery channel. `in-app` (default) emits the in-app `notify` toast. `email`/`sms`/`webhook` dispatch through call-service at event time (email.send / twilio.sendSMS / webhook.send) and persist a NotificationRecord audit row with an honest `dispatched` flag: true only once the service call succeeds, false plus the failure detail in `error` otherwise. `push` looks up the recipient's PushSubscription row (captured by std-notification-center's subscribe flow) and dispatches web-push via push.send — a recipient with no subscription records the audit row undispatched (`no-push-subscription`). `webhook` requires `webhookUrl` to actually dispatch; a blank `webhookUrl` still records the audit row undispatched rather than failing. A per-user NotificationPreference row's `channel` overrides this value for that recipient.",
               "label": "Channel",
               "synonyms": "delivery method, notification channel, send via, dispatch through, push notification, web push",
               "tier": "policy",
@@ -676,11 +689,7 @@
             },
             {
               "kind": "set",
-              "resource": "@entity.prefQuietEnd"
-            },
-            {
-              "kind": "set",
-              "resource": "@entity.prefQuietStart"
+              "resource": "@entity.prefQuietHours"
             },
             {
               "kind": "set",
@@ -741,11 +750,11 @@
                   "name": "data",
                   "properties": [
                     {
-                      "name": "userId",
+                      "name": "personId",
                       "type": "string"
                     },
                     {
-                      "name": "eventType",
+                      "name": "eventKey",
                       "type": "string"
                     },
                     {
@@ -757,12 +766,8 @@
                       "type": "string"
                     },
                     {
-                      "name": "quietStartHour",
-                      "type": "number"
-                    },
-                    {
-                      "name": "quietEndHour",
-                      "type": "number"
+                      "name": "quietHours",
+                      "type": "string"
                     }
                   ],
                   "type": "[object]"
@@ -1017,11 +1022,11 @@
                     "name": "data",
                     "properties": [
                       {
-                        "name": "userId",
+                        "name": "personId",
                         "type": "string"
                       },
                       {
-                        "name": "eventType",
+                        "name": "eventKey",
                         "type": "string"
                       },
                       {
@@ -1033,12 +1038,8 @@
                         "type": "string"
                       },
                       {
-                        "name": "quietStartHour",
-                        "type": "number"
-                      },
-                      {
-                        "name": "quietEndHour",
-                        "type": "number"
+                        "name": "quietHours",
+                        "type": "string"
                       }
                     ],
                     "type": "[object]"
@@ -1570,7 +1571,7 @@
                                   [
                                     "object/get",
                                     "@p",
-                                    "userId"
+                                    "personId"
                                   ],
                                   "@entity.recipient"
                                 ],
@@ -1581,7 +1582,7 @@
                                     [
                                       "object/get",
                                       "@p",
-                                      "eventType"
+                                      "eventKey"
                                     ],
                                     ""
                                   ],
@@ -1590,7 +1591,7 @@
                                     [
                                       "object/get",
                                       "@p",
-                                      "eventType"
+                                      "eventKey"
                                     ],
                                     "@config.eventKey"
                                   ]
@@ -1619,7 +1620,7 @@
                                   [
                                     "object/get",
                                     "@p",
-                                    "userId"
+                                    "personId"
                                   ],
                                   "@entity.recipient"
                                 ],
@@ -1630,7 +1631,7 @@
                                     [
                                       "object/get",
                                       "@p",
-                                      "eventType"
+                                      "eventKey"
                                     ],
                                     ""
                                   ],
@@ -1639,7 +1640,7 @@
                                     [
                                       "object/get",
                                       "@p",
-                                      "eventType"
+                                      "eventKey"
                                     ],
                                     "@config.eventKey"
                                   ]
@@ -1674,7 +1675,7 @@
                                   [
                                     "object/get",
                                     "@p",
-                                    "userId"
+                                    "personId"
                                   ],
                                   "@entity.recipient"
                                 ],
@@ -1685,7 +1686,7 @@
                                     [
                                       "object/get",
                                       "@p",
-                                      "eventType"
+                                      "eventKey"
                                     ],
                                     ""
                                   ],
@@ -1694,7 +1695,7 @@
                                     [
                                       "object/get",
                                       "@p",
-                                      "eventType"
+                                      "eventKey"
                                     ],
                                     "@config.eventKey"
                                   ]
@@ -1723,7 +1724,7 @@
                                   [
                                     "object/get",
                                     "@p",
-                                    "userId"
+                                    "personId"
                                   ],
                                   "@entity.recipient"
                                 ],
@@ -1734,7 +1735,7 @@
                                     [
                                       "object/get",
                                       "@p",
-                                      "eventType"
+                                      "eventKey"
                                     ],
                                     ""
                                   ],
@@ -1743,7 +1744,7 @@
                                     [
                                       "object/get",
                                       "@p",
-                                      "eventType"
+                                      "eventKey"
                                     ],
                                     "@config.eventKey"
                                   ]
@@ -1758,7 +1759,7 @@
                   ],
                   [
                     "set",
-                    "@entity.prefQuietStart",
+                    "@entity.prefQuietHours",
                     [
                       "if",
                       [
@@ -1778,7 +1779,7 @@
                                   [
                                     "object/get",
                                     "@p",
-                                    "userId"
+                                    "personId"
                                   ],
                                   "@entity.recipient"
                                 ],
@@ -1789,7 +1790,7 @@
                                     [
                                       "object/get",
                                       "@p",
-                                      "eventType"
+                                      "eventKey"
                                     ],
                                     ""
                                   ],
@@ -1798,7 +1799,7 @@
                                     [
                                       "object/get",
                                       "@p",
-                                      "eventType"
+                                      "eventKey"
                                     ],
                                     "@config.eventKey"
                                   ]
@@ -1809,7 +1810,7 @@
                         ],
                         0.0
                       ],
-                      0.0,
+                      "",
                       [
                         "object/get",
                         [
@@ -1827,7 +1828,7 @@
                                   [
                                     "object/get",
                                     "@p",
-                                    "userId"
+                                    "personId"
                                   ],
                                   "@entity.recipient"
                                 ],
@@ -1838,7 +1839,7 @@
                                     [
                                       "object/get",
                                       "@p",
-                                      "eventType"
+                                      "eventKey"
                                     ],
                                     ""
                                   ],
@@ -1847,7 +1848,7 @@
                                     [
                                       "object/get",
                                       "@p",
-                                      "eventType"
+                                      "eventKey"
                                     ],
                                     "@config.eventKey"
                                   ]
@@ -1856,111 +1857,7 @@
                             ]
                           ]
                         ],
-                        "quietStartHour"
-                      ]
-                    ]
-                  ],
-                  [
-                    "set",
-                    "@entity.prefQuietEnd",
-                    [
-                      "if",
-                      [
-                        "=",
-                        [
-                          "array/len",
-                          [
-                            "array/filter",
-                            "@payload.data",
-                            [
-                              "fn",
-                              "p",
-                              [
-                                "and",
-                                [
-                                  "=",
-                                  [
-                                    "object/get",
-                                    "@p",
-                                    "userId"
-                                  ],
-                                  "@entity.recipient"
-                                ],
-                                [
-                                  "or",
-                                  [
-                                    "=",
-                                    [
-                                      "object/get",
-                                      "@p",
-                                      "eventType"
-                                    ],
-                                    ""
-                                  ],
-                                  [
-                                    "=",
-                                    [
-                                      "object/get",
-                                      "@p",
-                                      "eventType"
-                                    ],
-                                    "@config.eventKey"
-                                  ]
-                                ]
-                              ]
-                            ]
-                          ]
-                        ],
-                        0.0
-                      ],
-                      0.0,
-                      [
-                        "object/get",
-                        [
-                          "array/first",
-                          [
-                            "array/filter",
-                            "@payload.data",
-                            [
-                              "fn",
-                              "p",
-                              [
-                                "and",
-                                [
-                                  "=",
-                                  [
-                                    "object/get",
-                                    "@p",
-                                    "userId"
-                                  ],
-                                  "@entity.recipient"
-                                ],
-                                [
-                                  "or",
-                                  [
-                                    "=",
-                                    [
-                                      "object/get",
-                                      "@p",
-                                      "eventType"
-                                    ],
-                                    ""
-                                  ],
-                                  [
-                                    "=",
-                                    [
-                                      "object/get",
-                                      "@p",
-                                      "eventType"
-                                    ],
-                                    "@config.eventKey"
-                                  ]
-                                ]
-                              ]
-                            ]
-                          ]
-                        ],
-                        "quietEndHour"
+                        "quietHours"
                       ]
                     ]
                   ],
@@ -2025,19 +1922,71 @@
                         [
                           "and",
                           [
-                            "not",
+                            "str/includes",
+                            "@entity.prefQuietHours",
+                            "-"
+                          ],
+                          [
+                            "!=",
                             [
-                              "=",
-                              "@entity.prefQuietStart",
-                              "@entity.prefQuietEnd"
+                              "str/slice",
+                              [
+                                "array/first",
+                                [
+                                  "str/split",
+                                  "@entity.prefQuietHours",
+                                  "-"
+                                ]
+                              ],
+                              0.0,
+                              2.0
+                            ],
+                            [
+                              "str/slice",
+                              [
+                                "array/nth",
+                                [
+                                  "str/split",
+                                  "@entity.prefQuietHours",
+                                  "-"
+                                ],
+                                1.0
+                              ],
+                              0.0,
+                              2.0
                             ]
                           ],
                           [
                             "if",
                             [
                               "<",
-                              "@entity.prefQuietStart",
-                              "@entity.prefQuietEnd"
+                              [
+                                "str/slice",
+                                [
+                                  "array/first",
+                                  [
+                                    "str/split",
+                                    "@entity.prefQuietHours",
+                                    "-"
+                                  ]
+                                ],
+                                0.0,
+                                2.0
+                              ],
+                              [
+                                "str/slice",
+                                [
+                                  "array/nth",
+                                  [
+                                    "str/split",
+                                    "@entity.prefQuietHours",
+                                    "-"
+                                  ],
+                                  1.0
+                                ],
+                                0.0,
+                                2.0
+                              ]
                             ],
                             [
                               "and",
@@ -2047,7 +1996,19 @@
                                   "time/hour",
                                   "@now"
                                 ],
-                                "@entity.prefQuietStart"
+                                [
+                                  "str/slice",
+                                  [
+                                    "array/first",
+                                    [
+                                      "str/split",
+                                      "@entity.prefQuietHours",
+                                      "-"
+                                    ]
+                                  ],
+                                  0.0,
+                                  2.0
+                                ]
                               ],
                               [
                                 "<",
@@ -2055,7 +2016,20 @@
                                   "time/hour",
                                   "@now"
                                 ],
-                                "@entity.prefQuietEnd"
+                                [
+                                  "str/slice",
+                                  [
+                                    "array/nth",
+                                    [
+                                      "str/split",
+                                      "@entity.prefQuietHours",
+                                      "-"
+                                    ],
+                                    1.0
+                                  ],
+                                  0.0,
+                                  2.0
+                                ]
                               ]
                             ],
                             [
@@ -2066,7 +2040,19 @@
                                   "time/hour",
                                   "@now"
                                 ],
-                                "@entity.prefQuietStart"
+                                [
+                                  "str/slice",
+                                  [
+                                    "array/first",
+                                    [
+                                      "str/split",
+                                      "@entity.prefQuietHours",
+                                      "-"
+                                    ]
+                                  ],
+                                  0.0,
+                                  2.0
+                                ]
                               ],
                               [
                                 "<",
@@ -2074,7 +2060,20 @@
                                   "time/hour",
                                   "@now"
                                 ],
-                                "@entity.prefQuietEnd"
+                                [
+                                  "str/slice",
+                                  [
+                                    "array/nth",
+                                    [
+                                      "str/split",
+                                      "@entity.prefQuietHours",
+                                      "-"
+                                    ],
+                                    1.0
+                                  ],
+                                  0.0,
+                                  2.0
+                                ]
                               ]
                             ]
                           ]
@@ -2096,9 +2095,17 @@
                         [
                           "if",
                           [
-                            "=",
-                            "@entity.channel",
-                            "in-app"
+                            "or",
+                            [
+                              "=",
+                              "@entity.channel",
+                              "in-app"
+                            ],
+                            [
+                              "=",
+                              "@entity.channel",
+                              "in_app"
+                            ]
                           ],
                           [
                             "do",
@@ -2939,11 +2946,11 @@
         ],
         "PrefRow": [
           {
-            "name": "userId",
+            "name": "personId",
             "type": "string"
           },
           {
-            "name": "eventType",
+            "name": "eventKey",
             "type": "string"
           },
           {
@@ -2955,12 +2962,8 @@
             "type": "string"
           },
           {
-            "name": "quietStartHour",
-            "type": "number"
-          },
-          {
-            "name": "quietEndHour",
-            "type": "number"
+            "name": "quietHours",
+            "type": "string"
           }
         ],
         "SubRow": [

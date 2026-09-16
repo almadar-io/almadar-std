@@ -449,18 +449,33 @@
             "type": "string"
           },
           {
-            "default": "",
             "description": "Owner of this preference row — rows are meant to be private to their owner. Access predicates need an [identity] roster, so the binding organism (which declares one) owns the @read/@update scoping; the generic atom cannot.",
-            "name": "userId",
+            "name": "personId",
+            "required": true,
             "synonyms": "user, owner, account",
             "type": "string"
           },
           {
             "default": "",
             "description": "Event key this preference applies to (matches a listener's eventKey); blank = all events.",
-            "name": "eventType",
+            "name": "eventKey",
             "synonyms": "event, trigger, subscription, topic",
             "type": "string"
+          },
+          {
+            "default": "in_app",
+            "description": "Channel override for this user.",
+            "name": "channel",
+            "synonyms": "preferred channel, delivery method",
+            "type": "string",
+            "values": [
+              "in_app",
+              "email",
+              "push",
+              "slack",
+              "sms",
+              "webhook"
+            ]
           },
           {
             "default": "instant",
@@ -476,23 +491,23 @@
           },
           {
             "default": "",
-            "description": "Channel override for this user (in-app/email/sms/push/webhook); blank = the listener's configured channel.",
-            "name": "channel",
-            "synonyms": "preferred channel, delivery method",
+            "description": "Per-user quiet-hours window as \"HH:MM-HH:MM\" (e.g. 22:00-07:00); blank = disabled.",
+            "name": "quietHours",
+            "synonyms": "do not disturb, quiet window, night mode",
             "type": "string"
           },
           {
             "default": 0.0,
-            "description": "Per-user quiet-hours start (hour 0-23); equal to quietEndHour = disabled.",
-            "name": "quietStartHour",
-            "synonyms": "quiet start, do not disturb from",
+            "description": "Timestamp indicating when this preference row was created.",
+            "name": "createdAt",
+            "synonyms": "creation time, created",
             "type": "number"
           },
           {
             "default": 0.0,
-            "description": "Per-user quiet-hours end (hour 0-23); equal to quietStartHour = disabled.",
-            "name": "quietEndHour",
-            "synonyms": "quiet end, do not disturb until",
+            "description": "Timestamp indicating when this preference row was last updated.",
+            "name": "updatedAt",
+            "synonyms": "modified, last updated",
             "type": "number"
           }
         ],
@@ -961,7 +976,7 @@
                 "name": "Save Preference",
                 "payloadSchema": [
                   {
-                    "name": "eventType",
+                    "name": "eventKey",
                     "type": "string"
                   },
                   {
@@ -973,12 +988,8 @@
                     "type": "string"
                   },
                   {
-                    "name": "quietStartHour",
-                    "type": "number"
-                  },
-                  {
-                    "name": "quietEndHour",
-                    "type": "number"
+                    "name": "quietHours",
+                    "type": "string"
                   }
                 ]
               },
@@ -992,7 +1003,7 @@
                     "type": "string"
                   },
                   {
-                    "name": "eventType",
+                    "name": "eventKey",
                     "type": "string"
                   },
                   {
@@ -1004,12 +1015,8 @@
                     "type": "string"
                   },
                   {
-                    "name": "quietStartHour",
-                    "type": "number"
-                  },
-                  {
-                    "name": "quietEndHour",
-                    "type": "number"
+                    "name": "quietHours",
+                    "type": "string"
                   }
                 ]
               },
@@ -1131,11 +1138,12 @@
                     "NotificationPreference",
                     {
                       "channel": "@payload.channel",
-                      "eventType": "@payload.eventType",
+                      "createdAt": "@now",
+                      "eventKey": "@payload.eventKey",
                       "mode": "@payload.mode",
-                      "quietEndHour": "@payload.quietEndHour",
-                      "quietStartHour": "@payload.quietStartHour",
-                      "userId": "@user.id"
+                      "personId": "@user.id",
+                      "quietHours": "@payload.quietHours",
+                      "updatedAt": "@now"
                     },
                     {
                       "emit": {
@@ -1158,11 +1166,11 @@
                     "NotificationPreference",
                     {
                       "channel": "@payload.channel",
-                      "eventType": "@payload.eventType",
+                      "eventKey": "@payload.eventKey",
                       "id": "@payload.id",
                       "mode": "@payload.mode",
-                      "quietEndHour": "@payload.quietEndHour",
-                      "quietStartHour": "@payload.quietStartHour"
+                      "quietHours": "@payload.quietHours",
+                      "updatedAt": "@now"
                     },
                     {
                       "emit": {

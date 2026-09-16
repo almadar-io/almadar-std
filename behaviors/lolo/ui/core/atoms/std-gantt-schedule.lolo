@@ -1,0 +1,215 @@
+app std-gantt-schedule "1.0.0"
+"std-gantt-schedule — GENERIC view-only Gantt/timeline atom: fetches a task collection on INIT and renders it as bars on a day-scale axis via the gantt pattern, with group headers, dependency arrows, and a today marker. Fully rebindable: a host overrides the linked entity and points the field-mapping configs (labelField/startField/endField/durationField/statusField/groupField) at its own columns; clicking a bar emits the config-named onBarClick event with the row id. No drag-edit, no zoom — schedule viewing only."
+type GanttLinkSpec = { from : string!, to : string! }
+orbital GanttScheduleOrbital {
+    type TaskLoaded = Event { data : [Task] } "Fired when Task finishes loading; payload.data holds the tasks"
+
+    type TaskLoadFailed = Event { error : string, code : string } "Fired when Task fails to load"
+
+  entity Task [runtime] {
+    id : string!
+    title : string @description "task label shown on the bar" @synonyms "name, label, summary, subject" = ""
+    start : datetime @description "task start timestamp the bar is placed from" @synonyms "starts, begins, start date, from"
+    end : datetime @description "task end timestamp the bar is placed to; when absent, duration days are used" @synonyms "finish, due, end date, until"
+    status : "pending" | "active" | "complete" | "blocked" @description "task lifecycle status, drives bar colour" @synonyms "state, stage, phase" = pending
+    group : string @description "group/section the task renders under a header row for" @synonyms "team, swimlane, section, project" = ""
+  }
+
+  trait TaskGanttSchedule -> @rebindable Task [interaction, collection] {
+    initial: loading
+
+    state loading {
+      INIT -> loading
+        (fetch Task {
+          emit: { failure: TaskLoadFailed, success: TaskLoaded }
+          include: @config.include
+        })
+        (render-ui main {
+          align: center
+          children: [{ type: spinner }, {
+            color: muted
+            content: "Loading schedule…"
+            type: typography
+            variant: caption
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      TaskLoaded -> chart
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{ name: gantt-chart, size: xl, type: icon }, {
+              content: @config.title
+              type: typography
+              variant: h2
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, {
+            barClickEvent: @config.onBarClick
+            dayWidth: @config.dayWidth
+            durationField: @config.durationField
+            endField: @config.endField
+            groupField: @config.groupField
+            links: @config.links
+            rangeEnd: @config.rangeEnd
+            rangeStart: @config.rangeStart
+            showToday: @config.showToday
+            startField: @config.startField
+            statusField: @config.statusField
+            tasks: ?data
+            titleField: @config.labelField
+            type: gantt
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
+      TaskLoadFailed -> error
+        (render-ui main {
+          align: center
+          children: [{
+            color: error
+            name: alert-triangle
+            size: lg
+            type: icon
+          }, {
+            content: "Failed to load"
+            type: typography
+            variant: h3
+          }, {
+            color: muted
+            content: ?error
+            type: typography
+            variant: body
+          }, {
+            action: RETRY
+            icon: rotate-ccw
+            label: Retry
+            type: button
+            variant: primary
+          }]
+          className: py-12
+          direction: vertical
+          gap: md
+          type: stack
+        })
+    }
+
+    state chart {
+      INIT -> loading
+        (fetch Task {
+          emit: { failure: TaskLoadFailed, success: TaskLoaded }
+          include: @config.include
+        })
+        (render-ui main { type: spinner })
+    }
+
+    state error {
+      INIT -> loading
+        (fetch Task {
+          emit: { failure: TaskLoadFailed, success: TaskLoaded }
+          include: @config.include
+        })
+        (render-ui main { type: spinner })
+      RETRY -> loading
+        (fetch Task {
+          emit: { failure: TaskLoadFailed, success: TaskLoaded }
+          include: @config.include
+        })
+        (render-ui main { type: spinner })
+    }
+
+    emits {
+      TaskLoaded
+        @description "Indicates that schedule tasks have been successfully retrieved."
+        @synonyms "loaded, fetched, retrieved, populated"
+        @tier "domain"
+      TaskLoadFailed
+        @description "Indicates a failure to load schedule tasks."
+        @synonyms "error, failed, problem, loading issue"
+        @tier "internal"
+      @config.onBarClick -> external {
+        id : string
+      }
+        @description "Emitted when a gantt bar is clicked; { id } carries the clicked task row's id."
+        @tier "presentation"
+    }
+
+    config {
+      title : string = "Schedule"
+        @label "Title"
+        @description "Header text shown above the gantt chart."
+        @tier "presentation"
+      labelField : string = "title"
+        @label "Label field"
+        @description "Row column holding the bar label. Rebound hosts point this at their own column (e.g. name, summary)."
+        @synonyms "title field, label column, name field"
+        @tier "presentation"
+      startField : string = "start"
+        @label "Start field"
+        @description "Row column holding the start timestamp each bar is placed from (e.g. startTime, startsAt, beginsAt)."
+        @synonyms "start column, from field, begin field"
+        @tier "presentation"
+      endField : string = "end"
+        @label "End field"
+        @description "Row column holding the end timestamp each bar is placed to. When a row has no end, durationField (days) is used instead."
+        @synonyms "end column, due field, finish field"
+        @tier "presentation"
+      durationField : string = ""
+        @label "Duration field"
+        @description "Row column holding the task length in days, used when the row has no end value. Empty = bars always read endField."
+        @synonyms "duration column, length field, days field"
+        @tier "presentation"
+      statusField : string = "status"
+        @label "Status field"
+        @description "Row column holding the status value that drives bar colour."
+        @synonyms "status column, state field, stage field"
+        @tier "presentation"
+      groupField : string = ""
+        @label "Group field"
+        @description "Row column rows are grouped under header rows by (e.g. team, project). Empty (default) = flat list, no group headers."
+        @synonyms "group column, swimlane field, section field"
+        @tier "presentation"
+      rangeStart : string = ""
+        @label "Range start"
+        @description "First visible day (ISO date). Empty (default) = 2 days before the earliest task."
+        @synonyms "window start, axis start, from date"
+        @tier "presentation"
+      rangeEnd : string = ""
+        @label "Range end"
+        @description "Last visible day (ISO date). Empty (default) = 2 days after the latest task end."
+        @synonyms "window end, axis end, to date"
+        @tier "presentation"
+      dayWidth : number = 28
+        @label "Day width"
+        @description "Pixels per day on the time axis."
+        @tier "presentation"
+      showToday : boolean = true
+        @label "Show today marker"
+        @description "Paint the today marker line when today falls inside the visible range."
+        @tier "presentation"
+      links : [GanttLinkSpec] = []
+        @label "Dependency links"
+        @description "Dependency arrows between task ids ({ from, to }); the host derives them from its own relation field and passes them here."
+        @synonyms "dependencies, dependency arrows, precedences"
+        @tier "presentation"
+      include : [string] = []
+        @label "Which relation fields to hydrate?"
+        @description "Entity relation field names to hydrate on fetch, so field mappings can use dot-paths like assignee.name. Empty = no hydration, the default."
+        @synonyms "relation hydration, populate relations, joined fields"
+        @tier "internal"
+      onBarClick : event = ""
+        @label "On bar click"
+        @description "Event emitted when a bar is clicked: UI:{onBarClick} with { id } carrying the clicked row's id. Empty means bars are not clickable."
+        @synonyms "bar click, task click, select task, open task"
+        @tier "presentation"
+    }
+  }
+
+  page "/tasks/gantt" as TaskGanttSchedulePage -> TaskGanttSchedule
+}

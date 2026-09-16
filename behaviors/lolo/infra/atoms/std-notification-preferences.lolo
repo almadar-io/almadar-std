@@ -1,5 +1,5 @@
 app std-notification-preferences "1.0.0"
-"std-notification-preferences — per-person notification preference store plus a consultable gate. Owns NotificationPreference rows (one per person + event key: channel override in_app/email/push/slack, mode instant/digest, quiet-hours window 'HH:MM-HH:MM' such as 22:00-07:00). The PreferencesManage trait is standard CRUD over the store (list / create / update / delete, persisted, success/failure cascade arms): a data-grid browse plus ModalRecordModal create/edit forms whose SAVE carries the full row payload (std-list daisy-chain idiom). The PreferenceGate trait is the consult half other notify traits call: emit CHECK_PREFERENCE { personId, eventKey } and the gate fetches the matching row (a row whose eventKey is blank applies to every event) and answers PREFERENCE_RESOLVED { personId, eventKey, channel, mode, suppressed } — suppressed is true only when the row's quietHours window covers the current hour; mode 'digest' rides on the verdict for the caller to defer. Default policy: no matching row — or a failed lookup — resolves fail-open to { channel: in_app, mode: instant, suppressed: false }; the absence of a preference never silences a notification."
+"std-notification-preferences — per-person notification preference store plus a consultable gate. Owns NotificationPreference rows (one per person + event key: channel override in_app/email/push/slack/sms/webhook, mode instant/digest/off, quiet-hours window 'HH:MM-HH:MM' such as 22:00-07:00). The PreferencesManage trait is standard CRUD over the store (list / create / update / delete, persisted, success/failure cascade arms): a data-grid browse plus ModalRecordModal create/edit forms whose SAVE carries the full row payload (std-list daisy-chain idiom). The PreferenceGate trait is the consult half other notify traits call: emit CHECK_PREFERENCE { personId, eventKey } and the gate fetches the matching row (a row whose eventKey is blank applies to every event) and answers PREFERENCE_RESOLVED { personId, eventKey, channel, mode, suppressed } — suppressed is true only when the row's quietHours window covers the current hour; mode 'digest' rides on the verdict for the caller to defer. Default policy: no matching row — or a failed lookup — resolves fail-open to { channel: in_app, mode: instant, suppressed: false }; the absence of a preference never silences a notification."
 orbital NotificationPreferencesOrbital {
     uses Modal from "std/behaviors/std-modal"
 
@@ -7,12 +7,12 @@ orbital NotificationPreferencesOrbital {
 
     type PREFERENCE_RESOLVED = Event { personId : string, eventKey : string, channel : string, mode : string, suppressed : boolean } "The gate's verdict. Fail-open defaults: no matching row or a failed lookup resolves { channel: in_app, mode: instant, suppressed: false } — absence of a preference never silences a notification."
 
-  entity NotificationPreference [persistent: notification_preferences] {
+  entity NotificationPreference [persistent: notificationPreferences] {
     id : string!
     personId : string! @description "The person this preference row belongs to." @synonyms "user, recipient, owner, account"
-    eventKey : string! @description "Event key this preference applies to (matches a notify listener's eventKey); blank = all events." @synonyms "event, trigger, topic, subscription"
-    channel : "in_app" | "email" | "push" | "slack" @description "Delivery channel override for this person." @synonyms "preferred channel, delivery method" = in_app
-    mode : "instant" | "digest" @description "Delivery mode: instant (default) or digest (deferred to a batch cycle)." @synonyms "delivery mode, frequency, cadence, defer" = instant
+    eventKey : string @description "Event key this preference applies to (matches a notify listener's eventKey); blank = all events." @synonyms "event, trigger, topic, subscription" = ""
+    channel : "in_app" | "email" | "push" | "slack" | "sms" | "webhook" @description "Delivery channel override for this person." @synonyms "preferred channel, delivery method" = in_app
+    mode : "instant" | "digest" | "off" @description "Delivery mode: instant (default), digest (deferred to a batch cycle), or off (muted)." @synonyms "delivery mode, frequency, cadence, mute, defer" = instant
     quietHours : string @description "Quiet-hours window as \"HH:MM-HH:MM\" (e.g. 22:00-07:00); blank or equal start/end = disabled." @synonyms "do not disturb, quiet window, night mode" = ""
     createdAt : number @description "Timestamp indicating when this preference row was created." @synonyms "creation time, created" = 0
     updatedAt : number @description "Timestamp indicating when this preference row was last updated." @synonyms "modified, last updated" = 0

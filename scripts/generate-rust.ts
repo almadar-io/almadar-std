@@ -50,6 +50,7 @@ const CATEGORY_META: Record<string, { description: string; target: string[] }> =
     'std-str': { description: 'String utilities', target: ['ts', 'rust'] },
     'std-array': { description: 'Array utilities', target: ['ts', 'rust'] },
     'std-object': { description: 'Object utilities', target: ['ts', 'rust'] },
+    'std-json': { description: 'JSON parsing/serialization', target: ['ts', 'rust'] },
     'std-time': { description: 'Date/time utilities', target: ['ts', 'rust'] },
     'std-validate': { description: 'Validation utilities', target: ['ts', 'rust'] },
     'std-format': { description: 'Formatting utilities', target: ['ts', 'rust'] },
