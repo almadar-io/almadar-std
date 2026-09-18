@@ -236,12 +236,11 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
             'default': {},
             'description': 'The row an edit-mode OPEN pre-fills from when its payload carries no row. Stashed by SEED — hosts route the surface\'s loaded event here (e.g. a document look\'s RecordItemLoaded) so scalar-only action events ({ id }) can still open a fully seeded settings form.',
             'intrinsic': true,
-            'name': 'seedRow',
-            'relation': {
-              'cardinality': 'one',
-              'entity': 'ModalRecord',
+            'items': {
+              'type': 'scalar',
             },
-            'type': 'relation',
+            'name': 'seedRow',
+            'type': 'object',
           },
           {
             'name': 'createdAt',
@@ -431,7 +430,7 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
                   },
                   {
                     'name': 'seedRow',
-                    'type': 'ModalRecord',
+                    'type': 'Map<string,scalar>',
                   },
                   {
                     'name': 'createdAt',
@@ -506,7 +505,7 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
                     },
                     {
                       'name': 'seedRow',
-                      'type': 'ModalRecord',
+                      'type': 'Map<string,scalar>',
                     },
                     {
                       'name': 'createdAt',
@@ -550,7 +549,7 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
                     },
                     {
                       'name': 'seedRow',
-                      'type': 'ModalRecord',
+                      'type': 'Map<string,scalar>',
                     },
                     {
                       'name': 'createdAt',
@@ -611,7 +610,7 @@ export function stdModalModalRecordOrbital(params: StdModalModalRecordOrbitalPar
                     },
                     {
                       'name': 'seedRow',
-                      'type': 'ModalRecord',
+                      'type': 'Map<string,scalar>',
                     },
                     {
                       'name': 'createdAt',

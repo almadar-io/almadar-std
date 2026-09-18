@@ -390,12 +390,11 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
             'default': {},
             'description': 'The row an edit-mode modal pre-fills from when its payload carries no row (a scalar-only action event still opens a fully seeded form).',
             'intrinsic': true,
-            'name': 'seedRow',
-            'relation': {
-              'cardinality': 'one',
-              'entity': 'ModQueueItem',
+            'items': {
+              'type': 'scalar',
             },
-            'type': 'relation',
+            'name': 'seedRow',
+            'type': 'object',
           },
         ];
         const extras = params.fields ?? [];
@@ -633,7 +632,7 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                   },
                   {
                     'name': 'seedRow',
-                    'type': 'ModQueueItem',
+                    'type': 'Map<string,scalar>',
                   },
                 ],
                 'type': 'object',
@@ -696,7 +695,7 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                   },
                   {
                     'name': 'seedRow',
-                    'type': 'ModQueueItem',
+                    'type': 'Map<string,scalar>',
                   },
                 ],
                 'type': 'object',
@@ -759,7 +758,7 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                   },
                   {
                     'name': 'seedRow',
-                    'type': 'ModQueueItem',
+                    'type': 'Map<string,scalar>',
                   },
                 ],
                 'type': 'object',
@@ -823,7 +822,7 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                   },
                   {
                     'name': 'seedRow',
-                    'type': 'ModQueueItem',
+                    'type': 'Map<string,scalar>',
                   },
                 ],
                 'type': '[object]',
@@ -894,7 +893,7 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
               },
               {
                 'name': 'seedRow',
-                'type': 'ModQueueItem',
+                'type': 'Map<string,scalar>',
               },
             ],
             'scope': 'internal',
@@ -987,7 +986,7 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                     },
                     {
                       'name': 'seedRow',
-                      'type': 'ModQueueItem',
+                      'type': 'Map<string,scalar>',
                     },
                   ],
                   'type': '[object]',
@@ -1082,7 +1081,7 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                     },
                     {
                       'name': 'seedRow',
-                      'type': 'ModQueueItem',
+                      'type': 'Map<string,scalar>',
                     },
                   ],
                   'type': 'object',
@@ -1146,7 +1145,7 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                     },
                     {
                       'name': 'seedRow',
-                      'type': 'ModQueueItem',
+                      'type': 'Map<string,scalar>',
                     },
                   ],
                   'type': 'object',
@@ -1210,7 +1209,7 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                     },
                     {
                       'name': 'seedRow',
-                      'type': 'ModQueueItem',
+                      'type': 'Map<string,scalar>',
                     },
                   ],
                   'type': 'object',
@@ -1266,7 +1265,7 @@ export function stdModQueueModQueueItemOrbital(params: StdModQueueModQueueItemOr
                 },
                 {
                   'name': 'seedRow',
-                  'type': 'ModQueueItem',
+                  'type': 'Map<string,scalar>',
                 },
               ],
               'synonyms': 'reviewed, processed, judged, completed',
