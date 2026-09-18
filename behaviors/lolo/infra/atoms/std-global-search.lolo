@@ -146,7 +146,15 @@ orbital GlobalSearchOrbital {
             event: SEARCH
             placeholder: @config.placeholder
             type: search-input
-          }, <Typography.traits.TypographyRender content={@entity.resultsSummary} linkedEntity={SearchQuery} variant={body} />]
+          }, (array/map (array/filter @entity.results (fn g (!= @g.resultsJson ""))) (fn g {
+            type: stack
+            direction: vertical
+            gap: sm
+            children: [
+              <Typography.traits.TypographyRender content={@g.moduleKey} linkedEntity={SearchQuery} variant={h4} />,
+              (array/map (array/filter (str/split @g.resultsJson ", ") (fn item (!= @item ""))) (fn item <Typography.traits.TypographyRender content={@item} linkedEntity={SearchQuery} variant={body} />))
+            ]
+          }))]
           direction: vertical
           gap: md
           type: stack
