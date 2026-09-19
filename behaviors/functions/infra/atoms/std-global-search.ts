@@ -1363,57 +1363,122 @@ export function stdGlobalSearchGlobalSearchOrbital(params: StdGlobalSearchGlobal
                         'type': 'search-input',
                       },
                       [
-                        'array/map',
+                        'if',
                         [
-                          'array/filter',
-                          '@entity.results',
+                          '>',
                           [
-                            'fn',
-                            'g',
+                            'array/len',
                             [
-                              '!=',
-                              '@g.resultsJson',
-                              '',
-                            ],
-                          ],
-                        ],
-                        [
-                          'fn',
-                          'g',
-                          {
-                            'children': [
-                              '@trait.InlineTypographyRender4',
+                              'array/filter',
+                              '@entity.results',
                               [
-                                'array/map',
+                                'fn',
+                                'g',
                                 [
-                                  'array/filter',
-                                  [
-                                    'str/split',
-                                    '@g.resultsJson',
-                                    ', ',
-                                  ],
-                                  [
-                                    'fn',
-                                    'item',
-                                    [
-                                      '!=',
-                                      '@item',
-                                      '',
-                                    ],
-                                  ],
-                                ],
-                                [
-                                  'fn',
-                                  'item',
-                                  '@trait.InlineTypographyRender5',
+                                  '!=',
+                                  '@g.resultsJson',
+                                  '',
                                 ],
                               ],
                             ],
-                            'direction': 'vertical',
-                            'gap': 'sm',
-                            'type': 'stack',
-                          },
+                          ],
+                          0,
                         ],
+                        {
+                          'children': [
+                            'array/map',
+                            [
+                              'array/filter',
+                              '@entity.results',
+                              [
+                                'fn',
+                                'g',
+                                [
+                                  '!=',
+                                  '@g.resultsJson',
+                                  '',
+                                ],
+                              ],
+                            ],
+                            [
+                              'fn',
+                              'g',
+                              {
+                                'children': [
+                                  '@trait.InlineTypographyRender4',
+                                  {
+                                    'children': [
+                                      'array/map',
+                                      [
+                                        'array/filter',
+                                        [
+                                          'str/split',
+                                          '@g.resultsJson',
+                                          ', ',
+                                        ],
+                                        [
+                                          'fn',
+                                          'item',
+                                          [
+                                            '!=',
+                                            '@item',
+                                            '',
+                                          ],
+                                        ],
+                                      ],
+                                      [
+                                        'fn',
+                                        'item',
+                                        '@trait.InlineTypographyRender5',
+                                      ],
+                                    ],
+                                    'direction': 'vertical',
+                                    'gap': 'xs',
+                                    'type': 'stack',
+                                  },
+                                ],
+                                'direction': 'vertical',
+                                'gap': 'sm',
+                                'type': 'stack',
+                              },
+                            ],
+                          ],
+                          'direction': 'vertical',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                        {
+                          'description': [
+                            'if',
+                            [
+                              'and',
+                              '@entity.fanOutDone',
+                              [
+                                '>=',
+                                '@entity.respondedCount',
+                                '@entity.requestedCount',
+                              ],
+                            ],
+                            'Try a different search term or module.',
+                            'Waiting for the rest of the results…',
+                          ],
+                          'icon': 'search-x',
+                          'title': [
+                            'if',
+                            [
+                              'and',
+                              '@entity.fanOutDone',
+                              [
+                                '>=',
+                                '@entity.respondedCount',
+                                '@entity.requestedCount',
+                              ],
+                            ],
+                            'No results found',
+                            'Searching…',
+                          ],
+                          'type': 'empty-state',
+                        },
                       ],
                     ],
                     'direction': 'vertical',

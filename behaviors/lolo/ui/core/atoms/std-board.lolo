@@ -110,7 +110,7 @@ orbital BoardOrbital {
         (set @entity.currentTitle ?title)
         (set @entity.currentDescription ?description)
         (set @entity.currentStage ?stage)
-        (set @entity.currentNotes ?row.notes)
+        (set @entity.currentNotes ?notes)
         (set @entity.currentRow ?row)
         (render-ui main {
           children: [{
@@ -423,6 +423,7 @@ orbital BoardOrbital {
         title : string
         description : string
         stage : string
+        notes : string
       }
         @description "A card within the board has been selected or activated."
         @synonyms "select, activate, view, show"
@@ -581,6 +582,10 @@ orbital BoardOrbital {
         @label "Card id binding"
         @description "Per-card binding for the id used in action payloads."
         @tier "presentation"
+      cardNotesBinding : string = @item.notes
+        @label "Card notes binding"
+        @description "Per-card binding for the notes slot shown in the card detail view. Set to an empty string for hosts with no notes-equivalent field — declared as 'no notes capture', never inferred."
+        @tier "presentation"
       groupByField : string = stage
         @label "Group-by field"
         @description "Entity field whose value matches a column key — items are filtered into columns by it. Default 'stage'; set to 'status' (or any field) for entities that track state under a different name."
@@ -717,7 +722,7 @@ orbital BoardOrbital {
                       align: center
                       children: [{
                         action: OPEN_CARD
-                        actionPayload: { description: @config.cardDescriptionBinding, id: @config.cardIdBinding, row: @item, stage: @config.cardStageBinding, title: @config.cardTitleBinding }
+                        actionPayload: { description: @config.cardDescriptionBinding, id: @config.cardIdBinding, notes: @config.cardNotesBinding, row: @item, stage: @config.cardStageBinding, title: @config.cardTitleBinding }
                         icon: arrow-right
                         label: Open
                         type: button
@@ -861,7 +866,7 @@ orbital BoardOrbital {
                         variant: @col.variant
                       }, {
                         action: OPEN_CARD
-                        actionPayload: { description: @config.cardDescriptionBinding, id: @config.cardIdBinding, row: @item, stage: @config.cardStageBinding, title: @config.cardTitleBinding }
+                        actionPayload: { description: @config.cardDescriptionBinding, id: @config.cardIdBinding, notes: @config.cardNotesBinding, row: @item, stage: @config.cardStageBinding, title: @config.cardTitleBinding }
                         className: ml-auto
                         icon: arrow-right
                         label: Open

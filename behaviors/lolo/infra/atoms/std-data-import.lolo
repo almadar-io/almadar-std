@@ -1,6 +1,7 @@
 app std-data-import "1.0.0"
 "std-data-import — staged CSV import run, source-agnostic: upload → staged review → confirm → parse+map → handoff. UPLOAD_CSV opens a run and persists an ImportBatch row (status uploaded, fieldMappingJson recorded verbatim for provenance); the host's file UI parses the CSV and answers with STAGE_ROWS, one JSON string per raw row, which the atom bulk-persists into import_rows against the batch id and presents as a staged review (row/error counts + Confirm/Discard). CONFIRM_IMPORT marks the batch confirmed, emits IMPORT_CONFIRMED { batchId, sourceName, rowCount }, and fetches the batch's staged rows; on fetch success the atom parses each rowJson via json/parse, remaps keys through the batch's mappingJson, and emits IMPORT_ROWS_PARSED { batchId, rows, failed } — the persist half is the CONSUMER organism's: it listens for IMPORT_ROWS_PARSED and persists the mapped rows into its own target entity (cross-atom persist into a consumer's entity is not expressible from here). This is deliberately the CSV-file path: the atom never calls a source service — sourceName/fieldMappingJson/targetEntity/historyWindowDays are declarative consumer configs, and any persist failure marks the batch row failed and fires IMPORT_FAILED, never a silent swallow. Compose with std-import for the file-picker menu."
 orbital DataImportOrbital {
+    type DataImportFile = { name : string!, size : number, type : string, content : string }
 
   entity ImportBatch [persistent: import_batches] {
     id : string!
@@ -30,6 +31,24 @@ orbital DataImportOrbital {
         (set @entity.errorCount 0)
         (set @entity.mappingJson @config.fieldMappingJson)
         (set @entity.createdAt 0)
+        (render-ui main {
+          children: [{
+            content: (str/concat "Import " @entity.sourceName)
+            type: typography
+            variant: h3
+          }, {
+            accept: ".csv,text/csv"
+            action: UPLOAD_CSV
+            description: "Drop a CSV file here or click to browse"
+            icon: upload
+            label: "Upload CSV file"
+            maxFiles: 1
+            type: upload-drop-zone
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
       UPLOAD_CSV -> uploaded
         (set @entity.id ?batchId)
         (set @entity.sourceName (or ?sourceName @config.sourceName))
@@ -52,8 +71,17 @@ orbital DataImportOrbital {
     }
 
     state uploaded {
+      ;; STAGE_ROWS has no emitter yet (host-side CSV-content parsing is a
+      ;; still-open substrate gap, R-DATA-IMPORT-PAGES-BLANK-NO-UPLOAD-UI) —
+      ;; render something here too so `uploaded` is never a second blank
+      ;; dead end after the upload affordance's UPLOAD_CSV succeeds.
       BATCH_CREATED -> uploaded
         (set @entity.id ?id)
+        (render-ui main {
+          message: (str/concat "Import started — " @entity.sourceName ". Waiting for the file's rows to be staged.")
+          type: alert
+          variant: info
+        })
       STAGE_ROWS -> staged when [">", (array/len ?rows), 0]
         (set @entity.rowCount (array/len ?rows))
         (set @entity.errorCount (or ?errorCount 0))
@@ -273,8 +301,9 @@ orbital DataImportOrbital {
       UPLOAD_CSV {
         batchId : string
         sourceName : string
+        files : [DataImportFile]!
       }
-        @description "Starts an import run for a CSV file upload. batchId is the client-minted batch id (idempotent upload — the host generates it so a retry never double-creates a batch); when omitted, the server-issued id is bound on BATCH_CREATED instead. The host's file UI (e.g. a sibling std-import menu) only announces the upload — parsing is host work and arrives as STAGE_ROWS."
+        @description "Starts an import run for a CSV file upload, fired by the idle state's own upload-drop-zone affordance. batchId is the client-minted batch id (idempotent upload — the host generates it so a retry never double-creates a batch); when omitted, the server-issued id is bound on BATCH_CREATED instead. files carries the picked file(s) (name/size/type/content) but the atom does not read content from it yet — no runtime capability exists to decode/parse it into rows (tracked: R-DATA-IMPORT-PAGES-BLANK-NO-UPLOAD-UI); STAGE_ROWS is the still-open handoff for a future host-side parser to answer with real row data."
         @synonyms "upload csv, import csv, start import, import file, bulk import"
         @tier "domain"
       STAGE_ROWS {

@@ -575,7 +575,7 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
               'name': 'Initialize',
             },
             {
-              'description': 'Starts an import run for a CSV file upload. batchId is the client-minted batch id (idempotent upload — the host generates it so a retry never double-creates a batch); when omitted, the server-issued id is bound on BATCH_CREATED instead. The host\'s file UI (e.g. a sibling std-import menu) only announces the upload — parsing is host work and arrives as STAGE_ROWS.',
+              'description': 'Starts an import run for a CSV file upload, fired by the idle state\'s own upload-drop-zone affordance. batchId is the client-minted batch id (idempotent upload — the host generates it so a retry never double-creates a batch); when omitted, the server-issued id is bound on BATCH_CREATED instead. files carries the picked file(s) (name/size/type/content) but the atom does not read content from it yet — no runtime capability exists to decode/parse it into rows (tracked: R-DATA-IMPORT-PAGES-BLANK-NO-UPLOAD-UI); STAGE_ROWS is the still-open handoff for a future host-side parser to answer with real row data.',
               'key': 'UPLOAD_CSV',
               'name': 'Upload Csv',
               'payloadSchema': [
@@ -586,6 +586,30 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
                 {
                   'name': 'sourceName',
                   'type': 'string',
+                },
+                {
+                  'name': 'files',
+                  'properties': [
+                    {
+                      'name': 'name',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'size',
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'type',
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'content',
+                      'type': 'string',
+                    },
+                  ],
+                  'required': true,
+                  'type': '[object]',
                 },
               ],
               'synonyms': 'upload csv, import csv, start import, import file, bulk import',
@@ -805,6 +829,35 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
                   '@entity.createdAt',
                   0,
                 ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'content': [
+                          'str/concat',
+                          'Import ',
+                          '@entity.sourceName',
+                        ],
+                        'type': 'typography',
+                        'variant': 'h3',
+                      },
+                      {
+                        'accept': '.csv,text/csv',
+                        'action': 'UPLOAD_CSV',
+                        'description': 'Drop a CSV file here or click to browse',
+                        'icon': 'upload',
+                        'label': 'Upload CSV file',
+                        'maxFiles': 1,
+                        'type': 'upload-drop-zone',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
               ],
               'event': 'INIT',
               'from': 'idle',
@@ -884,6 +937,20 @@ export function stdDataImportDataImportOrbital(params: StdDataImportDataImportOr
                   'set',
                   '@entity.id',
                   '@payload.id',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'message': [
+                      'str/concat',
+                      'Import started — ',
+                      '@entity.sourceName',
+                      '. Waiting for the file\'s rows to be staged.',
+                    ],
+                    'type': 'alert',
+                    'variant': 'info',
+                  },
                 ],
               ],
               'event': 'BATCH_CREATED',

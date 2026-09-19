@@ -146,15 +146,34 @@ orbital GlobalSearchOrbital {
             event: SEARCH
             placeholder: @config.placeholder
             type: search-input
-          }, (array/map (array/filter @entity.results (fn g (!= @g.resultsJson ""))) (fn g {
-            type: stack
-            direction: vertical
-            gap: sm
-            children: [
-              <Typography.traits.TypographyRender content={@g.moduleKey} linkedEntity={SearchQuery} variant={h4} />,
-              (array/map (array/filter (str/split @g.resultsJson ", ") (fn item (!= @item ""))) (fn item <Typography.traits.TypographyRender content={@item} linkedEntity={SearchQuery} variant={body} />))
-            ]
-          }))]
+          }, (if (> (array/len (array/filter @entity.results (fn g (!= @g.resultsJson "")))) 0)
+            {
+              type: stack
+              direction: vertical
+              gap: sm
+              children: (array/map (array/filter @entity.results (fn g (!= @g.resultsJson ""))) (fn g {
+                type: stack
+                direction: vertical
+                gap: sm
+                ;; a bare array/map result as a sibling of a static element in the SAME children list mis-renders as "Unknown pattern" in @almadar/ui (confirmed live via play_scene) — wrap it in its own container so every children element is a single node
+                children: [
+                  <Typography.traits.TypographyRender content={@g.moduleKey} linkedEntity={SearchQuery} variant={h4} />,
+                  {
+                    type: stack
+                    direction: vertical
+                    gap: xs
+                    children: (array/map (array/filter (str/split @g.resultsJson ", ") (fn item (!= @item ""))) (fn item <Typography.traits.TypographyRender content={@item} linkedEntity={SearchQuery} variant={body} />))
+                  }
+                ]
+              }))
+            }
+            ;; children[1] must never be a bare empty array (renders nothing, and was observed to blank the whole slot) — always a single well-formed node instead; the two "no results yet" sub-cases share one empty-state node, distinguished only by its string props
+            {
+              description: (if (and @entity.fanOutDone (>= @entity.respondedCount @entity.requestedCount)) "Try a different search term or module." "Waiting for the rest of the results…")
+              icon: search-x
+              title: (if (and @entity.fanOutDone (>= @entity.respondedCount @entity.requestedCount)) "No results found" "Searching…")
+              type: empty-state
+            })]
           direction: vertical
           gap: md
           type: stack
