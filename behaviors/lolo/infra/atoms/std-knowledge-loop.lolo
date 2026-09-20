@@ -1,0 +1,316 @@
+app std-knowledge-loop "1.0.0"
+"std-knowledge-loop — generic epistemic-loop / decision-gate machinery. Use when a user voices that a claim, hypothesis, or fix needs to be varied, predicted, falsified, independently checked, and calibrated before it is trusted (root-cause investigation, hypothesis testing, a fix that needs sign-off before it ships, a claim that needs a second opinion). The topology (vary -> compare -> hypothesize -> predict -> falsify -> verify -> generalize -> isolate & intervene -> compose -> calibrate -> select next target -> vary again) is fixed and never re-authored per domain. Each gate is announced: entering falsification emits FalsificationRequested, entering verification emits VerificationRequested, entering calibration emits CalibrationRequested (all carry the claim's title + candidateStructure). Who answers a gate is the consumer's call: with manualFalsification / manualVerification on (the default) the atom renders Survived/Failed and Checks-agree/Checks-disagree buttons and a person judges; a consumer that can compute the verdict sets the knob off, authors a sibling trait that listens for the *Requested event, does the domain check, and emits its result, then overrides listens {} at the call site to route that result into SURVIVED/FAILED or CHECKS_AGREE/CHECKS_DISAGREE — the `when` guard on that route IS the consumer's definition of what the gate means (e.g. ReproCheck.REPRO_RESULT -> SURVIVED when (>= ?passRate 0.95)). Calibration is enforced by the atom itself: a submitted numeric score is checked against reliabilityThreshold. On a claim clearing calibration, emits LoopConcluded (title, reliabilityScore) so a composing host can act on the validated result."
+
+orbital KnowledgeLoopOrbital {
+  uses Typography from "std/behaviors/ui-typography"
+  uses Button from "std/behaviors/ui-button"
+  uses Divider from "std/behaviors/ui-divider"
+
+  type ScoreCommit = { score : number }
+
+  type ConditionCommit = { title : string, candidateStructure : string }
+
+  entity KnowledgeClaim [runtime] {
+    title                  : string! @description "what's being investigated"
+    candidateStructure     : string  @description "the current hypothesis" = ""
+    survivedFalsification  : boolean @description "did the prediction survive an honest attempt to break it" = false
+    independentChecksAgree : boolean @description "did a different method or observer converge on the same result" = false
+    reliabilityScore       : number  @description "the calibrated model's measured reliability, 0-1" = 0
+    nextTarget             : string  @description "the next question that removes the most uncertainty" = ""
+  }
+
+  trait LoopTitle = Typography.traits.TypographyRender -> KnowledgeClaim {
+    config {
+      content: "Knowledge loop"
+      variant: h3
+    }
+  }
+
+  trait AwaitingFalsificationText = Typography.traits.TypographyRender -> KnowledgeClaim {
+    config {
+      color: muted
+      content: "Falsification requested — awaiting the automated check's verdict."
+      variant: caption
+    }
+  }
+
+  trait AwaitingVerificationText = Typography.traits.TypographyRender -> KnowledgeClaim {
+    config {
+      color: muted
+      content: "Independent verification requested — awaiting the automated check's verdict."
+      variant: caption
+    }
+  }
+
+  trait LoopDivider = Divider.traits.DividerRender -> KnowledgeClaim {
+    config {}
+  }
+
+  trait SurvivedButton = Button.traits.ButtonRender -> KnowledgeClaim {
+    config {
+      action: SURVIVED
+      icon: check
+      label: Survived
+      variant: primary
+    }
+  }
+
+  trait FailedButton = Button.traits.ButtonRender -> KnowledgeClaim {
+    config {
+      action: FAILED
+      icon: x
+      label: Failed
+      variant: danger
+    }
+  }
+
+  trait ChecksAgreeButton = Button.traits.ButtonRender -> KnowledgeClaim {
+    config {
+      action: CHECKS_AGREE
+      icon: check
+      label: "Checks agree"
+      variant: primary
+    }
+  }
+
+  trait ChecksDisagreeButton = Button.traits.ButtonRender -> KnowledgeClaim {
+    config {
+      action: CHECKS_DISAGREE
+      icon: x
+      label: "Checks disagree"
+      variant: danger
+    }
+  }
+
+  trait ChooseNextTargetButton = Button.traits.ButtonRender -> KnowledgeClaim {
+    config {
+      action: CHOOSE_NEXT_TARGET
+      icon: arrow-right
+      label: "Choose next target"
+      variant: primary
+    }
+  }
+
+  trait KnowledgeLoop -> @rebindable KnowledgeClaim [interaction, collection] {
+    initial: varying
+
+    state varying {
+      INIT -> varying
+        (fetch KnowledgeClaim)
+        (render-ui main {
+          children: [@trait.LoopTitle, @trait.LoopDivider, { type: "detail-panel", entity: @entity, title: "Current claim", fields: ["title", "candidateStructure", "survivedFalsification", "independentChecksAgree", "reliabilityScore", "nextTarget"] }, {
+            entity: { }
+            fields: (title candidateStructure)
+            mode: create
+            submitEvent: CHANGE_CONDITION
+            type: form-section
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      CHANGE_CONDITION -> comparing
+        (set @entity.title (object/get ?data title))
+        (set @entity.candidateStructure (object/get ?data candidateStructure))
+    }
+
+    state comparing {
+      MEASURE_DIFFERENCE -> hypothesizing
+    }
+
+    state hypothesizing {
+      FORM_GUESS -> predicting
+    }
+
+    state predicting {
+      EXTRAPOLATE -> falsifying
+        (emit FalsificationRequested { title: @entity.title, candidateStructure: @entity.candidateStructure })
+        (if @config.manualFalsification (render-ui main {
+          children: [@trait.LoopTitle, @trait.LoopDivider, @trait.SurvivedButton, @trait.FailedButton]
+          direction: vertical
+          gap: md
+          type: stack
+        }) (render-ui main {
+          children: [@trait.LoopTitle, @trait.LoopDivider, @trait.AwaitingFalsificationText]
+          direction: vertical
+          gap: md
+          type: stack
+        }))
+    }
+
+    state falsifying {
+      SURVIVED -> generalizing when (not @config.requireIndependentVerification)
+        (set @entity.survivedFalsification true)
+        (set @entity.independentChecksAgree true)
+      SURVIVED -> verifying when @config.requireIndependentVerification
+        (set @entity.survivedFalsification true)
+        (emit VerificationRequested { title: @entity.title, candidateStructure: @entity.candidateStructure })
+        (if @config.manualVerification (render-ui main {
+          children: [@trait.LoopTitle, @trait.LoopDivider, @trait.ChecksAgreeButton, @trait.ChecksDisagreeButton]
+          direction: vertical
+          gap: md
+          type: stack
+        }) (render-ui main {
+          children: [@trait.LoopTitle, @trait.LoopDivider, @trait.AwaitingVerificationText]
+          direction: vertical
+          gap: md
+          type: stack
+        }))
+      FAILED -> hypothesizing
+        (set @entity.survivedFalsification false)
+    }
+
+    state verifying {
+      CHECKS_AGREE -> generalizing
+        (set @entity.independentChecksAgree true)
+      CHECKS_DISAGREE -> hypothesizing
+        (set @entity.independentChecksAgree false)
+    }
+
+    state generalizing {
+      STRIP_TO_ESSENTIALS -> isolating
+    }
+
+    state isolating {
+      FIND_AND_CONTROL_CAUSE -> composing
+    }
+
+    state composing {
+      COMBINE_WITH_TRUSTED -> calibrating
+        (emit CalibrationRequested { title: @entity.title, candidateStructure: @entity.candidateStructure })
+        (render-ui main {
+          children: [@trait.LoopTitle, @trait.LoopDivider, {
+            cancelEvent: CANCEL_SCORE
+            entity: { }
+            fields: (reliabilityScore)
+            mode: create
+            submitEvent: CONFIRM_SCORE
+            type: form-section
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+    }
+
+    state calibrating {
+      CONFIRM_SCORE -> selecting when (>= (object/get ?data score) @config.reliabilityThreshold)
+        (set @entity.reliabilityScore (object/get ?data score))
+        (emit LoopConcluded { title: @entity.title, reliabilityScore: (object/get ?data score) })
+        (render-ui main {
+          children: [@trait.LoopTitle, @trait.LoopDivider, @trait.ChooseNextTargetButton]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      CONFIRM_SCORE -> falsifying when (< (object/get ?data score) @config.reliabilityThreshold)
+        (set @entity.reliabilityScore (object/get ?data score))
+        (emit FalsificationRequested { title: @entity.title, candidateStructure: @entity.candidateStructure })
+        (if @config.manualFalsification (render-ui main {
+          children: [@trait.LoopTitle, @trait.LoopDivider, @trait.SurvivedButton, @trait.FailedButton]
+          direction: vertical
+          gap: md
+          type: stack
+        }) (render-ui main {
+          children: [@trait.LoopTitle, @trait.LoopDivider, @trait.AwaitingFalsificationText]
+          direction: vertical
+          gap: md
+          type: stack
+        }))
+      CANCEL_SCORE -> calibrating
+    }
+
+    state selecting {
+      CHOOSE_NEXT_TARGET -> varying
+        (fetch KnowledgeClaim)
+        (render-ui main {
+          children: [@trait.LoopTitle, @trait.LoopDivider, { type: "detail-panel", entity: @entity, title: "Current claim", fields: ["title", "candidateStructure", "survivedFalsification", "independentChecksAgree", "reliabilityScore", "nextTarget"] }, {
+            entity: { }
+            fields: (title candidateStructure)
+            mode: create
+            submitEvent: CHANGE_CONDITION
+            type: form-section
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+    }
+
+    emits {
+      FalsificationRequested -> external {
+        title: string
+        candidateStructure: string
+      }
+        @description "The loop entered the falsification gate. A consumer that computes the verdict listens for this, runs its check, and routes its result into SURVIVED or FAILED via a listens override."
+        @synonyms "falsify, test the prediction, try to break it"
+        @tier "domain"
+      VerificationRequested -> external {
+        title: string
+        candidateStructure: string
+      }
+        @description "The loop entered the independent-verification gate. A consumer routes its second-method result into CHECKS_AGREE or CHECKS_DISAGREE via a listens override."
+        @synonyms "verify independently, second opinion, cross-check"
+        @tier "domain"
+      CalibrationRequested -> external {
+        title: string
+        candidateStructure: string
+      }
+        @description "The loop entered the calibration gate and is waiting for a reliability score (CONFIRM_SCORE, data.score), which the atom checks against reliabilityThreshold."
+        @synonyms "calibrate, measure reliability, score it"
+        @tier "domain"
+      LoopConcluded -> external {
+        title: string
+        reliabilityScore: number
+      }
+        @description "A claim cleared calibration; a composing host can act on the validated result."
+        @synonyms "validated, calibrated, concluded, ready to ship"
+        @tier "domain"
+    }
+
+    listens {
+      SurvivedButton.SURVIVED -> SURVIVED
+      FailedButton.FAILED -> FAILED
+      ChecksAgreeButton.CHECKS_AGREE -> CHECKS_AGREE
+      ChecksDisagreeButton.CHECKS_DISAGREE -> CHECKS_DISAGREE
+      ChooseNextTargetButton.CHOOSE_NEXT_TARGET -> CHOOSE_NEXT_TARGET
+      CONFIRM_SCORE {
+        data: ScoreCommit
+      }
+        @description "The reliability-score form committed."
+        @synonyms "submit score, report reliability"
+        @tier "internal"
+      CHANGE_CONDITION {
+        data: ConditionCommit
+      }
+        @description "The investigation's title and current hypothesis were entered."
+        @synonyms "start investigation, set hypothesis"
+        @tier "internal"
+    }
+
+    config {
+      requireIndependentVerification: boolean = true
+        @label "Require independent verification"
+        @description "Whether a second, independent check must agree before the claim advances. Off skips straight to generalization once falsification survives."
+        @synonyms "second opinion, independent check, cross-verify"
+        @tier "policy"
+      manualFalsification: boolean = true
+        @label "Falsification is judged by a person"
+        @description "On: the falsification gate renders Survived / Failed buttons and a person decides. Off: no buttons render; the consumer's own sibling trait must answer FalsificationRequested by routing its result into SURVIVED / FAILED through a listens override."
+        @synonyms "manual falsification, human judged, automated check off"
+        @tier "policy"
+      manualVerification: boolean = true
+        @label "Verification is judged by a person"
+        @description "On: the verification gate renders Checks-agree / Checks-disagree buttons. Off: the consumer's sibling trait answers VerificationRequested by routing its result into CHECKS_AGREE / CHECKS_DISAGREE through a listens override."
+        @synonyms "manual verification, human second opinion, automated cross-check off"
+        @tier "policy"
+      reliabilityThreshold: number = 0.8
+        @label "Reliability threshold"
+        @description "The measured reliability score a calibrated claim must clear before it is considered good enough to act on. Below it, the loop returns to falsification for more testing."
+        @synonyms "confidence threshold, calibration bar, minimum reliability"
+        @tier "policy"
+    }
+  }
+
+  page "/knowledge-loop" as KnowledgeLoopPage -> KnowledgeLoop [view: detail, entity: KnowledgeClaim, initial]
+}
