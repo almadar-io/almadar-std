@@ -1,0 +1,582 @@
+[
+  {
+    "organism": "std-knowledge-loop",
+    "orbital": "KnowledgeLoopOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/infra/atoms/std-knowledge-loop.ts",
+    "entities": [
+      {
+        "name": "KnowledgeClaim",
+        "fields": [
+          {
+            "name": "title",
+            "type": "string",
+            "required": true,
+            "description": "what's being investigated"
+          },
+          {
+            "name": "candidateStructure",
+            "type": "string",
+            "required": false,
+            "description": "the current hypothesis"
+          },
+          {
+            "name": "survivedFalsification",
+            "type": "boolean",
+            "required": false,
+            "description": "did the prediction survive an honest attempt to break it"
+          },
+          {
+            "name": "independentChecksAgree",
+            "type": "boolean",
+            "required": false,
+            "description": "did a different method or observer converge on the same result"
+          },
+          {
+            "name": "reliabilityScore",
+            "type": "number",
+            "required": false,
+            "description": "the calibrated model's measured reliability, 0-1"
+          },
+          {
+            "name": "nextTarget",
+            "type": "string",
+            "required": false,
+            "description": "the next question that removes the most uncertainty"
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "LoopTitle",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "content",
+            "type": "unknown",
+            "default": "Knowledge loop"
+          },
+          {
+            "key": "variant",
+            "type": "unknown",
+            "default": "h3"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Typography.traits.TypographyRender",
+        "linkedEntity": "KnowledgeClaim",
+        "transitionEvents": [
+          "INIT"
+        ],
+        "definerKnobs": []
+      },
+      {
+        "name": "AwaitingFalsificationText",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "color",
+            "type": "unknown",
+            "default": "muted"
+          },
+          {
+            "key": "content",
+            "type": "unknown",
+            "default": "Falsification requested — awaiting the automated check's verdict."
+          },
+          {
+            "key": "variant",
+            "type": "unknown",
+            "default": "caption"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Typography.traits.TypographyRender",
+        "linkedEntity": "KnowledgeClaim",
+        "transitionEvents": [
+          "INIT"
+        ],
+        "definerKnobs": []
+      },
+      {
+        "name": "AwaitingVerificationText",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "color",
+            "type": "unknown",
+            "default": "muted"
+          },
+          {
+            "key": "content",
+            "type": "unknown",
+            "default": "Independent verification requested — awaiting the automated check's verdict."
+          },
+          {
+            "key": "variant",
+            "type": "unknown",
+            "default": "caption"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Typography.traits.TypographyRender",
+        "linkedEntity": "KnowledgeClaim",
+        "transitionEvents": [
+          "INIT"
+        ],
+        "definerKnobs": []
+      },
+      {
+        "name": "LoopDivider",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [],
+        "capabilities": [],
+        "ref": "Divider.traits.DividerRender",
+        "linkedEntity": "KnowledgeClaim",
+        "transitionEvents": [
+          "INIT"
+        ],
+        "definerKnobs": []
+      },
+      {
+        "name": "SurvivedButton",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "action",
+            "type": "unknown",
+            "default": "SURVIVED"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "check"
+          },
+          {
+            "key": "label",
+            "type": "unknown",
+            "default": "Survived"
+          },
+          {
+            "key": "variant",
+            "type": "unknown",
+            "default": "primary"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Button.traits.ButtonRender",
+        "linkedEntity": "KnowledgeClaim",
+        "transitionEvents": [
+          "INIT"
+        ],
+        "definerKnobs": [
+          "action"
+        ]
+      },
+      {
+        "name": "FailedButton",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "action",
+            "type": "unknown",
+            "default": "FAILED"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "x"
+          },
+          {
+            "key": "label",
+            "type": "unknown",
+            "default": "Failed"
+          },
+          {
+            "key": "variant",
+            "type": "unknown",
+            "default": "danger"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Button.traits.ButtonRender",
+        "linkedEntity": "KnowledgeClaim",
+        "transitionEvents": [
+          "INIT"
+        ],
+        "definerKnobs": [
+          "action"
+        ]
+      },
+      {
+        "name": "ChecksAgreeButton",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "action",
+            "type": "unknown",
+            "default": "CHECKS_AGREE"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "check"
+          },
+          {
+            "key": "label",
+            "type": "unknown",
+            "default": "Checks agree"
+          },
+          {
+            "key": "variant",
+            "type": "unknown",
+            "default": "primary"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Button.traits.ButtonRender",
+        "linkedEntity": "KnowledgeClaim",
+        "transitionEvents": [
+          "INIT"
+        ],
+        "definerKnobs": [
+          "action"
+        ]
+      },
+      {
+        "name": "ChecksDisagreeButton",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "action",
+            "type": "unknown",
+            "default": "CHECKS_DISAGREE"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "x"
+          },
+          {
+            "key": "label",
+            "type": "unknown",
+            "default": "Checks disagree"
+          },
+          {
+            "key": "variant",
+            "type": "unknown",
+            "default": "danger"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Button.traits.ButtonRender",
+        "linkedEntity": "KnowledgeClaim",
+        "transitionEvents": [
+          "INIT"
+        ],
+        "definerKnobs": [
+          "action"
+        ]
+      },
+      {
+        "name": "ChooseNextTargetButton",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "action",
+            "type": "unknown",
+            "default": "CHOOSE_NEXT_TARGET"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "arrow-right"
+          },
+          {
+            "key": "label",
+            "type": "unknown",
+            "default": "Choose next target"
+          },
+          {
+            "key": "variant",
+            "type": "unknown",
+            "default": "primary"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Button.traits.ButtonRender",
+        "linkedEntity": "KnowledgeClaim",
+        "transitionEvents": [
+          "INIT"
+        ],
+        "definerKnobs": [
+          "action"
+        ]
+      },
+      {
+        "name": "KnowledgeLoop",
+        "emittedEvents": [
+          "FalsificationRequested",
+          "VerificationRequested",
+          "CalibrationRequested",
+          "LoopConcluded"
+        ],
+        "listenedEvents": [
+          "SURVIVED",
+          "FAILED",
+          "CHECKS_AGREE",
+          "CHECKS_DISAGREE",
+          "CHOOSE_NEXT_TARGET"
+        ],
+        "events": [
+          {
+            "name": "FalsificationRequested",
+            "direction": "emit",
+            "description": "The loop entered the falsification gate. A consumer that computes the verdict listens for this, runs its check, and routes its result into SURVIVED or FAILED via a listens override.",
+            "synonyms": "falsify, test the prediction, try to break it",
+            "tier": "domain"
+          },
+          {
+            "name": "VerificationRequested",
+            "direction": "emit",
+            "description": "The loop entered the independent-verification gate. A consumer routes its second-method result into CHECKS_AGREE or CHECKS_DISAGREE via a listens override.",
+            "synonyms": "verify independently, second opinion, cross-check",
+            "tier": "domain"
+          },
+          {
+            "name": "CalibrationRequested",
+            "direction": "emit",
+            "description": "The loop entered the calibration gate and is waiting for a reliability score (CONFIRM_SCORE, data.score), which the atom checks against reliabilityThreshold.",
+            "synonyms": "calibrate, measure reliability, score it",
+            "tier": "domain"
+          },
+          {
+            "name": "LoopConcluded",
+            "direction": "emit",
+            "description": "A claim cleared calibration; a composing host can act on the validated result.",
+            "synonyms": "validated, calibrated, concluded, ready to ship",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "CHANGE_CONDITION",
+            "direction": "listen",
+            "description": "The investigation's title and current hypothesis were entered.",
+            "synonyms": "start investigation, set hypothesis",
+            "tier": "internal"
+          },
+          {
+            "name": "MEASURE_DIFFERENCE",
+            "direction": "listen"
+          },
+          {
+            "name": "FORM_GUESS",
+            "direction": "listen"
+          },
+          {
+            "name": "EXTRAPOLATE",
+            "direction": "listen"
+          },
+          {
+            "name": "SURVIVED",
+            "direction": "listen"
+          },
+          {
+            "name": "FAILED",
+            "direction": "listen"
+          },
+          {
+            "name": "CHECKS_AGREE",
+            "direction": "listen"
+          },
+          {
+            "name": "CHECKS_DISAGREE",
+            "direction": "listen"
+          },
+          {
+            "name": "STRIP_TO_ESSENTIALS",
+            "direction": "listen"
+          },
+          {
+            "name": "FIND_AND_CONTROL_CAUSE",
+            "direction": "listen"
+          },
+          {
+            "name": "COMBINE_WITH_TRUSTED",
+            "direction": "listen"
+          },
+          {
+            "name": "CONFIRM_SCORE",
+            "direction": "listen",
+            "description": "The reliability-score form committed.",
+            "synonyms": "submit score, report reliability",
+            "tier": "internal"
+          },
+          {
+            "name": "CANCEL_SCORE",
+            "direction": "listen"
+          },
+          {
+            "name": "CHOOSE_NEXT_TARGET",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "manualFalsification",
+            "type": "boolean",
+            "default": true,
+            "label": "Falsification is judged by a person",
+            "description": "On: the falsification gate renders Survived / Failed buttons and a person decides. Off: no buttons render; the consumer's own sibling trait must answer FalsificationRequested by routing its result into SURVIVED / FAILED through a listens override.",
+            "synonyms": "manual falsification, human judged, automated check off",
+            "tier": "policy"
+          },
+          {
+            "key": "manualVerification",
+            "type": "boolean",
+            "default": true,
+            "label": "Verification is judged by a person",
+            "description": "On: the verification gate renders Checks-agree / Checks-disagree buttons. Off: the consumer's sibling trait answers VerificationRequested by routing its result into CHECKS_AGREE / CHECKS_DISAGREE through a listens override.",
+            "synonyms": "manual verification, human second opinion, automated cross-check off",
+            "tier": "policy"
+          },
+          {
+            "key": "reliabilityThreshold",
+            "type": "number",
+            "default": 0.8,
+            "label": "Reliability threshold",
+            "description": "The measured reliability score a calibrated claim must clear before it is considered good enough to act on. Below it, the loop returns to falsification for more testing.",
+            "synonyms": "confidence threshold, calibration bar, minimum reliability",
+            "tier": "policy"
+          },
+          {
+            "key": "requireIndependentVerification",
+            "type": "boolean",
+            "default": true,
+            "label": "Require independent verification",
+            "description": "Whether a second, independent check must agree before the claim advances. Off skips straight to generalization once falsification survives.",
+            "synonyms": "second opinion, independent check, cross-verify",
+            "tier": "policy"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "KnowledgeClaim",
+        "transitionEvents": [
+          "CANCEL_SCORE",
+          "CHANGE_CONDITION",
+          "CHECKS_AGREE",
+          "CHECKS_DISAGREE",
+          "CHOOSE_NEXT_TARGET",
+          "COMBINE_WITH_TRUSTED",
+          "CONFIRM_SCORE",
+          "EXTRAPOLATE",
+          "FAILED",
+          "FIND_AND_CONTROL_CAUSE",
+          "FORM_GUESS",
+          "INIT",
+          "MEASURE_DIFFERENCE",
+          "STRIP_TO_ESSENTIALS",
+          "SURVIVED"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "candidateStructure",
+            "independentChecksAgree",
+            "reliabilityScore",
+            "survivedFalsification",
+            "title"
+          ]
+        },
+        "effectRow": [
+          {
+            "kind": "emit",
+            "resource": "CalibrationRequested"
+          },
+          {
+            "kind": "emit",
+            "resource": "FalsificationRequested"
+          },
+          {
+            "kind": "emit",
+            "resource": "LoopConcluded"
+          },
+          {
+            "kind": "emit",
+            "resource": "VerificationRequested"
+          },
+          {
+            "kind": "fetch",
+            "resource": "KnowledgeClaim"
+          },
+          {
+            "kind": "render-ui",
+            "resource": "main"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.candidateStructure"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.independentChecksAgree"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.reliabilityScore"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.survivedFalsification"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.title"
+          }
+        ],
+        "effectEntityRefs": [
+          "KnowledgeClaim"
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "name": "KnowledgeLoopPage",
+        "defaultPath": "/knowledge-loop",
+        "primaryEntity": "KnowledgeClaim"
+      }
+    ],
+    "emittedEvents": [
+      "CalibrationRequested",
+      "FalsificationRequested",
+      "LoopConcluded",
+      "VerificationRequested"
+    ],
+    "listenedEvents": [
+      "CHECKS_AGREE",
+      "CHECKS_DISAGREE",
+      "CHOOSE_NEXT_TARGET",
+      "FAILED",
+      "SURVIVED"
+    ],
+    "exposure": "both",
+    "provenance": "authored",
+    "sourceValid": true
+  }
+]

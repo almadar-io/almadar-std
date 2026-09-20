@@ -270,6 +270,11 @@ import {
   isStdImageUploadMultiUploadedImageOrbitalParams,
 } from './ui/core/atoms/std-image-upload-multi.js';
 import {
+  stdKnowledgeLoopKnowledgeLoopOrbital,
+  StdKnowledgeLoopKnowledgeLoopOrbitalManifest,
+  isStdKnowledgeLoopKnowledgeLoopOrbitalParams,
+} from './infra/atoms/std-knowledge-loop.js';
+import {
   stdKnowledgeTracingKnowledgeTracingOrbital,
   StdKnowledgeTracingKnowledgeTracingOrbitalManifest,
   isStdKnowledgeTracingKnowledgeTracingOrbitalParams,
@@ -1186,6 +1191,15 @@ REGISTRY_MUT.set('std-image-upload-multi::UploadedImageOrbital', {
     return stdImageUploadMultiUploadedImageOrbital(p);
   },
   manifest: StdImageUploadMultiUploadedImageOrbitalManifest,
+});
+REGISTRY_MUT.set('std-knowledge-loop::KnowledgeLoopOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdKnowledgeLoopKnowledgeLoopOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-knowledge-loop::KnowledgeLoopOrbital');
+    }
+    return stdKnowledgeLoopKnowledgeLoopOrbital(p);
+  },
+  manifest: StdKnowledgeLoopKnowledgeLoopOrbitalManifest,
 });
 REGISTRY_MUT.set('std-knowledge-tracing::KnowledgeTracingOrbital', {
   factory: (p: object): OrbitalDefinition => {
