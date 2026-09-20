@@ -72,10 +72,41 @@
         "listenedEvents": [
           "RUN_EXACT"
         ],
-        "overridableConfigKeys": [],
+        "overridableConfigKeys": [
+          {
+            "key": "caseSensitive",
+            "type": "boolean",
+            "default": false,
+            "label": "Case sensitive",
+            "description": "Compare candidate and key with case sensitivity; off lowercases both sides before comparing",
+            "tier": "policy"
+          },
+          {
+            "key": "numericTolerance",
+            "type": "float",
+            "default": 0,
+            "label": "Numeric tolerance",
+            "description": "Absolute tolerance applied when both candidate and key are numbers; 0 requires an exact numeric match",
+            "tier": "policy"
+          },
+          {
+            "key": "trimWhitespace",
+            "type": "boolean",
+            "default": true,
+            "label": "Trim whitespace",
+            "description": "Strip leading and trailing whitespace from both sides before comparing",
+            "tier": "policy"
+          }
+        ],
         "capabilities": [],
         "ref": "Rung0.traits.ExactCheckRun",
-        "linkedEntity": "ExactCheck"
+        "linkedEntity": "ExactCheck",
+        "transitionEvents": [
+          "CHECK",
+          "INIT",
+          "RESET"
+        ],
+        "definerKnobs": []
       },
       {
         "name": "LookupRung",
@@ -83,10 +114,33 @@
         "listenedEvents": [
           "EXACT_UNMATCHED"
         ],
-        "overridableConfigKeys": [],
+        "overridableConfigKeys": [
+          {
+            "key": "matchField",
+            "type": "string",
+            "default": "",
+            "label": "Match field",
+            "description": "When the accepted list holds objects rather than scalars, the field to compare against the candidate; empty compares each element itself",
+            "tier": "domain"
+          },
+          {
+            "key": "normalize",
+            "type": "boolean",
+            "default": true,
+            "label": "Normalize",
+            "description": "Trim and lowercase both sides before comparing",
+            "tier": "policy"
+          }
+        ],
         "capabilities": [],
         "ref": "Rung1.traits.LookupRun",
-        "linkedEntity": "KeyLookup"
+        "linkedEntity": "KeyLookup",
+        "transitionEvents": [
+          "INIT",
+          "LOOKUP",
+          "RESET"
+        ],
+        "definerKnobs": []
       },
       {
         "name": "SimilarityRung",
@@ -94,10 +148,43 @@
         "listenedEvents": [
           "KEY_MISS"
         ],
-        "overridableConfigKeys": [],
+        "overridableConfigKeys": [
+          {
+            "key": "embedModel",
+            "type": "string",
+            "default": "",
+            "label": "Embedding model",
+            "description": "Reserved for embedding-model selection; llm/embed takes only a texts array today, so this knob is not yet wired into the call",
+            "tier": "infra"
+          },
+          {
+            "key": "floor",
+            "type": "float",
+            "default": 0.82,
+            "label": "Match floor",
+            "description": "Minimum cosine score for a confident match",
+            "tier": "policy"
+          },
+          {
+            "key": "margin",
+            "type": "float",
+            "default": 0.05,
+            "label": "Match margin",
+            "description": "Minimum gap between the best and second-best score required to trust the match",
+            "tier": "policy"
+          }
+        ],
         "capabilities": [],
         "ref": "Rung3.traits.SimilarityRun",
-        "linkedEntity": "SimilarityComparison"
+        "linkedEntity": "SimilarityComparison",
+        "transitionEvents": [
+          "COMPARE",
+          "EMBEDDED",
+          "EMBED_FAILED",
+          "INIT",
+          "RESET"
+        ],
+        "definerKnobs": []
       },
       {
         "name": "InferRung",
@@ -105,10 +192,75 @@
         "listenedEvents": [
           "SIMILARITY_ABSTAINED"
         ],
-        "overridableConfigKeys": [],
+        "overridableConfigKeys": [
+          {
+            "key": "confidenceFloor",
+            "type": "float",
+            "default": 0.7,
+            "label": "Confidence floor",
+            "description": "Minimum service-reported confidence required to answer; below this the atom abstains with reason low confidence",
+            "tier": "policy"
+          },
+          {
+            "key": "model",
+            "type": "string",
+            "default": "",
+            "label": "Model reference",
+            "description": "hf:<id> for off-the-shelf weights, or a masar checkpoint id, forwarded to the ml service infer action",
+            "tier": "infra"
+          },
+          {
+            "key": "outputContract",
+            "type": "OutputContract",
+            "default": {
+              "ranges": {}
+            },
+            "label": "Output contract",
+            "description": "Declared shape and per-dimension ranges the model output must satisfy; a failing check abstains with reason contract violation. Omit shape to assert ranges only — an empty shape [] asserts a SCALAR output, it does not mean unconstrained",
+            "tier": "domain",
+            "properties": {
+              "ranges": {
+                "name": "ranges",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "max": {
+                      "name": "max",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "min": {
+                      "name": "min",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "shape": {
+                "name": "shape",
+                "required": false,
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        ],
         "capabilities": [],
         "ref": "Rung4.traits.InferenceRun",
-        "linkedEntity": "Inference"
+        "linkedEntity": "Inference",
+        "transitionEvents": [
+          "INFER",
+          "INFERRED_RAW",
+          "INFER_CALL_FAILED",
+          "INIT",
+          "RESET"
+        ],
+        "definerKnobs": []
       },
       {
         "name": "ClassifyRung",
@@ -116,10 +268,46 @@
         "listenedEvents": [
           "INFER_ABSTAINED"
         ],
-        "overridableConfigKeys": [],
+        "overridableConfigKeys": [
+          {
+            "key": "categories",
+            "type": "[string]",
+            "default": [],
+            "label": "Categories",
+            "description": "Closed set of category labels the LLM must choose from",
+            "tier": "domain",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "model",
+            "type": "string",
+            "default": "",
+            "label": "Model",
+            "description": "Model override forwarded to the classify call",
+            "tier": "infra"
+          },
+          {
+            "key": "provider",
+            "type": "string",
+            "default": "",
+            "label": "Provider",
+            "description": "Reserved for provider selection; LLMServiceActions.classify (packages/almadar-llm/src/contracts.ts) takes no provider param today, so this knob is not forwarded to the call",
+            "tier": "infra"
+          }
+        ],
         "capabilities": [],
         "ref": "Rung5.traits.ClassifyRun",
-        "linkedEntity": "ClassifierVerdict"
+        "linkedEntity": "ClassifierVerdict",
+        "transitionEvents": [
+          "CLASSIFIED_RAW",
+          "CLASSIFY",
+          "CLASSIFY_CALL_FAILED",
+          "INIT",
+          "RESET"
+        ],
+        "definerKnobs": []
       },
       {
         "name": "LadderVerdictSink",

@@ -75,27 +75,39 @@
         "overridableConfigKeys": [
           {
             "key": "gridHeight",
-            "type": "unknown",
-            "default": 2
+            "type": "number",
+            "default": 2,
+            "label": "Grid Height",
+            "description": "Grid row count clamping move + wander bounds",
+            "tier": "presentation"
           },
           {
             "key": "gridWidth",
-            "type": "unknown",
-            "default": 2
+            "type": "number",
+            "default": 2,
+            "label": "Grid Width",
+            "description": "Grid column count clamping move + wander bounds",
+            "tier": "presentation"
           },
           {
             "key": "moveBudget",
-            "type": "unknown",
-            "default": 100
+            "type": "number",
+            "default": 100,
+            "label": "Move Budget",
+            "description": "Moves the hero may spend before the round is lost if objectives remain",
+            "tier": "domain"
           },
           {
             "key": "running",
-            "type": "unknown",
-            "default": true
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true, MOVE/WANDER intents are applied; toggle to freeze the board",
+            "tier": "domain"
           },
           {
             "key": "tiles",
-            "type": "unknown",
+            "type": "[Tile]",
             "default": [
               {
                 "id": "t-0-0",
@@ -185,11 +197,39 @@
                 "y": 1,
                 "z": 0
               }
-            ]
+            ],
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "passable": {
+                  "name": "passable",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "label": "Tiles",
+            "description": "Grid tiles used for passability checks (auto-generated all-passable when empty)",
+            "tier": "presentation"
           },
           {
             "key": "units",
-            "type": "unknown",
+            "type": "[Unit]",
             "default": [
               {
                 "health": 1,
@@ -220,12 +260,93 @@
                 "y": 1,
                 "z": 0
               }
-            ]
+            ],
+            "items": {
+              "properties": {
+                "health": {
+                  "name": "health",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "maxHealth": {
+                  "name": "maxHealth",
+                  "required": false,
+                  "type": "number"
+                },
+                "position": {
+                  "name": "position",
+                  "required": false,
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
+                },
+                "team": {
+                  "name": "team",
+                  "required": false,
+                  "type": "string"
+                },
+                "unitType": {
+                  "name": "unitType",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": false,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "label": "Initial Units",
+            "description": "Seed roster: the player hero plus any neutral NPCs",
+            "tier": "domain"
           }
         ],
         "capabilities": [],
         "ref": "Nav.traits.HeroNav",
-        "linkedEntity": "GameState"
+        "linkedEntity": "GameState",
+        "transitionEvents": [
+          "INIT",
+          "MOVE",
+          "RESTART",
+          "WANDER"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "movesLeft",
+            "tiles",
+            "units"
+          ]
+        }
       },
       {
         "name": "Gather",
@@ -233,29 +354,180 @@
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
+            "key": "features",
+            "type": "[Feature]",
+            "default": [],
+            "label": "Features",
+            "description": "Board features — resource nodes (matched by woodType/stoneType) plus decorations",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "assetUrl": {
+                  "name": "assetUrl",
+                  "required": false,
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "elevation": {
+                  "name": "elevation",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
             "key": "running",
-            "type": "unknown",
-            "default": true
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true, hero steps onto resource nodes are gathered; toggle to freeze",
+            "tier": "domain"
+          },
+          {
+            "key": "startStone",
+            "type": "number",
+            "default": 0,
+            "label": "Start Stone",
+            "description": "Stone set on INIT",
+            "tier": "domain"
+          },
+          {
+            "key": "startWood",
+            "type": "number",
+            "default": 0,
+            "label": "Start Wood",
+            "description": "Wood set on INIT",
+            "tier": "domain"
           },
           {
             "key": "stoneType",
-            "type": "unknown",
-            "default": "rock"
+            "type": "string",
+            "default": "rock",
+            "label": "Stone Type",
+            "description": "Feature type counted as a stone resource node",
+            "tier": "domain"
           },
           {
             "key": "woodType",
-            "type": "unknown",
-            "default": "tree"
+            "type": "string",
+            "default": "tree",
+            "label": "Wood Type",
+            "description": "Feature type counted as a wood resource node",
+            "tier": "domain"
           },
           {
             "key": "yieldPerNode",
-            "type": "unknown",
-            "default": 1
+            "type": "number",
+            "default": 1,
+            "label": "Yield Per Node",
+            "description": "Wood or stone gained per node gathered",
+            "tier": "domain"
           }
         ],
         "capabilities": [],
         "ref": "Harvest.traits.Gather",
-        "linkedEntity": "GameState"
+        "linkedEntity": "GameState",
+        "transitionEvents": [
+          "HERO_STEPPED",
+          "INIT",
+          "RESTART"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "features",
+            "stone",
+            "wood"
+          ]
+        }
       },
       {
         "name": "FxDecay",
@@ -263,14 +535,141 @@
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
+            "key": "decayRate",
+            "type": "number",
+            "default": 1,
+            "label": "Decay Rate",
+            "description": "Ttl units removed from every fx entry each tick; higher fades particles faster.",
+            "tier": "domain"
+          },
+          {
+            "key": "fx",
+            "type": "[Fx]",
+            "default": [],
+            "label": "Initial Fx",
+            "description": "Seed particles rendered before the first BURST; usually empty.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "animation": {
+                  "name": "animation",
+                  "required": false,
+                  "type": "string"
+                },
+                "bornAt": {
+                  "name": "bornAt",
+                  "required": false,
+                  "type": "number"
+                },
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "effect": {
+                  "name": "effect",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "maxTtl": {
+                  "name": "maxTtl",
+                  "required": false,
+                  "type": "number"
+                },
+                "message": {
+                  "name": "message",
+                  "required": false,
+                  "type": "string"
+                },
+                "particleCount": {
+                  "name": "particleCount",
+                  "required": false,
+                  "type": "number"
+                },
+                "size": {
+                  "name": "size",
+                  "required": false,
+                  "type": "number"
+                },
+                "space": {
+                  "name": "space",
+                  "required": false,
+                  "type": "string"
+                },
+                "ttl": {
+                  "name": "ttl",
+                  "required": true,
+                  "type": "number"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string"
+                },
+                "vx": {
+                  "name": "vx",
+                  "required": false,
+                  "type": "number"
+                },
+                "vy": {
+                  "name": "vy",
+                  "required": false,
+                  "type": "number"
+                },
+                "vz": {
+                  "name": "vz",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
             "key": "running",
-            "type": "unknown",
-            "default": true
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true the decay tick runs; toggle to freeze effects.",
+            "tier": "domain"
           }
         ],
         "capabilities": [],
         "ref": "Particles.traits.FxParticles",
-        "linkedEntity": "GameState"
+        "linkedEntity": "GameState",
+        "transitionEvents": [
+          "BURST",
+          "INIT",
+          "RESTART"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "fx"
+          ]
+        }
       },
       {
         "name": "Flow",
@@ -279,13 +678,30 @@
         "overridableConfigKeys": [
           {
             "key": "running",
-            "type": "unknown",
-            "default": true
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true, RESOURCES/BUILD_CAMP signals resolve win/lose; toggle to freeze",
+            "tier": "domain"
           }
         ],
         "capabilities": [],
         "ref": "Survival.traits.SurvivalFlow",
-        "linkedEntity": "GameState"
+        "linkedEntity": "GameState",
+        "transitionEvents": [
+          "BUILD_CAMP",
+          "INIT",
+          "RESOURCES",
+          "RESTART"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "result"
+          ]
+        }
       },
       {
         "name": "SurvivalIntent",

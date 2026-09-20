@@ -166,38 +166,74 @@
         "overridableConfigKeys": [
           {
             "key": "intervalWidthMax",
-            "type": "unknown",
-            "default": 0.25
+            "type": "float",
+            "default": 0.25,
+            "label": "Max credible-interval width",
+            "description": "Above this width the posterior is too uncertain to decide — abstain with EVIDENCE_INSUFFICIENT.",
+            "tier": "policy"
           },
           {
             "key": "masteryFloor",
-            "type": "unknown",
-            "default": 0.85
+            "type": "float",
+            "default": 0.85,
+            "label": "Mastery floor",
+            "description": "Posterior mean at or above this, with a tight interval, licenses MASTERY_REACHED.",
+            "tier": "policy"
           },
           {
             "key": "priorAlpha",
-            "type": "unknown",
-            "default": 1
+            "type": "float",
+            "default": 1,
+            "label": "Prior alpha",
+            "description": "Beta prior success pseudo-count before any observation.",
+            "tier": "domain"
           },
           {
             "key": "priorBeta",
-            "type": "unknown",
-            "default": 1
+            "type": "float",
+            "default": 1,
+            "label": "Prior beta",
+            "description": "Beta prior failure pseudo-count before any observation.",
+            "tier": "domain"
           },
           {
             "key": "remediationCeiling",
-            "type": "unknown",
-            "default": 0.35
+            "type": "float",
+            "default": 0.35,
+            "label": "Remediation ceiling",
+            "description": "Posterior mean at or below this, with a tight interval, licenses REMEDIATION_NEEDED.",
+            "tier": "policy"
           },
           {
             "key": "sampleCount",
-            "type": "unknown",
-            "default": 200
+            "type": "int",
+            "default": 200,
+            "label": "Posterior sample count",
+            "description": "Number of Monte Carlo draws from the Beta posterior used to estimate the credible interval.",
+            "tier": "infra"
           }
         ],
         "capabilities": [],
         "ref": "Posterior.traits.PosteriorBelief",
-        "linkedEntity": "KnowledgeState"
+        "linkedEntity": "KnowledgeState",
+        "transitionEvents": [
+          "INIT",
+          "OBSERVE"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "alpha",
+            "beta",
+            "intervalHigh",
+            "intervalLow",
+            "mean",
+            "observations",
+            "status"
+          ]
+        }
       },
       {
         "name": "Labels",
@@ -208,18 +244,44 @@
         "overridableConfigKeys": [
           {
             "key": "sampleRate",
-            "type": "unknown",
-            "default": 1
+            "type": "float",
+            "default": 1,
+            "label": "Sample rate",
+            "description": "Fraction of examples to keep (1 = capture all). A prob/flip trial per observation.",
+            "tier": "policy"
           },
           {
             "key": "sink",
-            "type": "unknown",
-            "default": "knowledge-tracing"
+            "type": "string",
+            "default": "knowledge-tracing",
+            "label": "Label sink",
+            "description": "Named destination this batch of examples is attributed to; interpreted downstream (the physical label store is not yet decided).",
+            "tier": "infra"
           }
         ],
         "capabilities": [],
         "ref": "LabelCap.traits.LabelCaptureListener",
-        "linkedEntity": "KnowledgeState"
+        "linkedEntity": "KnowledgeState",
+        "transitionEvents": [
+          "CAPTURE",
+          "INIT"
+        ],
+        "effectEntityRefs": [
+          "LabeledExample"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "input",
+            "outcome",
+            "recordedAt",
+            "sink",
+            "source",
+            "verdict"
+          ]
+        }
       }
     ],
     "pages": [

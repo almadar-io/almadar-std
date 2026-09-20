@@ -124,9 +124,279 @@
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
+            "key": "curveModsEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Curve Mods Enabled",
+            "description": "When true, entity.curveMods reshape the skate surface inside each mod's x-range: the road samples the base curve at b·(x − h) and applies a·y + k (slope scales by a·b) — coefficient pads lift/tilt/compress the segment the player is riding. Multiple overlapping mods stack by summing each mod's delta from the base surface; a mod whose shifted sample leaves the curve range is skipped. Default off: boards without coef pads pay nothing.",
+            "tier": "domain"
+          },
+          {
+            "key": "driftRegions",
+            "type": "[BodyDriftRegion]",
+            "default": [],
+            "label": "Drift Regions",
+            "description": "Axis-aligned rects (x0..x1, y0..y1 in world units) each carrying a constant acceleration (ax, ay in units/s²) applied with the physics dt whenever the body's center is inside — winds, currents, gradient pushes. Empty list = zero behavior change. Seeded onto the entity on INIT; the live set is entity.driftRegions — SET_DRIFT_REGIONS replaces it at runtime and RESTART does not reseed it.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "ax": {
+                  "name": "ax",
+                  "required": true,
+                  "type": "number"
+                },
+                "ay": {
+                  "name": "ay",
+                  "required": true,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "x0": {
+                  "name": "x0",
+                  "required": true,
+                  "type": "number"
+                },
+                "x1": {
+                  "name": "x1",
+                  "required": true,
+                  "type": "number"
+                },
+                "y0": {
+                  "name": "y0",
+                  "required": true,
+                  "type": "number"
+                },
+                "y1": {
+                  "name": "y1",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "gravity",
+            "type": "number",
+            "default": 24,
+            "label": "Gravity",
+            "description": "Units/s² added to vertical velocity; the SIGN is the vertical convention — positive pulls toward +y (screen boards, y down), negative toward −y (math canvases, y up) — and jumps always fire against it",
+            "tier": "domain"
+          },
+          {
+            "key": "jumpStrength",
+            "type": "number",
+            "default": 11,
+            "label": "Jump Strength",
+            "description": "Vertical speed in units/s imparted by JUMP, directed against gravity; apex height ≈ jumpStrength² / (2·|gravity|)",
+            "tier": "domain"
+          },
+          {
+            "key": "killY",
+            "type": "number",
+            "default": 1000000,
+            "label": "Kill Y",
+            "description": "Fall line: crossing it in the gravity direction fires BODY_FELL once (past it downward on y-down boards, below it on y-up canvases); y-up consumers must set a value below their world floor",
+            "tier": "domain"
+          },
+          {
+            "key": "maxFallSpeed",
+            "type": "number",
+            "default": 14,
+            "label": "Max Fall Speed",
+            "description": "Terminal velocity cap in units/s applied to vertical speed each tick",
+            "tier": "presentation"
+          },
+          {
+            "key": "moveSpeed",
+            "type": "number",
+            "default": 5,
+            "label": "Move Speed",
+            "description": "Horizontal run speed in units/s applied by STEER dir ±1",
+            "tier": "domain"
+          },
+          {
+            "key": "platforms",
+            "type": "[PlatformerPlatform]",
+            "default": [],
+            "label": "Platforms",
+            "description": "Level geometry as min-corner rects: ground/platform tiles are solid one-way landing surfaces, hazard tiles emit BODY_HAZARD on touch, goal tiles emit BODY_GOAL. Seeded onto the entity on INIT; the live set is entity.platforms — SET_PLATFORMS replaces it at runtime (boards that import geometry, e.g. stitched open worlds) and RESTART deliberately does NOT reseed it, so injected geometry survives respawns.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "height": {
+                  "name": "height",
+                  "required": true,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "type": {
+                  "name": "type",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "ground",
+                    "platform",
+                    "hazard",
+                    "goal"
+                  ]
+                },
+                "width": {
+                  "name": "width",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
             "key": "running",
-            "type": "unknown",
-            "default": true
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true the 33ms physics tick integrates and collides; toggle to freeze the body",
+            "tier": "domain"
+          },
+          {
+            "key": "skate",
+            "type": "boolean",
+            "default": false,
+            "label": "Curve Skating",
+            "description": "When true, a grounded body within skateSnap of the skateCurve surface rides the curve: y snaps to the interpolated surface and tangential gravity (g·slope/(1+slope²)) accelerates vx, so the body slides downhill along the graph and launches off its ends; JUMP kicks free. Engages when grounded, when landing on a tile, or when a falling (not rising) body passes within skateSnap above the surface.",
+            "tier": "domain"
+          },
+          {
+            "key": "skateCurve",
+            "type": "[PlatformerCurveSample]",
+            "default": [],
+            "label": "Skate Curve",
+            "description": "Surface samples (x strictly increasing) the body skates when skate is on; y is the surface height for the body's MIN corner, linearly interpolated between bracketing samples — mirror the render-side curve so what you see is what you ride. Seeded onto the entity on INIT; the live curve is entity.skateCurve — SET_SKATE_CURVE replaces it at runtime (stitched mega-curves) and RESTART does not reseed it.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "skateMaxGap",
+            "type": "number",
+            "default": 0,
+            "label": "Skate Max Gap",
+            "description": "Largest x-gap between consecutive skateCurve samples that still counts as surface. 0 = unlimited (sparse two-sample lines skate fine). Dense resampled curves with real gaps between segments (stitched worlds) MUST set this — otherwise the sampler invents a skatable chord across every gap (an invisible line above the bridge/terrain that the body snaps to and glides along).",
+            "tier": "domain"
+          },
+          {
+            "key": "skateSnap",
+            "type": "number",
+            "default": 0.75,
+            "label": "Skate Snap",
+            "description": "Max vertical gap (world units) between the body's min corner and the curve surface for skating to engage or stay engaged; larger values grab earlier on landing, smaller values release sooner on bumps",
+            "tier": "domain"
+          },
+          {
+            "key": "spawn",
+            "type": "PlatformerBody",
+            "default": {
+              "facingRight": true,
+              "grounded": false,
+              "height": 0.6,
+              "vx": 0,
+              "vy": 0,
+              "width": 0.6,
+              "x": 2,
+              "y": 8
+            },
+            "label": "Spawn Body",
+            "description": "Initial body rect (min-corner x/y plus width/height) seeded on INIT/RESTART; width/height also define the collision box",
+            "tier": "domain",
+            "properties": {
+              "facingRight": {
+                "name": "facingRight",
+                "required": false,
+                "type": "boolean"
+              },
+              "grounded": {
+                "name": "grounded",
+                "required": false,
+                "type": "boolean"
+              },
+              "height": {
+                "name": "height",
+                "required": true,
+                "type": "number"
+              },
+              "vx": {
+                "name": "vx",
+                "required": false,
+                "type": "number"
+              },
+              "vy": {
+                "name": "vy",
+                "required": false,
+                "type": "number"
+              },
+              "width": {
+                "name": "width",
+                "required": true,
+                "type": "number"
+              },
+              "x": {
+                "name": "x",
+                "required": true,
+                "type": "number"
+              },
+              "y": {
+                "name": "y",
+                "required": true,
+                "type": "number"
+              }
+            }
+          },
+          {
+            "key": "xMax",
+            "type": "number",
+            "default": 1000000,
+            "label": "Right Wall",
+            "description": "Largest x the body's min corner may hold (world bounds, not level geometry)",
+            "tier": "presentation"
+          },
+          {
+            "key": "xMin",
+            "type": "number",
+            "default": -1000000,
+            "label": "Left Wall",
+            "description": "Smallest x the body's min corner may hold (world bounds, not level geometry)",
+            "tier": "presentation"
           }
         ],
         "capabilities": [],
@@ -147,6 +417,37 @@
           "PLACE": "PLACE",
           "SET_TUNING": "SET_TUNING",
           "STEER": "STEER"
+        },
+        "transitionEvents": [
+          "CURVE_MOD_ADD",
+          "CURVE_MOD_CLEAR",
+          "CURVE_MOD_CLEAR_RANGE",
+          "INIT",
+          "JUMP",
+          "PLACE",
+          "RESTART",
+          "SET_DRIFT_REGIONS",
+          "SET_PLATFORMS",
+          "SET_SKATE_CURVE",
+          "SET_TUNING",
+          "STEER"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "body",
+            "curveMods",
+            "driftRegions",
+            "fell",
+            "goalId",
+            "hazardId",
+            "platforms",
+            "skateCurve",
+            "skating",
+            "tuning"
+          ]
         }
       },
       {
@@ -155,9 +456,81 @@
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
+            "key": "features",
+            "type": "[PickupFeature]",
+            "default": [],
+            "label": "Features",
+            "description": "One row per collectible: id, center (x, y in world units), board-defined kind (star, boost, …), display glyph and message floated on pickup. collected is stamped at runtime. Seeded onto the entity on INIT; the live set is entity.pickups — SET_FEATURES replaces it at runtime (boards that import collectibles), and RESTART re-arms the live set rather than re-reading config, so injected features survive respawns.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "active": {
+                  "name": "active",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "collected": {
+                  "name": "collected",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "glyph": {
+                  "name": "glyph",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "kind": {
+                  "name": "kind",
+                  "required": true,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "reachX",
+            "type": "number",
+            "default": 0.7,
+            "label": "Reach X",
+            "description": "Horizontal tolerance (world units) around a feature's center when testing player contact.",
+            "tier": "domain"
+          },
+          {
+            "key": "reachY",
+            "type": "number",
+            "default": 1.2,
+            "label": "Reach Y",
+            "description": "Vertical tolerance (world units) around a feature's center when testing player contact; generous values catch fly-through pickups.",
+            "tier": "domain"
+          },
+          {
             "key": "running",
-            "type": "unknown",
-            "default": true
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true, BODY_MOVED collects touched features; toggle to freeze the set as-is.",
+            "tier": "domain"
           }
         ],
         "capabilities": [],
@@ -165,6 +538,24 @@
         "linkedEntity": "PlatformerPuzzleData",
         "eventRenames": {
           "BODY_MOVED": "BODY_MOVED"
+        },
+        "transitionEvents": [
+          "ADD_FEATURES",
+          "BODY_MOVED",
+          "FEATURES_ACTIVE",
+          "INIT",
+          "RESTART",
+          "SET_FEATURES"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "pickupCompleted",
+            "pickups",
+            "total"
+          ]
         }
       },
       {
@@ -174,8 +565,11 @@
         "overridableConfigKeys": [
           {
             "key": "running",
-            "type": "unknown",
-            "default": true
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true, PROGRESS signals resolve win/lose; toggle to freeze",
+            "tier": "domain"
           }
         ],
         "capabilities": [],
@@ -184,6 +578,19 @@
         "eventRenames": {
           "GAME_END": "GAME_END",
           "PROGRESS": "PROGRESS"
+        },
+        "transitionEvents": [
+          "INIT",
+          "PROGRESS",
+          "RESTART"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "result"
+          ]
         }
       },
       {
@@ -192,9 +599,101 @@
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
+            "key": "gates",
+            "type": "[ChoiceGate]",
+            "default": [],
+            "label": "Choice Gates",
+            "description": "One row per gate: id, gate center (x, y — y is the option-platform surface the judge tests against), the hint floated on a wrong answer, and the options: id, dx offset from the gate center, the label drawn above the platform, and correct. solved/chosen are stamped at runtime. Seeded onto the entity on INIT; the live set is entity.choices — SET_GATES replaces it at runtime (boards that import gates), and RESTART re-arms the live set rather than re-reading config, so injected gates survive respawns.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "chosen": {
+                  "name": "chosen",
+                  "required": false,
+                  "type": "string"
+                },
+                "hint": {
+                  "name": "hint",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "options": {
+                  "name": "options",
+                  "required": true,
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "correct": {
+                        "name": "correct",
+                        "required": true,
+                        "type": "boolean"
+                      },
+                      "dx": {
+                        "name": "dx",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "id": {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "label": {
+                        "name": "label",
+                        "required": true,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "solved": {
+                  "name": "solved",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "reachX",
+            "type": "number",
+            "default": 0.7,
+            "label": "Reach X",
+            "description": "Horizontal tolerance (world units) around an option platform's center when testing a landing (approximates the body's half-width plus a step).",
+            "tier": "domain"
+          },
+          {
+            "key": "reachY",
+            "type": "number",
+            "default": 1.2,
+            "label": "Reach Y",
+            "description": "Vertical tolerance (world units) around the gate's option plane when testing a landing (covers small hops onto the platform surface).",
+            "tier": "domain"
+          },
+          {
             "key": "running",
-            "type": "unknown",
-            "default": true
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true, BODY_MOVED judges option landings; toggle to freeze every gate as-is.",
+            "tier": "domain"
           }
         ],
         "capabilities": [],
@@ -202,6 +701,20 @@
         "linkedEntity": "PlatformerPuzzleData",
         "eventRenames": {
           "BODY_MOVED": "BODY_MOVED"
+        },
+        "transitionEvents": [
+          "BODY_MOVED",
+          "INIT",
+          "RESTART",
+          "SET_GATES"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "choices"
+          ]
         }
       },
       {
@@ -210,9 +723,123 @@
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
+            "key": "decayRate",
+            "type": "number",
+            "default": 1,
+            "label": "Decay Rate",
+            "description": "Ttl units removed from every fx entry each tick; higher fades particles faster.",
+            "tier": "domain"
+          },
+          {
+            "key": "fx",
+            "type": "[Fx]",
+            "default": [],
+            "label": "Initial Fx",
+            "description": "Seed particles rendered before the first BURST; usually empty.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "animation": {
+                  "name": "animation",
+                  "required": false,
+                  "type": "string"
+                },
+                "bornAt": {
+                  "name": "bornAt",
+                  "required": false,
+                  "type": "number"
+                },
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "effect": {
+                  "name": "effect",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "maxTtl": {
+                  "name": "maxTtl",
+                  "required": false,
+                  "type": "number"
+                },
+                "message": {
+                  "name": "message",
+                  "required": false,
+                  "type": "string"
+                },
+                "particleCount": {
+                  "name": "particleCount",
+                  "required": false,
+                  "type": "number"
+                },
+                "size": {
+                  "name": "size",
+                  "required": false,
+                  "type": "number"
+                },
+                "space": {
+                  "name": "space",
+                  "required": false,
+                  "type": "string"
+                },
+                "ttl": {
+                  "name": "ttl",
+                  "required": true,
+                  "type": "number"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string"
+                },
+                "vx": {
+                  "name": "vx",
+                  "required": false,
+                  "type": "number"
+                },
+                "vy": {
+                  "name": "vy",
+                  "required": false,
+                  "type": "number"
+                },
+                "vz": {
+                  "name": "vz",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
             "key": "running",
-            "type": "unknown",
-            "default": true
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true the decay tick runs; toggle to freeze effects.",
+            "tier": "domain"
           }
         ],
         "capabilities": [],
@@ -220,6 +847,19 @@
         "linkedEntity": "PlatformerPuzzleData",
         "eventRenames": {
           "BURST": "BURST"
+        },
+        "transitionEvents": [
+          "BURST",
+          "INIT",
+          "RESTART"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "fx"
+          ]
         }
       },
       {
@@ -229,8 +869,69 @@
         "overridableConfigKeys": [
           {
             "key": "running",
-            "type": "unknown",
-            "default": true
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When false all narrative events are ignored.",
+            "tier": "domain"
+          },
+          {
+            "key": "styles",
+            "type": "Map<string,StyleDef>",
+            "default": {
+              "celebrate": {
+                "color": "#facc15",
+                "effect": "sparkle",
+                "size": 0.9,
+                "ttl": 3
+              },
+              "fact": {
+                "color": "#38bdf8",
+                "effect": "float-text",
+                "size": 0.7,
+                "ttl": 3
+              },
+              "hint": {
+                "color": "#a78bfa",
+                "effect": "float-text",
+                "size": 0.6,
+                "ttl": 2
+              },
+              "warn": {
+                "color": "#f87171",
+                "effect": "shake",
+                "size": 0.6,
+                "ttl": 1.5
+              }
+            },
+            "label": "Styles",
+            "description": "Map of narrative style to color, size, ttl, and effect. Override per game theme.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": true,
+                  "type": "string"
+                },
+                "effect": {
+                  "name": "effect",
+                  "required": true,
+                  "type": "string"
+                },
+                "size": {
+                  "name": "size",
+                  "required": true,
+                  "type": "number"
+                },
+                "ttl": {
+                  "name": "ttl",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
           }
         ],
         "capabilities": [],
@@ -239,6 +940,20 @@
         "eventRenames": {
           "BURST": "BURST",
           "NARRATE": "NARRATE"
+        },
+        "transitionEvents": [
+          "INIT",
+          "NARRATE",
+          "TUTORIAL_SHOW"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "lastText",
+            "seq"
+          ]
         }
       },
       {
@@ -248,13 +963,52 @@
         "overridableConfigKeys": [
           {
             "key": "autoShow",
-            "type": "unknown",
-            "default": false
+            "type": "boolean",
+            "default": false,
+            "label": "Auto Show",
+            "description": "When true the tutorial opens on INIT for this run; when false it stays hidden until SHOW.",
+            "tier": "domain"
           },
           {
             "key": "previewTrait",
-            "type": "unknown",
-            "default": "@trait.PlatformerPuzzleNoopPreview"
+            "type": "trait",
+            "default": "@trait.PlatformerPuzzleNoopPreview",
+            "label": "Preview trait",
+            "description": "Trait rendered in the media position of the modal — the live, demo-driven preview of the mechanic (a bare game canvas, no shell chrome). '@trait.TutorialEmptyPreview' leaves the slot blank. Override with '@trait.<TraitName>' to show a board's live frame.",
+            "tier": "presentation"
+          },
+          {
+            "key": "steps",
+            "type": "[TutorialStep]",
+            "default": [],
+            "label": "Steps",
+            "description": "One row per tutorial page: title, one line of body copy, and an optional demoId that plays a scripted live demo (std-tutorial-autodemo) for the mechanic being taught.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "body": {
+                  "name": "body",
+                  "required": false,
+                  "type": "string"
+                },
+                "demoId": {
+                  "name": "demoId",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "title": {
+                  "name": "title",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
           }
         ],
         "capabilities": [],
@@ -263,6 +1017,24 @@
         "eventRenames": {
           "SHOW": "SHOW",
           "TUTORIAL_DONE": "TUTORIAL_DONE"
+        },
+        "transitionEvents": [
+          "CLOSE",
+          "INIT",
+          "SHOW",
+          "TUT_AUTO",
+          "TUT_BACK",
+          "TUT_DISMISS",
+          "TUT_NEXT"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "done",
+            "step"
+          ]
         }
       },
       {

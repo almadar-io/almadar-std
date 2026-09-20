@@ -65,32 +65,72 @@
         "overridableConfigKeys": [
           {
             "key": "attackDamage",
-            "type": "unknown",
-            "default": 1
+            "type": "number",
+            "default": 1,
+            "label": "Attack Damage",
+            "description": "Health removed from a target per ATTACK intent",
+            "tier": "domain"
           },
           {
             "key": "gridHeight",
-            "type": "unknown",
-            "default": 4
+            "type": "number",
+            "default": 4,
+            "label": "Grid Height",
+            "description": "Grid row count clamping move + AI bounds",
+            "tier": "presentation"
           },
           {
             "key": "gridWidth",
-            "type": "unknown",
-            "default": 4
+            "type": "number",
+            "default": 4,
+            "label": "Grid Width",
+            "description": "Grid column count clamping move + AI bounds",
+            "tier": "presentation"
           },
           {
             "key": "running",
-            "type": "unknown",
-            "default": true
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true, incoming MOVE/ATTACK/AI_TURN intents are applied; toggle to freeze the board",
+            "tier": "domain"
           },
           {
             "key": "tiles",
-            "type": "unknown",
-            "default": []
+            "type": "[Tile]",
+            "default": [],
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "passable": {
+                  "name": "passable",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "label": "Tiles",
+            "description": "Grid tiles used for passability checks during moves and AI stepping",
+            "tier": "presentation"
           },
           {
             "key": "units",
-            "type": "unknown",
+            "type": "[Unit]",
             "default": [
               {
                 "animation": "idle",
@@ -154,12 +194,99 @@
                 "y": 3,
                 "z": 0
               }
-            ]
+            ],
+            "items": {
+              "properties": {
+                "health": {
+                  "name": "health",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "maxHealth": {
+                  "name": "maxHealth",
+                  "required": false,
+                  "type": "number"
+                },
+                "position": {
+                  "name": "position",
+                  "required": false,
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
+                },
+                "team": {
+                  "name": "team",
+                  "required": false,
+                  "type": "string"
+                },
+                "unitType": {
+                  "name": "unitType",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": false,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "yaw": {
+                  "name": "yaw",
+                  "required": false,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "label": "Initial Units",
+            "description": "Seed unit roster (players and enemies) present before the first intent",
+            "tier": "domain"
           }
         ],
         "capabilities": [],
         "ref": "Tactics.traits.GridTactics",
-        "linkedEntity": "GameState"
+        "linkedEntity": "GameState",
+        "transitionEvents": [
+          "AI_TURN",
+          "ATTACK",
+          "HEAL",
+          "INIT",
+          "MOVE",
+          "SPAWN"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "tiles",
+            "units"
+          ]
+        }
       },
       {
         "name": "RoundLogic",
@@ -168,13 +295,28 @@
         "overridableConfigKeys": [
           {
             "key": "running",
-            "type": "unknown",
-            "default": true
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true, incoming unit-count changes are evaluated for win/lose; toggle to freeze.",
+            "tier": "domain"
           }
         ],
         "capabilities": [],
         "ref": "Round.traits.RoundFlow",
-        "linkedEntity": "GameState"
+        "linkedEntity": "GameState",
+        "transitionEvents": [
+          "INIT",
+          "UNITS_CHANGED"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "result"
+          ]
+        }
       },
       {
         "name": "GoldAuthority",
@@ -183,23 +325,45 @@
         "overridableConfigKeys": [
           {
             "key": "running",
-            "type": "unknown",
-            "default": true
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true, mine-hit signals add gold; toggle to freeze",
+            "tier": "domain"
           },
           {
             "key": "startGold",
-            "type": "unknown",
-            "default": 0
+            "type": "number",
+            "default": 0,
+            "label": "Start Gold",
+            "description": "Gold set on INIT/RESTART",
+            "tier": "domain"
           },
           {
             "key": "yieldAmount",
-            "type": "unknown",
-            "default": 25
+            "type": "number",
+            "default": 25,
+            "label": "Yield Amount",
+            "description": "Gold added per mine-hit signal",
+            "tier": "domain"
           }
         ],
         "capabilities": [],
         "ref": "Gold.traits.GoldMine",
-        "linkedEntity": "GameState"
+        "linkedEntity": "GameState",
+        "transitionEvents": [
+          "INIT",
+          "MINE_HIT",
+          "RESTART"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "gold"
+          ]
+        }
       },
       {
         "name": "WorldMapIntent",

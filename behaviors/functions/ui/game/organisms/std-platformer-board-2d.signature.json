@@ -84,33 +84,104 @@
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
+            "key": "curveModsEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Curve Mods Enabled",
+            "description": "When true, entity.curveMods reshape the skate surface inside each mod's x-range: the road samples the base curve at b·(x − h) and applies a·y + k (slope scales by a·b) — coefficient pads lift/tilt/compress the segment the player is riding. Multiple overlapping mods stack by summing each mod's delta from the base surface; a mod whose shifted sample leaves the curve range is skipped. Default off: boards without coef pads pay nothing.",
+            "tier": "domain"
+          },
+          {
+            "key": "driftRegions",
+            "type": "[BodyDriftRegion]",
+            "default": [],
+            "label": "Drift Regions",
+            "description": "Axis-aligned rects (x0..x1, y0..y1 in world units) each carrying a constant acceleration (ax, ay in units/s²) applied with the physics dt whenever the body's center is inside — winds, currents, gradient pushes. Empty list = zero behavior change. Seeded onto the entity on INIT; the live set is entity.driftRegions — SET_DRIFT_REGIONS replaces it at runtime and RESTART does not reseed it.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "ax": {
+                  "name": "ax",
+                  "required": true,
+                  "type": "number"
+                },
+                "ay": {
+                  "name": "ay",
+                  "required": true,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "x0": {
+                  "name": "x0",
+                  "required": true,
+                  "type": "number"
+                },
+                "x1": {
+                  "name": "x1",
+                  "required": true,
+                  "type": "number"
+                },
+                "y0": {
+                  "name": "y0",
+                  "required": true,
+                  "type": "number"
+                },
+                "y1": {
+                  "name": "y1",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
             "key": "gravity",
-            "type": "unknown",
-            "default": 550
+            "type": "number",
+            "default": 550,
+            "label": "Gravity",
+            "description": "Units/s² added to vertical velocity; the SIGN is the vertical convention — positive pulls toward +y (screen boards, y down), negative toward −y (math canvases, y up) — and jumps always fire against it",
+            "tier": "domain"
           },
           {
             "key": "jumpStrength",
-            "type": "unknown",
-            "default": 365
+            "type": "number",
+            "default": 365,
+            "label": "Jump Strength",
+            "description": "Vertical speed in units/s imparted by JUMP, directed against gravity; apex height ≈ jumpStrength² / (2·|gravity|)",
+            "tier": "domain"
           },
           {
             "key": "killY",
-            "type": "unknown",
-            "default": 460
+            "type": "number",
+            "default": 460,
+            "label": "Kill Y",
+            "description": "Fall line: crossing it in the gravity direction fires BODY_FELL once (past it downward on y-down boards, below it on y-up canvases); y-up consumers must set a value below their world floor",
+            "tier": "domain"
           },
           {
             "key": "maxFallSpeed",
-            "type": "unknown",
-            "default": 600
+            "type": "number",
+            "default": 600,
+            "label": "Max Fall Speed",
+            "description": "Terminal velocity cap in units/s applied to vertical speed each tick",
+            "tier": "presentation"
           },
           {
             "key": "moveSpeed",
-            "type": "unknown",
-            "default": 120
+            "type": "number",
+            "default": 120,
+            "label": "Move Speed",
+            "description": "Horizontal run speed in units/s applied by STEER dir ±1",
+            "tier": "domain"
           },
           {
             "key": "platforms",
-            "type": "unknown",
+            "type": "[PlatformerPlatform]",
             "default": [
               {
                 "height": 32,
@@ -152,16 +223,110 @@
                 "x": 700,
                 "y": 340
               }
-            ]
+            ],
+            "items": {
+              "properties": {
+                "height": {
+                  "name": "height",
+                  "required": true,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "type": {
+                  "name": "type",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "ground",
+                    "platform",
+                    "hazard",
+                    "goal"
+                  ]
+                },
+                "width": {
+                  "name": "width",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "label": "Platforms",
+            "description": "Level geometry as min-corner rects: ground/platform tiles are solid one-way landing surfaces, hazard tiles emit BODY_HAZARD on touch, goal tiles emit BODY_GOAL. Seeded onto the entity on INIT; the live set is entity.platforms — SET_PLATFORMS replaces it at runtime (boards that import geometry, e.g. stitched open worlds) and RESTART deliberately does NOT reseed it, so injected geometry survives respawns.",
+            "tier": "domain"
           },
           {
             "key": "running",
-            "type": "unknown",
-            "default": true
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true the 33ms physics tick integrates and collides; toggle to freeze the body",
+            "tier": "domain"
+          },
+          {
+            "key": "skate",
+            "type": "boolean",
+            "default": false,
+            "label": "Curve Skating",
+            "description": "When true, a grounded body within skateSnap of the skateCurve surface rides the curve: y snaps to the interpolated surface and tangential gravity (g·slope/(1+slope²)) accelerates vx, so the body slides downhill along the graph and launches off its ends; JUMP kicks free. Engages when grounded, when landing on a tile, or when a falling (not rising) body passes within skateSnap above the surface.",
+            "tier": "domain"
+          },
+          {
+            "key": "skateCurve",
+            "type": "[PlatformerCurveSample]",
+            "default": [],
+            "label": "Skate Curve",
+            "description": "Surface samples (x strictly increasing) the body skates when skate is on; y is the surface height for the body's MIN corner, linearly interpolated between bracketing samples — mirror the render-side curve so what you see is what you ride. Seeded onto the entity on INIT; the live curve is entity.skateCurve — SET_SKATE_CURVE replaces it at runtime (stitched mega-curves) and RESTART does not reseed it.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "skateMaxGap",
+            "type": "number",
+            "default": 0,
+            "label": "Skate Max Gap",
+            "description": "Largest x-gap between consecutive skateCurve samples that still counts as surface. 0 = unlimited (sparse two-sample lines skate fine). Dense resampled curves with real gaps between segments (stitched worlds) MUST set this — otherwise the sampler invents a skatable chord across every gap (an invisible line above the bridge/terrain that the body snaps to and glides along).",
+            "tier": "domain"
+          },
+          {
+            "key": "skateSnap",
+            "type": "number",
+            "default": 0.75,
+            "label": "Skate Snap",
+            "description": "Max vertical gap (world units) between the body's min corner and the curve surface for skating to engage or stay engaged; larger values grab earlier on landing, smaller values release sooner on bumps",
+            "tier": "domain"
           },
           {
             "key": "spawn",
-            "type": "unknown",
+            "type": "PlatformerBody",
             "default": {
               "facingRight": true,
               "grounded": false,
@@ -171,17 +336,68 @@
               "width": 32,
               "x": 80,
               "y": 320
-            }
+            },
+            "properties": {
+              "facingRight": {
+                "name": "facingRight",
+                "required": false,
+                "type": "boolean"
+              },
+              "grounded": {
+                "name": "grounded",
+                "required": false,
+                "type": "boolean"
+              },
+              "height": {
+                "name": "height",
+                "required": true,
+                "type": "number"
+              },
+              "vx": {
+                "name": "vx",
+                "required": false,
+                "type": "number"
+              },
+              "vy": {
+                "name": "vy",
+                "required": false,
+                "type": "number"
+              },
+              "width": {
+                "name": "width",
+                "required": true,
+                "type": "number"
+              },
+              "x": {
+                "name": "x",
+                "required": true,
+                "type": "number"
+              },
+              "y": {
+                "name": "y",
+                "required": true,
+                "type": "number"
+              }
+            },
+            "label": "Spawn Body",
+            "description": "Initial body rect (min-corner x/y plus width/height) seeded on INIT/RESTART; width/height also define the collision box",
+            "tier": "domain"
           },
           {
             "key": "xMax",
-            "type": "unknown",
-            "default": 768
+            "type": "number",
+            "default": 768,
+            "label": "Right Wall",
+            "description": "Largest x the body's min corner may hold (world bounds, not level geometry)",
+            "tier": "presentation"
           },
           {
             "key": "xMin",
-            "type": "unknown",
-            "default": 0
+            "type": "number",
+            "default": 0,
+            "label": "Left Wall",
+            "description": "Smallest x the body's min corner may hold (world bounds, not level geometry)",
+            "tier": "presentation"
           }
         ],
         "capabilities": [],
@@ -197,6 +413,37 @@
           "JUMP": "PLAT_JUMP",
           "PLACE": "PLAT_PLACE",
           "STEER": "PLAT_STEER"
+        },
+        "transitionEvents": [
+          "CURVE_MOD_ADD",
+          "CURVE_MOD_CLEAR",
+          "CURVE_MOD_CLEAR_RANGE",
+          "INIT",
+          "PLAT_JUMP",
+          "PLAT_PLACE",
+          "PLAT_STEER",
+          "RESTART",
+          "SET_DRIFT_REGIONS",
+          "SET_PLATFORMS",
+          "SET_SKATE_CURVE",
+          "SET_TUNING"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "body",
+            "curveMods",
+            "driftRegions",
+            "fell",
+            "goalId",
+            "hazardId",
+            "platforms",
+            "skateCurve",
+            "skating",
+            "tuning"
+          ]
         }
       },
       {
@@ -205,14 +452,141 @@
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
+            "key": "decayRate",
+            "type": "number",
+            "default": 1,
+            "label": "Decay Rate",
+            "description": "Ttl units removed from every fx entry each tick; higher fades particles faster.",
+            "tier": "domain"
+          },
+          {
+            "key": "fx",
+            "type": "[Fx]",
+            "default": [],
+            "label": "Initial Fx",
+            "description": "Seed particles rendered before the first BURST; usually empty.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "animation": {
+                  "name": "animation",
+                  "required": false,
+                  "type": "string"
+                },
+                "bornAt": {
+                  "name": "bornAt",
+                  "required": false,
+                  "type": "number"
+                },
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "effect": {
+                  "name": "effect",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "maxTtl": {
+                  "name": "maxTtl",
+                  "required": false,
+                  "type": "number"
+                },
+                "message": {
+                  "name": "message",
+                  "required": false,
+                  "type": "string"
+                },
+                "particleCount": {
+                  "name": "particleCount",
+                  "required": false,
+                  "type": "number"
+                },
+                "size": {
+                  "name": "size",
+                  "required": false,
+                  "type": "number"
+                },
+                "space": {
+                  "name": "space",
+                  "required": false,
+                  "type": "string"
+                },
+                "ttl": {
+                  "name": "ttl",
+                  "required": true,
+                  "type": "number"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string"
+                },
+                "vx": {
+                  "name": "vx",
+                  "required": false,
+                  "type": "number"
+                },
+                "vy": {
+                  "name": "vy",
+                  "required": false,
+                  "type": "number"
+                },
+                "vz": {
+                  "name": "vz",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
             "key": "running",
-            "type": "unknown",
-            "default": true
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true the decay tick runs; toggle to freeze effects.",
+            "tier": "domain"
           }
         ],
         "capabilities": [],
         "ref": "Particles.traits.FxParticles",
-        "linkedEntity": "GameState"
+        "linkedEntity": "GameState",
+        "transitionEvents": [
+          "BURST",
+          "INIT",
+          "RESTART"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "fx"
+          ]
+        }
       },
       {
         "name": "RoundGate",
@@ -221,13 +595,29 @@
         "overridableConfigKeys": [
           {
             "key": "running",
-            "type": "unknown",
-            "default": true
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true, PROGRESS signals resolve win/lose; toggle to freeze",
+            "tier": "domain"
           }
         ],
         "capabilities": [],
         "ref": "Gate.traits.ObjectiveFlow",
-        "linkedEntity": "GameState"
+        "linkedEntity": "GameState",
+        "transitionEvents": [
+          "INIT",
+          "PROGRESS",
+          "RESTART"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "result"
+          ]
+        }
       },
       {
         "name": "PlatformerIntent",

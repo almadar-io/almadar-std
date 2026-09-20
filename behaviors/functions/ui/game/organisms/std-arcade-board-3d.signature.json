@@ -90,27 +90,39 @@
         "overridableConfigKeys": [
           {
             "key": "gridHeight",
-            "type": "unknown",
-            "default": 2
+            "type": "number",
+            "default": 2,
+            "label": "Grid Height",
+            "description": "Grid row count clamping move + wander bounds",
+            "tier": "presentation"
           },
           {
             "key": "gridWidth",
-            "type": "unknown",
-            "default": 2
+            "type": "number",
+            "default": 2,
+            "label": "Grid Width",
+            "description": "Grid column count clamping move + wander bounds",
+            "tier": "presentation"
           },
           {
             "key": "moveBudget",
-            "type": "unknown",
-            "default": 9999
+            "type": "number",
+            "default": 9999,
+            "label": "Move Budget",
+            "description": "Moves the hero may spend before the round is lost if objectives remain",
+            "tier": "domain"
           },
           {
             "key": "running",
-            "type": "unknown",
-            "default": true
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true, MOVE/WANDER intents are applied; toggle to freeze the board",
+            "tier": "domain"
           },
           {
             "key": "tiles",
-            "type": "unknown",
+            "type": "[Tile]",
             "default": [
               {
                 "id": "t-0-0",
@@ -200,11 +212,39 @@
                 "y": 1,
                 "z": 0
               }
-            ]
+            ],
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "passable": {
+                  "name": "passable",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "label": "Tiles",
+            "description": "Grid tiles used for passability checks (auto-generated all-passable when empty)",
+            "tier": "presentation"
           },
           {
             "key": "units",
-            "type": "unknown",
+            "type": "[Unit]",
             "default": [
               {
                 "health": 1,
@@ -235,12 +275,93 @@
                 "y": 1,
                 "z": 0
               }
-            ]
+            ],
+            "items": {
+              "properties": {
+                "health": {
+                  "name": "health",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "maxHealth": {
+                  "name": "maxHealth",
+                  "required": false,
+                  "type": "number"
+                },
+                "position": {
+                  "name": "position",
+                  "required": false,
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
+                },
+                "team": {
+                  "name": "team",
+                  "required": false,
+                  "type": "string"
+                },
+                "unitType": {
+                  "name": "unitType",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": false,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "label": "Initial Units",
+            "description": "Seed roster: the player hero plus any neutral NPCs",
+            "tier": "domain"
           }
         ],
         "capabilities": [],
         "ref": "Nav.traits.HeroNav",
-        "linkedEntity": "GameState"
+        "linkedEntity": "GameState",
+        "transitionEvents": [
+          "INIT",
+          "MOVE",
+          "RESTART",
+          "WANDER"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "movesLeft",
+            "tiles",
+            "units"
+          ]
+        }
       },
       {
         "name": "PlayEconomy",
@@ -249,33 +370,90 @@
         "overridableConfigKeys": [
           {
             "key": "machines",
-            "type": "unknown",
-            "default": []
+            "type": "[Machine]",
+            "default": [],
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "label": "Machines",
+            "description": "Playable machine ids the PLAY_MACHINE intent is validated against",
+            "tier": "domain"
           },
           {
             "key": "maxPayout",
-            "type": "unknown",
-            "default": 1
+            "type": "number",
+            "default": 1,
+            "label": "Max Payout",
+            "description": "Highest ticket payout a single play can award",
+            "tier": "domain"
           },
           {
             "key": "minPayout",
-            "type": "unknown",
-            "default": 0
+            "type": "number",
+            "default": 0,
+            "label": "Min Payout",
+            "description": "Lowest ticket payout a single play can award",
+            "tier": "domain"
           },
           {
             "key": "running",
-            "type": "unknown",
-            "default": true
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true, PLAY_MACHINE intents are applied; toggle to freeze the economy",
+            "tier": "domain"
           },
           {
             "key": "startTokens",
-            "type": "unknown",
-            "default": 14
+            "type": "number",
+            "default": 14,
+            "label": "Start Tokens",
+            "description": "Tokens the player starts with",
+            "tier": "domain"
           }
         ],
         "capabilities": [],
         "ref": "Play.traits.ArcadePlay",
-        "linkedEntity": "GameState"
+        "linkedEntity": "GameState",
+        "transitionEvents": [
+          "INIT",
+          "PLAY_MACHINE",
+          "RESTART"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "lastRoll",
+            "machines",
+            "playCount",
+            "tickets",
+            "tokens"
+          ]
+        }
       },
       {
         "name": "FxDecay",
@@ -283,14 +461,141 @@
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
+            "key": "decayRate",
+            "type": "number",
+            "default": 1,
+            "label": "Decay Rate",
+            "description": "Ttl units removed from every fx entry each tick; higher fades particles faster.",
+            "tier": "domain"
+          },
+          {
+            "key": "fx",
+            "type": "[Fx]",
+            "default": [],
+            "label": "Initial Fx",
+            "description": "Seed particles rendered before the first BURST; usually empty.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "animation": {
+                  "name": "animation",
+                  "required": false,
+                  "type": "string"
+                },
+                "bornAt": {
+                  "name": "bornAt",
+                  "required": false,
+                  "type": "number"
+                },
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "effect": {
+                  "name": "effect",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "maxTtl": {
+                  "name": "maxTtl",
+                  "required": false,
+                  "type": "number"
+                },
+                "message": {
+                  "name": "message",
+                  "required": false,
+                  "type": "string"
+                },
+                "particleCount": {
+                  "name": "particleCount",
+                  "required": false,
+                  "type": "number"
+                },
+                "size": {
+                  "name": "size",
+                  "required": false,
+                  "type": "number"
+                },
+                "space": {
+                  "name": "space",
+                  "required": false,
+                  "type": "string"
+                },
+                "ttl": {
+                  "name": "ttl",
+                  "required": true,
+                  "type": "number"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string"
+                },
+                "vx": {
+                  "name": "vx",
+                  "required": false,
+                  "type": "number"
+                },
+                "vy": {
+                  "name": "vy",
+                  "required": false,
+                  "type": "number"
+                },
+                "vz": {
+                  "name": "vz",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
             "key": "running",
-            "type": "unknown",
-            "default": true
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true the decay tick runs; toggle to freeze effects.",
+            "tier": "domain"
           }
         ],
         "capabilities": [],
         "ref": "Particles.traits.FxParticles",
-        "linkedEntity": "GameState"
+        "linkedEntity": "GameState",
+        "transitionEvents": [
+          "BURST",
+          "INIT",
+          "RESTART"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "fx"
+          ]
+        }
       },
       {
         "name": "RoundGate",
@@ -299,18 +604,37 @@
         "overridableConfigKeys": [
           {
             "key": "running",
-            "type": "unknown",
-            "default": true
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true, SCORE_CHANGED signals resolve win/lose; toggle to freeze",
+            "tier": "domain"
           },
           {
             "key": "ticketsToWin",
-            "type": "unknown",
-            "default": 5
+            "type": "number",
+            "default": 5,
+            "label": "Tickets To Win",
+            "description": "Ticket count that ends the round in a win",
+            "tier": "domain"
           }
         ],
         "capabilities": [],
         "ref": "Gate.traits.ArcadeFlow",
-        "linkedEntity": "GameState"
+        "linkedEntity": "GameState",
+        "transitionEvents": [
+          "INIT",
+          "RESTART",
+          "SCORE_CHANGED"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "result"
+          ]
+        }
       },
       {
         "name": "ArcadeIntent",

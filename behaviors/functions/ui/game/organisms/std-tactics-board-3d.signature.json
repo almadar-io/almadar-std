@@ -70,27 +70,39 @@
         "overridableConfigKeys": [
           {
             "key": "attackDamage",
-            "type": "unknown",
-            "default": 3
+            "type": "number",
+            "default": 3,
+            "label": "Attack Damage",
+            "description": "Health removed from a target per ATTACK intent",
+            "tier": "domain"
           },
           {
             "key": "gridHeight",
-            "type": "unknown",
-            "default": 2
+            "type": "number",
+            "default": 2,
+            "label": "Grid Height",
+            "description": "Grid row count clamping move + AI bounds",
+            "tier": "presentation"
           },
           {
             "key": "gridWidth",
-            "type": "unknown",
-            "default": 2
+            "type": "number",
+            "default": 2,
+            "label": "Grid Width",
+            "description": "Grid column count clamping move + AI bounds",
+            "tier": "presentation"
           },
           {
             "key": "running",
-            "type": "unknown",
-            "default": true
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true, incoming MOVE/ATTACK/AI_TURN intents are applied; toggle to freeze the board",
+            "tier": "domain"
           },
           {
             "key": "tiles",
-            "type": "unknown",
+            "type": "[Tile]",
             "default": [
               {
                 "id": "t-0-0",
@@ -176,11 +188,39 @@
                 "y": 1,
                 "z": 0
               }
-            ]
+            ],
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "passable": {
+                  "name": "passable",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "label": "Tiles",
+            "description": "Grid tiles used for passability checks during moves and AI stepping",
+            "tier": "presentation"
           },
           {
             "key": "units",
-            "type": "unknown",
+            "type": "[Unit]",
             "default": [
               {
                 "health": 3,
@@ -238,12 +278,99 @@
                 "y": 1,
                 "z": 0
               }
-            ]
+            ],
+            "items": {
+              "properties": {
+                "health": {
+                  "name": "health",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "maxHealth": {
+                  "name": "maxHealth",
+                  "required": false,
+                  "type": "number"
+                },
+                "position": {
+                  "name": "position",
+                  "required": false,
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
+                },
+                "team": {
+                  "name": "team",
+                  "required": false,
+                  "type": "string"
+                },
+                "unitType": {
+                  "name": "unitType",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": false,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "yaw": {
+                  "name": "yaw",
+                  "required": false,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "label": "Initial Units",
+            "description": "Seed unit roster (players and enemies) present before the first intent",
+            "tier": "domain"
           }
         ],
         "capabilities": [],
         "ref": "Tactics.traits.GridTactics",
-        "linkedEntity": "GameState"
+        "linkedEntity": "GameState",
+        "transitionEvents": [
+          "AI_TURN",
+          "ATTACK",
+          "HEAL",
+          "INIT",
+          "MOVE",
+          "SPAWN"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "tiles",
+            "units"
+          ]
+        }
       },
       {
         "name": "FxDecay",
@@ -251,14 +378,141 @@
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
+            "key": "decayRate",
+            "type": "number",
+            "default": 1,
+            "label": "Decay Rate",
+            "description": "Ttl units removed from every fx entry each tick; higher fades particles faster.",
+            "tier": "domain"
+          },
+          {
+            "key": "fx",
+            "type": "[Fx]",
+            "default": [],
+            "label": "Initial Fx",
+            "description": "Seed particles rendered before the first BURST; usually empty.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "animation": {
+                  "name": "animation",
+                  "required": false,
+                  "type": "string"
+                },
+                "bornAt": {
+                  "name": "bornAt",
+                  "required": false,
+                  "type": "number"
+                },
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "effect": {
+                  "name": "effect",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "maxTtl": {
+                  "name": "maxTtl",
+                  "required": false,
+                  "type": "number"
+                },
+                "message": {
+                  "name": "message",
+                  "required": false,
+                  "type": "string"
+                },
+                "particleCount": {
+                  "name": "particleCount",
+                  "required": false,
+                  "type": "number"
+                },
+                "size": {
+                  "name": "size",
+                  "required": false,
+                  "type": "number"
+                },
+                "space": {
+                  "name": "space",
+                  "required": false,
+                  "type": "string"
+                },
+                "ttl": {
+                  "name": "ttl",
+                  "required": true,
+                  "type": "number"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string"
+                },
+                "vx": {
+                  "name": "vx",
+                  "required": false,
+                  "type": "number"
+                },
+                "vy": {
+                  "name": "vy",
+                  "required": false,
+                  "type": "number"
+                },
+                "vz": {
+                  "name": "vz",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
             "key": "running",
-            "type": "unknown",
-            "default": true
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true the decay tick runs; toggle to freeze effects.",
+            "tier": "domain"
           }
         ],
         "capabilities": [],
         "ref": "Particles.traits.FxParticles",
-        "linkedEntity": "GameState"
+        "linkedEntity": "GameState",
+        "transitionEvents": [
+          "BURST",
+          "INIT",
+          "RESTART"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "fx"
+          ]
+        }
       },
       {
         "name": "RoundLogic",
@@ -267,22 +521,68 @@
         "overridableConfigKeys": [
           {
             "key": "running",
-            "type": "unknown",
-            "default": true
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true, incoming unit-count changes are evaluated for win/lose; toggle to freeze.",
+            "tier": "domain"
           }
         ],
         "capabilities": [],
         "ref": "Round.traits.RoundFlow",
-        "linkedEntity": "GameState"
+        "linkedEntity": "GameState",
+        "transitionEvents": [
+          "INIT",
+          "UNITS_CHANGED"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "result"
+          ]
+        }
       },
       {
         "name": "VolumetricArt",
         "emittedEvents": [],
         "listenedEvents": [],
-        "overridableConfigKeys": [],
+        "overridableConfigKeys": [
+          {
+            "key": "seedArt",
+            "type": "Map<string,Map<string,[node]>>",
+            "default": {},
+            "label": "Seed Art",
+            "description": "Initial kind → (state → draw-group items of draw-mesh descriptors) catalog merged under bus-published entries (published entries win). Lets a 3D board ship volumetric art with zero asset imports.",
+            "tier": "presentation",
+            "items": {
+              "type": "object",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "node"
+                }
+              }
+            }
+          }
+        ],
         "capabilities": [],
         "ref": "MeshArt.traits.MeshAssetArtCollector",
-        "linkedEntity": "GameState"
+        "linkedEntity": "GameState",
+        "transitionEvents": [
+          "INIT",
+          "MESH_ASSET_PUBLISH",
+          "MESH_ASSET_SYNC"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "meshAssetArt"
+          ]
+        }
       },
       {
         "name": "PlayerIntent",
