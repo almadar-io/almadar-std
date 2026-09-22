@@ -42,7 +42,7 @@ export interface StdUiLineChartConfig {
   /** Default: `"var(--color-primary)"` */
   areaColor?: string;
   className?: string;
-  /** Default: `[{"date":"2024-01-01","label":"Label","value":1},{"date":"2024-01-01","label":"Label 2","value":2}]` */
+  /** Default: `[{"date":"2024-01-01","label":"Label","value":1,"x":1},{"date":"2024-01-01","label":"Label 2","value":2,"x":2}]` */
   data?: EntityRow[];
   /** Default: `200` */
   height?: number;
