@@ -173,6 +173,14 @@ orbital DungeonBoard2DOrbital {
         { id: "t-3-3", x: 3, y: 3, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png", role: "tile", category: "terrain", animations: ["static"], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }
       ]
     }
+
+    listens {
+      MOVE { unitId : string, x : number, y : number }
+      WANDER { tick : number }
+      RESTART { id : string }
+      DungeonIntent.MOVE -> MOVE
+      DungeonIntent.RESTART -> RESTART
+    }
   }
 
   trait Enemies = Combat.traits.DungeonCombat -> GameState {
@@ -187,6 +195,15 @@ orbital DungeonBoard2DOrbital {
         { id: "goblin", position: { x: 2, y: 2 }, x: 2, y: 2, z: 0, team: "enemy", health: 2, maxHealth: 2, unitType: "goblin", name: "Goblin", sprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png", role: "enemy", category: "unit", animations: ["idle"], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "enemy-unit", thumbnailUrl: "" } }
       ]
     }
+
+    listens {
+      ATTACK { targetId : string }
+      MONSTER_TICK { heroX : number, heroY : number }
+      RESTART { id : string }
+      DungeonIntent.ATTACK -> ATTACK
+      DungeonIntent.MONSTER_TICK -> MONSTER_TICK
+      DungeonIntent.RESTART -> RESTART
+    }
   }
 
   trait Collector = Objective.traits.ObjectiveReach -> GameState {
@@ -198,14 +215,36 @@ orbital DungeonBoard2DOrbital {
       reachRadius: 0
       features: []
     }
+
+    listens {
+      HERO_STEPPED { unitId : string, x : number, z : number, movesLeft : number }
+      RESTART { id : string }
+      DungeonIntent.RESTART -> RESTART
+      HeroAuthority.HERO_STEPPED -> HERO_STEPPED
+    }
   }
 
   trait FxDecay = Particles.traits.FxParticles -> GameState {
     config { running: true }
+
+    listens {
+      BURST { particles : [Fx] }
+      RESTART { }
+      Collector.BURST -> BURST
+      DungeonIntent.RESTART -> RESTART
+      Enemies.BURST -> BURST
+    }
   }
 
   trait RoundGate = Gate.traits.ObjectiveFlow -> GameState {
     config { running: true }
+
+    listens {
+      PROGRESS { objectivesLeft : number, movesLeft : number }
+      RESTART { id : string }
+      Collector.PROGRESS -> PROGRESS
+      DungeonIntent.RESTART -> RESTART
+    }
   }
 
   trait DungeonIntent -> GameState [interaction, instance] {

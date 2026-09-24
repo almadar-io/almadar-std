@@ -579,6 +579,16 @@ export function stdPlatformerPuzzlePlatformerPuzzleOrbital(params: StdPlatformer
           'BODY_MOVED': 'BODY_MOVED',
         },
         'linkedEntity': 'PlatformerPuzzleData',
+        'listens': [
+          {
+            'event': 'BODY_MOVED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PlatformerPuzzleBody',
+            },
+            'triggers': 'BODY_MOVED',
+          },
+        ],
         'name': 'PlatformerPuzzlePickup',
         'ref': ('Pickup.traits.Pickup' satisfies _StdPlatformerPuzzlePlatformerPuzzleOrbitalUsesRef),
       }),
@@ -608,6 +618,16 @@ export function stdPlatformerPuzzlePlatformerPuzzleOrbital(params: StdPlatformer
           'BODY_MOVED': 'BODY_MOVED',
         },
         'linkedEntity': 'PlatformerPuzzleData',
+        'listens': [
+          {
+            'event': 'BODY_MOVED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PlatformerPuzzleBody',
+            },
+            'triggers': 'BODY_MOVED',
+          },
+        ],
         'name': 'PlatformerPuzzleChoice',
         'ref': ('Choice.traits.ChoiceGate' satisfies _StdPlatformerPuzzlePlatformerPuzzleOrbitalUsesRef),
       }),
@@ -622,6 +642,16 @@ export function stdPlatformerPuzzlePlatformerPuzzleOrbital(params: StdPlatformer
           'BURST': 'BURST',
         },
         'linkedEntity': 'PlatformerPuzzleData',
+        'listens': [
+          {
+            'event': 'BURST',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PlatformerPuzzleNarrative',
+            },
+            'triggers': 'BURST',
+          },
+        ],
         'name': 'PlatformerPuzzleFx',
         'ref': ('Particles.traits.FxParticles' satisfies _StdPlatformerPuzzlePlatformerPuzzleOrbitalUsesRef),
       }),
@@ -656,6 +686,16 @@ export function stdPlatformerPuzzlePlatformerPuzzleOrbital(params: StdPlatformer
           'TUTORIAL_DONE': 'TUTORIAL_DONE',
         },
         'linkedEntity': 'PlatformerPuzzleData',
+        'listens': [
+          {
+            'event': 'SHOW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PlatformerPuzzleNarrative',
+            },
+            'triggers': 'SHOW',
+          },
+        ],
         'name': 'PlatformerPuzzleTutorial',
         'ref': ('Tutorial.traits.TutorialOverlay' satisfies _StdPlatformerPuzzlePlatformerPuzzleOrbitalUsesRef),
       }),

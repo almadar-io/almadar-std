@@ -1,0 +1,401 @@
+[
+  {
+    "organism": "std-slide-deck",
+    "orbital": "SlideDeckOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/core/atoms/std-slide-deck.ts",
+    "entities": [
+      {
+        "name": "SlideDeck",
+        "fields": [
+          {
+            "name": "slideIndex",
+            "type": "number",
+            "required": false,
+            "description": "Zero-based index of the slide currently shown.",
+            "synonyms": "current slide, cursor, position"
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "SlideDeckPresenter",
+        "emittedEvents": [
+          "SLIDE_CHANGED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "SLIDE_CHANGED",
+            "direction": "emit",
+            "description": "The deck moved to a new slide (zero-based index).",
+            "synonyms": "slide shown, advanced, went back",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "GO_TO",
+            "direction": "listen",
+            "description": "Show a zero-based slide index. The arrows and dots send the already-bounded target; a remote or table of contents can send any index.",
+            "synonyms": "jump, seek, next slide, previous slide, select slide",
+            "tier": "domain"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "bodyContent",
+            "type": "render-ui",
+            "default": {
+              "children": [
+                {
+                  "align": "center",
+                  "children": [
+                    [
+                      "array/map",
+                      [
+                        [
+                          "array/len",
+                          "@config.slides"
+                        ]
+                      ],
+                      [
+                        "fn",
+                        "n",
+                        [
+                          "if",
+                          "@config.showArrows",
+                          {
+                            "action": "GO_TO",
+                            "actionPayload": {
+                              "index": [
+                                "if",
+                                "@config.loop",
+                                [
+                                  "math/wrap",
+                                  [
+                                    "-",
+                                    "@entity.slideIndex",
+                                    1
+                                  ],
+                                  0,
+                                  "@n"
+                                ],
+                                [
+                                  "math/max",
+                                  0,
+                                  [
+                                    "-",
+                                    "@entity.slideIndex",
+                                    1
+                                  ]
+                                ]
+                              ]
+                            },
+                            "disabled": [
+                              "and",
+                              [
+                                "==",
+                                "@config.loop",
+                                false
+                              ],
+                              [
+                                "<=",
+                                "@entity.slideIndex",
+                                0
+                              ]
+                            ],
+                            "icon": "@config.prevIcon",
+                            "size": "lg",
+                            "type": "button",
+                            "variant": "ghost"
+                          },
+                          null
+                        ]
+                      ]
+                    ],
+                    {
+                      "children": [
+                        "array/map",
+                        [
+                          "@entity.slideIndex"
+                        ],
+                        [
+                          "fn",
+                          "i",
+                          {
+                            "children": [
+                              [
+                                "array/nth",
+                                "@config.slides",
+                                "@i"
+                              ]
+                            ],
+                            "className": "w-full",
+                            "type": "box"
+                          }
+                        ]
+                      ],
+                      "className": "flex-1 min-w-0",
+                      "minHeight": "@config.stageMinHeight",
+                      "type": "center"
+                    },
+                    [
+                      "array/map",
+                      [
+                        [
+                          "array/len",
+                          "@config.slides"
+                        ]
+                      ],
+                      [
+                        "fn",
+                        "n",
+                        [
+                          "if",
+                          "@config.showArrows",
+                          {
+                            "action": "GO_TO",
+                            "actionPayload": {
+                              "index": [
+                                "if",
+                                "@config.loop",
+                                [
+                                  "math/wrap",
+                                  [
+                                    "+",
+                                    "@entity.slideIndex",
+                                    1
+                                  ],
+                                  0,
+                                  "@n"
+                                ],
+                                [
+                                  "math/min",
+                                  [
+                                    "-",
+                                    "@n",
+                                    1
+                                  ],
+                                  [
+                                    "+",
+                                    "@entity.slideIndex",
+                                    1
+                                  ]
+                                ]
+                              ]
+                            },
+                            "disabled": [
+                              "and",
+                              [
+                                "==",
+                                "@config.loop",
+                                false
+                              ],
+                              [
+                                ">=",
+                                "@entity.slideIndex",
+                                [
+                                  "-",
+                                  "@n",
+                                  1
+                                ]
+                              ]
+                            ],
+                            "icon": "@config.nextIcon",
+                            "size": "lg",
+                            "type": "button",
+                            "variant": "ghost"
+                          },
+                          null
+                        ]
+                      ]
+                    ]
+                  ],
+                  "direction": "horizontal",
+                  "gap": "md",
+                  "type": "stack"
+                },
+                [
+                  "if",
+                  "@config.showProgress",
+                  {
+                    "align": "center",
+                    "children": [
+                      "array/map",
+                      [
+                        [
+                          "array/len",
+                          "@config.slides"
+                        ]
+                      ],
+                      [
+                        "fn",
+                        "n",
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "count": "@n",
+                              "currentIndex": "@entity.slideIndex",
+                              "onDotClick": "GO_TO",
+                              "size": "sm",
+                              "type": "progress-dots"
+                            },
+                            {
+                              "color": "muted",
+                              "content": [
+                                "str/concat",
+                                "",
+                                [
+                                  "+",
+                                  "@entity.slideIndex",
+                                  1
+                                ],
+                                " / ",
+                                "@n"
+                              ],
+                              "type": "typography",
+                              "variant": "caption"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ]
+                    ],
+                    "direction": "horizontal",
+                    "gap": "md",
+                    "justify": "center",
+                    "type": "stack"
+                  },
+                  null
+                ]
+              ],
+              "className": "w-full",
+              "direction": "vertical",
+              "gap": "md",
+              "type": "stack"
+            },
+            "label": "Body content tree",
+            "description": "Render-ui tree for the deck. Default: slide centred between previous/next arrows, dot strip and counter below. A realization overrides this to restyle (full-bleed, bottom bar, no chrome) while keeping the same cursor, keys and emits.",
+            "tier": "internal"
+          },
+          {
+            "key": "loop",
+            "type": "boolean",
+            "default": false,
+            "label": "Loop",
+            "description": "Wrap from the last slide to the first (and back) instead of stopping at either end.",
+            "tier": "presentation"
+          },
+          {
+            "key": "nextIcon",
+            "type": "icon",
+            "default": "chevron-right",
+            "label": "Next icon",
+            "tier": "presentation"
+          },
+          {
+            "key": "prevIcon",
+            "type": "icon",
+            "default": "chevron-left",
+            "label": "Previous icon",
+            "tier": "presentation"
+          },
+          {
+            "key": "showArrows",
+            "type": "boolean",
+            "default": true,
+            "label": "Show arrows",
+            "description": "Previous/next buttons on the left and right of the slide.",
+            "tier": "presentation"
+          },
+          {
+            "key": "showProgress",
+            "type": "boolean",
+            "default": true,
+            "label": "Show progress",
+            "description": "Dot strip and k / n counter under the slide; dots jump to their slide.",
+            "tier": "presentation"
+          },
+          {
+            "key": "slides",
+            "type": "[trait]",
+            "default": [],
+            "label": "Slides",
+            "description": "Ordered slide nodes; each entry is a render tree or a @trait reference and is shown one at a time.",
+            "tier": "domain",
+            "items": {
+              "type": "trait"
+            }
+          },
+          {
+            "key": "stageMinHeight",
+            "type": "string",
+            "default": "70vh",
+            "label": "Stage height",
+            "description": "Minimum height of the slide stage (any CSS length, e.g. 70vh or 640px); the slide is centred vertically inside it so short and tall slides share one frame.",
+            "tier": "presentation"
+          },
+          {
+            "key": "startIndex",
+            "type": "number",
+            "default": 0,
+            "label": "Start slide",
+            "description": "Zero-based slide shown on first render; clamped to the deck.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "SlideDeck",
+        "transitionEvents": [
+          "GO_TO",
+          "INIT"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "slideIndex"
+          ]
+        },
+        "effectRow": [
+          {
+            "kind": "emit",
+            "resource": "SLIDE_CHANGED"
+          },
+          {
+            "kind": "render-ui",
+            "resource": "main"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.slideIndex"
+          }
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "name": "SlideDeckPage",
+        "defaultPath": "/slide-deck",
+        "primaryEntity": "SlideDeck"
+      }
+    ],
+    "emittedEvents": [
+      "SLIDE_CHANGED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "capabilities": "slide deck, presentation, pitch deck, keynote-style slideshow, previous and next slide arrows, arrow-key slide navigation, jump to slide from dots, slide counter",
+    "sourceValid": true
+  }
+]

@@ -22,6 +22,7 @@ export const OS_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Register file system watcher. Emits OS_FILE_MODIFIED, OS_FILE_CREATED, OS_FILE_DELETED events with { path, name, dir, timestamp } payload.',
     hasSideEffects: true,
+    runsOn: 'server',
     returnType: 'void',
     params: [
       { name: 'glob', type: 'string', description: 'Glob pattern to watch (e.g., "**/*.orb")' },
@@ -36,6 +37,7 @@ export const OS_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Register process monitor. Emits OS_PROCESS_EXITED, OS_PROCESS_STARTED events with { pid, name, exitCode, signal, args, duration } payload.',
     hasSideEffects: true,
+    runsOn: 'server',
     returnType: 'void',
     params: [
       { name: 'name', type: 'string', description: 'Process name to monitor (e.g., "orbital")' },
@@ -50,6 +52,7 @@ export const OS_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Register port monitor. Emits OS_PORT_OPENED, OS_PORT_CLOSED events with { port, protocol, pid, address } payload.',
     hasSideEffects: true,
+    runsOn: 'server',
     returnType: 'void',
     params: [
       { name: 'port', type: 'number', description: 'Port number to monitor' },
@@ -64,6 +67,7 @@ export const OS_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Register HTTP response interceptor. Emits OS_HTTP_RESPONSE events with { url, method, status, headers, body, duration } payload.',
     hasSideEffects: true,
+    runsOn: 'server',
     returnType: 'void',
     params: [
       { name: 'urlPattern', type: 'string', description: 'URL pattern to intercept (e.g., "https://api.example.com/*")' },
@@ -78,6 +82,7 @@ export const OS_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 1,
     description: 'Register cron schedule. Emits OS_CRON_FIRE events with { expression, timestamp } payload.',
     hasSideEffects: true,
+    runsOn: 'server',
     returnType: 'void',
     params: [
       { name: 'expression', type: 'string', description: 'Cron expression (e.g., "*/5 * * * *" for every 5 minutes)' },
@@ -91,6 +96,7 @@ export const OS_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 1,
     description: 'Register OS signal handler. Emits OS_SIGNAL_USR1, OS_SIGNAL_HUP, etc. with { pid, timestamp } payload.',
     hasSideEffects: true,
+    runsOn: 'server',
     returnType: 'void',
     params: [
       { name: 'signal', type: 'string', description: 'Signal name: "SIGUSR1", "SIGUSR2", "SIGHUP", "SIGTERM"' },
@@ -104,6 +110,7 @@ export const OS_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 1,
     description: 'Register environment variable watcher. Emits OS_ENV_CHANGED events with { variable, oldValue, newValue } payload.',
     hasSideEffects: true,
+    runsOn: 'server',
     returnType: 'void',
     params: [
       { name: 'variable', type: 'string', description: 'Environment variable name to watch' },
@@ -117,6 +124,7 @@ export const OS_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Configure debounce interval for an OS event type. Prevents trigger storms during rapid changes.',
     hasSideEffects: true,
+    runsOn: 'server',
     returnType: 'void',
     params: [
       { name: 'ms', type: 'number', description: 'Debounce interval in milliseconds' },

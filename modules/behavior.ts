@@ -21,6 +21,7 @@ export const BEHAVIOR_OPERATORS: Record<string, StdOperatorMeta> = {
     minArity: 0, maxArity: 0,
     description: 'Compose all orbitals in the workspace into a single schema. Backed by composeBehaviors.',
     hasSideEffects: true,
+    runsOn: 'any',
     returnType: 'ComposeAllResult',
     params: [],
     example: '["compose/compose-all"]',
@@ -30,6 +31,7 @@ export const BEHAVIOR_OPERATORS: Record<string, StdOperatorMeta> = {
     minArity: 1, maxArity: 1,
     description: 'Compose child orbitals under a parent for recursive builds.',
     hasSideEffects: true,
+    runsOn: 'any',
     returnType: 'ComposeChildrenResult',
     params: [{ name: 'parentName', type: 'string', description: 'Parent orbital name' }],
     example: '["compose/compose-children", "GameScreenOrbital"]',
@@ -39,6 +41,7 @@ export const BEHAVIOR_OPERATORS: Record<string, StdOperatorMeta> = {
     minArity: 2, maxArity: 3,
     description: 'Instantiate a behavior from the registry at runtime (meta-programming). Equivalent to compile-time `uses` but dynamic — the behavior name is a runtime value. Applies the same override surface (linkedEntity, events, config, fields).',
     hasSideEffects: true,
+    runsOn: 'any',
     returnType: 'BuilderResult',
     params: [
       { name: 'behavior', type: 'string', description: 'Behavior/organism name (e.g. "std-ecommerce")' },
@@ -52,6 +55,7 @@ export const BEHAVIOR_OPERATORS: Record<string, StdOperatorMeta> = {
     minArity: 2, maxArity: 3,
     description: 'Call a behavior service action. Returns the ServiceCallResult union — resolves to the specific member when the (behavior, action) pair is a literal.',
     hasSideEffects: true,
+    runsOn: 'any',
     returnType: 'ServiceCallResult',
     params: [
       { name: 'behavior', type: 'string', description: 'Service/behavior name' },
@@ -65,6 +69,7 @@ export const BEHAVIOR_OPERATORS: Record<string, StdOperatorMeta> = {
     minArity: 3, maxArity: 3,
     description: 'Emit a .lolo orbital body from the LLM (free-lolo path). Returns the emitted lolo source.',
     hasSideEffects: true,
+    runsOn: 'any',
     returnType: 'LoloEmitResult',
     params: [
       { name: 'name', type: 'string', description: 'Orbital name' },
@@ -78,6 +83,7 @@ export const BEHAVIOR_OPERATORS: Record<string, StdOperatorMeta> = {
     minArity: 1, maxArity: 2,
     description: 'Validate an orbital or the composed schema using orb validate.',
     hasSideEffects: true,
+    runsOn: 'any',
     returnType: 'ValidateResult',
     params: [
       { name: 'target', type: { kind: 'union', of: [{ kind: 'literal', value: 'orbital' }, { kind: 'literal', value: 'composed' }] }, description: 'Validation target' },

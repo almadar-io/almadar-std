@@ -139,6 +139,10 @@ export interface StdNotifyOnEventNotifyLookupFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdNotifyOnEventConfig {
+  /** Default: `"none"` */
+  coalesce?: 'none' | 'perDispatch' | 'perKey';
+  /** Default: `"id"` */
+  coalesceKey?: string;
   /** Default: `""` */
   emailSubject?: string;
   /** Default: `""` */
@@ -557,6 +561,27 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
       {
         'category': 'lifecycle',
         'config': {
+          'coalesce': {
+            'default': 'none',
+            'description': 'When one action raises the subscribed event several times (a bulk import, a batch save), send one notification for the whole action (`perDispatch`) or one per distinct value of `coalesceKey` (`perKey`) instead of one per event. `none` (default) notifies on every event. Scoped to a single action: the next action notifies again.',
+            'label': 'Collapse repeat notifications from one action?',
+            'synonyms': 'dedupe, deduplicate, collapse, batch notifications, one notification, bulk, coalesce, summarize, avoid spam, notification storm',
+            'tier': 'policy',
+            'type': 'string',
+            'values': [
+              'none',
+              'perDispatch',
+              'perKey',
+            ],
+          },
+          'coalesceKey': {
+            'default': 'id',
+            'description': 'With `coalesce: perKey`, the upstream event\'s payload field compared to tell repeats apart (e.g. `id` = one notification per record). Ignored otherwise.',
+            'label': 'Which field makes two events distinct?',
+            'synonyms': 'dedupe key, distinct by, per record, unique field',
+            'tier': 'policy',
+            'type': 'string',
+          },
           'emailSubject': {
             'default': '',
             'description': 'Subject line used for the email channel. Falls back to `template` when blank. Ignored for other channels.',
@@ -1557,23 +1582,82 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
               'event': 'EventOccurred',
               'from': 'idle',
               'guard': [
-                'if',
-                [
-                  '=',
-                  '@config.guardOp',
-                  'eq',
-                ],
+                'and',
                 [
                   'or',
                   [
                     '=',
-                    '@config.triggerStatus',
-                    '',
+                    '@config.coalesce',
+                    'none',
                   ],
                   [
-                    '=',
-                    '@payload.status',
-                    '@config.triggerStatus',
+                    'if',
+                    [
+                      '=',
+                      '@config.coalesce',
+                      'perDispatch',
+                    ],
+                    [
+                      'not',
+                      [
+                        'array/includes',
+                        [
+                          'array/map',
+                          '@prevEvents',
+                          [
+                            'fn',
+                            'e',
+                            [
+                              'object/get',
+                              '@e',
+                              'event',
+                            ],
+                          ],
+                        ],
+                        '@event.event',
+                      ],
+                    ],
+                    [
+                      'not',
+                      [
+                        'array/some',
+                        '@prevEvents',
+                        [
+                          'fn',
+                          'e',
+                          [
+                            'and',
+                            [
+                              '=',
+                              [
+                                'object/get',
+                                '@e',
+                                'event',
+                              ],
+                              '@event.event',
+                            ],
+                            [
+                              '=',
+                              [
+                                'object/get',
+                                [
+                                  'object/get',
+                                  '@e',
+                                  'payload',
+                                  {},
+                                ],
+                                '@config.coalesceKey',
+                              ],
+                              [
+                                'object/get',
+                                '@event.payload',
+                                '@config.coalesceKey',
+                              ],
+                            ],
+                          ],
+                        ],
+                      ],
+                    ],
                   ],
                 ],
                 [
@@ -1581,26 +1665,30 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                   [
                     '=',
                     '@config.guardOp',
-                    'gt',
+                    'eq',
                   ],
                   [
-                    '>',
+                    'or',
                     [
-                      'object/get',
-                      '@payload.data',
-                      '@config.guardField',
+                      '=',
+                      '@config.triggerStatus',
+                      '',
                     ],
-                    '@config.guardValue',
+                    [
+                      '=',
+                      '@payload.status',
+                      '@config.triggerStatus',
+                    ],
                   ],
                   [
                     'if',
                     [
                       '=',
                       '@config.guardOp',
-                      'lt',
+                      'gt',
                     ],
                     [
-                      '<',
+                      '>',
                       [
                         'object/get',
                         '@payload.data',
@@ -1613,10 +1701,10 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                       [
                         '=',
                         '@config.guardOp',
-                        'gte',
+                        'lt',
                       ],
                       [
-                        '>=',
+                        '<',
                         [
                           'object/get',
                           '@payload.data',
@@ -1625,13 +1713,30 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                         '@config.guardValue',
                       ],
                       [
-                        '<=',
+                        'if',
                         [
-                          'object/get',
-                          '@payload.data',
-                          '@config.guardField',
+                          '=',
+                          '@config.guardOp',
+                          'gte',
                         ],
-                        '@config.guardValue',
+                        [
+                          '>=',
+                          [
+                            'object/get',
+                            '@payload.data',
+                            '@config.guardField',
+                          ],
+                          '@config.guardValue',
+                        ],
+                        [
+                          '<=',
+                          [
+                            'object/get',
+                            '@payload.data',
+                            '@config.guardField',
+                          ],
+                          '@config.guardValue',
+                        ],
                       ],
                     ],
                   ],

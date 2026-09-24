@@ -115,6 +115,9 @@ export type ReturnSemantics =
   | 'object-key-lookup'
   | 'identity-of-arg<0>';
 
+/** Where an effect executes: a client host delegates `server` effects, a server ships `client` effects back, `any` runs wherever it is dispatched. */
+export type RunsOn = 'client' | 'server' | 'any';
+
 export interface OperatorMeta {
   /** Operator category */
   category: OperatorCategory;
@@ -137,6 +140,8 @@ export interface OperatorMeta {
    * verification doc.
    */
   returnSemantics?: ReturnSemantics;
+  /** Execution site of an effect operator; set on every `hasSideEffects` operator, absent on pure ones. */
+  runsOn?: RunsOn;
 }
 
 // ============================================================================

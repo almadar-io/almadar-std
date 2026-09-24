@@ -206,6 +206,29 @@
         ],
         "overridableConfigKeys": [
           {
+            "key": "coalesce",
+            "type": "string",
+            "default": "none",
+            "label": "Collapse repeat notifications from one action?",
+            "description": "When one action raises the subscribed event several times (a bulk import, a batch save), send one notification for the whole action (`perDispatch`) or one per distinct value of `coalesceKey` (`perKey`) instead of one per event. `none` (default) notifies on every event. Scoped to a single action: the next action notifies again.",
+            "synonyms": "dedupe, deduplicate, collapse, batch notifications, one notification, bulk, coalesce, summarize, avoid spam, notification storm",
+            "tier": "policy",
+            "enumValues": [
+              "none",
+              "perDispatch",
+              "perKey"
+            ]
+          },
+          {
+            "key": "coalesceKey",
+            "type": "string",
+            "default": "id",
+            "label": "Which field makes two events distinct?",
+            "description": "With `coalesce: perKey`, the upstream event's payload field compared to tell repeats apart (e.g. `id` = one notification per record). Ignored otherwise.",
+            "synonyms": "dedupe key, distinct by, per record, unique field",
+            "tier": "policy"
+          },
+          {
             "key": "emailSubject",
             "type": "string",
             "default": "",

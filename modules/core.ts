@@ -374,6 +374,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Set a binding to a value',
     hasSideEffects: true,
+    runsOn: 'any',
     returnType: 'void',
     params: [
       { name: 'binding', type: BINDING, description: 'Target binding (e.g. "@entity.field")' },
@@ -396,6 +397,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Emit an event onto the bus',
     hasSideEffects: true,
+    runsOn: 'any',
     returnType: 'void',
     params: [
       { name: 'event', type: EVENT_KEY, description: 'Event key' },
@@ -418,6 +420,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 4,
     description: 'Create, update, delete, clear, or batch entity records. Optional trailing { emit: { success, failure } } options object attaches closed-circuit emit routing.',
     hasSideEffects: true,
+    runsOn: 'server',
     returnType: 'void',
     params: [
       { name: 'action', type: PERSIST_ACTION, description: 'Persist action' },
@@ -475,6 +478,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     description:
       'Navigate to a route: (navigate path payload? options?) — options carries { crumb } labelling the navigation-stack entry for the target page',
     hasSideEffects: true,
+    runsOn: 'client',
     returnType: 'void',
     params: [
       { name: 'path', type: STRING, description: 'Route path (supports :param placeholders)' },
@@ -501,6 +505,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 0,
     description: 'Pop the orbital-scoped navigation stack and return to the previous entry',
     hasSideEffects: true,
+    runsOn: 'client',
     returnType: 'void',
     effect: { kind: 'navigate-back' },
   },
@@ -511,6 +516,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Show a notification (in-app, email, push, sms)',
     hasSideEffects: true,
+    runsOn: 'any',
     returnType: 'void',
     params: [
       { name: 'channel', type: NOTIFY_CHANNEL, description: 'Delivery channel' },
@@ -526,6 +532,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 1,
     description: 'Emit a structured info log line (compiled + runtime)',
     hasSideEffects: true,
+    runsOn: 'any',
     returnType: 'void',
     params: [{ name: 'message', type: STRING, description: 'Log message' }],
     example: '["log", "Context below compact threshold"]',
@@ -538,6 +545,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Spawn a new entity instance (games)',
     hasSideEffects: true,
+    runsOn: 'any',
     returnType: 'void',
     params: [
       { name: 'entity', type: { kind: 'entity' }, description: 'Entity name to spawn' },
@@ -558,6 +566,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 1,
     description: 'Despawn an entity instance (games)',
     hasSideEffects: true,
+    runsOn: 'any',
     returnType: 'void',
     params: [
       { name: 'entityId', type: STRING, description: 'Target entity id (defaults to @entity.id)', optional: true },
@@ -572,6 +581,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Fetch an entity (by id) or a collection (by filter) from persistence',
     hasSideEffects: true,
+    runsOn: 'server',
     returnType: 'void',
     params: [
       { name: 'entity', type: { kind: 'entity' }, description: 'Target entity name' },
@@ -619,6 +629,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Stream an LLM or HTTP response, emitting on_message per chunk, success on completion, failure on error',
     hasSideEffects: true,
+    runsOn: 'server',
     returnType: 'void',
     params: [
       { name: 'entity', type: { kind: 'entity' }, description: 'Target entity name' },
@@ -650,6 +661,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Send an orbital event to the server over WebSocket (client-side; chat/real-time trigger)',
     hasSideEffects: true,
+    runsOn: 'client',
     returnType: 'void',
     params: [
       { name: 'event', type: EVENT_KEY, description: 'Target orbital event name on the server' },
@@ -670,6 +682,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Reactive entity reference (deprecated, use fetch with listens in V2)',
     hasSideEffects: true,
+    runsOn: 'any',
     returnType: 'void',
     params: [
       { name: 'entity', type: { kind: 'entity' }, description: 'Target entity name' },
@@ -710,6 +723,78 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       },
     },
   },
+  deref: {
+    module: 'core',
+    category: 'effect',
+    minArity: 1,
+    maxArity: 2,
+    description: 'Snapshot read of a binding or entity, without subscribing to changes',
+    hasSideEffects: true,
+    runsOn: 'any',
+    returnType: 'any',
+    params: [
+      { name: 'target', type: STRING, description: 'A binding (`@entity.health`) or entity name' },
+      {
+        name: 'options',
+        type: {
+          kind: 'object',
+          fields: { id: STRING, filter: ANY, include: { kind: 'array', of: STRING } },
+          open: true,
+        },
+        description: 'Selector: id | filter | include',
+        optional: true,
+      },
+    ],
+    example: '["deref", "@entity.health"]',
+  },
+  'swap!': {
+    module: 'core',
+    category: 'effect',
+    minArity: 2,
+    maxArity: 2,
+    description: 'Atomic compare-and-swap of an entity field on the server',
+    hasSideEffects: true,
+    runsOn: 'server',
+    returnType: 'void',
+    params: [
+      { name: 'target', type: BINDING, description: 'The field to swap (`@entity.counter`)' },
+      { name: 'update', type: SEXPR, description: 'The new value, computed from the current one' },
+    ],
+    example: '(swap! @entity.counter (+ @entity.counter 1))',
+  },
+  watch: {
+    module: 'core',
+    category: 'effect',
+    minArity: 2,
+    maxArity: 3,
+    description: 'Emit an event whenever a watched binding changes',
+    hasSideEffects: true,
+    runsOn: 'any',
+    returnType: 'void',
+    params: [
+      { name: 'target', type: BINDING, description: 'The binding to watch' },
+      { name: 'event', type: EVENT_KEY, description: 'Event emitted on each change' },
+      {
+        name: 'options',
+        type: { kind: 'object', fields: { debounce: 'number', emit: { kind: 'object', fields: {}, open: true } }, open: false },
+        description: 'debounce (ms) | emit',
+        optional: true,
+      },
+    ],
+    example: '["watch", "@entity.status", "STATUS_UPDATED", { "debounce": 100 }]',
+  },
+  atomic: {
+    module: 'core',
+    category: 'effect',
+    minArity: 1,
+    maxArity: null,
+    description: 'Run effects as one server transaction: all succeed or all roll back',
+    hasSideEffects: true,
+    runsOn: 'server',
+    returnType: 'void',
+    params: [{ name: 'effects', type: SEXPR, description: 'The effects to group' }],
+    example: '(atomic (set @entity.x 10) (set @entity.y 20))',
+  },
   'call-service': {
     module: 'core',
     category: 'effect',
@@ -718,6 +803,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     description:
       'Invoke an external service action. Optional trailing { emit: { success, failure } } options object attaches closed-circuit emit routing (V2 frame contract).',
     hasSideEffects: true,
+    runsOn: 'server',
     returnType: 'void',
     params: [
       { name: 'service', type: STRING, description: 'Service name (e.g. "llm", "stripe")' },
@@ -752,6 +838,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 3,
     description: 'Render a pattern into a UI slot',
     hasSideEffects: true,
+    runsOn: 'client',
     returnType: 'void',
     params: [
       { name: 'slot', type: UI_SLOT, description: 'Target UI slot (main, sidebar, modal, hud, ...)' },

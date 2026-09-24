@@ -7,7 +7,7 @@
  * @packageDocumentation
  */
 
-import type { OperatorMeta, StdOperatorMeta, StdModule } from './types.js';
+import type { OperatorMeta, RunsOn, StdOperatorMeta, StdModule } from './types.js';
 import { isStdOperator, getModuleFromOperator, STD_MODULES } from './types.js';
 
 import { CORE_OPERATORS } from './modules/core.js';
@@ -291,6 +291,18 @@ export function isStdGuardOperator(operator: string): boolean {
 export function isStdEffectOperator(operator: string): boolean {
   const meta = STD_OPERATORS[operator];
   return meta?.hasSideEffects ?? false;
+}
+
+/** Declared execution site of an effect operator; `undefined` for a pure or unknown one. */
+export function getOperatorRunsOn(operator: string): RunsOn | undefined {
+  return STD_OPERATORS[operator]?.runsOn;
+}
+
+/** Effect operators whose declared execution site is `site`, sorted. */
+export function getOperatorsRunningOn(site: RunsOn): string[] {
+  return Object.keys(STD_OPERATORS)
+    .filter((name) => STD_OPERATORS[name].runsOn === site)
+    .sort();
 }
 
 // ============================================================================

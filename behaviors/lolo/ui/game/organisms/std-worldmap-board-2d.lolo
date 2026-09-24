@@ -119,14 +119,35 @@ orbital WorldMapBoard2DOrbital {
       ]
       tiles: []
     }
+
+    listens {
+      MOVE { unitId : string, x : number, y : number }
+      ATTACK { targetId : string }
+      AI_TURN { turn : number }
+      SPAWN { id : string, x : number, y : number, team : string, health : number, maxHealth : number, unitType : string }
+      HEAL { team : string, amount : number }
+      WorldMapIntent.ATTACK -> ATTACK
+      WorldMapIntent.MOVE -> MOVE
+    }
   }
 
   trait RoundLogic = Round.traits.RoundFlow -> GameState {
     config { running: true }
+
+    listens {
+      UNITS_CHANGED { playersAlive : number, enemiesAlive : number }
+      TacticsAuthority.UNITS_CHANGED -> UNITS_CHANGED
+    }
   }
 
   trait GoldAuthority = Gold.traits.GoldMine -> GameState {
     config { running: true, startGold: 0, yieldAmount: 25 }
+
+    listens {
+      MINE_HIT { id : string }
+      RESTART { id : string }
+      WorldMapIntent.MINE_HIT -> MINE_HIT
+    }
   }
 
   trait WorldMapIntent -> GameState [interaction, instance] {

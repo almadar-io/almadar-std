@@ -24,6 +24,7 @@ export const BROWSER_OPERATORS: Record<string, StdOperatorMeta> = {
     description:
       'Open the OS file picker (window.showOpenFilePicker / host dialog). Resolves with the selected file metadata list, or emits failure when the user cancels or the capability is denied. Async; use the trailing { emit } envelope for success/failure events.',
     hasSideEffects: true,
+    runsOn: 'client',
     returnType: 'array',
     params: [
       {
@@ -65,6 +66,7 @@ export const BROWSER_OPERATORS: Record<string, StdOperatorMeta> = {
     description:
       'Read text from the system clipboard (navigator.clipboard.readText / host clipboard). Requires a user gesture and clipboard permission. Resolves with the clipboard text via the trailing { emit } envelope.',
     hasSideEffects: true,
+    runsOn: 'client',
     returnType: 'string',
     effect: {
       kind: 'custom',
@@ -80,6 +82,7 @@ export const BROWSER_OPERATORS: Record<string, StdOperatorMeta> = {
     description:
       'Write text to the system clipboard (navigator.clipboard.writeText / host clipboard). Requires a user gesture. Emits success/failure via the trailing { emit } envelope.',
     hasSideEffects: true,
+    runsOn: 'client',
     returnType: 'void',
     params: [
       { name: 'text', type: 'string', description: 'Text to write to the clipboard' },
@@ -98,6 +101,7 @@ export const BROWSER_OPERATORS: Record<string, StdOperatorMeta> = {
     description:
       'Subscribe this browser to Web Push notifications: registers the shared push service worker, fetches the VAPID public key from the host (/api/push/vapid-public-key — no key material in the schema), and calls PushManager.subscribe. Requires notification permission (user gesture). Resolves with the flat subscription credentials { endpoint, p256dh, auth } via the trailing { emit } envelope — persist them on an owner-scoped entity row and pass them back to the push.send service as subscription: { endpoint, keys: { p256dh, auth } }. Emits failure when the Push API is unavailable, permission is denied, or the host has no VAPID key configured.',
     hasSideEffects: true,
+    runsOn: 'client',
     returnType: 'object',
     effect: {
       kind: 'custom',
@@ -120,6 +124,7 @@ export const BROWSER_OPERATORS: Record<string, StdOperatorMeta> = {
     description:
       'Read the current device position (navigator.geolocation.getCurrentPosition / host geolocation). Requires location permission. Resolves with { latitude, longitude, accuracy } via the trailing { emit } envelope.',
     hasSideEffects: true,
+    runsOn: 'client',
     returnType: 'object',
     params: [
       {

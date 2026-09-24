@@ -25,6 +25,12 @@ const BEHAVIOR_PATH = 'std/behaviors/std-survival-board-3d';
 const ALIAS = 'SurvivalBoard3d';
 
 /**
+ * Closed set of event keys this trait listens for —
+ * derived from the .orb's `listens[]` block.
+ */
+export type StdSurvivalBoard3dListenKey = 'MOVE' | 'RESTART' | 'WANDER';
+
+/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
@@ -909,6 +915,32 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
           },
         },
         'linkedEntity': 'GameState',
+        'listens': [
+          {
+            'event': 'MOVE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'SurvivalIntent',
+            },
+            'triggers': 'MOVE',
+          },
+          {
+            'event': 'RESTART',
+            'source': {
+              'kind': 'trait',
+              'trait': 'SurvivalIntent',
+            },
+            'triggers': 'RESTART',
+          },
+          {
+            'event': 'WANDER',
+            'source': {
+              'kind': 'trait',
+              'trait': 'SurvivalIntent',
+            },
+            'triggers': 'WANDER',
+          },
+        ],
         'name': 'HeroAuthority',
         'ref': ('Nav.traits.HeroNav' satisfies _StdSurvivalBoard3dSurvivalBoard3DOrbitalUsesRef),
       }),
@@ -932,6 +964,24 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
           },
         },
         'linkedEntity': 'GameState',
+        'listens': [
+          {
+            'event': 'HERO_STEPPED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'HeroAuthority',
+            },
+            'triggers': 'HERO_STEPPED',
+          },
+          {
+            'event': 'RESTART',
+            'source': {
+              'kind': 'trait',
+              'trait': 'SurvivalIntent',
+            },
+            'triggers': 'RESTART',
+          },
+        ],
         'name': 'Gather',
         'ref': ('Harvest.traits.Gather' satisfies _StdSurvivalBoard3dSurvivalBoard3DOrbitalUsesRef),
       }),
@@ -943,6 +993,24 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
           },
         },
         'linkedEntity': 'GameState',
+        'listens': [
+          {
+            'event': 'BURST',
+            'source': {
+              'kind': 'trait',
+              'trait': 'Gather',
+            },
+            'triggers': 'BURST',
+          },
+          {
+            'event': 'RESTART',
+            'source': {
+              'kind': 'trait',
+              'trait': 'SurvivalIntent',
+            },
+            'triggers': 'RESTART',
+          },
+        ],
         'name': 'FxDecay',
         'ref': ('Particles.traits.FxParticles' satisfies _StdSurvivalBoard3dSurvivalBoard3DOrbitalUsesRef),
       }),
@@ -954,6 +1022,32 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
           },
         },
         'linkedEntity': 'GameState',
+        'listens': [
+          {
+            'event': 'RESOURCES',
+            'source': {
+              'kind': 'trait',
+              'trait': 'Gather',
+            },
+            'triggers': 'RESOURCES',
+          },
+          {
+            'event': 'BUILD_CAMP',
+            'source': {
+              'kind': 'trait',
+              'trait': 'SurvivalIntent',
+            },
+            'triggers': 'BUILD_CAMP',
+          },
+          {
+            'event': 'RESTART',
+            'source': {
+              'kind': 'trait',
+              'trait': 'SurvivalIntent',
+            },
+            'triggers': 'RESTART',
+          },
+        ],
         'name': 'Flow',
         'ref': ('Survival.traits.SurvivalFlow' satisfies _StdSurvivalBoard3dSurvivalBoard3DOrbitalUsesRef),
       }),
@@ -1594,6 +1688,18 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
             'tier': 'domain',
           },
           {
+            'description': 'Build Camp button pressed',
+            'event': 'BUILD_CAMP_PRESS',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'domain',
+          },
+          {
             'description': 'Requests building the camp once wood/stone goals are met; survival-flow resolves the win',
             'event': 'BUILD_CAMP',
             'payloadSchema': [
@@ -1671,9 +1777,9 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
               'tier': 'domain',
             },
             {
-              'description': 'Requests building the camp once wood/stone goals are met; survival-flow resolves the win',
-              'key': 'BUILD_CAMP',
-              'name': 'Build Camp',
+              'description': 'Build Camp button pressed',
+              'key': 'BUILD_CAMP_PRESS',
+              'name': 'Build Camp Press',
               'payloadSchema': [
                 {
                   'name': 'id',
@@ -1730,6 +1836,18 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                 {
                   'name': 'id',
                   'required': true,
+                  'type': 'string',
+                },
+              ],
+              'tier': 'domain',
+            },
+            {
+              'description': 'Requests building the camp once wood/stone goals are met; survival-flow resolves the win',
+              'key': 'BUILD_CAMP',
+              'name': 'Build Camp',
+              'payloadSchema': [
+                {
+                  'name': 'id',
                   'type': 'string',
                 },
               ],
@@ -2126,7 +2244,7 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                           'type': 'game-hud',
                         },
                         {
-                          'action': 'BUILD_CAMP',
+                          'action': 'BUILD_CAMP_PRESS',
                           'label': 'Build Camp',
                           'type': 'button',
                           'variant': 'primary',
@@ -2568,7 +2686,7 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                   },
                 ],
               ],
-              'event': 'BUILD_CAMP',
+              'event': 'BUILD_CAMP_PRESS',
               'from': 'playing',
               'guard': [
                 'and',
@@ -2993,7 +3111,7 @@ export function stdSurvivalBoard3dSurvivalBoard3DOrbital(params: StdSurvivalBoar
                         'type': 'game-hud',
                       },
                       {
-                        'action': 'BUILD_CAMP',
+                        'action': 'BUILD_CAMP_PRESS',
                         'label': 'Build Camp',
                         'type': 'button',
                         'variant': 'primary',

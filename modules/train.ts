@@ -26,6 +26,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 3,
     description: 'Execute training loop with constraints',
     hasSideEffects: true,
+    runsOn: 'any',
     returnType: 'train/result',
     params: [
       { name: 'module', type: 'nn/module', description: 'The neural network to train' },
@@ -41,6 +42,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 4,
     description: 'Execute single training step (forward, loss, backward, update)',
     hasSideEffects: true,
+    runsOn: 'any',
     returnType: 'train/stepResult',
     params: [
       { name: 'module', type: 'nn/module', description: 'The neural network' },
@@ -144,6 +146,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Clip gradients to max norm (modifies in place)',
     hasSideEffects: true,
+    runsOn: 'any',
     returnType: 'number',
     params: [
       { name: 'module', type: 'nn/module', description: 'The neural network' },
@@ -176,6 +179,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Clip weights to max magnitude (modifies in place)',
     hasSideEffects: true,
+    runsOn: 'any',
     returnType: 'void',
     params: [
       { name: 'module', type: 'nn/module', description: 'The neural network' },
@@ -256,6 +260,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 3,
     description: 'Stochastic gradient descent optimizer step',
     hasSideEffects: true,
+    runsOn: 'any',
     returnType: 'void',
     params: [
       { name: 'module', type: 'nn/module', description: 'The neural network' },
@@ -271,6 +276,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 4,
     description: 'Adam optimizer step',
     hasSideEffects: true,
+    runsOn: 'any',
     returnType: 'void',
     params: [
       { name: 'module', type: 'nn/module', description: 'The neural network' },
@@ -340,6 +346,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 3,
     description: 'Train a model over a dataset (ML effect)',
     hasSideEffects: true,
+    runsOn: 'any',
     returnType: 'object',
     params: [
       { name: 'model', type: 'nn/module', description: 'The neural network module' },
@@ -369,6 +376,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Save a model checkpoint (ML effect)',
     hasSideEffects: true,
+    runsOn: 'any',
     returnType: 'void',
     params: [
       { name: 'model', type: 'nn/module', description: 'The neural network module' },

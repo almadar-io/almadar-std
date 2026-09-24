@@ -56,6 +56,34 @@
             "required": false,
             "description": "Timestamp indicating when the audit event was recorded.",
             "synonyms": "timestamp, date, time"
+          },
+          {
+            "name": "sourceEvent",
+            "type": "string",
+            "required": false,
+            "description": "The event that delivered the change to the audit trail, e.g. ContactSaved.",
+            "synonyms": "triggering event, cause, origin event"
+          },
+          {
+            "name": "sourceTrait",
+            "type": "string",
+            "required": false,
+            "description": "The behavior that emitted the change.",
+            "synonyms": "emitter, origin, raised by"
+          },
+          {
+            "name": "sourceOrbital",
+            "type": "string",
+            "required": false,
+            "description": "The module the change came from.",
+            "synonyms": "origin module, source module"
+          },
+          {
+            "name": "sourceTick",
+            "type": "string",
+            "required": false,
+            "description": "The scheduled job that caused the change; blank when a person or an event did.",
+            "synonyms": "scheduled job, background job, timer"
           }
         ],
         "persistence": "persistent"
@@ -101,7 +129,7 @@
             "type": "[string]",
             "default": [],
             "label": "Event-kind filter",
-            "description": "When set, only @payload.data.kind values in this list are audited. Empty list = capture every event. Requires the upstream event to include a `kind` field on its payload.",
+            "description": "When set, only these kinds are audited: the payload's `kind` field, or the delivering event's name when there is no kind. Empty list = capture every event.",
             "tier": "internal",
             "items": {
               "type": "string"

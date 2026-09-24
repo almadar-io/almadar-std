@@ -161,6 +161,7 @@ export const NN_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Set network weights from a flat tensor',
     hasSideEffects: true,
+    runsOn: 'any',
     returnType: 'nn/module',
     params: [
       { name: 'module', type: 'nn/module', description: 'The neural network module' },

@@ -91,6 +91,15 @@
         "parent": "trt_01M055GPVTGG74FHDJQC5JHNJ4",
         "renames": []
       },
+      "evt_01M38JTBE53DS99GCAYMFQBC48": {
+        "bakedName": "BUILD_CAMP_PRESS",
+        "curName": "BUILD_CAMP_PRESS",
+        "id": "evt_01M38JTBE53DS99GCAYMFQBC48",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M055GPVTGG74FHDJQC5JHNJ4",
+        "renames": []
+      },
       "orb_01M055GPVTCYJK833FGZQGJMED": {
         "bakedName": "SurvivalBoard3DOrbital",
         "curName": "SurvivalBoard3DOrbital",
@@ -978,6 +987,32 @@
           "id": "trt_01M055GPVT61NXB767JDEDYGT4",
           "linkedEntity": "GameState",
           "linkedEntityId": "ent_01M055GPVTDY0QW4KR5CANT7CX",
+          "listens": [
+            {
+              "event": "MOVE",
+              "source": {
+                "kind": "trait",
+                "trait": "SurvivalIntent"
+              },
+              "triggers": "MOVE"
+            },
+            {
+              "event": "RESTART",
+              "source": {
+                "kind": "trait",
+                "trait": "SurvivalIntent"
+              },
+              "triggers": "RESTART"
+            },
+            {
+              "event": "WANDER",
+              "source": {
+                "kind": "trait",
+                "trait": "SurvivalIntent"
+              },
+              "triggers": "WANDER"
+            }
+          ],
           "name": "HeroAuthority",
           "ref": "Nav.traits.HeroNav"
         },
@@ -1003,6 +1038,24 @@
           "id": "trt_01M055GPVT1R51986CRFT3MAZM",
           "linkedEntity": "GameState",
           "linkedEntityId": "ent_01M055GPVTDY0QW4KR5CANT7CX",
+          "listens": [
+            {
+              "event": "HERO_STEPPED",
+              "source": {
+                "kind": "trait",
+                "trait": "HeroAuthority"
+              },
+              "triggers": "HERO_STEPPED"
+            },
+            {
+              "event": "RESTART",
+              "source": {
+                "kind": "trait",
+                "trait": "SurvivalIntent"
+              },
+              "triggers": "RESTART"
+            }
+          ],
           "name": "Gather",
           "ref": "Harvest.traits.Gather"
         },
@@ -1016,6 +1069,24 @@
           "id": "trt_01M055GPVT86R2C39MKTHJV43B",
           "linkedEntity": "GameState",
           "linkedEntityId": "ent_01M055GPVTDY0QW4KR5CANT7CX",
+          "listens": [
+            {
+              "event": "BURST",
+              "source": {
+                "kind": "trait",
+                "trait": "Gather"
+              },
+              "triggers": "BURST"
+            },
+            {
+              "event": "RESTART",
+              "source": {
+                "kind": "trait",
+                "trait": "SurvivalIntent"
+              },
+              "triggers": "RESTART"
+            }
+          ],
           "name": "FxDecay",
           "ref": "Particles.traits.FxParticles"
         },
@@ -1029,6 +1100,32 @@
           "id": "trt_01M055GPVTQNM3WCJD1VBQ5Z1V",
           "linkedEntity": "GameState",
           "linkedEntityId": "ent_01M055GPVTDY0QW4KR5CANT7CX",
+          "listens": [
+            {
+              "event": "RESOURCES",
+              "source": {
+                "kind": "trait",
+                "trait": "Gather"
+              },
+              "triggers": "RESOURCES"
+            },
+            {
+              "event": "BUILD_CAMP",
+              "source": {
+                "kind": "trait",
+                "trait": "SurvivalIntent"
+              },
+              "triggers": "BUILD_CAMP"
+            },
+            {
+              "event": "RESTART",
+              "source": {
+                "kind": "trait",
+                "trait": "SurvivalIntent"
+              },
+              "triggers": "RESTART"
+            }
+          ],
           "name": "Flow",
           "ref": "Survival.traits.SurvivalFlow"
         },
@@ -1675,6 +1772,19 @@
               "tier": "domain"
             },
             {
+              "description": "Build Camp button pressed",
+              "event": "BUILD_CAMP_PRESS",
+              "eventId": "evt_01M38JTBE53DS99GCAYMFQBC48",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
               "description": "Requests building the camp once wood/stone goals are met; survival-flow resolves the win",
               "event": "BUILD_CAMP",
               "eventId": "evt_01M055GPVTSP3W6BPN8CDGGBSP",
@@ -1762,10 +1872,10 @@
                 "tier": "domain"
               },
               {
-                "description": "Requests building the camp once wood/stone goals are met; survival-flow resolves the win",
-                "id": "evt_01M055GPVTSP3W6BPN8CDGGBSP",
-                "key": "BUILD_CAMP",
-                "name": "Build Camp",
+                "description": "Build Camp button pressed",
+                "id": "evt_01M38JTBE53DS99GCAYMFQBC48",
+                "key": "BUILD_CAMP_PRESS",
+                "name": "Build Camp Press",
                 "payloadSchema": [
                   {
                     "name": "id",
@@ -1826,6 +1936,19 @@
                   {
                     "name": "id",
                     "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Requests building the camp once wood/stone goals are met; survival-flow resolves the win",
+                "id": "evt_01M055GPVTSP3W6BPN8CDGGBSP",
+                "key": "BUILD_CAMP",
+                "name": "Build Camp",
+                "payloadSchema": [
+                  {
+                    "name": "id",
                     "type": "string"
                   }
                 ],
@@ -2222,7 +2345,7 @@
                             "type": "game-hud"
                           },
                           {
-                            "action": "BUILD_CAMP",
+                            "action": "BUILD_CAMP_PRESS",
                             "label": "Build Camp",
                             "type": "button",
                             "variant": "primary"
@@ -2668,8 +2791,8 @@
                     }
                   ]
                 ],
-                "event": "BUILD_CAMP",
-                "eventId": "evt_01M055GPVTSP3W6BPN8CDGGBSP",
+                "event": "BUILD_CAMP_PRESS",
+                "eventId": "evt_01M38JTBE53DS99GCAYMFQBC48",
                 "from": "playing",
                 "guard": [
                   "and",
@@ -3095,7 +3218,7 @@
                           "type": "game-hud"
                         },
                         {
-                          "action": "BUILD_CAMP",
+                          "action": "BUILD_CAMP_PRESS",
                           "label": "Build Camp",
                           "type": "button",
                           "variant": "primary"

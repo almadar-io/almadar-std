@@ -159,6 +159,15 @@ orbital ObjectiveBoard3DOrbital {
         { id: "t-3-3", x: 3, y: 3, z: 0, terrain: "grass", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png", role: "tile", category: "terrain", animations: ["static"], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }
       ]
     }
+
+    listens {
+      MOVE { unitId : string, x : number, y : number }
+      WANDER { tick : number }
+      RESTART { id : string }
+      HeroIntent.MOVE -> MOVE
+      HeroIntent.RESTART -> RESTART
+      HeroIntent.WANDER -> WANDER
+    }
   }
 
   trait Collector = Objective.traits.ObjectiveReach -> GameState {
@@ -168,14 +177,35 @@ orbital ObjectiveBoard3DOrbital {
       pointsPerTarget: 1
       removeOnReach: true
     }
+
+    listens {
+      HERO_STEPPED { unitId : string, x : number, z : number, movesLeft : number }
+      RESTART { id : string }
+      HeroAuthority.HERO_STEPPED -> HERO_STEPPED
+      HeroIntent.RESTART -> RESTART
+    }
   }
 
   trait FxDecay = Particles.traits.FxParticles -> GameState {
     config { running: true }
+
+    listens {
+      BURST { particles : [Fx] }
+      RESTART { }
+      Collector.BURST -> BURST
+      HeroIntent.RESTART -> RESTART
+    }
   }
 
   trait RoundGate = Gate.traits.ObjectiveFlow -> GameState {
     config { running: true }
+
+    listens {
+      PROGRESS { objectivesLeft : number, movesLeft : number }
+      RESTART { id : string }
+      Collector.PROGRESS -> PROGRESS
+      HeroIntent.RESTART -> RESTART
+    }
   }
 
   trait HeroIntent -> GameState [interaction, instance] {

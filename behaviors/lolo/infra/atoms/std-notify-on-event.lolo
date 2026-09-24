@@ -49,7 +49,7 @@ orbital NotifyOnEventOrbital {
     initial: idle
 
     state idle {
-      EventOccurred -> idle when (if ["=", @config.guardOp, "eq"] (or ["=", @config.triggerStatus, ""] ["=", ?status, @config.triggerStatus]) (if ["=", @config.guardOp, "gt"] [">", (object/get ?data @config.guardField), @config.guardValue] (if ["=", @config.guardOp, "lt"] ["<", (object/get ?data @config.guardField), @config.guardValue] (if ["=", @config.guardOp, "gte"] [">=", (object/get ?data @config.guardField), @config.guardValue] ["<=", (object/get ?data @config.guardField), @config.guardValue]))))
+      EventOccurred -> idle when (and (or ["=", @config.coalesce, "none"] (if ["=", @config.coalesce, "perDispatch"] (not (array/includes (array/map @prevEvents (fn e (object/get @e "event"))) @event.event)) (not (array/some @prevEvents (fn e (and ["=", (object/get @e "event"), @event.event] ["=", (object/get (object/get @e "payload" {}) @config.coalesceKey), (object/get @event.payload @config.coalesceKey)])))))) (if ["=", @config.guardOp, "eq"] (or ["=", @config.triggerStatus, ""] ["=", ?status, @config.triggerStatus]) (if ["=", @config.guardOp, "gt"] [">", (object/get ?data @config.guardField), @config.guardValue] (if ["=", @config.guardOp, "lt"] ["<", (object/get ?data @config.guardField), @config.guardValue] (if ["=", @config.guardOp, "gte"] [">=", (object/get ?data @config.guardField), @config.guardValue] ["<=", (object/get ?data @config.guardField), @config.guardValue])))))
         (set @entity.recipient (if ["=", (array/len @config.recipients), 0] (if (not ["=", @config.fallbackRecipient, ""]) @config.fallbackRecipient @user.id) (array/first @config.recipients)))
         (set @entity.channel @config.notifyChannel)
         (set @entity.message @config.template)
@@ -352,6 +352,16 @@ orbital NotifyOnEventOrbital {
     }
 
     config {
+      coalesce : "none" | "perDispatch" | "perKey" = none
+        @label "Collapse repeat notifications from one action?"
+        @description "When one action raises the subscribed event several times (a bulk import, a batch save), send one notification for the whole action (`perDispatch`) or one per distinct value of `coalesceKey` (`perKey`) instead of one per event. `none` (default) notifies on every event. Scoped to a single action: the next action notifies again."
+        @synonyms "dedupe, deduplicate, collapse, batch notifications, one notification, bulk, coalesce, summarize, avoid spam, notification storm"
+        @tier "policy"
+      coalesceKey : string = "id"
+        @label "Which field makes two events distinct?"
+        @description "With `coalesce: perKey`, the upstream event's payload field compared to tell repeats apart (e.g. `id` = one notification per record). Ignored otherwise."
+        @synonyms "dedupe key, distinct by, per record, unique field"
+        @tier "policy"
       triggerStatus : string = ""
         @label "Trigger status"
         @description "When `guardOp` is `eq` and this is set, dispatch only when the upstream event's `status` field equals this value (e.g. fire only when a record becomes 'approved'). Empty = fire on every subscribed event. Ignored when `guardOp` is a numeric comparison."

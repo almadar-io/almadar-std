@@ -1,0 +1,175 @@
+[
+  {
+    "organism": "std-review-cycle",
+    "orbital": "ReviewCycleOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/infra/atoms/std-review-cycle.ts",
+    "entities": [
+      {
+        "name": "ReviewItem",
+        "fields": [
+          {
+            "name": "round",
+            "type": "number",
+            "required": false,
+            "description": "Review round the record is on; 1 for the first review, incremented on each resubmission.",
+            "synonyms": "iteration, revision round, review count"
+          },
+          {
+            "name": "lastNote",
+            "type": "string",
+            "required": false,
+            "description": "Note left with the most recent move.",
+            "synonyms": "comment, reason, feedback"
+          },
+          {
+            "name": "lastLogId",
+            "type": "string",
+            "required": false,
+            "description": "Id of the most recent ReviewEvent history row.",
+            "synonyms": "history id, log entry"
+          }
+        ],
+        "persistence": "persistent"
+      }
+    ],
+    "traits": [
+      {
+        "name": "ReviewCycle",
+        "emittedEvents": [
+          "ReviewLogged",
+          "ReviewLogFailed",
+          "ReviewRequested",
+          "ReviewDecided"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "ReviewLogged",
+            "direction": "emit",
+            "description": "Internal: a history row landed."
+          },
+          {
+            "name": "ReviewLogFailed",
+            "direction": "emit",
+            "description": "Internal: writing a history row failed."
+          },
+          {
+            "name": "ReviewRequested",
+            "direction": "emit"
+          },
+          {
+            "name": "ReviewDecided",
+            "direction": "emit"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "ReviewSubmitted",
+            "direction": "listen"
+          },
+          {
+            "name": "ReviewChangesRequested",
+            "direction": "listen"
+          },
+          {
+            "name": "ReviewApproved",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "enabled",
+            "type": "boolean",
+            "default": true,
+            "label": "Run the review workflow?",
+            "description": "Accept submissions into review. Off = submissions are ignored.",
+            "synonyms": "enable, turn on, review, require review, review workflow",
+            "tier": "policy"
+          },
+          {
+            "key": "requireSeparateApproval",
+            "type": "boolean",
+            "default": true,
+            "label": "Require approval to be a separate action?",
+            "description": "Four-eyes review: reject an approval raised by the same action that submitted the record, such as an automatic rule or bot that approves instantly. Approvals made as their own action are unaffected.",
+            "synonyms": "four eyes, two person rule, no self approval, separate reviewer, independent approval, no auto approve",
+            "tier": "policy"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "ReviewItem",
+        "transitionEvents": [
+          "INIT",
+          "ReviewApproved",
+          "ReviewChangesRequested",
+          "ReviewLogFailed",
+          "ReviewLogged",
+          "ReviewSubmitted"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "lastLogId",
+            "lastNote",
+            "round"
+          ]
+        },
+        "effectRow": [
+          {
+            "kind": "emit",
+            "resource": "ReviewDecided"
+          },
+          {
+            "kind": "emit",
+            "resource": "ReviewRequested"
+          },
+          {
+            "kind": "persist",
+            "resource": "ReviewEvent"
+          },
+          {
+            "kind": "render-ui",
+            "resource": "toast"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.lastLogId"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.lastNote"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.round"
+          }
+        ],
+        "effectEntityRefs": [
+          "ReviewEvent"
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "name": "ReviewCyclePage",
+        "defaultPath": "/review-cycle",
+        "primaryEntity": "ReviewItem"
+      }
+    ],
+    "emittedEvents": [
+      "ReviewDecided",
+      "ReviewLogFailed",
+      "ReviewLogged",
+      "ReviewRequested"
+    ],
+    "listenedEvents": [],
+    "exposure": "both",
+    "provenance": "authored",
+    "sourceValid": true
+  }
+]

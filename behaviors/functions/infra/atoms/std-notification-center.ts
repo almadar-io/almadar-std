@@ -1841,6 +1841,7 @@ export function stdNotificationCenterNotificationCenterOrbital(params: StdNotifi
             ],
             'interval': '0 * * * *',
             'name': 'digestCycle',
+            'runsInBackground': true,
           },
         ],
       } satisfies Trait,

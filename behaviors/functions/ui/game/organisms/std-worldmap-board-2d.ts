@@ -25,6 +25,12 @@ const BEHAVIOR_PATH = 'std/behaviors/std-worldmap-board-2d';
 const ALIAS = 'WorldmapBoard2d';
 
 /**
+ * Closed set of event keys this trait listens for —
+ * derived from the .orb's `listens[]` block.
+ */
+export type StdWorldmapBoard2dListenKey = 'ATTACK' | 'MOVE';
+
+/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
@@ -958,6 +964,24 @@ export function stdWorldmapBoard2dWorldMapBoard2DOrbital(params: StdWorldmapBoar
           },
         },
         'linkedEntity': 'GameState',
+        'listens': [
+          {
+            'event': 'ATTACK',
+            'source': {
+              'kind': 'trait',
+              'trait': 'WorldMapIntent',
+            },
+            'triggers': 'ATTACK',
+          },
+          {
+            'event': 'MOVE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'WorldMapIntent',
+            },
+            'triggers': 'MOVE',
+          },
+        ],
         'name': 'TacticsAuthority',
         'ref': ('Tactics.traits.GridTactics' satisfies _StdWorldmapBoard2dWorldMapBoard2DOrbitalUsesRef),
       }),
@@ -969,6 +993,16 @@ export function stdWorldmapBoard2dWorldMapBoard2DOrbital(params: StdWorldmapBoar
           },
         },
         'linkedEntity': 'GameState',
+        'listens': [
+          {
+            'event': 'UNITS_CHANGED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TacticsAuthority',
+            },
+            'triggers': 'UNITS_CHANGED',
+          },
+        ],
         'name': 'RoundLogic',
         'ref': ('Round.traits.RoundFlow' satisfies _StdWorldmapBoard2dWorldMapBoard2DOrbitalUsesRef),
       }),
@@ -988,6 +1022,16 @@ export function stdWorldmapBoard2dWorldMapBoard2DOrbital(params: StdWorldmapBoar
           },
         },
         'linkedEntity': 'GameState',
+        'listens': [
+          {
+            'event': 'MINE_HIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'WorldMapIntent',
+            },
+            'triggers': 'MINE_HIT',
+          },
+        ],
         'name': 'GoldAuthority',
         'ref': ('Gold.traits.GoldMine' satisfies _StdWorldmapBoard2dWorldMapBoard2DOrbitalUsesRef),
       }),

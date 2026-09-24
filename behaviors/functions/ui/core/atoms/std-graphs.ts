@@ -212,7 +212,20 @@ export function stdGraphsGraphItemOrbital(params: StdGraphsGraphItemOrbitalParam
             'type': 'string',
           },
           {
-            'default': [],
+            'default': [
+              {
+                'label': 'Active',
+                'value': 6,
+              },
+              {
+                'label': 'Pending',
+                'value': 3,
+              },
+              {
+                'label': 'Inactive',
+                'value': 1,
+              },
+            ],
             'description': 'The data points used to render the chart.',
             'intrinsic': true,
             'items': {
@@ -542,24 +555,6 @@ export function stdGraphsGraphItemOrbital(params: StdGraphsGraphItemOrbitalParam
           'transitions': [
             {
               'effects': [
-                [
-                  'set',
-                  '@entity.chartData',
-                  [
-                    {
-                      'label': 'Active',
-                      'value': 6,
-                    },
-                    {
-                      'label': 'Pending',
-                      'value': 3,
-                    },
-                    {
-                      'label': 'Inactive',
-                      'value': 1,
-                    },
-                  ],
-                ],
                 [
                   'render-ui',
                   'main',

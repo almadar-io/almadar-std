@@ -21,6 +21,7 @@ export const ASYNC_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Wait for specified milliseconds, optionally execute an effect after',
     hasSideEffects: true,
+    runsOn: 'any',
     returnType: 'any',
     params: [
       { name: 'ms', type: 'number', description: 'Milliseconds to wait' },
@@ -35,6 +36,7 @@ export const ASYNC_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Execute an effect periodically at a fixed interval',
     hasSideEffects: true,
+    runsOn: 'any',
     returnType: 'string',
     params: [
       { name: 'ms', type: 'number', description: 'Interval in milliseconds' },
@@ -49,6 +51,7 @@ export const ASYNC_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Add timeout to an effect',
     hasSideEffects: true,
+    runsOn: 'any',
     returnType: 'any',
     params: [
       { name: 'effect', type: 'expression', description: 'Effect to execute' },
@@ -63,6 +66,7 @@ export const ASYNC_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Debounce an event (wait for pause in events)',
     hasSideEffects: true,
+    runsOn: 'any',
     returnType: 'void',
     params: [
       { name: 'event', type: 'string', description: 'Event name to emit' },
@@ -77,6 +81,7 @@ export const ASYNC_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Throttle an event (emit at most once per interval)',
     hasSideEffects: true,
+    runsOn: 'any',
     returnType: 'void',
     params: [
       { name: 'event', type: 'string', description: 'Event name to emit' },
@@ -91,6 +96,7 @@ export const ASYNC_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Retry an effect with configurable backoff',
     hasSideEffects: true,
+    runsOn: 'any',
     returnType: 'any',
     params: [
       { name: 'effect', type: 'expression', description: 'Effect to retry' },
@@ -107,6 +113,7 @@ export const ASYNC_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: null,
     description: 'Execute effects in parallel, return first to complete',
     hasSideEffects: true,
+    runsOn: 'any',
     returnType: 'any',
     params: [{ name: '...effects', type: 'expression[]', description: 'Effects to race' }],
     example: '["async/race", ["call", "api1"], ["call", "api2"]]',
@@ -118,6 +125,7 @@ export const ASYNC_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: null,
     description: 'Execute effects in parallel, wait for all to complete',
     hasSideEffects: true,
+    runsOn: 'any',
     returnType: 'array',
     params: [{ name: '...effects', type: 'expression[]', description: 'Effects to execute' }],
     example: '["async/all", ["call", "api1"], ["call", "api2"]]',
@@ -129,6 +137,7 @@ export const ASYNC_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: null,
     description: 'Execute effects in sequence (one after another)',
     hasSideEffects: true,
+    runsOn: 'any',
     returnType: 'array',
     params: [{ name: '...effects', type: 'expression[]', description: 'Effects to execute in order' }],
     example: '["async/sequence", ["call", "validate"], ["call", "save"]]',

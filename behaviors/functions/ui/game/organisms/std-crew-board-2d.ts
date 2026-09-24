@@ -25,6 +25,12 @@ const BEHAVIOR_PATH = 'std/behaviors/std-crew-board-2d';
 const ALIAS = 'CrewBoard2d';
 
 /**
+ * Closed set of event keys this trait listens for —
+ * derived from the .orb's `listens[]` block.
+ */
+export type StdCrewBoard2dListenKey = 'MOVE';
+
+/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
@@ -790,6 +796,16 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
           },
         },
         'linkedEntity': 'GameState',
+        'listens': [
+          {
+            'event': 'MOVE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CrewIntent',
+            },
+            'triggers': 'MOVE',
+          },
+        ],
         'name': 'CrewAuthority',
         'ref': ('Nav.traits.HeroNav' satisfies _StdCrewBoard2dCrewBoard2DOrbitalUsesRef),
       }),

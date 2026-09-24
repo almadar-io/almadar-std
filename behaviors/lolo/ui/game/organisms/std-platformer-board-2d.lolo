@@ -134,14 +134,46 @@ orbital PlatformerBoard2DOrbital {
       xMax: 768
       killY: 460
     }
+
+    listens {
+      STEER { dir : number! }
+      JUMP { id : string }
+      PLACE { x : number!, y : number! }
+      CURVE_MOD_ADD { x0 : number!, x1 : number!, a : number!, b : number, h : number!, k : number! }
+      CURVE_MOD_CLEAR { }
+      CURVE_MOD_CLEAR_RANGE { x0 : number!, x1 : number! }
+      SET_TUNING { jumpStrength : number, moveSpeed : number, gravity : number }
+      SET_PLATFORMS { platforms : [PlatformerPlatform]! }
+      SET_SKATE_CURVE { curve : [PlatformerCurveSample]! }
+      SET_DRIFT_REGIONS { regions : [BodyDriftRegion]! }
+      RESTART { id : string }
+      PlatformerIntent.PLAT_JUMP -> PLAT_JUMP
+      PlatformerIntent.PLAT_PLACE -> PLAT_PLACE
+      PlatformerIntent.PLAT_STEER -> PLAT_STEER
+      PlatformerIntent.RESTART -> RESTART
+    }
   }
 
   trait FxDecay = Particles.traits.FxParticles -> GameState {
     config { running: true }
+
+    listens {
+      BURST { particles : [Fx] }
+      RESTART { }
+      PlatformerIntent.BURST -> BURST
+      PlatformerIntent.RESTART -> RESTART
+    }
   }
 
   trait RoundGate = Gate.traits.ObjectiveFlow -> GameState {
     config { running: true }
+
+    listens {
+      PROGRESS { objectivesLeft : number, movesLeft : number }
+      RESTART { id : string }
+      PlatformerIntent.PROGRESS -> PROGRESS
+      PlatformerIntent.RESTART -> RESTART
+    }
   }
 
   trait PlatformerIntent -> GameState [interaction, instance] {
@@ -393,6 +425,13 @@ orbital PlatformerBoard2DOrbital {
         @label "Direction Assets"
         @description "D-pad direction icon sprites"
         @tier "presentation"
+    }
+
+    listens {
+      BodyAuthority.PLAT_FELL -> PLAT_FELL
+      BodyAuthority.PLAT_GOAL -> PLAT_GOAL
+      BodyAuthority.PLAT_HAZARD -> PLAT_HAZARD
+      RoundGate.GAME_END -> GAME_END
     }
   }
 

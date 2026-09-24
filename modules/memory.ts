@@ -27,6 +27,7 @@ export const MEMORY_OPERATORS: Record<string, StdOperatorMeta> = {
     minArity: 2, maxArity: 3,
     description: 'Store a new memory. Returns the new memory ID.',
     hasSideEffects: true,
+    runsOn: 'any',
     returnType: 'string',
     params: [
       { name: 'content', type: 'string', description: 'Memory content to store' },

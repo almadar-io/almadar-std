@@ -15,6 +15,7 @@ export const TRACE_OPERATORS: Record<string, StdOperatorMeta> = {
     minArity: 1, maxArity: 2,
     description: 'Emit a structured trace event for observability (115 call sites in rabit today).',
     hasSideEffects: true,
+    runsOn: 'any',
     returnType: 'void',
     params: [
       { name: 'event', type: 'string', description: 'Event type name' },
@@ -27,6 +28,7 @@ export const TRACE_OPERATORS: Record<string, StdOperatorMeta> = {
     minArity: 2, maxArity: 2,
     description: 'Log a message at the given level.',
     hasSideEffects: true,
+    runsOn: 'any',
     returnType: 'void',
     params: [
       { name: 'level', type: { kind: 'union', of: [{ kind: 'literal', value: 'info' }, { kind: 'literal', value: 'warn' }, { kind: 'literal', value: 'error' }, { kind: 'literal', value: 'debug' }] }, description: 'Log level' },

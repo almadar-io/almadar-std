@@ -1,5 +1,5 @@
 {
-  "description": "std-global-search — cross-module federated search. Use when a user voices that one search box should query several modules at once (global search, search everything, unified search, cross-module search, federated search, search across records, omnisearch, one search box, aggregated results, grouped results). One SEARCH event fans out to every module key listed in the `modules` config (comma-separated, deterministic — no registry magic): the trait walks the parsed key list with an internal FAN_OUT_STEP sentinel and emits one scoped MODULE_SEARCH_REQUESTED { moduleKey, queryText, typeFilter, scopeJson } -> external per key, so modules respond in parallel rather than in sequence. Modules answer with SEARCH_RESULTS { moduleKey, resultsJson }; each answer appends a SearchResultGroup to the entity, so the merged view stays grouped by module. Client/person/date/type filters ride `scopeJson` — the atom never interprets them. Every query persists as a SearchQuery row (recent/saved searches) when `saveHistory` is on. The input is the mapped `search-input` type rendered inline with event renamed to SEARCH (the std-geosearch idiom); its native {searchTerm}/{value} payloads are bridged via str/default, so programmatic SEARCH { queryText, typeFilter, scopeJson } emitters and the UI box drive the same arm.",
+  "description": "std-global-search — cross-module federated search. Use when a user voices that one search box should query several modules at once (global search, search everything, unified search, cross-module search, federated search, search across records, omnisearch, one search box, aggregated results, grouped results). One SEARCH event fans out to every module key listed in the `modules` config (comma-separated, deterministic — no registry magic): the trait walks the parsed key list with an internal FAN_OUT_STEP sentinel and emits one scoped MODULE_SEARCH_REQUESTED { moduleKey, queryText, typeFilter, scopeJson } -> external per key, so modules respond in parallel rather than in sequence. Modules answer with SEARCH_RESULTS { moduleKey, resultsJson }; each answer appends a SearchResultGroup to the entity, so the merged view stays grouped by module. A module that answers twice is counted once, a keyless answer is filed under the answering module's name, and every group records which behavior answered it. Client/person/date/type filters ride `scopeJson` — the atom never interprets them. Every query persists as a SearchQuery row (recent/saved searches) when `saveHistory` is on. The input is the mapped `search-input` type rendered inline with event renamed to SEARCH (the std-geosearch idiom); its native {searchTerm}/{value} payloads are bridged via str/default, so programmatic SEARCH { queryText, typeFilter, scopeJson } emitters and the UI box drive the same arm.",
   "ledger": {
     "entries": {
       "ent_01M2HF5GMNGVKWFSM4E6WE1SAY": {
@@ -238,6 +238,11 @@
             "description": "Merged answers, one entry per responding module, grouped by moduleKey.",
             "items": {
               "properties": {
+                "answeredBy": {
+                  "name": "answeredBy",
+                  "required": false,
+                  "type": "string"
+                },
                 "moduleKey": {
                   "name": "moduleKey",
                   "required": false,
@@ -582,6 +587,17 @@
           "id": "trt_01M2HF5GMNYZN83ARCEMGT2H32",
           "linkedEntity": "SearchQuery",
           "linkedEntityId": "ent_01M2HF5GMNGVKWFSM4E6WE1SAY",
+          "listens": [
+            {
+              "event": "SEARCH_RESULTS",
+              "eventId": "evt_01M2HF5GMNEB63359FQVKBKN3V",
+              "source": {
+                "kind": "any"
+              },
+              "triggers": "SEARCH_RESULTS",
+              "triggersId": "evt_01M2HF5GMNEB63359FQVKBKN3V"
+            }
+          ],
           "name": "GlobalSearch",
           "scope": "instance",
           "stateMachine": {
@@ -1205,7 +1221,20 @@
                       "array/append",
                       "@entity.results",
                       {
-                        "moduleKey": "@payload.moduleKey",
+                        "answeredBy": [
+                          "str/default",
+                          "@event.source.trait",
+                          ""
+                        ],
+                        "moduleKey": [
+                          "str/default",
+                          "@payload.moduleKey",
+                          [
+                            "str/default",
+                            "@event.source.orbital",
+                            ""
+                          ]
+                        ],
                         "receivedAt": "@now",
                         "resultsJson": "@payload.resultsJson"
                       }
@@ -1219,7 +1248,15 @@
                       "@entity.resultsSummary",
                       [
                         "str/concat",
-                        "@payload.moduleKey",
+                        [
+                          "str/default",
+                          "@payload.moduleKey",
+                          [
+                            "str/default",
+                            "@event.source.orbital",
+                            ""
+                          ]
+                        ],
                         [
                           "str/concat",
                           ": ",
@@ -1399,6 +1436,30 @@
                 "event": "SEARCH_RESULTS",
                 "eventId": "evt_01M2HF5GMNEB63359FQVKBKN3V",
                 "from": "searching",
+                "guard": [
+                  "not",
+                  [
+                    "array/some",
+                    "@entity.results",
+                    [
+                      "fn",
+                      "g",
+                      [
+                        "=",
+                        "@g.moduleKey",
+                        [
+                          "str/default",
+                          "@payload.moduleKey",
+                          [
+                            "str/default",
+                            "@event.source.orbital",
+                            ""
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
                 "to": "searching"
               },
               {
@@ -1544,6 +1605,10 @@
           {
             "name": "receivedAt",
             "type": "number"
+          },
+          {
+            "name": "answeredBy",
+            "type": "string"
           }
         ]
       },

@@ -33,6 +33,13 @@ const ALIAS = 'UiTextarea';
 export type StdUiTextareaEventKey = 'ACTION' | 'CHANGE' | 'INIT';
 
 /**
+ * Payload shape for the `ACTION` event.
+ */
+export interface StdUiTextareaActionPayload {
+  value: string;
+}
+
+/**
  * Payload shape for the `CHANGE` event.
  */
 export interface StdUiTextareaChangePayload {

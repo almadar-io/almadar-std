@@ -25,6 +25,12 @@ const BEHAVIOR_PATH = 'std/behaviors/std-tactics-board-2d';
 const ALIAS = 'TacticsBoard2d';
 
 /**
+ * Closed set of event keys this trait listens for —
+ * derived from the .orb's `listens[]` block.
+ */
+export type StdTacticsBoard2dListenKey = 'ATTACK' | 'MOVE' | 'AI_TURN';
+
+/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
@@ -923,6 +929,32 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
           },
         },
         'linkedEntity': 'GameState',
+        'listens': [
+          {
+            'event': 'ATTACK',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PlayerIntent',
+            },
+            'triggers': 'ATTACK',
+          },
+          {
+            'event': 'MOVE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PlayerIntent',
+            },
+            'triggers': 'MOVE',
+          },
+          {
+            'event': 'AI_TURN',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PlayerIntent',
+            },
+            'triggers': 'AI_TURN',
+          },
+        ],
         'name': 'TacticsAuthority',
         'ref': ('Tactics.traits.GridTactics' satisfies _StdTacticsBoard2dTacticsBoard2DOrbitalUsesRef),
       }),
@@ -934,6 +966,16 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
           },
         },
         'linkedEntity': 'GameState',
+        'listens': [
+          {
+            'event': 'BURST',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TacticsAuthority',
+            },
+            'triggers': 'BURST',
+          },
+        ],
         'name': 'FxDecay',
         'ref': ('Particles.traits.FxParticles' satisfies _StdTacticsBoard2dTacticsBoard2DOrbitalUsesRef),
       }),
@@ -945,6 +987,16 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
           },
         },
         'linkedEntity': 'GameState',
+        'listens': [
+          {
+            'event': 'UNITS_CHANGED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TacticsAuthority',
+            },
+            'triggers': 'UNITS_CHANGED',
+          },
+        ],
         'name': 'RoundLogic',
         'ref': ('Round.traits.RoundFlow' satisfies _StdTacticsBoard2dTacticsBoard2DOrbitalUsesRef),
       }),
@@ -968,6 +1020,16 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
           },
         },
         'linkedEntity': 'GameState',
+        'listens': [
+          {
+            'event': 'UNITS_CHANGED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TacticsAuthority',
+            },
+            'triggers': 'UNITS_CHANGED',
+          },
+        ],
         'name': 'ScoreKeeper',
         'ref': ('Score.traits.ScoreKeeper' satisfies _StdTacticsBoard2dTacticsBoard2DOrbitalUsesRef),
       }),

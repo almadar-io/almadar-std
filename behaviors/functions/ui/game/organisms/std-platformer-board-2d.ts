@@ -25,6 +25,12 @@ const BEHAVIOR_PATH = 'std/behaviors/std-platformer-board-2d';
 const ALIAS = 'PlatformerBoard2d';
 
 /**
+ * Closed set of event keys this trait listens for —
+ * derived from the .orb's `listens[]` block.
+ */
+export type StdPlatformerBoard2dListenKey = 'PLAT_JUMP' | 'PLAT_PLACE' | 'PLAT_STEER' | 'RESTART';
+
+/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
@@ -476,6 +482,40 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
           'STEER': 'PLAT_STEER',
         },
         'linkedEntity': 'GameState',
+        'listens': [
+          {
+            'event': 'PLAT_JUMP',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PlatformerIntent',
+            },
+            'triggers': 'PLAT_JUMP',
+          },
+          {
+            'event': 'PLAT_PLACE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PlatformerIntent',
+            },
+            'triggers': 'PLAT_PLACE',
+          },
+          {
+            'event': 'PLAT_STEER',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PlatformerIntent',
+            },
+            'triggers': 'PLAT_STEER',
+          },
+          {
+            'event': 'RESTART',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PlatformerIntent',
+            },
+            'triggers': 'RESTART',
+          },
+        ],
         'name': 'BodyAuthority',
         'ref': ('Body.traits.PlatformerBody' satisfies _StdPlatformerBoard2dPlatformerBoard2DOrbitalUsesRef),
       }),
@@ -487,6 +527,24 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
           },
         },
         'linkedEntity': 'GameState',
+        'listens': [
+          {
+            'event': 'BURST',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PlatformerIntent',
+            },
+            'triggers': 'BURST',
+          },
+          {
+            'event': 'RESTART',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PlatformerIntent',
+            },
+            'triggers': 'RESTART',
+          },
+        ],
         'name': 'FxDecay',
         'ref': ('Particles.traits.FxParticles' satisfies _StdPlatformerBoard2dPlatformerBoard2DOrbitalUsesRef),
       }),
@@ -498,6 +556,24 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
           },
         },
         'linkedEntity': 'GameState',
+        'listens': [
+          {
+            'event': 'PROGRESS',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PlatformerIntent',
+            },
+            'triggers': 'PROGRESS',
+          },
+          {
+            'event': 'RESTART',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PlatformerIntent',
+            },
+            'triggers': 'RESTART',
+          },
+        ],
         'name': 'RoundGate',
         'ref': ('Gate.traits.ObjectiveFlow' satisfies _StdPlatformerBoard2dPlatformerBoard2DOrbitalUsesRef),
       }),
@@ -1772,6 +1848,40 @@ export function stdPlatformerBoard2dPlatformerBoard2DOrbital(params: StdPlatform
           },
         ],
         'linkedEntity': 'GameState',
+        'listens': [
+          {
+            'event': 'PLAT_FELL',
+            'source': {
+              'kind': 'trait',
+              'trait': ('BodyAuthority' satisfies _StdPlatformerBoard2dListenTraitName),
+            },
+            'triggers': 'PLAT_FELL',
+          },
+          {
+            'event': 'PLAT_GOAL',
+            'source': {
+              'kind': 'trait',
+              'trait': ('BodyAuthority' satisfies _StdPlatformerBoard2dListenTraitName),
+            },
+            'triggers': 'PLAT_GOAL',
+          },
+          {
+            'event': 'PLAT_HAZARD',
+            'source': {
+              'kind': 'trait',
+              'trait': ('BodyAuthority' satisfies _StdPlatformerBoard2dListenTraitName),
+            },
+            'triggers': 'PLAT_HAZARD',
+          },
+          {
+            'event': 'GAME_END',
+            'source': {
+              'kind': 'trait',
+              'trait': ('RoundGate' satisfies _StdPlatformerBoard2dListenTraitName),
+            },
+            'triggers': 'GAME_END',
+          },
+        ],
         'name': 'PlatformerIntent',
         'scope': 'instance',
         'stateMachine': {

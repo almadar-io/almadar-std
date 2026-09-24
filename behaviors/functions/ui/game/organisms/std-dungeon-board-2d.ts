@@ -25,6 +25,12 @@ const BEHAVIOR_PATH = 'std/behaviors/std-dungeon-board-2d';
 const ALIAS = 'DungeonBoard2d';
 
 /**
+ * Closed set of event keys this trait listens for —
+ * derived from the .orb's `listens[]` block.
+ */
+export type StdDungeonBoard2dListenKey = 'MOVE' | 'RESTART';
+
+/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
@@ -1576,6 +1582,24 @@ export function stdDungeonBoard2dDungeonBoard2DOrbital(params: StdDungeonBoard2d
           },
         },
         'linkedEntity': 'GameState',
+        'listens': [
+          {
+            'event': 'MOVE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DungeonIntent',
+            },
+            'triggers': 'MOVE',
+          },
+          {
+            'event': 'RESTART',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DungeonIntent',
+            },
+            'triggers': 'RESTART',
+          },
+        ],
         'name': 'HeroAuthority',
         'ref': ('Nav.traits.HeroNav' satisfies _StdDungeonBoard2dDungeonBoard2DOrbitalUsesRef),
       }),
@@ -1641,6 +1665,32 @@ export function stdDungeonBoard2dDungeonBoard2DOrbital(params: StdDungeonBoard2d
           },
         },
         'linkedEntity': 'GameState',
+        'listens': [
+          {
+            'event': 'ATTACK',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DungeonIntent',
+            },
+            'triggers': 'ATTACK',
+          },
+          {
+            'event': 'MONSTER_TICK',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DungeonIntent',
+            },
+            'triggers': 'MONSTER_TICK',
+          },
+          {
+            'event': 'RESTART',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DungeonIntent',
+            },
+            'triggers': 'RESTART',
+          },
+        ],
         'name': 'Enemies',
         'ref': ('Combat.traits.DungeonCombat' satisfies _StdDungeonBoard2dDungeonBoard2DOrbitalUsesRef),
       }),
@@ -1672,6 +1722,24 @@ export function stdDungeonBoard2dDungeonBoard2DOrbital(params: StdDungeonBoard2d
           },
         },
         'linkedEntity': 'GameState',
+        'listens': [
+          {
+            'event': 'RESTART',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DungeonIntent',
+            },
+            'triggers': 'RESTART',
+          },
+          {
+            'event': 'HERO_STEPPED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'HeroAuthority',
+            },
+            'triggers': 'HERO_STEPPED',
+          },
+        ],
         'name': 'Collector',
         'ref': ('Objective.traits.ObjectiveReach' satisfies _StdDungeonBoard2dDungeonBoard2DOrbitalUsesRef),
       }),
@@ -1683,6 +1751,32 @@ export function stdDungeonBoard2dDungeonBoard2DOrbital(params: StdDungeonBoard2d
           },
         },
         'linkedEntity': 'GameState',
+        'listens': [
+          {
+            'event': 'BURST',
+            'source': {
+              'kind': 'trait',
+              'trait': 'Collector',
+            },
+            'triggers': 'BURST',
+          },
+          {
+            'event': 'RESTART',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DungeonIntent',
+            },
+            'triggers': 'RESTART',
+          },
+          {
+            'event': 'BURST',
+            'source': {
+              'kind': 'trait',
+              'trait': 'Enemies',
+            },
+            'triggers': 'BURST',
+          },
+        ],
         'name': 'FxDecay',
         'ref': ('Particles.traits.FxParticles' satisfies _StdDungeonBoard2dDungeonBoard2DOrbitalUsesRef),
       }),
@@ -1694,6 +1788,24 @@ export function stdDungeonBoard2dDungeonBoard2DOrbital(params: StdDungeonBoard2d
           },
         },
         'linkedEntity': 'GameState',
+        'listens': [
+          {
+            'event': 'PROGRESS',
+            'source': {
+              'kind': 'trait',
+              'trait': 'Collector',
+            },
+            'triggers': 'PROGRESS',
+          },
+          {
+            'event': 'RESTART',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DungeonIntent',
+            },
+            'triggers': 'RESTART',
+          },
+        ],
         'name': 'RoundGate',
         'ref': ('Gate.traits.ObjectiveFlow' satisfies _StdDungeonBoard2dDungeonBoard2DOrbitalUsesRef),
       }),

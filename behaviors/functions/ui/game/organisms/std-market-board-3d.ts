@@ -25,6 +25,12 @@ const BEHAVIOR_PATH = 'std/behaviors/std-market-board-3d';
 const ALIAS = 'MarketBoard3d';
 
 /**
+ * Closed set of event keys this trait listens for —
+ * derived from the .orb's `listens[]` block.
+ */
+export type StdMarketBoard3dListenKey = 'MOVE' | 'RESTART';
+
+/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
@@ -1431,6 +1437,24 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
           },
         },
         'linkedEntity': 'GameState',
+        'listens': [
+          {
+            'event': 'MOVE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'MarketIntent',
+            },
+            'triggers': 'MOVE',
+          },
+          {
+            'event': 'RESTART',
+            'source': {
+              'kind': 'trait',
+              'trait': 'MarketIntent',
+            },
+            'triggers': 'RESTART',
+          },
+        ],
         'name': 'HeroAuthority',
         'ref': ('Nav.traits.HeroNav' satisfies _StdMarketBoard3dMarketBoard3DOrbitalUsesRef),
       }),
@@ -1476,6 +1500,24 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
           },
         },
         'linkedEntity': 'GameState',
+        'listens': [
+          {
+            'event': 'HERO_STEPPED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'HeroAuthority',
+            },
+            'triggers': 'HERO_STEPPED',
+          },
+          {
+            'event': 'RESTART',
+            'source': {
+              'kind': 'trait',
+              'trait': 'MarketIntent',
+            },
+            'triggers': 'RESTART',
+          },
+        ],
         'name': 'Patience',
         'ref': ('Svc.traits.Patience' satisfies _StdMarketBoard3dMarketBoard3DOrbitalUsesRef),
       }),
@@ -1487,6 +1529,24 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
           },
         },
         'linkedEntity': 'GameState',
+        'listens': [
+          {
+            'event': 'RESTART',
+            'source': {
+              'kind': 'trait',
+              'trait': 'MarketIntent',
+            },
+            'triggers': 'RESTART',
+          },
+          {
+            'event': 'BURST',
+            'source': {
+              'kind': 'trait',
+              'trait': 'Patience',
+            },
+            'triggers': 'BURST',
+          },
+        ],
         'name': 'FxDecay',
         'ref': ('Particles.traits.FxParticles' satisfies _StdMarketBoard3dMarketBoard3DOrbitalUsesRef),
       }),
@@ -1506,6 +1566,24 @@ export function stdMarketBoard3dMarketBoard3DOrbital(params: StdMarketBoard3dMar
           },
         },
         'linkedEntity': 'GameState',
+        'listens': [
+          {
+            'event': 'RESTART',
+            'source': {
+              'kind': 'trait',
+              'trait': 'MarketIntent',
+            },
+            'triggers': 'RESTART',
+          },
+          {
+            'event': 'SERVICE_CHANGED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'Patience',
+            },
+            'triggers': 'SERVICE_CHANGED',
+          },
+        ],
         'name': 'RoundGate',
         'ref': ('Flow.traits.MarketFlow' satisfies _StdMarketBoard3dMarketBoard3DOrbitalUsesRef),
       }),

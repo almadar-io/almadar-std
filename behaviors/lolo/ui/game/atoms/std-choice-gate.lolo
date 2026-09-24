@@ -45,7 +45,7 @@ orbital ChoiceGateOrbital {
           (if (== (object/get @o correct) true)
             (do
               (set @entity.choices (array/map @entity.choices (fn c (if (== (object/get @c id) (object/get @g id)) (object/merge @c { solved: true, chosen: (object/get @o id) }) @c))))
-              (emit CHOICE_CORRECT { id: (object/get @g id), x: (object/get @g x), y: (object/get @g y) }))
+              (emit CHOICE_CORRECT { id: (object/get @g id), optionId: (object/get @o id), x: (object/get @g x), y: (object/get @g y) }))
             (emit CHOICE_WRONG { id: (object/get @g id), optionId: (object/get @o id), x: (+ (object/get @g x) (object/get @o dx)), y: (object/get @g y) }))))
           null))
 
@@ -59,10 +59,11 @@ orbital ChoiceGateOrbital {
     emits {
       CHOICE_CORRECT -> external {
         id : string!
+        optionId : string!
         x : number!
         y : number!
       }
-        @description "The player landed grounded on the gate's correct option; fires once per gate (solved gates stop judging). Carries the gate center so boards can burst the unlock there."
+        @description "The player landed grounded on the gate's correct option; fires once per gate (solved gates stop judging). Carries the gate id, the chosen optionId, and the gate center so boards can burst the unlock there."
         @tier "domain"
       CHOICE_WRONG -> external {
         id : string!

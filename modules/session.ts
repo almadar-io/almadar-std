@@ -24,7 +24,7 @@ export const SESSION_OPERATORS: Record<string, StdOperatorMeta> = {
     module: 'session', category: 'std-session',
     minArity: 2, maxArity: 2,
     description: 'Write the per-orbital spec.json to the session store.',
-    hasSideEffects: true, returnType: 'void',
+    hasSideEffects: true, runsOn: 'any', returnType: 'void',
     params: [
       { name: 'orbitalName', type: 'string', description: 'Orbital name' },
       { name: 'spec', type: { kind: 'object', fields: { orbitalName: 'string', organism: 'string', method: 'string' } }, description: 'Orbital spec' },
@@ -44,7 +44,7 @@ export const SESSION_OPERATORS: Record<string, StdOperatorMeta> = {
     module: 'session', category: 'std-session',
     minArity: 2, maxArity: 2,
     description: 'Write per-orbital memory to the session store.',
-    hasSideEffects: true, returnType: 'void',
+    hasSideEffects: true, runsOn: 'any', returnType: 'void',
     params: [
       { name: 'orbitalName', type: 'string', description: 'Orbital name' },
       { name: 'memory', type: { kind: 'object', fields: { entityName: 'string', notes: { kind: 'array', of: 'string' } }, open: true }, description: 'Orbital memory' },
@@ -64,7 +64,7 @@ export const SESSION_OPERATORS: Record<string, StdOperatorMeta> = {
     module: 'session', category: 'std-session',
     minArity: 2, maxArity: 2,
     description: 'Append an entry to the per-orbital conversation history.',
-    hasSideEffects: true, returnType: 'void',
+    hasSideEffects: true, runsOn: 'any', returnType: 'void',
     params: [
       { name: 'orbitalName', type: 'string', description: 'Orbital name' },
       { name: 'entry', type: { kind: 'object', fields: { role: 'string', content: 'string' } }, description: 'History entry' },
@@ -84,7 +84,7 @@ export const SESSION_OPERATORS: Record<string, StdOperatorMeta> = {
     module: 'session', category: 'std-session',
     minArity: 2, maxArity: 2,
     description: 'Write validation errors for an orbital.',
-    hasSideEffects: true, returnType: 'void',
+    hasSideEffects: true, runsOn: 'any', returnType: 'void',
     params: [
       { name: 'orbitalName', type: 'string', description: 'Orbital name' },
       { name: 'errors', type: { kind: 'array', of: 'ValidationError' }, description: 'Validation errors' },

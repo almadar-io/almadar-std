@@ -783,6 +783,7 @@ export function stdLifecycleLifecycleOrbital(params: StdLifecycleLifecycleOrbita
             ],
             'interval': '0 * * * *',
             'name': 'scanCycle',
+            'runsInBackground': true,
           },
         ],
       } satisfies Trait,

@@ -1853,6 +1853,7 @@ export function stdCalendarSyncCalendarSyncOrbital(params: StdCalendarSyncCalend
             ],
             'interval': '*/15 * * * *',
             'name': 'syncCycle',
+            'runsInBackground': true,
           },
         ],
       } satisfies Trait,

@@ -30,7 +30,7 @@ const ALIAS = 'MarketingHero';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdMarketingHeroEventKey = 'CTA_PRIMARY' | 'CTA_SECONDARY' | 'INIT';
+export type StdMarketingHeroEventKey = 'CTA_PRIMARY' | 'CTA_SECONDARY' | 'INIT' | 'PRIMARY_ACTION' | 'SECONDARY_ACTION';
 
 /**
  * Payload shape for the `CTA_PRIMARY` event.

@@ -1856,6 +1856,7 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
             ],
             'interval': '0 * * * *',
             'name': 'executionScan',
+            'runsInBackground': true,
           },
         ],
       } satisfies Trait,

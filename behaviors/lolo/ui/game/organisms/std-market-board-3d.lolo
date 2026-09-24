@@ -166,6 +166,14 @@ orbital MarketBoard3DOrbital {
         { id: "t-3-3", x: 3, y: 3, z: 0, terrain: "grass", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png", role: "tile", category: "terrain", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }
       ]
     }
+
+    listens {
+      MOVE { unitId : string, x : number, y : number }
+      WANDER { tick : number }
+      RESTART { id : string }
+      MarketIntent.MOVE -> MOVE
+      MarketIntent.RESTART -> RESTART
+    }
   }
 
   trait Patience = Svc.traits.Patience -> GameState {
@@ -176,14 +184,35 @@ orbital MarketBoard3DOrbital {
         { id: "cust-1", position: { x: 2, y: 2 }, patience: 10, maxPatience: 10, unitType: "customer", name: "Customer", team: "customer", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/units/soldier/soldier.png", role: "customer", category: "customer", animations: ["idle"], style: "vector", dimension: "2d", aspect: "1:1", name: "customer", thumbnailUrl: "" } }
       ]
     }
+
+    listens {
+      HERO_STEPPED { unitId : string, x : number, z : number, movesLeft : number }
+      RESTART { id : string }
+      HeroAuthority.HERO_STEPPED -> HERO_STEPPED
+      MarketIntent.RESTART -> RESTART
+    }
   }
 
   trait FxDecay = Particles.traits.FxParticles -> GameState {
     config { running: true }
+
+    listens {
+      BURST { particles : [Fx] }
+      RESTART { }
+      MarketIntent.RESTART -> RESTART
+      Patience.BURST -> BURST
+    }
   }
 
   trait RoundGate = Flow.traits.MarketFlow -> GameState {
     config { running: true, targetServed: 10, maxLost: 3 }
+
+    listens {
+      SERVICE_CHANGED { served : number, pending : number, lost : number }
+      RESTART { id : string }
+      MarketIntent.RESTART -> RESTART
+      Patience.SERVICE_CHANGED -> SERVICE_CHANGED
+    }
   }
 
   trait MarketIntent -> GameState [interaction, instance] {

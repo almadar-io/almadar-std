@@ -33,6 +33,12 @@ const ALIAS = 'AgentRabit';
 export type StdAgentRabitEventKey = 'ALL_DONE' | 'COMPOSED' | 'COMPOSE_FAILED' | 'DISPATCHED' | 'INIT' | 'PLANNED' | 'PLAN_FAILED' | 'RABIT_DONE' | 'RESET' | 'START';
 
 /**
+ * Closed set of event keys this trait listens for —
+ * derived from the .orb's `listens[]` block.
+ */
+export type StdAgentRabitListenKey = 'ALL_DONE';
+
+/**
  * Payload shape for the `PLANNED` event.
  */
 export interface StdAgentRabitPlannedPayload {
@@ -318,6 +324,16 @@ export function stdAgentRabitCoordinatorOrbital(params: StdAgentRabitCoordinator
           },
         ],
         'linkedEntity': 'Coordinator',
+        'listens': [
+          {
+            'event': 'ALL_DONE',
+            'source': {
+              'kind': 'trait',
+              'trait': ('CoordinatorMonitor' satisfies _StdAgentRabitListenTraitName),
+            },
+            'triggers': 'ALL_DONE',
+          },
+        ],
         'name': 'CoordinatorPipeline',
         'scope': 'instance',
         'stateMachine': {

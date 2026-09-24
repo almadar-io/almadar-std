@@ -37,6 +37,7 @@ export type StdChoiceGateEventKey = 'BODY_MOVED' | 'CHOICE_CORRECT' | 'CHOICE_WR
  */
 export interface StdChoiceGateChoiceCorrectPayload {
   id: string;
+  optionId: string;
   x: number;
   y: number;
 }

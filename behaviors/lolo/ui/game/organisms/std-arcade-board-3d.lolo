@@ -142,6 +142,15 @@ orbital ArcadeBoard3DFrameOrbital {
         { id: "t-1-1", x: 1, y: 1, z: 0, terrain: "grass", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png", role: "tile", category: "terrain", animations: ["static"], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }
       ]
     }
+
+    listens {
+      MOVE { unitId : string, x : number, y : number }
+      WANDER { tick : number }
+      RESTART { id : string }
+      ArcadeIntent.MOVE -> MOVE
+      ArcadeIntent.RESTART -> RESTART
+      ArcadeIntent.WANDER -> WANDER
+    }
   }
 
   trait PlayEconomy = Play.traits.ArcadePlay -> GameState {
@@ -152,14 +161,35 @@ orbital ArcadeBoard3DFrameOrbital {
       maxPayout: 1
       machines: []
     }
+
+    listens {
+      PLAY_MACHINE { machineId : string, x : number, z : number }
+      RESTART { id : string }
+      ArcadeIntent.PLAY_MACHINE -> PLAY_MACHINE
+      ArcadeIntent.RESTART -> RESTART
+    }
   }
 
   trait FxDecay = Particles.traits.FxParticles -> GameState {
     config { running: true }
+
+    listens {
+      BURST { particles : [Fx] }
+      RESTART { }
+      ArcadeIntent.RESTART -> RESTART
+      PlayEconomy.BURST -> BURST
+    }
   }
 
   trait RoundGate = Gate.traits.ArcadeFlow -> GameState {
     config { running: true, ticketsToWin: 5 }
+
+    listens {
+      SCORE_CHANGED { tickets : number, tokens : number }
+      RESTART { id : string }
+      ArcadeIntent.RESTART -> RESTART
+      PlayEconomy.SCORE_CHANGED -> SCORE_CHANGED
+    }
   }
 
   trait ArcadeIntent -> GameState [interaction, instance] {

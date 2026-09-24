@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-09-16T03:45:18.260Z",
+  "generated": "2026-09-24T11:24:53.040Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -1715,6 +1715,7 @@
       "description": "Execute effects in parallel, wait for all to complete",
       "module": "async",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "All",
       "params": [
         {
@@ -1736,6 +1737,7 @@
       "description": "Debounce an event (wait for pause in events)",
       "module": "async",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Debounce",
       "params": [
         {
@@ -1762,6 +1764,7 @@
       "description": "Wait for specified milliseconds, optionally execute an effect after",
       "module": "async",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Delay",
       "params": [
         {
@@ -1783,6 +1786,7 @@
       "description": "Execute an effect periodically at a fixed interval",
       "module": "async",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Interval",
       "params": [
         {
@@ -1809,6 +1813,7 @@
       "description": "Execute effects in parallel, return first to complete",
       "module": "async",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Race",
       "params": [
         {
@@ -1830,6 +1835,7 @@
       "description": "Retry an effect with configurable backoff",
       "module": "async",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Retry",
       "params": [
         {
@@ -1856,6 +1862,7 @@
       "description": "Execute effects in sequence (one after another)",
       "module": "async",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Sequence",
       "params": [
         {
@@ -1877,6 +1884,7 @@
       "description": "Throttle an event (emit at most once per interval)",
       "module": "async",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Throttle",
       "params": [
         {
@@ -1903,6 +1911,7 @@
       "description": "Add timeout to an effect",
       "module": "async",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Timeout",
       "params": [
         {
@@ -1921,6 +1930,29 @@
       ],
       "docsSource": "reference-docs"
     },
+    "atomic": {
+      "category": "effect",
+      "minArity": 1,
+      "maxArity": null,
+      "returnType": "void",
+      "description": "Run effects as one server transaction: all succeed or all roll back",
+      "module": "core",
+      "hasSideEffects": true,
+      "runsOn": "server",
+      "params": [
+        {
+          "name": "effects",
+          "type": {
+            "kind": "sexpr"
+          },
+          "description": "The effects to group"
+        }
+      ],
+      "examples": [
+        "(atomic (set @entity.x 10) (set @entity.y 20))"
+      ],
+      "docsSource": "generated"
+    },
     "behavior/call": {
       "category": "std-behavior",
       "minArity": 2,
@@ -1929,6 +1961,7 @@
       "description": "Call a behavior service action. Returns the ServiceCallResult union — resolves to the specific member when the (behavior, action) pair is a literal.",
       "module": "behavior",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Call",
       "params": [
         {
@@ -1995,6 +2028,7 @@
       "description": "Instantiate a behavior from the registry at runtime (meta-programming). Equivalent to compile-time `uses` but dynamic — the behavior name is a runtime value. Applies the same override surface (linkedEntity, events, config, fields).",
       "module": "behavior",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Instantiate",
       "params": [
         {
@@ -2075,6 +2109,7 @@
         "kind": "custom",
         "produces": "string"
       },
+      "runsOn": "client",
       "title": "Clipboard Read",
       "examples": [
         "(browser/clipboard-read) // => \"clipboard text\""
@@ -2093,6 +2128,7 @@
         "kind": "custom",
         "produces": "string"
       },
+      "runsOn": "client",
       "title": "Clipboard Write",
       "params": [
         {
@@ -2125,6 +2161,7 @@
           }
         }
       },
+      "runsOn": "client",
       "title": "Geolocation Current",
       "params": [
         {
@@ -2170,6 +2207,7 @@
           }
         }
       },
+      "runsOn": "client",
       "title": "Open File Picker",
       "params": [
         {
@@ -2210,6 +2248,7 @@
           }
         }
       },
+      "runsOn": "client",
       "title": "Push Subscribe",
       "examples": [
         "(browser/push-subscribe) // => {\"endpoint\": \"https://...\", \"p256dh\": \"...\", \"auth\": \"...\"}"
@@ -2228,6 +2267,7 @@
         "kind": "call-service",
         "produces": "any"
       },
+      "runsOn": "server",
       "title": "Call Service",
       "params": [
         {
@@ -2274,6 +2314,7 @@
       "description": "Save a model checkpoint (ML effect)",
       "module": "train",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Save",
       "params": [
         {
@@ -2300,6 +2341,7 @@
       "description": "Compose all orbitals in the workspace into a single schema. Backed by composeBehaviors.",
       "module": "behavior",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Compose All",
       "examples": [
         "(compose/compose-all) // => {}"
@@ -2314,6 +2356,7 @@
       "description": "Compose child orbitals under a parent for recursive builds.",
       "module": "behavior",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Compose Children",
       "params": [
         {
@@ -2652,6 +2695,44 @@
       ],
       "docsSource": "generated"
     },
+    "deref": {
+      "category": "effect",
+      "minArity": 1,
+      "maxArity": 2,
+      "returnType": "any",
+      "description": "Snapshot read of a binding or entity, without subscribing to changes",
+      "module": "core",
+      "hasSideEffects": true,
+      "runsOn": "any",
+      "params": [
+        {
+          "name": "target",
+          "type": "string",
+          "description": "A binding (`@entity.health`) or entity name"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "id": "string",
+              "filter": "any",
+              "include": {
+                "kind": "array",
+                "of": "string"
+              }
+            },
+            "open": true
+          },
+          "description": "Selector: id | filter | include",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(deref @entity.health)"
+      ],
+      "docsSource": "generated"
+    },
     "despawn": {
       "category": "effect",
       "minArity": 0,
@@ -2663,6 +2744,7 @@
       "effect": {
         "kind": "despawn"
       },
+      "runsOn": "any",
       "title": "Despawn",
       "params": [
         {
@@ -2773,6 +2855,7 @@
           "open": true
         }
       },
+      "runsOn": "any",
       "title": "Emit",
       "params": [
         {
@@ -2838,6 +2921,7 @@
           "open": false
         }
       },
+      "runsOn": "server",
       "title": "Fetch",
       "params": [
         {
@@ -2865,6 +2949,7 @@
           "kind": "entity"
         }
       },
+      "runsOn": "server",
       "title": "Fetch Stream",
       "params": [
         {
@@ -3928,6 +4013,7 @@
       "description": "Create a GitHub issue. Typed wrapper for the GitHub API.",
       "module": "integration",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Create GitHub Issue",
       "params": [
         {
@@ -3959,6 +4045,7 @@
       "description": "Get a GitHub repository. Typed wrapper for the GitHub API.",
       "module": "integration",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Get GitHub Repository",
       "params": [
         {
@@ -3985,6 +4072,7 @@
       "description": "HTTP request with caller-declared response schema. Validates the response against the schema before returning.",
       "module": "integration",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "HTTP Request",
       "params": [
         {
@@ -4101,6 +4189,7 @@
       "description": "Call the LLM with tool definitions. Returns the assistant response with optional tool calls and token usage.",
       "module": "llm",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Call LLM With Tools",
       "params": [
         {
@@ -4127,6 +4216,7 @@
       "description": "Compact the context window. Returns before/after token counts.",
       "module": "llm",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Compact Context",
       "params": [
         {
@@ -4169,6 +4259,7 @@
       "description": "Generate embeddings for an array of texts. Returns a 2D array of floats.",
       "module": "llm",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Embed",
       "params": [
         {
@@ -4190,6 +4281,7 @@
       "description": "Generate text from an LLM. Returns the generated string.",
       "module": "llm",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Generate",
       "params": [
         {
@@ -4211,6 +4303,7 @@
       "description": "Switch the active LLM provider and optionally the model.",
       "module": "llm",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Switch LLM",
       "params": [
         {
@@ -4248,6 +4341,7 @@
       "effect": {
         "kind": "log"
       },
+      "runsOn": "any",
       "title": "Log",
       "params": [
         {
@@ -4269,6 +4363,7 @@
       "description": "Emit a .lolo orbital body from the LLM (free-lolo path). Returns the emitted lolo source.",
       "module": "behavior",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Emit Body",
       "params": [
         {
@@ -4612,6 +4707,46 @@
       ],
       "docsSource": "reference-docs"
     },
+    "math/ln": {
+      "category": "std-math",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "number",
+      "description": "Natural logarithm (base e)",
+      "module": "math",
+      "title": "Ln",
+      "params": [
+        {
+          "name": "n",
+          "type": "number",
+          "description": "The number"
+        }
+      ],
+      "examples": [
+        "(math/ln 2.718281828) // => 1"
+      ],
+      "docsSource": "reference-docs"
+    },
+    "math/log10": {
+      "category": "std-math",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "number",
+      "description": "Base-10 logarithm",
+      "module": "math",
+      "title": "Log10",
+      "params": [
+        {
+          "name": "n",
+          "type": "number",
+          "description": "The number"
+        }
+      ],
+      "examples": [
+        "(math/log10 100) // => 2"
+      ],
+      "docsSource": "reference-docs"
+    },
     "math/map": {
       "category": "std-math",
       "minArity": 5,
@@ -4865,46 +5000,6 @@
       ],
       "docsSource": "generated"
     },
-    "math/log10": {
-      "category": "std-math",
-      "minArity": 1,
-      "maxArity": 1,
-      "returnType": "number",
-      "description": "Base-10 logarithm",
-      "module": "math",
-      "title": "Log10",
-      "params": [
-        {
-          "name": "n",
-          "type": "number",
-          "description": "The number"
-        }
-      ],
-      "examples": [
-        "(math/log10 100) // => 2"
-      ],
-      "docsSource": "reference-docs"
-    },
-    "math/ln": {
-      "category": "std-math",
-      "minArity": 1,
-      "maxArity": 1,
-      "returnType": "number",
-      "description": "Natural logarithm (base e)",
-      "module": "math",
-      "title": "Ln",
-      "params": [
-        {
-          "name": "n",
-          "type": "number",
-          "description": "The number"
-        }
-      ],
-      "examples": [
-        "(math/ln 2.718281828) // => 1"
-      ],
-      "docsSource": "reference-docs"
-    },
     "math/sqrt": {
       "category": "std-math",
       "minArity": 1,
@@ -5024,6 +5119,7 @@
       "description": "Store a new memory. Returns the new memory ID.",
       "module": "memory",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Store Memory",
       "params": [
         {
@@ -5053,6 +5149,7 @@
       "effect": {
         "kind": "navigate"
       },
+      "runsOn": "client",
       "title": "Navigate",
       "params": [
         {
@@ -5077,6 +5174,7 @@
       "effect": {
         "kind": "navigate-back"
       },
+      "runsOn": "client",
       "title": "Navigate Back",
       "examples": [
         "(navigate-back)"
@@ -5296,6 +5394,7 @@
       "description": "Set network weights from a flat tensor",
       "module": "nn",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Set Weights",
       "params": [
         {
@@ -5473,6 +5572,7 @@
       "effect": {
         "kind": "notify"
       },
+      "runsOn": "any",
       "title": "Notify",
       "params": [
         {
@@ -5920,6 +6020,7 @@
       "description": "Configure debounce interval for an OS event type. Prevents trigger storms during rapid changes.",
       "module": "os",
       "hasSideEffects": true,
+      "runsOn": "server",
       "title": "Debounce",
       "params": [
         {
@@ -5946,6 +6047,7 @@
       "description": "Register cron schedule. Emits OS_CRON_FIRE events with { expression, timestamp } payload.",
       "module": "os",
       "hasSideEffects": true,
+      "runsOn": "server",
       "title": "Watch Cron",
       "params": [
         {
@@ -5967,6 +6069,7 @@
       "description": "Register environment variable watcher. Emits OS_ENV_CHANGED events with { variable, oldValue, newValue } payload.",
       "module": "os",
       "hasSideEffects": true,
+      "runsOn": "server",
       "title": "Watch Environment",
       "params": [
         {
@@ -5988,6 +6091,7 @@
       "description": "Register file system watcher. Emits OS_FILE_MODIFIED, OS_FILE_CREATED, OS_FILE_DELETED events with { path, name, dir, timestamp } payload.",
       "module": "os",
       "hasSideEffects": true,
+      "runsOn": "server",
       "title": "Watch Files",
       "params": [
         {
@@ -6009,6 +6113,7 @@
       "description": "Register HTTP response interceptor. Emits OS_HTTP_RESPONSE events with { url, method, status, headers, body, duration } payload.",
       "module": "os",
       "hasSideEffects": true,
+      "runsOn": "server",
       "title": "Watch HTTP",
       "params": [
         {
@@ -6030,6 +6135,7 @@
       "description": "Register port monitor. Emits OS_PORT_OPENED, OS_PORT_CLOSED events with { port, protocol, pid, address } payload.",
       "module": "os",
       "hasSideEffects": true,
+      "runsOn": "server",
       "title": "Watch Port",
       "params": [
         {
@@ -6051,6 +6157,7 @@
       "description": "Register process monitor. Emits OS_PROCESS_EXITED, OS_PROCESS_STARTED events with { pid, name, exitCode, signal, args, duration } payload.",
       "module": "os",
       "hasSideEffects": true,
+      "runsOn": "server",
       "title": "Watch Process",
       "params": [
         {
@@ -6072,6 +6179,7 @@
       "description": "Register OS signal handler. Emits OS_SIGNAL_USR1, OS_SIGNAL_HUP, etc. with { pid, timestamp } payload.",
       "module": "os",
       "hasSideEffects": true,
+      "runsOn": "server",
       "title": "Watch Signal",
       "params": [
         {
@@ -6224,6 +6332,7 @@
           ]
         }
       },
+      "runsOn": "server",
       "title": "Persist",
       "params": [
         {
@@ -6300,6 +6409,7 @@
       "description": "Mark current sample as rejected if predicate is false",
       "module": "prob",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Condition",
       "params": [
         {
@@ -6576,6 +6686,7 @@
       "description": "Set seeded PRNG for deterministic probabilistic sampling",
       "module": "prob",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Seed PRNG",
       "params": [
         {
@@ -6666,6 +6777,7 @@
           "open": false
         }
       },
+      "runsOn": "any",
       "title": "Reference",
       "params": [
         {
@@ -6690,6 +6802,7 @@
       "effect": {
         "kind": "render-ui"
       },
+      "runsOn": "client",
       "title": "Render UI",
       "params": [
         {
@@ -6719,6 +6832,7 @@
       "effect": {
         "kind": "send-server"
       },
+      "runsOn": "client",
       "title": "Send Server",
       "params": [
         {
@@ -6740,6 +6854,7 @@
       "description": "Append an entry to the per-orbital conversation history.",
       "module": "session",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Append History",
       "params": [
         {
@@ -6859,6 +6974,7 @@
       "description": "Write validation errors for an orbital.",
       "module": "session",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Write Errors",
       "params": [
         {
@@ -6885,6 +7001,7 @@
       "description": "Write per-orbital memory to the session store.",
       "module": "session",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Write Memory",
       "params": [
         {
@@ -6911,6 +7028,7 @@
       "description": "Write the per-orbital spec.json to the session store.",
       "module": "session",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Write Spec",
       "params": [
         {
@@ -6968,6 +7086,7 @@
           }
         }
       },
+      "runsOn": "any",
       "title": "Set",
       "params": [
         {
@@ -6997,6 +7116,7 @@
       "effect": {
         "kind": "spawn"
       },
+      "runsOn": "any",
       "title": "Spawn",
       "params": [
         {
@@ -7644,6 +7764,36 @@
         "(str/upper \"hello\") // => \"HELLO\""
       ],
       "docsSource": "reference-docs"
+    },
+    "swap!": {
+      "category": "effect",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "void",
+      "description": "Atomic compare-and-swap of an entity field on the server",
+      "module": "core",
+      "hasSideEffects": true,
+      "runsOn": "server",
+      "params": [
+        {
+          "name": "target",
+          "type": {
+            "kind": "binding"
+          },
+          "description": "The field to swap (`@entity.counter`)"
+        },
+        {
+          "name": "update",
+          "type": {
+            "kind": "sexpr"
+          },
+          "description": "The new value, computed from the current one"
+        }
+      ],
+      "examples": [
+        "(swap! @entity.counter (+ @entity.counter 1))"
+      ],
+      "docsSource": "generated"
     },
     "tensor/add": {
       "category": "ml-tensor",
@@ -8994,6 +9144,7 @@
       "description": "Emit a structured trace event for observability (115 call sites in rabit today).",
       "module": "trace",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Emit",
       "params": [
         {
@@ -9015,6 +9166,7 @@
       "description": "Log a message at the given level.",
       "module": "trace",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Log",
       "params": [
         {
@@ -9041,6 +9193,7 @@
       "description": "Train a model over a dataset (ML effect)",
       "module": "train",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Train",
       "params": [
         {
@@ -9062,6 +9215,7 @@
       "description": "Adam optimizer step",
       "module": "train",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Adam",
       "params": [
         {
@@ -9198,6 +9352,7 @@
       "description": "Clip gradients to max norm (modifies in place)",
       "module": "train",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Clip Gradients",
       "params": [
         {
@@ -9224,6 +9379,7 @@
       "description": "Clip weights to max magnitude (modifies in place)",
       "module": "train",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Clip Weights",
       "params": [
         {
@@ -9395,6 +9551,7 @@
       "description": "Execute training loop with constraints",
       "module": "train",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Training Loop",
       "params": [
         {
@@ -9476,6 +9633,7 @@
       "description": "Stochastic gradient descent optimizer step",
       "module": "train",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "SGD Optimizer Step",
       "params": [
         {
@@ -9502,6 +9660,7 @@
       "description": "Execute single training step (forward, loss, backward, update)",
       "module": "train",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Training Step",
       "params": [
         {
@@ -10068,6 +10227,7 @@
       "description": "Validate an orbital or the composed schema using orb validate.",
       "module": "behavior",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Validate",
       "params": [
         {
@@ -10426,6 +10586,53 @@
       ],
       "docsSource": "generated"
     },
+    "watch": {
+      "category": "effect",
+      "minArity": 2,
+      "maxArity": 3,
+      "returnType": "void",
+      "description": "Emit an event whenever a watched binding changes",
+      "module": "core",
+      "hasSideEffects": true,
+      "runsOn": "any",
+      "params": [
+        {
+          "name": "target",
+          "type": {
+            "kind": "binding"
+          },
+          "description": "The binding to watch"
+        },
+        {
+          "name": "event",
+          "type": {
+            "kind": "eventKey"
+          },
+          "description": "Event emitted on each change"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "debounce": "number",
+              "emit": {
+                "kind": "object",
+                "fields": {},
+                "open": true
+              }
+            },
+            "open": false
+          },
+          "description": "debounce (ms) | emit",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(watch @entity.status \"STATUS_UPDATED\" {\"debounce\":100})"
+      ],
+      "docsSource": "generated"
+    },
     "when": {
       "category": "control",
       "minArity": 2,
@@ -10459,6 +10666,7 @@
       "description": "Archive (remove from active set) an orbital from the workspace.",
       "module": "workspace",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Archive Orbital",
       "params": [
         {
@@ -10579,6 +10787,7 @@
       "description": "Write a file to the workspace.",
       "module": "workspace",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Write File",
       "params": [
         {
@@ -10605,6 +10814,7 @@
       "description": "Write an orbital definition to the workspace.",
       "module": "workspace",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Write Orbital",
       "params": [
         {
@@ -10631,6 +10841,7 @@
       "description": "Write the plan snapshot to the workspace.",
       "module": "workspace",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Write Plan",
       "params": [
         {
@@ -10652,6 +10863,7 @@
       "description": "Write the composed schema.orb to the workspace.",
       "module": "workspace",
       "hasSideEffects": true,
+      "runsOn": "any",
       "title": "Write Schema",
       "params": [
         {

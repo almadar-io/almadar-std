@@ -1,0 +1,135 @@
+app std-review-cycle "0.1.0"
+"std-review-cycle — revise-and-resubmit review workflow (document review, pull-request review, design review, editorial review, submission review, send back for changes, request changes, resubmit, review rounds, four-eyes approval). A record moves draft → in review → changes requested → in review → … → approved. One SUBMIT event serves both the first submission and every resubmission; the atom counts review rounds and marks resubmissions on the emitted ReviewRequested. Every move writes a ReviewEvent history row stamped with the states it left and entered. `requireSeparateApproval` enforces four-eyes review: an approval raised in the same action that submitted the record (an auto-responding rule or bot) is rejected. Headless — the host renders the badge and buttons and routes its actions to SUBMIT / REQUEST_CHANGES / APPROVE."
+orbital ReviewCycleOrbital {
+    type ReviewSubmitted = Event { id : string, note : string } "Rename via traitOverrides.events to the host's submit action. Serves both the first submission and every resubmission."
+
+    type ReviewChangesRequested = Event { id : string, note : string } "Rename to the host's request-changes action. Sends the record back to its author."
+
+    type ReviewApproved = Event { id : string, note : string } "Rename to the host's approve action."
+
+    type ReviewRequested = Event { itemId : string, round : number, resubmission : boolean } "Emitted when a record enters review; `resubmission` is true when it came back from changes requested."
+
+    type ReviewLogged = Event ReviewEvent "Internal: a history row landed."
+
+    type ReviewLogFailed = Event { error : string, code : string } "Internal: writing a history row failed."
+
+    type ReviewDecided = Event { itemId : string, decision : string, round : number } "Emitted when a reviewer decides; `decision` is the state the record moved to (changes_requested or approved)."
+
+  entity ReviewItem [persistent: review_items] {
+    id : string!
+    round : number @description "Review round the record is on; 1 for the first review, incremented on each resubmission." @synonyms "iteration, revision round, review count" = 0
+    lastNote : string @description "Note left with the most recent move." @synonyms "comment, reason, feedback" = ""
+    lastLogId : string @description "Id of the most recent ReviewEvent history row." @synonyms "history id, log entry" = ""
+  }
+
+  entity ReviewEvent [persistent: review_events] {
+    id : string!
+    itemId : string @description "The record this history entry belongs to." @synonyms "record id, document id, item" = ""
+    fromState : string @description "The review state the record left." @synonyms "previous state, was" = ""
+    toState : string @description "The review state the record entered." @synonyms "new state, became" = ""
+    round : number @description "Review round at the time of the move." @synonyms "iteration" = 0
+    actor : string @description "Who made the move." @synonyms "user, reviewer, author" = ""
+    note : string @description "Note left with the move." @synonyms "comment, feedback, reason" = ""
+    at : number @description "When the move happened." @synonyms "timestamp, date, time" = 0
+  }
+
+  trait ReviewCycle -> @rebindable ReviewItem [lifecycle, instance] {
+    initial: draft
+
+    state draft {
+      INIT -> draft
+      ReviewSubmitted -> in_review when @config.enabled
+        (set @entity.round 1)
+        (set @entity.lastNote (str/default ?note ""))
+        (emit ReviewRequested { itemId: (str/default ?id ""), round: 1, resubmission: false })
+        (persist create ReviewEvent { itemId: (str/default ?id ""), fromState: @fromState, toState: @toState, round: 1, actor: (str/default @user.id ""), note: (str/default ?note ""), at: @now } { emit: { success: ReviewLogged, failure: ReviewLogFailed } })
+    }
+
+    state in_review {
+      INIT -> in_review
+      ReviewLogged -> in_review
+        (set @entity.lastLogId (str/default ?id ""))
+      ReviewLogFailed -> in_review
+        (notify error (str/concat "Couldn't record the review history — " ?error))
+      ReviewChangesRequested -> changes_requested
+        (set @entity.lastNote (str/default ?note ""))
+        (emit ReviewDecided { itemId: (str/default ?id ""), decision: @toState, round: @entity.round })
+        (persist create ReviewEvent { itemId: (str/default ?id ""), fromState: @fromState, toState: @toState, round: @entity.round, actor: (str/default @user.id ""), note: (str/default ?note ""), at: @now } { emit: { success: ReviewLogged, failure: ReviewLogFailed } })
+      ReviewApproved -> approved when (or (not @config.requireSeparateApproval) (not (array/some @prevStates (fn s (or (= @s "draft") (= @s "changes_requested"))))))
+        (set @entity.lastNote (str/default ?note ""))
+        (emit ReviewDecided { itemId: (str/default ?id ""), decision: @toState, round: @entity.round })
+        (persist create ReviewEvent { itemId: (str/default ?id ""), fromState: @fromState, toState: @toState, round: @entity.round, actor: (str/default @user.id ""), note: (str/default ?note ""), at: @now } { emit: { success: ReviewLogged, failure: ReviewLogFailed } })
+    }
+
+    state changes_requested {
+      INIT -> changes_requested
+      ReviewLogged -> changes_requested
+        (set @entity.lastLogId (str/default ?id ""))
+      ReviewLogFailed -> changes_requested
+        (notify error (str/concat "Couldn't record the review history — " ?error))
+      ReviewSubmitted -> in_review
+        (set @entity.round (+ @entity.round 1))
+        (set @entity.lastNote (str/default ?note ""))
+        (emit ReviewRequested { itemId: (str/default ?id ""), round: @entity.round, resubmission: true })
+        (persist create ReviewEvent { itemId: (str/default ?id ""), fromState: @fromState, toState: @toState, round: @entity.round, actor: (str/default @user.id ""), note: (str/default ?note ""), at: @now } { emit: { success: ReviewLogged, failure: ReviewLogFailed } })
+    }
+
+    state approved {
+      INIT -> approved
+      ReviewLogged -> approved
+        (set @entity.lastLogId (str/default ?id ""))
+      ReviewLogFailed -> approved
+        (notify error (str/concat "Couldn't record the review history — " ?error))
+    }
+
+    emits {
+      ReviewLogged
+      ReviewLogFailed
+      ReviewRequested -> external {
+        itemId : string
+        round : number
+        resubmission : boolean
+      }
+      ReviewDecided -> external {
+        itemId : string
+        decision : string
+        round : number
+      }
+    }
+
+    listens {
+      ReviewLogged
+      ReviewLogFailed {
+        error : string
+        code : string
+      }
+      ReviewSubmitted {
+        id : string
+        note : string
+      }
+      ReviewChangesRequested {
+        id : string
+        note : string
+      }
+      ReviewApproved {
+        id : string
+        note : string
+      }
+    }
+
+    config {
+      enabled : boolean = true
+        @label "Run the review workflow?"
+        @description "Accept submissions into review. Off = submissions are ignored."
+        @synonyms "enable, turn on, review, require review, review workflow"
+        @tier "policy"
+      requireSeparateApproval : boolean = true
+        @label "Require approval to be a separate action?"
+        @description "Four-eyes review: reject an approval raised by the same action that submitted the record, such as an automatic rule or bot that approves instantly. Approvals made as their own action are unaffected."
+        @synonyms "four eyes, two person rule, no self approval, separate reviewer, independent approval, no auto approve"
+        @tier "policy"
+    }
+  }
+
+  page "/review-cycle" as ReviewCyclePage -> ReviewCycle
+}

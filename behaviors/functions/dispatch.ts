@@ -420,6 +420,11 @@ import {
   isStdReminderSchedulerReminderSchedulerOrbitalParams,
 } from './infra/atoms/std-reminder-scheduler.js';
 import {
+  stdReviewCycleReviewCycleOrbital,
+  StdReviewCycleReviewCycleOrbitalManifest,
+  isStdReviewCycleReviewCycleOrbitalParams,
+} from './infra/atoms/std-review-cycle.js';
+import {
   stdRowAccessControlRowAccessControlOrbital,
   StdRowAccessControlRowAccessControlOrbitalManifest,
   isStdRowAccessControlRowAccessControlOrbitalParams,
@@ -1461,6 +1466,15 @@ REGISTRY_MUT.set('std-reminder-scheduler::ReminderSchedulerOrbital', {
     return stdReminderSchedulerReminderSchedulerOrbital(p);
   },
   manifest: StdReminderSchedulerReminderSchedulerOrbitalManifest,
+});
+REGISTRY_MUT.set('std-review-cycle::ReviewCycleOrbital', {
+  factory: (p: object): OrbitalDefinition => {
+    if (!isStdReviewCycleReviewCycleOrbitalParams(p)) {
+      throw new TypeError('Invalid params for std-review-cycle::ReviewCycleOrbital');
+    }
+    return stdReviewCycleReviewCycleOrbital(p);
+  },
+  manifest: StdReviewCycleReviewCycleOrbitalManifest,
 });
 REGISTRY_MUT.set('std-row-access-control::RowAccessControlOrbital', {
   factory: (p: object): OrbitalDefinition => {

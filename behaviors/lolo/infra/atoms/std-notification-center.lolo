@@ -279,7 +279,7 @@ orbital NotificationCenterOrbital {
     }
 
     ticks {
-      digestCycle every "0 * * * *"
+      digestCycle every "0 * * * *" [background]
         (fetch NotificationRecord {
           emit: { failure: DIGEST_FAILED, success: DIGEST_ROWS_LOADED }
           filter: (and ["=", (object/get @entity dispatched), false] (or ["=", (object/get @entity error), "digest-deferred"] ["=", (object/get @entity error), "quiet-hours"]) ["<", (object/get @entity recordedAt), ["-", @now, ["*", @config.minAgeHours, 3600000]]])

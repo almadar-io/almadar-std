@@ -903,6 +903,7 @@ export function stdReminderSchedulerReminderSchedulerOrbital(params: StdReminder
             ],
             'interval': '*/15 * * * *',
             'name': 'scanCycle',
+            'runsInBackground': true,
           },
         ],
       } satisfies Trait,

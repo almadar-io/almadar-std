@@ -1,13 +1,13 @@
 {
-  "$generated": "2026-09-21T16:43:24.294Z",
+  "$generated": "2026-09-24T15:03:20.500Z",
   "$source": "tools/almadar-pattern-sync/behaviors",
   "$package": "@almadar/std",
-  "totalBehaviors": 470,
-  "atoms": 305,
+  "totalBehaviors": 472,
+  "atoms": 307,
   "molecules": 112,
   "organisms": 53,
   "layers": {
-    "UI Patterns": 457,
+    "UI Patterns": 459,
     "ML": 13
   },
   "behaviors": {
@@ -3352,7 +3352,9 @@
             "DISPATCHED",
             "RABIT_DONE"
           ],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "ALL_DONE"
+          ],
           "overridableConfigKeys": [],
           "capabilities": [],
           "ticks": [],
@@ -3636,6 +3638,7 @@
         "std-permission-matrix",
         "std-rate-limiter",
         "std-reminder-scheduler",
+        "std-review-cycle",
         "std-row-access-control",
         "std-service-accounting",
         "std-service-arxiv",
@@ -3889,6 +3892,7 @@
         "std-rate-limiter",
         "std-reminder-scheduler",
         "std-reorder-rule",
+        "std-review-cycle",
         "std-rfi",
         "std-row-access-control",
         "std-service-accounting",
@@ -4570,7 +4574,7 @@
       "topic": "infra",
       "family": "infra",
       "layer": "UI Patterns",
-      "description": "std-audit-capture — event-interceptor audit log / audit trail. Use when a user voices that a record's changes must be tracked, logged, or auditable (audit trail, track changes, change history, who edited what, mutation log, record changes, log every edit, edit history, modification log, who did what when, accountability log). Listens for the generic `EntityMutated` sentinel (rename via traitOverrides.events to the real mutation event, e.g. ContactSaved) and persists an AuditEntry row capturing actor, action, entity type/id, before/after snapshots, and timestamp. `captureEventTypes` filters on @payload.data.kind (empty = capture all). Compose with `std-lifecycle` to apply retention. Composable via `extraTraits` to interpose audit logging behind any mutating trait.",
+      "description": "std-audit-capture — event-interceptor audit log / audit trail. Use when a user voices that a record's changes must be tracked, logged, or auditable (audit trail, track changes, change history, who edited what, mutation log, record changes, log every edit, edit history, modification log, who did what when, accountability log). Listens for the generic `EntityMutated` sentinel (rename via traitOverrides.events to the real mutation event, e.g. ContactSaved) and persists an AuditEntry row capturing actor, action, entity type/id, before/after snapshots, and timestamp. `captureEventTypes` filters on @payload.data.kind, or on the delivered event's own name when the payload carries no kind (empty = capture all). Every entry also records where the change came from — the delivering event, the behavior and module that emitted it, and the scheduled job when a tick caused it — with no change to the upstream emitter. Compose with `std-lifecycle` to apply retention. Composable via `extraTraits` to interpose audit logging behind any mutating trait.",
       "defaultOrbitalName": "AuditCaptureOrbital",
       "statePattern": "idle",
       "complexity": {
@@ -4621,6 +4625,26 @@
             "name": "recordedAt",
             "type": "number",
             "default": 0
+          },
+          {
+            "name": "sourceEvent",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "sourceTrait",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "sourceOrbital",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "sourceTick",
+            "type": "string",
+            "default": ""
           }
         ]
       },
@@ -4654,6 +4678,7 @@
         "std-permission-matrix",
         "std-rate-limiter",
         "std-reminder-scheduler",
+        "std-review-cycle",
         "std-row-access-control",
         "std-service-accounting",
         "std-service-arxiv",
@@ -4730,7 +4755,7 @@
               "type": "[string]",
               "default": [],
               "label": "Event-kind filter",
-              "description": "When set, only @payload.data.kind values in this list are audited. Empty list = capture every event. Requires the upstream event to include a `kind` field on its payload.",
+              "description": "When set, only these kinds are audited: the payload's `kind` field, or the delivering event's name when there is no kind. Empty list = capture every event.",
               "tier": "internal",
               "items": {
                 "type": "string"
@@ -4931,6 +4956,7 @@
         "std-permission-matrix",
         "std-rate-limiter",
         "std-reminder-scheduler",
+        "std-review-cycle",
         "std-row-access-control",
         "std-service-accounting",
         "std-service-arxiv",
@@ -6129,6 +6155,7 @@
         "std-permission-matrix",
         "std-rate-limiter",
         "std-reminder-scheduler",
+        "std-review-cycle",
         "std-row-access-control",
         "std-service-accounting",
         "std-service-arxiv",
@@ -6536,6 +6563,7 @@
         "std-permission-matrix",
         "std-rate-limiter",
         "std-reminder-scheduler",
+        "std-review-cycle",
         "std-row-access-control",
         "std-service-accounting",
         "std-service-arxiv",
@@ -6876,6 +6904,7 @@
         "std-psych-stroop",
         "std-rate-limiter",
         "std-reminder-scheduler",
+        "std-review-cycle",
         "std-row-access-control",
         "std-service-accounting",
         "std-service-arxiv",
@@ -7645,6 +7674,7 @@
         "std-permission-matrix",
         "std-rate-limiter",
         "std-reminder-scheduler",
+        "std-review-cycle",
         "std-row-access-control",
         "std-service-accounting",
         "std-service-arxiv",
@@ -7860,6 +7890,7 @@
         "std-permission-matrix",
         "std-rate-limiter",
         "std-reminder-scheduler",
+        "std-review-cycle",
         "std-row-access-control",
         "std-service-accounting",
         "std-service-arxiv",
@@ -8123,6 +8154,7 @@
         "std-rate-limiter",
         "std-reminder-scheduler",
         "std-reorder-rule",
+        "std-review-cycle",
         "std-rfi",
         "std-row-access-control",
         "std-service-accounting",
@@ -8817,6 +8849,7 @@
         "std-psych-stroop",
         "std-rate-limiter",
         "std-reminder-scheduler",
+        "std-review-cycle",
         "std-row-access-control",
         "std-service-accounting",
         "std-service-arxiv",
@@ -9187,6 +9220,7 @@
         "std-physics-projectile-3d",
         "std-rate-limiter",
         "std-reminder-scheduler",
+        "std-review-cycle",
         "std-row-access-control",
         "std-service-accounting",
         "std-service-arxiv",
@@ -9320,7 +9354,7 @@
       "topic": "infra",
       "family": "infra",
       "layer": "UI Patterns",
-      "description": "std-global-search — cross-module federated search. Use when a user voices that one search box should query several modules at once (global search, search everything, unified search, cross-module search, federated search, search across records, omnisearch, one search box, aggregated results, grouped results). One SEARCH event fans out to every module key listed in the `modules` config (comma-separated, deterministic — no registry magic): the trait walks the parsed key list with an internal FAN_OUT_STEP sentinel and emits one scoped MODULE_SEARCH_REQUESTED { moduleKey, queryText, typeFilter, scopeJson } -> external per key, so modules respond in parallel rather than in sequence. Modules answer with SEARCH_RESULTS { moduleKey, resultsJson }; each answer appends a SearchResultGroup to the entity, so the merged view stays grouped by module. Client/person/date/type filters ride `scopeJson` — the atom never interprets them. Every query persists as a SearchQuery row (recent/saved searches) when `saveHistory` is on. The input is the mapped `search-input` type rendered inline with event renamed to SEARCH (the std-geosearch idiom); its native {searchTerm}/{value} payloads are bridged via str/default, so programmatic SEARCH { queryText, typeFilter, scopeJson } emitters and the UI box drive the same arm.",
+      "description": "std-global-search — cross-module federated search. Use when a user voices that one search box should query several modules at once (global search, search everything, unified search, cross-module search, federated search, search across records, omnisearch, one search box, aggregated results, grouped results). One SEARCH event fans out to every module key listed in the `modules` config (comma-separated, deterministic — no registry magic): the trait walks the parsed key list with an internal FAN_OUT_STEP sentinel and emits one scoped MODULE_SEARCH_REQUESTED { moduleKey, queryText, typeFilter, scopeJson } -> external per key, so modules respond in parallel rather than in sequence. Modules answer with SEARCH_RESULTS { moduleKey, resultsJson }; each answer appends a SearchResultGroup to the entity, so the merged view stays grouped by module. A module that answers twice is counted once, a keyless answer is filed under the answering module's name, and every group records which behavior answered it. Client/person/date/type filters ride `scopeJson` — the atom never interprets them. Every query persists as a SearchQuery row (recent/saved searches) when `saveHistory` is on. The input is the mapped `search-input` type rendered inline with event renamed to SEARCH (the std-geosearch idiom); its native {searchTerm}/{value} payloads are bridged via str/default, so programmatic SEARCH { queryText, typeFilter, scopeJson } emitters and the UI box drive the same arm.",
       "defaultOrbitalName": "GlobalSearchOrbital",
       "statePattern": "idle, searching",
       "complexity": {
@@ -9440,6 +9474,7 @@
         "std-permission-matrix",
         "std-rate-limiter",
         "std-reminder-scheduler",
+        "std-review-cycle",
         "std-row-access-control",
         "std-search",
         "std-service-accounting",
@@ -9504,7 +9539,9 @@
             "QUERY_SAVE_FAILED",
             "FAN_OUT_STEP"
           ],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "SEARCH_RESULTS"
+          ],
           "overridableConfigKeys": [
             {
               "key": "modules",
@@ -9934,6 +9971,7 @@
         "std-permission-matrix",
         "std-rate-limiter",
         "std-reminder-scheduler",
+        "std-review-cycle",
         "std-row-access-control",
         "std-service-accounting",
         "std-service-arxiv",
@@ -10644,6 +10682,7 @@
         "std-permission-matrix",
         "std-rate-limiter",
         "std-reminder-scheduler",
+        "std-review-cycle",
         "std-row-access-control",
         "std-service-accounting",
         "std-service-arxiv",
@@ -11047,6 +11086,7 @@
         "std-rate-limiter",
         "std-reminder-scheduler",
         "std-reorder-rule",
+        "std-review-cycle",
         "std-rfi",
         "std-row-access-control",
         "std-service-accounting",
@@ -11551,6 +11591,7 @@
         "std-rate-limiter",
         "std-reminder-scheduler",
         "std-reorder-rule",
+        "std-review-cycle",
         "std-rfi",
         "std-row-access-control",
         "std-service-accounting",
@@ -12112,6 +12153,7 @@
         "std-permission-matrix",
         "std-rate-limiter",
         "std-reminder-scheduler",
+        "std-review-cycle",
         "std-row-access-control",
         "std-service-accounting",
         "std-service-arxiv",
@@ -12681,6 +12723,7 @@
         "std-reminder-scheduler",
         "std-restaurant-pos",
         "std-retail-pos",
+        "std-review-cycle",
         "std-row-access-control",
         "std-saved-search",
         "std-selection",
@@ -13236,6 +13279,7 @@
         "std-permission-matrix",
         "std-rate-limiter",
         "std-reminder-scheduler",
+        "std-review-cycle",
         "std-row-access-control",
         "std-service-accounting",
         "std-service-arxiv",
@@ -13314,6 +13358,29 @@
           ],
           "listenedEvents": [],
           "overridableConfigKeys": [
+            {
+              "key": "coalesce",
+              "type": "string",
+              "default": "none",
+              "label": "Collapse repeat notifications from one action?",
+              "description": "When one action raises the subscribed event several times (a bulk import, a batch save), send one notification for the whole action (`perDispatch`) or one per distinct value of `coalesceKey` (`perKey`) instead of one per event. `none` (default) notifies on every event. Scoped to a single action: the next action notifies again.",
+              "synonyms": "dedupe, deduplicate, collapse, batch notifications, one notification, bulk, coalesce, summarize, avoid spam, notification storm",
+              "tier": "policy",
+              "enumValues": [
+                "none",
+                "perDispatch",
+                "perKey"
+              ]
+            },
+            {
+              "key": "coalesceKey",
+              "type": "string",
+              "default": "id",
+              "label": "Which field makes two events distinct?",
+              "description": "With `coalesce: perKey`, the upstream event's payload field compared to tell repeats apart (e.g. `id` = one notification per record). Ignored otherwise.",
+              "synonyms": "dedupe key, distinct by, per record, unique field",
+              "tier": "policy"
+            },
             {
               "key": "emailSubject",
               "type": "string",
@@ -13832,6 +13899,7 @@
         "std-rate-limiter",
         "std-record-detail",
         "std-reminder-scheduler",
+        "std-review-cycle",
         "std-row-access-control",
         "std-saved-search",
         "std-service-accounting",
@@ -14612,6 +14680,7 @@
         "std-psych-signal",
         "std-psych-stroop",
         "std-reminder-scheduler",
+        "std-review-cycle",
         "std-row-access-control",
         "std-service-accounting",
         "std-service-arxiv",
@@ -15355,6 +15424,7 @@
         "std-notify-on-event",
         "std-permission-matrix",
         "std-rate-limiter",
+        "std-review-cycle",
         "std-row-access-control",
         "std-service-accounting",
         "std-service-arxiv",
@@ -15571,6 +15641,255 @@
         "renderer"
       ]
     },
+    "std-review-cycle": {
+      "name": "std-review-cycle",
+      "level": "atom",
+      "topic": "infra",
+      "family": "infra",
+      "layer": "UI Patterns",
+      "description": "std-review-cycle — revise-and-resubmit review workflow (document review, pull-request review, design review, editorial review, submission review, send back for changes, request changes, resubmit, review rounds, four-eyes approval). A record moves draft → in review → changes requested → in review → … → approved. One SUBMIT event serves both the first submission and every resubmission; the atom counts review rounds and marks resubmissions on the emitted ReviewRequested. Every move writes a ReviewEvent history row stamped with the states it left and entered. `requireSeparateApproval` enforces four-eyes review: an approval raised in the same action that submitted the record (an auto-responding rule or bot) is rejected. Headless — the host renders the badge and buttons and routes its actions to SUBMIT / REQUEST_CHANGES / APPROVE.",
+      "defaultOrbitalName": "ReviewCycleOrbital",
+      "statePattern": "approved, changes_requested, draft, in_review",
+      "complexity": {
+        "states": 4,
+        "events": 8,
+        "transitions": 14
+      },
+      "defaultEntity": {
+        "name": "ReviewItem",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "round",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "lastNote",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "lastLogId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "defaultLabels": {
+        "title": "ReviewItems",
+        "entitySingular": "ReviewItem",
+        "entityPlural": "ReviewItems"
+      },
+      "defaultIcons": [],
+      "composableWith": [
+        "std-anim-tick",
+        "std-approval-gate",
+        "std-audit-capture",
+        "std-cache-aside",
+        "std-calendar-sync",
+        "std-cascade-on-delete",
+        "std-circuit-breaker",
+        "std-cooldown",
+        "std-cross-reference",
+        "std-data-erasure",
+        "std-data-import",
+        "std-game-clock",
+        "std-global-search",
+        "std-integration-settings",
+        "std-knowledge-loop",
+        "std-lifecycle",
+        "std-migration-job",
+        "std-mod-queue",
+        "std-notification-center",
+        "std-notification-preferences",
+        "std-notify-on-event",
+        "std-permission-matrix",
+        "std-rate-limiter",
+        "std-reminder-scheduler",
+        "std-row-access-control",
+        "std-service-accounting",
+        "std-service-arxiv",
+        "std-service-banking",
+        "std-service-calendar",
+        "std-service-calendar-ical",
+        "std-service-cli",
+        "std-service-custom-bearer",
+        "std-service-database",
+        "std-service-deepagent",
+        "std-service-docker",
+        "std-service-drive",
+        "std-service-email",
+        "std-service-esign",
+        "std-service-github",
+        "std-service-iconify",
+        "std-service-llm",
+        "std-service-maps",
+        "std-service-marketplace",
+        "std-service-meta-ads",
+        "std-service-ml",
+        "std-service-oauth",
+        "std-service-otel",
+        "std-service-print",
+        "std-service-push",
+        "std-service-queue",
+        "std-service-redis",
+        "std-service-research-assistant",
+        "std-service-storage",
+        "std-service-stripe",
+        "std-service-twilio",
+        "std-service-webhook",
+        "std-service-wikimedia",
+        "std-service-youtube",
+        "std-status-lifecycle",
+        "std-status-lifecycle-control"
+      ],
+      "connectableEvents": [
+        "ReviewSubmitted",
+        "ReviewLogged",
+        "ReviewLogFailed",
+        "ReviewChangesRequested",
+        "ReviewApproved",
+        "ReviewRequested",
+        "ReviewDecided"
+      ],
+      "eventPayloads": {},
+      "exposure": "both",
+      "provenance": "authored",
+      "traits": [
+        {
+          "name": "ReviewCycle",
+          "orbital": "ReviewCycleOrbital",
+          "role": "renderer",
+          "emittedEvents": [
+            "ReviewLogged",
+            "ReviewLogFailed",
+            "ReviewRequested",
+            "ReviewDecided"
+          ],
+          "listenedEvents": [],
+          "overridableConfigKeys": [
+            {
+              "key": "enabled",
+              "type": "boolean",
+              "default": true,
+              "label": "Run the review workflow?",
+              "description": "Accept submissions into review. Off = submissions are ignored.",
+              "synonyms": "enable, turn on, review, require review, review workflow",
+              "tier": "policy"
+            },
+            {
+              "key": "requireSeparateApproval",
+              "type": "boolean",
+              "default": true,
+              "label": "Require approval to be a separate action?",
+              "description": "Four-eyes review: reject an approval raised by the same action that submitted the record, such as an automatic rule or bot that approves instantly. Approvals made as their own action are unaffected.",
+              "synonyms": "four eyes, two person rule, no self approval, separate reviewer, independent approval, no auto approve",
+              "tier": "policy"
+            }
+          ],
+          "capabilities": [],
+          "ticks": [],
+          "rendersUi": true,
+          "category": "lifecycle",
+          "entityRebindable": true,
+          "linkedEntity": "ReviewItem",
+          "entityContract": {
+            "requires": [],
+            "provides": [
+              "lastLogId",
+              "lastNote",
+              "round"
+            ]
+          },
+          "effectRow": [
+            {
+              "kind": "emit",
+              "resource": "ReviewDecided"
+            },
+            {
+              "kind": "emit",
+              "resource": "ReviewRequested"
+            },
+            {
+              "kind": "persist",
+              "resource": "ReviewEvent"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "toast"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.lastLogId"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.lastNote"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.round"
+            }
+          ],
+          "transitionEvents": [
+            "INIT",
+            "ReviewApproved",
+            "ReviewChangesRequested",
+            "ReviewLogFailed",
+            "ReviewLogged",
+            "ReviewSubmitted"
+          ],
+          "events": [
+            {
+              "name": "ReviewLogged",
+              "direction": "emit",
+              "description": "Internal: a history row landed."
+            },
+            {
+              "name": "ReviewLogFailed",
+              "direction": "emit",
+              "description": "Internal: writing a history row failed."
+            },
+            {
+              "name": "ReviewRequested",
+              "direction": "emit"
+            },
+            {
+              "name": "ReviewDecided",
+              "direction": "emit"
+            },
+            {
+              "name": "INIT",
+              "direction": "listen"
+            },
+            {
+              "name": "ReviewSubmitted",
+              "direction": "listen"
+            },
+            {
+              "name": "ReviewChangesRequested",
+              "direction": "listen"
+            },
+            {
+              "name": "ReviewApproved",
+              "direction": "listen"
+            }
+          ],
+          "definerKnobs": []
+        }
+      ],
+      "factoryPath": "behaviors/functions/infra/atoms/std-review-cycle.ts",
+      "sourceValid": true,
+      "roles": [
+        "renderer"
+      ]
+    },
     "std-row-access-control": {
       "name": "std-row-access-control",
       "level": "atom",
@@ -15647,6 +15966,7 @@
         "std-permission-matrix",
         "std-rate-limiter",
         "std-reminder-scheduler",
+        "std-review-cycle",
         "std-service-accounting",
         "std-service-arxiv",
         "std-service-banking",
@@ -15852,6 +16172,7 @@
         "std-permission-matrix",
         "std-rate-limiter",
         "std-reminder-scheduler",
+        "std-review-cycle",
         "std-row-access-control",
         "std-service-accounting",
         "std-service-arxiv",
@@ -16125,6 +16446,7 @@
         "std-permission-matrix",
         "std-rate-limiter",
         "std-reminder-scheduler",
+        "std-review-cycle",
         "std-row-access-control",
         "std-service-accounting",
         "std-service-arxiv",
@@ -20175,6 +20497,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "behavior-view",
       "traits": [
         {
           "name": "BehaviorViewRender",
@@ -20634,6 +20957,7 @@
       "exposure": "palette",
       "provenance": "generated",
       "capabilities": "course module card, lesson card, curriculum unit card, learning-path step card",
+      "pattern": "module-card",
       "traits": [
         {
           "name": "ModuleCardRender",
@@ -21124,6 +21448,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -21778,6 +22103,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -22492,6 +22818,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -23281,6 +23608,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -24607,6 +24935,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -26431,6 +26760,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-soc-deviance",
         "std-stat-rows",
         "std-stats",
@@ -27722,6 +28052,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -28203,6 +28534,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -28805,6 +29137,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -29217,6 +29550,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -29723,6 +30057,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-soc-deviance",
         "std-social-feed",
         "std-stat-rows",
@@ -30488,6 +30823,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -31122,6 +31458,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -31850,6 +32187,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -32493,6 +32831,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -33293,6 +33632,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -33908,6 +34248,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-soc-conformity",
         "std-soc-mobility",
         "std-soc-network",
@@ -34551,6 +34892,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -35370,6 +35712,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-soc-deviance",
         "std-stat-rows",
         "std-stats",
@@ -35946,6 +36289,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -36274,7 +36618,20 @@
           {
             "name": "chartData",
             "type": "array",
-            "default": []
+            "default": [
+              {
+                "label": "Active",
+                "value": 6
+              },
+              {
+                "label": "Pending",
+                "value": 3
+              },
+              {
+                "label": "Inactive",
+                "value": 1
+              }
+            ]
           }
         ]
       },
@@ -36357,6 +36714,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -37022,6 +37380,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -37529,6 +37888,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -38188,6 +38548,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-soc-deviance",
         "std-social-feed",
         "std-stat-rows",
@@ -39005,6 +39366,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -39936,6 +40298,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -40605,6 +40968,7 @@
         "std-service-youtube",
         "std-signature-capture",
         "std-simple-rpg",
+        "std-slide-deck",
         "std-snake",
         "std-snake-loop",
         "std-stat-rows",
@@ -41422,6 +41786,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -41891,6 +42256,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -42403,6 +42769,7 @@
         "std-service-youtube",
         "std-signature-capture",
         "std-simple-rpg",
+        "std-slide-deck",
         "std-snake",
         "std-snake-loop",
         "std-stat-rows",
@@ -43418,6 +43785,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-soc-deviance",
         "std-stat-rows",
         "std-stats",
@@ -44712,6 +45080,7 @@
         "std-service-youtube",
         "std-signature-capture",
         "std-simple-rpg",
+        "std-slide-deck",
         "std-snake",
         "std-snake-loop",
         "std-stat-rows",
@@ -45352,6 +45721,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-soc-deviance",
         "std-stat-rows",
         "std-stats",
@@ -45855,6 +46225,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -46383,6 +46754,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -46827,6 +47199,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -47247,6 +47620,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-soc-deviance",
         "std-stat-rows",
         "std-stats",
@@ -47834,6 +48208,7 @@
         "std-service-webhook",
         "std-service-wikimedia",
         "std-service-youtube",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -48187,6 +48562,705 @@
         "renderer"
       ]
     },
+    "std-slide-deck": {
+      "name": "std-slide-deck",
+      "level": "atom",
+      "topic": "ui/core",
+      "family": "ui/core",
+      "layer": "UI Patterns",
+      "description": "std-slide-deck — generic presentation atom. An ordered list of slide nodes (`config.slides`, any render tree or @trait) shown one at a time, with a previous/next arrow on either side, a dot strip and a k / n counter underneath, and keyboard stepping through the host's KEY router (`config.nextKeys` / `config.prevKeys`, captured per `config.keymap`). The cursor clamps at either end unless `loop` is on. Each visit mounts the slide fresh, so its own entry animations replay. Carries no content or visual style: a realization supplies the slides and restyles via `bodyContent`. The default body picks the slide inside a mapped-children lambda, which expands static slides only; a deck whose slides hold stateful traits (forms, live lists) overrides `bodyContent` with one `presence` per slide gated on `@entity.slideIndex`. Every move emits SLIDE_CHANGED for speaker notes, timers or analytics.",
+      "defaultOrbitalName": "SlideDeckOrbital",
+      "statePattern": "presenting",
+      "complexity": {
+        "states": 1,
+        "events": 3,
+        "transitions": 2
+      },
+      "defaultEntity": {
+        "name": "SlideDeck",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "slideIndex",
+            "type": "number",
+            "default": 0
+          }
+        ]
+      },
+      "defaultLabels": {
+        "title": "SlideDecks",
+        "entitySingular": "SlideDeck",
+        "entityPlural": "SlideDecks"
+      },
+      "defaultIcons": [],
+      "composableWith": [
+        "std-app-layout",
+        "std-app-search",
+        "std-billable-hour",
+        "std-board",
+        "std-browse",
+        "std-calendar",
+        "std-confirmation",
+        "std-dashboard-grid-embedded",
+        "std-date-range",
+        "std-detail-layout",
+        "std-esign-flow",
+        "std-esign-request",
+        "std-event-log",
+        "std-export",
+        "std-file-store",
+        "std-filter",
+        "std-form-advanced",
+        "std-gallery",
+        "std-gantt-schedule",
+        "std-geosearch",
+        "std-graphs",
+        "std-image-upload-multi",
+        "std-import",
+        "std-integration-settings",
+        "std-list",
+        "std-modal",
+        "std-modal-editor",
+        "std-multi-party-flow",
+        "std-notification-panel",
+        "std-pagination",
+        "std-rating-review",
+        "std-record-detail",
+        "std-recurrence",
+        "std-related",
+        "std-saved-search",
+        "std-scatter",
+        "std-search",
+        "std-selection",
+        "std-service-accounting",
+        "std-service-arxiv",
+        "std-service-banking",
+        "std-service-calendar",
+        "std-service-calendar-ical",
+        "std-service-cli",
+        "std-service-custom-bearer",
+        "std-service-database",
+        "std-service-deepagent",
+        "std-service-docker",
+        "std-service-drive",
+        "std-service-email",
+        "std-service-esign",
+        "std-service-github",
+        "std-service-iconify",
+        "std-service-llm",
+        "std-service-maps",
+        "std-service-marketplace",
+        "std-service-meta-ads",
+        "std-service-ml",
+        "std-service-oauth",
+        "std-service-otel",
+        "std-service-print",
+        "std-service-push",
+        "std-service-queue",
+        "std-service-redis",
+        "std-service-research-assistant",
+        "std-service-storage",
+        "std-service-stripe",
+        "std-service-twilio",
+        "std-service-webhook",
+        "std-service-wikimedia",
+        "std-service-youtube",
+        "std-signature-capture",
+        "std-stat-rows",
+        "std-stats",
+        "std-step-flow",
+        "std-tabs",
+        "std-tag-strip",
+        "std-tag-taxonomy",
+        "std-thread",
+        "std-tree",
+        "std-version-history",
+        "std-vote",
+        "std-wizard",
+        "ui-accordion",
+        "ui-activation-block",
+        "ui-alert",
+        "ui-aside",
+        "ui-atlas-image",
+        "ui-atlas-panel",
+        "ui-avatar",
+        "ui-badge",
+        "ui-bloom-quiz-block",
+        "ui-box",
+        "ui-branching-logic-builder",
+        "ui-breadcrumb",
+        "ui-button",
+        "ui-calendar-grid",
+        "ui-card",
+        "ui-carousel",
+        "ui-center",
+        "ui-chart",
+        "ui-chart-legend",
+        "ui-chat-bar",
+        "ui-checkbox",
+        "ui-code-block",
+        "ui-code-runner-panel",
+        "ui-command-palette",
+        "ui-conditional-wrapper",
+        "ui-confetti-effect",
+        "ui-confirm-dialog",
+        "ui-connection-block",
+        "ui-container",
+        "ui-content-renderer",
+        "ui-counter-template",
+        "ui-dashboard-grid",
+        "ui-dashboard-layout",
+        "ui-data-grid",
+        "ui-data-list",
+        "ui-date-range-picker",
+        "ui-date-range-selector",
+        "ui-day-cell",
+        "ui-detail-panel",
+        "ui-dialog",
+        "ui-divider",
+        "ui-doc-breadcrumb",
+        "ui-doc-pagination",
+        "ui-doc-search",
+        "ui-doc-sidebar",
+        "ui-doc-toc",
+        "ui-dock-layout",
+        "ui-document-details",
+        "ui-document-panel",
+        "ui-document-viewer",
+        "ui-drawer",
+        "ui-drawer-slot",
+        "ui-edge-decoration",
+        "ui-emoji-picker",
+        "ui-empty-state",
+        "ui-entity-cards",
+        "ui-entity-list",
+        "ui-entity-table",
+        "ui-error-boundary",
+        "ui-error-state",
+        "ui-feature-grid",
+        "ui-file-tree",
+        "ui-filter-group",
+        "ui-filter-pill",
+        "ui-flex",
+        "ui-flip-card",
+        "ui-flip-container",
+        "ui-floating-action-button",
+        "ui-floating-toolbar",
+        "ui-form",
+        "ui-form-actions",
+        "ui-form-field",
+        "ui-form-layout",
+        "ui-form-section",
+        "ui-form-section-header",
+        "ui-fx-overlay",
+        "ui-game-icon",
+        "ui-gantt",
+        "ui-generic-app-template",
+        "ui-gradient-divider",
+        "ui-graph-canvas",
+        "ui-graph-view",
+        "ui-grid",
+        "ui-header",
+        "ui-hstack",
+        "ui-icon",
+        "ui-import-preview-tree",
+        "ui-import-progress",
+        "ui-import-source-picker",
+        "ui-infinite-scroll-sentinel",
+        "ui-input",
+        "ui-input-group",
+        "ui-jazari-state-machine",
+        "ui-label",
+        "ui-law-reference-tooltip",
+        "ui-lightbox",
+        "ui-likert-scale",
+        "ui-line-chart",
+        "ui-loading-state",
+        "ui-map-view",
+        "ui-markdown-content",
+        "ui-master-detail",
+        "ui-master-detail-layout",
+        "ui-matrix-question",
+        "ui-media-gallery",
+        "ui-menu",
+        "ui-meter",
+        "ui-modal",
+        "ui-modal-slot",
+        "ui-navigation",
+        "ui-notification",
+        "ui-number-stepper",
+        "ui-option-constraint-group",
+        "ui-orbital-visualization",
+        "ui-overlay",
+        "ui-page-header",
+        "ui-page-transition",
+        "ui-pagination",
+        "ui-popover",
+        "ui-positioned-canvas",
+        "ui-presence",
+        "ui-progress-bar",
+        "ui-progress-dots",
+        "ui-pull-to-refresh",
+        "ui-qr-scanner",
+        "ui-quiz-block",
+        "ui-radio",
+        "ui-range-slider",
+        "ui-reflection-block",
+        "ui-relation-select",
+        "ui-repeatable-form-section",
+        "ui-reply-tree",
+        "ui-rich-text-editor",
+        "ui-runtime-debugger",
+        "ui-scaled-diagram",
+        "ui-search-input",
+        "ui-section",
+        "ui-section-header",
+        "ui-segment-renderer",
+        "ui-select",
+        "ui-side-panel",
+        "ui-sidebar",
+        "ui-signature-pad",
+        "ui-simple-grid",
+        "ui-skeleton",
+        "ui-social-proof",
+        "ui-sortable-list",
+        "ui-spacer",
+        "ui-sparkline",
+        "ui-spinner",
+        "ui-split",
+        "ui-split-pane",
+        "ui-stack",
+        "ui-star-rating",
+        "ui-stat-card",
+        "ui-stat-display",
+        "ui-state-machine-view",
+        "ui-status-dot",
+        "ui-subagent-trace-panel",
+        "ui-svg-branch",
+        "ui-svg-connection",
+        "ui-svg-flow",
+        "ui-svg-grid",
+        "ui-svg-lobe",
+        "ui-svg-mesh",
+        "ui-svg-morph",
+        "ui-svg-node",
+        "ui-svg-pulse",
+        "ui-svg-ring",
+        "ui-svg-shield",
+        "ui-svg-stack",
+        "ui-swipeable-row",
+        "ui-switch",
+        "ui-tabbed-container",
+        "ui-table-view",
+        "ui-tabs",
+        "ui-tag-input",
+        "ui-text-highlight",
+        "ui-textarea",
+        "ui-theme-toggle",
+        "ui-time-slot-cell",
+        "ui-timeline",
+        "ui-toast-slot",
+        "ui-tooltip",
+        "ui-trait-frame",
+        "ui-trend-indicator",
+        "ui-typewriter-text",
+        "ui-typography",
+        "ui-upload-drop-zone",
+        "ui-version-diff",
+        "ui-violation-alert",
+        "ui-vote-stack",
+        "ui-vstack",
+        "ui-wizard-container",
+        "ui-wizard-navigation",
+        "ui-wizard-progress"
+      ],
+      "connectableEvents": [
+        "GO_TO",
+        "SLIDE_CHANGED"
+      ],
+      "eventPayloads": {},
+      "exposure": "palette",
+      "provenance": "generated",
+      "capabilities": "slide deck, presentation, pitch deck, keynote-style slideshow, previous and next slide arrows, arrow-key slide navigation, jump to slide from dots, slide counter",
+      "traits": [
+        {
+          "name": "SlideDeckPresenter",
+          "orbital": "SlideDeckOrbital",
+          "role": "renderer",
+          "emittedEvents": [
+            "SLIDE_CHANGED"
+          ],
+          "listenedEvents": [],
+          "overridableConfigKeys": [
+            {
+              "key": "bodyContent",
+              "type": "render-ui",
+              "default": {
+                "children": [
+                  {
+                    "align": "center",
+                    "children": [
+                      [
+                        "array/map",
+                        [
+                          [
+                            "array/len",
+                            "@config.slides"
+                          ]
+                        ],
+                        [
+                          "fn",
+                          "n",
+                          [
+                            "if",
+                            "@config.showArrows",
+                            {
+                              "action": "GO_TO",
+                              "actionPayload": {
+                                "index": [
+                                  "if",
+                                  "@config.loop",
+                                  [
+                                    "math/wrap",
+                                    [
+                                      "-",
+                                      "@entity.slideIndex",
+                                      1
+                                    ],
+                                    0,
+                                    "@n"
+                                  ],
+                                  [
+                                    "math/max",
+                                    0,
+                                    [
+                                      "-",
+                                      "@entity.slideIndex",
+                                      1
+                                    ]
+                                  ]
+                                ]
+                              },
+                              "disabled": [
+                                "and",
+                                [
+                                  "==",
+                                  "@config.loop",
+                                  false
+                                ],
+                                [
+                                  "<=",
+                                  "@entity.slideIndex",
+                                  0
+                                ]
+                              ],
+                              "icon": "@config.prevIcon",
+                              "size": "lg",
+                              "type": "button",
+                              "variant": "ghost"
+                            },
+                            null
+                          ]
+                        ]
+                      ],
+                      {
+                        "children": [
+                          "array/map",
+                          [
+                            "@entity.slideIndex"
+                          ],
+                          [
+                            "fn",
+                            "i",
+                            {
+                              "children": [
+                                [
+                                  "array/nth",
+                                  "@config.slides",
+                                  "@i"
+                                ]
+                              ],
+                              "className": "w-full",
+                              "type": "box"
+                            }
+                          ]
+                        ],
+                        "className": "flex-1 min-w-0",
+                        "minHeight": "@config.stageMinHeight",
+                        "type": "center"
+                      },
+                      [
+                        "array/map",
+                        [
+                          [
+                            "array/len",
+                            "@config.slides"
+                          ]
+                        ],
+                        [
+                          "fn",
+                          "n",
+                          [
+                            "if",
+                            "@config.showArrows",
+                            {
+                              "action": "GO_TO",
+                              "actionPayload": {
+                                "index": [
+                                  "if",
+                                  "@config.loop",
+                                  [
+                                    "math/wrap",
+                                    [
+                                      "+",
+                                      "@entity.slideIndex",
+                                      1
+                                    ],
+                                    0,
+                                    "@n"
+                                  ],
+                                  [
+                                    "math/min",
+                                    [
+                                      "-",
+                                      "@n",
+                                      1
+                                    ],
+                                    [
+                                      "+",
+                                      "@entity.slideIndex",
+                                      1
+                                    ]
+                                  ]
+                                ]
+                              },
+                              "disabled": [
+                                "and",
+                                [
+                                  "==",
+                                  "@config.loop",
+                                  false
+                                ],
+                                [
+                                  ">=",
+                                  "@entity.slideIndex",
+                                  [
+                                    "-",
+                                    "@n",
+                                    1
+                                  ]
+                                ]
+                              ],
+                              "icon": "@config.nextIcon",
+                              "size": "lg",
+                              "type": "button",
+                              "variant": "ghost"
+                            },
+                            null
+                          ]
+                        ]
+                      ]
+                    ],
+                    "direction": "horizontal",
+                    "gap": "md",
+                    "type": "stack"
+                  },
+                  [
+                    "if",
+                    "@config.showProgress",
+                    {
+                      "align": "center",
+                      "children": [
+                        "array/map",
+                        [
+                          [
+                            "array/len",
+                            "@config.slides"
+                          ]
+                        ],
+                        [
+                          "fn",
+                          "n",
+                          {
+                            "align": "center",
+                            "children": [
+                              {
+                                "count": "@n",
+                                "currentIndex": "@entity.slideIndex",
+                                "onDotClick": "GO_TO",
+                                "size": "sm",
+                                "type": "progress-dots"
+                              },
+                              {
+                                "color": "muted",
+                                "content": [
+                                  "str/concat",
+                                  "",
+                                  [
+                                    "+",
+                                    "@entity.slideIndex",
+                                    1
+                                  ],
+                                  " / ",
+                                  "@n"
+                                ],
+                                "type": "typography",
+                                "variant": "caption"
+                              }
+                            ],
+                            "direction": "horizontal",
+                            "gap": "md",
+                            "type": "stack"
+                          }
+                        ]
+                      ],
+                      "direction": "horizontal",
+                      "gap": "md",
+                      "justify": "center",
+                      "type": "stack"
+                    },
+                    null
+                  ]
+                ],
+                "className": "w-full",
+                "direction": "vertical",
+                "gap": "md",
+                "type": "stack"
+              },
+              "label": "Body content tree",
+              "description": "Render-ui tree for the deck. Default: slide centred between previous/next arrows, dot strip and counter below. A realization overrides this to restyle (full-bleed, bottom bar, no chrome) while keeping the same cursor, keys and emits.",
+              "tier": "internal"
+            },
+            {
+              "key": "loop",
+              "type": "boolean",
+              "default": false,
+              "label": "Loop",
+              "description": "Wrap from the last slide to the first (and back) instead of stopping at either end.",
+              "tier": "presentation"
+            },
+            {
+              "key": "nextIcon",
+              "type": "icon",
+              "default": "chevron-right",
+              "label": "Next icon",
+              "tier": "presentation"
+            },
+            {
+              "key": "prevIcon",
+              "type": "icon",
+              "default": "chevron-left",
+              "label": "Previous icon",
+              "tier": "presentation"
+            },
+            {
+              "key": "showArrows",
+              "type": "boolean",
+              "default": true,
+              "label": "Show arrows",
+              "description": "Previous/next buttons on the left and right of the slide.",
+              "tier": "presentation"
+            },
+            {
+              "key": "showProgress",
+              "type": "boolean",
+              "default": true,
+              "label": "Show progress",
+              "description": "Dot strip and k / n counter under the slide; dots jump to their slide.",
+              "tier": "presentation"
+            },
+            {
+              "key": "slides",
+              "type": "[trait]",
+              "default": [],
+              "label": "Slides",
+              "description": "Ordered slide nodes; each entry is a render tree or a @trait reference and is shown one at a time.",
+              "tier": "domain",
+              "items": {
+                "type": "trait"
+              }
+            },
+            {
+              "key": "stageMinHeight",
+              "type": "string",
+              "default": "70vh",
+              "label": "Stage height",
+              "description": "Minimum height of the slide stage (any CSS length, e.g. 70vh or 640px); the slide is centred vertically inside it so short and tall slides share one frame.",
+              "tier": "presentation"
+            },
+            {
+              "key": "startIndex",
+              "type": "number",
+              "default": 0,
+              "label": "Start slide",
+              "description": "Zero-based slide shown on first render; clamped to the deck.",
+              "tier": "presentation"
+            }
+          ],
+          "capabilities": [],
+          "ticks": [],
+          "rendersUi": true,
+          "category": "interaction",
+          "entityRebindable": true,
+          "linkedEntity": "SlideDeck",
+          "entityContract": {
+            "requires": [],
+            "provides": [
+              "slideIndex"
+            ]
+          },
+          "effectRow": [
+            {
+              "kind": "emit",
+              "resource": "SLIDE_CHANGED"
+            },
+            {
+              "kind": "render-ui",
+              "resource": "main"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.slideIndex"
+            }
+          ],
+          "transitionEvents": [
+            "GO_TO",
+            "INIT"
+          ],
+          "events": [
+            {
+              "name": "SLIDE_CHANGED",
+              "direction": "emit",
+              "description": "The deck moved to a new slide (zero-based index).",
+              "synonyms": "slide shown, advanced, went back",
+              "tier": "domain"
+            },
+            {
+              "name": "INIT",
+              "direction": "listen"
+            },
+            {
+              "name": "GO_TO",
+              "direction": "listen",
+              "description": "Show a zero-based slide index. The arrows and dots send the already-bounded target; a remote or table of contents can send any index.",
+              "synonyms": "jump, seek, next slide, previous slide, select slide",
+              "tier": "domain"
+            }
+          ],
+          "definerKnobs": []
+        }
+      ],
+      "factoryPath": "behaviors/functions/ui/core/atoms/std-slide-deck.ts",
+      "sourceValid": true,
+      "roles": [
+        "renderer"
+      ]
+    },
     "std-stats": {
       "name": "std-stats",
       "level": "atom",
@@ -48297,6 +49371,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-step-flow",
         "std-tabs",
@@ -49401,6 +50476,7 @@
         "std-service-youtube",
         "std-signature-capture",
         "std-simple-rpg",
+        "std-slide-deck",
         "std-snake",
         "std-snake-loop",
         "std-soc-deviance",
@@ -50173,6 +51249,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -50693,6 +51770,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -51246,6 +52324,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -51856,6 +52935,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -52618,6 +53698,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-soc-deviance",
         "std-stat-rows",
         "std-stats",
@@ -53311,6 +54392,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -53898,6 +54980,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -54500,6 +55583,7 @@
         "std-service-youtube",
         "std-signature-capture",
         "std-simple-rpg",
+        "std-slide-deck",
         "std-snake",
         "std-snake-loop",
         "std-soc-deviance",
@@ -55151,6 +56235,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -55363,6 +56448,7 @@
       "exposure": "palette",
       "provenance": "generated",
       "capabilities": "settings navigation sidebar, preferences menu panel, account settings nav, secondary panel, side navigation rail",
+      "pattern": "aside",
       "traits": [
         {
           "name": "AsideRender",
@@ -55524,6 +56610,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -55735,6 +56822,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "atlas-image",
       "traits": [
         {
           "name": "AtlasImageRender",
@@ -55983,6 +57071,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -56194,6 +57283,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "atlas-panel",
       "traits": [
         {
           "name": "AtlasPanelRender",
@@ -56428,6 +57518,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -56644,6 +57735,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "avatar",
       "traits": [
         {
           "name": "AvatarRender",
@@ -56911,6 +58003,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -57122,6 +58215,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "badge",
       "traits": [
         {
           "name": "BadgeRender",
@@ -57436,6 +58530,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -57651,6 +58746,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "box",
       "traits": [
         {
           "name": "BoxRender",
@@ -58090,6 +59186,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -58304,6 +59401,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "button",
       "traits": [
         {
           "name": "ButtonRender",
@@ -58655,6 +59753,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -58869,6 +59968,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "card",
       "traits": [
         {
           "name": "CardRender",
@@ -59128,6 +60228,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -59339,6 +60440,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "center",
       "traits": [
         {
           "name": "CenterRender",
@@ -59562,6 +60664,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -59776,6 +60879,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "checkbox",
       "traits": [
         {
           "name": "CheckboxRender",
@@ -59976,6 +61080,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -60187,6 +61292,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "conditional-wrapper",
       "traits": [
         {
           "name": "ConditionalWrapperRender",
@@ -60624,6 +61730,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -60835,6 +61942,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "confetti-effect",
       "traits": [
         {
           "name": "ConfettiEffectRender",
@@ -61013,6 +62121,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -61228,6 +62337,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "day-cell",
       "traits": [
         {
           "name": "DayCellRender",
@@ -61416,6 +62526,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -61627,6 +62738,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "dialog",
       "traits": [
         {
           "name": "DialogRender",
@@ -61788,6 +62900,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -61999,6 +63112,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "divider",
       "traits": [
         {
           "name": "DividerRender",
@@ -62185,6 +63299,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -62400,6 +63515,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "filter-pill",
       "traits": [
         {
           "name": "FilterPillRender",
@@ -62649,6 +63765,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -62864,6 +63981,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "flip-container",
       "traits": [
         {
           "name": "FlipContainerRender",
@@ -63051,6 +64169,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -63262,6 +64381,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "game-icon",
       "traits": [
         {
           "name": "GameIconRender",
@@ -63536,6 +64656,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -63750,6 +64871,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "hstack",
       "traits": [
         {
           "name": "HstackRender",
@@ -64043,6 +65165,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -64254,6 +65377,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "icon",
       "traits": [
         {
           "name": "IconRender",
@@ -64475,6 +65599,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -64688,6 +65813,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "infinite-scroll-sentinel",
       "traits": [
         {
           "name": "InfiniteScrollSentinelRender",
@@ -64891,6 +66017,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -65107,6 +66234,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "input",
       "traits": [
         {
           "name": "InputRender",
@@ -65435,6 +66563,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -65646,6 +66775,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "label",
       "traits": [
         {
           "name": "LabelRender",
@@ -65821,6 +66951,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -66032,6 +67163,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "law-reference-tooltip",
       "traits": [
         {
           "name": "LawReferenceTooltipRender",
@@ -66248,6 +67380,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -66462,6 +67595,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "overlay",
       "traits": [
         {
           "name": "OverlayRender",
@@ -66650,6 +67784,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -66861,6 +67996,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "presence",
       "traits": [
         {
           "name": "PresenceRender",
@@ -67030,6 +68166,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -67241,6 +68378,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "progress-bar",
       "traits": [
         {
           "name": "ProgressBarRender",
@@ -67505,6 +68643,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -67720,6 +68859,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "radio",
       "traits": [
         {
           "name": "RadioRender",
@@ -67957,6 +69097,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -68174,6 +69315,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "range-slider",
       "traits": [
         {
           "name": "RangeSliderRender",
@@ -68453,6 +69595,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -68664,6 +69807,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "section-header",
       "traits": [
         {
           "name": "SectionHeaderRender",
@@ -68854,6 +69998,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -69070,6 +70215,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "select",
       "traits": [
         {
           "name": "SelectRender",
@@ -69377,6 +70523,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -69588,6 +70735,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "spacer",
       "traits": [
         {
           "name": "SpacerRender",
@@ -69771,6 +70919,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -69982,6 +71131,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "sparkline",
       "traits": [
         {
           "name": "SparklineRender",
@@ -70199,6 +71349,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -70410,6 +71561,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "spinner",
       "traits": [
         {
           "name": "SpinnerRender",
@@ -70585,6 +71737,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -70799,6 +71952,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "stack",
       "traits": [
         {
           "name": "StackRender",
@@ -71102,6 +72256,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -71313,6 +72468,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "status-dot",
       "traits": [
         {
           "name": "StatusDotRender",
@@ -71511,6 +72667,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -71722,6 +72879,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "svg-branch",
       "traits": [
         {
           "name": "SvgBranchRender",
@@ -71961,6 +73119,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -72172,6 +73331,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "svg-connection",
       "traits": [
         {
           "name": "SvgConnectionRender",
@@ -72419,6 +73579,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -72630,6 +73791,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "svg-flow",
       "traits": [
         {
           "name": "SvgFlowRender",
@@ -72854,6 +74016,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -73065,6 +74228,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "svg-grid",
       "traits": [
         {
           "name": "SvgGridRender",
@@ -73318,6 +74482,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -73529,6 +74694,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "svg-lobe",
       "traits": [
         {
           "name": "SvgLobeRender",
@@ -73771,6 +74937,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -73982,6 +75149,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "svg-mesh",
       "traits": [
         {
           "name": "SvgMeshRender",
@@ -74216,6 +75384,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -74427,6 +75596,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "svg-morph",
       "traits": [
         {
           "name": "SvgMorphRender",
@@ -74658,6 +75828,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -74869,6 +76040,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "svg-node",
       "traits": [
         {
           "name": "SvgNodeRender",
@@ -75107,6 +76279,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -75318,6 +76491,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "svg-pulse",
       "traits": [
         {
           "name": "SvgPulseRender",
@@ -75552,6 +76726,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -75763,6 +76938,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "svg-ring",
       "traits": [
         {
           "name": "SvgRingRender",
@@ -76009,6 +77185,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -76220,6 +77397,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "svg-shield",
       "traits": [
         {
           "name": "SvgShieldRender",
@@ -76451,6 +77629,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -76662,6 +77841,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "svg-stack",
       "traits": [
         {
           "name": "SvgStackRender",
@@ -76910,6 +78090,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -77124,6 +78305,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "switch",
       "traits": [
         {
           "name": "SwitchRender",
@@ -77345,6 +78527,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -77566,6 +78749,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "text-highlight",
       "traits": [
         {
           "name": "TextHighlightRender",
@@ -77844,6 +79028,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -78059,6 +79244,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "textarea",
       "traits": [
         {
           "name": "TextareaRender",
@@ -78268,6 +79454,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -78479,6 +79666,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "theme-toggle",
       "traits": [
         {
           "name": "ThemeToggleRender",
@@ -78659,6 +79847,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -78875,6 +80064,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "time-slot-cell",
       "traits": [
         {
           "name": "TimeSlotCellRender",
@@ -79077,6 +80267,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -79288,6 +80479,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "trait-frame",
       "traits": [
         {
           "name": "TraitFrameRender",
@@ -79450,6 +80642,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -79661,6 +80854,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "trend-indicator",
       "traits": [
         {
           "name": "TrendIndicatorRender",
@@ -79871,6 +81065,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -80084,6 +81279,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "typewriter-text",
       "traits": [
         {
           "name": "TypewriterTextRender",
@@ -80280,6 +81476,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -80491,6 +81688,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "typography",
       "traits": [
         {
           "name": "TypographyRender",
@@ -80807,6 +82005,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -81021,6 +82220,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "vstack",
       "traits": [
         {
           "name": "VstackRender",
@@ -81316,6 +82516,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stats",
         "std-step-flow",
         "std-tabs",
@@ -81738,6 +82939,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -81953,6 +83155,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "accordion",
       "traits": [
         {
           "name": "AccordionRender",
@@ -82242,6 +83445,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -82453,6 +83657,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "activation-block",
       "traits": [
         {
           "name": "ActivationBlockRender",
@@ -82630,6 +83835,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -82844,6 +84050,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "alert",
       "traits": [
         {
           "name": "AlertRender",
@@ -83090,6 +84297,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -83301,6 +84509,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "bloom-quiz-block",
       "traits": [
         {
           "name": "BloomQuizBlockRender",
@@ -83509,6 +84718,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -83722,6 +84932,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "branching-logic-builder",
       "traits": [
         {
           "name": "BranchingLogicBuilderRender",
@@ -84017,6 +85228,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -84230,6 +85442,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "breadcrumb",
       "traits": [
         {
           "name": "BreadcrumbRender",
@@ -84487,6 +85700,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -84706,6 +85920,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "calendar-grid",
       "traits": [
         {
           "name": "CalendarGridRender",
@@ -85044,6 +86259,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -85257,6 +86473,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "carousel",
       "traits": [
         {
           "name": "CarouselRender",
@@ -85515,6 +86732,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -85726,6 +86944,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "chart-legend",
       "traits": [
         {
           "name": "ChartLegendRender",
@@ -85924,6 +87143,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -86135,6 +87355,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "chart",
       "traits": [
         {
           "name": "ChartRender",
@@ -86594,6 +87815,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -86818,6 +88040,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "code-block",
       "traits": [
         {
           "name": "CodeBlockRender",
@@ -87520,6 +88743,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -87738,6 +88962,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "command-palette",
       "traits": [
         {
           "name": "CommandPaletteRender",
@@ -88037,6 +89262,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -88257,6 +89483,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "confirm-dialog",
       "traits": [
         {
           "name": "ConfirmDialogRender",
@@ -88582,6 +89809,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -88793,6 +90021,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "connection-block",
       "traits": [
         {
           "name": "ConnectionBlockRender",
@@ -88955,6 +90184,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -89166,6 +90396,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "container",
       "traits": [
         {
           "name": "ContainerRender",
@@ -89384,6 +90615,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -89595,6 +90827,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "content-renderer",
       "traits": [
         {
           "name": "ContentRendererRender",
@@ -89904,6 +91137,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -90122,6 +91356,7 @@
       "exposure": "palette",
       "provenance": "generated",
       "capabilities": "admin table, records grid, user list, CRUD list, manage-records view, spreadsheet-style data grid, sortable columns",
+      "pattern": "data-grid",
       "traits": [
         {
           "name": "DataGridRender",
@@ -90736,6 +91971,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -90957,6 +92193,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "data-list",
       "traits": [
         {
           "name": "DataListRender",
@@ -91715,6 +92952,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -91930,6 +93168,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "date-range-picker",
       "traits": [
         {
           "name": "DateRangePickerRender",
@@ -92185,6 +93424,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -92401,6 +93641,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "date-range-selector",
       "traits": [
         {
           "name": "DateRangeSelectorRender",
@@ -92604,6 +93845,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -92815,6 +94057,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "doc-breadcrumb",
       "traits": [
         {
           "name": "DocBreadcrumbRender",
@@ -93001,6 +94244,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -93212,6 +94456,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "doc-pagination",
       "traits": [
         {
           "name": "DocPaginationRender",
@@ -93414,6 +94659,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -93625,6 +94871,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "doc-search",
       "traits": [
         {
           "name": "DocSearchRender",
@@ -93786,6 +95033,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -93997,6 +95245,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "doc-sidebar",
       "traits": [
         {
           "name": "DocSidebarRender",
@@ -94203,6 +95452,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -94414,6 +95664,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "doc-toc",
       "traits": [
         {
           "name": "DocTocRender",
@@ -94614,6 +95865,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -94830,6 +96082,7 @@
       "exposure": "palette",
       "provenance": "generated",
       "capabilities": "document settings, page details, post settings sidebar, metadata panel, document properties, publish settings",
+      "pattern": "document-details",
       "traits": [
         {
           "name": "DocumentDetailsRender",
@@ -95129,6 +96382,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -95348,6 +96602,7 @@
       "exposure": "palette",
       "provenance": "generated",
       "capabilities": "document page, note editor, wiki page, article editor, writing surface, rich text document, content editing canvas",
+      "pattern": "document-panel",
       "traits": [
         {
           "name": "DocumentPanelRender",
@@ -95698,6 +96953,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -95909,6 +97165,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "document-viewer",
       "traits": [
         {
           "name": "DocumentViewerRender",
@@ -96273,6 +97530,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -96492,6 +97750,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "drawer",
       "traits": [
         {
           "name": "DrawerRender",
@@ -96758,6 +98017,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -96969,6 +98229,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "edge-decoration",
       "traits": [
         {
           "name": "EdgeDecorationRender",
@@ -97181,6 +98442,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -97394,6 +98656,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "emoji-picker",
       "traits": [
         {
           "name": "EmojiPickerRender",
@@ -97593,6 +98856,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -97807,6 +99071,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "empty-state",
       "traits": [
         {
           "name": "EmptyStateRender",
@@ -98058,6 +99323,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -98269,6 +99535,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "error-boundary",
       "traits": [
         {
           "name": "ErrorBoundaryRender",
@@ -98430,6 +99697,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -98643,6 +99911,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "error-state",
       "traits": [
         {
           "name": "ErrorStateRender",
@@ -98844,6 +100113,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -99055,6 +100325,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "feature-grid",
       "traits": [
         {
           "name": "FeatureGridRender",
@@ -99315,6 +100586,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -99528,6 +100800,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "file-tree",
       "traits": [
         {
           "name": "FileTreeRender",
@@ -99862,6 +101135,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -100082,6 +101356,7 @@
       "exposure": "palette",
       "provenance": "generated",
       "capabilities": "search refinement panel, facet filters, admin list filters, records filter sidebar, filter chips panel",
+      "pattern": "filter-group",
       "traits": [
         {
           "name": "FilterGroupRender",
@@ -100470,6 +101745,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -100681,6 +101957,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "flex",
       "traits": [
         {
           "name": "FlexRender",
@@ -100946,6 +102223,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -101160,6 +102438,7 @@
       "exposure": "palette",
       "provenance": "generated",
       "capabilities": "flashcard, study deck, spaced-repetition review card, memorization drill, quiz reveal card, question/answer card, before/after reveal, term-and-definition card",
+      "pattern": "flip-card",
       "traits": [
         {
           "name": "FlipCardRender",
@@ -101364,6 +102643,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -101580,6 +102860,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "floating-action-button",
       "traits": [
         {
           "name": "FloatingActionButtonRender",
@@ -101857,6 +103138,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -102068,6 +103350,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "floating-toolbar",
       "traits": [
         {
           "name": "FloatingToolbarRender",
@@ -102303,6 +103586,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -102514,6 +103798,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "form-actions",
       "traits": [
         {
           "name": "FormActionsRender",
@@ -102869,6 +104154,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -103080,6 +104366,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "form-field",
       "traits": [
         {
           "name": "FormFieldRender",
@@ -103270,6 +104557,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -103481,6 +104769,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "form-layout",
       "traits": [
         {
           "name": "FormLayoutRender",
@@ -103756,6 +105045,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -103969,6 +105259,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "form-section-header",
       "traits": [
         {
           "name": "FormSectionHeaderRender",
@@ -104209,6 +105500,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -104420,6 +105712,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "fx-overlay",
       "traits": [
         {
           "name": "FxOverlayRender",
@@ -104715,6 +106008,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -104930,6 +106224,7 @@
       "exposure": "palette",
       "provenance": "generated",
       "capabilities": "gantt chart, project timeline, schedule view, task bars, dependency arrows, roadmap, milestone plan",
+      "pattern": "gantt",
       "traits": [
         {
           "name": "GanttRender",
@@ -105261,6 +106556,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -105472,6 +106768,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "gradient-divider",
       "traits": [
         {
           "name": "GradientDividerRender",
@@ -105633,6 +106930,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -105850,6 +107148,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "graph-canvas",
       "traits": [
         {
           "name": "GraphCanvasRender",
@@ -106421,6 +107720,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -106636,6 +107936,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "graph-view",
       "traits": [
         {
           "name": "GraphViewRender",
@@ -106968,6 +108269,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -107179,6 +108481,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "grid",
       "traits": [
         {
           "name": "GridRender",
@@ -107459,6 +108762,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -107675,6 +108979,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "header",
       "traits": [
         {
           "name": "HeaderRender",
@@ -108096,6 +109401,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -108310,6 +109616,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "import-preview-tree",
       "traits": [
         {
           "name": "ImportPreviewTreeRender",
@@ -108663,6 +109970,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -108874,6 +110182,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "import-progress",
       "traits": [
         {
           "name": "ImportProgressRender",
@@ -109081,6 +110390,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -109297,6 +110607,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "import-source-picker",
       "traits": [
         {
           "name": "ImportSourcePickerRender",
@@ -109561,6 +110872,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -109777,6 +111089,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "input-group",
       "traits": [
         {
           "name": "InputGroupRender",
@@ -110111,6 +111424,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -110322,6 +111636,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "jazari-state-machine",
       "traits": [
         {
           "name": "JazariStateMachineRender",
@@ -110558,6 +111873,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -110778,6 +112094,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "lightbox",
       "traits": [
         {
           "name": "LightboxRender",
@@ -111049,6 +112366,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -111262,6 +112580,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "likert-scale",
       "traits": [
         {
           "name": "LikertScaleRender",
@@ -111512,6 +112831,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -111723,6 +113043,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "line-chart",
       "traits": [
         {
           "name": "LineChartRender",
@@ -111979,6 +113300,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -112190,6 +113512,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "loading-state",
       "traits": [
         {
           "name": "LoadingStateRender",
@@ -112366,6 +113689,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -112580,6 +113904,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "map-view",
       "traits": [
         {
           "name": "MapViewRender",
@@ -112933,6 +114258,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -113144,6 +114470,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "markdown-content",
       "traits": [
         {
           "name": "MarkdownContentRender",
@@ -113318,6 +114645,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -113531,6 +114859,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "matrix-question",
       "traits": [
         {
           "name": "MatrixQuestionRender",
@@ -113804,6 +115133,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -114015,6 +115345,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "menu",
       "traits": [
         {
           "name": "MenuRender",
@@ -114281,6 +115612,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -114492,6 +115824,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "meter",
       "traits": [
         {
           "name": "MeterRender",
@@ -114843,6 +116176,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -115063,6 +116397,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "modal",
       "traits": [
         {
           "name": "ModalRender",
@@ -115362,6 +116697,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -115573,6 +116909,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "navigation",
       "traits": [
         {
           "name": "NavigationRender",
@@ -115855,6 +117192,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -116070,6 +117408,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "notification",
       "traits": [
         {
           "name": "NotificationRender",
@@ -116339,6 +117678,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -116556,6 +117896,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "number-stepper",
       "traits": [
         {
           "name": "NumberStepperRender",
@@ -116817,6 +118158,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -117030,6 +118372,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "option-constraint-group",
       "traits": [
         {
           "name": "OptionConstraintGroupRender",
@@ -117309,6 +118652,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -117524,6 +118868,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "orbital-visualization",
       "traits": [
         {
           "name": "OrbitalVisualizationRender",
@@ -117810,6 +119155,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -118024,6 +119370,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "page-header",
       "traits": [
         {
           "name": "PageHeaderRender",
@@ -118415,6 +119762,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -118626,6 +119974,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "page-transition",
       "traits": [
         {
           "name": "PageTransitionRender",
@@ -118799,6 +120148,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -119014,6 +120364,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "pagination",
       "traits": [
         {
           "name": "PaginationRender",
@@ -119307,6 +120658,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -119521,6 +120873,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "popover",
       "traits": [
         {
           "name": "PopoverRender",
@@ -119795,6 +121148,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -120013,6 +121367,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "positioned-canvas",
       "traits": [
         {
           "name": "PositionedCanvasRender",
@@ -120269,6 +121624,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -120482,6 +121838,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "progress-dots",
       "traits": [
         {
           "name": "ProgressDotsRender",
@@ -120683,6 +122040,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -120896,6 +122254,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "pull-to-refresh",
       "traits": [
         {
           "name": "PullToRefreshRender",
@@ -121090,6 +122449,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -121303,6 +122663,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "qr-scanner",
       "traits": [
         {
           "name": "QrScannerRender",
@@ -121526,6 +122887,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -121738,6 +123100,7 @@
       "exposure": "palette",
       "provenance": "generated",
       "capabilities": "multiple-choice quiz, test question, exam item, assessment question, knowledge check, trivia question",
+      "pattern": "quiz-block",
       "traits": [
         {
           "name": "QuizBlockRender",
@@ -121908,6 +123271,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -122119,6 +123483,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "reflection-block",
       "traits": [
         {
           "name": "ReflectionBlockRender",
@@ -122308,6 +123673,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -122522,6 +123888,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "relation-select",
       "traits": [
         {
           "name": "RelationSelectRender",
@@ -122821,6 +124188,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -123037,6 +124405,7 @@
       "exposure": "palette",
       "provenance": "generated",
       "capabilities": "dynamic line items, repeatable field group, add/remove entry rows, multi-entry form block",
+      "pattern": "repeatable-form-section",
       "traits": [
         {
           "name": "RepeatableFormSectionRender",
@@ -123412,6 +124781,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -123629,6 +124999,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "reply-tree",
       "traits": [
         {
           "name": "ReplyTreeRender",
@@ -123922,6 +125293,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -124136,6 +125508,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "rich-text-editor",
       "traits": [
         {
           "name": "RichTextEditorRender",
@@ -124353,6 +125726,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -124564,6 +125938,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "scaled-diagram",
       "traits": [
         {
           "name": "ScaledDiagramRender",
@@ -124730,6 +126105,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -124945,6 +126321,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "search-input",
       "traits": [
         {
           "name": "SearchInputRender",
@@ -125189,6 +126566,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -125400,6 +126778,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "section",
       "traits": [
         {
           "name": "SectionRender",
@@ -125683,6 +127062,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -125902,6 +127282,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "side-panel",
       "traits": [
         {
           "name": "SidePanelRender",
@@ -126150,6 +127531,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -126366,6 +127748,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "sidebar",
       "traits": [
         {
           "name": "SidebarRender",
@@ -126761,6 +128144,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -126977,6 +128361,7 @@
       "exposure": "palette",
       "provenance": "generated",
       "capabilities": "e-signature capture, sign-here field, consent signature, initial-here field, wet-signature substitute",
+      "pattern": "signature-pad",
       "traits": [
         {
           "name": "SignaturePadRender",
@@ -127270,6 +128655,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -127481,6 +128867,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "simple-grid",
       "traits": [
         {
           "name": "SimpleGridRender",
@@ -127680,6 +129067,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -127891,6 +129279,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "skeleton",
       "traits": [
         {
           "name": "SkeletonRender",
@@ -128084,6 +129473,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -128295,6 +129685,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "social-proof",
       "traits": [
         {
           "name": "SocialProofRender",
@@ -128501,6 +129892,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -128716,6 +130108,7 @@
       "exposure": "palette",
       "provenance": "generated",
       "capabilities": "checklist, task list, to-do list, priority list, ranked list, drag-to-reorder queue",
+      "pattern": "sortable-list",
       "traits": [
         {
           "name": "SortableListRender",
@@ -128936,6 +130329,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -129147,6 +130541,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "split",
       "traits": [
         {
           "name": "SplitRender",
@@ -129443,6 +130838,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -129660,6 +131056,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "star-rating",
       "traits": [
         {
           "name": "StarRatingRender",
@@ -129921,6 +131318,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -130132,6 +131530,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "stat-display",
       "traits": [
         {
           "name": "StatDisplayRender",
@@ -130498,6 +131897,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -130711,6 +132111,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "swipeable-row",
       "traits": [
         {
           "name": "SwipeableRowRender",
@@ -130994,6 +132395,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -131212,6 +132614,7 @@
       "exposure": "palette",
       "provenance": "generated",
       "capabilities": "admin console table, records list, CRUD data table, user list, manage-users grid, sortable columns, row selection with bulk actions, grouped list view",
+      "pattern": "table-view",
       "traits": [
         {
           "name": "TableViewRender",
@@ -131858,6 +133261,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -132071,6 +133475,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "tabs",
       "traits": [
         {
           "name": "TabsRender",
@@ -132586,6 +133991,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -132801,6 +134207,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "tag-input",
       "traits": [
         {
           "name": "TagInputRender",
@@ -133068,6 +134475,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -133279,6 +134687,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "tooltip",
       "traits": [
         {
           "name": "TooltipRender",
@@ -133485,6 +134894,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -133699,6 +135109,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "upload-drop-zone",
       "traits": [
         {
           "name": "UploadDropZoneRender",
@@ -133929,6 +135340,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -134144,6 +135556,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "version-diff",
       "traits": [
         {
           "name": "VersionDiffRender",
@@ -134458,6 +135871,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -134672,6 +136086,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "violation-alert",
       "traits": [
         {
           "name": "ViolationAlertRender",
@@ -134965,6 +136380,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -135178,6 +136594,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "vote-stack",
       "traits": [
         {
           "name": "VoteStackRender",
@@ -135419,6 +136836,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -135635,6 +137053,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "wizard-container",
       "traits": [
         {
           "name": "WizardContainerRender",
@@ -137112,6 +138531,7 @@
       "defaultIcons": [],
       "composableWith": [
         "learning-diagram",
+        "std-almadar-pitch",
         "std-app-layout",
         "std-app-search",
         "std-approval-chain",
@@ -137197,6 +138617,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -137419,6 +138840,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "wizard-navigation",
       "traits": [
         {
           "name": "WizardNavigationRender",
@@ -137762,6 +139184,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -137975,6 +139398,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "wizard-progress",
       "traits": [
         {
           "name": "WizardProgressRender",
@@ -138207,6 +139631,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -138418,6 +139843,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "chat-bar",
       "traits": [
         {
           "name": "ChatBarRender",
@@ -138721,6 +140147,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -138932,6 +140359,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "code-runner-panel",
       "traits": [
         {
           "name": "CodeRunnerPanelRender",
@@ -139118,6 +140546,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -139329,6 +140758,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "dashboard-grid",
       "traits": [
         {
           "name": "DashboardGridRender",
@@ -139656,6 +141086,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -139869,6 +141300,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "detail-panel",
       "traits": [
         {
           "name": "DetailPanelRender",
@@ -140541,6 +141973,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -140758,6 +142191,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "dock-layout",
       "traits": [
         {
           "name": "DockLayoutRender",
@@ -141151,6 +142585,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -141362,6 +142797,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "drawer-slot",
       "traits": [
         {
           "name": "DrawerSlotRender",
@@ -141608,6 +143044,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -141823,6 +143260,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "entity-cards",
       "traits": [
         {
           "name": "EntityCardsRender",
@@ -142331,6 +143769,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -142547,6 +143986,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "entity-list",
       "traits": [
         {
           "name": "EntityListRender",
@@ -143004,6 +144444,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -143219,6 +144660,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "entity-table",
       "traits": [
         {
           "name": "EntityTableRender",
@@ -143864,6 +145306,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -144080,6 +145523,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "form-section",
       "traits": [
         {
           "name": "FormSectionRender",
@@ -145409,6 +146853,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -145625,6 +147070,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "form",
       "traits": [
         {
           "name": "FormRender",
@@ -146954,6 +148400,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -147165,6 +148612,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "master-detail-layout",
       "traits": [
         {
           "name": "MasterDetailLayoutRender",
@@ -147370,6 +148818,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -147583,6 +149032,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "master-detail",
       "traits": [
         {
           "name": "MasterDetailRender",
@@ -147897,6 +149347,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -148111,6 +149562,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "media-gallery",
       "traits": [
         {
           "name": "MediaGalleryRender",
@@ -148556,6 +150008,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -148767,6 +150220,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "modal-slot",
       "traits": [
         {
           "name": "ModalSlotRender",
@@ -148997,6 +150451,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -149208,6 +150663,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "runtime-debugger",
       "traits": [
         {
           "name": "RuntimeDebuggerRender",
@@ -149404,6 +150860,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -149615,6 +151072,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "segment-renderer",
       "traits": [
         {
           "name": "SegmentRendererRender",
@@ -149845,6 +151303,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -150059,6 +151518,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "split-pane",
       "traits": [
         {
           "name": "SplitPaneRender",
@@ -150303,6 +151763,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -150516,6 +151977,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "stat-card",
       "traits": [
         {
           "name": "StatCardRender",
@@ -150975,6 +152437,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -151186,6 +152649,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "state-machine-view",
       "traits": [
         {
           "name": "StateMachineViewRender",
@@ -151390,6 +152854,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -151609,6 +153074,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "subagent-trace-panel",
       "traits": [
         {
           "name": "SubagentTracePanelRender",
@@ -152129,6 +153595,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -152342,6 +153809,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "tabbed-container",
       "traits": [
         {
           "name": "TabbedContainerRender",
@@ -152604,6 +154072,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -152820,6 +154289,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "timeline",
       "traits": [
         {
           "name": "TimelineRender",
@@ -153170,6 +154640,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -153381,6 +154852,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "toast-slot",
       "traits": [
         {
           "name": "ToastSlotRender",
@@ -153648,6 +155120,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -153864,6 +155337,7 @@
       "eventPayloads": {},
       "exposure": "internal",
       "provenance": "generated",
+      "pattern": "counter-template",
       "traits": [
         {
           "name": "CounterTemplateRender",
@@ -154154,6 +155628,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -154370,6 +155845,7 @@
       "eventPayloads": {},
       "exposure": "internal",
       "provenance": "generated",
+      "pattern": "dashboard-layout",
       "traits": [
         {
           "name": "DashboardLayoutRender",
@@ -154824,6 +156300,7 @@
         "std-service-wikimedia",
         "std-service-youtube",
         "std-signature-capture",
+        "std-slide-deck",
         "std-stat-rows",
         "std-stats",
         "std-step-flow",
@@ -155037,6 +156514,7 @@
       "eventPayloads": {},
       "exposure": "internal",
       "provenance": "generated",
+      "pattern": "generic-app-template",
       "traits": [
         {
           "name": "GenericAppTemplateRender",
@@ -157936,7 +159414,7 @@
             {
               "name": "CHOICE_CORRECT",
               "direction": "emit",
-              "description": "The player landed grounded on the gate's correct option; fires once per gate (solved gates stop judging). Carries the gate center so boards can burst the unlock there.",
+              "description": "The player landed grounded on the gate's correct option; fires once per gate (solved gates stop judging). Carries the gate id, the chosen optionId, and the gate center so boards can burst the unlock there.",
               "tier": "domain"
             },
             {
@@ -170742,6 +172220,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "action-palette",
       "traits": [
         {
           "name": "ActionPaletteRender",
@@ -171281,6 +172760,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "action-tile",
       "traits": [
         {
           "name": "ActionTileRender",
@@ -171871,6 +173351,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "canvas-2d",
       "traits": [
         {
           "name": "Canvas2dRender",
@@ -172416,6 +173897,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "canvas",
       "traits": [
         {
           "name": "CanvasRender",
@@ -173243,6 +174725,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "choice-button",
       "traits": [
         {
           "name": "ChoiceButtonRender",
@@ -173625,6 +175108,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "control-button",
       "traits": [
         {
           "name": "ControlButtonRender",
@@ -174026,6 +175510,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "control-grid",
       "traits": [
         {
           "name": "ControlGridRender",
@@ -174602,6 +176087,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "dialogue-bubble",
       "traits": [
         {
           "name": "DialogueBubbleRender",
@@ -174945,6 +176431,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "draw-fx-layer",
       "traits": [
         {
           "name": "DrawFxLayerRender",
@@ -175543,6 +177030,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "draw-group",
       "traits": [
         {
           "name": "DrawGroupRender",
@@ -175920,6 +177408,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "draw-mesh",
       "traits": [
         {
           "name": "DrawMeshRender",
@@ -176543,6 +178032,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "draw-shape-layer",
       "traits": [
         {
           "name": "DrawShapeLayerRender",
@@ -177625,6 +179115,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "draw-shape",
       "traits": [
         {
           "name": "DrawShapeRender",
@@ -178432,6 +179923,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "draw-skinned-mesh",
       "traits": [
         {
           "name": "DrawSkinnedMeshRender",
@@ -178969,6 +180461,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "draw-sprite-layer",
       "traits": [
         {
           "name": "DrawSpriteLayerRender",
@@ -179487,6 +180980,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "draw-sprite",
       "traits": [
         {
           "name": "DrawSpriteRender",
@@ -179920,6 +181414,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "draw-text-layer",
       "traits": [
         {
           "name": "DrawTextLayerRender",
@@ -180265,6 +181760,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "draw-text",
       "traits": [
         {
           "name": "DrawTextRender",
@@ -180577,6 +182073,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "game-audio-cue",
       "traits": [
         {
           "name": "GameAudioCueRender",
@@ -180865,6 +182362,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "game-audio-toggle",
       "traits": [
         {
           "name": "GameAudioToggleRender",
@@ -181318,6 +182816,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "game-hud",
       "traits": [
         {
           "name": "GameHudRender",
@@ -182185,6 +183684,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "game-menu",
       "traits": [
         {
           "name": "GameMenuRender",
@@ -182615,6 +184115,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "health-bar",
       "traits": [
         {
           "name": "HealthBarRender",
@@ -183074,6 +184575,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "score-display",
       "traits": [
         {
           "name": "ScoreDisplayRender",
@@ -183422,6 +184924,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "sequence-bar",
       "traits": [
         {
           "name": "SequenceBarRender",
@@ -184024,6 +185527,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "stat-badge",
       "traits": [
         {
           "name": "StatBadgeRender",
@@ -184479,6 +185983,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "state-graph",
       "traits": [
         {
           "name": "StateGraphRender",
@@ -184790,6 +186295,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "state-json-view",
       "traits": [
         {
           "name": "StateJsonViewRender",
@@ -185478,6 +186984,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "trait-slot",
       "traits": [
         {
           "name": "TraitSlotRender",
@@ -186484,7 +187991,11 @@
           "orbital": "ArcadeBoard3DFrameOrbital",
           "role": "reactor",
           "emittedEvents": [],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "MOVE",
+            "RESTART",
+            "WANDER"
+          ],
           "overridableConfigKeys": [
             {
               "key": "gridHeight",
@@ -186769,7 +188280,10 @@
           "orbital": "ArcadeBoard3DFrameOrbital",
           "role": "reactor",
           "emittedEvents": [],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "PLAY_MACHINE",
+            "RESTART"
+          ],
           "overridableConfigKeys": [
             {
               "key": "machines",
@@ -186866,7 +188380,10 @@
           "orbital": "ArcadeBoard3DFrameOrbital",
           "role": "authority",
           "emittedEvents": [],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "RESTART",
+            "BURST"
+          ],
           "overridableConfigKeys": [
             {
               "key": "decayRate",
@@ -187018,7 +188535,10 @@
           "orbital": "ArcadeBoard3DFrameOrbital",
           "role": "reactor",
           "emittedEvents": [],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "RESTART",
+            "SCORE_CHANGED"
+          ],
           "overridableConfigKeys": [
             {
               "key": "running",
@@ -188230,7 +189750,9 @@
           "orbital": "CrewBoard2DOrbital",
           "role": "reactor",
           "emittedEvents": [],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "MOVE"
+          ],
           "overridableConfigKeys": [
             {
               "key": "gridHeight",
@@ -190438,7 +191960,10 @@
           "orbital": "DungeonBoard2DOrbital",
           "role": "reactor",
           "emittedEvents": [],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "MOVE",
+            "RESTART"
+          ],
           "overridableConfigKeys": [
             {
               "key": "gridHeight",
@@ -190971,7 +192496,11 @@
           "orbital": "DungeonBoard2DOrbital",
           "role": "reactor",
           "emittedEvents": [],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "ATTACK",
+            "MONSTER_TICK",
+            "RESTART"
+          ],
           "overridableConfigKeys": [
             {
               "key": "attackDamage",
@@ -191200,7 +192729,10 @@
           "orbital": "DungeonBoard2DOrbital",
           "role": "reactor",
           "emittedEvents": [],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "RESTART",
+            "HERO_STEPPED"
+          ],
           "overridableConfigKeys": [
             {
               "key": "features",
@@ -191391,7 +192923,11 @@
           "orbital": "DungeonBoard2DOrbital",
           "role": "authority",
           "emittedEvents": [],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "BURST",
+            "RESTART",
+            "BURST"
+          ],
           "overridableConfigKeys": [
             {
               "key": "decayRate",
@@ -191543,7 +193079,10 @@
           "orbital": "DungeonBoard2DOrbital",
           "role": "reactor",
           "emittedEvents": [],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "PROGRESS",
+            "RESTART"
+          ],
           "overridableConfigKeys": [
             {
               "key": "running",
@@ -193306,7 +194845,10 @@
           "orbital": "MarketBoard3DOrbital",
           "role": "reactor",
           "emittedEvents": [],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "MOVE",
+            "RESTART"
+          ],
           "overridableConfigKeys": [
             {
               "key": "gridHeight",
@@ -193838,7 +195380,10 @@
           "orbital": "MarketBoard3DOrbital",
           "role": "authority",
           "emittedEvents": [],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "HERO_STEPPED",
+            "RESTART"
+          ],
           "overridableConfigKeys": [
             {
               "key": "customers",
@@ -194031,7 +195576,10 @@
           "orbital": "MarketBoard3DOrbital",
           "role": "authority",
           "emittedEvents": [],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "RESTART",
+            "BURST"
+          ],
           "overridableConfigKeys": [
             {
               "key": "decayRate",
@@ -194183,7 +195731,10 @@
           "orbital": "MarketBoard3DOrbital",
           "role": "reactor",
           "emittedEvents": [],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "RESTART",
+            "SERVICE_CHANGED"
+          ],
           "overridableConfigKeys": [
             {
               "key": "maxLost",
@@ -195628,7 +197179,11 @@
           "orbital": "ObjectiveBoard3DOrbital",
           "role": "reactor",
           "emittedEvents": [],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "MOVE",
+            "RESTART",
+            "WANDER"
+          ],
           "overridableConfigKeys": [
             {
               "key": "gridHeight",
@@ -196177,7 +197732,10 @@
           "orbital": "ObjectiveBoard3DOrbital",
           "role": "reactor",
           "emittedEvents": [],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "HERO_STEPPED",
+            "RESTART"
+          ],
           "overridableConfigKeys": [
             {
               "key": "features",
@@ -196368,7 +197926,10 @@
           "orbital": "ObjectiveBoard3DOrbital",
           "role": "authority",
           "emittedEvents": [],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "BURST",
+            "RESTART"
+          ],
           "overridableConfigKeys": [
             {
               "key": "decayRate",
@@ -196520,7 +198081,10 @@
           "orbital": "ObjectiveBoard3DOrbital",
           "role": "reactor",
           "emittedEvents": [],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "PROGRESS",
+            "RESTART"
+          ],
           "overridableConfigKeys": [
             {
               "key": "running",
@@ -197512,7 +199076,12 @@
           "orbital": "PlatformerBoard2DOrbital",
           "role": "authority",
           "emittedEvents": [],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "PLAT_JUMP",
+            "PLAT_PLACE",
+            "PLAT_STEER",
+            "RESTART"
+          ],
           "overridableConfigKeys": [
             {
               "key": "curveModsEnabled",
@@ -197879,7 +199448,10 @@
           "orbital": "PlatformerBoard2DOrbital",
           "role": "authority",
           "emittedEvents": [],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "BURST",
+            "RESTART"
+          ],
           "overridableConfigKeys": [
             {
               "key": "decayRate",
@@ -198031,7 +199603,10 @@
           "orbital": "PlatformerBoard2DOrbital",
           "role": "reactor",
           "emittedEvents": [],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "PROGRESS",
+            "RESTART"
+          ],
           "overridableConfigKeys": [
             {
               "key": "running",
@@ -198083,7 +199658,12 @@
             "RESTART",
             "PLAY_AGAIN"
           ],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "PLAT_FELL",
+            "PLAT_GOAL",
+            "PLAT_HAZARD",
+            "GAME_END"
+          ],
           "overridableConfigKeys": [
             {
               "key": "backgroundAsset",
@@ -199797,7 +201377,9 @@
           "orbital": "PlatformerPuzzleOrbital",
           "role": "reactor",
           "emittedEvents": [],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "BODY_MOVED"
+          ],
           "overridableConfigKeys": [
             {
               "key": "features",
@@ -199943,7 +201525,9 @@
           "orbital": "PlatformerPuzzleOrbital",
           "role": "reactor",
           "emittedEvents": [],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "BODY_MOVED"
+          ],
           "overridableConfigKeys": [
             {
               "key": "gates",
@@ -200069,7 +201653,9 @@
           "orbital": "PlatformerPuzzleOrbital",
           "role": "authority",
           "emittedEvents": [],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "BURST"
+          ],
           "overridableConfigKeys": [
             {
               "key": "decayRate",
@@ -200316,7 +201902,9 @@
           "orbital": "PlatformerPuzzleOrbital",
           "role": "renderer",
           "emittedEvents": [],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "SHOW"
+          ],
           "overridableConfigKeys": [
             {
               "key": "autoShow",
@@ -200948,7 +202536,7 @@
       "statePattern": "playing",
       "complexity": {
         "states": 1,
-        "events": 9,
+        "events": 10,
         "transitions": 6
       },
       "defaultEntity": {
@@ -201356,11 +202944,12 @@
         "UNIT_CLICK",
         "TILE_CLICK",
         "CANCEL",
-        "BUILD_CAMP",
+        "BUILD_CAMP_PRESS",
         "PLAY_AGAIN",
         "MOVE",
         "WANDER",
-        "RESTART"
+        "RESTART",
+        "BUILD_CAMP"
       ],
       "eventPayloads": {},
       "exposure": "palette",
@@ -201371,7 +202960,11 @@
           "orbital": "SurvivalBoard3DOrbital",
           "role": "reactor",
           "emittedEvents": [],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "MOVE",
+            "RESTART",
+            "WANDER"
+          ],
           "overridableConfigKeys": [
             {
               "key": "gridHeight",
@@ -201656,7 +203249,10 @@
           "orbital": "SurvivalBoard3DOrbital",
           "role": "reactor",
           "emittedEvents": [],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "HERO_STEPPED",
+            "RESTART"
+          ],
           "overridableConfigKeys": [
             {
               "key": "features",
@@ -201842,7 +203438,10 @@
           "orbital": "SurvivalBoard3DOrbital",
           "role": "authority",
           "emittedEvents": [],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "BURST",
+            "RESTART"
+          ],
           "overridableConfigKeys": [
             {
               "key": "decayRate",
@@ -201994,7 +203593,11 @@
           "orbital": "SurvivalBoard3DOrbital",
           "role": "reactor",
           "emittedEvents": [],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "RESOURCES",
+            "BUILD_CAMP",
+            "RESTART"
+          ],
           "overridableConfigKeys": [
             {
               "key": "running",
@@ -202037,6 +203640,7 @@
             "TILE_CLICK",
             "UNIT_CLICK",
             "CANCEL",
+            "BUILD_CAMP_PRESS",
             "BUILD_CAMP"
           ],
           "listenedEvents": [],
@@ -202596,7 +204200,7 @@
             }
           ],
           "transitionEvents": [
-            "BUILD_CAMP",
+            "BUILD_CAMP_PRESS",
             "CANCEL",
             "INIT",
             "PLAY_AGAIN",
@@ -202641,6 +204245,12 @@
               "tier": "domain"
             },
             {
+              "name": "BUILD_CAMP_PRESS",
+              "direction": "emit",
+              "description": "Build Camp button pressed",
+              "tier": "domain"
+            },
+            {
               "name": "BUILD_CAMP",
               "direction": "emit",
               "description": "Requests building the camp once wood/stone goals are met; survival-flow resolves the win",
@@ -202659,14 +204269,11 @@
         }
       ],
       "factoryPath": "behaviors/functions/ui/game/organisms/std-survival-board-3d.ts",
-      "sourceValid": false,
+      "sourceValid": true,
       "roles": [
         "authority",
         "reactor",
         "renderer"
-      ],
-      "sourceErrors": [
-        "orb validate reported invalid: [{\"code\":\"ORB_CIRCUIT_SELF_EMIT_LOOP\",\"path\":\"orbitals[0 (SurvivalBoard3DOrbital)].traits[4 (SurvivalIntent)].stateMachine.transitions[4].effects[0]\",\"message\":\"'SurvivalBoard3DOrbital.SurvivalIntent': transition playing--[BUILD_CAMP]-->playing re-emits its own trigger event 'BUILD_CAMP' with a constant payload and a same-event arm is reachable at the target state — the runtime path loops forever re-entering this arm\",\"suggestion\":\"this arm re-emits its own trigger event and a same-event arm is "
       ]
     },
     "std-tactics-board-2d": {
@@ -203142,7 +204749,11 @@
           "orbital": "TacticsBoard2DOrbital",
           "role": "reactor",
           "emittedEvents": [],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "ATTACK",
+            "MOVE",
+            "AI_TURN"
+          ],
           "overridableConfigKeys": [
             {
               "key": "attackDamage",
@@ -203456,7 +205067,9 @@
           "orbital": "TacticsBoard2DOrbital",
           "role": "authority",
           "emittedEvents": [],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "BURST"
+          ],
           "overridableConfigKeys": [
             {
               "key": "decayRate",
@@ -203608,7 +205221,9 @@
           "orbital": "TacticsBoard2DOrbital",
           "role": "reactor",
           "emittedEvents": [],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "UNITS_CHANGED"
+          ],
           "overridableConfigKeys": [
             {
               "key": "running",
@@ -203643,7 +205258,9 @@
           "orbital": "TacticsBoard2DOrbital",
           "role": "reactor",
           "emittedEvents": [],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "UNITS_CHANGED"
+          ],
           "overridableConfigKeys": [
             {
               "key": "initialEnemies",
@@ -205232,7 +206849,11 @@
           "orbital": "TacticsBoard3DOrbital",
           "role": "reactor",
           "emittedEvents": [],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "AI_TURN",
+            "ATTACK",
+            "MOVE"
+          ],
           "overridableConfigKeys": [
             {
               "key": "attackDamage",
@@ -205546,7 +207167,9 @@
           "orbital": "TacticsBoard3DOrbital",
           "role": "authority",
           "emittedEvents": [],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "BURST"
+          ],
           "overridableConfigKeys": [
             {
               "key": "decayRate",
@@ -205698,7 +207321,9 @@
           "orbital": "TacticsBoard3DOrbital",
           "role": "reactor",
           "emittedEvents": [],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "UNITS_CHANGED"
+          ],
           "overridableConfigKeys": [
             {
               "key": "running",
@@ -207294,7 +208919,10 @@
           "orbital": "WorldMapBoard2DOrbital",
           "role": "reactor",
           "emittedEvents": [],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "ATTACK",
+            "MOVE"
+          ],
           "overridableConfigKeys": [
             {
               "key": "attackDamage",
@@ -207529,7 +209157,9 @@
           "orbital": "WorldMapBoard2DOrbital",
           "role": "reactor",
           "emittedEvents": [],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "UNITS_CHANGED"
+          ],
           "overridableConfigKeys": [
             {
               "key": "running",
@@ -207564,7 +209194,9 @@
           "orbital": "WorldMapBoard2DOrbital",
           "role": "reactor",
           "emittedEvents": [],
-          "listenedEvents": [],
+          "listenedEvents": [
+            "MINE_HIT"
+          ],
           "overridableConfigKeys": [
             {
               "key": "running",
@@ -214604,6 +216236,7 @@
         "std-algo-stack",
         "std-algo-toposort",
         "std-algo-twopointer",
+        "std-almadar-pitch",
         "std-astro-orbit",
         "std-astro-orbit-3d",
         "std-astro-stellar",
@@ -217520,6 +219153,7 @@
         "std-algo-stack",
         "std-algo-toposort",
         "std-algo-twopointer",
+        "std-almadar-pitch",
         "std-astro-orbit",
         "std-astro-orbit-3d",
         "std-astro-stellar",
@@ -220991,6 +222625,7 @@
         "std-algo-stack",
         "std-algo-toposort",
         "std-algo-twopointer",
+        "std-almadar-pitch",
         "std-astro-orbit",
         "std-astro-orbit-3d",
         "std-astro-stellar",
@@ -225838,6 +227473,7 @@
         "std-algo-stack",
         "std-algo-toposort",
         "std-algo-twopointer",
+        "std-almadar-pitch",
         "std-astro-orbit",
         "std-astro-orbit-3d",
         "std-astro-stellar",
@@ -226512,6 +228148,7 @@
         "std-algo-stack",
         "std-algo-toposort",
         "std-algo-twopointer",
+        "std-almadar-pitch",
         "std-astro-orbit",
         "std-astro-orbit-3d",
         "std-astro-stellar",
@@ -230217,6 +231854,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "algo-graph-canvas",
       "traits": [
         {
           "name": "AlgoGraphCanvasRender",
@@ -230861,6 +232499,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "algorithm-canvas",
       "traits": [
         {
           "name": "AlgorithmCanvasRender",
@@ -231726,6 +233365,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "biology-canvas",
       "traits": [
         {
           "name": "BiologyCanvasRender",
@@ -233085,6 +234725,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "chemistry-canvas",
       "traits": [
         {
           "name": "ChemistryCanvasRender",
@@ -234421,6 +236062,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "learning-canvas",
       "traits": [
         {
           "name": "LearningCanvasRender",
@@ -235097,6 +236739,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "math-canvas",
       "traits": [
         {
           "name": "MathCanvasRender",
@@ -236245,6 +237888,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "physics-canvas",
       "traits": [
         {
           "name": "PhysicsCanvasRender",
@@ -237879,7 +239523,7 @@
       "statePattern": "idle",
       "complexity": {
         "states": 1,
-        "events": 3,
+        "events": 5,
         "transitions": 3
       },
       "defaultEntity": {
@@ -237990,6 +239634,8 @@
         "ui-team-organism"
       ],
       "connectableEvents": [
+        "PRIMARY_ACTION",
+        "SECONDARY_ACTION",
         "CTA_PRIMARY",
         "CTA_SECONDARY"
       ],
@@ -238088,9 +239734,9 @@
             }
           ],
           "transitionEvents": [
-            "CTA_PRIMARY",
-            "CTA_SECONDARY",
-            "INIT"
+            "INIT",
+            "PRIMARY_ACTION",
+            "SECONDARY_ACTION"
           ],
           "events": [
             {
@@ -238110,18 +239756,29 @@
             {
               "name": "INIT",
               "direction": "listen"
+            },
+            {
+              "name": "PRIMARY_ACTION",
+              "direction": "listen",
+              "description": "Primary action button was clicked.",
+              "synonyms": "click, select, submit, activate",
+              "tier": "domain"
+            },
+            {
+              "name": "SECONDARY_ACTION",
+              "direction": "listen",
+              "description": "A secondary action button was clicked.",
+              "synonyms": "clicked, pressed, selected, activated",
+              "tier": "domain"
             }
           ],
           "definerKnobs": []
         }
       ],
       "factoryPath": "behaviors/functions/ui/marketing/atoms/std-marketing-cta.ts",
-      "sourceValid": false,
+      "sourceValid": true,
       "roles": [
         "renderer"
-      ],
-      "sourceErrors": [
-        "orb validate reported invalid: [{\"code\":\"ORB_CIRCUIT_SELF_EMIT_LOOP\",\"path\":\"orbitals[0 (CTAItemOrbital)].traits[0 (CTAItemCTA)].stateMachine.transitions[1].effects[0]\",\"message\":\"'CTAItemOrbital.CTAItemCTA': transition idle--[CTA_PRIMARY]-->idle re-emits its own trigger event 'CTA_PRIMARY' with a constant payload and a same-event arm is reachable at the target state — the runtime path loops forever re-entering this arm\",\"suggestion\":\"this arm re-emits its own trigger event and a same-event arm is reachable at the target stat"
       ]
     },
     "std-marketing-features": {
@@ -238669,7 +240326,7 @@
       "statePattern": "idle",
       "complexity": {
         "states": 1,
-        "events": 3,
+        "events": 5,
         "transitions": 3
       },
       "defaultEntity": {
@@ -238780,6 +240437,8 @@
         "ui-team-organism"
       ],
       "connectableEvents": [
+        "PRIMARY_ACTION",
+        "SECONDARY_ACTION",
         "CTA_PRIMARY",
         "CTA_SECONDARY"
       ],
@@ -238940,9 +240599,9 @@
             }
           ],
           "transitionEvents": [
-            "CTA_PRIMARY",
-            "CTA_SECONDARY",
-            "INIT"
+            "INIT",
+            "PRIMARY_ACTION",
+            "SECONDARY_ACTION"
           ],
           "events": [
             {
@@ -238962,18 +240621,29 @@
             {
               "name": "INIT",
               "direction": "listen"
+            },
+            {
+              "name": "PRIMARY_ACTION",
+              "direction": "listen",
+              "description": "A primary call to action has been triggered.",
+              "synonyms": "click, select, submit, activate",
+              "tier": "domain"
+            },
+            {
+              "name": "SECONDARY_ACTION",
+              "direction": "listen",
+              "description": "A secondary call to action has been triggered.",
+              "synonyms": "secondary action, second click, alternate button",
+              "tier": "domain"
             }
           ],
           "definerKnobs": []
         }
       ],
       "factoryPath": "behaviors/functions/ui/marketing/atoms/std-marketing-hero.ts",
-      "sourceValid": false,
+      "sourceValid": true,
       "roles": [
         "renderer"
-      ],
-      "sourceErrors": [
-        "orb validate reported invalid: [{\"code\":\"ORB_CIRCUIT_SELF_EMIT_LOOP\",\"path\":\"orbitals[0 (HeroItemOrbital)].traits[0 (HeroItemHero)].stateMachine.transitions[1].effects[0]\",\"message\":\"'HeroItemOrbital.HeroItemHero': transition idle--[CTA_PRIMARY]-->idle re-emits its own trigger event 'CTA_PRIMARY' with a constant payload and a same-event arm is reachable at the target state — the runtime path loops forever re-entering this arm\",\"suggestion\":\"this arm re-emits its own trigger event and a same-event arm is reachable at the targe"
       ]
     },
     "std-marketing-nav": {
@@ -240813,6 +242483,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "animated-counter",
       "traits": [
         {
           "name": "AnimatedCounterRender",
@@ -241025,6 +242696,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "animated-graphic",
       "traits": [
         {
           "name": "AnimatedGraphicRender",
@@ -241296,6 +242968,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "animated-reveal",
       "traits": [
         {
           "name": "AnimatedRevealRender",
@@ -241556,6 +243229,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "article-section",
       "traits": [
         {
           "name": "ArticleSectionRender",
@@ -241760,6 +243434,7 @@
       "exposure": "palette",
       "provenance": "generated",
       "capabilities": "customer story, success story, client story card, results showcase, proof-point card",
+      "pattern": "case-study-card",
       "traits": [
         {
           "name": "CaseStudyCardRender",
@@ -241982,6 +243657,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "community-links",
       "traits": [
         {
           "name": "CommunityLinksRender",
@@ -242228,6 +243904,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "content-section",
       "traits": [
         {
           "name": "ContentSectionRender",
@@ -242437,6 +244114,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "cta-banner",
       "traits": [
         {
           "name": "CtaBannerRender",
@@ -242693,6 +244371,7 @@
       "exposure": "palette",
       "provenance": "generated",
       "capabilities": "feature highlight, benefit callout, product capability card, feature-grid tile",
+      "pattern": "feature-card",
       "traits": [
         {
           "name": "FeatureCardRender",
@@ -242933,6 +244612,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "geometric-pattern",
       "traits": [
         {
           "name": "GeometricPatternRender",
@@ -243187,6 +244867,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "hero-section",
       "traits": [
         {
           "name": "HeroSectionRender",
@@ -243521,6 +245202,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "install-box",
       "traits": [
         {
           "name": "InstallBoxRender",
@@ -243711,6 +245393,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "marketing-footer",
       "traits": [
         {
           "name": "MarketingFooterRender",
@@ -243983,6 +245666,7 @@
       "exposure": "palette",
       "provenance": "generated",
       "capabilities": "KPI card, metric tile, dashboard stat card, number card, big-number widget, stat highlight, key metric callout",
+      "pattern": "marketing-stat-card",
       "traits": [
         {
           "name": "MarketingStatCardRender",
@@ -244187,6 +245871,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "pattern-tile",
       "traits": [
         {
           "name": "PatternTileRender",
@@ -244411,6 +246096,7 @@
       "exposure": "palette",
       "provenance": "generated",
       "capabilities": "pricing tier, plan card, subscription tier, plan comparison card, price plan",
+      "pattern": "pricing-card",
       "traits": [
         {
           "name": "PricingCardRender",
@@ -244661,6 +246347,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "pricing-grid",
       "traits": [
         {
           "name": "PricingGridRender",
@@ -244937,6 +246624,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "pull-quote",
       "traits": [
         {
           "name": "PullQuoteRender",
@@ -245120,6 +246808,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "service-catalog",
       "traits": [
         {
           "name": "ServiceCatalogRender",
@@ -245334,6 +247023,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "showcase-card",
       "traits": [
         {
           "name": "ShowcaseCardRender",
@@ -245568,6 +247258,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "split-section",
       "traits": [
         {
           "name": "SplitSectionRender",
@@ -245820,6 +247511,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "stats-grid",
       "traits": [
         {
           "name": "StatsGridRender",
@@ -246035,6 +247727,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "step-flow",
       "traits": [
         {
           "name": "StepFlowRender",
@@ -246276,6 +247969,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "tag-cloud",
       "traits": [
         {
           "name": "TagCloudRender",
@@ -246503,6 +248197,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "team-card",
       "traits": [
         {
           "name": "TeamCardRender",
@@ -246718,6 +248413,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "book-chapter-view",
       "traits": [
         {
           "name": "BookChapterViewRender",
@@ -246927,6 +248623,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "book-cover-page",
       "traits": [
         {
           "name": "BookCoverPageRender",
@@ -247144,6 +248841,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "book-nav-bar",
       "traits": [
         {
           "name": "BookNavBarRender",
@@ -247356,6 +249054,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "book-table-of-contents",
       "traits": [
         {
           "name": "BookTableOfContentsRender",
@@ -247574,6 +249273,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "book-viewer",
       "traits": [
         {
           "name": "BookViewerRender",
@@ -247986,6 +249686,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "case-study-organism",
       "traits": [
         {
           "name": "CaseStudyOrganismRender",
@@ -248331,6 +250032,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "feature-grid-organism",
       "traits": [
         {
           "name": "FeatureGridOrganismRender",
@@ -248718,6 +250420,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "hero-organism",
       "traits": [
         {
           "name": "HeroOrganismRender",
@@ -249074,6 +250777,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "pricing-organism",
       "traits": [
         {
           "name": "PricingOrganismRender",
@@ -249427,6 +251131,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "showcase-organism",
       "traits": [
         {
           "name": "ShowcaseOrganismRender",
@@ -249765,6 +251470,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "stats-organism",
       "traits": [
         {
           "name": "StatsOrganismRender",
@@ -250099,6 +251805,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "step-flow-organism",
       "traits": [
         {
           "name": "StepFlowOrganismRender",
@@ -250464,6 +252171,7 @@
       "eventPayloads": {},
       "exposure": "palette",
       "provenance": "generated",
+      "pattern": "team-organism",
       "traits": [
         {
           "name": "TeamOrganismRender",
@@ -250877,6 +252585,7 @@
       "eventPayloads": {},
       "exposure": "internal",
       "provenance": "generated",
+      "pattern": "about-page-template",
       "traits": [
         {
           "name": "AboutPageTemplateRender",
@@ -251073,6 +252782,7 @@
       "eventPayloads": {},
       "exposure": "internal",
       "provenance": "generated",
+      "pattern": "auth-layout",
       "traits": [
         {
           "name": "AuthLayoutRender",
@@ -251345,6 +253055,7 @@
       "eventPayloads": {},
       "exposure": "internal",
       "provenance": "generated",
+      "pattern": "feature-detail-page-template",
       "traits": [
         {
           "name": "FeatureDetailPageTemplateRender",
@@ -251687,6 +253398,7 @@
       "eventPayloads": {},
       "exposure": "internal",
       "provenance": "generated",
+      "pattern": "landing-page-template",
       "traits": [
         {
           "name": "LandingPageTemplateRender",
@@ -251984,6 +253696,7 @@
       "eventPayloads": {},
       "exposure": "internal",
       "provenance": "generated",
+      "pattern": "pricing-page-template",
       "traits": [
         {
           "name": "PricingPageTemplateRender",

@@ -206,6 +206,15 @@ orbital PlatformerPuzzleOrbital {
       BODY_MOVED: BODY_MOVED
     }
     config { running: true }
+
+    listens {
+      BODY_MOVED { x : number!, y : number!, vx : number!, vy : number!, grounded : boolean!, skating : boolean!, speed : number! }
+      SET_FEATURES { features : [PickupFeature]! }
+      ADD_FEATURES { features : [PickupFeature]! }
+      FEATURES_ACTIVE { updates : [PickupActiveUpdate]! }
+      RESTART { id : string }
+      PlatformerPuzzleBody.BODY_MOVED -> BODY_MOVED
+    }
   }
 
   trait PlatformerPuzzleObjective = Gate.traits.ObjectiveFlow -> PlatformerPuzzleData {
@@ -221,6 +230,13 @@ orbital PlatformerPuzzleOrbital {
       BODY_MOVED: BODY_MOVED
     }
     config { running: true }
+
+    listens {
+      BODY_MOVED { x : number!, y : number!, vx : number!, vy : number!, grounded : boolean!, skating : boolean!, speed : number! }
+      SET_GATES { gates : [ChoiceGate]! }
+      RESTART { id : string }
+      PlatformerPuzzleBody.BODY_MOVED -> BODY_MOVED
+    }
   }
 
   trait PlatformerPuzzleFx = Particles.traits.FxParticles -> PlatformerPuzzleData {
@@ -228,6 +244,12 @@ orbital PlatformerPuzzleOrbital {
       BURST: BURST
     }
     config { running: true }
+
+    listens {
+      BURST { particles : [Fx] }
+      RESTART { }
+      PlatformerPuzzleNarrative.BURST -> BURST
+    }
   }
 
   trait PlatformerPuzzleNarrative = Narrative.traits.FxNarrative -> PlatformerPuzzleData {
@@ -244,6 +266,11 @@ orbital PlatformerPuzzleOrbital {
       TUTORIAL_DONE: TUTORIAL_DONE
     }
     config { autoShow: false, previewTrait: @trait.PlatformerPuzzleNoopPreview }
+
+    listens {
+      SHOW { id : string }
+      PlatformerPuzzleNarrative.SHOW -> SHOW
+    }
   }
 
   trait PlatformerPuzzleNoopPreview -> PlatformerPuzzleData [interaction, instance] {

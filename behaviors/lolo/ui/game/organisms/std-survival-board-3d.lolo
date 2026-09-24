@@ -134,6 +134,15 @@ orbital SurvivalBoard3DOrbital {
         { id: "t-1-1", x: 1, y: 1, z: 0, terrain: "grass", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png", role: "tile", category: "terrain", animations: ["static"], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }
       ]
     }
+
+    listens {
+      MOVE { unitId : string, x : number, y : number }
+      WANDER { tick : number }
+      RESTART { id : string }
+      SurvivalIntent.MOVE -> MOVE
+      SurvivalIntent.RESTART -> RESTART
+      SurvivalIntent.WANDER -> WANDER
+    }
   }
 
   trait Gather = Harvest.traits.Gather -> GameState {
@@ -143,14 +152,37 @@ orbital SurvivalBoard3DOrbital {
       stoneType: "rock"
       yieldPerNode: 1
     }
+
+    listens {
+      HERO_STEPPED { unitId : string, x : number, z : number, movesLeft : number }
+      RESTART { id : string }
+      HeroAuthority.HERO_STEPPED -> HERO_STEPPED
+      SurvivalIntent.RESTART -> RESTART
+    }
   }
 
   trait FxDecay = Particles.traits.FxParticles -> GameState {
     config { running: true }
+
+    listens {
+      BURST { particles : [Fx] }
+      RESTART { }
+      Gather.BURST -> BURST
+      SurvivalIntent.RESTART -> RESTART
+    }
   }
 
   trait Flow = Survival.traits.SurvivalFlow -> GameState {
     config { running: true }
+
+    listens {
+      RESOURCES { wood : number, stone : number, movesLeft : number }
+      BUILD_CAMP { id : string }
+      RESTART { id : string }
+      Gather.RESOURCES -> RESOURCES
+      SurvivalIntent.BUILD_CAMP -> BUILD_CAMP
+      SurvivalIntent.RESTART -> RESTART
+    }
   }
 
   trait SurvivalIntent -> GameState [interaction, instance] {
@@ -163,7 +195,7 @@ orbital SurvivalBoard3DOrbital {
         (set @entity.phase "observation")
         (render-ui main {
           type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: (array/concat [ { label: "Wood", value: @entity.wood }, { label: "Stone", value: @entity.stone }, { label: "Energy", value: @entity.movesLeft }, { label: "Result", value: @entity.result } ] @config.extraStats) }, { type: button, action: BUILD_CAMP, label: "Build Camp", variant: primary } ] }
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: (array/concat [ { label: "Wood", value: @entity.wood }, { label: "Stone", value: @entity.stone }, { label: "Energy", value: @entity.movesLeft }, { label: "Result", value: @entity.result } ] @config.extraStats) }, { type: button, action: BUILD_CAMP_PRESS, label: "Build Camp", variant: primary } ] }
           addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
           overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
           children: [ { type: canvas, mode: "3d", camera: { mode: @config.cameraMode, zoom: @config.scale }, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, unitScale: @config.unitScale, backgroundColor: @config.bgColor, children: [
@@ -195,7 +227,7 @@ orbital SurvivalBoard3DOrbital {
         (set @entity.validMoves [])
         (set @entity.phase "observation")
 
-      BUILD_CAMP -> playing when (and (== @entity.result "none") (and (>= @entity.wood @config.campWood) (>= @entity.stone @config.campStone)))
+      BUILD_CAMP_PRESS -> playing when (and (== @entity.result "none") (and (>= @entity.wood @config.campWood) (>= @entity.stone @config.campStone)))
         (emit BUILD_CAMP { id: "board" })
 
       PLAY_AGAIN -> playing
@@ -209,7 +241,7 @@ orbital SurvivalBoard3DOrbital {
       renderTick every 100ms
         (render-ui main {
           type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: (array/concat [ { label: "Wood", value: @entity.wood }, { label: "Stone", value: @entity.stone }, { label: "Energy", value: @entity.movesLeft }, { label: "Result", value: @entity.result } ] @config.extraStats) }, { type: button, action: BUILD_CAMP, label: "Build Camp", variant: primary } ] }
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: (array/concat [ { label: "Wood", value: @entity.wood }, { label: "Stone", value: @entity.stone }, { label: "Energy", value: @entity.movesLeft }, { label: "Result", value: @entity.result } ] @config.extraStats) }, { type: button, action: BUILD_CAMP_PRESS, label: "Build Camp", variant: primary } ] }
           addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
           overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
           children: [ { type: canvas, mode: "3d", camera: { mode: @config.cameraMode, zoom: @config.scale }, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, unitScale: @config.unitScale, backgroundColor: @config.bgColor, children: [
@@ -265,6 +297,11 @@ orbital SurvivalBoard3DOrbital {
         id : string
       }
         @description "Clears the current selection"
+        @tier "domain"
+      BUILD_CAMP_PRESS -> external {
+        id : string
+      }
+        @description "Build Camp button pressed"
         @tier "domain"
       BUILD_CAMP -> external {
         id : string

@@ -1,0 +1,113 @@
+app std-slide-deck "1.0.0"
+"std-slide-deck — generic presentation atom. An ordered list of slide nodes (`config.slides`, any render tree or @trait) shown one at a time, with a previous/next arrow on either side, a dot strip and a k / n counter underneath, and keyboard stepping through the host's KEY router (`config.nextKeys` / `config.prevKeys`, captured per `config.keymap`). The cursor clamps at either end unless `loop` is on. Each visit mounts the slide fresh, so its own entry animations replay. Carries no content or visual style: a realization supplies the slides and restyles via `bodyContent`. The default body picks the slide inside a mapped-children lambda, which expands static slides only; a deck whose slides hold stateful traits (forms, live lists) overrides `bodyContent` with one `presence` per slide gated on `@entity.slideIndex`. Every move emits SLIDE_CHANGED for speaker notes, timers or analytics."
+;; @capabilities "slide deck, presentation, pitch deck, keynote-style slideshow, previous and next slide arrows, arrow-key slide navigation, jump to slide from dots, slide counter"
+;; @synonyms "slideshow, deck, presentation, slides, pitch"
+orbital SlideDeckOrbital {
+  entity SlideDeck [runtime] {
+    id : string!
+    slideIndex : number @description "Zero-based index of the slide currently shown." @synonyms "current slide, cursor, position" = 0
+  }
+
+  trait SlideDeckPresenter -> @rebindable SlideDeck [interaction, instance] {
+    initial: presenting
+
+    state presenting {
+      INIT -> presenting
+        (set @entity.slideIndex @config.startIndex)
+        (render-ui main @config.bodyContent)
+      GO_TO -> presenting
+        (set @entity.slideIndex ?index)
+        (emit SLIDE_CHANGED { index: @entity.slideIndex })
+        (render-ui main @config.bodyContent)
+    }
+
+    emits {
+      SLIDE_CHANGED -> external {
+        index : number!
+      }
+        @description "The deck moved to a new slide (zero-based index)."
+        @synonyms "slide shown, advanced, went back"
+        @tier "domain"
+    }
+
+    listens {
+      GO_TO {
+        index : number!
+      }
+        @description "Show a zero-based slide index. The arrows and dots send the already-bounded target; a remote or table of contents can send any index."
+        @synonyms "jump, seek, next slide, previous slide, select slide"
+        @tier "domain"
+    }
+
+    config {
+      slides : [trait] = []
+        @label "Slides"
+        @description "Ordered slide nodes; each entry is a render tree or a @trait reference and is shown one at a time."
+        @tier "domain"
+      startIndex : number = 0
+        @label "Start slide"
+        @description "Zero-based slide shown on first render; clamped to the deck."
+        @tier "presentation"
+      loop : boolean = false
+        @label "Loop"
+        @description "Wrap from the last slide to the first (and back) instead of stopping at either end."
+        @tier "presentation"
+      showArrows : boolean = true
+        @label "Show arrows"
+        @description "Previous/next buttons on the left and right of the slide."
+        @tier "presentation"
+      showProgress : boolean = true
+        @label "Show progress"
+        @description "Dot strip and k / n counter under the slide; dots jump to their slide."
+        @tier "presentation"
+      stageMinHeight : string = "70vh"
+        @label "Stage height"
+        @description "Minimum height of the slide stage (any CSS length, e.g. 70vh or 640px); the slide is centred vertically inside it so short and tall slides share one frame."
+        @tier "presentation"
+      prevIcon : icon = chevron-left
+        @label "Previous icon"
+        @tier "presentation"
+      nextIcon : icon = chevron-right
+        @label "Next icon"
+        @tier "presentation"
+      bodyContent : render-ui = {
+        type: stack
+        direction: vertical
+        gap: md
+        className: "w-full"
+        children: [{
+          type: stack
+          direction: horizontal
+          gap: md
+          align: center
+          children: [
+            (array/map [(array/len @config.slides)] (fn n (if @config.showArrows { type: button, variant: ghost, size: lg, icon: @config.prevIcon, action: GO_TO, actionPayload: { index: (if @config.loop (math/wrap (- @entity.slideIndex 1) 0 @n) (math/max 0 (- @entity.slideIndex 1))) }, disabled: (and (== @config.loop false) (<= @entity.slideIndex 0)) } null))),
+            { type: center, className: "flex-1 min-w-0", minHeight: @config.stageMinHeight, children: (array/map [@entity.slideIndex] (fn i { type: box, className: "w-full", children: [(array/nth @config.slides @i)] })) },
+            (array/map [(array/len @config.slides)] (fn n (if @config.showArrows { type: button, variant: ghost, size: lg, icon: @config.nextIcon, action: GO_TO, actionPayload: { index: (if @config.loop (math/wrap (+ @entity.slideIndex 1) 0 @n) (math/min (- @n 1) (+ @entity.slideIndex 1))) }, disabled: (and (== @config.loop false) (>= @entity.slideIndex (- @n 1))) } null)))
+          ]
+        }, (if @config.showProgress {
+          type: stack
+          direction: horizontal
+          gap: md
+          align: center
+          justify: center
+          children: (array/map [(array/len @config.slides)] (fn n {
+            type: stack
+            direction: horizontal
+            gap: md
+            align: center
+            children: [
+              { type: progress-dots, count: @n, currentIndex: @entity.slideIndex, onDotClick: GO_TO, size: sm },
+              { type: typography, variant: caption, color: muted, content: (str/concat "" (+ @entity.slideIndex 1) " / " @n) }
+            ]
+          }))
+        } null)]
+      }
+        @label "Body content tree"
+        @description "Render-ui tree for the deck. Default: slide centred between previous/next arrows, dot strip and counter below. A realization overrides this to restyle (full-bleed, bottom bar, no chrome) while keeping the same cursor, keys and emits."
+        @tier "internal"
+    }
+  }
+
+  page "/slide-deck" as SlideDeckPage -> SlideDeckPresenter
+}

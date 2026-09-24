@@ -17,6 +17,7 @@ export const LLM_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Generate text from an LLM. Returns the generated string.',
     hasSideEffects: true,
+    runsOn: 'any',
     returnType: 'string',
     params: [
       { name: 'prompt', type: 'string', description: 'Prompt text to send to the LLM' },
@@ -31,6 +32,7 @@ export const LLM_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Call the LLM with tool definitions. Returns the assistant response with optional tool calls and token usage.',
     hasSideEffects: true,
+    runsOn: 'any',
     returnType: 'LlmCallToolsResult',
     params: [
       { name: 'messages', type: { kind: 'array', of: 'LlmMessage' }, description: 'Conversation messages' },
@@ -45,6 +47,7 @@ export const LLM_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 1,
     description: 'Generate embeddings for an array of texts. Returns a 2D array of floats.',
     hasSideEffects: true,
+    runsOn: 'any',
     returnType: 'array',
     params: [
       { name: 'texts', type: { kind: 'array', of: 'string' }, description: 'Texts to embed' },
@@ -69,6 +72,7 @@ export const LLM_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: 'Switch the active LLM provider and optionally the model.',
     hasSideEffects: true,
+    runsOn: 'any',
     returnType: 'void',
     params: [
       { name: 'provider', type: 'string', description: 'Provider name (e.g. "deepseek", "openai")' },
@@ -83,6 +87,7 @@ export const LLM_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 1,
     description: 'Compact the context window. Returns before/after token counts.',
     hasSideEffects: true,
+    runsOn: 'any',
     returnType: 'object',
     params: [
       { name: 'strategy', type: { kind: 'union', of: [{ kind: 'literal', value: 'hybrid' }, { kind: 'literal', value: 'summarize' }, { kind: 'literal', value: 'truncate' }, { kind: 'literal', value: 'extract' }] }, description: 'Compaction strategy', optional: true },

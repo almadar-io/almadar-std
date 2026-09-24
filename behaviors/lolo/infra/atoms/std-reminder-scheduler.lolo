@@ -96,7 +96,7 @@ orbital ReminderSchedulerOrbital {
     }
 
     ticks {
-      scanCycle every "*/15 * * * *"
+      scanCycle every "*/15 * * * *" [background]
         (fetch @config.targetEntity {
           emit: { failure: ScanFailed, success: ScanRecordsLoaded }
           filter: (and ["=", (object/get @entity remindedAt), 0] (or (and ["=", @config.direction, "future"] [">", (time/parse (object/get @entity @config.dateField)), @now] ["<", ["-", (time/parse (object/get @entity @config.dateField)), @now], ["*", @config.offsetHours, 3600000]]) (and ["=", @config.direction, "past"] [">", ["-", @now, (time/parse (object/get @entity @config.dateField))], ["*", @config.offsetHours, 3600000]])))

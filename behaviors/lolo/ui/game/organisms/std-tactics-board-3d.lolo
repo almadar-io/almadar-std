@@ -164,14 +164,36 @@ orbital TacticsBoard3DOrbital {
         { id: "t-1-1", x: 1, y: 1, z: 0, terrain: "grass", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tactics-demo-2d/default/terrain/grass/grass.png", role: "tile", category: "terrain", animations: ["static"], style: "vector", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }
       ]
     }
+
+    listens {
+      MOVE { unitId : string, x : number, y : number }
+      ATTACK { targetId : string }
+      AI_TURN { turn : number }
+      SPAWN { id : string, x : number, y : number, team : string, health : number, maxHealth : number, unitType : string }
+      HEAL { team : string, amount : number }
+      PlayerIntent.AI_TURN -> AI_TURN
+      PlayerIntent.ATTACK -> ATTACK
+      PlayerIntent.MOVE -> MOVE
+    }
   }
 
   trait FxDecay = Particles.traits.FxParticles -> GameState {
     config { running: true }
+
+    listens {
+      BURST { particles : [Fx] }
+      RESTART { }
+      TacticsAuthority.BURST -> BURST
+    }
   }
 
   trait RoundLogic = Round.traits.RoundFlow -> GameState {
     config { running: true }
+
+    listens {
+      UNITS_CHANGED { playersAlive : number, enemiesAlive : number }
+      TacticsAuthority.UNITS_CHANGED -> UNITS_CHANGED
+    }
   }
 
   trait VolumetricArt = MeshArt.traits.MeshAssetArtCollector -> GameState { }

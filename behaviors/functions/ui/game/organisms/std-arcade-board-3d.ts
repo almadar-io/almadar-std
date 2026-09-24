@@ -25,6 +25,12 @@ const BEHAVIOR_PATH = 'std/behaviors/std-arcade-board-3d';
 const ALIAS = 'ArcadeBoard3d';
 
 /**
+ * Closed set of event keys this trait listens for —
+ * derived from the .orb's `listens[]` block.
+ */
+export type StdArcadeBoard3dListenKey = 'MOVE' | 'RESTART' | 'WANDER';
+
+/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
@@ -949,6 +955,32 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
           },
         },
         'linkedEntity': 'GameState',
+        'listens': [
+          {
+            'event': 'MOVE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ArcadeIntent',
+            },
+            'triggers': 'MOVE',
+          },
+          {
+            'event': 'RESTART',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ArcadeIntent',
+            },
+            'triggers': 'RESTART',
+          },
+          {
+            'event': 'WANDER',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ArcadeIntent',
+            },
+            'triggers': 'WANDER',
+          },
+        ],
         'name': 'HeroAuthority',
         'ref': ('Nav.traits.HeroNav' satisfies _StdArcadeBoard3dArcadeBoard3DFrameOrbitalUsesRef),
       }),
@@ -976,6 +1008,24 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
           },
         },
         'linkedEntity': 'GameState',
+        'listens': [
+          {
+            'event': 'PLAY_MACHINE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ArcadeIntent',
+            },
+            'triggers': 'PLAY_MACHINE',
+          },
+          {
+            'event': 'RESTART',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ArcadeIntent',
+            },
+            'triggers': 'RESTART',
+          },
+        ],
         'name': 'PlayEconomy',
         'ref': ('Play.traits.ArcadePlay' satisfies _StdArcadeBoard3dArcadeBoard3DFrameOrbitalUsesRef),
       }),
@@ -987,6 +1037,24 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
           },
         },
         'linkedEntity': 'GameState',
+        'listens': [
+          {
+            'event': 'RESTART',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ArcadeIntent',
+            },
+            'triggers': 'RESTART',
+          },
+          {
+            'event': 'BURST',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PlayEconomy',
+            },
+            'triggers': 'BURST',
+          },
+        ],
         'name': 'FxDecay',
         'ref': ('Particles.traits.FxParticles' satisfies _StdArcadeBoard3dArcadeBoard3DFrameOrbitalUsesRef),
       }),
@@ -1002,6 +1070,24 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
           },
         },
         'linkedEntity': 'GameState',
+        'listens': [
+          {
+            'event': 'RESTART',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ArcadeIntent',
+            },
+            'triggers': 'RESTART',
+          },
+          {
+            'event': 'SCORE_CHANGED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PlayEconomy',
+            },
+            'triggers': 'SCORE_CHANGED',
+          },
+        ],
         'name': 'RoundGate',
         'ref': ('Gate.traits.ArcadeFlow' satisfies _StdArcadeBoard3dArcadeBoard3DFrameOrbitalUsesRef),
       }),

@@ -25,6 +25,12 @@ const BEHAVIOR_PATH = 'std/behaviors/std-objective-board-3d';
 const ALIAS = 'ObjectiveBoard3d';
 
 /**
+ * Closed set of event keys this trait listens for —
+ * derived from the .orb's `listens[]` block.
+ */
+export type StdObjectiveBoard3dListenKey = 'MOVE' | 'RESTART' | 'WANDER';
+
+/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
@@ -1437,6 +1443,32 @@ export function stdObjectiveBoard3dObjectiveBoard3DOrbital(params: StdObjectiveB
           },
         },
         'linkedEntity': 'GameState',
+        'listens': [
+          {
+            'event': 'MOVE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'HeroIntent',
+            },
+            'triggers': 'MOVE',
+          },
+          {
+            'event': 'RESTART',
+            'source': {
+              'kind': 'trait',
+              'trait': 'HeroIntent',
+            },
+            'triggers': 'RESTART',
+          },
+          {
+            'event': 'WANDER',
+            'source': {
+              'kind': 'trait',
+              'trait': 'HeroIntent',
+            },
+            'triggers': 'WANDER',
+          },
+        ],
         'name': 'HeroAuthority',
         'ref': ('Nav.traits.HeroNav' satisfies _StdObjectiveBoard3dObjectiveBoard3DOrbitalUsesRef),
       }),
@@ -1460,6 +1492,24 @@ export function stdObjectiveBoard3dObjectiveBoard3DOrbital(params: StdObjectiveB
           },
         },
         'linkedEntity': 'GameState',
+        'listens': [
+          {
+            'event': 'HERO_STEPPED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'HeroAuthority',
+            },
+            'triggers': 'HERO_STEPPED',
+          },
+          {
+            'event': 'RESTART',
+            'source': {
+              'kind': 'trait',
+              'trait': 'HeroIntent',
+            },
+            'triggers': 'RESTART',
+          },
+        ],
         'name': 'Collector',
         'ref': ('Objective.traits.ObjectiveReach' satisfies _StdObjectiveBoard3dObjectiveBoard3DOrbitalUsesRef),
       }),
@@ -1471,6 +1521,24 @@ export function stdObjectiveBoard3dObjectiveBoard3DOrbital(params: StdObjectiveB
           },
         },
         'linkedEntity': 'GameState',
+        'listens': [
+          {
+            'event': 'BURST',
+            'source': {
+              'kind': 'trait',
+              'trait': 'Collector',
+            },
+            'triggers': 'BURST',
+          },
+          {
+            'event': 'RESTART',
+            'source': {
+              'kind': 'trait',
+              'trait': 'HeroIntent',
+            },
+            'triggers': 'RESTART',
+          },
+        ],
         'name': 'FxDecay',
         'ref': ('Particles.traits.FxParticles' satisfies _StdObjectiveBoard3dObjectiveBoard3DOrbitalUsesRef),
       }),
@@ -1482,6 +1550,24 @@ export function stdObjectiveBoard3dObjectiveBoard3DOrbital(params: StdObjectiveB
           },
         },
         'linkedEntity': 'GameState',
+        'listens': [
+          {
+            'event': 'PROGRESS',
+            'source': {
+              'kind': 'trait',
+              'trait': 'Collector',
+            },
+            'triggers': 'PROGRESS',
+          },
+          {
+            'event': 'RESTART',
+            'source': {
+              'kind': 'trait',
+              'trait': 'HeroIntent',
+            },
+            'triggers': 'RESTART',
+          },
+        ],
         'name': 'RoundGate',
         'ref': ('Gate.traits.ObjectiveFlow' satisfies _StdObjectiveBoard3dObjectiveBoard3DOrbitalUsesRef),
       }),

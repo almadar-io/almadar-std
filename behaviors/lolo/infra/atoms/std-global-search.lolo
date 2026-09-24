@@ -1,6 +1,6 @@
 app std-global-search "1.0.0"
-"std-global-search — cross-module federated search. Use when a user voices that one search box should query several modules at once (global search, search everything, unified search, cross-module search, federated search, search across records, omnisearch, one search box, aggregated results, grouped results). One SEARCH event fans out to every module key listed in the `modules` config (comma-separated, deterministic — no registry magic): the trait walks the parsed key list with an internal FAN_OUT_STEP sentinel and emits one scoped MODULE_SEARCH_REQUESTED { moduleKey, queryText, typeFilter, scopeJson } -> external per key, so modules respond in parallel rather than in sequence. Modules answer with SEARCH_RESULTS { moduleKey, resultsJson }; each answer appends a SearchResultGroup to the entity, so the merged view stays grouped by module. Client/person/date/type filters ride `scopeJson` — the atom never interprets them. Every query persists as a SearchQuery row (recent/saved searches) when `saveHistory` is on. The input is the mapped `search-input` type rendered inline with event renamed to SEARCH (the std-geosearch idiom); its native {searchTerm}/{value} payloads are bridged via str/default, so programmatic SEARCH { queryText, typeFilter, scopeJson } emitters and the UI box drive the same arm."
-type SearchResultGroup = { moduleKey : string, resultsJson : string, receivedAt : number }
+"std-global-search — cross-module federated search. Use when a user voices that one search box should query several modules at once (global search, search everything, unified search, cross-module search, federated search, search across records, omnisearch, one search box, aggregated results, grouped results). One SEARCH event fans out to every module key listed in the `modules` config (comma-separated, deterministic — no registry magic): the trait walks the parsed key list with an internal FAN_OUT_STEP sentinel and emits one scoped MODULE_SEARCH_REQUESTED { moduleKey, queryText, typeFilter, scopeJson } -> external per key, so modules respond in parallel rather than in sequence. Modules answer with SEARCH_RESULTS { moduleKey, resultsJson }; each answer appends a SearchResultGroup to the entity, so the merged view stays grouped by module. A module that answers twice is counted once, a keyless answer is filed under the answering module's name, and every group records which behavior answered it. Client/person/date/type filters ride `scopeJson` — the atom never interprets them. Every query persists as a SearchQuery row (recent/saved searches) when `saveHistory` is on. The input is the mapped `search-input` type rendered inline with event renamed to SEARCH (the std-geosearch idiom); its native {searchTerm}/{value} payloads are bridged via str/default, so programmatic SEARCH { queryText, typeFilter, scopeJson } emitters and the UI box drive the same arm."
+type SearchResultGroup = { moduleKey : string, resultsJson : string, receivedAt : number, answeredBy : string }
 orbital GlobalSearchOrbital {
     uses Typography from "std/behaviors/ui-typography"
     uses Spinner from "std/behaviors/ui-spinner"
@@ -133,14 +133,15 @@ orbital GlobalSearchOrbital {
           (set @entity.fanOutDone true))
         (when [">", (array/len @entity.pendingModules), 0]
           (emit FAN_OUT_STEP { remaining: (array/len @entity.pendingModules) }))
-      SEARCH_RESULTS -> searching
+      SEARCH_RESULTS -> searching when (not (array/some @entity.results (fn g (= @g.moduleKey (str/default ?moduleKey (str/default @event.source.orbital ""))))))
         (set @entity.respondedCount ["+", @entity.respondedCount, 1])
         (set @entity.results (array/append @entity.results {
-          moduleKey: ?moduleKey
+          moduleKey: (str/default ?moduleKey (str/default @event.source.orbital ""))
           receivedAt: @now
           resultsJson: ?resultsJson
+          answeredBy: (str/default @event.source.trait "")
         }))
-        (set @entity.resultsSummary (str/concat @entity.resultsSummary (str/concat ?moduleKey (str/concat ": " (str/concat ?resultsJson "\n")))))
+        (set @entity.resultsSummary (str/concat @entity.resultsSummary (str/concat (str/default ?moduleKey (str/default @event.source.orbital "")) (str/concat ": " (str/concat ?resultsJson "\n")))))
         (render-ui main {
           children: [{
             event: SEARCH
@@ -250,6 +251,7 @@ orbital GlobalSearchOrbital {
       FAN_OUT_STEP {
         remaining : number
       }
+      *.SEARCH_RESULTS -> SEARCH_RESULTS
     }
 
     config {

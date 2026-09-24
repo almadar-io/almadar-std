@@ -176,6 +176,12 @@ export interface RegistryEntry {
    */
   provenance?: FactoryProvenance;
   /**
+   * The `@almadar/ui` pattern this behavior wraps 1:1 — present only on
+   * lolo-ui generated `ui-*` pattern factories (their `;; @pattern` header
+   * tag). The designer's pattern palette lists exactly these.
+   */
+  pattern?: string;
+  /**
    * Per-trait exposure surfaces for the orbital's first (canonical) orbital
    * — the registry-record mirror of `FactorySignature.traits`. Stamped by
    * `tools/almadar-pattern-sync` (`behaviors` command) via `extractSignatures`

@@ -24,6 +24,7 @@ export {
   type OperatorMeta,
   type OperatorTypeRef,
   type OperatorEffectMeta,
+  type RunsOn,
   type BasicReturnType,
   type StdModule,
   type StdOperatorCategory,
@@ -61,6 +62,8 @@ export {
   assertOperatorArity,
   isStdGuardOperator,
   isStdEffectOperator,
+  getOperatorRunsOn,
+  getOperatorsRunningOn,
   // Extended functions for integration with core operators
   getOperatorMetaExtended,
   isKnownOperatorExtended,
