@@ -1,0 +1,177 @@
+app std-pricing "1.0.0"
+"std-pricing — side-by-side plan cards from a config list: plan name, price and billing period, a one-line summary, the included features, and a link action per plan; one plan can be highlighted as recommended with a badge. Optional heading and footnote. Clicking a plan's action follows its href and emits PLAN_SELECTED. Pick for pricing pages, subscription tiers and service packages."
+type PricingPlan = { name : string!, price : string!, period : string, summary : string, features : [string], actionLabel : string, actionHref : string, highlighted : boolean, badge : string }
+orbital PricingOrbital {
+
+  entity PricingView [runtime] {
+    id : string!
+  }
+
+  trait PricingRender -> @rebindable PricingView [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          type: box
+          paddingY: xl
+          bg: (if (== @config.surface muted) muted transparent)
+          fullWidth: true
+          children: [{
+            type: container
+            size: xl
+            maxWidth: xl
+            padding: lg
+            children: [{ type: stack, direction: vertical, gap: xl, children: [{
+              type: stack
+              direction: vertical
+              gap: sm
+              align: center
+              className: (if (== @config.heading "") (if (== @config.lede "") hidden "") "")
+              children: [{
+              type: typography
+              content: @config.heading
+              variant: h2
+              weight: bold
+              align: center
+              className: (if (== @config.heading "") hidden "tracking-tight text-balance")
+            }, {
+              type: typography
+              content: @config.lede
+              variant: large
+              color: muted
+              align: center
+              className: (if (== @config.lede "") hidden "max-w-2xl text-pretty")
+            }]
+            }, {
+              type: simple-grid
+              cols: (math/min (math/max (array/len @config.plans) 1) 4)
+              gap: lg
+              className: "items-stretch"
+              children: (array/map @config.plans (fn plan {
+                type: card
+                look: elevated
+                padding: lg
+                className: (if (object/get @plan highlighted false) "h-full ring-2 ring-primary" "h-full")
+                children: [{
+                  type: stack
+                  direction: vertical
+                  gap: md
+                  className: "h-full"
+                  children: [{
+                    type: stack
+                    direction: horizontal
+                    gap: sm
+                    align: center
+                    justify: between
+                    children: [{
+                      type: typography
+                      content: (object/get @plan name "")
+                      variant: h4
+                      weight: semibold
+                    }, {
+                      type: badge
+                      label: (object/get @plan badge "")
+                      variant: primary
+                    }]
+                  }, {
+                    type: stack
+                    direction: horizontal
+                    gap: xs
+                    align: baseline
+                    children: [{
+                      type: typography
+                      content: (object/get @plan price "")
+                      variant: h2
+                      weight: bold
+                      className: "tracking-tight"
+                    }, {
+                      type: typography
+                      content: (object/get @plan period "")
+                      variant: body
+                      color: muted
+                      className: (if (== (object/get @plan period "") "") hidden "")
+                    }]
+                  }, {
+                    type: typography
+                    content: (object/get @plan summary "")
+                    variant: body
+                    color: muted
+                    className: (if (== (object/get @plan summary "") "") hidden "text-pretty")
+                  }, {
+                    type: divider
+                  }, {
+                    type: markdown-content
+                    content: (if (== (array/len (object/get @plan features [])) 0) "" (str/concat "- " (str/join (object/get @plan features []) "\n- ")))
+                    className: "flex-1"
+                  }, {
+                    type: button
+                    label: (object/get @plan actionLabel "")
+                    href: (object/get @plan actionHref "")
+                    variant: (if (object/get @plan highlighted false) primary secondary)
+                    size: lg
+                    action: PLAN_CHOOSE
+                    actionPayload: { plan: (object/get @plan name ""), href: (object/get @plan actionHref "") }
+                    className: (if (== (object/get @plan actionLabel "") "") hidden "w-full")
+                  }]
+                }]
+              }))
+            }, {
+              type: typography
+              content: @config.footnote
+              variant: caption
+              color: muted
+              align: center
+              className: (if (== @config.footnote "") hidden "")
+            }] }]
+          }]
+        })
+      PLAN_CHOOSE -> idle
+        (emit PLAN_SELECTED { plan: ?plan, href: ?href })
+    }
+
+    emits {
+      PLAN_SELECTED -> external {
+        plan : string
+        href : string
+      }
+        @description "A plan's action was clicked; carries the plan name and its href."
+        @synonyms "choose plan, select tier, subscribe click"
+        @tier "domain"
+    }
+
+    listens {
+      PLAN_CHOOSE {
+        plan : string
+        href : string
+      }
+        @description "Plan action click."
+        @tier "internal"
+    }
+
+    config {
+      heading : string = ""
+        @label "Heading"
+        @description "Section heading above the plans; empty hides it"
+        @synonyms "title"
+        @tier "presentation"
+      lede : string = ""
+        @label "Supporting text"
+        @tier "presentation"
+      plans : [PricingPlan] = [{ name: "Starter", price: "$0", period: "/month", summary: "For trying things out.", features: ["1 project", "Community support"], actionLabel: "Start free", actionHref: "#" }, { name: "Team", price: "$29", period: "/month", summary: "For teams shipping every week.", features: ["Unlimited projects", "Shared workspace", "Priority support"], actionLabel: "Choose Team", actionHref: "#", highlighted: true, badge: "Popular" }]
+        @label "Plans"
+        @description "One card per plan: name, price, period, summary, features, action; `highlighted` marks the recommended plan"
+        @synonyms "tiers, packages, subscriptions, pricing table"
+        @tier "presentation"
+      footnote : string = ""
+        @label "Footnote"
+        @description "Small print under the plans, e.g. taxes or billing terms"
+        @tier "presentation"
+      surface : "plain" | "muted" = plain
+        @label "Surface"
+        @tier "presentation"
+    }
+  }
+
+  page "/pricing" as PricingPage -> PricingRender
+}

@@ -177,7 +177,7 @@ export interface StdNotifyOnEventConfig {
   severity?: string;
   /** Default: `[]` */
   suppressionList?: string[];
-  /** Default: `""` */
+  /** Default: `"You have a new notification"` */
   template?: string;
   /** Default: `""` */
   triggerStatus?: string;
@@ -742,7 +742,7 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
             'type': '[string]',
           },
           'template': {
-            'default': '',
+            'default': 'You have a new notification',
             'description': 'Text shown to the recipient; supports payload interpolation',
             'label': 'Message template',
             'synonyms': 'notification text, message body, alert text',
@@ -2190,8 +2190,17 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                             [
                               '>=',
                               [
-                                'time/hour',
-                                '@now',
+                                'str/padStart',
+                                [
+                                  'str/concat',
+                                  '',
+                                  [
+                                    'time/hour',
+                                    '@now',
+                                  ],
+                                ],
+                                2,
+                                '0',
                               ],
                               [
                                 'str/slice',
@@ -2210,8 +2219,17 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                             [
                               '<',
                               [
-                                'time/hour',
-                                '@now',
+                                'str/padStart',
+                                [
+                                  'str/concat',
+                                  '',
+                                  [
+                                    'time/hour',
+                                    '@now',
+                                  ],
+                                ],
+                                2,
+                                '0',
                               ],
                               [
                                 'str/slice',
@@ -2234,8 +2252,17 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                             [
                               '>=',
                               [
-                                'time/hour',
-                                '@now',
+                                'str/padStart',
+                                [
+                                  'str/concat',
+                                  '',
+                                  [
+                                    'time/hour',
+                                    '@now',
+                                  ],
+                                ],
+                                2,
+                                '0',
                               ],
                               [
                                 'str/slice',
@@ -2254,8 +2281,17 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
                             [
                               '<',
                               [
-                                'time/hour',
-                                '@now',
+                                'str/padStart',
+                                [
+                                  'str/concat',
+                                  '',
+                                  [
+                                    'time/hour',
+                                    '@now',
+                                  ],
+                                ],
+                                2,
+                                '0',
                               ],
                               [
                                 'str/slice',

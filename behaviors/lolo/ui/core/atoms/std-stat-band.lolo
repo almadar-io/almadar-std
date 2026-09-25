@@ -1,0 +1,83 @@
+app std-stat-band "1.0.0"
+"std-stat-band — a band of headline figures from a config list: each item a big value (a number or short text such as '99.9%', '3x' or 'Open source') over a short label, centered in a row that wraps on small screens, under an optional heading. Display only — for figures computed from data use std-stats. Pick for 'by the numbers' strips on landing, about and product pages."
+type StatBandItem = { value : string!, label : string! }
+orbital StatBandOrbital {
+
+  entity StatBandView [runtime] {
+    id : string!
+  }
+
+  trait StatBandRender -> @rebindable StatBandView [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          type: box
+          paddingY: xl
+          bg: (if (== @config.surface muted) muted transparent)
+          fullWidth: true
+          children: [{
+            type: container
+            size: xl
+            maxWidth: xl
+            padding: lg
+            children: [{
+              type: stack
+              direction: vertical
+              gap: lg
+              children: [{
+                type: typography
+                content: @config.heading
+                variant: h3
+                weight: bold
+                align: center
+                className: (if (== @config.heading "") hidden "tracking-tight")
+              }, {
+                type: simple-grid
+                cols: (math/min (math/max (array/len @config.items) 1) 4)
+                gap: lg
+                children: (array/map @config.items (fn item {
+                  type: stack
+                  direction: vertical
+                  gap: xs
+                  align: center
+                  children: [{
+                    type: typography
+                    content: (object/get @item value "")
+                    variant: h2
+                    weight: bold
+                    align: center
+                    className: "tracking-tight text-primary"
+                  }, {
+                    type: typography
+                    content: (object/get @item label "")
+                    variant: body
+                    color: muted
+                    align: center
+                  }]
+                }))
+              }]
+            }]
+          }]
+        })
+    }
+
+    config {
+      heading : string = ""
+        @label "Heading"
+        @description "Heading above the figures; empty hides it"
+        @tier "presentation"
+      items : [StatBandItem] = [{ value: "120+", label: "Building blocks" }, { value: "3", label: "Languages" }, { value: "99.9%", label: "Uptime" }]
+        @label "Figures"
+        @description "One entry per figure: value (number or short text) and label"
+        @synonyms "stats, numbers, metrics, kpis, by the numbers"
+        @tier "presentation"
+      surface : "plain" | "muted" = plain
+        @label "Surface"
+        @tier "presentation"
+    }
+  }
+
+  page "/stat-band" as StatBandPage -> StatBandRender
+}

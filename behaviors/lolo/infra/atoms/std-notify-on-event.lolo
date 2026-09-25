@@ -92,7 +92,7 @@ orbital NotifyOnEventOrbital {
           recipient: @entity.recipient
           recordedAt: @now
           severity: @entity.severity
-        }) (if (and (str/includes @entity.prefQuietHours "-") ["!=", (str/slice (array/first (str/split @entity.prefQuietHours "-")) 0 2), (str/slice (array/nth (str/split @entity.prefQuietHours "-") 1) 0 2)] (if ["<", (str/slice (array/first (str/split @entity.prefQuietHours "-")) 0 2), (str/slice (array/nth (str/split @entity.prefQuietHours "-") 1) 0 2)] (and [">=", (time/hour @now), (str/slice (array/first (str/split @entity.prefQuietHours "-")) 0 2)] ["<", (time/hour @now), (str/slice (array/nth (str/split @entity.prefQuietHours "-") 1) 0 2)]) (or [">=", (time/hour @now), (str/slice (array/first (str/split @entity.prefQuietHours "-")) 0 2)] ["<", (time/hour @now), (str/slice (array/nth (str/split @entity.prefQuietHours "-") 1) 0 2)]))) (persist create NotificationRecord {
+        }) (if (and (str/includes @entity.prefQuietHours "-") ["!=", (str/slice (array/first (str/split @entity.prefQuietHours "-")) 0 2), (str/slice (array/nth (str/split @entity.prefQuietHours "-") 1) 0 2)] (if ["<", (str/slice (array/first (str/split @entity.prefQuietHours "-")) 0 2), (str/slice (array/nth (str/split @entity.prefQuietHours "-") 1) 0 2)] (and [">=", (str/padStart (str/concat "" (time/hour @now)) 2 "0"), (str/slice (array/first (str/split @entity.prefQuietHours "-")) 0 2)] ["<", (str/padStart (str/concat "" (time/hour @now)) 2 "0"), (str/slice (array/nth (str/split @entity.prefQuietHours "-") 1) 0 2)]) (or [">=", (str/padStart (str/concat "" (time/hour @now)) 2 "0"), (str/slice (array/first (str/split @entity.prefQuietHours "-")) 0 2)] ["<", (str/padStart (str/concat "" (time/hour @now)) 2 "0"), (str/slice (array/nth (str/split @entity.prefQuietHours "-") 1) 0 2)]))) (persist create NotificationRecord {
           channel: @entity.channel
           dispatched: false
           error: "quiet-hours"
@@ -427,7 +427,7 @@ orbital NotifyOnEventOrbital {
         @description "Signing secret forwarded to the webhook service so the receiving endpoint can verify the payload. Ignored when `webhookUrl` is blank."
         @synonyms "signing secret, hmac secret, webhook signature, shared secret"
         @tier "internal"
-      template : string = ""
+      template : string = "You have a new notification"
         @label "Message template"
         @description "Text shown to the recipient; supports payload interpolation"
         @synonyms "notification text, message body, alert text"

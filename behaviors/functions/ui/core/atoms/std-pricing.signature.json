@@ -1,0 +1,206 @@
+[
+  {
+    "organism": "std-pricing",
+    "orbital": "PricingOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/core/atoms/std-pricing.ts",
+    "entities": [
+      {
+        "name": "PricingView",
+        "fields": [],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "PricingRender",
+        "emittedEvents": [
+          "PLAN_SELECTED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "PLAN_SELECTED",
+            "direction": "emit",
+            "description": "A plan's action was clicked; carries the plan name and its href.",
+            "synonyms": "choose plan, select tier, subscribe click",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "PLAN_CHOOSE",
+            "direction": "listen",
+            "description": "Plan action click.",
+            "tier": "internal"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "footnote",
+            "type": "string",
+            "default": "",
+            "label": "Footnote",
+            "description": "Small print under the plans, e.g. taxes or billing terms",
+            "tier": "presentation"
+          },
+          {
+            "key": "heading",
+            "type": "string",
+            "default": "",
+            "label": "Heading",
+            "description": "Section heading above the plans; empty hides it",
+            "synonyms": "title",
+            "tier": "presentation"
+          },
+          {
+            "key": "lede",
+            "type": "string",
+            "default": "",
+            "label": "Supporting text",
+            "tier": "presentation"
+          },
+          {
+            "key": "plans",
+            "type": "[PricingPlan]",
+            "default": [
+              {
+                "actionHref": "#",
+                "actionLabel": "Start free",
+                "features": [
+                  "1 project",
+                  "Community support"
+                ],
+                "name": "Starter",
+                "period": "/month",
+                "price": "$0",
+                "summary": "For trying things out."
+              },
+              {
+                "actionHref": "#",
+                "actionLabel": "Choose Team",
+                "badge": "Popular",
+                "features": [
+                  "Unlimited projects",
+                  "Shared workspace",
+                  "Priority support"
+                ],
+                "highlighted": true,
+                "name": "Team",
+                "period": "/month",
+                "price": "$29",
+                "summary": "For teams shipping every week."
+              }
+            ],
+            "label": "Plans",
+            "description": "One card per plan: name, price, period, summary, features, action; `highlighted` marks the recommended plan",
+            "synonyms": "tiers, packages, subscriptions, pricing table",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "actionHref": {
+                  "name": "actionHref",
+                  "required": false,
+                  "type": "string"
+                },
+                "actionLabel": {
+                  "name": "actionLabel",
+                  "required": false,
+                  "type": "string"
+                },
+                "badge": {
+                  "name": "badge",
+                  "required": false,
+                  "type": "string"
+                },
+                "features": {
+                  "name": "features",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "highlighted": {
+                  "name": "highlighted",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
+                "period": {
+                  "name": "period",
+                  "required": false,
+                  "type": "string"
+                },
+                "price": {
+                  "name": "price",
+                  "required": true,
+                  "type": "string"
+                },
+                "summary": {
+                  "name": "summary",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "surface",
+            "type": "string",
+            "default": "plain",
+            "label": "Surface",
+            "tier": "presentation",
+            "enumValues": [
+              "plain",
+              "muted"
+            ]
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "PricingView",
+        "transitionEvents": [
+          "INIT",
+          "PLAN_CHOOSE"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        },
+        "effectRow": [
+          {
+            "kind": "emit",
+            "resource": "PLAN_SELECTED"
+          },
+          {
+            "kind": "render-ui",
+            "resource": "main"
+          }
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "name": "PricingPage",
+        "defaultPath": "/pricing",
+        "primaryEntity": "PricingView"
+      }
+    ],
+    "emittedEvents": [
+      "PLAN_SELECTED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

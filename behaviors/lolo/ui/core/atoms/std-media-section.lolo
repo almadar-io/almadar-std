@@ -1,0 +1,154 @@
+app std-media-section "1.0.0"
+"std-media-section — content rows that pair copy with a screenshot or illustration: each row has an eyebrow, heading, body text, a short bullet list and an optional link action on one side and its media on the other, and consecutive rows alternate sides. A row without media sits alone at reading width. Stacks on small screens. Pick for 'how it works', product tours and feature-detail pages."
+type MediaRow = { eyebrow : string, heading : string!, body : string, bullets : [string], mediaSrc : string, mediaAlt : string, actionLabel : string, actionHref : string }
+orbital MediaSectionOrbital {
+  entity MediaSectionView [runtime] {
+    id : string!
+  }
+
+  trait MediaSectionRender -> @rebindable MediaSectionView [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          type: box
+          paddingY: xl
+          bg: (if (== @config.surface muted) muted transparent)
+          fullWidth: true
+          children: [{
+            type: container
+            size: xl
+            maxWidth: xl
+            padding: lg
+            children: [{
+              type: stack
+              direction: vertical
+              gap: "2xl"
+              children: (array/map @config.rows (fn row (if (== (object/get @row mediaSrc "") "") {
+                type: box
+                className: "mx-auto w-full max-w-3xl"
+                children: [{
+                  type: stack
+                  direction: vertical
+                  gap: md
+                  align: start
+                  children: [{
+                    type: badge
+                    label: (object/get @row eyebrow "")
+                    variant: primary
+                  }, {
+                    type: typography
+                    content: (object/get @row heading "")
+                    variant: h2
+                    weight: bold
+                  }, {
+                    type: typography
+                    content: (object/get @row body "")
+                    variant: large
+                    color: muted
+                    className: (if (== (object/get @row body "") "") hidden "")
+                  }, {
+                    type: markdown-content
+                    content: (if (== (array/len (object/get @row bullets [])) 0) "" (str/concat "- " (str/join (object/get @row bullets []) "\n- ")))
+                    className: (if (== (array/len (object/get @row bullets [])) 0) hidden "")
+                  }, {
+                    type: button
+                    label: (object/get @row actionLabel "")
+                    href: (object/get @row actionHref "")
+                    variant: secondary
+                    action: SECTION_ACTION
+                    actionPayload: { href: (object/get @row actionHref "") }
+                    className: (if (== (object/get @row actionLabel "") "") hidden "")
+                  }]
+                }]
+              } {
+                type: split
+                ratio: "1:1"
+                gap: xl
+                align: center
+                reverse: (== (math/mod (+ @index (if (== @config.firstMediaSide start) 1 0)) 2) 1)
+                children: [{
+                  type: stack
+                  direction: vertical
+                  gap: md
+                  align: start
+                  children: [{
+                    type: badge
+                    label: (object/get @row eyebrow "")
+                    variant: primary
+                  }, {
+                    type: typography
+                    content: (object/get @row heading "")
+                    variant: h2
+                    weight: bold
+                  }, {
+                    type: typography
+                    content: (object/get @row body "")
+                    variant: large
+                    color: muted
+                    className: (if (== (object/get @row body "") "") hidden "")
+                  }, {
+                    type: markdown-content
+                    content: (if (== (array/len (object/get @row bullets [])) 0) "" (str/concat "- " (str/join (object/get @row bullets []) "\n- ")))
+                    className: (if (== (array/len (object/get @row bullets [])) 0) hidden "")
+                  }, {
+                    type: button
+                    label: (object/get @row actionLabel "")
+                    href: (object/get @row actionHref "")
+                    variant: secondary
+                    action: SECTION_ACTION
+                    actionPayload: { href: (object/get @row actionHref "") }
+                    className: (if (== (object/get @row actionLabel "") "") hidden "")
+                  }]
+                }, {
+                  type: image
+                  src: (object/get @row mediaSrc "")
+                  alt: (object/get @row mediaAlt "")
+                  rounded: xl
+                  bordered: true
+                }]
+              })))
+            }]
+          }]
+        })
+      SECTION_ACTION -> idle
+        (emit SECTION_ACTION_CLICKED { href: ?href })
+    }
+
+    emits {
+      SECTION_ACTION_CLICKED -> external {
+        href : string
+      }
+        @description "A row's link action was clicked; carries its href."
+        @tier "domain"
+    }
+
+    listens {
+      SECTION_ACTION {
+        href : string
+      }
+        @description "Row link action click."
+        @tier "internal"
+    }
+
+    config {
+      rows : [MediaRow] = [{ heading: "Everything in one place", body: "Say what you want and see it take shape.", bullets: ["Fast", "Verified", "Yours"] }]
+        @label "Rows"
+        @description "One row per entry: eyebrow, heading, body, bullets, media (mediaSrc + mediaAlt) and an optional link action (actionLabel + actionHref)"
+        @synonyms "feature rows, product tour, split sections, alternating sections, how it works"
+        @tier "presentation"
+      firstMediaSide : "start" | "end" = end
+        @label "First row media side"
+        @description "Which side the first row's media sits on; later rows alternate"
+        @synonyms "image position, image left, image right, flip"
+        @tier "presentation"
+      surface : "plain" | "muted" = plain
+        @label "Surface"
+        @description "Background behind the rows"
+        @tier "presentation"
+    }
+  }
+
+  page "/media-section" as MediaSectionPage -> MediaSectionRender
+}

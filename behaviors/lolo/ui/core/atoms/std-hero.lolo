@@ -1,0 +1,247 @@
+app std-hero "1.0.0"
+"std-hero — the headline block at the top of a page, or a call-to-action banner further down. Optional eyebrow badge, headline, supporting text, up to two link actions, an optional copyable command, and optional media below or beside the copy. `look: banner` turns it into a contained call-to-action card. Links follow `href` (in-app path, #anchor, or absolute URL); each click also emits CTA_PRIMARY / CTA_SECONDARY with the href. Pick for landing, product, pricing and campaign pages."
+orbital HeroOrbital {
+  entity HeroView [runtime] {
+    id : string!
+  }
+
+  trait HeroRender -> @rebindable HeroView [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (if (== @config.mediaPosition side)
+          (render-ui main @config.sideContent)
+          (render-ui main @config.stackedContent))
+      HERO_PRIMARY -> idle
+        (emit CTA_PRIMARY { href: ?href })
+      HERO_SECONDARY -> idle
+        (emit CTA_SECONDARY { href: ?href })
+    }
+
+    emits {
+      CTA_PRIMARY -> external {
+        href : string
+      }
+        @description "The primary action was clicked; carries its href."
+        @synonyms "primary cta, main button, get started click"
+        @tier "domain"
+      CTA_SECONDARY -> external {
+        href : string
+      }
+        @description "The secondary action was clicked; carries its href."
+        @synonyms "secondary cta, second button, learn more click"
+        @tier "domain"
+    }
+
+    listens {
+      HERO_PRIMARY {
+        href : string
+      }
+        @description "Primary action button click."
+        @tier "internal"
+      HERO_SECONDARY {
+        href : string
+      }
+        @description "Secondary action button click."
+        @tier "internal"
+    }
+
+    config {
+      look : "hero" | "banner" = hero
+        @label "Look"
+        @description "hero = full-width page opener with an h1; banner = contained call-to-action card with an h2"
+        @synonyms "cta banner, call to action, callout, page header, masthead"
+        @tier "presentation"
+      eyebrow : string = ""
+        @label "Eyebrow"
+        @description "Small badge above the headline; empty hides it"
+        @synonyms "tag, kicker, label above title"
+        @tier "presentation"
+      headline : string = "Build what you mean"
+        @label "Headline"
+        @description "Main headline"
+        @synonyms "title, heading"
+        @tier "presentation"
+      lede : string = ""
+        @label "Supporting text"
+        @description "One or two sentences under the headline; empty hides it"
+        @synonyms "subtitle, subheading, description, tagline"
+        @tier "presentation"
+      alignment : "center" | "start" = center
+        @label "Alignment"
+        @description "Center the copy, or align it to the start edge"
+        @tier "presentation"
+      primaryLabel : string = "Get started"
+        @label "Primary action label"
+        @description "Empty hides the primary action"
+        @tier "presentation"
+      primaryHref : string = "#"
+        @label "Primary action link"
+        @description "In-app path, #anchor, or absolute URL"
+        @tier "presentation"
+      secondaryLabel : string = ""
+        @label "Secondary action label"
+        @description "Empty hides the secondary action"
+        @tier "presentation"
+      secondaryHref : string = ""
+        @label "Secondary action link"
+        @description "In-app path, #anchor, or absolute URL"
+        @tier "presentation"
+      command : string = ""
+        @label "Command"
+        @description "A shell command shown in a copyable code box under the actions, e.g. an install one-liner; empty hides it"
+        @synonyms "install command, cli, terminal snippet"
+        @tier "presentation"
+      mediaSrc : string = ""
+        @label "Media image"
+        @description "Screenshot or illustration URL; empty hides it"
+        @synonyms "hero image, screenshot, picture"
+        @tier "presentation"
+      mediaAlt : string = ""
+        @label "Media alt text"
+        @tier "presentation"
+      mediaPosition : "below" | "side" = below
+        @label "Media position"
+        @description "Below the copy, or beside it on wide screens"
+        @tier "presentation"
+      surface : "plain" | "muted" = plain
+        @label "Surface"
+        @description "Background behind the block"
+        @tier "presentation"
+      copyContent : render-ui = {
+        type: stack
+        direction: vertical
+        gap: lg
+        align: (if (== @config.alignment center) center start)
+        children: [{
+          type: badge
+          label: @config.eyebrow
+          variant: primary
+          size: md
+        }, {
+          type: typography
+          content: @config.headline
+          variant: (if (== @config.look banner) h2 h1)
+          weight: bold
+          align: (if (== @config.alignment center) center left)
+          className: "tracking-tight text-balance"
+        }, {
+          type: typography
+          content: @config.lede
+          variant: large
+          color: muted
+          align: (if (== @config.alignment center) center left)
+          className: (if (== @config.lede "") hidden "max-w-2xl text-pretty")
+        }, {
+          type: stack
+          direction: horizontal
+          gap: md
+          wrap: true
+          justify: (if (== @config.alignment center) center start)
+          className: (if (== @config.primaryLabel "") (if (== @config.secondaryLabel "") hidden "pt-2") "pt-2")
+          children: [{
+            type: button
+            label: @config.primaryLabel
+            href: @config.primaryHref
+            variant: primary
+            size: lg
+            action: HERO_PRIMARY
+            actionPayload: { href: @config.primaryHref }
+            className: (if (== @config.primaryLabel "") hidden "")
+          }, {
+            type: button
+            label: @config.secondaryLabel
+            href: @config.secondaryHref
+            variant: secondary
+            size: lg
+            action: HERO_SECONDARY
+            actionPayload: { href: @config.secondaryHref }
+            className: (if (== @config.secondaryLabel "") hidden "")
+          }]
+        }, {
+          type: box
+          fullWidth: true
+          className: (if (== @config.command "") hidden "max-w-xl")
+          children: [{
+            type: code-block
+            code: @config.command
+            language: bash
+            showLanguageBadge: false
+            showCopyButton: true
+          }]
+        }]
+      }
+        @label "Copy block"
+        @tier "internal"
+      mediaContent : render-ui = {
+        type: image
+        src: @config.mediaSrc
+        alt: @config.mediaAlt
+        rounded: xl
+        bordered: true
+        loading: eager
+      }
+        @label "Media block"
+        @tier "internal"
+      stackedContent : render-ui = {
+        type: box
+        paddingY: (if (== @config.look banner) xl "2xl")
+        bg: (if (== @config.surface muted) muted transparent)
+        fullWidth: true
+        children: [{
+          type: container
+          size: xl
+          maxWidth: xl
+          padding: lg
+          children: [{
+            type: box
+            padding: (if (== @config.look banner) xl none)
+            rounded: (if (== @config.look banner) "2xl" none)
+            border: (== @config.look banner)
+            bg: (if (== @config.look banner) muted transparent)
+            children: [{
+              type: stack
+              direction: vertical
+              gap: "2xl"
+              align: (if (== @config.alignment center) center stretch)
+              children: [@config.copyContent, @config.mediaContent]
+            }]
+          }]
+        }]
+      }
+        @label "Stacked body"
+        @tier "internal"
+      sideContent : render-ui = {
+        type: box
+        paddingY: (if (== @config.look banner) xl "2xl")
+        bg: (if (== @config.surface muted) muted transparent)
+        fullWidth: true
+        children: [{
+          type: container
+          size: xl
+          maxWidth: xl
+          padding: lg
+          children: [{
+            type: box
+            padding: (if (== @config.look banner) xl none)
+            rounded: (if (== @config.look banner) "2xl" none)
+            border: (== @config.look banner)
+            bg: (if (== @config.look banner) muted transparent)
+            children: [{
+              type: split
+              ratio: "1:1"
+              gap: xl
+              align: center
+              children: [@config.copyContent, @config.mediaContent]
+            }]
+          }]
+        }]
+      }
+        @label "Side-by-side body"
+        @tier "internal"
+    }
+  }
+
+  page "/hero" as HeroPage -> HeroRender
+}

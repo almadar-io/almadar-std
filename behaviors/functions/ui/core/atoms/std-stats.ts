@@ -47,7 +47,7 @@ export interface StdStatsConfig {
   kpiTilesBodyContent?: unknown;
   /** Default: `[{"aggregation":"count","format":"number","icon":"list","label":"Total Items","sparklineData":[2,4,3,6,5,8,7],"variant":"primary"},{"aggregation":"count","format":"number","icon":"check-circle","label":"Active","sparklineData":[1,3,2,4,6,5,7],"variant":"success"},{"aggregation":"avg","field":"value","format":"number","icon":"trending-up","label":"Avg Value","sparklineData":[5,4,6,3,5,7,6],"variant":"info"}]` */
   metrics?: EntityRow[];
-  /** Default: `{"children":[{"className":"w-full","entity":"@entity.cards","fields":[],"gap":"md","minCardWidth":260,"renderItem":["fn","card",{"children":[{"align":"center","children":[{"color":"muted","name":"@card.icon","size":"xs","type":"icon"},{"className":"uppercase tracking-wide truncate","color":"muted","content":"@card.label","type":"typography","variant":"overline","weight":"semibold"}],"direction":"horizontal","gap":"xs","type":"stack"},{"className":"w-full","color":"auto","data":"@card.sparklineData","fill":true,"height":64,"strokeWidth":2,"type":"sparkline"},{"align":"baseline","children":[{"align":"baseline","children":[{"color":"muted","content":"@card.prefix","type":"typography","variant":"caption"},{"className":"tabular-nums","content":"@card.value","type":"typography","variant":"h3","weight":"semibold"},{"color":"muted","content":"@card.suffix","type":"typography","variant":"caption"}],"direction":"horizontal","gap":"xs","type":"stack"},{"showValue":true,"size":"sm","type":"trend-indicator","value":"@card.trend"}],"direction":"horizontal","gap":"sm","justify":"between","type":"stack"}],"className":"rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] p-card-md shadow-elevation-sm hover:shadow-elevation-md transition-shadow min-h-[180px]","direction":"vertical","gap":"sm","type":"stack"}],"type":"data-grid"}],"data-theme":"@config.theme","type":"box"}` */
+  /** Default: `{"children":[{"className":"w-full","entity":"@entity.cards","fields":[],"gap":"md","minCardWidth":260,"renderItem":["fn","card",{"children":[{"align":"center","children":[{"color":"muted","name":"@card.icon","size":"xs","type":"icon"},{"className":"uppercase tracking-wide truncate","color":"muted","content":"@card.label","type":"typography","variant":"overline","weight":"semibold"}],"direction":"horizontal","gap":"xs","type":"stack"},{"className":"w-full","color":"auto","data":"@card.sparklineData","fill":true,"height":64,"strokeWidth":2,"type":"sparkline"},{"align":"baseline","children":[{"align":"baseline","children":[{"color":"muted","content":"@card.prefix","type":"typography","variant":"caption"},{"className":"text-2xl font-semibold tabular-nums","format":"@card.format","type":"animated-counter","value":"@card.value"},{"color":"muted","content":"@card.suffix","type":"typography","variant":"caption"}],"direction":"horizontal","gap":"xs","type":"stack"},{"showValue":true,"size":"sm","type":"trend-indicator","value":"@card.trend"}],"direction":"horizontal","gap":"sm","justify":"between","type":"stack"}],"className":"rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] p-card-md shadow-elevation-sm hover:shadow-elevation-md transition-shadow min-h-[180px]","direction":"vertical","gap":"sm","type":"stack"}],"type":"data-grid"}],"data-theme":"@config.theme","type":"box"}` */
   sparklineRowBodyContent?: unknown;
   /** Default: `"elevated"` */
   statLook?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
@@ -800,11 +800,10 @@ export function stdStatsStatsItemOrbital(params: StdStatsStatsItemOrbitalParams 
                                   'variant': 'caption',
                                 },
                                 {
-                                  'className': 'tabular-nums',
-                                  'content': '@card.value',
-                                  'type': 'typography',
-                                  'variant': 'h3',
-                                  'weight': 'semibold',
+                                  'className': 'text-2xl font-semibold tabular-nums',
+                                  'format': '@card.format',
+                                  'type': 'animated-counter',
+                                  'value': '@card.value',
                                 },
                                 {
                                   'color': 'muted',

@@ -540,36 +540,6 @@ import {
   isStdWorldmapBoard2dWorldMapBoard2DOrbitalParams,
 } from './ui/game/organisms/std-worldmap-board-2d.js';
 import {
-  stdUiBookChapterViewBookChapterViewOrbital,
-  StdUiBookChapterViewBookChapterViewOrbitalManifest,
-  isStdUiBookChapterViewBookChapterViewOrbitalParams,
-} from './ui/marketing/organisms/ui-book-chapter-view.js';
-import {
-  stdUiBookCoverPageBookCoverPageOrbital,
-  StdUiBookCoverPageBookCoverPageOrbitalManifest,
-  isStdUiBookCoverPageBookCoverPageOrbitalParams,
-} from './ui/marketing/organisms/ui-book-cover-page.js';
-import {
-  stdUiBookNavBarBookNavBarOrbital,
-  StdUiBookNavBarBookNavBarOrbitalManifest,
-  isStdUiBookNavBarBookNavBarOrbitalParams,
-} from './ui/marketing/organisms/ui-book-nav-bar.js';
-import {
-  stdUiBookTableOfContentsBookTableOfContentsOrbital,
-  StdUiBookTableOfContentsBookTableOfContentsOrbitalManifest,
-  isStdUiBookTableOfContentsBookTableOfContentsOrbitalParams,
-} from './ui/marketing/organisms/ui-book-table-of-contents.js';
-import {
-  stdUiBookViewerBookViewerOrbital,
-  StdUiBookViewerBookViewerOrbitalManifest,
-  isStdUiBookViewerBookViewerOrbitalParams,
-} from './ui/marketing/organisms/ui-book-viewer.js';
-import {
-  stdUiCaseStudyOrganismCaseStudyOrganismOrbital,
-  StdUiCaseStudyOrganismCaseStudyOrganismOrbitalManifest,
-  isStdUiCaseStudyOrganismCaseStudyOrganismOrbitalParams,
-} from './ui/marketing/organisms/ui-case-study-organism.js';
-import {
   stdUiChatBarChatBarOrbital,
   StdUiChatBarChatBarOrbitalManifest,
   isStdUiChatBarChatBarOrbitalParams,
@@ -615,11 +585,6 @@ import {
   isStdUiEntityTableEntityTableOrbitalParams,
 } from './ui/core/organisms/ui-entity-table.js';
 import {
-  stdUiFeatureGridOrganismFeatureGridOrganismOrbital,
-  StdUiFeatureGridOrganismFeatureGridOrganismOrbitalManifest,
-  isStdUiFeatureGridOrganismFeatureGridOrganismOrbitalParams,
-} from './ui/marketing/organisms/ui-feature-grid-organism.js';
-import {
   stdUiFormFormOrbital,
   StdUiFormFormOrbitalManifest,
   isStdUiFormFormOrbitalParams,
@@ -629,11 +594,6 @@ import {
   StdUiFormSectionFormSectionOrbitalManifest,
   isStdUiFormSectionFormSectionOrbitalParams,
 } from './ui/core/organisms/ui-form-section.js';
-import {
-  stdUiHeroOrganismHeroOrganismOrbital,
-  StdUiHeroOrganismHeroOrganismOrbitalManifest,
-  isStdUiHeroOrganismHeroOrganismOrbitalParams,
-} from './ui/marketing/organisms/ui-hero-organism.js';
 import {
   stdUiMasterDetailMasterDetailOrbital,
   StdUiMasterDetailMasterDetailOrbitalManifest,
@@ -655,11 +615,6 @@ import {
   isStdUiModalSlotModalSlotOrbitalParams,
 } from './ui/core/organisms/ui-modal-slot.js';
 import {
-  stdUiPricingOrganismPricingOrganismOrbital,
-  StdUiPricingOrganismPricingOrganismOrbitalManifest,
-  isStdUiPricingOrganismPricingOrganismOrbitalParams,
-} from './ui/marketing/organisms/ui-pricing-organism.js';
-import {
   stdUiRuntimeDebuggerRuntimeDebuggerOrbital,
   StdUiRuntimeDebuggerRuntimeDebuggerOrbitalManifest,
   isStdUiRuntimeDebuggerRuntimeDebuggerOrbitalParams,
@@ -669,11 +624,6 @@ import {
   StdUiSegmentRendererSegmentRendererOrbitalManifest,
   isStdUiSegmentRendererSegmentRendererOrbitalParams,
 } from './ui/core/organisms/ui-segment-renderer.js';
-import {
-  stdUiShowcaseOrganismShowcaseOrganismOrbital,
-  StdUiShowcaseOrganismShowcaseOrganismOrbitalManifest,
-  isStdUiShowcaseOrganismShowcaseOrganismOrbitalParams,
-} from './ui/marketing/organisms/ui-showcase-organism.js';
 import {
   stdUiSplitPaneSplitPaneOrbital,
   StdUiSplitPaneSplitPaneOrbitalManifest,
@@ -690,16 +640,6 @@ import {
   isStdUiStateMachineViewStateMachineViewOrbitalParams,
 } from './ui/core/organisms/ui-state-machine-view.js';
 import {
-  stdUiStatsOrganismStatsOrganismOrbital,
-  StdUiStatsOrganismStatsOrganismOrbitalManifest,
-  isStdUiStatsOrganismStatsOrganismOrbitalParams,
-} from './ui/marketing/organisms/ui-stats-organism.js';
-import {
-  stdUiStepFlowOrganismStepFlowOrganismOrbital,
-  StdUiStepFlowOrganismStepFlowOrganismOrbitalManifest,
-  isStdUiStepFlowOrganismStepFlowOrganismOrbitalParams,
-} from './ui/marketing/organisms/ui-step-flow-organism.js';
-import {
   stdUiSubagentTracePanelSubagentTracePanelOrbital,
   StdUiSubagentTracePanelSubagentTracePanelOrbitalManifest,
   isStdUiSubagentTracePanelSubagentTracePanelOrbitalParams,
@@ -709,11 +649,6 @@ import {
   StdUiTabbedContainerTabbedContainerOrbitalManifest,
   isStdUiTabbedContainerTabbedContainerOrbitalParams,
 } from './ui/core/organisms/ui-tabbed-container.js';
-import {
-  stdUiTeamOrganismTeamOrganismOrbital,
-  StdUiTeamOrganismTeamOrganismOrbitalManifest,
-  isStdUiTeamOrganismTeamOrganismOrbitalParams,
-} from './ui/marketing/organisms/ui-team-organism.js';
 import {
   stdUiTimelineTimelineOrbital,
   StdUiTimelineTimelineOrbitalManifest,
@@ -1683,60 +1618,6 @@ REGISTRY_MUT.set('std-worldmap-board-2d::WorldMapBoard2DOrbital', {
   },
   manifest: StdWorldmapBoard2dWorldMapBoard2DOrbitalManifest,
 });
-REGISTRY_MUT.set('ui-book-chapter-view::BookChapterViewOrbital', {
-  factory: (p: object): OrbitalDefinition => {
-    if (!isStdUiBookChapterViewBookChapterViewOrbitalParams(p)) {
-      throw new TypeError('Invalid params for ui-book-chapter-view::BookChapterViewOrbital');
-    }
-    return stdUiBookChapterViewBookChapterViewOrbital(p);
-  },
-  manifest: StdUiBookChapterViewBookChapterViewOrbitalManifest,
-});
-REGISTRY_MUT.set('ui-book-cover-page::BookCoverPageOrbital', {
-  factory: (p: object): OrbitalDefinition => {
-    if (!isStdUiBookCoverPageBookCoverPageOrbitalParams(p)) {
-      throw new TypeError('Invalid params for ui-book-cover-page::BookCoverPageOrbital');
-    }
-    return stdUiBookCoverPageBookCoverPageOrbital(p);
-  },
-  manifest: StdUiBookCoverPageBookCoverPageOrbitalManifest,
-});
-REGISTRY_MUT.set('ui-book-nav-bar::BookNavBarOrbital', {
-  factory: (p: object): OrbitalDefinition => {
-    if (!isStdUiBookNavBarBookNavBarOrbitalParams(p)) {
-      throw new TypeError('Invalid params for ui-book-nav-bar::BookNavBarOrbital');
-    }
-    return stdUiBookNavBarBookNavBarOrbital(p);
-  },
-  manifest: StdUiBookNavBarBookNavBarOrbitalManifest,
-});
-REGISTRY_MUT.set('ui-book-table-of-contents::BookTableOfContentsOrbital', {
-  factory: (p: object): OrbitalDefinition => {
-    if (!isStdUiBookTableOfContentsBookTableOfContentsOrbitalParams(p)) {
-      throw new TypeError('Invalid params for ui-book-table-of-contents::BookTableOfContentsOrbital');
-    }
-    return stdUiBookTableOfContentsBookTableOfContentsOrbital(p);
-  },
-  manifest: StdUiBookTableOfContentsBookTableOfContentsOrbitalManifest,
-});
-REGISTRY_MUT.set('ui-book-viewer::BookViewerOrbital', {
-  factory: (p: object): OrbitalDefinition => {
-    if (!isStdUiBookViewerBookViewerOrbitalParams(p)) {
-      throw new TypeError('Invalid params for ui-book-viewer::BookViewerOrbital');
-    }
-    return stdUiBookViewerBookViewerOrbital(p);
-  },
-  manifest: StdUiBookViewerBookViewerOrbitalManifest,
-});
-REGISTRY_MUT.set('ui-case-study-organism::CaseStudyOrganismOrbital', {
-  factory: (p: object): OrbitalDefinition => {
-    if (!isStdUiCaseStudyOrganismCaseStudyOrganismOrbitalParams(p)) {
-      throw new TypeError('Invalid params for ui-case-study-organism::CaseStudyOrganismOrbital');
-    }
-    return stdUiCaseStudyOrganismCaseStudyOrganismOrbital(p);
-  },
-  manifest: StdUiCaseStudyOrganismCaseStudyOrganismOrbitalManifest,
-});
 REGISTRY_MUT.set('ui-chat-bar::ChatBarOrbital', {
   factory: (p: object): OrbitalDefinition => {
     if (!isStdUiChatBarChatBarOrbitalParams(p)) {
@@ -1818,15 +1699,6 @@ REGISTRY_MUT.set('ui-entity-table::EntityTableOrbital', {
   },
   manifest: StdUiEntityTableEntityTableOrbitalManifest,
 });
-REGISTRY_MUT.set('ui-feature-grid-organism::FeatureGridOrganismOrbital', {
-  factory: (p: object): OrbitalDefinition => {
-    if (!isStdUiFeatureGridOrganismFeatureGridOrganismOrbitalParams(p)) {
-      throw new TypeError('Invalid params for ui-feature-grid-organism::FeatureGridOrganismOrbital');
-    }
-    return stdUiFeatureGridOrganismFeatureGridOrganismOrbital(p);
-  },
-  manifest: StdUiFeatureGridOrganismFeatureGridOrganismOrbitalManifest,
-});
 REGISTRY_MUT.set('ui-form::FormOrbital', {
   factory: (p: object): OrbitalDefinition => {
     if (!isStdUiFormFormOrbitalParams(p)) {
@@ -1844,15 +1716,6 @@ REGISTRY_MUT.set('ui-form-section::FormSectionOrbital', {
     return stdUiFormSectionFormSectionOrbital(p);
   },
   manifest: StdUiFormSectionFormSectionOrbitalManifest,
-});
-REGISTRY_MUT.set('ui-hero-organism::HeroOrganismOrbital', {
-  factory: (p: object): OrbitalDefinition => {
-    if (!isStdUiHeroOrganismHeroOrganismOrbitalParams(p)) {
-      throw new TypeError('Invalid params for ui-hero-organism::HeroOrganismOrbital');
-    }
-    return stdUiHeroOrganismHeroOrganismOrbital(p);
-  },
-  manifest: StdUiHeroOrganismHeroOrganismOrbitalManifest,
 });
 REGISTRY_MUT.set('ui-master-detail::MasterDetailOrbital', {
   factory: (p: object): OrbitalDefinition => {
@@ -1890,15 +1753,6 @@ REGISTRY_MUT.set('ui-modal-slot::ModalSlotOrbital', {
   },
   manifest: StdUiModalSlotModalSlotOrbitalManifest,
 });
-REGISTRY_MUT.set('ui-pricing-organism::PricingOrganismOrbital', {
-  factory: (p: object): OrbitalDefinition => {
-    if (!isStdUiPricingOrganismPricingOrganismOrbitalParams(p)) {
-      throw new TypeError('Invalid params for ui-pricing-organism::PricingOrganismOrbital');
-    }
-    return stdUiPricingOrganismPricingOrganismOrbital(p);
-  },
-  manifest: StdUiPricingOrganismPricingOrganismOrbitalManifest,
-});
 REGISTRY_MUT.set('ui-runtime-debugger::RuntimeDebuggerOrbital', {
   factory: (p: object): OrbitalDefinition => {
     if (!isStdUiRuntimeDebuggerRuntimeDebuggerOrbitalParams(p)) {
@@ -1916,15 +1770,6 @@ REGISTRY_MUT.set('ui-segment-renderer::SegmentRendererOrbital', {
     return stdUiSegmentRendererSegmentRendererOrbital(p);
   },
   manifest: StdUiSegmentRendererSegmentRendererOrbitalManifest,
-});
-REGISTRY_MUT.set('ui-showcase-organism::ShowcaseOrganismOrbital', {
-  factory: (p: object): OrbitalDefinition => {
-    if (!isStdUiShowcaseOrganismShowcaseOrganismOrbitalParams(p)) {
-      throw new TypeError('Invalid params for ui-showcase-organism::ShowcaseOrganismOrbital');
-    }
-    return stdUiShowcaseOrganismShowcaseOrganismOrbital(p);
-  },
-  manifest: StdUiShowcaseOrganismShowcaseOrganismOrbitalManifest,
 });
 REGISTRY_MUT.set('ui-split-pane::SplitPaneOrbital', {
   factory: (p: object): OrbitalDefinition => {
@@ -1953,24 +1798,6 @@ REGISTRY_MUT.set('ui-state-machine-view::StateMachineViewOrbital', {
   },
   manifest: StdUiStateMachineViewStateMachineViewOrbitalManifest,
 });
-REGISTRY_MUT.set('ui-stats-organism::StatsOrganismOrbital', {
-  factory: (p: object): OrbitalDefinition => {
-    if (!isStdUiStatsOrganismStatsOrganismOrbitalParams(p)) {
-      throw new TypeError('Invalid params for ui-stats-organism::StatsOrganismOrbital');
-    }
-    return stdUiStatsOrganismStatsOrganismOrbital(p);
-  },
-  manifest: StdUiStatsOrganismStatsOrganismOrbitalManifest,
-});
-REGISTRY_MUT.set('ui-step-flow-organism::StepFlowOrganismOrbital', {
-  factory: (p: object): OrbitalDefinition => {
-    if (!isStdUiStepFlowOrganismStepFlowOrganismOrbitalParams(p)) {
-      throw new TypeError('Invalid params for ui-step-flow-organism::StepFlowOrganismOrbital');
-    }
-    return stdUiStepFlowOrganismStepFlowOrganismOrbital(p);
-  },
-  manifest: StdUiStepFlowOrganismStepFlowOrganismOrbitalManifest,
-});
 REGISTRY_MUT.set('ui-subagent-trace-panel::SubagentTracePanelOrbital', {
   factory: (p: object): OrbitalDefinition => {
     if (!isStdUiSubagentTracePanelSubagentTracePanelOrbitalParams(p)) {
@@ -1988,15 +1815,6 @@ REGISTRY_MUT.set('ui-tabbed-container::TabbedContainerOrbital', {
     return stdUiTabbedContainerTabbedContainerOrbital(p);
   },
   manifest: StdUiTabbedContainerTabbedContainerOrbitalManifest,
-});
-REGISTRY_MUT.set('ui-team-organism::TeamOrganismOrbital', {
-  factory: (p: object): OrbitalDefinition => {
-    if (!isStdUiTeamOrganismTeamOrganismOrbitalParams(p)) {
-      throw new TypeError('Invalid params for ui-team-organism::TeamOrganismOrbital');
-    }
-    return stdUiTeamOrganismTeamOrganismOrbital(p);
-  },
-  manifest: StdUiTeamOrganismTeamOrganismOrbitalManifest,
 });
 REGISTRY_MUT.set('ui-timeline::TimelineOrbital', {
   factory: (p: object): OrbitalDefinition => {
@@ -2087,9 +1905,12 @@ export function dispatchOrbitalFactory(
       const extraName = extraTraitName(extra);
       const overlay = extraName ? extraOverrides[extraName] : undefined;
       const { from: _from, as: _as, ...traitFields } = extra;
+      // A bare call-site value is wrapped as a declaration either way (the orb stamp takes only ConfigField).
       const merged = overlay
         ? mergeExtraTraitWithOverlay(traitFields, overlay)
-        : traitFields;
+        : traitFields.config !== undefined
+          ? { ...traitFields, config: mergeCallSiteConfigOverrides(traitFields.config, {}) }
+          : traitFields;
       def.traits.push(merged);
     }
   }

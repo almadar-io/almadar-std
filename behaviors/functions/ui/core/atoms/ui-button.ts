@@ -44,6 +44,7 @@ export interface StdUiButtonConfig {
   actionPayload?: unknown;
   className?: string;
   disabled?: boolean;
+  href?: string;
   icon?: unknown;
   iconAsset?: EntityRow;
   iconRight?: unknown;
@@ -55,7 +56,7 @@ export interface StdUiButtonConfig {
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
   /** Default: `"primary"` */
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'success' | 'warning' | 'default';
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'success' | 'warning' | 'default' | 'link';
 }
 
 /**

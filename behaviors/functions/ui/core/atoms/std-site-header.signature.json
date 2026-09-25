@@ -1,0 +1,328 @@
+[
+  {
+    "organism": "std-site-header",
+    "orbital": "SiteHeaderOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/core/atoms/std-site-header.ts",
+    "entities": [
+      {
+        "name": "SiteHeaderView",
+        "fields": [
+          {
+            "name": "menuOpen",
+            "type": "boolean",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "SiteHeaderRender",
+        "emittedEvents": [
+          "NAV_CLICKED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "NAV_CLICKED",
+            "direction": "emit",
+            "description": "A navigation link or the header action was clicked; carries its href and label.",
+            "synonyms": "menu click, nav click, header link",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MENU_TOGGLE",
+            "direction": "listen"
+          },
+          {
+            "name": "NAV_LINK",
+            "direction": "listen",
+            "description": "Navigation link click.",
+            "tier": "internal"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "actionHref",
+            "type": "string",
+            "default": "",
+            "label": "Header action link",
+            "tier": "presentation"
+          },
+          {
+            "key": "actionLabel",
+            "type": "string",
+            "default": "",
+            "label": "Header action label",
+            "description": "Call-to-action button at the right; empty hides it",
+            "synonyms": "cta, sign up button, get started",
+            "tier": "presentation"
+          },
+          {
+            "key": "brandName",
+            "type": "string",
+            "default": "Almadar",
+            "label": "Brand name",
+            "synonyms": "site name, company, logo text",
+            "tier": "presentation"
+          },
+          {
+            "key": "currentPath",
+            "type": "string",
+            "default": "/",
+            "label": "Current page path",
+            "description": "Marks the matching link as active",
+            "tier": "presentation"
+          },
+          {
+            "key": "headerContent",
+            "type": "render-ui",
+            "default": {
+              "children": [
+                {
+                  "actions": {
+                    "action": "NAV_LINK",
+                    "actionPayload": {
+                      "href": "@config.actionHref",
+                      "label": "@config.actionLabel"
+                    },
+                    "className": [
+                      "if",
+                      [
+                        "==",
+                        "@config.actionLabel",
+                        ""
+                      ],
+                      "hidden",
+                      ""
+                    ],
+                    "href": "@config.actionHref",
+                    "label": "@config.actionLabel",
+                    "size": "sm",
+                    "type": "button",
+                    "variant": "primary"
+                  },
+                  "brandName": "@config.brandName",
+                  "className": "hidden md:flex",
+                  "logoSrc": "@config.logoSrc",
+                  "navigationItems": [
+                    "array/map",
+                    "@config.links",
+                    [
+                      "fn",
+                      "entry",
+                      {
+                        "active": [
+                          "==",
+                          [
+                            "object/get",
+                            "@entry",
+                            "href",
+                            ""
+                          ],
+                          "@config.currentPath"
+                        ],
+                        "href": [
+                          "object/get",
+                          "@entry",
+                          "href",
+                          ""
+                        ],
+                        "label": [
+                          "object/get",
+                          "@entry",
+                          "label",
+                          ""
+                        ]
+                      }
+                    ]
+                  ],
+                  "showMenuToggle": false,
+                  "sticky": false,
+                  "type": "header",
+                  "variant": "desktop"
+                },
+                {
+                  "brandName": "@config.brandName",
+                  "className": "md:hidden",
+                  "isMenuOpen": "@entity.menuOpen",
+                  "logoSrc": "@config.logoSrc",
+                  "onMenuToggle": "MENU_TOGGLE",
+                  "showMenuToggle": true,
+                  "sticky": false,
+                  "type": "header",
+                  "variant": "mobile"
+                },
+                {
+                  "align": "stretch",
+                  "children": [
+                    "array/map",
+                    "@config.links",
+                    [
+                      "fn",
+                      "entry",
+                      {
+                        "action": "NAV_LINK",
+                        "actionPayload": {
+                          "href": [
+                            "object/get",
+                            "@entry",
+                            "href",
+                            ""
+                          ],
+                          "label": [
+                            "object/get",
+                            "@entry",
+                            "label",
+                            ""
+                          ]
+                        },
+                        "className": "justify-start",
+                        "href": [
+                          "object/get",
+                          "@entry",
+                          "href",
+                          ""
+                        ],
+                        "label": [
+                          "object/get",
+                          "@entry",
+                          "label",
+                          ""
+                        ],
+                        "type": "button",
+                        "variant": [
+                          "if",
+                          [
+                            "==",
+                            [
+                              "object/get",
+                              "@entry",
+                              "href",
+                              ""
+                            ],
+                            "@config.currentPath"
+                          ],
+                          "secondary",
+                          "ghost"
+                        ]
+                      }
+                    ]
+                  ],
+                  "className": [
+                    "if",
+                    "@entity.menuOpen",
+                    "md:hidden border-b border-border bg-card px-4 py-3",
+                    "hidden"
+                  ],
+                  "direction": "vertical",
+                  "gap": "xs",
+                  "type": "stack"
+                }
+              ],
+              "className": "sticky top-0 z-50",
+              "direction": "vertical",
+              "gap": "none",
+              "type": "stack"
+            },
+            "label": "Header body",
+            "tier": "internal"
+          },
+          {
+            "key": "links",
+            "type": "[SiteNavLink]",
+            "default": [
+              {
+                "href": "/features",
+                "label": "Features"
+              },
+              {
+                "href": "/pricing",
+                "label": "Pricing"
+              },
+              {
+                "href": "/about",
+                "label": "About"
+              }
+            ],
+            "label": "Navigation links",
+            "synonyms": "menu, nav items, top navigation",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "href": {
+                  "name": "href",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "logoSrc",
+            "type": "string",
+            "default": "",
+            "label": "Logo image",
+            "description": "Logo URL; empty shows the name only",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "SiteHeaderView",
+        "transitionEvents": [
+          "INIT",
+          "MENU_TOGGLE",
+          "NAV_LINK"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "menuOpen"
+          ]
+        },
+        "effectRow": [
+          {
+            "kind": "emit",
+            "resource": "NAV_CLICKED"
+          },
+          {
+            "kind": "render-ui",
+            "resource": "main"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.menuOpen"
+          }
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "name": "SiteHeaderPage",
+        "defaultPath": "/site-header",
+        "primaryEntity": "SiteHeaderView"
+      }
+    ],
+    "emittedEvents": [
+      "NAV_CLICKED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

@@ -1,0 +1,192 @@
+{
+  "description": "AnimatedCounter — UI factory (1:1 with the @almadar/ui animated-counter pattern).",
+  "ledger": {
+    "entries": {
+      "ent_01M3B9EMJTMAR95VN6KK25466F": {
+        "bakedName": "AnimatedCounterItem",
+        "curName": "AnimatedCounterItem",
+        "id": "ent_01M3B9EMJTMAR95VN6KK25466F",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "evt_01M3B9EMJTXY84Y3GQH6PNMNF8": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01M3B9EMJTXY84Y3GQH6PNMNF8",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M3B9EMJTE02VKZ1PCMY071HE",
+        "renames": []
+      },
+      "orb_01M3B9EMJTMJ8H5G9MQAFB2P7X": {
+        "bakedName": "AnimatedCounterOrbital",
+        "curName": "AnimatedCounterOrbital",
+        "id": "orb_01M3B9EMJTMJ8H5G9MQAFB2P7X",
+        "kind": "orbital",
+        "owner": "workspace",
+        "renames": []
+      },
+      "pag_01M3B9EMJT99W8EN45488C7FCV": {
+        "bakedName": "AnimatedCounterPage",
+        "curName": "AnimatedCounterPage",
+        "id": "pag_01M3B9EMJT99W8EN45488C7FCV",
+        "kind": "page",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M3B9EMJTE02VKZ1PCMY071HE": {
+        "bakedName": "AnimatedCounterRender",
+        "curName": "AnimatedCounterRender",
+        "id": "trt_01M3B9EMJTE02VKZ1PCMY071HE",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      }
+    },
+    "schemaVersion": 1
+  },
+  "name": "ui-animated-counter",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "id": "ent_01M3B9EMJTMAR95VN6KK25466F",
+        "name": "AnimatedCounterItem",
+        "persistence": "runtime"
+      },
+      "id": "orb_01M3B9EMJTMJ8H5G9MQAFB2P7X",
+      "name": "AnimatedCounterOrbital",
+      "pages": [
+        {
+          "id": "pag_01M3B9EMJT99W8EN45488C7FCV",
+          "name": "AnimatedCounterPage",
+          "path": "/animated-counter",
+          "traits": [
+            {
+              "ref": "AnimatedCounterRender",
+              "refId": "trt_01M3B9EMJTE02VKZ1PCMY071HE"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "description": "Additional class names",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "duration": {
+              "default": 1500.0,
+              "description": "Animation duration in ms",
+              "label": "Duration",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "format": {
+              "description": "'number' (locale grouping), 'currency' ($x.xx), 'percent' (rounded %). Unset keeps the value's own decimals.",
+              "label": "Format",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "label": {
+              "description": "Label displayed below the number",
+              "label": "Label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "prefix": {
+              "description": "Text displayed before the number",
+              "label": "Prefix",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "suffix": {
+              "description": "Text displayed after the number",
+              "label": "Suffix",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "value": {
+              "default": "",
+              "description": "Target value. Strings may carry display affixes (e.g. '500+', '99.9%', '$1.2M').",
+              "label": "Value",
+              "tier": "presentation",
+              "type": "scalar"
+            }
+          },
+          "effectRow": [
+            {
+              "kind": "render-ui",
+              "resource": "main"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "entityRefIds": {
+            "AnimatedCounterItem": "ent_01M3B9EMJTMAR95VN6KK25466F"
+          },
+          "id": "trt_01M3B9EMJTE02VKZ1PCMY071HE",
+          "linkedEntity": "AnimatedCounterItem",
+          "linkedEntityId": "ent_01M3B9EMJTMAR95VN6KK25466F",
+          "name": "AnimatedCounterRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "id": "evt_01M3B9EMJTXY84Y3GQH6PNMNF8",
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "duration": "@config.duration",
+                      "format": "@config.format",
+                      "label": "@config.label",
+                      "prefix": "@config.prefix",
+                      "suffix": "@config.suffix",
+                      "type": "animated-counter",
+                      "value": "@config.value"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01M3B9EMJTXY84Y3GQH6PNMNF8",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 1,
+  "version": "1.0.0"
+}

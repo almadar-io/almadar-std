@@ -13,6 +13,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { describe, it, expect } from 'vitest';
 import type { OrbitalSchema, TraitConfigValue } from '@almadar/core';
+import { rehydrateKnobDefs } from '@almadar/core';
 import {
   applyParamsToOrb,
   applyParamsToWholeOrb,
@@ -248,7 +249,8 @@ describe('factory-runtime', () => {
         }
 
         const catalogRaw = await readFile(SIGNATURES_PATH, 'utf-8');
-        const catalog = JSON.parse(catalogRaw) as FactorySignatureCatalog;
+        // The catalog stores knobs once in `knobDefs`; rehydrate like every consumer does.
+        const catalog: FactorySignatureCatalog = rehydrateKnobDefs(JSON.parse(catalogRaw));
 
         const failures: string[] = [];
         const tempFiles: string[] = [];

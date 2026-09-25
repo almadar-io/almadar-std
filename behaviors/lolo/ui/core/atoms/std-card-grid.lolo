@@ -1,0 +1,172 @@
+app std-card-grid "1.0.0"
+"std-card-grid — a titled grid of content cards from a config list. Each card can carry an image (screenshots, portfolio, case studies), a portrait (team members), an icon, a badge, a title, a description and a link. `look` picks media cards, centered profile cards, or plain text cards. Pick for showcases, team pages, case studies, service catalogs and testimonials."
+type CardItem = { title : string!, description : string, image : string, imageAlt : string, avatar : string, icon : string, badge : string, meta : string, href : string, linkLabel : string }
+orbital CardGridOrbital {
+
+  entity CardGridView [runtime] {
+    id : string!
+  }
+
+  trait CardGridRender -> @rebindable CardGridView [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          type: box
+          paddingY: xl
+          bg: (if (== @config.surface muted) muted transparent)
+          fullWidth: true
+          children: [{
+            type: container
+            size: xl
+            maxWidth: xl
+            padding: lg
+            children: [{ type: stack, direction: vertical, gap: xl, children: [{
+              type: stack
+              direction: vertical
+              gap: sm
+              align: (if (== @config.alignment center) center start)
+              className: (if (== @config.heading "") (if (== @config.lede "") hidden "") "")
+              children: [{
+              type: typography
+              content: @config.heading
+              variant: h2
+              weight: bold
+              align: (if (== @config.alignment center) center left)
+              className: (if (== @config.heading "") hidden "tracking-tight text-balance")
+            }, {
+              type: typography
+              content: @config.lede
+              variant: large
+              color: muted
+              align: (if (== @config.alignment center) center left)
+              className: (if (== @config.lede "") hidden "max-w-2xl text-pretty")
+            }]
+            }, {
+              type: simple-grid
+              cols: (math/min (math/max @config.columns 1) 6)
+              gap: lg
+              children: (array/map @config.items (fn item {
+                type: card
+                look: (if (== @config.look media) tile-image-first elevated)
+                padding: (if (== @config.look media) none md)
+                className: "h-full"
+                children: [{
+                  type: image
+                  src: (object/get @item image "")
+                  alt: (object/get @item imageAlt (object/get @item title ""))
+                  aspect: "16/9"
+                  rounded: none
+                }, {
+                  type: stack
+                  direction: vertical
+                  gap: sm
+                  align: (if (== @config.look profile) center start)
+                  className: (if (== @config.look media) "p-5" "")
+                  children: [{
+                    type: avatar
+                    src: (object/get @item avatar "")
+                    name: (object/get @item title "")
+                    size: xl
+                    className: (if (== (object/get @item avatar "") "") hidden "")
+                  }, {
+                    type: icon
+                    name: (object/get @item icon "")
+                    size: lg
+                    className: (if (== (object/get @item icon "") "") hidden "text-primary")
+                  }, {
+                    type: badge
+                    label: (object/get @item badge "")
+                    variant: primary
+                  }, {
+                    type: typography
+                    content: (object/get @item title "")
+                    variant: h4
+                    weight: semibold
+                    align: (if (== @config.look profile) center left)
+                  }, {
+                    type: typography
+                    content: (object/get @item meta "")
+                    variant: caption
+                    color: muted
+                    align: (if (== @config.look profile) center left)
+                    className: (if (== (object/get @item meta "") "") hidden "")
+                  }, {
+                    type: typography
+                    content: (object/get @item description "")
+                    variant: body
+                    color: muted
+                    align: (if (== @config.look profile) center left)
+                    className: (if (== (object/get @item description "") "") hidden "text-pretty")
+                  }, {
+                    type: button
+                    label: (object/get @item linkLabel "")
+                    href: (object/get @item href "")
+                    variant: link
+                    rightIcon: arrow-right
+                    action: CARD_OPEN
+                    actionPayload: { href: (object/get @item href ""), title: (object/get @item title "") }
+                    className: (if (== (object/get @item linkLabel "") "") hidden "")
+                  }]
+                }]
+              }))
+            }] }]
+          }]
+        })
+      CARD_OPEN -> idle
+        (emit CARD_OPENED { href: ?href, title: ?title })
+    }
+
+    emits {
+      CARD_OPENED -> external {
+        href : string
+        title : string
+      }
+        @description "A card's link was clicked; carries its href and title."
+        @tier "domain"
+    }
+
+    listens {
+      CARD_OPEN {
+        href : string
+        title : string
+      }
+        @description "Card link click."
+        @tier "internal"
+    }
+
+    config {
+      heading : string = ""
+        @label "Heading"
+        @description "Section heading above the grid; empty hides it"
+        @synonyms "title"
+        @tier "presentation"
+      lede : string = ""
+        @label "Supporting text"
+        @description "Text under the heading; empty hides it"
+        @tier "presentation"
+      alignment : "center" | "start" = center
+        @label "Heading alignment"
+        @tier "presentation"
+      items : [CardItem] = [{ title: "First card", description: "What this card is about." }, { title: "Second card", description: "What this card is about." }, { title: "Third card", description: "What this card is about." }]
+        @label "Cards"
+        @description "One card per entry: title plus any of image, avatar, icon, badge, meta, description, href + linkLabel"
+        @synonyms "items, entries, showcase, portfolio, team members, case studies, services, testimonials"
+        @tier "presentation"
+      look : "media" | "profile" | "plain" = plain
+        @label "Card look"
+        @description "media = image-led cards, profile = centered portrait cards, plain = text cards"
+        @tier "presentation"
+      columns : number = 3
+        @label "Max columns"
+        @tier "presentation"
+      surface : "plain" | "muted" = plain
+        @label "Surface"
+        @description "Background behind the section"
+        @tier "presentation"
+    }
+  }
+
+  page "/card-grid" as CardGridPage -> CardGridRender
+}

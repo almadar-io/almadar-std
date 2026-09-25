@@ -747,7 +747,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     ],
     example: '["deref", "@entity.health"]',
   },
-  'swap!': {
+  'swap': {
     module: 'core',
     category: 'effect',
     minArity: 2,
@@ -760,7 +760,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'target', type: BINDING, description: 'The field to swap (`@entity.counter`)' },
       { name: 'update', type: SEXPR, description: 'The new value, computed from the current one' },
     ],
-    example: '(swap! @entity.counter (+ @entity.counter 1))',
+    example: '(swap @entity.counter (+ @entity.counter 1))',
   },
   watch: {
     module: 'core',

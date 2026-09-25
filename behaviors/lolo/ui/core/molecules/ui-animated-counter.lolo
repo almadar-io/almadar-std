@@ -1,0 +1,59 @@
+app ui-animated-counter "1.0.0"
+"AnimatedCounter — UI factory (1:1 with the @almadar/ui animated-counter pattern)."
+;; @pattern "animated-counter"
+orbital AnimatedCounterOrbital {
+  entity AnimatedCounterItem [runtime] {
+    id : string!
+  }
+
+  trait AnimatedCounterRender -> @rebindable AnimatedCounterItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          value: @config.value
+          label: @config.label
+          duration: @config.duration
+          prefix: @config.prefix
+          suffix: @config.suffix
+          format: @config.format
+          className: @config.className
+          type: animated-counter
+        })
+    }
+
+    config {
+      value : scalar = ""
+        @label "Value"
+        @description "Target value. Strings may carry display affixes (e.g. '500+', '99.9%', '$1.2M')."
+        @tier "presentation"
+      label : string
+        @label "Label"
+        @description "Label displayed below the number"
+        @tier "presentation"
+      duration : number = 1500
+        @label "Duration"
+        @description "Animation duration in ms"
+        @tier "presentation"
+      prefix : string
+        @label "Prefix"
+        @description "Text displayed before the number"
+        @tier "presentation"
+      suffix : string
+        @label "Suffix"
+        @description "Text displayed after the number"
+        @tier "presentation"
+      format : string
+        @label "Format"
+        @description "'number' (locale grouping), 'currency' ($x.xx), 'percent' (rounded %). Unset keeps the value's own decimals."
+        @tier "presentation"
+      className : string
+        @label "Class Name"
+        @description "Additional class names"
+        @tier "presentation"
+    }
+  }
+
+  page "/animated-counter" as AnimatedCounterPage -> AnimatedCounterRender
+}

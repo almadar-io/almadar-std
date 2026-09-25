@@ -1,0 +1,159 @@
+app std-site-footer "1.0.0"
+"std-site-footer — the footer at the bottom of a public site: brand name and tagline, columns of links, and a bottom row with the copyright line and legal links. Links follow `href` (in-app path, #anchor, or absolute URL) and each click emits FOOTER_LINK_CLICKED. Pick for marketing sites, docs portals and product websites."
+type FooterLink = { label : string!, href : string! }
+type FooterColumn = { title : string!, links : [FooterLink] }
+orbital SiteFooterOrbital {
+
+  entity SiteFooterView [runtime] {
+    id : string!
+  }
+
+  trait SiteFooterRender -> @rebindable SiteFooterView [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          type: box
+          paddingY: xl
+          border: true
+          fullWidth: true
+          className: "border-x-0 border-b-0"
+          children: [{
+            type: container
+            size: xl
+            maxWidth: xl
+            padding: lg
+            children: [{
+              type: stack
+              direction: vertical
+              gap: xl
+              children: [{
+                type: split
+                ratio: "1:2"
+                gap: xl
+                children: [{
+                  type: stack
+                  direction: vertical
+                  gap: sm
+                  children: [{
+                  type: typography
+                  content: @config.brandName
+                  variant: h5
+                  weight: bold
+                }, {
+                  type: typography
+                  content: @config.tagline
+                  variant: body2
+                  color: muted
+                  className: (if (== @config.tagline "") hidden "max-w-xs text-pretty")
+                }]
+                }, {
+                  type: simple-grid
+                  cols: (math/min (math/max (array/len @config.columns) 1) 4)
+                  gap: lg
+                  children: (array/map @config.columns (fn column {
+                    type: stack
+                    direction: vertical
+                    gap: sm
+                    children: [{
+                      type: typography
+                      content: (object/get @column title "")
+                      variant: label
+                      weight: semibold
+                    }, {
+                      type: stack
+                      direction: vertical
+                      gap: xs
+                      align: start
+                      children: (array/map (object/get @column links []) (fn entry {
+                        type: button
+                        variant: link
+                        label: (object/get @entry label "")
+                        href: (object/get @entry href "")
+                        action: FOOTER_LINK
+                        actionPayload: { label: (object/get @entry label ""), href: (object/get @entry href "") }
+                      }))
+                    }]
+                  }))
+                }]
+              }, {
+                type: divider
+              }, {
+                type: stack
+                direction: horizontal
+                gap: md
+                wrap: true
+                align: center
+                justify: between
+                children: [{
+                  type: typography
+                  content: @config.copyright
+                  variant: caption
+                  color: muted
+                }, {
+                  type: stack
+                  direction: horizontal
+                  gap: md
+                  wrap: true
+                  children: (array/map @config.legalLinks (fn entry {
+                    type: button
+                    variant: link
+                    label: (object/get @entry label "")
+                    href: (object/get @entry href "")
+                    action: FOOTER_LINK
+                    actionPayload: { label: (object/get @entry label ""), href: (object/get @entry href "") }
+                  }))
+                }]
+              }]
+            }]
+          }]
+        })
+      FOOTER_LINK -> idle
+        (emit FOOTER_LINK_CLICKED { label: ?label, href: ?href })
+    }
+
+    emits {
+      FOOTER_LINK_CLICKED -> external {
+        label : string
+        href : string
+      }
+        @description "A footer link was clicked; carries its label and href."
+        @tier "domain"
+    }
+
+    listens {
+      FOOTER_LINK {
+        label : string
+        href : string
+      }
+        @description "Footer link click."
+        @tier "internal"
+    }
+
+    config {
+      brandName : string = "Almadar"
+        @label "Brand name"
+        @synonyms "company, product name, logo text"
+        @tier "presentation"
+      tagline : string = ""
+        @label "Tagline"
+        @description "One line under the brand name; empty hides it"
+        @tier "presentation"
+      columns : [FooterColumn] = [{ title: "Product", links: [{ label: "Features", href: "/features" }, { label: "Pricing", href: "/pricing" }] }, { title: "Company", links: [{ label: "About", href: "/about" }, { label: "Blog", href: "/blog" }] }]
+        @label "Link columns"
+        @description "Each column: a title and its links (label + href)"
+        @synonyms "sitemap, footer menu, footer navigation"
+        @tier "presentation"
+      copyright : string = "© Almadar"
+        @label "Copyright line"
+        @tier "presentation"
+      legalLinks : [FooterLink] = []
+        @label "Legal links"
+        @description "Links in the bottom row, e.g. Privacy and Terms"
+        @tier "presentation"
+    }
+  }
+
+  page "/site-footer" as SiteFooterPage -> SiteFooterRender
+}

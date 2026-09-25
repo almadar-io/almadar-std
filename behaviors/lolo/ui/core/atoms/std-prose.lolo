@@ -1,0 +1,85 @@
+app std-prose "1.0.0"
+"std-prose — a block of long-form text at a comfortable reading width: optional eyebrow, heading and meta line (date, author), then markdown body with headings, lists, links and code blocks. Supports right-to-left text. Pick for articles, blog posts, about and mission pages, policy text and install notes."
+orbital ProseOrbital {
+
+  entity ProseView [runtime] {
+    id : string!
+  }
+
+  trait ProseRender -> @rebindable ProseView [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          type: box
+          paddingY: xl
+          bg: (if (== @config.surface muted) muted transparent)
+          fullWidth: true
+          dir: @config.direction
+          children: [{
+            type: container
+            size: md
+            maxWidth: md
+            padding: lg
+            children: [{
+              type: stack
+              direction: vertical
+              gap: md
+              children: [{
+                type: badge
+                label: @config.eyebrow
+                variant: primary
+              }, {
+                type: typography
+                content: @config.heading
+                variant: h2
+                weight: bold
+                className: (if (== @config.heading "") hidden "tracking-tight text-balance")
+              }, {
+                type: typography
+                content: @config.meta
+                variant: caption
+                color: muted
+                className: (if (== @config.meta "") hidden "")
+              }, {
+                type: markdown-content
+                content: @config.body
+                direction: @config.direction
+              }]
+            }]
+          }]
+        })
+    }
+
+    config {
+      eyebrow : string = ""
+        @label "Eyebrow"
+        @description "Small badge above the heading; empty hides it"
+        @tier "presentation"
+      heading : string = ""
+        @label "Heading"
+        @description "Empty hides it"
+        @synonyms "title"
+        @tier "presentation"
+      meta : string = ""
+        @label "Meta line"
+        @description "Date, author or reading time under the heading; empty hides it"
+        @synonyms "byline, date, author"
+        @tier "presentation"
+      body : string = "Write the text here in **markdown**."
+        @label "Body"
+        @description "Markdown text"
+        @synonyms "content, article, text, copy"
+        @tier "presentation"
+      direction : "ltr" | "rtl" = ltr
+        @label "Text direction"
+        @tier "presentation"
+      surface : "plain" | "muted" = plain
+        @label "Surface"
+        @tier "presentation"
+    }
+  }
+
+  page "/prose" as ProsePage -> ProseRender
+}

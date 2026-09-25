@@ -1,0 +1,604 @@
+[
+  {
+    "organism": "std-book-reader",
+    "orbital": "BookReaderOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/core/atoms/std-book-reader.ts",
+    "entities": [
+      {
+        "name": "BookReaderView",
+        "fields": [
+          {
+            "name": "chapterIndex",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "chapterTitle",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "chapterContent",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "progressLabel",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "isFirst",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "isLast",
+            "type": "boolean",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "BookReaderRead",
+        "emittedEvents": [
+          "CHAPTER_OPENED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "CHAPTER_OPENED",
+            "direction": "emit",
+            "description": "The reader moved to a chapter; carries its index and title.",
+            "synonyms": "page turned, chapter changed, reading progress",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "START_READING",
+            "direction": "listen"
+          },
+          {
+            "name": "OPEN_CHAPTER",
+            "direction": "listen",
+            "description": "Jump to a chapter from the table of contents.",
+            "tier": "internal"
+          },
+          {
+            "name": "NEXT_CHAPTER",
+            "direction": "listen"
+          },
+          {
+            "name": "PREV_CHAPTER",
+            "direction": "listen"
+          },
+          {
+            "name": "BACK_TO_COVER",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "author",
+            "type": "string",
+            "default": "",
+            "label": "Author",
+            "tier": "presentation"
+          },
+          {
+            "key": "chapters",
+            "type": "[BookChapter]",
+            "default": [
+              {
+                "content": "The first chapter's text, in **markdown**.",
+                "title": "Chapter one"
+              },
+              {
+                "content": "The second chapter's text.",
+                "title": "Chapter two"
+              }
+            ],
+            "label": "Chapters",
+            "description": "Ordered chapters: a title and markdown content each",
+            "synonyms": "sections, parts, pages, table of contents",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "content": {
+                  "name": "content",
+                  "required": true,
+                  "type": "string"
+                },
+                "title": {
+                  "name": "title",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "contentsLabel",
+            "type": "string",
+            "default": "Contents",
+            "label": "Contents heading",
+            "tier": "presentation"
+          },
+          {
+            "key": "coverContent",
+            "type": "render-ui",
+            "default": {
+              "children": [
+                {
+                  "children": [
+                    {
+                      "children": [
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "alt": "@config.title",
+                              "bordered": true,
+                              "className": "max-w-xs",
+                              "loading": "eager",
+                              "rounded": "lg",
+                              "src": "@config.coverImage",
+                              "type": "image"
+                            },
+                            {
+                              "align": "center",
+                              "className": "tracking-tight text-balance",
+                              "content": "@config.title",
+                              "type": "typography",
+                              "variant": "h1",
+                              "weight": "bold"
+                            },
+                            {
+                              "align": "center",
+                              "className": [
+                                "if",
+                                [
+                                  "==",
+                                  "@config.subtitle",
+                                  ""
+                                ],
+                                "hidden",
+                                "text-pretty"
+                              ],
+                              "color": "muted",
+                              "content": "@config.subtitle",
+                              "type": "typography",
+                              "variant": "large"
+                            },
+                            {
+                              "align": "center",
+                              "className": [
+                                "if",
+                                [
+                                  "==",
+                                  "@config.author",
+                                  ""
+                                ],
+                                "hidden",
+                                ""
+                              ],
+                              "color": "muted",
+                              "content": "@config.author",
+                              "type": "typography",
+                              "variant": "label"
+                            },
+                            {
+                              "action": "START_READING",
+                              "className": [
+                                "if",
+                                [
+                                  "==",
+                                  [
+                                    "array/len",
+                                    "@config.chapters"
+                                  ],
+                                  0
+                                ],
+                                "hidden",
+                                ""
+                              ],
+                              "label": "@config.startLabel",
+                              "size": "lg",
+                              "type": "button",
+                              "variant": "primary"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        },
+                        {
+                          "children": [
+                            {
+                              "content": "@config.contentsLabel",
+                              "type": "typography",
+                              "variant": "label",
+                              "weight": "semibold"
+                            },
+                            {
+                              "align": "start",
+                              "children": [
+                                "array/map",
+                                "@config.chapters",
+                                [
+                                  "fn",
+                                  "chapter",
+                                  {
+                                    "action": "OPEN_CHAPTER",
+                                    "actionPayload": {
+                                      "index": "@index"
+                                    },
+                                    "label": [
+                                      "str/concat",
+                                      [
+                                        "+",
+                                        "@index",
+                                        1
+                                      ],
+                                      ". ",
+                                      [
+                                        "object/get",
+                                        "@chapter",
+                                        "title",
+                                        ""
+                                      ]
+                                    ],
+                                    "type": "button",
+                                    "variant": "link"
+                                  }
+                                ]
+                              ],
+                              "direction": "vertical",
+                              "gap": "none",
+                              "type": "stack"
+                            }
+                          ],
+                          "className": [
+                            "if",
+                            [
+                              "==",
+                              [
+                                "array/len",
+                                "@config.chapters"
+                              ],
+                              0
+                            ],
+                            "hidden",
+                            ""
+                          ],
+                          "direction": "vertical",
+                          "gap": "xs",
+                          "type": "stack"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "xl",
+                      "type": "stack"
+                    }
+                  ],
+                  "maxWidth": "md",
+                  "padding": "lg",
+                  "size": "md",
+                  "type": "container"
+                }
+              ],
+              "dir": "@config.direction",
+              "fullWidth": true,
+              "paddingY": "2xl",
+              "type": "box"
+            },
+            "label": "Cover body",
+            "tier": "internal"
+          },
+          {
+            "key": "coverImage",
+            "type": "string",
+            "default": "",
+            "label": "Cover image",
+            "description": "Cover image URL; empty hides it",
+            "tier": "presentation"
+          },
+          {
+            "key": "coverLabel",
+            "type": "string",
+            "default": "Cover",
+            "label": "Back-to-cover label",
+            "tier": "presentation"
+          },
+          {
+            "key": "direction",
+            "type": "string",
+            "default": "ltr",
+            "label": "Text direction",
+            "description": "rtl for Arabic, Hebrew and other right-to-left books",
+            "synonyms": "right to left, arabic book",
+            "tier": "presentation",
+            "enumValues": [
+              "ltr",
+              "rtl"
+            ]
+          },
+          {
+            "key": "nextLabel",
+            "type": "string",
+            "default": "Next",
+            "label": "Next button label",
+            "tier": "presentation"
+          },
+          {
+            "key": "previousLabel",
+            "type": "string",
+            "default": "Previous",
+            "label": "Previous button label",
+            "tier": "presentation"
+          },
+          {
+            "key": "readingContent",
+            "type": "render-ui",
+            "default": {
+              "children": [
+                {
+                  "children": [
+                    {
+                      "children": [
+                        {
+                          "align": "start",
+                          "children": [
+                            {
+                              "action": "BACK_TO_COVER",
+                              "label": "@config.coverLabel",
+                              "leftIcon": "book-open",
+                              "type": "button",
+                              "variant": "link"
+                            },
+                            {
+                              "className": "pt-2",
+                              "content": "@config.contentsLabel",
+                              "type": "typography",
+                              "variant": "label",
+                              "weight": "semibold"
+                            },
+                            {
+                              "align": "start",
+                              "children": [
+                                "array/map",
+                                "@config.chapters",
+                                [
+                                  "fn",
+                                  "chapter",
+                                  {
+                                    "action": "OPEN_CHAPTER",
+                                    "actionPayload": {
+                                      "index": "@index"
+                                    },
+                                    "className": [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@index",
+                                        "@entity.chapterIndex"
+                                      ],
+                                      "text-foreground font-semibold",
+                                      ""
+                                    ],
+                                    "label": [
+                                      "object/get",
+                                      "@chapter",
+                                      "title",
+                                      ""
+                                    ],
+                                    "type": "button",
+                                    "variant": "link"
+                                  }
+                                ]
+                              ],
+                              "direction": "vertical",
+                              "gap": "none",
+                              "type": "stack"
+                            }
+                          ],
+                          "className": "lg:sticky lg:top-6 self-start",
+                          "direction": "vertical",
+                          "gap": "xs",
+                          "type": "stack"
+                        },
+                        {
+                          "children": [
+                            {
+                              "color": "muted",
+                              "content": "@entity.progressLabel",
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "className": "tracking-tight",
+                              "content": "@entity.chapterTitle",
+                              "type": "typography",
+                              "variant": "h2",
+                              "weight": "bold"
+                            },
+                            {
+                              "content": "@entity.chapterContent",
+                              "direction": "@config.direction",
+                              "type": "markdown-content"
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "PREV_CHAPTER",
+                                  "disabled": "@entity.isFirst",
+                                  "label": "@config.previousLabel",
+                                  "leftIcon": [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@config.direction",
+                                      "rtl"
+                                    ],
+                                    "chevron-right",
+                                    "chevron-left"
+                                  ],
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "NEXT_CHAPTER",
+                                  "disabled": "@entity.isLast",
+                                  "label": "@config.nextLabel",
+                                  "rightIcon": [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@config.direction",
+                                      "rtl"
+                                    ],
+                                    "chevron-left",
+                                    "chevron-right"
+                                  ],
+                                  "type": "button",
+                                  "variant": "primary"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "type": "stack"
+                        }
+                      ],
+                      "gap": "xl",
+                      "ratio": "1:3",
+                      "type": "split"
+                    }
+                  ],
+                  "maxWidth": "xl",
+                  "padding": "lg",
+                  "size": "xl",
+                  "type": "container"
+                }
+              ],
+              "dir": "@config.direction",
+              "fullWidth": true,
+              "paddingY": "xl",
+              "type": "box"
+            },
+            "label": "Reading body",
+            "tier": "internal"
+          },
+          {
+            "key": "startLabel",
+            "type": "string",
+            "default": "Start reading",
+            "label": "Start button label",
+            "tier": "presentation"
+          },
+          {
+            "key": "subtitle",
+            "type": "string",
+            "default": "",
+            "label": "Subtitle",
+            "tier": "presentation"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Untitled book",
+            "label": "Title",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "BookReaderView",
+        "transitionEvents": [
+          "BACK_TO_COVER",
+          "INIT",
+          "NEXT_CHAPTER",
+          "OPEN_CHAPTER",
+          "PREV_CHAPTER",
+          "START_READING"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "chapterContent",
+            "chapterIndex",
+            "chapterTitle",
+            "isFirst",
+            "isLast",
+            "progressLabel"
+          ]
+        },
+        "effectRow": [
+          {
+            "kind": "emit",
+            "resource": "CHAPTER_OPENED"
+          },
+          {
+            "kind": "render-ui",
+            "resource": "main"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.chapterContent"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.chapterIndex"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.chapterTitle"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.isFirst"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.isLast"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.progressLabel"
+          }
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "name": "BookReaderPage",
+        "defaultPath": "/book",
+        "primaryEntity": "BookReaderView"
+      }
+    ],
+    "emittedEvents": [
+      "CHAPTER_OPENED"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

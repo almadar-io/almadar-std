@@ -55,6 +55,7 @@ export interface StdUiBoxConfig {
   border?: boolean;
   children?: PatternValue;
   className?: string;
+  dir?: string;
   /** Default: `"block"` */
   display?: 'block' | 'inline' | 'inline-block' | 'flex' | 'inline-flex' | 'grid';
   /** Default: `false` */

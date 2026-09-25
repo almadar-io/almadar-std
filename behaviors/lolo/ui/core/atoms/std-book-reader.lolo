@@ -1,0 +1,316 @@
+app std-book-reader "1.0.0"
+"std-book-reader — reads a multi-chapter book one chapter at a time. Opens on a cover (cover image, title, subtitle, author, a start button and the table of contents); reading shows a contents rail with the current chapter marked, the chapter title and progress, the chapter text (markdown) and previous/next buttons. Supports right-to-left books. Emits CHAPTER_OPENED on every chapter change. Pick for handbooks, manifestos, course readers and long-form guides."
+type BookChapter = { title : string!, content : string! }
+orbital BookReaderOrbital {
+
+  entity BookReaderView [runtime] {
+    id : string!
+    chapterIndex : number = 0
+    chapterTitle : string = ""
+    chapterContent : string = ""
+    progressLabel : string = ""
+    isFirst : boolean = true
+    isLast : boolean = false
+  }
+
+  trait BookReaderRead -> @rebindable BookReaderView [interaction, instance] {
+    initial: cover
+
+    state cover {
+      INIT -> cover
+        (render-ui main @config.coverContent)
+      START_READING -> reading
+        (set @entity.chapterIndex 0)
+        (set @entity.chapterTitle (object/get (array/nth @config.chapters 0) title ""))
+        (set @entity.chapterContent (object/get (array/nth @config.chapters 0) content ""))
+        (set @entity.isFirst true)
+        (set @entity.isLast (<= (array/len @config.chapters) 1))
+        (set @entity.progressLabel (str/concat "1 / " (array/len @config.chapters)))
+        (render-ui main @config.readingContent)
+        (emit CHAPTER_OPENED { index: 0, title: @entity.chapterTitle })
+      OPEN_CHAPTER -> reading
+        (set @entity.chapterIndex ?index)
+        (set @entity.chapterTitle (object/get (array/nth @config.chapters ?index) title ""))
+        (set @entity.chapterContent (object/get (array/nth @config.chapters ?index) content ""))
+        (set @entity.isFirst (== ?index 0))
+        (set @entity.isLast (>= ?index (- (array/len @config.chapters) 1)))
+        (set @entity.progressLabel (str/concat (+ ?index 1) " / " (array/len @config.chapters)))
+        (render-ui main @config.readingContent)
+        (emit CHAPTER_OPENED { index: ?index, title: @entity.chapterTitle })
+    }
+
+    state reading {
+      INIT -> reading
+        (render-ui main @config.readingContent)
+      OPEN_CHAPTER -> reading
+        (set @entity.chapterIndex ?index)
+        (set @entity.chapterTitle (object/get (array/nth @config.chapters ?index) title ""))
+        (set @entity.chapterContent (object/get (array/nth @config.chapters ?index) content ""))
+        (set @entity.isFirst (== ?index 0))
+        (set @entity.isLast (>= ?index (- (array/len @config.chapters) 1)))
+        (set @entity.progressLabel (str/concat (+ ?index 1) " / " (array/len @config.chapters)))
+        (render-ui main @config.readingContent)
+        (emit CHAPTER_OPENED { index: ?index, title: @entity.chapterTitle })
+      NEXT_CHAPTER -> reading when (not @entity.isLast)
+        (set @entity.chapterIndex (+ @entity.chapterIndex 1))
+        (set @entity.chapterTitle (object/get (array/nth @config.chapters @entity.chapterIndex) title ""))
+        (set @entity.chapterContent (object/get (array/nth @config.chapters @entity.chapterIndex) content ""))
+        (set @entity.isFirst false)
+        (set @entity.isLast (>= @entity.chapterIndex (- (array/len @config.chapters) 1)))
+        (set @entity.progressLabel (str/concat (+ @entity.chapterIndex 1) " / " (array/len @config.chapters)))
+        (render-ui main @config.readingContent)
+        (emit CHAPTER_OPENED { index: @entity.chapterIndex, title: @entity.chapterTitle })
+      PREV_CHAPTER -> reading when (not @entity.isFirst)
+        (set @entity.chapterIndex (- @entity.chapterIndex 1))
+        (set @entity.chapterTitle (object/get (array/nth @config.chapters @entity.chapterIndex) title ""))
+        (set @entity.chapterContent (object/get (array/nth @config.chapters @entity.chapterIndex) content ""))
+        (set @entity.isFirst (== @entity.chapterIndex 0))
+        (set @entity.isLast false)
+        (set @entity.progressLabel (str/concat (+ @entity.chapterIndex 1) " / " (array/len @config.chapters)))
+        (render-ui main @config.readingContent)
+        (emit CHAPTER_OPENED { index: @entity.chapterIndex, title: @entity.chapterTitle })
+      BACK_TO_COVER -> cover
+        (render-ui main @config.coverContent)
+    }
+
+    emits {
+      CHAPTER_OPENED -> external {
+        index : number
+        title : string
+      }
+        @description "The reader moved to a chapter; carries its index and title."
+        @synonyms "page turned, chapter changed, reading progress"
+        @tier "domain"
+    }
+
+    listens {
+      OPEN_CHAPTER {
+        index : number!
+      }
+        @description "Jump to a chapter from the table of contents."
+        @tier "internal"
+    }
+
+    config {
+      title : string = "Untitled book"
+        @label "Title"
+        @tier "presentation"
+      subtitle : string = ""
+        @label "Subtitle"
+        @tier "presentation"
+      author : string = ""
+        @label "Author"
+        @tier "presentation"
+      coverImage : string = ""
+        @label "Cover image"
+        @description "Cover image URL; empty hides it"
+        @tier "presentation"
+      direction : "ltr" | "rtl" = ltr
+        @label "Text direction"
+        @description "rtl for Arabic, Hebrew and other right-to-left books"
+        @synonyms "right to left, arabic book"
+        @tier "presentation"
+      chapters : [BookChapter] = [{ title: "Chapter one", content: "The first chapter's text, in **markdown**." }, { title: "Chapter two", content: "The second chapter's text." }]
+        @label "Chapters"
+        @description "Ordered chapters: a title and markdown content each"
+        @synonyms "sections, parts, pages, table of contents"
+        @tier "presentation"
+      startLabel : string = "Start reading"
+        @label "Start button label"
+        @tier "presentation"
+      contentsLabel : string = "Contents"
+        @label "Contents heading"
+        @tier "presentation"
+      previousLabel : string = "Previous"
+        @label "Previous button label"
+        @tier "presentation"
+      nextLabel : string = "Next"
+        @label "Next button label"
+        @tier "presentation"
+      coverLabel : string = "Cover"
+        @label "Back-to-cover label"
+        @tier "presentation"
+      coverContent : render-ui = {
+        type: box
+        paddingY: "2xl"
+        fullWidth: true
+        dir: @config.direction
+        children: [{
+          type: container
+          size: md
+          maxWidth: md
+          padding: lg
+          children: [{
+            type: stack
+            direction: vertical
+            gap: xl
+            children: [{
+              type: stack
+              direction: vertical
+              gap: md
+              align: center
+              children: [{
+              type: image
+              src: @config.coverImage
+              alt: @config.title
+              rounded: lg
+              bordered: true
+              loading: eager
+              className: "max-w-xs"
+            }, {
+              type: typography
+              content: @config.title
+              variant: h1
+              weight: bold
+              align: center
+              className: "tracking-tight text-balance"
+            }, {
+              type: typography
+              content: @config.subtitle
+              variant: large
+              color: muted
+              align: center
+              className: (if (== @config.subtitle "") hidden "text-pretty")
+            }, {
+              type: typography
+              content: @config.author
+              variant: label
+              color: muted
+              align: center
+              className: (if (== @config.author "") hidden "")
+            }, {
+              type: button
+              label: @config.startLabel
+              variant: primary
+              size: lg
+              action: START_READING
+              className: (if (== (array/len @config.chapters) 0) hidden "")
+            }]
+            }, {
+              type: stack
+              direction: vertical
+              gap: xs
+              className: (if (== (array/len @config.chapters) 0) hidden "")
+              children: [{
+                type: typography
+                content: @config.contentsLabel
+                variant: label
+                weight: semibold
+              }, {
+                type: stack
+                direction: vertical
+                gap: none
+                align: start
+                children: (array/map @config.chapters (fn chapter {
+                  type: button
+                  variant: link
+                  label: (str/concat (+ @index 1) ". " (object/get @chapter title ""))
+                  action: OPEN_CHAPTER
+                  actionPayload: { index: @index }
+                }))
+              }]
+            }]
+          }]
+        }]
+      }
+        @label "Cover body"
+        @tier "internal"
+      readingContent : render-ui = {
+        type: box
+        paddingY: xl
+        fullWidth: true
+        dir: @config.direction
+        children: [{
+          type: container
+          size: xl
+          maxWidth: xl
+          padding: lg
+          children: [{
+            type: split
+            ratio: "1:3"
+            gap: xl
+            children: [{
+              type: stack
+              direction: vertical
+              gap: xs
+              align: start
+              className: "lg:sticky lg:top-6 self-start"
+              children: [{
+                type: button
+                variant: link
+                label: @config.coverLabel
+                leftIcon: book-open
+                action: BACK_TO_COVER
+              }, {
+                type: typography
+                content: @config.contentsLabel
+                variant: label
+                weight: semibold
+                className: "pt-2"
+              }, {
+                type: stack
+                direction: vertical
+                gap: none
+                align: start
+                children: (array/map @config.chapters (fn chapter {
+                  type: button
+                  variant: link
+                  label: (object/get @chapter title "")
+                  action: OPEN_CHAPTER
+                  actionPayload: { index: @index }
+                  className: (if (== @index @entity.chapterIndex) "text-foreground font-semibold" "")
+                }))
+              }]
+            }, {
+              type: stack
+              direction: vertical
+              gap: lg
+              children: [{
+                type: typography
+                content: @entity.progressLabel
+                variant: caption
+                color: muted
+              }, {
+                type: typography
+                content: @entity.chapterTitle
+                variant: h2
+                weight: bold
+                className: "tracking-tight"
+              }, {
+                type: markdown-content
+                content: @entity.chapterContent
+                direction: @config.direction
+              }, {
+                type: divider
+              }, {
+                type: stack
+                direction: horizontal
+                gap: md
+                justify: between
+                children: [{
+                  type: button
+                  variant: secondary
+                  label: @config.previousLabel
+                  leftIcon: (if (== @config.direction rtl) chevron-right chevron-left)
+                  action: PREV_CHAPTER
+                  disabled: @entity.isFirst
+                }, {
+                  type: button
+                  variant: primary
+                  label: @config.nextLabel
+                  rightIcon: (if (== @config.direction rtl) chevron-left chevron-right)
+                  action: NEXT_CHAPTER
+                  disabled: @entity.isLast
+                }]
+              }]
+            }]
+          }]
+        }]
+      }
+        @label "Reading body"
+        @tier "internal"
+    }
+  }
+
+  page "/book" as BookReaderPage -> BookReaderRead
+}

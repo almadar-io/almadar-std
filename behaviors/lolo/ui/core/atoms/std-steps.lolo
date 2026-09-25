@@ -1,0 +1,124 @@
+app std-steps "1.0.0"
+"std-steps — a numbered 'how it works' sequence from a config list: a numbered marker (or icon), a title and a short description per step, laid out as a row of columns or a vertical list, under an optional heading. Display only — for an interactive stepper use std-step-flow or std-wizard. Pick for onboarding explainers, process overviews and learning paths."
+type StepItem = { title : string!, description : string, icon : string }
+orbital StepsOrbital {
+
+  entity StepsView [runtime] {
+    id : string!
+  }
+
+  trait StepsRender -> @rebindable StepsView [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          type: box
+          paddingY: xl
+          bg: (if (== @config.surface muted) muted transparent)
+          fullWidth: true
+          children: [{
+            type: container
+            size: xl
+            maxWidth: xl
+            padding: lg
+            children: [{ type: stack, direction: vertical, gap: xl, children: [{
+              type: stack
+              direction: vertical
+              gap: sm
+              align: (if (== @config.alignment center) center start)
+              className: (if (== @config.heading "") (if (== @config.lede "") hidden "") "")
+              children: [{
+              type: typography
+              content: @config.heading
+              variant: h2
+              weight: bold
+              align: (if (== @config.alignment center) center left)
+              className: (if (== @config.heading "") hidden "tracking-tight text-balance")
+            }, {
+              type: typography
+              content: @config.lede
+              variant: large
+              color: muted
+              align: (if (== @config.alignment center) center left)
+              className: (if (== @config.lede "") hidden "max-w-2xl text-pretty")
+            }]
+            }, {
+              type: simple-grid
+              cols: (if (== @config.layout vertical) 1 (math/min (math/max (array/len @config.steps) 1) 4))
+              gap: lg
+              children: (array/map @config.steps (fn step {
+                type: stack
+                direction: (if (== @config.layout vertical) horizontal vertical)
+                gap: md
+                align: start
+                children: [{
+                  type: box
+                  rounded: full
+                  bg: primary
+                  className: "flex h-10 w-10 shrink-0 items-center justify-center text-primary-foreground"
+                  children: [{
+                    type: typography
+                    content: (if (== (object/get @step icon "") "") (str/concat "" (+ @index 1)) "")
+                    variant: label
+                    weight: bold
+                    color: inherit
+                    className: (if (== (object/get @step icon "") "") "" hidden)
+                  }, {
+                    type: icon
+                    name: (object/get @step icon "")
+                    size: sm
+                    className: (if (== (object/get @step icon "") "") hidden "")
+                  }]
+                }, {
+                  type: stack
+                  direction: vertical
+                  gap: xs
+                  children: [{
+                    type: typography
+                    content: (object/get @step title "")
+                    variant: h5
+                    weight: semibold
+                  }, {
+                    type: typography
+                    content: (object/get @step description "")
+                    variant: body
+                    color: muted
+                    className: (if (== (object/get @step description "") "") hidden "text-pretty")
+                  }]
+                }]
+              }))
+            }] }]
+          }]
+        })
+    }
+
+    config {
+      heading : string = ""
+        @label "Heading"
+        @description "Section heading above the steps; empty hides it"
+        @synonyms "title"
+        @tier "presentation"
+      lede : string = ""
+        @label "Supporting text"
+        @tier "presentation"
+      alignment : "center" | "start" = center
+        @label "Heading alignment"
+        @tier "presentation"
+      steps : [StepItem] = [{ title: "Describe it", description: "Say what you want in plain words." }, { title: "Review it", description: "Check the plan before anything is built." }, { title: "Ship it", description: "Publish when it looks right." }]
+        @label "Steps"
+        @description "One entry per step: title, optional description and icon (an icon replaces the step number)"
+        @synonyms "how it works, process, stages, phases, path"
+        @tier "presentation"
+      layout : "row" | "vertical" = row
+        @label "Layout"
+        @description "row = side-by-side columns, vertical = a top-to-bottom list"
+        @tier "presentation"
+      surface : "plain" | "muted" = plain
+        @label "Surface"
+        @tier "presentation"
+    }
+  }
+
+  page "/steps" as StepsPage -> StepsRender
+}

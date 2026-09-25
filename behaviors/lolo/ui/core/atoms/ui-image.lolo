@@ -1,0 +1,64 @@
+app ui-image "1.0.0"
+"Image — UI factory (1:1 with the @almadar/ui image pattern)."
+;; @pattern "image"
+orbital ImageOrbital {
+  entity ImageItem [runtime] {
+    id : string!
+  }
+
+  trait ImageRender -> @rebindable ImageItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          src: @config.src
+          alt: @config.alt
+          fit: @config.fit
+          aspect: @config.aspect
+          rounded: @config.rounded
+          bordered: @config.bordered
+          loading: @config.loading
+          className: @config.className
+          type: image
+        })
+    }
+
+    config {
+      src : asset = "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"
+        @label "Src"
+        @description "Image source URL"
+        @tier "presentation"
+      alt : string = ""
+        @label "Alt"
+        @description "Alternative text; empty string marks the image decorative"
+        @tier "presentation"
+      fit : "cover" | "contain" | "fill" | "none" = cover
+        @label "Fit"
+        @description "How the image fills its box"
+        @tier "presentation"
+      aspect : "auto" | "1/1" | "4/3" | "3/2" | "16/9" | "21/9" = auto
+        @label "Aspect"
+        @description "Fixed aspect ratio of the box; 'auto' keeps the image's own"
+        @tier "presentation"
+      rounded : "none" | "sm" | "md" | "lg" | "xl" | "2xl" | "full" = md
+        @label "Rounded"
+        @description "Corner rounding"
+        @tier "presentation"
+      bordered : boolean = false
+        @label "Bordered"
+        @description "Draw a subtle border around the image"
+        @tier "presentation"
+      loading : "lazy" | "eager" = lazy
+        @label "Loading"
+        @description "'lazy' defers off-screen images; 'eager' for above-the-fold media"
+        @tier "presentation"
+      className : string
+        @label "Class Name"
+        @description "Additional class names"
+        @tier "presentation"
+    }
+  }
+
+  page "/image" as ImagePage -> ImageRender
+}

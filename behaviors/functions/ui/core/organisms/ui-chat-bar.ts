@@ -50,6 +50,7 @@ export interface StdUiChatBarConfig {
   pageProp?: number;
   pageSize?: number;
   placeholder?: string;
+  runningIndicator?: PatternValue;
   searchValue?: string;
   /** Default: `[]` */
   selectedIds?: string[];
@@ -219,6 +220,12 @@ export function stdUiChatBarChatBarOrbital(params: StdUiChatBarChatBarOrbitalPar
             'tier': 'presentation',
             'type': 'string',
           },
+          'runningIndicator': {
+            'description': 'Shown beside the gate while `status` is running; defaults to a Spinner (a host passes its brand mark).',
+            'label': 'Running Indicator',
+            'tier': 'presentation',
+            'type': 'node',
+          },
           'searchValue': {
             'description': 'Current search query value',
             'label': 'Search Value',
@@ -317,6 +324,7 @@ export function stdUiChatBarChatBarOrbital(params: StdUiChatBarChatBarOrbitalPar
                     'page': '@config.pageProp',
                     'pageSize': '@config.pageSize',
                     'placeholder': '@config.placeholder',
+                    'runningIndicator': '@config.runningIndicator',
                     'searchValue': '@config.searchValue',
                     'selectedIds': '@config.selectedIds',
                     'sortBy': '@config.sortBy',

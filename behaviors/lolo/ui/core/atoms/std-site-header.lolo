@@ -1,0 +1,131 @@
+app std-site-header "1.0.0"
+"std-site-header — the sticky top bar of a public website: brand (logo + name), navigation links with the current page marked, and an optional call-to-action button. On small screens the links fold into a menu opened by a toggle. Links follow `href` (in-app path, #anchor, or absolute URL); the header action and the small-screen menu links also emit NAV_CLICKED { href, label }. Pick for marketing sites, docs portals and product websites; for signed-in app chrome use std-app-layout."
+type SiteNavLink = { label : string!, href : string! }
+orbital SiteHeaderOrbital {
+  entity SiteHeaderView [runtime] {
+    id : string!
+    menuOpen : boolean = false
+  }
+
+  trait SiteHeaderRender -> @rebindable SiteHeaderView [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.menuOpen false)
+        (render-ui main @config.headerContent)
+      MENU_TOGGLE -> idle
+        (set @entity.menuOpen (not @entity.menuOpen))
+        (render-ui main @config.headerContent)
+      NAV_LINK -> idle
+        (set @entity.menuOpen false)
+        (render-ui main @config.headerContent)
+        (emit NAV_CLICKED { href: ?href, label: ?label })
+    }
+
+    emits {
+      NAV_CLICKED -> external {
+        href : string
+        label : string
+      }
+        @description "A navigation link or the header action was clicked; carries its href and label."
+        @synonyms "menu click, nav click, header link"
+        @tier "domain"
+    }
+
+    listens {
+      NAV_LINK {
+        href : string
+        label : string
+      }
+        @description "Navigation link click."
+        @tier "internal"
+    }
+
+    config {
+      brandName : string = "Almadar"
+        @label "Brand name"
+        @synonyms "site name, company, logo text"
+        @tier "presentation"
+      logoSrc : string = ""
+        @label "Logo image"
+        @description "Logo URL; empty shows the name only"
+        @tier "presentation"
+      links : [SiteNavLink] = [{ label: "Features", href: "/features" }, { label: "Pricing", href: "/pricing" }, { label: "About", href: "/about" }]
+        @label "Navigation links"
+        @synonyms "menu, nav items, top navigation"
+        @tier "presentation"
+      currentPath : string = "/"
+        @label "Current page path"
+        @description "Marks the matching link as active"
+        @tier "presentation"
+      actionLabel : string = ""
+        @label "Header action label"
+        @description "Call-to-action button at the right; empty hides it"
+        @synonyms "cta, sign up button, get started"
+        @tier "presentation"
+      actionHref : string = ""
+        @label "Header action link"
+        @tier "presentation"
+      headerContent : render-ui = {
+        type: stack
+        direction: vertical
+        gap: none
+        className: "sticky top-0 z-50"
+        children: [{
+          type: header
+          variant: desktop
+          sticky: false
+          showMenuToggle: false
+          brandName: @config.brandName
+          logoSrc: @config.logoSrc
+          className: "hidden md:flex"
+          navigationItems: (array/map @config.links (fn entry {
+            label: (object/get @entry label "")
+            href: (object/get @entry href "")
+            active: (== (object/get @entry href "") @config.currentPath)
+          }))
+          actions: {
+            type: button
+            label: @config.actionLabel
+            href: @config.actionHref
+            variant: primary
+            size: sm
+            action: NAV_LINK
+            actionPayload: { href: @config.actionHref, label: @config.actionLabel }
+            className: (if (== @config.actionLabel "") hidden "")
+          }
+        }, {
+          type: header
+          variant: mobile
+          sticky: false
+          showMenuToggle: true
+          isMenuOpen: @entity.menuOpen
+          onMenuToggle: MENU_TOGGLE
+          brandName: @config.brandName
+          logoSrc: @config.logoSrc
+          className: "md:hidden"
+        }, {
+          type: stack
+          direction: vertical
+          gap: xs
+          align: stretch
+          className: (if @entity.menuOpen "md:hidden border-b border-border bg-card px-4 py-3" hidden)
+          children: (array/map @config.links (fn entry {
+            type: button
+            variant: (if (== (object/get @entry href "") @config.currentPath) secondary ghost)
+            label: (object/get @entry label "")
+            href: (object/get @entry href "")
+            action: NAV_LINK
+            actionPayload: { href: (object/get @entry href ""), label: (object/get @entry label "") }
+            className: "justify-start"
+          }))
+        }]
+      }
+        @label "Header body"
+        @tier "internal"
+    }
+  }
+
+  page "/site-header" as SiteHeaderPage -> SiteHeaderRender
+}

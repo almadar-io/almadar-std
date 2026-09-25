@@ -1,0 +1,264 @@
+{
+  "description": "std-prose — a block of long-form text at a comfortable reading width: optional eyebrow, heading and meta line (date, author), then markdown body with headings, lists, links and code blocks. Supports right-to-left text. Pick for articles, blog posts, about and mission pages, policy text and install notes.",
+  "ledger": {
+    "entries": {
+      "ent_01M3B9EHP8WAV2T25Z4Y13J6VE": {
+        "bakedName": "ProseView",
+        "curName": "ProseView",
+        "id": "ent_01M3B9EHP8WAV2T25Z4Y13J6VE",
+        "kind": "entity",
+        "owner": "workspace",
+        "renames": []
+      },
+      "evt_01M3B9EHP8VM4CPFKCBQEMWVH8": {
+        "bakedName": "INIT",
+        "curName": "INIT",
+        "id": "evt_01M3B9EHP8VM4CPFKCBQEMWVH8",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M3B9EHP8G26V3RYFSQTSV0W5",
+        "renames": []
+      },
+      "orb_01M3B9EHP8NP9APB3E0SBWDGG8": {
+        "bakedName": "ProseOrbital",
+        "curName": "ProseOrbital",
+        "id": "orb_01M3B9EHP8NP9APB3E0SBWDGG8",
+        "kind": "orbital",
+        "owner": "workspace",
+        "renames": []
+      },
+      "pag_01M3B9EHP8JRZ5YSHJJ0WXQ854": {
+        "bakedName": "ProsePage",
+        "curName": "ProsePage",
+        "id": "pag_01M3B9EHP8JRZ5YSHJJ0WXQ854",
+        "kind": "page",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M3B9EHP8G26V3RYFSQTSV0W5": {
+        "bakedName": "ProseRender",
+        "curName": "ProseRender",
+        "id": "trt_01M3B9EHP8G26V3RYFSQTSV0W5",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      }
+    },
+    "schemaVersion": 1
+  },
+  "name": "std-prose",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "id": "ent_01M3B9EHP8WAV2T25Z4Y13J6VE",
+        "name": "ProseView",
+        "persistence": "runtime"
+      },
+      "id": "orb_01M3B9EHP8NP9APB3E0SBWDGG8",
+      "name": "ProseOrbital",
+      "pages": [
+        {
+          "id": "pag_01M3B9EHP8JRZ5YSHJJ0WXQ854",
+          "name": "ProsePage",
+          "path": "/prose",
+          "traits": [
+            {
+              "ref": "ProseRender",
+              "refId": "trt_01M3B9EHP8G26V3RYFSQTSV0W5"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "body": {
+              "default": "Write the text here in **markdown**.",
+              "description": "Markdown text",
+              "label": "Body",
+              "synonyms": "content, article, text, copy",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "direction": {
+              "default": "ltr",
+              "label": "Text direction",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "ltr",
+                "rtl"
+              ]
+            },
+            "eyebrow": {
+              "default": "",
+              "description": "Small badge above the heading; empty hides it",
+              "label": "Eyebrow",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "heading": {
+              "default": "",
+              "description": "Empty hides it",
+              "label": "Heading",
+              "synonyms": "title",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "meta": {
+              "default": "",
+              "description": "Date, author or reading time under the heading; empty hides it",
+              "label": "Meta line",
+              "synonyms": "byline, date, author",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "surface": {
+              "default": "plain",
+              "label": "Surface",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "plain",
+                "muted"
+              ]
+            }
+          },
+          "effectRow": [
+            {
+              "kind": "render-ui",
+              "resource": "main"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "entityRefIds": {
+            "ProseView": "ent_01M3B9EHP8WAV2T25Z4Y13J6VE"
+          },
+          "id": "trt_01M3B9EHP8G26V3RYFSQTSV0W5",
+          "linkedEntity": "ProseView",
+          "linkedEntityId": "ent_01M3B9EHP8WAV2T25Z4Y13J6VE",
+          "name": "ProseRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "id": "evt_01M3B9EHP8VM4CPFKCBQEMWVH8",
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "bg": [
+                        "if",
+                        [
+                          "==",
+                          "@config.surface",
+                          "muted"
+                        ],
+                        "muted",
+                        "transparent"
+                      ],
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "label": "@config.eyebrow",
+                                  "type": "badge",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "className": [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@config.heading",
+                                      ""
+                                    ],
+                                    "hidden",
+                                    "tracking-tight text-balance"
+                                  ],
+                                  "content": "@config.heading",
+                                  "type": "typography",
+                                  "variant": "h2",
+                                  "weight": "bold"
+                                },
+                                {
+                                  "className": [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@config.meta",
+                                      ""
+                                    ],
+                                    "hidden",
+                                    ""
+                                  ],
+                                  "color": "muted",
+                                  "content": "@config.meta",
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "content": "@config.body",
+                                  "direction": "@config.direction",
+                                  "type": "markdown-content"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "md",
+                              "type": "stack"
+                            }
+                          ],
+                          "maxWidth": "md",
+                          "padding": "lg",
+                          "size": "md",
+                          "type": "container"
+                        }
+                      ],
+                      "dir": "@config.direction",
+                      "fullWidth": true,
+                      "paddingY": "xl",
+                      "type": "box"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01M3B9EHP8VM4CPFKCBQEMWVH8",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 1,
+  "version": "1.0.0"
+}
