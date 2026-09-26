@@ -1,7 +1,10 @@
 app std-site-header "1.0.0"
-"std-site-header — the sticky top bar of a public website: brand (logo + name), navigation links with the current page marked, and an optional call-to-action button. On small screens the links fold into a menu opened by a toggle. Links follow `href` (in-app path, #anchor, or absolute URL); the header action and the small-screen menu links also emit NAV_CLICKED { href, label }. Pick for marketing sites, docs portals and product websites; for signed-in app chrome use std-app-layout."
-type SiteNavLink = { label : string!, href : string! }
+"std-site-header — the sticky top bar of a public website: brand (logo + name), navigation links with the current page marked (a link with children opens a dropdown), an optional language picker (std-language-picker: the same page in each language, default language at the root and the others under /<code>/), and an optional call-to-action button. On small screens the links fold into a menu opened by a toggle, with child links indented under their parent and the call-to-action button at the bottom. Links follow `href` (in-app path, #anchor, or absolute URL); the header action and the small-screen menu links also emit NAV_CLICKED { href, label }. Pick for marketing sites, docs portals and product websites; for signed-in app chrome use std-app-layout."
+type SiteNavLink = { label : string!, href : string!, children : [SiteNavLink] }
+type SiteLanguage = { code : string!, label : string!, href : string! }
 orbital SiteHeaderOrbital {
+  uses LanguagePicker from "std/behaviors/std-language-picker"
+
   entity SiteHeaderView [runtime] {
     id : string!
     menuOpen : boolean = false
@@ -59,6 +62,16 @@ orbital SiteHeaderOrbital {
         @label "Current page path"
         @description "Marks the matching link as active"
         @tier "presentation"
+      languages : [SiteLanguage] = []
+        @label "Languages"
+        @description "Every language this page exists in, each named in its own language, with the href of THIS page in that language (default language at the root, others under /<code>/). Empty hides the language picker."
+        @synonyms "locales, translations, language switcher, i18n"
+        @tier "presentation"
+      currentLanguage : string = "en"
+        @label "Current language"
+        @description "The code of the language this page is in"
+        @synonyms "locale, active language, page language"
+        @tier "presentation"
       actionLabel : string = ""
         @label "Header action label"
         @description "Call-to-action button at the right; empty hides it"
@@ -79,13 +92,18 @@ orbital SiteHeaderOrbital {
           showMenuToggle: false
           brandName: @config.brandName
           logoSrc: @config.logoSrc
-          className: "hidden md:flex"
+          className: "hidden lg:flex"
           navigationItems: (array/map @config.links (fn entry {
             label: (object/get @entry label "")
             href: (object/get @entry href "")
             active: (== (object/get @entry href "") @config.currentPath)
+            children: (array/map (object/get @entry children []) (fn child {
+              label: (object/get @child label "")
+              href: (object/get @child href "")
+              active: (== (object/get @child href "") @config.currentPath)
+            }))
           }))
-          actions: {
+          actions: [@trait.SiteHeaderLanguages, {
             type: button
             label: @config.actionLabel
             href: @config.actionHref
@@ -94,7 +112,7 @@ orbital SiteHeaderOrbital {
             action: NAV_LINK
             actionPayload: { href: @config.actionHref, label: @config.actionLabel }
             className: (if (== @config.actionLabel "") hidden "")
-          }
+          }]
         }, {
           type: header
           variant: mobile
@@ -104,22 +122,59 @@ orbital SiteHeaderOrbital {
           onMenuToggle: MENU_TOGGLE
           brandName: @config.brandName
           logoSrc: @config.logoSrc
-          className: "md:hidden"
+          className: "lg:hidden"
+          actions: [@trait.SiteHeaderLanguages]
         }, {
           type: stack
           direction: vertical
           gap: xs
           align: stretch
-          className: (if @entity.menuOpen "md:hidden border-b border-border bg-card px-4 py-3" hidden)
-          children: (array/map @config.links (fn entry {
-            type: button
-            variant: (if (== (object/get @entry href "") @config.currentPath) secondary ghost)
-            label: (object/get @entry label "")
-            href: (object/get @entry href "")
-            action: NAV_LINK
-            actionPayload: { href: (object/get @entry href ""), label: (object/get @entry label "") }
-            className: "justify-start"
+          className: (if @entity.menuOpen "lg:hidden border-b border-border bg-card px-4 py-3" hidden)
+          children: [{
+          type: stack
+          direction: vertical
+          gap: xs
+          align: stretch
+          children: (array/map @config.links (fn (entry) {
+            type: stack
+            direction: vertical
+            gap: xs
+            align: stretch
+            children: [{
+              type: button
+              variant: (if (== (object/get @entry href "") @config.currentPath) secondary ghost)
+              label: (object/get @entry label "")
+              href: (object/get @entry href "")
+              action: NAV_LINK
+              actionPayload: { href: (object/get @entry href ""), label: (object/get @entry label "") }
+              className: "justify-start"
+            }, {
+              type: stack
+              direction: vertical
+              gap: xs
+              align: stretch
+              className: "ps-6"
+              children: (array/map (object/get @entry children []) (fn (child) {
+                type: button
+                variant: (if (== (object/get @child href "") @config.currentPath) secondary ghost)
+                label: (object/get @child label "")
+                href: (object/get @child href "")
+                action: NAV_LINK
+                actionPayload: { href: (object/get @child href ""), label: (object/get @child label "") }
+                className: "justify-start"
+              }))
+            }]
           }))
+          }, {
+            type: button
+            label: @config.actionLabel
+            href: @config.actionHref
+            variant: primary
+            size: md
+            action: NAV_LINK
+            actionPayload: { href: @config.actionHref, label: @config.actionLabel }
+            className: (if (== @config.actionLabel "") hidden "mt-2 w-full")
+          }]
         }]
       }
         @label "Header body"
@@ -127,5 +182,12 @@ orbital SiteHeaderOrbital {
     }
   }
 
-  page "/site-header" as SiteHeaderPage -> SiteHeaderRender
+  trait SiteHeaderLanguages = LanguagePicker.traits.LanguagePickerRender -> SiteHeaderView {
+    config {
+      languages: @config.languages
+      currentLanguage: @config.currentLanguage
+    }
+  }
+
+  page "/site-header" as SiteHeaderPage -> SiteHeaderRender, SiteHeaderLanguages
 }

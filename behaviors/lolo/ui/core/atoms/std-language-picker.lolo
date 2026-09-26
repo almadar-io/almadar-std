@@ -1,0 +1,52 @@
+app std-language-picker "1.0.0"
+"std-language-picker — the language switcher of a multilingual site or app: a globe button showing the current language code that opens a menu listing every language in its own name, with the current one ticked. Each entry links to the same page in that language. Routing convention: the default language lives at the root and every other language under a `/<code>/` prefix (`/pricing`, `/ar/pricing`, `/sl/pricing`), so each language has its own stable URL that can be linked from outside and indexed by search engines. Pick for public websites and app chrome that serve more than one language; std-site-header embeds it."
+type SiteLanguage = { code : string!, label : string!, href : string! }
+orbital LanguagePickerOrbital {
+  entity LanguagePickerView [runtime] {
+    id : string!
+  }
+
+  trait LanguagePickerRender -> @rebindable LanguagePickerView [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main @config.pickerContent)
+    }
+
+    config {
+      languages : [SiteLanguage] = [{ code: "en", label: "English", href: "/" }, { code: "ar", label: "العربية", href: "/ar/" }, { code: "sl", label: "Slovenščina", href: "/sl/" }]
+        @label "Languages"
+        @description "Every language this page exists in, each named in its own language, with the href of THIS page in that language. The default language's href has no prefix; the others start with /<code>/."
+        @synonyms "locales, translations, language list, language switcher, i18n"
+        @tier "presentation"
+      currentLanguage : string = "en"
+        @label "Current language"
+        @description "The code of the language this page is in; shown on the button and ticked in the menu"
+        @synonyms "locale, active language, page language"
+        @tier "presentation"
+      pickerContent : render-ui = {
+        type: menu
+        position: bottom-end
+        className: (if (== (array/len @config.languages) 0) hidden "")
+        trigger: {
+          type: button
+          variant: ghost
+          size: sm
+          icon: globe
+          label: (str/upper @config.currentLanguage)
+        }
+        items: (array/map @config.languages (fn entry {
+          id: (object/get @entry code "")
+          label: (object/get @entry label "")
+          href: (object/get @entry href "")
+          icon: (if (== (object/get @entry code "") @config.currentLanguage) check "")
+        }))
+      }
+        @label "Picker body"
+        @tier "internal"
+    }
+  }
+
+  page "/language-picker" as LanguagePickerPage -> LanguagePickerRender
+}

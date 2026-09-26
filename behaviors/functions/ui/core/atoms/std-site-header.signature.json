@@ -73,6 +73,15 @@
             "tier": "presentation"
           },
           {
+            "key": "currentLanguage",
+            "type": "string",
+            "default": "en",
+            "label": "Current language",
+            "description": "The code of the language this page is in",
+            "synonyms": "locale, active language, page language",
+            "tier": "presentation"
+          },
+          {
             "key": "currentPath",
             "type": "string",
             "default": "/",
@@ -86,30 +95,33 @@
             "default": {
               "children": [
                 {
-                  "actions": {
-                    "action": "NAV_LINK",
-                    "actionPayload": {
-                      "href": "@config.actionHref",
-                      "label": "@config.actionLabel"
-                    },
-                    "className": [
-                      "if",
-                      [
-                        "==",
-                        "@config.actionLabel",
+                  "actions": [
+                    "@trait.SiteHeaderLanguages",
+                    {
+                      "action": "NAV_LINK",
+                      "actionPayload": {
+                        "href": "@config.actionHref",
+                        "label": "@config.actionLabel"
+                      },
+                      "className": [
+                        "if",
+                        [
+                          "==",
+                          "@config.actionLabel",
+                          ""
+                        ],
+                        "hidden",
                         ""
                       ],
-                      "hidden",
-                      ""
-                    ],
-                    "href": "@config.actionHref",
-                    "label": "@config.actionLabel",
-                    "size": "sm",
-                    "type": "button",
-                    "variant": "primary"
-                  },
+                      "href": "@config.actionHref",
+                      "label": "@config.actionLabel",
+                      "size": "sm",
+                      "type": "button",
+                      "variant": "primary"
+                    }
+                  ],
                   "brandName": "@config.brandName",
-                  "className": "hidden md:flex",
+                  "className": "hidden lg:flex",
                   "logoSrc": "@config.logoSrc",
                   "navigationItems": [
                     "array/map",
@@ -127,6 +139,43 @@
                             ""
                           ],
                           "@config.currentPath"
+                        ],
+                        "children": [
+                          "array/map",
+                          [
+                            "object/get",
+                            "@entry",
+                            "children",
+                            []
+                          ],
+                          [
+                            "fn",
+                            "child",
+                            {
+                              "active": [
+                                "==",
+                                [
+                                  "object/get",
+                                  "@child",
+                                  "href",
+                                  ""
+                                ],
+                                "@config.currentPath"
+                              ],
+                              "href": [
+                                "object/get",
+                                "@child",
+                                "href",
+                                ""
+                              ],
+                              "label": [
+                                "object/get",
+                                "@child",
+                                "label",
+                                ""
+                              ]
+                            }
+                          ]
                         ],
                         "href": [
                           "object/get",
@@ -149,8 +198,11 @@
                   "variant": "desktop"
                 },
                 {
+                  "actions": [
+                    "@trait.SiteHeaderLanguages"
+                  ],
                   "brandName": "@config.brandName",
-                  "className": "md:hidden",
+                  "className": "lg:hidden",
                   "isMenuOpen": "@entity.menuOpen",
                   "logoSrc": "@config.logoSrc",
                   "onMenuToggle": "MENU_TOGGLE",
@@ -162,63 +214,171 @@
                 {
                   "align": "stretch",
                   "children": [
-                    "array/map",
-                    "@config.links",
-                    [
-                      "fn",
-                      "entry",
-                      {
-                        "action": "NAV_LINK",
-                        "actionPayload": {
-                          "href": [
-                            "object/get",
-                            "@entry",
-                            "href",
-                            ""
-                          ],
-                          "label": [
-                            "object/get",
-                            "@entry",
-                            "label",
-                            ""
-                          ]
-                        },
-                        "className": "justify-start",
-                        "href": [
-                          "object/get",
-                          "@entry",
-                          "href",
-                          ""
-                        ],
-                        "label": [
-                          "object/get",
-                          "@entry",
-                          "label",
-                          ""
-                        ],
-                        "type": "button",
-                        "variant": [
-                          "if",
+                    {
+                      "align": "stretch",
+                      "children": [
+                        "array/map",
+                        "@config.links",
+                        [
+                          "fn",
                           [
-                            "==",
-                            [
-                              "object/get",
-                              "@entry",
-                              "href",
-                              ""
-                            ],
-                            "@config.currentPath"
+                            "entry"
                           ],
-                          "secondary",
-                          "ghost"
+                          {
+                            "align": "stretch",
+                            "children": [
+                              {
+                                "action": "NAV_LINK",
+                                "actionPayload": {
+                                  "href": [
+                                    "object/get",
+                                    "@entry",
+                                    "href",
+                                    ""
+                                  ],
+                                  "label": [
+                                    "object/get",
+                                    "@entry",
+                                    "label",
+                                    ""
+                                  ]
+                                },
+                                "className": "justify-start",
+                                "href": [
+                                  "object/get",
+                                  "@entry",
+                                  "href",
+                                  ""
+                                ],
+                                "label": [
+                                  "object/get",
+                                  "@entry",
+                                  "label",
+                                  ""
+                                ],
+                                "type": "button",
+                                "variant": [
+                                  "if",
+                                  [
+                                    "==",
+                                    [
+                                      "object/get",
+                                      "@entry",
+                                      "href",
+                                      ""
+                                    ],
+                                    "@config.currentPath"
+                                  ],
+                                  "secondary",
+                                  "ghost"
+                                ]
+                              },
+                              {
+                                "align": "stretch",
+                                "children": [
+                                  "array/map",
+                                  [
+                                    "object/get",
+                                    "@entry",
+                                    "children",
+                                    []
+                                  ],
+                                  [
+                                    "fn",
+                                    [
+                                      "child"
+                                    ],
+                                    {
+                                      "action": "NAV_LINK",
+                                      "actionPayload": {
+                                        "href": [
+                                          "object/get",
+                                          "@child",
+                                          "href",
+                                          ""
+                                        ],
+                                        "label": [
+                                          "object/get",
+                                          "@child",
+                                          "label",
+                                          ""
+                                        ]
+                                      },
+                                      "className": "justify-start",
+                                      "href": [
+                                        "object/get",
+                                        "@child",
+                                        "href",
+                                        ""
+                                      ],
+                                      "label": [
+                                        "object/get",
+                                        "@child",
+                                        "label",
+                                        ""
+                                      ],
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          [
+                                            "object/get",
+                                            "@child",
+                                            "href",
+                                            ""
+                                          ],
+                                          "@config.currentPath"
+                                        ],
+                                        "secondary",
+                                        "ghost"
+                                      ]
+                                    }
+                                  ]
+                                ],
+                                "className": "ps-6",
+                                "direction": "vertical",
+                                "gap": "xs",
+                                "type": "stack"
+                              }
+                            ],
+                            "direction": "vertical",
+                            "gap": "xs",
+                            "type": "stack"
+                          }
                         ]
-                      }
-                    ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "xs",
+                      "type": "stack"
+                    },
+                    {
+                      "action": "NAV_LINK",
+                      "actionPayload": {
+                        "href": "@config.actionHref",
+                        "label": "@config.actionLabel"
+                      },
+                      "className": [
+                        "if",
+                        [
+                          "==",
+                          "@config.actionLabel",
+                          ""
+                        ],
+                        "hidden",
+                        "mt-2 w-full"
+                      ],
+                      "href": "@config.actionHref",
+                      "label": "@config.actionLabel",
+                      "size": "md",
+                      "type": "button",
+                      "variant": "primary"
+                    }
                   ],
                   "className": [
                     "if",
                     "@entity.menuOpen",
-                    "md:hidden border-b border-border bg-card px-4 py-3",
+                    "lg:hidden border-b border-border bg-card px-4 py-3",
                     "hidden"
                   ],
                   "direction": "vertical",
@@ -233,6 +393,35 @@
             },
             "label": "Header body",
             "tier": "internal"
+          },
+          {
+            "key": "languages",
+            "type": "[SiteLanguage]",
+            "default": [],
+            "label": "Languages",
+            "description": "Every language this page exists in, each named in its own language, with the href of THIS page in that language (default language at the root, others under /<code>/). Empty hides the language picker.",
+            "synonyms": "locales, translations, language switcher, i18n",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "code": {
+                  "name": "code",
+                  "required": true,
+                  "type": "string"
+                },
+                "href": {
+                  "name": "href",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
           },
           {
             "key": "links",
@@ -256,6 +445,17 @@
             "tier": "presentation",
             "items": {
               "properties": {
+                "children": {
+                  "name": "children",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "union",
+                    "values": [
+                      "SiteNavLink"
+                    ]
+                  }
+                },
                 "href": {
                   "name": "href",
                   "required": true,
@@ -308,6 +508,30 @@
             "resource": "@entity.menuOpen"
           }
         ]
+      },
+      {
+        "name": "SiteHeaderLanguages",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "currentLanguage",
+            "type": "unknown",
+            "default": "@config.currentLanguage"
+          },
+          {
+            "key": "languages",
+            "type": "unknown",
+            "default": "@config.languages"
+          }
+        ],
+        "capabilities": [],
+        "ref": "LanguagePicker.traits.LanguagePickerRender",
+        "linkedEntity": "SiteHeaderView",
+        "transitionEvents": [
+          "INIT"
+        ],
+        "definerKnobs": []
       }
     ],
     "pages": [

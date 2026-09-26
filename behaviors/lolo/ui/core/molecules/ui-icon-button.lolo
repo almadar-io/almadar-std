@@ -1,0 +1,105 @@
+app ui-icon-button "1.0.0"
+"IconButton — UI factory (1:1 with the @almadar/ui icon-button pattern)."
+;; @pattern "icon-button"
+orbital IconButtonOrbital {
+  type IconButtonIconAsset = {
+    url : asset!
+    role : string!
+    category : string!
+    animations : [string]
+    style : "pixel" | "vector" | "hd" | "1-bit" | "isometric"
+    variant : string
+    dimension : "2d" | "3d"
+    aspect : "1:1" | "16:9" | "5:7" | "8:1" | "4:1" | "5:3" | "1:2"
+    atlas : asset
+    sprite : string
+    name : string
+    thumbnailUrl : string
+  }
+
+  entity IconButtonItem [runtime] {
+    id : string!
+  }
+
+  trait IconButtonRender -> @rebindable IconButtonItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          className: @config.className
+          variant: @config.variant
+          size: @config.size
+          isLoading: @config.isLoading
+          iconAsset: @config.iconAsset
+          action: @config.action
+          actionPayload: @config.actionPayload
+          disabled: @config.disabled
+          href: @config.href
+          icon: @config.icon
+          label: @config.label
+          tooltipPosition: @config.tooltipPosition
+          type: icon-button
+        })
+    }
+
+    emits {
+      @config.action -> external { }
+        @description "Declarative event name — emits UI:{action} via eventBus on click"
+        @tier "essential"
+    }
+
+    config {
+      className : string
+        @label "Class Name"
+        @description "Additional CSS classes applied to the root element."
+        @tier "presentation"
+      variant : "primary" | "secondary" | "ghost" | "danger" | "success" | "warning" | "default" | "link" = ghost
+        @label "Variant"
+        @description "variant prop"
+        @tier "presentation"
+      size : "sm" | "md" | "lg" = sm
+        @label "Size"
+        @description "size prop"
+        @tier "presentation"
+      isLoading : boolean
+        @label "Is Loading"
+        @description "isLoading prop"
+        @tier "presentation"
+      iconAsset : IconButtonIconAsset
+        @label "Icon Asset"
+        @description "Asset image rendered as the leading icon; takes precedence over icon/leftIcon when provided."
+        @tier "presentation"
+      action : event = "ACTION"
+        @label "Action"
+        @description "Declarative event name — emits UI:{action} via eventBus on click"
+        @tier "presentation"
+      actionPayload : @payload @config.action
+        @label "Action Payload"
+        @description "Payload to include with the action event"
+        @tier "presentation"
+      disabled : boolean
+        @label "Disabled"
+        @description "Disable the button (greys out, blocks click events)"
+        @tier "presentation"
+      href : string
+        @label "Href"
+        @description "Makes the button a link: `#anchor` scrolls, an absolute URL loads, a path navigates in-app"
+        @tier "presentation"
+      icon : icon = "circle"
+        @label "Icon"
+        @description "icon prop"
+        @tier "presentation"
+      label : string = ""
+        @label "Label"
+        @description "What the button does — its accessible name and its tooltip."
+        @tier "presentation"
+      tooltipPosition : "top" | "bottom" | "left" | "right" = right
+        @label "Tooltip Position"
+        @description "Where the tooltip opens."
+        @tier "presentation"
+    }
+  }
+
+  page "/icon-button" as IconButtonPage -> IconButtonRender
+}

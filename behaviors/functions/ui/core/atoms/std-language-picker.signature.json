@@ -1,0 +1,189 @@
+[
+  {
+    "organism": "std-language-picker",
+    "orbital": "LanguagePickerOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/core/atoms/std-language-picker.ts",
+    "entities": [
+      {
+        "name": "LanguagePickerView",
+        "fields": [],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "LanguagePickerRender",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "currentLanguage",
+            "type": "string",
+            "default": "en",
+            "label": "Current language",
+            "description": "The code of the language this page is in; shown on the button and ticked in the menu",
+            "synonyms": "locale, active language, page language",
+            "tier": "presentation"
+          },
+          {
+            "key": "languages",
+            "type": "[SiteLanguage]",
+            "default": [
+              {
+                "code": "en",
+                "href": "/",
+                "label": "English"
+              },
+              {
+                "code": "ar",
+                "href": "/ar/",
+                "label": "العربية"
+              },
+              {
+                "code": "sl",
+                "href": "/sl/",
+                "label": "Slovenščina"
+              }
+            ],
+            "label": "Languages",
+            "description": "Every language this page exists in, each named in its own language, with the href of THIS page in that language. The default language's href has no prefix; the others start with /<code>/.",
+            "synonyms": "locales, translations, language list, language switcher, i18n",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "code": {
+                  "name": "code",
+                  "required": true,
+                  "type": "string"
+                },
+                "href": {
+                  "name": "href",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "pickerContent",
+            "type": "render-ui",
+            "default": {
+              "className": [
+                "if",
+                [
+                  "==",
+                  [
+                    "array/len",
+                    "@config.languages"
+                  ],
+                  0
+                ],
+                "hidden",
+                ""
+              ],
+              "items": [
+                "array/map",
+                "@config.languages",
+                [
+                  "fn",
+                  "entry",
+                  {
+                    "href": [
+                      "object/get",
+                      "@entry",
+                      "href",
+                      ""
+                    ],
+                    "icon": [
+                      "if",
+                      [
+                        "==",
+                        [
+                          "object/get",
+                          "@entry",
+                          "code",
+                          ""
+                        ],
+                        "@config.currentLanguage"
+                      ],
+                      "check",
+                      ""
+                    ],
+                    "id": [
+                      "object/get",
+                      "@entry",
+                      "code",
+                      ""
+                    ],
+                    "label": [
+                      "object/get",
+                      "@entry",
+                      "label",
+                      ""
+                    ]
+                  }
+                ]
+              ],
+              "position": "bottom-end",
+              "trigger": {
+                "icon": "globe",
+                "label": [
+                  "str/upper",
+                  "@config.currentLanguage"
+                ],
+                "size": "sm",
+                "type": "button",
+                "variant": "ghost"
+              },
+              "type": "menu"
+            },
+            "label": "Picker body",
+            "tier": "internal"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "LanguagePickerView",
+        "transitionEvents": [
+          "INIT"
+        ],
+        "definerKnobs": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        },
+        "effectRow": [
+          {
+            "kind": "render-ui",
+            "resource": "main"
+          }
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "name": "LanguagePickerPage",
+        "defaultPath": "/language-picker",
+        "primaryEntity": "LanguagePickerView"
+      }
+    ],
+    "emittedEvents": [],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "sourceValid": true
+  }
+]

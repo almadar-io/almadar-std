@@ -1,0 +1,53 @@
+app ui-top-nav-item "1.0.0"
+"TopNavItem — UI factory (1:1 with the @almadar/ui top-nav-item pattern)."
+;; @pattern "top-nav-item"
+orbital TopNavItemOrbital {
+  type TopNavItemItem = {
+    label : string!
+    href : string
+    icon : icon
+    badge : string
+    active : boolean
+    children : [TopNavItemItem]
+  }
+
+  entity TopNavItemItem [runtime] {
+    id : string!
+  }
+
+  trait TopNavItemRender -> @rebindable TopNavItemItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          item: @config.item
+          activeHref: @config.activeHref
+          tone: @config.tone
+          className: @config.className
+          type: top-nav-item
+        })
+    }
+
+    config {
+      item : TopNavItemItem = { label: "Label", href: "Href", icon: "circle", badge: "Badge", active: false, children: [] }
+        @label "Item"
+        @description "item prop"
+        @tier "presentation"
+      activeHref : string
+        @label "Active Href"
+        @description "The href of the active page, used to mark the item (or its parent) active."
+        @tier "presentation"
+      tone : "solid" | "soft" = solid
+        @label "Tone"
+        @description "Active styling: `solid` fills with the primary colour (dashboard top bar); `soft` tints it (site header)."
+        @tier "presentation"
+      className : string
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/top-nav-item" as TopNavItemPage -> TopNavItemRender
+}

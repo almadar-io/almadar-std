@@ -81,6 +81,7 @@ export * from './ui/game/atoms/std-hero-nav.js';
 export * from './ui/core/atoms/std-image-upload-multi.js';
 export * from './ui/core/atoms/std-import.js';
 export * from './infra/atoms/std-knowledge-loop.js';
+export * from './ui/core/atoms/std-language-picker.js';
 export * from './ui/learning/atoms/std-learn-arrangement.js';
 export * from './ui/learning/atoms/std-learn-classify.js';
 export * from './ui/learning/atoms/std-learn-compare.js';
