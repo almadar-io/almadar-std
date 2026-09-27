@@ -50,6 +50,7 @@ export interface StdUiButtonConfig {
   iconRight?: unknown;
   /** Default: `false` */
   isLoading?: boolean;
+  /** Default: `"Button"` */
   label?: string;
   leftIcon?: unknown;
   rightIcon?: unknown;

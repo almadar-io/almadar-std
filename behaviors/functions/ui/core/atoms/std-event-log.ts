@@ -95,10 +95,14 @@ export interface StdEventLogConfig {
   filters?: EntityRow[];
   /** Default: `["backfillTitle","backfillDescription","backfillKind","backfillDate"]` */
   formFields?: string[];
+  /** Default: `"kind"` */
+  kindField?: string;
   /** Default: `[{"icon":"plus-circle","key":"created","label":"Created","status":"active"},{"icon":"edit-3","key":"updated","label":"Updated","status":"pending"},{"icon":"check-circle","key":"approved","label":"Approved","status":"complete"},{"icon":"x-circle","key":"rejected","label":"Rejected","status":"error"}]` */
   kindOptions?: EntityRow[];
   /** Default: `20` */
   pageSize?: number;
+  /** Default: `"title"` */
+  searchField?: string;
   /** Default: `"Search activity…"` */
   searchPlaceholder?: string;
   /** Default: `"vertical-spacious"` */
@@ -552,6 +556,14 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
             'tier': 'presentation',
             'type': '[string]',
           },
+          'kindField': {
+            'default': 'kind',
+            'description': 'Name the field on this entity the kind filter compares against (the values of kindOptions). An entity whose kind lives under another column (e.g. status) sets it here, or the kind filter can never match an entry.',
+            'label': 'Which column holds each entry\'s kind?',
+            'synonyms': 'kind column, type field, category column, filter by kind',
+            'tier': 'policy',
+            'type': 'string',
+          },
           'kindOptions': {
             'default': [
               {
@@ -622,6 +634,14 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
             'synonyms': 'fetch limit, records per page, page limit',
             'tier': 'presentation',
             'type': 'number',
+          },
+          'searchField': {
+            'default': 'title',
+            'description': 'Name the field on this entity the search box\'s str/includes filter matches against. Declared, never inferred: an entity with no `title` column must set this to a real field or the search box can never match an entry.',
+            'label': 'Which column does the search box match against?',
+            'synonyms': 'search column, search on field, match field, search key',
+            'tier': 'policy',
+            'type': 'string',
           },
           'searchPlaceholder': {
             'default': 'Search activity…',
@@ -1630,7 +1650,7 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                           [
                             'object/get',
                             '@entity',
-                            'kind',
+                            '@config.kindField',
                           ],
                           '@entity.filterKind',
                         ],
@@ -1647,7 +1667,7 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                           [
                             'object/get',
                             '@entity',
-                            'title',
+                            '@config.searchField',
                           ],
                           '@payload.searchTerm',
                         ],
@@ -1684,7 +1704,7 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
                           [
                             'object/get',
                             '@entity',
-                            'kind',
+                            '@config.kindField',
                           ],
                           '@entity.filterKind',
                         ],

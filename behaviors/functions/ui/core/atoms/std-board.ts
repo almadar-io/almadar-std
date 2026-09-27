@@ -162,6 +162,8 @@ export interface StdBoardConfig {
   kanbanClassicBodyContent?: unknown;
   /** Default: `10` */
   pageSize?: number;
+  /** Default: `"title"` */
+  searchField?: string;
   /** Default: `"Search…"` */
   searchPlaceholder?: string;
   /** Default: `"Board"` */
@@ -1152,6 +1154,14 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
             'synonyms': 'fetch limit, records per page, batch size, page limit',
             'tier': 'presentation',
             'type': 'number',
+          },
+          'searchField': {
+            'default': 'title',
+            'description': 'Name the field on this entity the search box\'s str/includes filter matches against. Declared, never inferred: an entity with no `title` column must set this to a real field (e.g. name, summary) or the search box can never match a card.',
+            'label': 'Which column does the search box match against?',
+            'synonyms': 'search column, search on field, match field, search key',
+            'tier': 'policy',
+            'type': 'string',
           },
           'searchPlaceholder': {
             'default': 'Search…',
@@ -2366,7 +2376,7 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                         [
                           'object/get',
                           '@entity',
-                          'title',
+                          '@config.searchField',
                         ],
                         '@payload.searchTerm',
                       ],

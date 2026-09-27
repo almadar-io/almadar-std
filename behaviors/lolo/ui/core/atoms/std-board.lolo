@@ -241,7 +241,7 @@ orbital BoardOrbital {
       REFETCH_QUERY -> viewing_board
         (fetch BoardView {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
-          filter: (or ["=", ?searchTerm, ""] (str/includes (object/get @entity title) ?searchTerm))
+          filter: (or ["=", ?searchTerm, ""] (str/includes (object/get @entity @config.searchField) ?searchTerm))
         })
       REFETCH_FILTER -> viewing_board
         (fetch BoardView {
@@ -535,6 +535,11 @@ orbital BoardOrbital {
         @label "Board title"
         @description "Heading shown above the column board"
         @tier "presentation"
+      searchField : string = "title"
+        @label "Which column does the search box match against?"
+        @description "Name the field on this entity the search box's str/includes filter matches against. Declared, never inferred: an entity with no `title` column must set this to a real field (e.g. name, summary) or the search box can never match a card."
+        @synonyms "search column, search on field, match field, search key"
+        @tier "policy"
       columns : [ColumnSpec] = [{
         icon: circle
         key: todo

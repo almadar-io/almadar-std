@@ -53,7 +53,7 @@ export interface StdUiBreadcrumbConfig {
   fromNavStack?: boolean;
   /** Default: `"ITEM"` */
   itemEvent?: string;
-  /** Default: `[]` */
+  /** Default: `[{"href":"/","label":"Home"},{"label":"Page"}]` */
   items?: EntityRow[];
   maxItems?: number;
   separator?: unknown;

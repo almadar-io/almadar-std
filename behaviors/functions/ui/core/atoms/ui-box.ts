@@ -51,7 +51,7 @@ export interface StdUiBoxConfig {
   actionPayload?: unknown;
   /** Default: `"transparent"` */
   bg?: 'transparent' | 'primary' | 'secondary' | 'muted' | 'accent' | 'surface' | 'overlay';
-  /** Default: `false` */
+  /** Default: `true` */
   border?: boolean;
   children?: PatternValue;
   className?: string;
@@ -73,7 +73,7 @@ export interface StdUiBoxConfig {
   maxWidth?: string;
   /** Default: `"auto"` */
   overflow?: 'auto' | 'hidden' | 'visible' | 'scroll';
-  /** Default: `"none"` */
+  /** Default: `"md"` */
   padding?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   /** Default: `"none"` */
   paddingX?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
