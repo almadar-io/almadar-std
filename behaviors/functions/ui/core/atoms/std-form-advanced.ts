@@ -68,12 +68,22 @@ export interface StdFormAdvancedFormEntrySaveFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdFormAdvancedConfig {
+  cancelLabel?: string;
   /** Default: `[]` */
   fieldValidation?: EntityRow[];
   /** Default: `[{"label":"Name","name":"name"},{"label":"Description","name":"description"},{"label":"Status","name":"status","type":"enum","values":["active","inactive","pending"]},{"label":"Notes","name":"notes","type":"textarea"},{"label":"Age","name":"age","type":"number"},{"label":"Is Active","name":"isActive","type":"boolean"},{"label":"Birth Date","name":"birthDate","type":"date"},{"label":"Priority","name":"priority","type":"enum","values":["low","medium","high","critical"]},{"label":"Category ID","name":"categoryId","relation":{"cardinality":"one","entity":"FormEntry"},"type":"relation"}]` */
   fields?: EntityRow[];
   /** Default: `"file-text"` */
   icon?: string;
+  /** Default: `"New Entry"` */
+  newEntryLabel?: string;
+  /** Default: `true` */
+  showCancel?: boolean;
+  submitLabel?: string;
+  /** Default: `"Your form has been submitted successfully."` */
+  successMessage?: string;
+  /** Default: `"Form Submitted"` */
+  successTitle?: string;
   /** Default: `"Form"` */
   title?: string;
 }
@@ -296,6 +306,12 @@ export function stdFormAdvancedFormEntryOrbital(params: StdFormAdvancedFormEntry
       {
         'category': 'interaction',
         'config': {
+          'cancelLabel': {
+            'description': 'Label on the cancel button; unset keeps the translated Cancel',
+            'label': 'Cancel button',
+            'tier': 'presentation',
+            'type': 'string',
+          },
           'fieldValidation': {
             'default': [],
             'description': 'Per-field rules (format, regex, length) shown inline on submit',
@@ -433,6 +449,40 @@ export function stdFormAdvancedFormEntryOrbital(params: StdFormAdvancedFormEntry
             'default': 'file-text',
             'description': 'Icon shown beside the form title',
             'label': 'Header icon',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'newEntryLabel': {
+            'default': 'New Entry',
+            'description': 'Label on the button that starts another entry after a submit',
+            'label': 'New entry button',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'showCancel': {
+            'default': true,
+            'description': 'Whether the form shows a cancel button',
+            'label': 'Show cancel',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'submitLabel': {
+            'description': 'Label on the submit button; unset keeps the translated Save',
+            'label': 'Submit button',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'successMessage': {
+            'default': 'Your form has been submitted successfully.',
+            'description': 'Message shown after a successful submit',
+            'label': 'Confirmation message',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'successTitle': {
+            'default': 'Form Submitted',
+            'description': 'Heading shown after a successful submit',
+            'label': 'Confirmation title',
             'tier': 'presentation',
             'type': 'string',
           },
@@ -770,9 +820,12 @@ export function stdFormAdvancedFormEntryOrbital(params: StdFormAdvancedFormEntry
                       },
                       {
                         'cancelEvent': 'CANCEL',
+                        'cancelLabel': '@config.cancelLabel',
                         'fields': '@config.fields',
                         'mode': 'create',
+                        'showCancel': '@config.showCancel',
                         'submitEvent': 'SUBMIT',
+                        'submitLabel': '@config.submitLabel',
                         'type': 'form-section',
                       },
                     ],
@@ -826,9 +879,12 @@ export function stdFormAdvancedFormEntryOrbital(params: StdFormAdvancedFormEntry
                       },
                       {
                         'cancelEvent': 'CANCEL',
+                        'cancelLabel': '@config.cancelLabel',
                         'fields': '@config.fields',
                         'mode': 'create',
+                        'showCancel': '@config.showCancel',
                         'submitEvent': 'SUBMIT',
+                        'submitLabel': '@config.submitLabel',
                         'type': 'form-section',
                       },
                     ],
@@ -868,19 +924,19 @@ export function stdFormAdvancedFormEntryOrbital(params: StdFormAdvancedFormEntry
                         'type': 'icon',
                       },
                       {
-                        'content': 'Form Submitted',
+                        'content': '@config.successTitle',
                         'type': 'typography',
                         'variant': 'h2',
                       },
                       {
-                        'message': 'Your form has been submitted successfully.',
+                        'message': '@config.successMessage',
                         'type': 'alert',
                         'variant': 'success',
                       },
                       {
                         'action': 'RESET',
                         'icon': 'plus',
-                        'label': 'New Entry',
+                        'label': '@config.newEntryLabel',
                         'type': 'button',
                         'variant': 'primary',
                       },
@@ -967,9 +1023,12 @@ export function stdFormAdvancedFormEntryOrbital(params: StdFormAdvancedFormEntry
                       },
                       {
                         'cancelEvent': 'CANCEL',
+                        'cancelLabel': '@config.cancelLabel',
                         'fields': '@config.fields',
                         'mode': 'create',
+                        'showCancel': '@config.showCancel',
                         'submitEvent': 'SUBMIT',
+                        'submitLabel': '@config.submitLabel',
                         'type': 'form-section',
                       },
                     ],
