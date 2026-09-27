@@ -1,13 +1,11 @@
 app std-version-history "1.0.0"
-"std-version-history — wiki/CMS revision history with diff + rollback. Browses revisions; opens detail in `viewing_single`; compares two revisions in `comparing` with intrinsic version-diff; persists rollback. `RevisionManage` is a rebindable single-entity trait: a consumer rebinds it to its own entity via `linkedEntity`. `config.scopeField` names the Revision field holding the parent document id; a page-mounted `{id}` route param scopes INIT's own fetch, and a consumer forwards SHOW_HISTORY { key } (via a `listens` override) to rescope the feed to one document — empty scopeField (default) or no id keeps today's unfiltered global feed. Rollback and retry refetches stay scoped."
+"std-version-history — wiki/CMS revision history with diff + rollback. Browses revisions; opens detail in `viewing_single`; compares the opened revision with the newest in `comparing`; Rollback emits RevisionRolledBack { row } for the consumer to restore onto its source document. `RevisionManage` is a rebindable single-entity trait: a consumer rebinds it to its own entity via `linkedEntity`. `config.scopeField` names the Revision field holding the parent document id; a page-mounted `{id}` route param scopes INIT's own fetch, and a consumer forwards SHOW_HISTORY { key } (via a `listens` override) to rescope the feed to one document — empty scopeField (default) or no id keeps today's unfiltered global feed. Rollback and retry refetches stay scoped."
 orbital RevisionOrbital {
     type RevisionLoaded = Event { data : [Revision] } "Fired when the revision collection finishes loading"
 
     type RevisionLoadFailed = Event { error : string, code : string } "Fired when the revision collection fails to load"
 
-    type RevisionRolledBack = Event Revision "Fired after a rollback persists successfully on the source document"
-
-    type RevisionRollbackFailed = Event { error : string, code : string } "Fired when a rollback fails to persist"
+    type RevisionRolledBack = Event { row : Revision! } "The revision to roll back to: the consumer restores row.content onto its source document (listen for it)"
 
   entity Revision [persistent: revisions] {
     id : string!
@@ -16,11 +14,12 @@ orbital RevisionOrbital {
     versionNumber : number! @description "A sequential identifier representing the revision's order." @synonyms "sequence, order, iteration"
     authorId : string @description "Unique identifier for the user who made the change." @synonyms "user identifier, creator, contributor"
     authorName : string @description "The name of the user who made the change." @synonyms "user, contributor, owner"
-    content : string @description "The snapshotted body of the revision — plain text or the rich-text HTML a document-look record carries. Rollback hands the whole row back to the host, which restores content onto the source document." @synonyms "text, body, data, value"
+    content : string @description "The snapshotted body of the revision — plain text or the rich-text HTML a document-look record carries. Rollback emits RevisionRolledBack { row }; the consumer restores row.content onto its source document." @synonyms "text, body, data, value"
     summary : string @description "A brief explanation of the revision's changes." @synonyms "description, note, comment, explanation"
     searchTerm : string @intrinsic @description "The current search query the user submitted." @synonyms "query, term, q" = ""
     createdAt : string
     scopeKey : string @intrinsic @description "The parent document id the feed is currently scoped to, set by SHOW_HISTORY. Empty when browsing the unfiltered global feed." @synonyms "scope, filter key, document scope" = ""
+    revisions : [Revision] @intrinsic @description "The loaded revisions, newest first — what Compare diffs against." @synonyms "versions, history" = []
   }
 
   trait RevisionManage -> @rebindable Revision [interaction, collection] {
@@ -47,6 +46,7 @@ orbital RevisionOrbital {
           type: stack
         })
       RevisionLoaded -> browsing
+        (set @entity.revisions (array/sort ?data "versionNumber" "desc"))
         (render-ui main {
           children: [{
             align: center
@@ -96,18 +96,6 @@ orbital RevisionOrbital {
           direction: vertical
           gap: md
           type: stack
-        })
-      RevisionRolledBack -> loading
-        (set @entity.scopeKey (object/get @payload @config.scopeField ""))
-        (fetch Revision {
-          filter: (or ["=", @config.scopeField, ""] ["=", (object/get @payload @config.scopeField ""), ""] ["=", (object/get @entity @config.scopeField), (object/get @payload @config.scopeField "")])
-          emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
-        })
-      RevisionRollbackFailed -> error
-        (render-ui main {
-          message: ?error
-          type: alert
-          variant: error
         })
       RevisionLoadFailed -> error
         (render-ui main {
@@ -267,7 +255,7 @@ orbital RevisionOrbital {
               variant: secondary
             }, {
               action: ROLLBACK
-              actionPayload: { id: @entity.id }
+              actionPayload: { row: @entity }
               label: Rollback
               type: button
               variant: danger
@@ -281,9 +269,11 @@ orbital RevisionOrbital {
           type: stack
         })
       ROLLBACK -> loading
-        (set @entity.id ?id)
-        (persist update Revision @entity {
-          emit: { failure: RevisionRollbackFailed, success: RevisionRolledBack }
+        (emit RevisionRolledBack { row: ?row })
+        (set @entity.scopeKey (object/get ?row @config.scopeField ""))
+        (fetch Revision {
+          filter: (or ["=", @config.scopeField, ""] ["=", (object/get ?row @config.scopeField ""), ""] ["=", (object/get @entity @config.scopeField), (object/get ?row @config.scopeField "")])
+          emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
         })
         (render-ui main {
           align: center
@@ -322,6 +312,7 @@ orbital RevisionOrbital {
     state viewing_single {
       CLOSE_VIEW -> loading
         (fetch Revision {
+          filter: (or ["=", @config.scopeField, ""] ["=", @entity.scopeKey, ""] ["=", (object/get @entity @config.scopeField), @entity.scopeKey])
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
         })
         (render-ui main {
@@ -356,17 +347,16 @@ orbital RevisionOrbital {
             gap: sm
             type: stack
           }, { type: divider }, {
-            afterId: ?afterId
-            beforeId: ?beforeId
-            onRevert: ROLLBACK
-            revisions: ?revisions
+            afterId: (object/get (array/first @entity.revisions) "id" "")
+            beforeId: @entity.id
+            revisions: (array/map @entity.revisions (fn r { id: @r.id, label: (str/concat "v" (str/default @r.versionNumber "")), author: @r.authorName, timestamp: @r.createdAt, content: @r.content }))
             type: version-diff
             view: side-by-side
           }, {
             align: center
             children: [{
               action: ROLLBACK
-              actionPayload: { id: @entity.id }
+              actionPayload: { row: @entity }
               label: Rollback
               type: button
               variant: danger
@@ -380,9 +370,11 @@ orbital RevisionOrbital {
           type: stack
         })
       ROLLBACK -> loading
-        (set @entity.id ?id)
-        (persist update Revision @entity {
-          emit: { failure: RevisionRollbackFailed, success: RevisionRolledBack }
+        (emit RevisionRolledBack { row: ?row })
+        (set @entity.scopeKey (object/get ?row @config.scopeField ""))
+        (fetch Revision {
+          filter: (or ["=", @config.scopeField, ""] ["=", (object/get ?row @config.scopeField ""), ""] ["=", (object/get @entity @config.scopeField), (object/get ?row @config.scopeField "")])
+          emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
         })
         (render-ui main {
           align: center
@@ -421,6 +413,7 @@ orbital RevisionOrbital {
     state comparing {
       CLOSE_VIEW -> loading
         (fetch Revision {
+          filter: (or ["=", @config.scopeField, ""] ["=", @entity.scopeKey, ""] ["=", (object/get @entity @config.scopeField), @entity.scopeKey])
           emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
         })
         (render-ui main {
@@ -437,9 +430,11 @@ orbital RevisionOrbital {
           type: stack
         })
       ROLLBACK -> loading
-        (set @entity.id ?id)
-        (persist update Revision @entity {
-          emit: { failure: RevisionRollbackFailed, success: RevisionRolledBack }
+        (emit RevisionRolledBack { row: ?row })
+        (set @entity.scopeKey (object/get ?row @config.scopeField ""))
+        (fetch Revision {
+          filter: (or ["=", @config.scopeField, ""] ["=", (object/get ?row @config.scopeField ""), ""] ["=", (object/get @entity @config.scopeField), (object/get ?row @config.scopeField "")])
+          emit: { failure: RevisionLoadFailed, success: RevisionLoaded }
         })
         (render-ui main {
           align: center
@@ -506,17 +501,14 @@ orbital RevisionOrbital {
         @tier "domain"
       COMPARE {
         id : string!
-        beforeId : string!
-        afterId : string!
-        revisions : [Revision]
       }
-        @description "Signals a request to compare two versions."
+        @description "Signals a request to compare the opened revision with the newest one."
         @synonyms "compare, diff, contrast"
         @tier "presentation"
       ROLLBACK {
-        id : string!
+        row : Revision!
       }
-        @description "Indicates a revision has been successfully reverted."
+        @description "Requests a rollback to this revision."
         @synonyms "reverted, undone, restored"
         @tier "domain"
       RevisionLoaded {
@@ -532,17 +524,12 @@ orbital RevisionOrbital {
         @description "Indicates a failure to load revision data."
         @synonyms "error, fail, problem, unsuccessful"
         @tier "internal"
-      RevisionRolledBack
-        @description "Indicates a revision has been successfully restored to a previous state."
-        @synonyms "restored, reverted, undone"
-        @tier "presentation"
-      RevisionRollbackFailed {
-        error : string
-        code : string
+      RevisionRolledBack -> external {
+        row : Revision!
       }
-        @description "Indicates that a revision rollback operation was unsuccessful."
-        @synonyms "rollback failed, revert error, undo failure"
-        @tier "internal"
+        @description "The revision to roll back to; the consumer restores row.content onto its source document."
+        @synonyms "restored, reverted, undone"
+        @tier "domain"
     }
 
     listens {
@@ -565,17 +552,14 @@ orbital RevisionOrbital {
         @tier "domain"
       COMPARE {
         id : string!
-        beforeId : string!
-        afterId : string!
-        revisions : [Revision]
       }
-        @description "Indicates a request to compare two versions."
+        @description "Indicates a request to compare the opened revision with the newest one."
         @synonyms "diff, compare, contrast"
         @tier "presentation"
       ROLLBACK {
-        id : string!
+        row : Revision!
       }
-        @description "A revision has been successfully reverted to a previous state."
+        @description "A rollback to this revision was requested."
         @synonyms "reverted, undone, restored"
         @tier "domain"
       RevisionLoaded {
@@ -590,17 +574,6 @@ orbital RevisionOrbital {
       }
         @description "Indicates a failure to retrieve revision data."
         @synonyms "error, failure, problem, fetch failed"
-        @tier "internal"
-      RevisionRolledBack
-        @description "Indicates a revision has been successfully reverted."
-        @synonyms "reverted, undone, restored"
-        @tier "internal"
-      RevisionRollbackFailed {
-        error : string
-        code : string
-      }
-        @description "Indicates that a revision rollback operation has failed."
-        @synonyms "rollback error, revert failure, undo failed"
         @tier "internal"
       SHOW_HISTORY {
         key : string!

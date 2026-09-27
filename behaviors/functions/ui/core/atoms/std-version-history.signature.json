@@ -47,7 +47,7 @@
             "name": "content",
             "type": "string",
             "required": false,
-            "description": "The snapshotted body of the revision — plain text or the rich-text HTML a document-look record carries. Rollback hands the whole row back to the host, which restores content onto the source document.",
+            "description": "The snapshotted body of the revision — plain text or the rich-text HTML a document-look record carries. Rollback emits RevisionRolledBack { row }; the consumer restores row.content onto its source document.",
             "synonyms": "text, body, data, value"
           },
           {
@@ -72,6 +72,19 @@
             "intrinsic": true,
             "description": "The parent document id the feed is currently scoped to, set by SHOW_HISTORY. Empty when browsing the unfiltered global feed.",
             "synonyms": "scope, filter key, document scope"
+          },
+          {
+            "name": "revisions",
+            "type": "relation",
+            "required": false,
+            "intrinsic": true,
+            "description": "The loaded revisions, newest first — what Compare diffs against.",
+            "synonyms": "versions, history",
+            "relation": {
+              "cardinality": "many",
+              "entity": "Revision",
+              "entityId": "ent_01KXG04HV98PSNYWMGHCREKPA4"
+            }
           }
         ],
         "persistence": "persistent"
@@ -87,8 +100,7 @@
           "ROLLBACK",
           "RevisionLoaded",
           "RevisionLoadFailed",
-          "RevisionRolledBack",
-          "RevisionRollbackFailed"
+          "RevisionRolledBack"
         ],
         "listenedEvents": [],
         "events": [
@@ -109,14 +121,14 @@
           {
             "name": "COMPARE",
             "direction": "emit",
-            "description": "Signals a request to compare two versions.",
+            "description": "Signals a request to compare the opened revision with the newest one.",
             "synonyms": "compare, diff, contrast",
             "tier": "presentation"
           },
           {
             "name": "ROLLBACK",
             "direction": "emit",
-            "description": "Indicates a revision has been successfully reverted.",
+            "description": "Requests a rollback to this revision.",
             "synonyms": "reverted, undone, restored",
             "tier": "domain"
           },
@@ -137,16 +149,9 @@
           {
             "name": "RevisionRolledBack",
             "direction": "emit",
-            "description": "Indicates a revision has been successfully restored to a previous state.",
+            "description": "The revision to roll back to; the consumer restores row.content onto its source document.",
             "synonyms": "restored, reverted, undone",
-            "tier": "presentation"
-          },
-          {
-            "name": "RevisionRollbackFailed",
-            "direction": "emit",
-            "description": "Indicates that a revision rollback operation was unsuccessful.",
-            "synonyms": "rollback failed, revert error, undo failure",
-            "tier": "internal"
+            "tier": "domain"
           },
           {
             "name": "INIT",
@@ -221,8 +226,6 @@
           "ROLLBACK",
           "RevisionLoadFailed",
           "RevisionLoaded",
-          "RevisionRollbackFailed",
-          "RevisionRolledBack",
           "SHOW_HISTORY"
         ],
         "definerKnobs": [],
@@ -235,6 +238,7 @@
             "content",
             "documentId",
             "documentType",
+            "revisions",
             "scopeKey",
             "summary",
             "versionNumber"
@@ -242,11 +246,11 @@
         },
         "effectRow": [
           {
-            "kind": "fetch",
-            "resource": "Revision"
+            "kind": "emit",
+            "resource": "RevisionRolledBack"
           },
           {
-            "kind": "persist",
+            "kind": "fetch",
             "resource": "Revision"
           },
           {
@@ -283,6 +287,10 @@
           },
           {
             "kind": "set",
+            "resource": "@entity.revisions"
+          },
+          {
+            "kind": "set",
             "resource": "@entity.scopeKey"
           },
           {
@@ -313,7 +321,6 @@
       "ROLLBACK",
       "RevisionLoadFailed",
       "RevisionLoaded",
-      "RevisionRollbackFailed",
       "RevisionRolledBack"
     ],
     "listenedEvents": [],

@@ -1,0 +1,143 @@
+app ui-commit-row "1.0.0"
+"One version in a history list — a commit row with select and restore. — UI factory (1:1 with the @almadar/ui commit-row pattern)."
+;; @capabilities "version history row, commit entry, revision list item, change log entry, restore point, undo history item"
+;; @pattern "commit-row"
+orbital CommitRowOrbital {
+  entity CommitRowItem [runtime] {
+    id : string!
+    sha : string @intrinsic = ""
+  }
+
+  trait CommitRowRender -> @rebindable CommitRowItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.sha @config.sha)
+        (render-ui main {
+          sha: @entity.sha
+          message: @config.message
+          author: @config.author
+          timestamp: @config.timestamp
+          kind: @config.kind
+          additions: @config.additions
+          deletions: @config.deletions
+          selected: @config.selected
+          current: @config.current
+          selectEvent: @config.selectEvent
+          restoreEvent: @config.restoreEvent
+          className: @config.className
+          type: commit-row
+        })
+      SELECT -> idle
+        (set @entity.sha ?sha)
+        (render-ui main {
+          sha: @entity.sha
+          message: @config.message
+          author: @config.author
+          timestamp: @config.timestamp
+          kind: @config.kind
+          additions: @config.additions
+          deletions: @config.deletions
+          selected: @config.selected
+          current: @config.current
+          selectEvent: @config.selectEvent
+          restoreEvent: @config.restoreEvent
+          className: @config.className
+          type: commit-row
+        })
+      RESTORE -> idle
+        (set @entity.sha ?sha)
+        (render-ui main {
+          sha: @entity.sha
+          message: @config.message
+          author: @config.author
+          timestamp: @config.timestamp
+          kind: @config.kind
+          additions: @config.additions
+          deletions: @config.deletions
+          selected: @config.selected
+          current: @config.current
+          selectEvent: @config.selectEvent
+          restoreEvent: @config.restoreEvent
+          className: @config.className
+          type: commit-row
+        })
+    }
+
+    emits {
+      @config.selectEvent -> external {
+        sha : string!
+      }
+        @description "Emitted when the row is picked. Payload: { sha }."
+        @tier "essential"
+      @config.restoreEvent -> external {
+        sha : string!
+      }
+        @description "Emitted by the Restore button. Payload: { sha }."
+        @tier "essential"
+    }
+
+    listens {
+      SELECT {
+        sha : string!
+      }
+      RESTORE {
+        sha : string!
+      }
+    }
+
+    config {
+      sha : string = ""
+        @label "Sha"
+        @description "Commit id; the first 7 characters are shown, the whole id on hover."
+        @tier "presentation"
+      message : string = ""
+        @label "Message"
+        @description "Commit message."
+        @tier "presentation"
+      author : string
+        @label "Author"
+        @description "author prop"
+        @tier "presentation"
+      timestamp : string
+        @label "Timestamp"
+        @description "Display time (already formatted, e.g. '2 min ago')."
+        @tier "presentation"
+      kind : "user" | "agent" | "restore" | "undo" | "redo" | "snapshot" = user
+        @label "Kind"
+        @description "What made this version (a user save, an agent turn, a restore, an undo/redo, a snapshot)."
+        @tier "presentation"
+      additions : number
+        @label "Additions"
+        @description "additions prop"
+        @tier "presentation"
+      deletions : number
+        @label "Deletions"
+        @description "deletions prop"
+        @tier "presentation"
+      selected : boolean = false
+        @label "Selected"
+        @description "The row the user picked (shows its detail)."
+        @tier "presentation"
+      current : boolean = false
+        @label "Current"
+        @description "The version the app is at now — it cannot be restored to."
+        @tier "presentation"
+      selectEvent : event = "SELECT"
+        @label "Select Event"
+        @description "Emitted when the row is picked. Payload: { sha }."
+        @tier "presentation"
+      restoreEvent : event = "RESTORE"
+        @label "Restore Event"
+        @description "Emitted by the Restore button. Payload: { sha }."
+        @tier "presentation"
+      className : string
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/commit-row" as CommitRowPage -> CommitRowRender
+}

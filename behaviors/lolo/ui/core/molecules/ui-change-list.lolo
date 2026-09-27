@@ -1,0 +1,57 @@
+app ui-change-list "1.0.0"
+"The plain-language changes in one version (added / modified / removed). — UI factory (1:1 with the @almadar/ui change-list pattern)."
+;; @capabilities "change summary, what changed, version changes, diff summary, release notes list, modification list"
+;; @pattern "change-list"
+orbital ChangeListOrbital {
+  type ChangeListChangesItem = {
+    type : "added" | "modified" | "removed"!
+    title : string!
+    description : string
+    before : string
+    after : string
+  }
+
+  entity ChangeListItem [runtime] {
+    id : string!
+  }
+
+  trait ChangeListRender -> @rebindable ChangeListItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          changes: @config.changes
+          inspectEvent: @config.inspectEvent
+          className: @config.className
+          type: change-list
+        })
+    }
+
+    emits {
+      @config.inspectEvent -> external {
+        title : string!
+        type : "added" | "modified" | "removed"!
+      }
+        @description "Emitted by a change's Inspect button. Payload: { title, type }."
+        @tier "essential"
+    }
+
+    config {
+      changes : [ChangeListChangesItem] = [{ type: added, title: "Title", description: "Description", before: "Before", after: "After" }, { type: modified, title: "Title 2", description: "Description 2", before: "Before 2", after: "After 2" }]
+        @label "Changes"
+        @description "The changes. Accepts a typed list or a render-ui payload binding."
+        @tier "presentation"
+      inspectEvent : event = "INSPECT"
+        @label "Inspect Event"
+        @description "Emitted by a change's Inspect button. Payload: { title, type }."
+        @tier "presentation"
+      className : string
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/change-list" as ChangeListPage -> ChangeListRender
+}

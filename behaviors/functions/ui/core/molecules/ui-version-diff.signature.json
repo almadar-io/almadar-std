@@ -67,6 +67,60 @@
             "tier": "presentation"
           },
           {
+            "key": "hunks",
+            "type": "[VersionDiffHunksItem]",
+            "default": [],
+            "label": "Hunks",
+            "description": "A pre-computed diff to render instead of diffing `revisions` (no revision pickers).",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "header": {
+                  "name": "header",
+                  "required": true,
+                  "type": "string"
+                },
+                "lines": {
+                  "name": "lines",
+                  "required": true,
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "afterLineNumber": {
+                        "name": "afterLineNumber",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "beforeLineNumber": {
+                        "name": "beforeLineNumber",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "content": {
+                        "name": "content",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "type": {
+                        "name": "type",
+                        "required": true,
+                        "type": "string",
+                        "values": [
+                          "added",
+                          "removed",
+                          "unchanged",
+                          "context"
+                        ]
+                      }
+                    },
+                    "type": "object"
+                  }
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
             "key": "language",
             "type": "string",
             "label": "Language",
@@ -108,22 +162,7 @@
           {
             "key": "revisions",
             "type": "[VersionDiffRevisionsItem]",
-            "default": [
-              {
-                "author": "Author",
-                "content": "Content",
-                "id": "Id",
-                "label": "Label",
-                "timestamp": "Timestamp"
-              },
-              {
-                "author": "Author 2",
-                "content": "Content 2",
-                "id": "Id 2",
-                "label": "Label 2",
-                "timestamp": "Timestamp 2"
-              }
-            ],
+            "default": [],
             "label": "Revisions",
             "description": "All available revisions (at least 2). Accepts either a typed array (direct consumers) or the runtime payload shape from a render-ui binding (`@payload.revisions`). Narrowed to `[]` internally when the value isn't an array.",
             "tier": "presentation",
@@ -179,7 +218,7 @@
             "type": "string",
             "default": "side-by-side",
             "label": "View",
-            "description": "Display mode.",
+            "description": "Display mode to start in; the toggle switches it.",
             "tier": "presentation",
             "enumValues": [
               "side-by-side",
@@ -225,6 +264,7 @@
     "listenedEvents": [],
     "exposure": "palette",
     "provenance": "generated",
+    "capabilities": "version diff, compare revisions, what changed, before and after, code diff, commit diff, revision comparison",
     "sourceValid": true
   }
 ]

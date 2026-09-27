@@ -76,13 +76,15 @@ export interface StdUiDockLayoutSecondarySidebarCollapsedChangePayload {
 export interface StdUiDockLayoutConfig {
   bottomPanel?: PatternValue;
   bottomPanelClassName?: string;
-  /** Default: `false` */
   bottomPanelCollapsed?: boolean;
   /** Default: `30` */
   bottomPanelHeight?: number;
+  bottomPanelIcon?: unknown;
+  bottomPanelLabel?: string;
   /** Default: `120` */
   bottomPanelMinSize?: number;
   className?: string;
+  compact?: boolean;
   /** Default: `[]` */
   main?: PatternValue;
   mainClassName?: string;
@@ -98,17 +100,16 @@ export interface StdUiDockLayoutConfig {
   onSidebarWidthChange?: string;
   rail?: PatternValue;
   railClassName?: string;
-  /** Default: `56` */
   railWidth?: number;
   secondarySidebar?: PatternValue;
   secondarySidebarClassName?: string;
-  /** Default: `false` */
   secondarySidebarCollapsed?: boolean;
+  secondarySidebarIcon?: unknown;
+  secondarySidebarLabel?: string;
   /** Default: `280` */
   secondarySidebarWidth?: number;
   sidebar?: PatternValue;
   sidebarClassName?: string;
-  /** Default: `false` */
   sidebarCollapsed?: boolean;
   /** Default: `160` */
   sidebarMinSize?: number;
@@ -116,6 +117,7 @@ export interface StdUiDockLayoutConfig {
   sidebarWidth?: number;
   statusBar?: PatternValue;
   statusBarClassName?: string;
+  topBarActions?: PatternValue;
 }
 
 type _StdUiDockLayoutEntityName = 'DockLayoutItem';
@@ -202,7 +204,6 @@ export function stdUiDockLayoutDockLayoutOrbital(params: StdUiDockLayoutDockLayo
             'type': 'string',
           },
           'bottomPanelCollapsed': {
-            'default': false,
             'description': 'Whether `bottomPanel` is collapsed. @default false',
             'label': 'Bottom Panel Collapsed',
             'tier': 'presentation',
@@ -214,6 +215,18 @@ export function stdUiDockLayoutDockLayoutOrbital(params: StdUiDockLayoutDockLayo
             'label': 'Bottom Panel Height',
             'tier': 'presentation',
             'type': 'number',
+          },
+          'bottomPanelIcon': {
+            'description': 'bottomPanelIcon prop',
+            'label': 'Bottom Panel Icon',
+            'tier': 'presentation',
+            'type': 'icon',
+          },
+          'bottomPanelLabel': {
+            'description': 'Compact: the top-bar button that opens `bottomPanel`.',
+            'label': 'Bottom Panel Label',
+            'tier': 'presentation',
+            'type': 'string',
           },
           'bottomPanelMinSize': {
             'default': 120,
@@ -227,6 +240,12 @@ export function stdUiDockLayoutDockLayoutOrbital(params: StdUiDockLayoutDockLayo
             'label': 'Class Name',
             'tier': 'presentation',
             'type': 'string',
+          },
+          'compact': {
+            'description': 'The mobile variant; decided by the viewport (narrower than 1024px) when omitted.',
+            'label': 'Compact',
+            'tier': 'presentation',
+            'type': 'boolean',
           },
           'main': {
             'default': [],
@@ -289,8 +308,7 @@ export function stdUiDockLayoutDockLayoutOrbital(params: StdUiDockLayoutDockLayo
             'type': 'string',
           },
           'railWidth': {
-            'default': 56,
-            'description': 'Width of `rail` in pixels. @default 56',
+            'description': 'Width of `rail` in pixels; the rail sizes the column itself when omitted.',
             'label': 'Rail Width',
             'tier': 'presentation',
             'type': 'number',
@@ -308,11 +326,22 @@ export function stdUiDockLayoutDockLayoutOrbital(params: StdUiDockLayoutDockLayo
             'type': 'string',
           },
           'secondarySidebarCollapsed': {
-            'default': false,
             'description': 'Whether `secondarySidebar` is collapsed. @default false',
             'label': 'Secondary Sidebar Collapsed',
             'tier': 'presentation',
             'type': 'boolean',
+          },
+          'secondarySidebarIcon': {
+            'description': 'secondarySidebarIcon prop',
+            'label': 'Secondary Sidebar Icon',
+            'tier': 'presentation',
+            'type': 'icon',
+          },
+          'secondarySidebarLabel': {
+            'description': 'Compact: the top-bar button that opens `secondarySidebar` (e.g. \'Inspector\', \'Chat\').',
+            'label': 'Secondary Sidebar Label',
+            'tier': 'presentation',
+            'type': 'string',
           },
           'secondarySidebarWidth': {
             'default': 280,
@@ -334,7 +363,6 @@ export function stdUiDockLayoutDockLayoutOrbital(params: StdUiDockLayoutDockLayo
             'type': 'string',
           },
           'sidebarCollapsed': {
-            'default': false,
             'description': 'Whether `sidebar` is collapsed. @default false',
             'label': 'Sidebar Collapsed',
             'tier': 'presentation',
@@ -365,6 +393,12 @@ export function stdUiDockLayoutDockLayoutOrbital(params: StdUiDockLayoutDockLayo
             'label': 'Status Bar Class Name',
             'tier': 'presentation',
             'type': 'string',
+          },
+          'topBarActions': {
+            'description': 'Compact: the host\'s own actions at the end of the top bar (e.g. Run).',
+            'label': 'Top Bar Actions',
+            'tier': 'presentation',
+            'type': 'node',
           },
         },
         'effectRow': [
@@ -532,8 +566,11 @@ export function stdUiDockLayoutDockLayoutOrbital(params: StdUiDockLayoutDockLayo
                     'bottomPanelClassName': '@config.bottomPanelClassName',
                     'bottomPanelCollapsed': '@config.bottomPanelCollapsed',
                     'bottomPanelHeight': '@config.bottomPanelHeight',
+                    'bottomPanelIcon': '@config.bottomPanelIcon',
+                    'bottomPanelLabel': '@config.bottomPanelLabel',
                     'bottomPanelMinSize': '@config.bottomPanelMinSize',
                     'className': '@config.className',
+                    'compact': '@config.compact',
                     'main': '@config.main',
                     'mainClassName': '@config.mainClassName',
                     'onBottomPanelCollapsedChange': '@config.onBottomPanelCollapsedChange',
@@ -547,6 +584,8 @@ export function stdUiDockLayoutDockLayoutOrbital(params: StdUiDockLayoutDockLayo
                     'secondarySidebar': '@config.secondarySidebar',
                     'secondarySidebarClassName': '@config.secondarySidebarClassName',
                     'secondarySidebarCollapsed': '@config.secondarySidebarCollapsed',
+                    'secondarySidebarIcon': '@config.secondarySidebarIcon',
+                    'secondarySidebarLabel': '@config.secondarySidebarLabel',
                     'secondarySidebarWidth': '@config.secondarySidebarWidth',
                     'sidebar': '@config.sidebar',
                     'sidebarClassName': '@config.sidebarClassName',
@@ -555,6 +594,7 @@ export function stdUiDockLayoutDockLayoutOrbital(params: StdUiDockLayoutDockLayo
                     'sidebarWidth': '@config.sidebarWidth',
                     'statusBar': '@config.statusBar',
                     'statusBarClassName': '@config.statusBarClassName',
+                    'topBarActions': '@config.topBarActions',
                     'type': 'dock-layout',
                   },
                 ],

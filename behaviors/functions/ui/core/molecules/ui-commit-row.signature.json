@@ -1,0 +1,195 @@
+[
+  {
+    "organism": "ui-commit-row",
+    "orbital": "CommitRowOrbital",
+    "tier": "molecules",
+    "factoryPath": "behaviors/functions/ui/core/molecules/ui-commit-row.ts",
+    "entities": [
+      {
+        "name": "CommitRowItem",
+        "fields": [
+          {
+            "name": "sha",
+            "type": "string",
+            "required": false,
+            "intrinsic": true
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "CommitRowRender",
+        "emittedEvents": [
+          "SELECT",
+          "RESTORE"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "SELECT",
+            "direction": "emit",
+            "description": "Emitted when the row is picked. Payload: { sha }.",
+            "tier": "essential"
+          },
+          {
+            "name": "RESTORE",
+            "direction": "emit",
+            "description": "Emitted by the Restore button. Payload: { sha }.",
+            "tier": "essential"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "additions",
+            "type": "number",
+            "label": "Additions",
+            "description": "additions prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "author",
+            "type": "string",
+            "label": "Author",
+            "description": "author prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "className",
+            "type": "string",
+            "label": "Class Name",
+            "description": "className prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "current",
+            "type": "boolean",
+            "default": false,
+            "label": "Current",
+            "description": "The version the app is at now — it cannot be restored to.",
+            "tier": "presentation"
+          },
+          {
+            "key": "deletions",
+            "type": "number",
+            "label": "Deletions",
+            "description": "deletions prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "kind",
+            "type": "string",
+            "default": "user",
+            "label": "Kind",
+            "description": "What made this version (a user save, an agent turn, a restore, an undo/redo, a snapshot).",
+            "tier": "presentation",
+            "enumValues": [
+              "user",
+              "agent",
+              "restore",
+              "undo",
+              "redo",
+              "snapshot"
+            ]
+          },
+          {
+            "key": "message",
+            "type": "string",
+            "default": "",
+            "label": "Message",
+            "description": "Commit message.",
+            "tier": "presentation"
+          },
+          {
+            "key": "restoreEvent",
+            "type": "event",
+            "default": "RESTORE",
+            "label": "Restore Event",
+            "description": "Emitted by the Restore button. Payload: { sha }.",
+            "tier": "presentation"
+          },
+          {
+            "key": "selectEvent",
+            "type": "event",
+            "default": "SELECT",
+            "label": "Select Event",
+            "description": "Emitted when the row is picked. Payload: { sha }.",
+            "tier": "presentation"
+          },
+          {
+            "key": "selected",
+            "type": "boolean",
+            "default": false,
+            "label": "Selected",
+            "description": "The row the user picked (shows its detail).",
+            "tier": "presentation"
+          },
+          {
+            "key": "sha",
+            "type": "string",
+            "default": "",
+            "label": "Sha",
+            "description": "Commit id; the first 7 characters are shown, the whole id on hover.",
+            "tier": "presentation"
+          },
+          {
+            "key": "timestamp",
+            "type": "string",
+            "label": "Timestamp",
+            "description": "Display time (already formatted, e.g. '2 min ago').",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "linkedEntity": "CommitRowItem",
+        "transitionEvents": [
+          "INIT",
+          "RESTORE",
+          "SELECT"
+        ],
+        "definerKnobs": [
+          "restoreEvent",
+          "selectEvent"
+        ],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "sha"
+          ]
+        },
+        "effectRow": [
+          {
+            "kind": "render-ui",
+            "resource": "main"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.sha"
+          }
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "name": "CommitRowPage",
+        "defaultPath": "/commit-row",
+        "primaryEntity": "CommitRowItem"
+      }
+    ],
+    "emittedEvents": [
+      "RESTORE",
+      "SELECT"
+    ],
+    "listenedEvents": [],
+    "exposure": "palette",
+    "provenance": "generated",
+    "capabilities": "version history row, commit entry, revision list item, change log entry, restore point, undo history item",
+    "sourceValid": true
+  }
+]
