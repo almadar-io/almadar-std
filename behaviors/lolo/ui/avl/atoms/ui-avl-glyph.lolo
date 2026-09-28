@@ -1,0 +1,54 @@
+app ui-avl-glyph "1.0.0"
+"AvlGlyph — UI factory (1:1 with the @almadar/ui avl-glyph pattern)."
+;; @pattern "avl-glyph"
+orbital AvlGlyphOrbital {
+  entity AvlGlyphItem [runtime] {
+    id : string!
+  }
+
+  trait AvlGlyphRender -> @rebindable AvlGlyphItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          kind: @config.kind
+          label: @config.label
+          effectType: @config.effectType
+          size: @config.size
+          showCaption: @config.showCaption
+          className: @config.className
+          type: avl-glyph
+        })
+    }
+
+    config {
+      kind : "application" | "orbital" | "entity" | "trait" | "page" | "state" | "transition" | "event" | "guard" | "effect" | "field" | "fieldType" | "binding" | "bindingRef" | "persistence" | "operator" | "sexpr" | "literal" = state
+        @label "Kind"
+        @description "Which notation symbol to draw."
+        @tier "presentation"
+      label : string
+        @label "Label"
+        @description "Caption, and the drawn text for operator / literal / bindingRef symbols."
+        @tier "presentation"
+      effectType : string
+        @label "Effect Type"
+        @description "Effect symbol variant. @default 'set'"
+        @tier "presentation"
+      size : "sm" | "md" | "lg" = md
+        @label "Size"
+        @description "Symbol height. @default 'md'"
+        @tier "presentation"
+      showCaption : boolean = true
+        @label "Show Caption"
+        @description "Show the caption under the symbol. @default true"
+        @tier "presentation"
+      className : string
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/avl-glyph" as AvlGlyphPage -> AvlGlyphRender
+}

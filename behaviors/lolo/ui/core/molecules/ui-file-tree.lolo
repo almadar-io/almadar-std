@@ -8,6 +8,7 @@ orbital FileTreeOrbital {
     type : "file" | "dir"!
     children : [FileTreeTreeItem]
     note : string
+    expandable : boolean
     size : number
     language : string
   }
@@ -34,6 +35,8 @@ orbital FileTreeOrbital {
           selectedId: @config.selectedId
           look: @config.look
           onFileSelect: @config.onFileSelect
+          onNodeExpand: @config.onNodeExpand
+          expandedPaths: @config.expandedPaths
           onNodeSelect: @config.onNodeSelect
           onNodeAction: @config.onNodeAction
           nodeActionIcon: @config.nodeActionIcon
@@ -50,6 +53,11 @@ orbital FileTreeOrbital {
         path : string
       }
         @description "Called when a file is clicked"
+        @tier "essential"
+      @config.onNodeExpand -> external {
+        path : string
+      }
+        @description "Called the first time a node marked `expandable` is expanded, with its path, so its children can be loaded."
         @tier "essential"
     }
 
@@ -77,6 +85,14 @@ orbital FileTreeOrbital {
       onFileSelect : event = "FILE_SELECT"
         @label "On File Select"
         @description "Called when a file is clicked"
+        @tier "presentation"
+      onNodeExpand : event = "NODE_EXPAND"
+        @label "On Node Expand"
+        @description "Called the first time a node marked `expandable` is expanded, with its path, so its children can be loaded."
+        @tier "presentation"
+      expandedPaths : [string] = []
+        @label "Expanded Paths"
+        @description "Paths to show expanded (e.g. to reveal a node): each is expanded when it appears here, loading its children if needed."
         @tier "presentation"
       onNodeSelect : event = ""
         @label "On Node Select"

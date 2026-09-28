@@ -30,7 +30,24 @@ const ALIAS = 'UiStateMachineView';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiStateMachineViewEventKey = 'INIT';
+export type StdUiStateMachineViewEventKey = 'INIT' | 'STATE_CLICK' | 'TRANSITION_CLICK';
+
+/**
+ * Payload shape for the `STATE_CLICK` event.
+ */
+export interface StdUiStateMachineViewStateClickPayload {
+  stateId: string;
+}
+
+/**
+ * Payload shape for the `TRANSITION_CLICK` event.
+ */
+export interface StdUiStateMachineViewTransitionClickPayload {
+  index: number;
+  event: string;
+  from: string;
+  to: string;
+}
 
 /**
  * Typed call-site config block for this trait — every
@@ -39,9 +56,28 @@ export type StdUiStateMachineViewEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiStateMachineViewConfig {
+  activeState?: string;
+  activeTransition?: number;
   className?: string;
+  /** Default: `"ltr"` */
+  direction?: 'ltr' | 'rtl';
+  /** Default: `[]` */
+  entityFields?: string[];
   error?: EntityRow;
+  /** Default: `false` */
   isLoading?: boolean;
+  /** Default: `"pill"` */
+  nodeShape?: 'pill' | 'gear';
+  pendingSourceState?: string;
+  selectedState?: string;
+  showHeader?: boolean;
+  /** Default: `"STATE_CLICK"` */
+  stateClickEvent?: string;
+  traitProp?: EntityRow;
+  /** Default: `"TRANSITION_CLICK"` */
+  transitionClickEvent?: string;
+  /** Default: `[]` */
+  visitedStates?: string[];
 }
 
 type _StdUiStateMachineViewEntityName = 'StateMachineViewItem';
@@ -115,11 +151,44 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
       {
         'category': 'interaction',
         'config': {
+          'activeState': {
+            'description': 'State execution is currently in.',
+            'label': 'Active State',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'activeTransition': {
+            'description': '`index` of the transition that just fired.',
+            'label': 'Active Transition',
+            'tier': 'presentation',
+            'type': 'number',
+          },
           'className': {
-            'description': 'Additional CSS classes',
+            'description': 'className prop',
             'label': 'Class Name',
             'tier': 'presentation',
             'type': 'string',
+          },
+          'direction': {
+            'default': 'ltr',
+            'description': 'Flow direction. @default \'ltr\'',
+            'label': 'Direction',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'ltr',
+              'rtl',
+            ],
+          },
+          'entityFields': {
+            'default': [],
+            'description': 'Entity field names listed in the header.',
+            'items': {
+              'type': 'string',
+            },
+            'label': 'Entity Fields',
+            'tier': 'presentation',
+            'type': '[string]',
           },
           'error': {
             'description': 'Error state',
@@ -150,16 +219,233 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
             'type': 'StateMachineViewError',
           },
           'isLoading': {
+            'default': false,
             'description': 'Loading state indicator',
             'label': 'Is Loading',
             'tier': 'presentation',
             'type': 'boolean',
+          },
+          'nodeShape': {
+            'default': 'pill',
+            'description': 'Node silhouette. @default \'pill\'',
+            'label': 'Node Shape',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'pill',
+              'gear',
+            ],
+          },
+          'pendingSourceState': {
+            'description': 'Source of a transition being drawn — the next state click picks its target.',
+            'label': 'Pending Source State',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'selectedState': {
+            'description': 'State picked in an editor (first click).',
+            'label': 'Selected State',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'showHeader': {
+            'description': 'Show the trait header (name, entity, listens/emits). @default true',
+            'label': 'Show Header',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'stateClickEvent': {
+            'default': 'STATE_CLICK',
+            'description': 'Emits UI:{stateClickEvent} with { stateId } when a state is clicked.',
+            'label': 'State Click Event',
+            'tier': 'presentation',
+            'type': 'event',
+          },
+          'traitProp': {
+            'description': 'The trait to draw (see `parseTraitLevel` / `traitLevelFromTrait`).',
+            'label': 'Trait',
+            'properties': {
+              'emittedEvents': {
+                'items': {
+                  'type': 'string',
+                },
+                'name': 'emittedEvents',
+                'required': true,
+                'type': 'array',
+              },
+              'linkedEntity': {
+                'name': 'linkedEntity',
+                'required': true,
+                'type': 'string',
+              },
+              'listenedEvents': {
+                'items': {
+                  'type': 'string',
+                },
+                'name': 'listenedEvents',
+                'required': true,
+                'type': 'array',
+              },
+              'name': {
+                'name': 'name',
+                'required': true,
+                'type': 'string',
+              },
+              'states': {
+                'items': {
+                  'properties': {
+                    'isInitial': {
+                      'name': 'isInitial',
+                      'required': false,
+                      'type': 'boolean',
+                    },
+                    'isTerminal': {
+                      'name': 'isTerminal',
+                      'required': false,
+                      'type': 'boolean',
+                    },
+                    'name': {
+                      'name': 'name',
+                      'required': true,
+                      'type': 'string',
+                    },
+                  },
+                  'type': 'object',
+                },
+                'name': 'states',
+                'required': true,
+                'type': 'array',
+              },
+              'transitions': {
+                'items': {
+                  'properties': {
+                    'effects': {
+                      'items': {
+                        'properties': {
+                          'args': {
+                            'items': {
+                              'type': 'object',
+                            },
+                            'name': 'args',
+                            'required': true,
+                            'type': 'array',
+                          },
+                          'type': {
+                            'name': 'type',
+                            'required': true,
+                            'type': 'string',
+                          },
+                        },
+                        'type': 'object',
+                      },
+                      'name': 'effects',
+                      'required': true,
+                      'type': 'array',
+                    },
+                    'event': {
+                      'name': 'event',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    'from': {
+                      'name': 'from',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    'guard': {
+                      'name': 'guard',
+                      'required': false,
+                      'type': 'object',
+                    },
+                    'index': {
+                      'name': 'index',
+                      'required': true,
+                      'type': 'number',
+                    },
+                    'to': {
+                      'name': 'to',
+                      'required': true,
+                      'type': 'string',
+                    },
+                  },
+                  'type': 'object',
+                },
+                'name': 'transitions',
+                'required': true,
+                'type': 'array',
+              },
+            },
+            'synonyms': 'trait',
+            'tier': 'presentation',
+            'type': 'StateMachineViewTrait',
+          },
+          'transitionClickEvent': {
+            'default': 'TRANSITION_CLICK',
+            'description': 'Emits UI:{transitionClickEvent} with { index, event, from, to } when a transition label is clicked.',
+            'label': 'Transition Click Event',
+            'tier': 'presentation',
+            'type': 'event',
+          },
+          'visitedStates': {
+            'default': [],
+            'description': 'States already passed through, in order.',
+            'items': {
+              'type': 'string',
+            },
+            'label': 'Visited States',
+            'tier': 'presentation',
+            'type': '[string]',
           },
         },
         'effectRow': [
           {
             'kind': 'render-ui',
             'resource': 'main',
+          },
+        ],
+        'emits': [
+          {
+            'definerKnob': 'stateClickEvent',
+            'description': 'Emits UI:{stateClickEvent} with { stateId } when a state is clicked.',
+            'event': '@config.stateClickEvent',
+            'payloadSchema': [
+              {
+                'name': 'stateId',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'essential',
+          },
+          {
+            'definerKnob': 'transitionClickEvent',
+            'description': 'Emits UI:{transitionClickEvent} with { index, event, from, to } when a transition label is clicked.',
+            'event': '@config.transitionClickEvent',
+            'payloadSchema': [
+              {
+                'name': 'index',
+                'required': true,
+                'type': 'number',
+              },
+              {
+                'name': 'event',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'from',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'to',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'essential',
           },
         ],
         'entityContract': {
@@ -176,6 +462,47 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
               'key': 'INIT',
               'name': 'Initialize',
             },
+            {
+              'description': 'Emits UI:{stateClickEvent} with { stateId } when a state is clicked.',
+              'key': '@config.stateClickEvent',
+              'name': '@config.state click event',
+              'payloadSchema': [
+                {
+                  'name': 'stateId',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'tier': 'essential',
+            },
+            {
+              'description': 'Emits UI:{transitionClickEvent} with { index, event, from, to } when a transition label is clicked.',
+              'key': '@config.transitionClickEvent',
+              'name': '@config.transition click event',
+              'payloadSchema': [
+                {
+                  'name': 'index',
+                  'required': true,
+                  'type': 'number',
+                },
+                {
+                  'name': 'event',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'from',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'to',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'tier': 'essential',
+            },
           ],
           'states': [
             {
@@ -190,10 +517,22 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
                   'render-ui',
                   'main',
                   {
+                    'activeState': '@config.activeState',
+                    'activeTransition': '@config.activeTransition',
                     'className': '@config.className',
+                    'direction': '@config.direction',
+                    'entityFields': '@config.entityFields',
                     'error': '@config.error',
                     'isLoading': '@config.isLoading',
+                    'nodeShape': '@config.nodeShape',
+                    'pendingSourceState': '@config.pendingSourceState',
+                    'selectedState': '@config.selectedState',
+                    'showHeader': '@config.showHeader',
+                    'stateClickEvent': '@config.stateClickEvent',
+                    'trait': '@config.traitProp',
+                    'transitionClickEvent': '@config.transitionClickEvent',
                     'type': 'state-machine-view',
+                    'visitedStates': '@config.visitedStates',
                   },
                 ],
               ],

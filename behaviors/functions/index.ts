@@ -197,6 +197,8 @@ export * from './ui/core/atoms/ui-aside.js';
 export * from './ui/core/atoms/ui-atlas-image.js';
 export * from './ui/core/atoms/ui-atlas-panel.js';
 export * from './ui/core/atoms/ui-avatar.js';
+export * from './ui/avl/atoms/ui-avl-glyph.js';
+export * from './ui/avl/atoms/ui-avl-state-machine.js';
 export * from './ui/core/atoms/ui-badge.js';
 export * from './ui/avl/atoms/ui-behavior-view.js';
 export * from './ui/learning/atoms/ui-biology-canvas.js';

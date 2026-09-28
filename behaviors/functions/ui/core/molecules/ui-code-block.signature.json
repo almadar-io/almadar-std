@@ -30,7 +30,8 @@
         "emittedEvents": [
           "CHANGE",
           "EDITOR_FOCUS",
-          "EDITOR_BLUR"
+          "EDITOR_BLUR",
+          "GO_TO_DEFINITION"
         ],
         "listenedEvents": [],
         "events": [
@@ -50,6 +51,12 @@
             "name": "EDITOR_BLUR",
             "direction": "emit",
             "description": "Declarative bus emit fired when this editor loses focus.",
+            "tier": "essential"
+          },
+          {
+            "name": "GO_TO_DEFINITION",
+            "direction": "emit",
+            "description": "Editable only: Cmd/Ctrl+click, or Cmd/Ctrl+Enter at the caret, on an identifier `definitionAt` accepts.",
             "tier": "essential"
           },
           {
@@ -124,6 +131,65 @@
             "type": "string",
             "label": "Code",
             "description": "The code content to display",
+            "tier": "presentation"
+          },
+          {
+            "key": "diagnostics",
+            "type": "[CodeBlockDiagnosticsItem]",
+            "default": [],
+            "label": "Diagnostics",
+            "description": "Editable only: problems located in the code (1-based line/column in characters, `endColumn` just past the last one), each underlined exactly — red wavy for an error, amber for a warning, dotted where the position is approximate. The message of the one under the caret shows below the editor.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "approximate": {
+                  "name": "approximate",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "column": {
+                  "name": "column",
+                  "required": false,
+                  "type": "number"
+                },
+                "endColumn": {
+                  "name": "endColumn",
+                  "required": false,
+                  "type": "number"
+                },
+                "endLine": {
+                  "name": "endLine",
+                  "required": false,
+                  "type": "number"
+                },
+                "line": {
+                  "name": "line",
+                  "required": true,
+                  "type": "number"
+                },
+                "message": {
+                  "name": "message",
+                  "required": true,
+                  "type": "string"
+                },
+                "severity": {
+                  "name": "severity",
+                  "required": true,
+                  "type": "string",
+                  "values": [
+                    "error",
+                    "warning"
+                  ]
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "diagnosticsCode",
+            "type": "string",
+            "label": "Diagnostics Code",
+            "description": "The code `diagnostics` were computed on. When the editor's text has moved on, each range is carried over the edit; a range the edit touches is dropped until the code is checked again. Absent: they describe the current text.",
             "tier": "presentation"
           },
           {
@@ -343,6 +409,13 @@
             "tier": "presentation"
           },
           {
+            "key": "lineNumbers",
+            "type": "boolean",
+            "label": "Line Numbers",
+            "description": "Editable only: number the lines in a gutter (lines with errors in red). Default on.",
+            "tier": "presentation"
+          },
+          {
             "key": "maxHeight",
             "type": "scalar",
             "default": "60vh",
@@ -449,6 +522,14 @@
             "tier": "presentation"
           },
           {
+            "key": "onGoToDefinition",
+            "type": "event",
+            "default": "GO_TO_DEFINITION",
+            "label": "On Go To Definition",
+            "description": "Editable only: Cmd/Ctrl+click, or Cmd/Ctrl+Enter at the caret, on an identifier `definitionAt` accepts.",
+            "tier": "presentation"
+          },
+          {
             "key": "onInsertText",
             "type": "event",
             "default": "INSERT_TEXT",
@@ -519,6 +600,13 @@
             }
           },
           {
+            "key": "problems",
+            "type": "number",
+            "label": "Problems",
+            "description": "Editable only: how many problems the host knows the code has (some, like a parse error, have no line to mark). With `assist`, the editor offers to fix them.",
+            "tier": "presentation"
+          },
+          {
             "key": "showCopy",
             "type": "boolean",
             "label": "Show Copy",
@@ -580,7 +668,8 @@
         "definerKnobs": [
           "onChange",
           "onEditorBlur",
-          "onEditorFocus"
+          "onEditorFocus",
+          "onGoToDefinition"
         ],
         "entityRebindable": true,
         "entityContract": {
@@ -616,7 +705,8 @@
     "emittedEvents": [
       "CHANGE",
       "EDITOR_BLUR",
-      "EDITOR_FOCUS"
+      "EDITOR_FOCUS",
+      "GO_TO_DEFINITION"
     ],
     "listenedEvents": [],
     "exposure": "palette",

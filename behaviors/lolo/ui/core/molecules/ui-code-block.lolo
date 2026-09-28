@@ -25,6 +25,15 @@ orbital CodeBlockOrbital {
     code : string
     stack : string
   }
+  type CodeBlockDiagnosticsItem = {
+    line : number!
+    column : number
+    endLine : number
+    endColumn : number
+    severity : "error" | "warning"!
+    message : string!
+    approximate : boolean
+  }
 
   entity CodeBlockItem [runtime] {
     id : string!
@@ -70,6 +79,11 @@ orbital CodeBlockOrbital {
           onSetMode: @config.onSetMode
           motions: @config.motions
           operators: @config.operators
+          problems: @config.problems
+          diagnostics: @config.diagnostics
+          onGoToDefinition: @config.onGoToDefinition
+          diagnosticsCode: @config.diagnosticsCode
+          lineNumbers: @config.lineNumbers
           type: code-block
         })
       CHANGE -> idle
@@ -105,6 +119,11 @@ orbital CodeBlockOrbital {
           onSetMode: @config.onSetMode
           motions: @config.motions
           operators: @config.operators
+          problems: @config.problems
+          diagnostics: @config.diagnostics
+          onGoToDefinition: @config.onGoToDefinition
+          diagnosticsCode: @config.diagnosticsCode
+          lineNumbers: @config.lineNumbers
           type: code-block
         })
       EDITOR_FOCUS -> idle
@@ -140,6 +159,11 @@ orbital CodeBlockOrbital {
           onSetMode: @config.onSetMode
           motions: @config.motions
           operators: @config.operators
+          problems: @config.problems
+          diagnostics: @config.diagnostics
+          onGoToDefinition: @config.onGoToDefinition
+          diagnosticsCode: @config.diagnosticsCode
+          lineNumbers: @config.lineNumbers
           type: code-block
         })
       EDITOR_BLUR -> idle
@@ -175,6 +199,11 @@ orbital CodeBlockOrbital {
           onSetMode: @config.onSetMode
           motions: @config.motions
           operators: @config.operators
+          problems: @config.problems
+          diagnostics: @config.diagnostics
+          onGoToDefinition: @config.onGoToDefinition
+          diagnosticsCode: @config.diagnosticsCode
+          lineNumbers: @config.lineNumbers
           type: code-block
         })
       MOTION -> idle
@@ -210,6 +239,11 @@ orbital CodeBlockOrbital {
           onSetMode: @config.onSetMode
           motions: @config.motions
           operators: @config.operators
+          problems: @config.problems
+          diagnostics: @config.diagnostics
+          onGoToDefinition: @config.onGoToDefinition
+          diagnosticsCode: @config.diagnosticsCode
+          lineNumbers: @config.lineNumbers
           type: code-block
         })
       OPERATE -> idle
@@ -245,6 +279,11 @@ orbital CodeBlockOrbital {
           onSetMode: @config.onSetMode
           motions: @config.motions
           operators: @config.operators
+          problems: @config.problems
+          diagnostics: @config.diagnostics
+          onGoToDefinition: @config.onGoToDefinition
+          diagnosticsCode: @config.diagnosticsCode
+          lineNumbers: @config.lineNumbers
           type: code-block
         })
       INSERT_TEXT -> idle
@@ -280,6 +319,11 @@ orbital CodeBlockOrbital {
           onSetMode: @config.onSetMode
           motions: @config.motions
           operators: @config.operators
+          problems: @config.problems
+          diagnostics: @config.diagnostics
+          onGoToDefinition: @config.onGoToDefinition
+          diagnosticsCode: @config.diagnosticsCode
+          lineNumbers: @config.lineNumbers
           type: code-block
         })
       SET_MODE -> idle
@@ -315,6 +359,11 @@ orbital CodeBlockOrbital {
           onSetMode: @config.onSetMode
           motions: @config.motions
           operators: @config.operators
+          problems: @config.problems
+          diagnostics: @config.diagnostics
+          onGoToDefinition: @config.onGoToDefinition
+          diagnosticsCode: @config.diagnosticsCode
+          lineNumbers: @config.lineNumbers
           type: code-block
         })
     }
@@ -334,6 +383,11 @@ orbital CodeBlockOrbital {
         editorId : string!
       }
         @description "Declarative bus emit fired when this editor loses focus."
+        @tier "essential"
+      @config.onGoToDefinition -> external {
+        identifier : string
+      }
+        @description "Editable only: Cmd/Ctrl+click, or Cmd/Ctrl+Enter at the caret, on an identifier `definitionAt` accepts."
         @tier "essential"
     }
 
@@ -489,6 +543,26 @@ orbital CodeBlockOrbital {
       operators : ["delete" | "yank" | "change" | "put" | "put-before" | "undo" | "redo" | "join" | "toggle-case" | "indent" | "dedent" | "replace"] = ["delete", "yank", "change", "put", "put-before", "undo", "redo", "join", "toggle-case", "indent", "dedent", "replace"]
         @label "Operators"
         @description "Operator vocabulary this editor accepts. Default: the full `EditorOperator` set."
+        @tier "presentation"
+      problems : number
+        @label "Problems"
+        @description "Editable only: how many problems the host knows the code has (some, like a parse error, have no line to mark). With `assist`, the editor offers to fix them."
+        @tier "presentation"
+      diagnostics : [CodeBlockDiagnosticsItem] = []
+        @label "Diagnostics"
+        @description "Editable only: problems located in the code (1-based line/column in characters, `endColumn` just past the last one), each underlined exactly — red wavy for an error, amber for a warning, dotted where the position is approximate. The message of the one under the caret shows below the editor."
+        @tier "presentation"
+      onGoToDefinition : event = "GO_TO_DEFINITION"
+        @label "On Go To Definition"
+        @description "Editable only: Cmd/Ctrl+click, or Cmd/Ctrl+Enter at the caret, on an identifier `definitionAt` accepts."
+        @tier "presentation"
+      diagnosticsCode : string
+        @label "Diagnostics Code"
+        @description "The code `diagnostics` were computed on. When the editor's text has moved on, each range is carried over the edit; a range the edit touches is dropped until the code is checked again. Absent: they describe the current text."
+        @tier "presentation"
+      lineNumbers : boolean
+        @label "Line Numbers"
+        @description "Editable only: number the lines in a gutter (lines with errors in red). Default on."
         @tier "presentation"
     }
   }

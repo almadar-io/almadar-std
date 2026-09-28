@@ -1,12 +1,11 @@
 app ui-module-card "1.0.0"
-"ModuleCard — a card summarizing one course module or lesson with progress and entry point. — UI factory (1:1 with the @almadar/ui module-card pattern)."
-;; @capabilities "course module card, lesson card, curriculum unit card, learning-path step card"
+"ModuleCard — a compact summary card for one orbital module: its entity and fields, a mini state machine per trait, and its pages. — UI factory (1:1 with the @almadar/ui module-card pattern)."
+;; @capabilities "orbital module summary card, entity and trait overview card, app architecture node card"
 ;; @pattern "module-card"
 orbital ModuleCardOrbital {
   type ModuleCardData = {
     orbitalName : string!
     entityName : string!
-    persistence : string!
     fields : [ModuleCardDataFieldsItem]!
     traits : [ModuleCardDataTraitsItem]!
     pages : [ModuleCardDataPagesItem]!
@@ -41,14 +40,14 @@ orbital ModuleCardOrbital {
   }
   type ModuleCardDataTraitDetailsValueStatesItem = {
     name : string!
-    isInitial : boolean!
-    isTerminal : boolean!
+    isInitial : boolean
+    isTerminal : boolean
   }
   type ModuleCardDataTraitDetailsValueTransitionsItem = {
     from : string!
     to : string!
     event : string!
-    guard : SExpr!
+    guard : SExpr
     effects : [ModuleCardDataTraitDetailsValueTransitionsItemEffectsItem]!
     index : number!
   }
@@ -79,9 +78,9 @@ orbital ModuleCardOrbital {
     }
 
     config {
-      data : ModuleCardData = { orbitalName: "Orbital Name", entityName: "Entity Name", persistence: "Persistence", fields: [{ name: "Name", type: "Type", required: false, hasDefault: false }, { name: "Name 2", type: "Type 2", required: true, hasDefault: true }], traits: [{ name: "Name", stateCount: 1, eventCount: 1, transitionCount: 1, emits: ["Item", "Item 2"], listens: ["Item", "Item 2"] }, { name: "Name 2", stateCount: 2, eventCount: 2, transitionCount: 2, emits: ["Item", "Item 2"], listens: ["Item", "Item 2"] }], pages: [{ name: "Name", route: "Route" }, { name: "Name 2", route: "Route 2" }], traitDetails: {}, externalLinks: [{ targetOrbital: "Target Orbital", eventName: "Event Name", direction: "Direction", traitName: "Trait Name" }, { targetOrbital: "Target Orbital 2", eventName: "Event Name 2", direction: "Direction 2", traitName: "Trait Name 2" }] }
+      data : ModuleCardData = { orbitalName: "OrderOrbital", entityName: "Order", persistence: "persistent", fields: [{ name: "customer", type: "string", required: true, hasDefault: false }, { name: "qty", type: "number", required: true, hasDefault: true }, { name: "status", type: "string", required: false, hasDefault: true }], traits: [{ name: "OrderFlow", stateCount: 5, eventCount: 7, transitionCount: 7, emits: ["ORDER_SAVED"], listens: ["PAYMENT_OK"] }], pages: [{ name: "Orders", route: "/orders" }], traitDetails: { OrderFlow: { name: "OrderFlow", linkedEntity: "Order", states: [{ name: "browsing", isInitial: true, isTerminal: false }, { name: "editing", isInitial: false, isTerminal: false }, { name: "saving", isInitial: false, isTerminal: false }, { name: "confirmed", isInitial: false, isTerminal: true }, { name: "failed", isInitial: false, isTerminal: false }], transitions: [{ from: "browsing", to: "editing", event: "EDIT", effects: [{ type: "render-ui", args: [] }], index: 0 }, { from: "editing", to: "saving", event: "SAVE", effects: [{ type: "persist", args: [] }, { type: "notify", args: [] }], index: 1 }, { from: "saving", to: "confirmed", event: "SAVED", effects: [{ type: "emit", args: [] }, { type: "render-ui", args: [] }], index: 2 }, { from: "saving", to: "failed", event: "SAVE_FAILED", effects: [{ type: "notify", args: [] }], index: 3 }, { from: "failed", to: "editing", event: "RETRY", effects: [], index: 4 }, { from: "editing", to: "browsing", event: "CANCEL", effects: [{ type: "render-ui", args: [] }], index: 5 }, { from: "confirmed", to: "browsing", event: "DONE", effects: [{ type: "navigate", args: [] }], index: 6 }], emittedEvents: ["ORDER_SAVED"], listenedEvents: ["PAYMENT_OK"] } }, externalLinks: [{ targetOrbital: "PaymentOrbital", eventName: "PAYMENT_OK", direction: "in", traitName: "OrderFlow" }] }
         @label "Data"
-        @description "data prop"
+        @description "The orbital to summarize."
         @tier "presentation"
     }
   }

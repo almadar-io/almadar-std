@@ -30,7 +30,7 @@ const ALIAS = 'UiCodeBlock';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiCodeBlockEventKey = 'CHANGE' | 'EDITOR_BLUR' | 'EDITOR_FOCUS' | 'INIT' | 'INSERT_TEXT' | 'MOTION' | 'OPERATE' | 'SET_MODE';
+export type StdUiCodeBlockEventKey = 'CHANGE' | 'EDITOR_BLUR' | 'EDITOR_FOCUS' | 'GO_TO_DEFINITION' | 'INIT' | 'INSERT_TEXT' | 'MOTION' | 'OPERATE' | 'SET_MODE';
 
 /**
  * Payload shape for the `CHANGE` event.
@@ -54,6 +54,13 @@ export interface StdUiCodeBlockEditorBlurPayload {
 }
 
 /**
+ * Payload shape for the `GO_TO_DEFINITION` event.
+ */
+export interface StdUiCodeBlockGoToDefinitionPayload {
+  identifier?: string;
+}
+
+/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
@@ -64,6 +71,9 @@ export interface StdUiCodeBlockConfig {
   actions?: EntityRow[];
   className?: string;
   code?: string;
+  /** Default: `[]` */
+  diagnostics?: EntityRow[];
+  diagnosticsCode?: string;
   /** Default: `[]` */
   diff?: EntityRow[];
   /** Default: `false` */
@@ -77,6 +87,7 @@ export interface StdUiCodeBlockConfig {
   isLoading?: boolean;
   /** Default: `"text"` */
   language?: string;
+  lineNumbers?: boolean;
   /** Default: `"60vh"` */
   maxHeight?: unknown;
   /** Default: `"code"` */
@@ -91,6 +102,8 @@ export interface StdUiCodeBlockConfig {
   onEditorBlur?: string;
   /** Default: `"EDITOR_FOCUS"` */
   onEditorFocus?: string;
+  /** Default: `"GO_TO_DEFINITION"` */
+  onGoToDefinition?: string;
   /** Default: `"INSERT_TEXT"` */
   onInsertText?: string;
   /** Default: `"MOTION"` */
@@ -101,6 +114,7 @@ export interface StdUiCodeBlockConfig {
   onSetMode?: string;
   /** Default: `["delete","yank","change","put","put-before","undo","redo","join","toggle-case","indent","dedent","replace"]` */
   operators?: string[];
+  problems?: number;
   showCopy?: boolean;
   /** Default: `true` */
   showCopyButton?: boolean;

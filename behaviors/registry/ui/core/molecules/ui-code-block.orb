@@ -109,6 +109,15 @@
         "parent": "trt_01KXG04N2STG2K5C78H6K1FDZ8",
         "renames": []
       },
+      "evt_01M3M10AGQ3638A5DTWM086EYC": {
+        "bakedName": "@config.onGoToDefinition",
+        "curName": "@config.onGoToDefinition",
+        "id": "evt_01M3M10AGQ3638A5DTWM086EYC",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04N2STG2K5C78H6K1FDZ8",
+        "renames": []
+      },
       "orb_01KXG04N2S51MYQ8WYZMAPKCX0": {
         "bakedName": "CodeBlockOrbital",
         "curName": "CodeBlockOrbital",
@@ -226,6 +235,63 @@
             "code": {
               "description": "The code content to display",
               "label": "Code",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "diagnostics": {
+              "default": [],
+              "description": "Editable only: problems located in the code (1-based line/column in characters, `endColumn` just past the last one), each underlined exactly — red wavy for an error, amber for a warning, dotted where the position is approximate. The message of the one under the caret shows below the editor.",
+              "items": {
+                "properties": {
+                  "approximate": {
+                    "name": "approximate",
+                    "required": false,
+                    "type": "boolean"
+                  },
+                  "column": {
+                    "name": "column",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "endColumn": {
+                    "name": "endColumn",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "endLine": {
+                    "name": "endLine",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "line": {
+                    "name": "line",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "message": {
+                    "name": "message",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "severity": {
+                    "name": "severity",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "error",
+                      "warning"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Diagnostics",
+              "tier": "presentation",
+              "type": "[CodeBlockDiagnosticsItem]"
+            },
+            "diagnosticsCode": {
+              "description": "The code `diagnostics` were computed on. When the editor's text has moved on, each range is carried over the edit; a range the edit touches is dropped until the code is checked again. Absent: they describe the current text.",
+              "label": "Diagnostics Code",
               "tier": "presentation",
               "type": "string"
             },
@@ -437,6 +503,12 @@
               "tier": "presentation",
               "type": "string"
             },
+            "lineNumbers": {
+              "description": "Editable only: number the lines in a gutter (lines with errors in red). Default on.",
+              "label": "Line Numbers",
+              "tier": "presentation",
+              "type": "boolean"
+            },
             "maxHeight": {
               "default": "60vh",
               "description": "Maximum height before scrolling",
@@ -535,6 +607,13 @@
               "tier": "presentation",
               "type": "event"
             },
+            "onGoToDefinition": {
+              "default": "GO_TO_DEFINITION",
+              "description": "Editable only: Cmd/Ctrl+click, or Cmd/Ctrl+Enter at the caret, on an identifier `definitionAt` accepts.",
+              "label": "On Go To Definition",
+              "tier": "presentation",
+              "type": "event"
+            },
             "onInsertText": {
               "default": "INSERT_TEXT",
               "description": "Declarative bus listen: insert literal text at the cursor.",
@@ -603,6 +682,12 @@
               "label": "Operators",
               "tier": "presentation",
               "type": "[string]"
+            },
+            "problems": {
+              "description": "Editable only: how many problems the host knows the code has (some, like a parse error, have no line to mark). With `assist`, the editor offers to fix them.",
+              "label": "Problems",
+              "tier": "presentation",
+              "type": "number"
             },
             "showCopy": {
               "description": "Show copy button (viewer alias for showCopyButton)",
@@ -698,6 +783,20 @@
                 {
                   "name": "editorId",
                   "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "definerKnob": "onGoToDefinition",
+              "description": "Editable only: Cmd/Ctrl+click, or Cmd/Ctrl+Enter at the caret, on an identifier `definitionAt` accepts.",
+              "event": "@config.onGoToDefinition",
+              "eventId": "evt_01M3M10AGQ3638A5DTWM086EYC",
+              "payloadSchema": [
+                {
+                  "name": "identifier",
                   "type": "string"
                 }
               ],
@@ -891,6 +990,19 @@
                   }
                 ],
                 "tier": "essential"
+              },
+              {
+                "description": "Editable only: Cmd/Ctrl+click, or Cmd/Ctrl+Enter at the caret, on an identifier `definitionAt` accepts.",
+                "id": "evt_01M3M10AGQ3638A5DTWM086EYC",
+                "key": "@config.onGoToDefinition",
+                "name": "@config.on go to definition",
+                "payloadSchema": [
+                  {
+                    "name": "identifier",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
               }
             ],
             "states": [
@@ -919,6 +1031,8 @@
                       "actions": "@config.actions",
                       "className": "@config.className",
                       "code": "@entity.code",
+                      "diagnostics": "@config.diagnostics",
+                      "diagnosticsCode": "@config.diagnosticsCode",
                       "diff": "@config.diff",
                       "editable": "@config.editable",
                       "editorId": "@entity.editorId",
@@ -927,6 +1041,7 @@
                       "foldable": "@config.foldable",
                       "isLoading": "@config.isLoading",
                       "language": "@config.language",
+                      "lineNumbers": "@config.lineNumbers",
                       "maxHeight": "@config.maxHeight",
                       "mode": "@config.mode",
                       "motions": "@config.motions",
@@ -935,11 +1050,13 @@
                       "onChange": "@config.onChange",
                       "onEditorBlur": "@config.onEditorBlur",
                       "onEditorFocus": "@config.onEditorFocus",
+                      "onGoToDefinition": "@config.onGoToDefinition",
                       "onInsertText": "@config.onInsertText",
                       "onMotion": "@config.onMotion",
                       "onOperate": "@config.onOperate",
                       "onSetMode": "@config.onSetMode",
                       "operators": "@config.operators",
+                      "problems": "@config.problems",
                       "showCopy": "@config.showCopy",
                       "showCopyButton": "@config.showCopyButton",
                       "showLanguageBadge": "@config.showLanguageBadge",
@@ -969,6 +1086,8 @@
                       "actions": "@config.actions",
                       "className": "@config.className",
                       "code": "@entity.code",
+                      "diagnostics": "@config.diagnostics",
+                      "diagnosticsCode": "@config.diagnosticsCode",
                       "diff": "@config.diff",
                       "editable": "@config.editable",
                       "editorId": "@entity.editorId",
@@ -977,6 +1096,7 @@
                       "foldable": "@config.foldable",
                       "isLoading": "@config.isLoading",
                       "language": "@config.language",
+                      "lineNumbers": "@config.lineNumbers",
                       "maxHeight": "@config.maxHeight",
                       "mode": "@config.mode",
                       "motions": "@config.motions",
@@ -985,11 +1105,13 @@
                       "onChange": "@config.onChange",
                       "onEditorBlur": "@config.onEditorBlur",
                       "onEditorFocus": "@config.onEditorFocus",
+                      "onGoToDefinition": "@config.onGoToDefinition",
                       "onInsertText": "@config.onInsertText",
                       "onMotion": "@config.onMotion",
                       "onOperate": "@config.onOperate",
                       "onSetMode": "@config.onSetMode",
                       "operators": "@config.operators",
+                      "problems": "@config.problems",
                       "showCopy": "@config.showCopy",
                       "showCopyButton": "@config.showCopyButton",
                       "showLanguageBadge": "@config.showLanguageBadge",
@@ -1019,6 +1141,8 @@
                       "actions": "@config.actions",
                       "className": "@config.className",
                       "code": "@entity.code",
+                      "diagnostics": "@config.diagnostics",
+                      "diagnosticsCode": "@config.diagnosticsCode",
                       "diff": "@config.diff",
                       "editable": "@config.editable",
                       "editorId": "@entity.editorId",
@@ -1027,6 +1151,7 @@
                       "foldable": "@config.foldable",
                       "isLoading": "@config.isLoading",
                       "language": "@config.language",
+                      "lineNumbers": "@config.lineNumbers",
                       "maxHeight": "@config.maxHeight",
                       "mode": "@config.mode",
                       "motions": "@config.motions",
@@ -1035,11 +1160,13 @@
                       "onChange": "@config.onChange",
                       "onEditorBlur": "@config.onEditorBlur",
                       "onEditorFocus": "@config.onEditorFocus",
+                      "onGoToDefinition": "@config.onGoToDefinition",
                       "onInsertText": "@config.onInsertText",
                       "onMotion": "@config.onMotion",
                       "onOperate": "@config.onOperate",
                       "onSetMode": "@config.onSetMode",
                       "operators": "@config.operators",
+                      "problems": "@config.problems",
                       "showCopy": "@config.showCopy",
                       "showCopyButton": "@config.showCopyButton",
                       "showLanguageBadge": "@config.showLanguageBadge",
@@ -1069,6 +1196,8 @@
                       "actions": "@config.actions",
                       "className": "@config.className",
                       "code": "@entity.code",
+                      "diagnostics": "@config.diagnostics",
+                      "diagnosticsCode": "@config.diagnosticsCode",
                       "diff": "@config.diff",
                       "editable": "@config.editable",
                       "editorId": "@entity.editorId",
@@ -1077,6 +1206,7 @@
                       "foldable": "@config.foldable",
                       "isLoading": "@config.isLoading",
                       "language": "@config.language",
+                      "lineNumbers": "@config.lineNumbers",
                       "maxHeight": "@config.maxHeight",
                       "mode": "@config.mode",
                       "motions": "@config.motions",
@@ -1085,11 +1215,13 @@
                       "onChange": "@config.onChange",
                       "onEditorBlur": "@config.onEditorBlur",
                       "onEditorFocus": "@config.onEditorFocus",
+                      "onGoToDefinition": "@config.onGoToDefinition",
                       "onInsertText": "@config.onInsertText",
                       "onMotion": "@config.onMotion",
                       "onOperate": "@config.onOperate",
                       "onSetMode": "@config.onSetMode",
                       "operators": "@config.operators",
+                      "problems": "@config.problems",
                       "showCopy": "@config.showCopy",
                       "showCopyButton": "@config.showCopyButton",
                       "showLanguageBadge": "@config.showLanguageBadge",
@@ -1119,6 +1251,8 @@
                       "actions": "@config.actions",
                       "className": "@config.className",
                       "code": "@entity.code",
+                      "diagnostics": "@config.diagnostics",
+                      "diagnosticsCode": "@config.diagnosticsCode",
                       "diff": "@config.diff",
                       "editable": "@config.editable",
                       "editorId": "@entity.editorId",
@@ -1127,6 +1261,7 @@
                       "foldable": "@config.foldable",
                       "isLoading": "@config.isLoading",
                       "language": "@config.language",
+                      "lineNumbers": "@config.lineNumbers",
                       "maxHeight": "@config.maxHeight",
                       "mode": "@config.mode",
                       "motions": "@config.motions",
@@ -1135,11 +1270,13 @@
                       "onChange": "@config.onChange",
                       "onEditorBlur": "@config.onEditorBlur",
                       "onEditorFocus": "@config.onEditorFocus",
+                      "onGoToDefinition": "@config.onGoToDefinition",
                       "onInsertText": "@config.onInsertText",
                       "onMotion": "@config.onMotion",
                       "onOperate": "@config.onOperate",
                       "onSetMode": "@config.onSetMode",
                       "operators": "@config.operators",
+                      "problems": "@config.problems",
                       "showCopy": "@config.showCopy",
                       "showCopyButton": "@config.showCopyButton",
                       "showLanguageBadge": "@config.showLanguageBadge",
@@ -1169,6 +1306,8 @@
                       "actions": "@config.actions",
                       "className": "@config.className",
                       "code": "@entity.code",
+                      "diagnostics": "@config.diagnostics",
+                      "diagnosticsCode": "@config.diagnosticsCode",
                       "diff": "@config.diff",
                       "editable": "@config.editable",
                       "editorId": "@entity.editorId",
@@ -1177,6 +1316,7 @@
                       "foldable": "@config.foldable",
                       "isLoading": "@config.isLoading",
                       "language": "@config.language",
+                      "lineNumbers": "@config.lineNumbers",
                       "maxHeight": "@config.maxHeight",
                       "mode": "@config.mode",
                       "motions": "@config.motions",
@@ -1185,11 +1325,13 @@
                       "onChange": "@config.onChange",
                       "onEditorBlur": "@config.onEditorBlur",
                       "onEditorFocus": "@config.onEditorFocus",
+                      "onGoToDefinition": "@config.onGoToDefinition",
                       "onInsertText": "@config.onInsertText",
                       "onMotion": "@config.onMotion",
                       "onOperate": "@config.onOperate",
                       "onSetMode": "@config.onSetMode",
                       "operators": "@config.operators",
+                      "problems": "@config.problems",
                       "showCopy": "@config.showCopy",
                       "showCopyButton": "@config.showCopyButton",
                       "showLanguageBadge": "@config.showLanguageBadge",
@@ -1219,6 +1361,8 @@
                       "actions": "@config.actions",
                       "className": "@config.className",
                       "code": "@entity.code",
+                      "diagnostics": "@config.diagnostics",
+                      "diagnosticsCode": "@config.diagnosticsCode",
                       "diff": "@config.diff",
                       "editable": "@config.editable",
                       "editorId": "@entity.editorId",
@@ -1227,6 +1371,7 @@
                       "foldable": "@config.foldable",
                       "isLoading": "@config.isLoading",
                       "language": "@config.language",
+                      "lineNumbers": "@config.lineNumbers",
                       "maxHeight": "@config.maxHeight",
                       "mode": "@config.mode",
                       "motions": "@config.motions",
@@ -1235,11 +1380,13 @@
                       "onChange": "@config.onChange",
                       "onEditorBlur": "@config.onEditorBlur",
                       "onEditorFocus": "@config.onEditorFocus",
+                      "onGoToDefinition": "@config.onGoToDefinition",
                       "onInsertText": "@config.onInsertText",
                       "onMotion": "@config.onMotion",
                       "onOperate": "@config.onOperate",
                       "onSetMode": "@config.onSetMode",
                       "operators": "@config.operators",
+                      "problems": "@config.problems",
                       "showCopy": "@config.showCopy",
                       "showCopyButton": "@config.showCopyButton",
                       "showLanguageBadge": "@config.showLanguageBadge",
@@ -1269,6 +1416,8 @@
                       "actions": "@config.actions",
                       "className": "@config.className",
                       "code": "@entity.code",
+                      "diagnostics": "@config.diagnostics",
+                      "diagnosticsCode": "@config.diagnosticsCode",
                       "diff": "@config.diff",
                       "editable": "@config.editable",
                       "editorId": "@entity.editorId",
@@ -1277,6 +1426,7 @@
                       "foldable": "@config.foldable",
                       "isLoading": "@config.isLoading",
                       "language": "@config.language",
+                      "lineNumbers": "@config.lineNumbers",
                       "maxHeight": "@config.maxHeight",
                       "mode": "@config.mode",
                       "motions": "@config.motions",
@@ -1285,11 +1435,13 @@
                       "onChange": "@config.onChange",
                       "onEditorBlur": "@config.onEditorBlur",
                       "onEditorFocus": "@config.onEditorFocus",
+                      "onGoToDefinition": "@config.onGoToDefinition",
                       "onInsertText": "@config.onInsertText",
                       "onMotion": "@config.onMotion",
                       "onOperate": "@config.onOperate",
                       "onSetMode": "@config.onSetMode",
                       "operators": "@config.operators",
+                      "problems": "@config.problems",
                       "showCopy": "@config.showCopy",
                       "showCopyButton": "@config.showCopyButton",
                       "showLanguageBadge": "@config.showLanguageBadge",
@@ -1327,6 +1479,39 @@
           {
             "name": "variant",
             "type": "string"
+          }
+        ],
+        "CodeBlockDiagnosticsItem": [
+          {
+            "name": "line",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "name": "column",
+            "type": "number"
+          },
+          {
+            "name": "endLine",
+            "type": "number"
+          },
+          {
+            "name": "endColumn",
+            "type": "number"
+          },
+          {
+            "name": "severity",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "message",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "approximate",
+            "type": "boolean"
           }
         ],
         "CodeBlockDiffItem": [

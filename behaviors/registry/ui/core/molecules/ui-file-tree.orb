@@ -28,6 +28,15 @@
         "parent": "trt_01KXG04NVWDQQWWZ4WSN5EYEV0",
         "renames": []
       },
+      "evt_01M3KVGWPG3XD19A0QREZ70WG3": {
+        "bakedName": "@config.onNodeExpand",
+        "curName": "@config.onNodeExpand",
+        "id": "evt_01M3KVGWPG3XD19A0QREZ70WG3",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04NVWDQQWWZ4WSN5EYEV0",
+        "renames": []
+      },
       "orb_01KXG04NVWH7AX67H597E423W6": {
         "bakedName": "FileTreeOrbital",
         "curName": "FileTreeOrbital",
@@ -94,6 +103,16 @@
               "label": "Class Name",
               "tier": "presentation",
               "type": "string"
+            },
+            "expandedPaths": {
+              "default": [],
+              "description": "Paths to show expanded (e.g. to reveal a node): each is expanded when it appears here, loading its children if needed.",
+              "items": {
+                "type": "string"
+              },
+              "label": "Expanded Paths",
+              "tier": "presentation",
+              "type": "[string]"
             },
             "indent": {
               "default": 16.0,
@@ -171,6 +190,13 @@
               "tier": "presentation",
               "type": "event"
             },
+            "onNodeExpand": {
+              "default": "NODE_EXPAND",
+              "description": "Called the first time a node marked `expandable` is expanded, with its path, so its children can be loaded.",
+              "label": "On Node Expand",
+              "tier": "presentation",
+              "type": "event"
+            },
             "onNodeReorder": {
               "default": "",
               "description": "Called when a row is dropped onto another, in flat `items` mode; carries the moved node's id, its new parent id (`null` for a root drop), and its index within the new parent's children. Presence-gated: binding this prop is what turns on row dragging.",
@@ -212,6 +238,11 @@
                     "name": "children",
                     "required": false,
                     "type": "array"
+                  },
+                  "expandable": {
+                    "name": "expandable",
+                    "required": false,
+                    "type": "boolean"
                   },
                   "language": {
                     "name": "language",
@@ -275,6 +306,20 @@
               ],
               "scope": "external",
               "tier": "essential"
+            },
+            {
+              "definerKnob": "onNodeExpand",
+              "description": "Called the first time a node marked `expandable` is expanded, with its path, so its children can be loaded.",
+              "event": "@config.onNodeExpand",
+              "eventId": "evt_01M3KVGWPG3XD19A0QREZ70WG3",
+              "payloadSchema": [
+                {
+                  "name": "path",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
             }
           ],
           "entityContract": {
@@ -309,6 +354,19 @@
                   }
                 ],
                 "tier": "essential"
+              },
+              {
+                "description": "Called the first time a node marked `expandable` is expanded, with its path, so its children can be loaded.",
+                "id": "evt_01M3KVGWPG3XD19A0QREZ70WG3",
+                "key": "@config.onNodeExpand",
+                "name": "@config.on node expand",
+                "payloadSchema": [
+                  {
+                    "name": "path",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
               }
             ],
             "states": [
@@ -325,6 +383,7 @@
                     "main",
                     {
                       "className": "@config.className",
+                      "expandedPaths": "@config.expandedPaths",
                       "indent": "@config.indent",
                       "items": "@config.items",
                       "look": "@config.look",
@@ -332,6 +391,7 @@
                       "nodeActionLabel": "@config.nodeActionLabel",
                       "onFileSelect": "@config.onFileSelect",
                       "onNodeAction": "@config.onNodeAction",
+                      "onNodeExpand": "@config.onNodeExpand",
                       "onNodeReorder": "@config.onNodeReorder",
                       "onNodeSelect": "@config.onNodeSelect",
                       "selectedId": "@config.selectedId",
@@ -415,6 +475,10 @@
                 "type": "string"
               },
               {
+                "name": "expandable",
+                "type": "boolean"
+              },
+              {
                 "name": "size",
                 "type": "number"
               },
@@ -428,6 +492,10 @@
           {
             "name": "note",
             "type": "string"
+          },
+          {
+            "name": "expandable",
+            "type": "boolean"
           },
           {
             "name": "size",

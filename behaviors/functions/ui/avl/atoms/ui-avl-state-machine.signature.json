@@ -1,19 +1,19 @@
 [
   {
-    "organism": "ui-state-machine-view",
-    "orbital": "StateMachineViewOrbital",
-    "tier": "organisms",
-    "factoryPath": "behaviors/functions/ui/core/organisms/ui-state-machine-view.ts",
+    "organism": "ui-avl-state-machine",
+    "orbital": "AvlStateMachineOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/avl/atoms/ui-avl-state-machine.ts",
     "entities": [
       {
-        "name": "StateMachineViewItem",
+        "name": "AvlStateMachineItem",
         "fields": [],
         "persistence": "runtime"
       }
     ],
     "traits": [
       {
-        "name": "StateMachineViewRender",
+        "name": "AvlStateMachineRender",
         "emittedEvents": [
           "STATE_CLICK",
           "TRANSITION_CLICK"
@@ -83,43 +83,6 @@
             }
           },
           {
-            "key": "error",
-            "type": "StateMachineViewError",
-            "label": "Error",
-            "description": "Error state",
-            "tier": "presentation",
-            "properties": {
-              "code": {
-                "name": "code",
-                "required": false,
-                "type": "string"
-              },
-              "message": {
-                "name": "message",
-                "required": true,
-                "type": "string"
-              },
-              "name": {
-                "name": "name",
-                "required": false,
-                "type": "string"
-              },
-              "stack": {
-                "name": "stack",
-                "required": false,
-                "type": "string"
-              }
-            }
-          },
-          {
-            "key": "isLoading",
-            "type": "boolean",
-            "default": false,
-            "label": "Is Loading",
-            "description": "Loading state indicator",
-            "tier": "presentation"
-          },
-          {
             "key": "nodeShape",
             "type": "string",
             "default": "pill",
@@ -148,6 +111,7 @@
           {
             "key": "showHeader",
             "type": "boolean",
+            "default": true,
             "label": "Show Header",
             "description": "Show the trait header (name, entity, listens/emits). @default true",
             "tier": "presentation"
@@ -162,9 +126,135 @@
           },
           {
             "key": "traitProp",
-            "type": "StateMachineViewTrait",
+            "type": "AvlStateMachineTrait",
+            "default": {
+              "emittedEvents": [
+                "ORDER_SAVED"
+              ],
+              "linkedEntity": "Order",
+              "listenedEvents": [
+                "PAYMENT_OK"
+              ],
+              "name": "OrderFlow",
+              "states": [
+                {
+                  "isInitial": true,
+                  "isTerminal": false,
+                  "name": "browsing"
+                },
+                {
+                  "isInitial": false,
+                  "isTerminal": false,
+                  "name": "editing"
+                },
+                {
+                  "isInitial": false,
+                  "isTerminal": false,
+                  "name": "saving"
+                },
+                {
+                  "isInitial": false,
+                  "isTerminal": true,
+                  "name": "confirmed"
+                },
+                {
+                  "isInitial": false,
+                  "isTerminal": false,
+                  "name": "failed"
+                }
+              ],
+              "transitions": [
+                {
+                  "effects": [
+                    {
+                      "args": [],
+                      "type": "render-ui"
+                    }
+                  ],
+                  "event": "EDIT",
+                  "from": "browsing",
+                  "index": 0,
+                  "to": "editing"
+                },
+                {
+                  "effects": [
+                    {
+                      "args": [],
+                      "type": "persist"
+                    },
+                    {
+                      "args": [],
+                      "type": "notify"
+                    }
+                  ],
+                  "event": "SAVE",
+                  "from": "editing",
+                  "index": 1,
+                  "to": "saving"
+                },
+                {
+                  "effects": [
+                    {
+                      "args": [],
+                      "type": "emit"
+                    },
+                    {
+                      "args": [],
+                      "type": "render-ui"
+                    }
+                  ],
+                  "event": "SAVED",
+                  "from": "saving",
+                  "index": 2,
+                  "to": "confirmed"
+                },
+                {
+                  "effects": [
+                    {
+                      "args": [],
+                      "type": "notify"
+                    }
+                  ],
+                  "event": "SAVE_FAILED",
+                  "from": "saving",
+                  "index": 3,
+                  "to": "failed"
+                },
+                {
+                  "effects": [],
+                  "event": "RETRY",
+                  "from": "failed",
+                  "index": 4,
+                  "to": "editing"
+                },
+                {
+                  "effects": [
+                    {
+                      "args": [],
+                      "type": "render-ui"
+                    }
+                  ],
+                  "event": "CANCEL",
+                  "from": "editing",
+                  "index": 5,
+                  "to": "browsing"
+                },
+                {
+                  "effects": [
+                    {
+                      "args": [],
+                      "type": "navigate"
+                    }
+                  ],
+                  "event": "DONE",
+                  "from": "confirmed",
+                  "index": 6,
+                  "to": "browsing"
+                }
+              ]
+            },
             "label": "Trait",
-            "description": "The trait to draw (see `parseTraitLevel` / `traitLevelFromTrait`).",
+            "description": "The trait to draw (see `parseTraitLevel`).",
             "synonyms": "trait",
             "tier": "presentation",
             "properties": {
@@ -300,7 +390,7 @@
           }
         ],
         "capabilities": [],
-        "linkedEntity": "StateMachineViewItem",
+        "linkedEntity": "AvlStateMachineItem",
         "transitionEvents": [
           "INIT"
         ],
@@ -323,9 +413,9 @@
     ],
     "pages": [
       {
-        "name": "StateMachineViewPage",
-        "defaultPath": "/state-machine-view",
-        "primaryEntity": "StateMachineViewItem"
+        "name": "AvlStateMachinePage",
+        "defaultPath": "/avl-state-machine",
+        "primaryEntity": "AvlStateMachineItem"
       }
     ],
     "emittedEvents": [

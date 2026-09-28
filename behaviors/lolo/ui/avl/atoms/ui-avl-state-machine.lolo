@@ -1,49 +1,44 @@
-app ui-state-machine-view "1.0.0"
-"StateMachineView — UI factory (1:1 with the @almadar/ui state-machine-view pattern)."
-;; @pattern "state-machine-view"
-orbital StateMachineViewOrbital {
-  type StateMachineViewTrait = {
+app ui-avl-state-machine "1.0.0"
+"AvlStateMachine — UI factory (1:1 with the @almadar/ui avl-state-machine pattern)."
+;; @pattern "avl-state-machine"
+orbital AvlStateMachineOrbital {
+  type AvlStateMachineTrait = {
     name : string!
     linkedEntity : string!
-    states : [StateMachineViewTraitStatesItem]!
-    transitions : [StateMachineViewTraitTransitionsItem]!
+    states : [AvlStateMachineTraitStatesItem]!
+    transitions : [AvlStateMachineTraitTransitionsItem]!
     emittedEvents : [string]!
     listenedEvents : [string]!
   }
-  type StateMachineViewTraitStatesItem = {
+  type AvlStateMachineTraitStatesItem = {
     name : string!
     isInitial : boolean
     isTerminal : boolean
   }
-  type StateMachineViewTraitTransitionsItem = {
+  type AvlStateMachineTraitTransitionsItem = {
     from : string!
     to : string!
     event : string!
     guard : SExpr
-    effects : [StateMachineViewTraitTransitionsItemEffectsItem]!
+    effects : [AvlStateMachineTraitTransitionsItemEffectsItem]!
     index : number!
   }
-  type StateMachineViewTraitTransitionsItemEffectsItem = {
+  type AvlStateMachineTraitTransitionsItemEffectsItem = {
     type : string!
     args : [SExpr]!
   }
-  type StateMachineViewError = {
-    message : string!
-    name : string
-    code : string
-    stack : string
-  }
 
-  entity StateMachineViewItem [runtime] {
+  entity AvlStateMachineItem [runtime] {
     id : string!
   }
 
-  trait StateMachineViewRender -> @rebindable StateMachineViewItem [interaction, instance] {
+  trait AvlStateMachineRender -> @rebindable AvlStateMachineItem [interaction, instance] {
     initial: idle
 
     state idle {
       INIT -> idle
         (render-ui main {
+          trait: @config.traitProp
           activeState: @config.activeState
           activeTransition: @config.activeTransition
           visitedStates: @config.visitedStates
@@ -56,10 +51,7 @@ orbital StateMachineViewOrbital {
           direction: @config.direction
           showHeader: @config.showHeader
           className: @config.className
-          trait: @config.traitProp
-          isLoading: @config.isLoading
-          error: @config.error
-          type: state-machine-view
+          type: avl-state-machine
         })
     }
 
@@ -80,6 +72,11 @@ orbital StateMachineViewOrbital {
     }
 
     config {
+      traitProp : AvlStateMachineTrait = { name: "OrderFlow", linkedEntity: "Order", states: [{ name: "browsing", isInitial: true, isTerminal: false }, { name: "editing", isInitial: false, isTerminal: false }, { name: "saving", isInitial: false, isTerminal: false }, { name: "confirmed", isInitial: false, isTerminal: true }, { name: "failed", isInitial: false, isTerminal: false }], transitions: [{ from: "browsing", to: "editing", event: "EDIT", effects: [{ type: "render-ui", args: [] }], index: 0 }, { from: "editing", to: "saving", event: "SAVE", effects: [{ type: "persist", args: [] }, { type: "notify", args: [] }], index: 1 }, { from: "saving", to: "confirmed", event: "SAVED", effects: [{ type: "emit", args: [] }, { type: "render-ui", args: [] }], index: 2 }, { from: "saving", to: "failed", event: "SAVE_FAILED", effects: [{ type: "notify", args: [] }], index: 3 }, { from: "failed", to: "editing", event: "RETRY", effects: [], index: 4 }, { from: "editing", to: "browsing", event: "CANCEL", effects: [{ type: "render-ui", args: [] }], index: 5 }, { from: "confirmed", to: "browsing", event: "DONE", effects: [{ type: "navigate", args: [] }], index: 6 }], emittedEvents: ["ORDER_SAVED"], listenedEvents: ["PAYMENT_OK"] }
+        @label "Trait"
+        @description "The trait to draw (see `parseTraitLevel`)."
+        @synonyms "trait"
+        @tier "presentation"
       activeState : string
         @label "Active State"
         @description "State execution is currently in."
@@ -120,7 +117,7 @@ orbital StateMachineViewOrbital {
         @label "Direction"
         @description "Flow direction. @default 'ltr'"
         @tier "presentation"
-      showHeader : boolean
+      showHeader : boolean = true
         @label "Show Header"
         @description "Show the trait header (name, entity, listens/emits). @default true"
         @tier "presentation"
@@ -128,21 +125,8 @@ orbital StateMachineViewOrbital {
         @label "Class Name"
         @description "className prop"
         @tier "presentation"
-      traitProp : StateMachineViewTrait
-        @label "Trait"
-        @description "The trait to draw (see `parseTraitLevel` / `traitLevelFromTrait`)."
-        @synonyms "trait"
-        @tier "presentation"
-      isLoading : boolean = false
-        @label "Is Loading"
-        @description "Loading state indicator"
-        @tier "presentation"
-      error : StateMachineViewError
-        @label "Error"
-        @description "Error state"
-        @tier "presentation"
     }
   }
 
-  page "/state-machine-view" as StateMachineViewPage -> StateMachineViewRender
+  page "/avl-state-machine" as AvlStateMachinePage -> AvlStateMachineRender
 }

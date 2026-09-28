@@ -15,7 +15,8 @@
       {
         "name": "FileTreeRender",
         "emittedEvents": [
-          "FILE_SELECT"
+          "FILE_SELECT",
+          "NODE_EXPAND"
         ],
         "listenedEvents": [],
         "events": [
@@ -23,6 +24,12 @@
             "name": "FILE_SELECT",
             "direction": "emit",
             "description": "Called when a file is clicked",
+            "tier": "essential"
+          },
+          {
+            "name": "NODE_EXPAND",
+            "direction": "emit",
+            "description": "Called the first time a node marked `expandable` is expanded, with its path, so its children can be loaded.",
             "tier": "essential"
           },
           {
@@ -37,6 +44,17 @@
             "label": "Class Name",
             "description": "CSS class",
             "tier": "presentation"
+          },
+          {
+            "key": "expandedPaths",
+            "type": "[string]",
+            "default": [],
+            "label": "Expanded Paths",
+            "description": "Paths to show expanded (e.g. to reveal a node): each is expanded when it appears here, loading its children if needed.",
+            "tier": "presentation",
+            "items": {
+              "type": "string"
+            }
           },
           {
             "key": "indent",
@@ -122,6 +140,14 @@
             "tier": "presentation"
           },
           {
+            "key": "onNodeExpand",
+            "type": "event",
+            "default": "NODE_EXPAND",
+            "label": "On Node Expand",
+            "description": "Called the first time a node marked `expandable` is expanded, with its path, so its children can be loaded.",
+            "tier": "presentation"
+          },
+          {
             "key": "onNodeReorder",
             "type": "event",
             "default": "",
@@ -171,6 +197,11 @@
                     ]
                   }
                 },
+                "expandable": {
+                  "name": "expandable",
+                  "required": false,
+                  "type": "boolean"
+                },
                 "language": {
                   "name": "language",
                   "required": false,
@@ -216,7 +247,8 @@
           "INIT"
         ],
         "definerKnobs": [
-          "onFileSelect"
+          "onFileSelect",
+          "onNodeExpand"
         ],
         "entityRebindable": true,
         "entityContract": {
@@ -239,7 +271,8 @@
       }
     ],
     "emittedEvents": [
-      "FILE_SELECT"
+      "FILE_SELECT",
+      "NODE_EXPAND"
     ],
     "listenedEvents": [],
     "exposure": "palette",

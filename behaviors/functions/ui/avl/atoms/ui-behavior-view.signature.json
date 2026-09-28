@@ -27,81 +27,188 @@
             "key": "data",
             "type": "BehaviorViewData",
             "default": {
-              "entityName": "Entity Name",
+              "entityName": "Order",
               "externalLinks": [
                 {
-                  "direction": "Direction",
-                  "eventName": "Event Name",
-                  "targetOrbital": "Target Orbital",
-                  "traitName": "Trait Name"
-                },
-                {
-                  "direction": "Direction 2",
-                  "eventName": "Event Name 2",
-                  "targetOrbital": "Target Orbital 2",
-                  "traitName": "Trait Name 2"
+                  "direction": "in",
+                  "eventName": "PAYMENT_OK",
+                  "targetOrbital": "PaymentOrbital",
+                  "traitName": "OrderFlow"
                 }
               ],
               "fields": [
                 {
                   "hasDefault": false,
-                  "name": "Name",
-                  "required": false,
-                  "type": "Type"
+                  "name": "customer",
+                  "required": true,
+                  "type": "string"
                 },
                 {
                   "hasDefault": true,
-                  "name": "Name 2",
+                  "name": "qty",
                   "required": true,
-                  "type": "Type 2"
-                }
-              ],
-              "orbitalName": "Orbital Name",
-              "pages": [
-                {
-                  "name": "Name",
-                  "route": "Route"
+                  "type": "number"
                 },
                 {
-                  "name": "Name 2",
-                  "route": "Route 2"
+                  "hasDefault": true,
+                  "name": "status",
+                  "required": false,
+                  "type": "string"
                 }
               ],
-              "persistence": "Persistence",
-              "traitDetails": {},
+              "orbitalName": "OrderOrbital",
+              "pages": [
+                {
+                  "name": "Orders",
+                  "route": "/orders"
+                }
+              ],
+              "persistence": "persistent",
+              "traitDetails": {
+                "OrderFlow": {
+                  "emittedEvents": [
+                    "ORDER_SAVED"
+                  ],
+                  "linkedEntity": "Order",
+                  "listenedEvents": [
+                    "PAYMENT_OK"
+                  ],
+                  "name": "OrderFlow",
+                  "states": [
+                    {
+                      "isInitial": true,
+                      "isTerminal": false,
+                      "name": "browsing"
+                    },
+                    {
+                      "isInitial": false,
+                      "isTerminal": false,
+                      "name": "editing"
+                    },
+                    {
+                      "isInitial": false,
+                      "isTerminal": false,
+                      "name": "saving"
+                    },
+                    {
+                      "isInitial": false,
+                      "isTerminal": true,
+                      "name": "confirmed"
+                    },
+                    {
+                      "isInitial": false,
+                      "isTerminal": false,
+                      "name": "failed"
+                    }
+                  ],
+                  "transitions": [
+                    {
+                      "effects": [
+                        {
+                          "args": [],
+                          "type": "render-ui"
+                        }
+                      ],
+                      "event": "EDIT",
+                      "from": "browsing",
+                      "index": 0,
+                      "to": "editing"
+                    },
+                    {
+                      "effects": [
+                        {
+                          "args": [],
+                          "type": "persist"
+                        },
+                        {
+                          "args": [],
+                          "type": "notify"
+                        }
+                      ],
+                      "event": "SAVE",
+                      "from": "editing",
+                      "index": 1,
+                      "to": "saving"
+                    },
+                    {
+                      "effects": [
+                        {
+                          "args": [],
+                          "type": "emit"
+                        },
+                        {
+                          "args": [],
+                          "type": "render-ui"
+                        }
+                      ],
+                      "event": "SAVED",
+                      "from": "saving",
+                      "index": 2,
+                      "to": "confirmed"
+                    },
+                    {
+                      "effects": [
+                        {
+                          "args": [],
+                          "type": "notify"
+                        }
+                      ],
+                      "event": "SAVE_FAILED",
+                      "from": "saving",
+                      "index": 3,
+                      "to": "failed"
+                    },
+                    {
+                      "effects": [],
+                      "event": "RETRY",
+                      "from": "failed",
+                      "index": 4,
+                      "to": "editing"
+                    },
+                    {
+                      "effects": [
+                        {
+                          "args": [],
+                          "type": "render-ui"
+                        }
+                      ],
+                      "event": "CANCEL",
+                      "from": "editing",
+                      "index": 5,
+                      "to": "browsing"
+                    },
+                    {
+                      "effects": [
+                        {
+                          "args": [],
+                          "type": "navigate"
+                        }
+                      ],
+                      "event": "DONE",
+                      "from": "confirmed",
+                      "index": 6,
+                      "to": "browsing"
+                    }
+                  ]
+                }
+              },
               "traits": [
                 {
                   "emits": [
-                    "Item",
-                    "Item 2"
+                    "ORDER_SAVED"
                   ],
-                  "eventCount": 1,
+                  "eventCount": 7,
                   "listens": [
-                    "Item",
-                    "Item 2"
+                    "PAYMENT_OK"
                   ],
-                  "name": "Name",
-                  "stateCount": 1,
-                  "transitionCount": 1
-                },
-                {
-                  "emits": [
-                    "Item",
-                    "Item 2"
-                  ],
-                  "eventCount": 2,
-                  "listens": [
-                    "Item",
-                    "Item 2"
-                  ],
-                  "name": "Name 2",
-                  "stateCount": 2,
-                  "transitionCount": 2
+                  "name": "OrderFlow",
+                  "stateCount": 5,
+                  "transitionCount": 7
                 }
               ]
             },
             "label": "Data",
-            "description": "data prop",
+            "description": "The orbital to summarize.",
             "tier": "presentation",
             "properties": {
               "entityName": {
@@ -194,11 +301,6 @@
                   "type": "object"
                 }
               },
-              "persistence": {
-                "name": "persistence",
-                "required": true,
-                "type": "string"
-              },
               "traitDetails": {
                 "name": "traitDetails",
                 "required": true,
@@ -239,12 +341,12 @@
                         "properties": {
                           "isInitial": {
                             "name": "isInitial",
-                            "required": true,
+                            "required": false,
                             "type": "boolean"
                           },
                           "isTerminal": {
                             "name": "isTerminal",
-                            "required": true,
+                            "required": false,
                             "type": "boolean"
                           },
                           "name": {
@@ -297,7 +399,7 @@
                           },
                           "guard": {
                             "name": "guard",
-                            "required": true,
+                            "required": false,
                             "type": "object"
                           },
                           "index": {
