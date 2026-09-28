@@ -15,6 +15,7 @@ import type { StdOperatorMeta } from '../types.js';
  */
 export const ASYNC_OPERATORS: Record<string, StdOperatorMeta> = {
   'async/delay': {
+    visual: { form: 'delay' },
     module: 'async',
     category: 'std-async',
     minArity: 1,
@@ -30,6 +31,7 @@ export const ASYNC_OPERATORS: Record<string, StdOperatorMeta> = {
     example: '["async/delay", 2000, ["emit", "RETRY"]] // Wait 2s then emit',
   },
   'async/interval': {
+    visual: { form: 'delay' },
     module: 'async',
     category: 'std-async',
     minArity: 2,
@@ -45,6 +47,7 @@ export const ASYNC_OPERATORS: Record<string, StdOperatorMeta> = {
     example: '["async/interval", 5000, ["emit", "POLL_TICK"]] // Emit every 5s',
   },
   'async/timeout': {
+    visual: { form: 'delay' },
     module: 'async',
     category: 'std-async',
     minArity: 2,
@@ -60,6 +63,7 @@ export const ASYNC_OPERATORS: Record<string, StdOperatorMeta> = {
     example: '["async/timeout", ["call", "api", "fetchData"], 5000]',
   },
   'async/debounce': {
+    visual: { form: 'delay' },
     module: 'async',
     category: 'std-async',
     minArity: 2,
@@ -75,6 +79,7 @@ export const ASYNC_OPERATORS: Record<string, StdOperatorMeta> = {
     example: '["async/debounce", "SEARCH", 300]',
   },
   'async/throttle': {
+    visual: { form: 'delay' },
     module: 'async',
     category: 'std-async',
     minArity: 2,
@@ -90,6 +95,7 @@ export const ASYNC_OPERATORS: Record<string, StdOperatorMeta> = {
     example: '["async/throttle", "SCROLL", 100]',
   },
   'async/retry': {
+    visual: { form: 'delay' },
     module: 'async',
     category: 'std-async',
     minArity: 2,
@@ -107,6 +113,7 @@ export const ASYNC_OPERATORS: Record<string, StdOperatorMeta> = {
   { "attempts": 3, "backoff": "exponential", "baseDelay": 1000 }]`,
   },
   'async/race': {
+    visual: { form: 'parallel' },
     module: 'async',
     category: 'std-async',
     minArity: 2,
@@ -119,6 +126,7 @@ export const ASYNC_OPERATORS: Record<string, StdOperatorMeta> = {
     example: '["async/race", ["call", "api1"], ["call", "api2"]]',
   },
   'async/all': {
+    visual: { form: 'parallel' },
     module: 'async',
     category: 'std-async',
     minArity: 2,
@@ -131,6 +139,7 @@ export const ASYNC_OPERATORS: Record<string, StdOperatorMeta> = {
     example: '["async/all", ["call", "api1"], ["call", "api2"]]',
   },
   'async/sequence': {
+    visual: { form: 'ladder' },
     module: 'async',
     category: 'std-async',
     minArity: 2,

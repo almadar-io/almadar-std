@@ -300,6 +300,13 @@ export interface OperatorEffectMeta {
  * Extended operator metadata for std library operators.
  * Adds parameter descriptions and examples.
  */
+/** How an operator is drawn in the AVL circuit notation (evaluation as signal flow). */
+export const OPERATOR_VISUAL_FORMS = [
+  'block', 'series', 'parallel', 'invert', 'branch', 'scope', 'template', 'conveyor', 'ladder', 'actuator', 'delay',
+] as const;
+
+export type OperatorVisualForm = (typeof OPERATOR_VISUAL_FORMS)[number];
+
 export interface StdOperatorMeta extends OperatorMeta {
   /** The std module this operator belongs to */
   module: StdModule;
@@ -321,6 +328,8 @@ export interface StdOperatorMeta extends OperatorMeta {
   compileTime?: boolean;
   /** Schema v2: structured metadata for effect operators */
   effect?: OperatorEffectMeta;
+  /** Circuit form, declared only where it is not derivable (lambda → conveyor, side effect → actuator, else block). */
+  visual?: { form: OperatorVisualForm };
 }
 
 /**

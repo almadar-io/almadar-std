@@ -241,6 +241,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   // --- logic ------------------------------------------------------------------
 
   and: {
+    visual: { form: 'series' },
     module: 'core',
     category: 'logic',
     minArity: 2,
@@ -253,6 +254,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     example: '["and", ["=", "active", "active"], [">", 5, 0]]',
   },
   or: {
+    visual: { form: 'parallel' },
     module: 'core',
     category: 'logic',
     minArity: 2,
@@ -265,6 +267,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     example: '["or", ["=", "admin", "user"], ["=", "admin", "owner"]]',
   },
   not: {
+    visual: { form: 'invert' },
     module: 'core',
     category: 'logic',
     minArity: 1,
@@ -276,6 +279,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     example: '["not", false]',
   },
   if: {
+    visual: { form: 'branch' },
     module: 'core',
     category: 'logic',
     minArity: 3,
@@ -295,6 +299,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   // --- control ----------------------------------------------------------------
 
   let: {
+    visual: { form: 'scope' },
     module: 'core',
     category: 'control',
     minArity: 2,
@@ -313,6 +318,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     example: '["let", [["x", 10]], ["+", "x", 1]]',
   },
   do: {
+    visual: { form: 'ladder' },
     module: 'core',
     category: 'control',
     minArity: 1,
@@ -335,6 +341,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     example: '["list", "path", "method", "status"] // => ["path", "method", "status"]',
   },
   when: {
+    visual: { form: 'branch' },
     module: 'core',
     category: 'control',
     minArity: 2,
@@ -349,6 +356,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     example: '["when", [">", "@entity.health", 0], ["emit", "ALIVE"]]',
   },
   fn: {
+    visual: { form: 'template' },
     module: 'core',
     category: 'control',
     minArity: 2,

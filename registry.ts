@@ -7,8 +7,10 @@
  * @packageDocumentation
  */
 
-import type { OperatorMeta, RunsOn, StdOperatorMeta, StdModule } from './types.js';
+import type { OperatorMeta, OperatorVisualForm, RunsOn, StdOperatorMeta, StdModule } from './types.js';
 import { isStdOperator, getModuleFromOperator, STD_MODULES } from './types.js';
+
+export { OPERATOR_VISUAL_FORMS, type OperatorVisualForm } from './types.js';
 
 import { CORE_OPERATORS } from './modules/core.js';
 import { MATH_OPERATORS } from './modules/math.js';
@@ -423,4 +425,13 @@ export function getStdLibStats(): {
     effectOperators: getStdEffectOperators().length,
     lambdaOperators: getLambdaOperators().length,
   };
+}
+
+/** The AVL circuit form of an operator: its declared form, else conveyor (takes a lambda), actuator (side effect) or block. Null when unregistered. */
+export function operatorVisualForm(operator: string): OperatorVisualForm | null {
+  const meta = getStdOperatorMeta(operator);
+  if (!meta) return null;
+  if (meta.visual) return meta.visual.form;
+  if (meta.acceptsLambda) return 'conveyor';
+  return meta.hasSideEffects ? 'actuator' : 'block';
 }
