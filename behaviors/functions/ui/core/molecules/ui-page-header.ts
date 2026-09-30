@@ -56,6 +56,7 @@ export interface StdUiPageHeaderConfig {
   children?: PatternValue;
   className?: string;
   error?: EntityRow;
+  icon?: unknown;
   isLoading?: boolean;
   /** Default: `"TAB_CHANGE"` */
   onTabChange?: string;
@@ -66,6 +67,8 @@ export interface StdUiPageHeaderConfig {
   /** Default: `[]` */
   tabs?: EntityRow[];
   title?: unknown;
+  /** Default: `""` */
+  viewerRole?: string;
 }
 
 /**

@@ -775,41 +775,11 @@ export function stdCircuitBreakerServiceNodeOrbital(params: StdCircuitBreakerSer
       {
         'category': 'interaction',
         'config': {
-          'cooldownSeconds': {
-            'default': 30,
-            'description': 'Seconds the circuit stays open before transitioning to half-open and probing for recovery.',
-            'label': 'Cooldown (seconds)',
-            'synonyms': 'reset timeout, open duration',
-            'tier': 'domain',
-            'type': 'number',
-          },
           'failureThreshold': {
             'default': 5,
             'description': 'Number of consecutive failures before the circuit opens and starts rejecting requests.',
             'label': 'Failure threshold',
             'synonyms': 'open trigger, failure count',
-            'tier': 'domain',
-            'type': 'number',
-          },
-          'fallbackBehavior': {
-            'default': 'reject',
-            'description': 'What to return to callers while the circuit is open: reject = fail-fast/strict, cached-response = graceful degrade with stale data, queue = retry-later/no data loss, static-default = safe placeholder.',
-            'label': 'Fallback behavior',
-            'synonyms': 'open-state response, degraded mode, fail-fast vs graceful degrade',
-            'tier': 'domain',
-            'type': 'string',
-            'values': [
-              'reject',
-              'cached-response',
-              'queue',
-              'static-default',
-            ],
-          },
-          'halfOpenRequests': {
-            'default': 1,
-            'description': 'Probe requests allowed through in the half-open state before deciding to close or re-open. Lower = cautious single-probe recovery; higher = aggressive parallel re-validation.',
-            'label': 'Half-open probe requests',
-            'synonyms': 'probe count, recovery test size, probe aggressiveness, recovery test volume, cautious vs fast recovery',
             'tier': 'domain',
             'type': 'number',
           },
@@ -918,16 +888,6 @@ export function stdCircuitBreakerServiceNodeOrbital(params: StdCircuitBreakerSer
           },
         ],
         'linkedEntity': 'ServiceNode',
-        'listens': [
-          {
-            'event': 'RESET',
-            'source': {
-              'kind': 'trait',
-              'trait': ('ResetButton' satisfies _StdCircuitBreakerListenTraitName),
-            },
-            'triggers': 'RESET',
-          },
-        ],
         'name': 'ServiceNodeCircuitBreaker',
         'scope': 'collection',
         'stateMachine': {
@@ -1042,7 +1002,7 @@ export function stdCircuitBreakerServiceNodeOrbital(params: StdCircuitBreakerSer
                 [
                   'set',
                   '@entity.threshold',
-                  5,
+                  '@config.failureThreshold',
                 ],
                 [
                   'fetch',

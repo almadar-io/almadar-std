@@ -66,6 +66,8 @@ export interface StdUiCommandPaletteConfig {
   open?: boolean;
   /** Default: `"Type a command..."` */
   placeholder?: string;
+  /** Default: `""` */
+  viewerRole?: string;
 }
 
 /**

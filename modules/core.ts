@@ -307,6 +307,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Bind local variables for a body expression',
     hasSideEffects: false,
     returnType: 'any',
+    returnSemantics: 'identity-of-arg<1>',
     params: [
       {
         name: 'bindings',
@@ -326,6 +327,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Sequential execution of multiple effects/expressions',
     hasSideEffects: false,
     returnType: 'any',
+    returnSemantics: 'last-of-args',
     params: [{ name: '...exprs', type: SEXPR, description: 'Effects/expressions to run in order' }],
     example: '["do", ["set", "@entity.x", 0], ["set", "@entity.y", 0]]',
   },

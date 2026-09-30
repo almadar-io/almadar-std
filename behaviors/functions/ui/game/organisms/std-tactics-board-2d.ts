@@ -1843,13 +1843,6 @@ export function stdTacticsBoard2dTacticsBoard2DOrbital(params: StdTacticsBoard2d
             'tier': 'presentation',
             'type': 'string',
           },
-          'scale': {
-            'default': 1,
-            'description': 'Canvas render scale.',
-            'label': 'Scale',
-            'tier': 'presentation',
-            'type': 'number',
-          },
           'showMinimap': {
             'default': false,
             'description': 'Whether the canvas draws a minimap.',

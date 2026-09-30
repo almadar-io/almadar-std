@@ -1,7 +1,7 @@
 app std-app-search "1.0.0"
 "std-app-search — reusable global search: wraps a host content view and, on a SEARCH trigger, fetches the linked entity filtered by @config.searchField and renders the matching results, then CLEAR_SEARCH returns to the host view. Rebind to any entity; point @config.idleContent at the normal view and wire a trigger (e.g. AppLayout SEARCH) into SEARCH."
 type AppSearchFieldSpec = { name : string!, label : string, variant : h3 | h4 | body | caption | badge | small | progress, icon : string, format : date | currency | number | boolean | percent, event : string, href : string, payload : string, disabled : boolean, confirm : string, hidden : boolean }
-type AppSearchActionSpec = { label : string!, event : event!, variant : primary | secondary | ghost | danger, icon : string, href : string, payload : string, disabled : boolean, confirm : string, hidden : boolean }
+type AppSearchActionSpec = { label : string!, event : event!, variant : primary | secondary | ghost | danger, icon : string, href : string, payload : string, disabled : boolean, confirm : string, hidden : boolean, roles : [string] }
 orbital AppSearchOrbital {
   type AppSearchLoaded = Event { data : [AppSearchTarget] } "Filtered search results loaded"
   type AppSearchFailed = Event { error : string } "Search fetch failed"
@@ -127,7 +127,7 @@ orbital AppSearchOrbital {
             type: data-grid
             entity: @payload.data
             fields: @config.resultFields
-            itemActions: @config.resultActions
+            itemActions: (array/filter @config.resultActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           }]
         })
       AppSearchFailed -> idle
@@ -224,6 +224,10 @@ orbital AppSearchOrbital {
         @label "Result row actions"
         @description "Optional per-row actions on a result, e.g. { label: \"View Details\", event: \"VIEW\" }."
         @tier "presentation"
+      viewerRole : string = ""
+        @label "Viewer's role"
+        @description "The signed-in viewer's role that each action's `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show."
+        @tier "policy"
     }
   }
 

@@ -1,5 +1,6 @@
 app std-esign-flow "1.2.0"
 "std-esign-flow — the send-for-signature flow: list signature requests, create one (pick document + recipient), resend or cancel, track status. Composes std-file-store + std-esign-request; no document-rendering or code-preview chrome. v1.2 (W5): EnvelopeDispatcher wires sessions to the real `esign` service — SEND_ENVELOPE dispatches a DocuSign envelope (the document rides the event as an UploadDropZone-shaped file payload, since StoredFile rows are metadata-only) and stamps `envelopeId`/`sentAt`/status=sent; the browse grid's per-row \"Refresh status\" pulls getEnvelopeStatus and maps completed/delivered/declined onto signed/viewed/declined."
+type ItemAction = { label : string!, event : event, variant : string, roles : [string], when : SExpr }
 orbital SignatureSessionOrbital {
   uses StoredFile from "std/behaviors/std-file-store"
 
@@ -95,19 +96,7 @@ orbital SignatureSessionOrbital {
               name: sentAt
               variant: caption
             }]
-            itemActions: [{
-              event: RESEND_REQUEST
-              label: Resend
-              variant: primary
-            }, {
-              event: REQUEST_DELETE
-              label: Cancel
-              variant: danger
-            }, {
-              event: CHECK_ENVELOPE_STATUS
-              label: "Refresh status"
-              variant: secondary
-            }]
+            itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
             type: data-grid
           }]
           direction: vertical
@@ -215,6 +204,29 @@ orbital SignatureSessionOrbital {
       SignatureSessionPersistor.SESSION_CREATED -> INIT
       SignatureSessionPersistor.SESSION_RESENT -> INIT
       SignatureSessionPersistor.SESSION_DELETED -> INIT
+    }
+
+    config {
+      itemActions : [ItemAction] = [{
+        event: RESEND_REQUEST
+        label: Resend
+        variant: primary
+      }, {
+        event: REQUEST_DELETE
+        label: Cancel
+        variant: danger
+      }, {
+        event: CHECK_ENVELOPE_STATUS
+        label: "Refresh status"
+        variant: secondary
+      }]
+        @label "Row actions"
+        @description "Actions offered on each row; give an item `roles` to show it only to those viewer roles."
+        @tier "presentation"
+      viewerRole : string = ""
+        @label "Viewer's role"
+        @description "The signed-in viewer's role that each action's `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show."
+        @tier "policy"
     }
   }
 

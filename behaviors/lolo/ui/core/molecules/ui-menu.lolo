@@ -14,6 +14,7 @@ orbital MenuOrbital {
     url : string
     variant : "default" | "danger"
     subMenu : [MenuItemsItem]
+    roles : [string]
   }
 
   entity MenuItem [runtime] {
@@ -27,7 +28,7 @@ orbital MenuOrbital {
       INIT -> idle
         (render-ui main {
           trigger: @config.trigger
-          items: @config.items
+          items: (array/filter @config.items (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           position: @config.position
           className: @config.className
           header: @config.header
@@ -61,6 +62,10 @@ orbital MenuOrbital {
         @label "Footer"
         @description "Optional slot rendered below the items."
         @tier "presentation"
+      viewerRole : string = ""
+        @label "Viewer's role"
+        @description "The viewer's role that each action's `roles` is checked against; bind it at the call site (e.g. `viewerRole: @user.role`). Empty = only actions with no `roles` show."
+        @tier "policy"
     }
   }
 

@@ -13,6 +13,7 @@ orbital TabsOrbital {
     disabled : boolean
     event : event
     active : boolean
+    roles : [string]
   }
   type TabsItemsItemIconAsset = {
     url : asset!
@@ -39,6 +40,7 @@ orbital TabsOrbital {
     disabled : boolean
     event : event
     active : boolean
+    roles : [string]
   }
   type TabsTabsItemIconAsset = {
     url : asset!
@@ -65,8 +67,8 @@ orbital TabsOrbital {
     state idle {
       INIT -> idle
         (render-ui main {
-          items: @config.items
-          tabs: @config.tabs
+          items: (array/filter @config.items (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
+          tabs: (array/filter @config.tabs (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           defaultActiveTab: @config.defaultActiveTab
           activeTab: @config.activeTab
           onTabChange: @config.onTabChange
@@ -123,6 +125,10 @@ orbital TabsOrbital {
         @label "Class Name"
         @description "Additional CSS classes"
         @tier "presentation"
+      viewerRole : string = ""
+        @label "Viewer's role"
+        @description "The viewer's role that each action's `roles` is checked against; bind it at the call site (e.g. `viewerRole: @user.role`). Empty = only actions with no `roles` show."
+        @tier "policy"
     }
   }
 

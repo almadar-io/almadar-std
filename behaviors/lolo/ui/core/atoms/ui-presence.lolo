@@ -12,6 +12,9 @@ orbital PresenceOrbital {
     state idle {
       INIT -> idle
         (render-ui main {
+          animation: @config.animation
+          animate: @config.animate
+          onExited: @config.onExited
           show: @config.show
           className: @config.className
           children: @config.children
@@ -19,7 +22,25 @@ orbital PresenceOrbital {
         })
     }
 
+    emits {
+      @config.onExited -> external { }
+        @description "Fired after the exit animation completes (before unmount)."
+        @tier "essential"
+    }
+
     config {
+      animation : "modal" | "overlay" | "slide-up" | "drawer" | "popover" | "toast" | "fade" | "page" = modal
+        @label "Animation"
+        @description "Which motion preset to use (maps to `animate-<name>-in/out`)."
+        @tier "presentation"
+      animate : boolean
+        @label "Animate"
+        @description "Per-instance opt-out. Global opt-out is `--motion-enable` / reduced-motion. @default true"
+        @tier "presentation"
+      onExited : event = "EXITED"
+        @label "On Exited"
+        @description "Fired after the exit animation completes (before unmount)."
+        @tier "presentation"
       show : boolean = false
         @label "Show"
         @description "When false, the exit animation runs, then children unmount."

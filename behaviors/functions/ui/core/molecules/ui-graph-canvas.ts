@@ -112,6 +112,8 @@ export interface StdUiGraphCanvasConfig {
   /** Default: `[]` */
   similarity?: EntityRow[];
   title?: string;
+  /** Default: `""` */
+  viewerRole?: string;
 }
 
 /**

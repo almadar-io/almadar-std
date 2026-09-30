@@ -439,6 +439,70 @@
               "tier": "policy",
               "type": "boolean"
             },
+            "itemActions": {
+              "default": [
+                {
+                  "event": "APPROVE",
+                  "icon": "check",
+                  "label": "Approve",
+                  "variant": "primary"
+                },
+                {
+                  "event": "REJECT",
+                  "icon": "x",
+                  "label": "Reject",
+                  "variant": "danger"
+                },
+                {
+                  "event": "ESCALATE",
+                  "icon": "alert-triangle",
+                  "label": "Escalate",
+                  "variant": "secondary"
+                }
+              ],
+              "description": "Actions offered on each row; give an item `roles` to show it only to those viewer roles.",
+              "items": {
+                "properties": {
+                  "event": {
+                    "name": "event",
+                    "required": false,
+                    "type": "event"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "roles": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "name": "roles",
+                    "required": false,
+                    "type": "array"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "when": {
+                    "name": "when",
+                    "required": false,
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Row actions",
+              "tier": "presentation",
+              "type": "[ItemAction]"
+            },
             "reviewSlot": {
               "default": "modal",
               "description": "UI slot the moderation queue renders into. Defaults to the modal overlay so it never seizes the host's main content; summoned via OPEN, cleared via CLOSE.",
@@ -466,6 +530,13 @@
               "label": "Section title",
               "tier": "presentation",
               "type": "string"
+            },
+            "viewerRole": {
+              "default": "",
+              "description": "The signed-in viewer's role that each action's `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.",
+              "label": "Viewer's role",
+              "tier": "policy",
+              "type": "string"
             }
           },
           "effectRow": [
@@ -485,6 +556,10 @@
             {
               "kind": "render-ui",
               "resource": "toast"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.id"
             }
           ],
           "emits": [
@@ -841,19 +916,6 @@
           "id": "trt_01KXG04FDN5KK86TRNWDH400C7",
           "linkedEntity": "ModQueueItem",
           "linkedEntityId": "ent_01KXG04FDN3D78Z39RX2F9T16W",
-          "listens": [
-            {
-              "event": "CLOSE",
-              "eventId": "evt_01KXG04FDRRPKTR9Q0BG0KGCYA",
-              "source": {
-                "kind": "trait",
-                "trait": "CloseButton",
-                "traitId": "trt_01KY21K6XKRBR3VETM6W0DHEGE"
-              },
-              "triggers": "CLOSE",
-              "triggersId": "evt_01KXG04FDRRPKTR9Q0BG0KGCYA"
-            }
-          ],
           "name": "ModQueueItemReview",
           "scope": "collection",
           "stateMachine": {
@@ -948,6 +1010,78 @@
                 "name": "Open",
                 "synonyms": "open, show, review, view queue, moderation queue",
                 "tier": "domain"
+              },
+              {
+                "description": "Signals a moderation queue item has been reviewed and a verdict recorded.",
+                "id": "evt_01KXG04FDRK0BYNNF0VGSXN4PD",
+                "key": "ModQueueItemReviewed",
+                "name": "ModQueueItem reviewed",
+                "payloadEntity": "ModQueueItem",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "targetId",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "targetType",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "reason",
+                    "type": "string"
+                  },
+                  {
+                    "name": "flagCount",
+                    "type": "number"
+                  },
+                  {
+                    "name": "status",
+                    "type": "string"
+                  },
+                  {
+                    "name": "reviewedBy",
+                    "type": "string"
+                  },
+                  {
+                    "name": "reviewedAt",
+                    "type": "datetime"
+                  },
+                  {
+                    "name": "notes",
+                    "type": "string"
+                  },
+                  {
+                    "name": "seedRow",
+                    "type": "Map<string,scalar>"
+                  }
+                ],
+                "synonyms": "reviewed, processed, judged, completed",
+                "tier": "domain"
+              },
+              {
+                "description": "Indicates a failure to load or process a moderation queue item.",
+                "id": "evt_01KXG04FDRWRQTRN1DZEAFNWKJ",
+                "key": "ModQueueItemReviewFailed",
+                "name": "ModQueueItem review failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "error, failure, problem, issue",
+                "tier": "internal"
               },
               {
                 "description": "Dismisses the moderation queue overlay.",
@@ -1151,78 +1285,6 @@
                 ],
                 "synonyms": "flag, defer, elevate",
                 "tier": "presentation"
-              },
-              {
-                "description": "Signals a moderation queue item has been reviewed and a verdict recorded.",
-                "id": "evt_01KXG04FDRK0BYNNF0VGSXN4PD",
-                "key": "ModQueueItemReviewed",
-                "name": "ModQueueItem reviewed",
-                "payloadEntity": "ModQueueItem",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "required": true,
-                    "type": "string"
-                  },
-                  {
-                    "name": "targetId",
-                    "required": true,
-                    "type": "string"
-                  },
-                  {
-                    "name": "targetType",
-                    "required": true,
-                    "type": "string"
-                  },
-                  {
-                    "name": "reason",
-                    "type": "string"
-                  },
-                  {
-                    "name": "flagCount",
-                    "type": "number"
-                  },
-                  {
-                    "name": "status",
-                    "type": "string"
-                  },
-                  {
-                    "name": "reviewedBy",
-                    "type": "string"
-                  },
-                  {
-                    "name": "reviewedAt",
-                    "type": "datetime"
-                  },
-                  {
-                    "name": "notes",
-                    "type": "string"
-                  },
-                  {
-                    "name": "seedRow",
-                    "type": "Map<string,scalar>"
-                  }
-                ],
-                "synonyms": "reviewed, processed, judged, completed",
-                "tier": "domain"
-              },
-              {
-                "description": "Indicates a failure to load or process a moderation queue item.",
-                "id": "evt_01KXG04FDRWRQTRN1DZEAFNWKJ",
-                "key": "ModQueueItemReviewFailed",
-                "name": "ModQueueItem review failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ],
-                "synonyms": "error, failure, problem, issue",
-                "tier": "internal"
               }
             ],
             "states": [
@@ -1324,6 +1386,141 @@
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.id",
+                    [
+                      "object/get",
+                      [
+                        "array/first",
+                        [
+                          "array/filter",
+                          "@payload.data",
+                          [
+                            "fn",
+                            "row",
+                            [
+                              "and",
+                              [
+                                "=",
+                                [
+                                  "object/get",
+                                  "@row",
+                                  "status"
+                                ],
+                                "pending"
+                              ],
+                              [
+                                ">=",
+                                [
+                                  "object/get",
+                                  "@row",
+                                  "flagCount"
+                                ],
+                                "@config.autoEscalateThreshold"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      "id"
+                    ]
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "ModQueueItem",
+                    {
+                      "id": "@entity.id",
+                      "status": "escalated"
+                    },
+                    {
+                      "emit": {
+                        "failure": "ModQueueItemReviewFailed",
+                        "success": "ModQueueItemReviewed"
+                      }
+                    }
+                  ]
+                ],
+                "event": "ModQueueItemLoaded",
+                "eventId": "evt_01KXG04FDRNRES60JDBSQ392V4",
+                "from": "loading",
+                "guard": [
+                  ">",
+                  [
+                    "array/len",
+                    [
+                      "array/filter",
+                      "@payload.data",
+                      [
+                        "fn",
+                        "row",
+                        [
+                          "and",
+                          [
+                            "=",
+                            [
+                              "object/get",
+                              "@row",
+                              "status"
+                            ],
+                            "pending"
+                          ],
+                          [
+                            ">=",
+                            [
+                              "object/get",
+                              "@row",
+                              "flagCount"
+                            ],
+                            "@config.autoEscalateThreshold"
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  0.0
+                ],
+                "to": "loading"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "ModQueueItem",
+                    {
+                      "emit": {
+                        "failure": "ModQueueItemLoadFailed",
+                        "success": "ModQueueItemLoaded"
+                      }
+                    }
+                  ]
+                ],
+                "event": "ModQueueItemReviewed",
+                "eventId": "evt_01KXG04FDRK0BYNNF0VGSXN4PD",
+                "from": "loading",
+                "to": "loading"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "@config.reviewSlot",
+                    {
+                      "children": [
+                        "@trait.ErrorAlert"
+                      ],
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "ModQueueItemReviewFailed",
+                "eventId": "evt_01KXG04FDRWRQTRN1DZEAFNWKJ",
+                "from": "loading",
+                "to": "error"
+              },
+              {
+                "effects": [
+                  [
                     "render-ui",
                     "@config.reviewSlot",
                     {
@@ -1376,24 +1573,38 @@
                           ],
                           "gap": "sm",
                           "itemActions": [
-                            {
-                              "event": "APPROVE",
-                              "icon": "check",
-                              "label": "Approve",
-                              "variant": "primary"
-                            },
-                            {
-                              "event": "REJECT",
-                              "icon": "x",
-                              "label": "Reject",
-                              "variant": "danger"
-                            },
-                            {
-                              "event": "ESCALATE",
-                              "icon": "alert-triangle",
-                              "label": "Escalate",
-                              "variant": "secondary"
-                            }
+                            "array/filter",
+                            "@config.itemActions",
+                            [
+                              "fn",
+                              "action",
+                              [
+                                "or",
+                                [
+                                  "=",
+                                  [
+                                    "array/len",
+                                    [
+                                      "object/get",
+                                      "@action",
+                                      "roles",
+                                      []
+                                    ]
+                                  ],
+                                  0.0
+                                ],
+                                [
+                                  "array/includes",
+                                  [
+                                    "object/get",
+                                    "@action",
+                                    "roles",
+                                    []
+                                  ],
+                                  "@config.viewerRole"
+                                ]
+                              ]
+                            ]
                           ],
                           "look": "@config.tableLook",
                           "type": "data-grid"
@@ -1408,6 +1619,42 @@
                 "event": "ModQueueItemLoaded",
                 "eventId": "evt_01KXG04FDRNRES60JDBSQ392V4",
                 "from": "loading",
+                "guard": [
+                  "=",
+                  [
+                    "array/len",
+                    [
+                      "array/filter",
+                      "@payload.data",
+                      [
+                        "fn",
+                        "row",
+                        [
+                          "and",
+                          [
+                            "=",
+                            [
+                              "object/get",
+                              "@row",
+                              "status"
+                            ],
+                            "pending"
+                          ],
+                          [
+                            ">=",
+                            [
+                              "object/get",
+                              "@row",
+                              "flagCount"
+                            ],
+                            "@config.autoEscalateThreshold"
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  0.0
+                ],
                 "to": "reviewing"
               },
               {
@@ -1644,6 +1891,35 @@
           }
         }
       ],
+      "types": {
+        "ItemAction": [
+          {
+            "name": "label",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "event",
+            "type": "event"
+          },
+          {
+            "name": "variant",
+            "type": "string"
+          },
+          {
+            "name": "icon",
+            "type": "string"
+          },
+          {
+            "name": "roles",
+            "type": "[string]"
+          },
+          {
+            "name": "when",
+            "type": "SExpr"
+          }
+        ]
+      },
       "uses": [
         {
           "as": "Spinner",

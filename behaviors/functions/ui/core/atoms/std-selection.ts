@@ -62,6 +62,8 @@ export interface StdSelectionConfig {
   filterBarLook?: 'toolbar' | 'chips' | 'pills' | 'popover-trigger' | 'inline-column-header';
   /** Default: `[]` */
   filters?: EntityRow[];
+  /** Default: `[{"event":"SELECT","icon":"check","label":"Select"}]` */
+  itemActions?: EntityRow[];
   /** Default: `20` */
   pageSize?: number;
   /** Default: `"name"` */
@@ -70,6 +72,8 @@ export interface StdSelectionConfig {
   searchPlaceholder?: string;
   /** Default: `"dense"` */
   tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  /** Default: `""` */
+  viewerRole?: string;
 }
 
 /**
@@ -306,6 +310,52 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
             'tier': 'presentation',
             'type': '[FilterSpec]',
           },
+          'itemActions': {
+            'default': [
+              {
+                'event': 'SELECT',
+                'icon': 'check',
+                'label': 'Select',
+              },
+            ],
+            'description': 'Actions offered on each row; give an item `roles` to show it only to those viewer roles.',
+            'items': {
+              'properties': {
+                'event': {
+                  'name': 'event',
+                  'required': false,
+                  'type': 'event',
+                },
+                'icon': {
+                  'name': 'icon',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': true,
+                  'type': 'string',
+                },
+                'roles': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'roles',
+                  'required': false,
+                  'type': 'array',
+                },
+                'when': {
+                  'name': 'when',
+                  'required': false,
+                  'type': 'object',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Row actions',
+            'tier': 'presentation',
+            'type': '[ItemAction]',
+          },
           'pageSize': {
             'default': 20,
             'description': 'Records fetched from the server per REFETCH_PAGE request. The initial load and search/filter refetches remain unpaginated (load every candidate) unless a consumer wires REFETCH_PAGE, so the default pick-list surface is unchanged. Safe to page: this atom\'s selection is a single transient id (never an accumulated array), so no already-picked item can be stranded on another page.',
@@ -343,6 +393,13 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
               'borderless',
               'card-rows',
             ],
+          },
+          'viewerRole': {
+            'default': '',
+            'description': 'The signed-in viewer\'s role that each action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
+            'label': 'Viewer\'s role',
+            'tier': 'policy',
+            'type': 'string',
           },
         },
         'effectRow': [
@@ -728,11 +785,38 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
                         'entity': '@payload.data',
                         'fields': [],
                         'itemActions': [
-                          {
-                            'event': 'SELECT',
-                            'icon': 'check',
-                            'label': 'Select',
-                          },
+                          'array/filter',
+                          '@config.itemActions',
+                          [
+                            'fn',
+                            'action',
+                            [
+                              'or',
+                              [
+                                '=',
+                                [
+                                  'array/len',
+                                  [
+                                    'object/get',
+                                    '@action',
+                                    'roles',
+                                    [],
+                                  ],
+                                ],
+                                0,
+                              ],
+                              [
+                                'array/includes',
+                                [
+                                  'object/get',
+                                  '@action',
+                                  'roles',
+                                  [],
+                                ],
+                                '@config.viewerRole',
+                              ],
+                            ],
+                          ],
                         ],
                         'look': '@config.tableLook',
                         'pageSize': '@config.displayPageSize',
@@ -1017,11 +1101,38 @@ export function stdSelectionSelectableItemOrbital(params: StdSelectionSelectable
                         'entity': '@payload.data',
                         'fields': [],
                         'itemActions': [
-                          {
-                            'event': 'SELECT',
-                            'icon': 'check',
-                            'label': 'Select',
-                          },
+                          'array/filter',
+                          '@config.itemActions',
+                          [
+                            'fn',
+                            'action',
+                            [
+                              'or',
+                              [
+                                '=',
+                                [
+                                  'array/len',
+                                  [
+                                    'object/get',
+                                    '@action',
+                                    'roles',
+                                    [],
+                                  ],
+                                ],
+                                0,
+                              ],
+                              [
+                                'array/includes',
+                                [
+                                  'object/get',
+                                  '@action',
+                                  'roles',
+                                  [],
+                                ],
+                                '@config.viewerRole',
+                              ],
+                            ],
+                          ],
                         ],
                         'look': '@config.tableLook',
                         'pageSize': '@config.displayPageSize',

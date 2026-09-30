@@ -77,7 +77,11 @@ export interface StdUiTableViewConfig {
   dndRoot?: boolean;
   dragGroup?: string;
   dropEvent?: string;
+  emptyAction?: EntityRow;
+  emptyDescription?: string;
+  emptyIcon?: unknown;
   emptyMessage?: string;
+  emptyTitle?: string;
   error?: EntityRow;
   /** Default: `[]` */
   fields?: EntityRow[];
@@ -111,6 +115,8 @@ export interface StdUiTableViewConfig {
   /** Default: `"SORT"` */
   sortEvent?: string;
   sortable?: boolean;
+  /** Default: `""` */
+  viewerRole?: string;
 }
 
 /**

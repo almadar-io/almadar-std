@@ -406,6 +406,45 @@
               {
                 "effects": [
                   [
+                    "render-ui",
+                    "toast",
+                    {
+                      "dismissible": true,
+                      "message": [
+                        "str/concat",
+                        "Dry run — ",
+                        [
+                          "array/len",
+                          "@payload.data"
+                        ],
+                        " record(s) would transition, nothing was written."
+                      ],
+                      "type": "alert",
+                      "variant": "info"
+                    }
+                  ]
+                ],
+                "event": "ScanRecordsLoaded",
+                "eventId": "evt_01KXG04FCCM9PAS36JGRFE7M0Z",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  "@config.enabled",
+                  "@config.dryRun",
+                  [
+                    ">",
+                    [
+                      "array/len",
+                      "@payload.data"
+                    ],
+                    0.0
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
                     "set",
                     "@entity.headId",
                     [
@@ -452,6 +491,10 @@
                 "guard": [
                   "and",
                   "@config.enabled",
+                  [
+                    "not",
+                    "@config.dryRun"
+                  ],
                   [
                     ">",
                     [

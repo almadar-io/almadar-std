@@ -1744,6 +1744,7 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
                               },
                               {
                                 'cancelEvent': 'CANCEL_REVIEW',
+                                'cancelLabel': '@config.cancelLabel',
                                 'entity': '@entity',
                                 'fields': '@config.reviewFields',
                                 'mode': 'edit',
@@ -3008,6 +3009,7 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
                               },
                               {
                                 'cancelEvent': 'CANCEL_REVIEW',
+                                'cancelLabel': '@config.cancelLabel',
                                 'entity': '@entity',
                                 'fields': '@config.reviewFields',
                                 'mode': 'edit',
@@ -3232,13 +3234,6 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
             'tier': 'presentation',
             'type': 'boolean',
           },
-          'allowPhotos': {
-            'default': false,
-            'description': 'Let the user attach photos to the review',
-            'label': 'Allow photos',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
           'cancelLabel': {
             'default': 'Cancel',
             'description': 'Label on the cancel button',
@@ -3268,13 +3263,6 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
             'label': 'Max stars',
             'tier': 'domain',
             'type': 'number',
-          },
-          'submitEvent': {
-            'default': 'SUBMIT_REVIEW',
-            'description': 'Event emitted when the user submits the form',
-            'label': 'Submit event',
-            'tier': 'internal',
-            'type': 'string',
           },
           'submitLabel': {
             'default': 'Submit review',
@@ -3732,9 +3720,15 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
                           },
                           {
                             'cancelEvent': 'CANCEL_REVIEW',
+                            'cancelLabel': '@config.cancelLabel',
                             'entity': '@entity',
                             'fields': [
-                              'draftComment',
+                              'if',
+                              '@config.allowComment',
+                              [
+                                'draftComment',
+                              ],
+                              [],
                             ],
                             'mode': 'edit',
                             'submitEvent': 'SUBMIT_REVIEW',
@@ -3783,9 +3777,15 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
                           },
                           {
                             'cancelEvent': 'CANCEL_REVIEW',
+                            'cancelLabel': '@config.cancelLabel',
                             'entity': '@entity',
                             'fields': [
-                              'draftComment',
+                              'if',
+                              '@config.allowComment',
+                              [
+                                'draftComment',
+                              ],
+                              [],
                             ],
                             'mode': 'edit',
                             'submitEvent': 'SUBMIT_REVIEW',
@@ -3883,9 +3883,15 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
                           },
                           {
                             'cancelEvent': 'CANCEL_REVIEW',
+                            'cancelLabel': '@config.cancelLabel',
                             'entity': '@entity',
                             'fields': [
-                              'draftComment',
+                              'if',
+                              '@config.allowComment',
+                              [
+                                'draftComment',
+                              ],
+                              [],
                             ],
                             'mode': 'edit',
                             'submitEvent': 'SUBMIT_REVIEW',
@@ -3996,9 +4002,15 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
                           },
                           {
                             'cancelEvent': 'CANCEL_REVIEW',
+                            'cancelLabel': '@config.cancelLabel',
                             'entity': '@entity',
                             'fields': [
-                              'draftComment',
+                              'if',
+                              '@config.allowComment',
+                              [
+                                'draftComment',
+                              ],
+                              [],
                             ],
                             'mode': 'edit',
                             'submitEvent': 'SUBMIT_REVIEW',
@@ -4042,9 +4054,15 @@ export function stdRatingReviewRatingReviewOrbital(params: StdRatingReviewRating
                           },
                           {
                             'cancelEvent': 'CANCEL_REVIEW',
+                            'cancelLabel': '@config.cancelLabel',
                             'entity': '@entity',
                             'fields': [
-                              'draftComment',
+                              'if',
+                              '@config.allowComment',
+                              [
+                                'draftComment',
+                              ],
+                              [],
                             ],
                             'mode': 'edit',
                             'submitEvent': 'SUBMIT_REVIEW',

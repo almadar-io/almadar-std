@@ -89,6 +89,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Extract subarray',
     hasSideEffects: false,
     returnType: 'array',
+    returnSemantics: 'identity-of-arg<0>',
     params: [
       { name: 'arr', type: 'array', description: 'The array' },
       { name: 'start', type: 'number', description: 'Start index' },
@@ -104,6 +105,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Concatenate arrays',
     hasSideEffects: false,
     returnType: 'array',
+    returnSemantics: 'union-of-args',
     params: [{ name: '...arrs', type: 'array[]', description: 'Arrays to concatenate' }],
     example: '["array/concat", [1, 2], [3, 4]] // => [1, 2, 3, 4]',
   },
@@ -115,6 +117,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Add item to end (returns new array)',
     hasSideEffects: false,
     returnType: 'array',
+    returnSemantics: 'union-of-args<0,1>',
     params: [
       { name: 'arr', type: 'array', description: 'The array' },
       { name: 'item', type: 'any', description: 'Item to add' },
@@ -129,6 +132,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Add item to start (returns new array)',
     hasSideEffects: false,
     returnType: 'array',
+    returnSemantics: 'union-of-args<0,1>',
     params: [
       { name: 'arr', type: 'array', description: 'The array' },
       { name: 'item', type: 'any', description: 'Item to add' },
@@ -143,6 +147,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Insert item at index (returns new array)',
     hasSideEffects: false,
     returnType: 'array',
+    returnSemantics: 'union-of-args<0,2>',
     params: [
       { name: 'arr', type: 'array', description: 'The array' },
       { name: 'index', type: 'number', description: 'Index to insert at' },
@@ -158,6 +163,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Remove item at index (returns new array)',
     hasSideEffects: false,
     returnType: 'array',
+    returnSemantics: 'identity-of-arg<0>',
     params: [
       { name: 'arr', type: 'array', description: 'The array' },
       { name: 'index', type: 'number', description: 'Index to remove' },
@@ -172,6 +178,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Remove first matching item (returns new array)',
     hasSideEffects: false,
     returnType: 'array',
+    returnSemantics: 'identity-of-arg<0>',
     params: [
       { name: 'arr', type: 'array', description: 'The array' },
       { name: 'item', type: 'any', description: 'Item to remove' },
@@ -186,6 +193,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Reverse array order (returns new array)',
     hasSideEffects: false,
     returnType: 'array',
+    returnSemantics: 'identity-of-arg<0>',
     params: [{ name: 'arr', type: 'array', description: 'The array' }],
     example: '["array/reverse", [1, 2, 3]] // => [3, 2, 1]',
   },
@@ -197,6 +205,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Sort array (returns new array)',
     hasSideEffects: false,
     returnType: 'array',
+    returnSemantics: 'identity-of-arg<0>',
     params: [
       { name: 'arr', type: 'array', description: 'The array' },
       { name: 'key', type: 'string', description: 'Field to sort by (for objects)', optional: true },
@@ -212,6 +221,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Randomly shuffle array (returns new array)',
     hasSideEffects: false,
     returnType: 'array',
+    returnSemantics: 'identity-of-arg<0>',
     params: [{ name: 'arr', type: 'array', description: 'The array' }],
     example: '["array/shuffle", [1, 2, 3, 4, 5]]',
   },
@@ -223,6 +233,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Remove duplicates (returns new array)',
     hasSideEffects: false,
     returnType: 'array',
+    returnSemantics: 'identity-of-arg<0>',
     params: [{ name: 'arr', type: 'array', description: 'The array' }],
     example: '["array/unique", [1, 2, 2, 3, 1]] // => [1, 2, 3]',
   },
@@ -523,6 +534,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Take first n elements',
     hasSideEffects: false,
     returnType: 'array',
+    returnSemantics: 'identity-of-arg<0>',
     params: [
       { name: 'arr', type: 'array', description: 'The array' },
       { name: 'n', type: 'number', description: 'Number of elements' },
@@ -537,6 +549,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Skip first n elements',
     hasSideEffects: false,
     returnType: 'array',
+    returnSemantics: 'identity-of-arg<0>',
     params: [
       { name: 'arr', type: 'array', description: 'The array' },
       { name: 'n', type: 'number', description: 'Number of elements to skip' },
@@ -551,6 +564,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Take last n elements',
     hasSideEffects: false,
     returnType: 'array',
+    returnSemantics: 'identity-of-arg<0>',
     params: [
       { name: 'arr', type: 'array', description: 'The array' },
       { name: 'n', type: 'number', description: 'Number of elements' },
@@ -565,6 +579,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Skip last n elements',
     hasSideEffects: false,
     returnType: 'array',
+    returnSemantics: 'identity-of-arg<0>',
     params: [
       { name: 'arr', type: 'array', description: 'The array' },
       { name: 'n', type: 'number', description: 'Number of elements to skip' },

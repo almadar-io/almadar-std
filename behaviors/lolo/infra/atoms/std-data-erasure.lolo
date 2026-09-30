@@ -1,5 +1,6 @@
 app std-data-erasure "1.0.0"
 "std-data-erasure — GDPR Art. 17 right-to-be-forgotten queue. Tracks ErasureRequest rows through pending → grace → executed lifecycle with Cancel during grace. v1.0 ships the request lifecycle UI + knob set; auto-emit of ExecuteErasure after grace lands in v1.1 (loop-with-emit gap — docs/Almadar_Std_Factories.md). Target app/ atoms then own the actual delete or piiFields scrub via an ExecuteErasure listener."
+type ItemAction = { label : string!, event : event, variant : string, icon : string, roles : [string] }
 orbital DataErasureOrbital {
     uses Spinner from "std/behaviors/ui-spinner"
     uses Typography from "std/behaviors/ui-typography"
@@ -112,7 +113,7 @@ orbital DataErasureOrbital {
         })
       ExecScanLoaded -> execScanning when (and @config.enabled [">", (array/len ?data), 0])
         (set @entity.id (object/get (array/first ?data) id))
-        (set @entity.targetEntity (object/get (array/first ?data) targetEntity))
+        (set @entity.targetEntity (str/default (object/get (array/first ?data) targetEntity) @config.targetEntity))
         (set @entity.subjectId (object/get (array/first ?data) subjectId))
         (emit ExecuteErasure {
           requestId: @entity.id
@@ -139,7 +140,7 @@ orbital DataErasureOrbital {
         })
       ExecScanLoaded -> execScanning when [">", (array/len ?data), 0]
         (set @entity.id (object/get (array/first ?data) id))
-        (set @entity.targetEntity (object/get (array/first ?data) targetEntity))
+        (set @entity.targetEntity (str/default (object/get (array/first ?data) targetEntity) @config.targetEntity))
         (set @entity.subjectId (object/get (array/first ?data) subjectId))
         (emit ExecuteErasure {
           requestId: @entity.id
@@ -191,12 +192,7 @@ orbital DataErasureOrbital {
               variant: caption
             }]
             gap: sm
-            itemActions: [{
-              event: CANCEL_ERASURE
-              icon: x
-              label: Cancel
-              variant: secondary
-            }]
+            itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
             look: @config.tableLook
             type: data-grid
           }]
@@ -316,7 +312,6 @@ orbital DataErasureOrbital {
     }
 
     listens {
-      CloseButton.CLOSE -> CLOSE
       ExecScanLoaded {
         data : [ErasureRequest]
       }
@@ -396,21 +391,6 @@ orbital DataErasureOrbital {
         @label "Target entity"
         @description "Entity name whose records erasure requests apply to (e.g. 'CustomerAccount')."
         @tier "internal"
-      gracePeriodDays : number = 30
-        @label "How many days before deletion is carried out?"
-        @description "Days between request submission and execution. The subject can cancel during this window."
-        @synonyms "grace period, cancellation window, deletion delay, days before delete"
-        @tier "policy"
-      anonymizeVsDelete : "anonymize" | "delete" = anonymize
-        @label "Anonymize or fully delete the record?"
-        @description "anonymize = scrub PII fields and keep row for audit; delete = remove the row entirely."
-        @synonyms "deletion mode, anonymize, delete, scrub or remove, retention mode"
-        @tier "policy"
-      piiFields : [string] = []
-        @label "Which fields contain personal data to scrub?"
-        @description "Fields the target atom nulls when anonymizing (e.g. email, name, phone)."
-        @synonyms "PII fields, personal data fields, sensitive fields, fields to scrub"
-        @tier "policy"
       tableLook : "dense" | "spacious" | "striped" | "borderless" | "card-rows" = dense
         @label "Erasure queue table style"
         @description "Visual treatment for the erasure-requests data table."
@@ -420,6 +400,19 @@ orbital DataErasureOrbital {
         @label "Review slot"
         @description "UI slot the erasure-requests queue renders into. Defaults to the modal overlay so it never seizes the host's main content; summoned via OPEN, cleared via CLOSE."
         @tier "internal"
+      itemActions : [ItemAction] = [{
+        event: CANCEL_ERASURE
+        icon: x
+        label: Cancel
+        variant: secondary
+      }]
+        @label "Row actions"
+        @description "Actions offered on each row; give an item `roles` to show it only to those viewer roles."
+        @tier "presentation"
+      viewerRole : string = ""
+        @label "Viewer's role"
+        @description "The signed-in viewer's role that each action's `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show."
+        @tier "policy"
     }
   }
 

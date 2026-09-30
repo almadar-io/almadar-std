@@ -60,7 +60,7 @@ export interface StdUiCommitRowConfig {
   current?: boolean;
   deletions?: number;
   /** Default: `"user"` */
-  kind?: 'user' | 'agent' | 'restore' | 'undo' | 'redo' | 'snapshot';
+  kind?: 'user' | 'agent' | 'restore' | 'undo' | 'redo' | 'snapshot' | 'merge';
   /** Default: `""` */
   message?: string;
   /** Default: `"RESTORE"` */

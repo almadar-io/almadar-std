@@ -2,13 +2,15 @@ app ui-swipeable-row "1.0.0"
 "SwipeableRow — UI factory (1:1 with the @almadar/ui swipeable-row pattern)."
 ;; @pattern "swipeable-row"
 orbital SwipeableRowOrbital {
-    type SwipeableRowLoaded = Event { data : [SwipeableRowItem] } "SwipeableRow rows finished loading; payload.data holds the collection"
+    type SwipeableRowLoaded = Event { data : SwipeableRowItem } "SwipeableRow row finished loading; payload.data holds the single row"
   type SwipeableRowLeftActionsItem = {
     label : string!
     icon : icon
     variant : "primary" | "secondary" | "danger" | "ghost"
     event : event!
     eventPayload : @payload event
+    when : SExpr
+    roles : [string]
   }
   type SwipeableRowRightActionsItem = {
     label : string!
@@ -16,6 +18,8 @@ orbital SwipeableRowOrbital {
     variant : "primary" | "secondary" | "danger" | "ghost"
     event : event!
     eventPayload : @payload event
+    when : SExpr
+    roles : [string]
   }
 
   entity SwipeableRowItem [runtime] {
@@ -23,24 +27,37 @@ orbital SwipeableRowOrbital {
   }
 
   trait SwipeableRowRender -> @rebindable SwipeableRowItem [interaction, instance] {
-    initial: idle
+    initial: resolving
 
-    state idle {
-      INIT -> idle when @config.selfFetch
-        (fetch SwipeableRowItem { emit: { success: SwipeableRowLoaded } })
+    state resolving {
+      INIT -> idle when (and @config.selfFetch (!= (str/default ?id "") ""))
+        (fetch SwipeableRowItem { id: ?id, emit: { success: SwipeableRowLoaded } })
         (render-ui main {
-          leftActions: @config.leftActions
-          rightActions: @config.rightActions
+          leftActions: (array/filter @config.leftActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
+          rightActions: (array/filter @config.rightActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           threshold: @config.threshold
           children: @config.children
           itemData: @entity
           className: @config.className
           type: swipeable-row
         })
-      INIT -> idle when (not @config.selfFetch)
+      INIT -> idle when (not (and @config.selfFetch (!= (str/default ?id "") "")))
         (render-ui main {
-          leftActions: @config.leftActions
-          rightActions: @config.rightActions
+          leftActions: (array/filter @config.leftActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
+          rightActions: (array/filter @config.rightActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
+          threshold: @config.threshold
+          children: @config.children
+          itemData: @entity
+          className: @config.className
+          type: swipeable-row
+        })
+    }
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          leftActions: (array/filter @config.leftActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
+          rightActions: (array/filter @config.rightActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           threshold: @config.threshold
           children: @config.children
           itemData: @entity
@@ -49,8 +66,8 @@ orbital SwipeableRowOrbital {
         })
       SwipeableRowLoaded -> idle
         (render-ui main {
-          leftActions: @config.leftActions
-          rightActions: @config.rightActions
+          leftActions: (array/filter @config.leftActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
+          rightActions: (array/filter @config.rightActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           threshold: @config.threshold
           children: @config.children
           itemData: @payload.data
@@ -61,9 +78,17 @@ orbital SwipeableRowOrbital {
 
     emits {
       SwipeableRowLoaded
-        @description "SwipeableRow rows finished loading; payload.data holds the collection."
+        @description "SwipeableRow row finished loading; payload.data holds the single row."
         @synonyms "loaded, fetched, retrieved"
         @tier "essential"
+    }
+
+    listens {
+      INIT {
+        id : string
+      }
+        @description "Mount payload; a host that routes to this panel by id (a :id page param) passes it here."
+        @tier "internal"
     }
 
     config {
@@ -87,9 +112,13 @@ orbital SwipeableRowOrbital {
         @label "Class Name"
         @description "className prop"
         @tier "presentation"
+      viewerRole : string = ""
+        @label "Viewer's role"
+        @description "The viewer's role that each action's `roles` is checked against; bind it at the call site (e.g. `viewerRole: @user.role`). Empty = only actions with no `roles` show."
+        @tier "policy"
       selfFetch : boolean = true
-        @label "Fetch its own rows on mount?"
-        @description "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's."
+        @label "Fetch its own row on mount?"
+        @description "true (default) = a mount that carries an id loads that one row (never the collection); a create-mode mount skips the load. false = a composing atom owns the load."
         @tier "internal"
     }
   }

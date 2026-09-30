@@ -87,8 +87,6 @@ export interface StdEventLogConfig {
   bodySearch?: boolean;
   /** Default: `"elevated"` */
   cardLook?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
-  /** Default: `20` */
-  displayPageSize?: number;
   /** Default: `"toolbar"` */
   filterBarLook?: 'toolbar' | 'chips' | 'pills' | 'popover-trigger' | 'inline-column-header';
   /** Default: `[]` */
@@ -486,14 +484,6 @@ export function stdEventLogEventLogOrbital(params: StdEventLogEventLogOrbitalPar
               'chip',
               'tile-image-first',
             ],
-          },
-          'displayPageSize': {
-            'default': 20,
-            'description': 'Page size a consumer-composed std-pagination control should use to compute total pages (e.g. from totalCount). This atom\'s own timeline pattern has no built-in pager UI, so this knob is informational for the composed control, not consumed by the timeline itself.',
-            'label': 'How many entries per page should a pager show?',
-            'synonyms': 'visible rows, items per page, display limit',
-            'tier': 'presentation',
-            'type': 'number',
           },
           'filterBarLook': {
             'default': 'toolbar',

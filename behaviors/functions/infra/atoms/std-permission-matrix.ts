@@ -517,6 +517,73 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
           'access',
         ],
         'category': 'interaction',
+        'config': {
+          'itemActions': {
+            'default': [
+              {
+                'event': 'EDIT',
+                'icon': 'pencil',
+                'label': 'Edit',
+                'variant': 'ghost',
+              },
+              {
+                'event': 'DELETE',
+                'icon': 'trash',
+                'label': 'Delete',
+                'variant': 'danger',
+              },
+            ],
+            'description': 'Actions offered on each row; give an item `roles` to show it only to those viewer roles.',
+            'items': {
+              'properties': {
+                'event': {
+                  'name': 'event',
+                  'required': false,
+                  'type': 'event',
+                },
+                'icon': {
+                  'name': 'icon',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': true,
+                  'type': 'string',
+                },
+                'roles': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'roles',
+                  'required': false,
+                  'type': 'array',
+                },
+                'variant': {
+                  'name': 'variant',
+                  'required': false,
+                  'type': 'string',
+                },
+                'when': {
+                  'name': 'when',
+                  'required': false,
+                  'type': 'object',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Row actions',
+            'tier': 'presentation',
+            'type': '[ItemAction]',
+          },
+          'viewerRole': {
+            'default': '',
+            'description': 'The signed-in viewer\'s role that each action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
+            'label': 'Viewer\'s role',
+            'tier': 'policy',
+            'type': 'string',
+          },
+        },
         'effectRow': [
           {
             'kind': 'fetch',
@@ -1050,18 +1117,38 @@ export function stdPermissionMatrixPermissionMatrixOrbital(params: StdPermission
                         ],
                         'gap': 'sm',
                         'itemActions': [
-                          {
-                            'event': 'EDIT',
-                            'icon': 'pencil',
-                            'label': 'Edit',
-                            'variant': 'ghost',
-                          },
-                          {
-                            'event': 'DELETE',
-                            'icon': 'trash',
-                            'label': 'Delete',
-                            'variant': 'danger',
-                          },
+                          'array/filter',
+                          '@config.itemActions',
+                          [
+                            'fn',
+                            'action',
+                            [
+                              'or',
+                              [
+                                '=',
+                                [
+                                  'array/len',
+                                  [
+                                    'object/get',
+                                    '@action',
+                                    'roles',
+                                    [],
+                                  ],
+                                ],
+                                0,
+                              ],
+                              [
+                                'array/includes',
+                                [
+                                  'object/get',
+                                  '@action',
+                                  'roles',
+                                  [],
+                                ],
+                                '@config.viewerRole',
+                              ],
+                            ],
+                          ],
                         ],
                         'type': 'data-grid',
                       },

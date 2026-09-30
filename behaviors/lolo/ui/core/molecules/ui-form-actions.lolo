@@ -15,6 +15,7 @@ orbital FormActionsOrbital {
     event : event
     navigatesTo : string
     variant : string
+    roles : [string]
   }
   type FormActionsFiltersItem = {
     field : string!
@@ -40,7 +41,7 @@ orbital FormActionsOrbital {
         (render-ui main {
           children: @config.children
           primary: @config.primary
-          secondary: @config.secondary
+          secondary: (array/filter @config.secondary (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           variant: @config.variant
           orientation: @config.orientation
           className: @config.className
@@ -84,6 +85,10 @@ orbital FormActionsOrbital {
         @label "Look"
         @description "Layer 2 visual treatment for the action-cluster (form-actions) pattern."
         @tier "presentation"
+      viewerRole : string = ""
+        @label "Viewer's role"
+        @description "The viewer's role that each action's `roles` is checked against; bind it at the call site (e.g. `viewerRole: @user.role`). Empty = only actions with no `roles` show."
+        @tier "policy"
     }
   }
 

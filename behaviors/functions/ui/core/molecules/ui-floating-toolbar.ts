@@ -45,6 +45,8 @@ export interface StdUiFloatingToolbarConfig {
   items?: EntityRow[];
   /** Default: `"bottom-center"` */
   position?: 'bottom-center' | 'bottom-left' | 'bottom-right' | 'top-center' | 'top-left' | 'top-right';
+  /** Default: `""` */
+  viewerRole?: string;
 }
 
 /**

@@ -87,6 +87,8 @@ export interface StdUiMediaGalleryConfig {
   sortDirection?: 'asc' | 'desc';
   title?: string;
   totalCount?: number;
+  /** Default: `""` */
+  viewerRole?: string;
 }
 
 type _StdUiMediaGalleryEntityName = 'MediaGalleryItem';
@@ -179,6 +181,14 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
                   'name': 'navigatesTo',
                   'required': false,
                   'type': 'string',
+                },
+                'roles': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'roles',
+                  'required': false,
+                  'type': 'array',
                 },
                 'variant': {
                   'name': 'variant',
@@ -414,6 +424,13 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
             'tier': 'presentation',
             'type': 'number',
           },
+          'viewerRole': {
+            'default': '',
+            'description': 'The viewer\'s role that each action\'s `roles` is checked against; bind it at the call site (e.g. `viewerRole: @user.role`). Empty = only actions with no `roles` show.',
+            'label': 'Viewer\'s role',
+            'tier': 'policy',
+            'type': 'string',
+          },
         },
         'effectRow': [
           {
@@ -533,7 +550,40 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
                   'render-ui',
                   'main',
                   {
-                    'actions': '@config.actions',
+                    'actions': [
+                      'array/filter',
+                      '@config.actions',
+                      [
+                        'fn',
+                        'action',
+                        [
+                          'or',
+                          [
+                            '=',
+                            [
+                              'array/len',
+                              [
+                                'object/get',
+                                '@action',
+                                'roles',
+                                [],
+                              ],
+                            ],
+                            0,
+                          ],
+                          [
+                            'array/includes',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                            '@config.viewerRole',
+                          ],
+                        ],
+                      ],
+                    ],
                     'activeFilters': '@config.activeFilters',
                     'aspectRatio': '@config.aspectRatio',
                     'className': '@config.className',
@@ -569,7 +619,40 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
                   'render-ui',
                   'main',
                   {
-                    'actions': '@config.actions',
+                    'actions': [
+                      'array/filter',
+                      '@config.actions',
+                      [
+                        'fn',
+                        'action',
+                        [
+                          'or',
+                          [
+                            '=',
+                            [
+                              'array/len',
+                              [
+                                'object/get',
+                                '@action',
+                                'roles',
+                                [],
+                              ],
+                            ],
+                            0,
+                          ],
+                          [
+                            'array/includes',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                            '@config.viewerRole',
+                          ],
+                        ],
+                      ],
+                    ],
                     'activeFilters': '@config.activeFilters',
                     'aspectRatio': '@config.aspectRatio',
                     'className': '@config.className',
@@ -608,7 +691,40 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
                   'render-ui',
                   'main',
                   {
-                    'actions': '@config.actions',
+                    'actions': [
+                      'array/filter',
+                      '@config.actions',
+                      [
+                        'fn',
+                        'action',
+                        [
+                          'or',
+                          [
+                            '=',
+                            [
+                              'array/len',
+                              [
+                                'object/get',
+                                '@action',
+                                'roles',
+                                [],
+                              ],
+                            ],
+                            0,
+                          ],
+                          [
+                            'array/includes',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                            '@config.viewerRole',
+                          ],
+                        ],
+                      ],
+                    ],
                     'activeFilters': '@config.activeFilters',
                     'aspectRatio': '@config.aspectRatio',
                     'className': '@config.className',

@@ -19,15 +19,6 @@
         "parent": "trt_01KXG04TDBVMKKGGKC4SF9M7JS",
         "renames": []
       },
-      "evt_01KXG04TDEP7KJSJF4M4V70Q4J": {
-        "bakedName": "GenericAppTemplateLoaded",
-        "curName": "GenericAppTemplateLoaded",
-        "id": "evt_01KXG04TDEP7KJSJF4M4V70Q4J",
-        "kind": "event",
-        "owner": "workspace",
-        "parent": "trt_01KXG04TDBVMKKGGKC4SF9M7JS",
-        "renames": []
-      },
       "orb_01KXG04TDB3TJHM94ZTY58DP7F": {
         "bakedName": "GenericAppTemplateOrbital",
         "curName": "GenericAppTemplateOrbital",
@@ -113,13 +104,6 @@
               "tier": "presentation",
               "type": "node"
             },
-            "selfFetch": {
-              "default": true,
-              "description": "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's.",
-              "label": "Fetch its own rows on mount?",
-              "tier": "internal",
-              "type": "boolean"
-            },
             "subtitle": {
               "description": "Subtitle or description",
               "label": "Subtitle",
@@ -144,30 +128,6 @@
               "resource": "main"
             }
           ],
-          "emits": [
-            {
-              "description": "GenericAppTemplate rows finished loading; payload.data holds the collection.",
-              "event": "GenericAppTemplateLoaded",
-              "eventId": "evt_01KXG04TDEP7KJSJF4M4V70Q4J",
-              "payloadSchema": [
-                {
-                  "entity": "GenericAppTemplateItem",
-                  "name": "data",
-                  "properties": [
-                    {
-                      "name": "id",
-                      "required": true,
-                      "type": "string"
-                    }
-                  ],
-                  "type": "[object]"
-                }
-              ],
-              "scope": "internal",
-              "synonyms": "loaded, fetched, retrieved",
-              "tier": "essential"
-            }
-          ],
           "entityContract": {
             "provides": [],
             "requires": []
@@ -187,28 +147,6 @@
                 "id": "evt_01KXG04TDBE232FYBJ4V8RCY1J",
                 "key": "INIT",
                 "name": "Initialize"
-              },
-              {
-                "description": "GenericAppTemplate rows finished loading; payload.data holds the collection.",
-                "id": "evt_01KXG04TDEP7KJSJF4M4V70Q4J",
-                "key": "GenericAppTemplateLoaded",
-                "name": "Generic app template loaded",
-                "payloadSchema": [
-                  {
-                    "entity": "GenericAppTemplateItem",
-                    "name": "data",
-                    "properties": [
-                      {
-                        "name": "id",
-                        "required": true,
-                        "type": "string"
-                      }
-                    ],
-                    "type": "[object]"
-                  }
-                ],
-                "synonyms": "loaded, fetched, retrieved",
-                "tier": "essential"
               }
             ],
             "states": [
@@ -223,11 +161,7 @@
                   [
                     "fetch",
                     "GenericAppTemplateItem",
-                    {
-                      "emit": {
-                        "success": "GenericAppTemplateLoaded"
-                      }
-                    }
+                    {}
                   ],
                   [
                     "render-ui",
@@ -246,55 +180,6 @@
                 ],
                 "event": "INIT",
                 "eventId": "evt_01KXG04TDBE232FYBJ4V8RCY1J",
-                "from": "idle",
-                "guard": "@config.selfFetch",
-                "to": "idle"
-              },
-              {
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": "@config.children",
-                      "className": "@config.className",
-                      "entity": "@entity",
-                      "footer": "@config.footer",
-                      "headerActions": "@config.headerActions",
-                      "subtitle": "@config.subtitle",
-                      "title": "@config.title",
-                      "type": "generic-app-template"
-                    }
-                  ]
-                ],
-                "event": "INIT",
-                "eventId": "evt_01KXG04TDBE232FYBJ4V8RCY1J",
-                "from": "idle",
-                "guard": [
-                  "not",
-                  "@config.selfFetch"
-                ],
-                "to": "idle"
-              },
-              {
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": "@config.children",
-                      "className": "@config.className",
-                      "entity": "@payload.data",
-                      "footer": "@config.footer",
-                      "headerActions": "@config.headerActions",
-                      "subtitle": "@config.subtitle",
-                      "title": "@config.title",
-                      "type": "generic-app-template"
-                    }
-                  ]
-                ],
-                "event": "GenericAppTemplateLoaded",
-                "eventId": "evt_01KXG04TDEP7KJSJF4M4V70Q4J",
                 "from": "idle",
                 "to": "idle"
               }

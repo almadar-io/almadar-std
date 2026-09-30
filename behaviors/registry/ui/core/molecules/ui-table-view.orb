@@ -237,9 +237,45 @@
               "tier": "presentation",
               "type": "string"
             },
+            "emptyAction": {
+              "description": "Create-the-first-item action.",
+              "label": "Empty Action",
+              "properties": {
+                "event": {
+                  "name": "event",
+                  "required": false,
+                  "type": "event"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "TableViewEmptyAction"
+            },
+            "emptyDescription": {
+              "description": "What will appear here once rows exist.",
+              "label": "Empty Description",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "emptyIcon": {
+              "description": "Domain icon for the empty state.",
+              "label": "Empty Icon",
+              "tier": "presentation",
+              "type": "icon"
+            },
             "emptyMessage": {
               "description": "Message shown when there are no rows.",
               "label": "Empty Message",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "emptyTitle": {
+              "description": "Specific title ('No orders yet').",
+              "label": "Empty Title",
               "tier": "presentation",
               "type": "string"
             },
@@ -389,6 +425,14 @@
                     "required": true,
                     "type": "string"
                   },
+                  "roles": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "name": "roles",
+                    "required": false,
+                    "type": "array"
+                  },
                   "variant": {
                     "name": "variant",
                     "required": false,
@@ -399,6 +443,11 @@
                       "ghost",
                       "danger"
                     ]
+                  },
+                  "when": {
+                    "name": "when",
+                    "required": false,
+                    "type": "object"
                   }
                 },
                 "type": "object"
@@ -548,6 +597,13 @@
               "label": "Sortable",
               "tier": "presentation",
               "type": "boolean"
+            },
+            "viewerRole": {
+              "default": "",
+              "description": "The viewer's role that each action's `roles` is checked against; bind it at the call site (e.g. `viewerRole: @user.role`). Empty = only actions with no `roles` show.",
+              "label": "Viewer's role",
+              "tier": "policy",
+              "type": "string"
             }
           },
           "effectRow": [
@@ -762,13 +818,50 @@
                       "dndRoot": "@config.dndRoot",
                       "dragGroup": "@config.dragGroup",
                       "dropEvent": "@config.dropEvent",
+                      "emptyAction": "@config.emptyAction",
+                      "emptyDescription": "@config.emptyDescription",
+                      "emptyIcon": "@config.emptyIcon",
                       "emptyMessage": "@config.emptyMessage",
+                      "emptyTitle": "@config.emptyTitle",
                       "entity": "@entity",
                       "error": "@config.error",
                       "fields": "@config.fields",
                       "groupBy": "@config.groupBy",
                       "isLoading": "@config.isLoading",
-                      "itemActions": "@config.itemActions",
+                      "itemActions": [
+                        "array/filter",
+                        "@config.itemActions",
+                        [
+                          "fn",
+                          "action",
+                          [
+                            "or",
+                            [
+                              "=",
+                              [
+                                "array/len",
+                                [
+                                  "object/get",
+                                  "@action",
+                                  "roles",
+                                  []
+                                ]
+                              ],
+                              0.0
+                            ],
+                            [
+                              "array/includes",
+                              [
+                                "object/get",
+                                "@action",
+                                "roles",
+                                []
+                              ],
+                              "@config.viewerRole"
+                            ]
+                          ]
+                        ]
+                      ],
                       "itemClickEvent": "@config.itemClickEvent",
                       "look": "@config.look",
                       "maxInlineActions": "@config.maxInlineActions",
@@ -806,13 +899,50 @@
                       "dndRoot": "@config.dndRoot",
                       "dragGroup": "@config.dragGroup",
                       "dropEvent": "@config.dropEvent",
+                      "emptyAction": "@config.emptyAction",
+                      "emptyDescription": "@config.emptyDescription",
+                      "emptyIcon": "@config.emptyIcon",
                       "emptyMessage": "@config.emptyMessage",
+                      "emptyTitle": "@config.emptyTitle",
                       "entity": "@entity",
                       "error": "@config.error",
                       "fields": "@config.fields",
                       "groupBy": "@config.groupBy",
                       "isLoading": "@config.isLoading",
-                      "itemActions": "@config.itemActions",
+                      "itemActions": [
+                        "array/filter",
+                        "@config.itemActions",
+                        [
+                          "fn",
+                          "action",
+                          [
+                            "or",
+                            [
+                              "=",
+                              [
+                                "array/len",
+                                [
+                                  "object/get",
+                                  "@action",
+                                  "roles",
+                                  []
+                                ]
+                              ],
+                              0.0
+                            ],
+                            [
+                              "array/includes",
+                              [
+                                "object/get",
+                                "@action",
+                                "roles",
+                                []
+                              ],
+                              "@config.viewerRole"
+                            ]
+                          ]
+                        ]
+                      ],
                       "itemClickEvent": "@config.itemClickEvent",
                       "look": "@config.look",
                       "maxInlineActions": "@config.maxInlineActions",
@@ -853,13 +983,50 @@
                       "dndRoot": "@config.dndRoot",
                       "dragGroup": "@config.dragGroup",
                       "dropEvent": "@config.dropEvent",
+                      "emptyAction": "@config.emptyAction",
+                      "emptyDescription": "@config.emptyDescription",
+                      "emptyIcon": "@config.emptyIcon",
                       "emptyMessage": "@config.emptyMessage",
+                      "emptyTitle": "@config.emptyTitle",
                       "entity": "@payload.data",
                       "error": "@config.error",
                       "fields": "@config.fields",
                       "groupBy": "@config.groupBy",
                       "isLoading": "@config.isLoading",
-                      "itemActions": "@config.itemActions",
+                      "itemActions": [
+                        "array/filter",
+                        "@config.itemActions",
+                        [
+                          "fn",
+                          "action",
+                          [
+                            "or",
+                            [
+                              "=",
+                              [
+                                "array/len",
+                                [
+                                  "object/get",
+                                  "@action",
+                                  "roles",
+                                  []
+                                ]
+                              ],
+                              0.0
+                            ],
+                            [
+                              "array/includes",
+                              [
+                                "object/get",
+                                "@action",
+                                "roles",
+                                []
+                              ],
+                              "@config.viewerRole"
+                            ]
+                          ]
+                        ]
+                      ],
                       "itemClickEvent": "@config.itemClickEvent",
                       "look": "@config.look",
                       "maxInlineActions": "@config.maxInlineActions",
@@ -933,6 +1100,17 @@
           {
             "name": "sortable",
             "type": "boolean"
+          }
+        ],
+        "TableViewEmptyAction": [
+          {
+            "name": "label",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "event",
+            "type": "event"
           }
         ],
         "TableViewError": [
@@ -1019,6 +1197,14 @@
           {
             "name": "variant",
             "type": "string"
+          },
+          {
+            "name": "when",
+            "type": "SExpr"
+          },
+          {
+            "name": "roles",
+            "type": "[string]"
           }
         ],
         "TableViewRelationsDataValueItem": [

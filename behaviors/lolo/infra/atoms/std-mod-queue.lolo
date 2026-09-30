@@ -1,5 +1,6 @@
 app std-mod-queue "1.0.0"
 "std-mod-queue — moderation queue for content review. Owns a ModQueueItem entity (one row per flagged target) and a single review trait that loads pending items, renders them in a data-grid with Approve / Reject / Escalate actions, and persists the reviewer's verdict back to the row."
+type ItemAction = { label : string!, event : event, variant : string, icon : string, roles : [string], when : SExpr }
 orbital ModQueueItemOrbital {
     uses Spinner from "std/behaviors/ui-spinner"
     uses Typography from "std/behaviors/ui-typography"
@@ -106,7 +107,21 @@ orbital ModQueueItemOrbital {
     }
 
     state loading {
-      ModQueueItemLoaded -> reviewing
+      ModQueueItemLoaded -> loading when [">", (array/len (array/filter ?data (fn row (and ["=", (object/get @row "status"), pending] [">=", (object/get @row "flagCount"), @config.autoEscalateThreshold])))), 0]
+        (set @entity.id (object/get (array/first (array/filter ?data (fn row (and ["=", (object/get @row "status"), pending] [">=", (object/get @row "flagCount"), @config.autoEscalateThreshold])))) id))
+        (persist update ModQueueItem { id: @entity.id, status: escalated } {
+          emit: { failure: ModQueueItemReviewFailed, success: ModQueueItemReviewed }
+        })
+      ModQueueItemReviewed -> loading
+        (fetch ModQueueItem {
+          emit: { failure: ModQueueItemLoadFailed, success: ModQueueItemLoaded }
+        })
+      ModQueueItemReviewFailed -> error
+        (render-ui @config.reviewSlot {
+          children: [@trait.ErrorAlert]
+          type: stack
+        })
+      ModQueueItemLoaded -> reviewing when ["=", (array/len (array/filter ?data (fn row (and ["=", (object/get @row "status"), pending] [">=", (object/get @row "flagCount"), @config.autoEscalateThreshold])))), 0]
         (render-ui @config.reviewSlot {
           children: [{
             align: center
@@ -142,22 +157,7 @@ orbital ModQueueItemOrbital {
               variant: badge
             }]
             gap: sm
-            itemActions: [{
-              event: APPROVE
-              icon: check
-              label: Approve
-              variant: primary
-            }, {
-              event: REJECT
-              icon: x
-              label: Reject
-              variant: danger
-            }, {
-              event: ESCALATE
-              icon: alert-triangle
-              label: Escalate
-              variant: secondary
-            }]
+            itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
             look: @config.tableLook
             type: data-grid
           }]
@@ -275,7 +275,6 @@ orbital ModQueueItemOrbital {
     }
 
     listens {
-      CloseButton.CLOSE -> CLOSE
       OPEN
         @description "Summons the moderation queue (host nav/affordance requests it)."
         @synonyms "open, show, review, view queue, moderation queue"
@@ -353,6 +352,29 @@ orbital ModQueueItemOrbital {
         @label "Review slot"
         @description "UI slot the moderation queue renders into. Defaults to the modal overlay so it never seizes the host's main content; summoned via OPEN, cleared via CLOSE."
         @tier "internal"
+      itemActions : [ItemAction] = [{
+        event: APPROVE
+        icon: check
+        label: Approve
+        variant: primary
+      }, {
+        event: REJECT
+        icon: x
+        label: Reject
+        variant: danger
+      }, {
+        event: ESCALATE
+        icon: alert-triangle
+        label: Escalate
+        variant: secondary
+      }]
+        @label "Row actions"
+        @description "Actions offered on each row; give an item `roles` to show it only to those viewer roles."
+        @tier "presentation"
+      viewerRole : string = ""
+        @label "Viewer's role"
+        @description "The signed-in viewer's role that each action's `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show."
+        @tier "policy"
     }
   }
 

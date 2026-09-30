@@ -10,15 +10,6 @@
         "owner": "workspace",
         "renames": []
       },
-      "evt_01M13ZXC59HB41Z83ZYJR50JQP": {
-        "bakedName": "DocumentDetailsLoaded",
-        "curName": "DocumentDetailsLoaded",
-        "id": "evt_01M13ZXC59HB41Z83ZYJR50JQP",
-        "kind": "event",
-        "owner": "workspace",
-        "parent": "trt_01M13ZXC5906BVQKXF5JMWBD0E",
-        "renames": []
-      },
       "evt_01M13ZXC59R4VP1T1DHD262B08": {
         "bakedName": "@config.metaCommitEvent",
         "curName": "@config.metaCommitEvent",
@@ -41,6 +32,15 @@
         "bakedName": "@config.relationEvent",
         "curName": "@config.relationEvent",
         "id": "evt_01M1694617Q04F1T085TTM4F8C",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01M13ZXC5906BVQKXF5JMWBD0E",
+        "renames": []
+      },
+      "evt_01M3RWGC5NSA2MG9W3F0E0SB97": {
+        "bakedName": "DocumentDetailsLoaded",
+        "curName": "DocumentDetailsLoaded",
+        "id": "evt_01M3RWGC5NSA2MG9W3F0E0SB97",
         "kind": "event",
         "owner": "workspace",
         "parent": "trt_01M13ZXC5906BVQKXF5JMWBD0E",
@@ -203,8 +203,8 @@
             },
             "selfFetch": {
               "default": true,
-              "description": "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's.",
-              "label": "Fetch its own rows on mount?",
+              "description": "true (default) = a mount that carries an id loads that one row (never the collection); a create-mode mount skips the load. false = a composing atom owns the load.",
+              "label": "Fetch its own row on mount?",
               "tier": "internal",
               "type": "boolean"
             },
@@ -272,9 +272,9 @@
               "tier": "essential"
             },
             {
-              "description": "DocumentDetails rows finished loading; payload.data holds the collection.",
+              "description": "DocumentDetails row finished loading; payload.data holds the single row.",
               "event": "DocumentDetailsLoaded",
-              "eventId": "evt_01M13ZXC59HB41Z83ZYJR50JQP",
+              "eventId": "evt_01M3RWGC5NSA2MG9W3F0E0SB97",
               "payloadSchema": [
                 {
                   "entity": "DocumentDetailsItem",
@@ -286,7 +286,7 @@
                       "type": "string"
                     }
                   ],
-                  "type": "[object]"
+                  "type": "object"
                 }
               ],
               "scope": "internal",
@@ -310,13 +310,21 @@
           "stateMachine": {
             "events": [
               {
+                "description": "Mount payload; a host that routes to this panel by id (a :id page param) passes it here.",
                 "id": "evt_01M13ZXC59XKCDATMN4TVFVMZ7",
                 "key": "INIT",
-                "name": "Initialize"
+                "name": "Initialize",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "internal"
               },
               {
-                "description": "DocumentDetails rows finished loading; payload.data holds the collection.",
-                "id": "evt_01M13ZXC59HB41Z83ZYJR50JQP",
+                "description": "DocumentDetails row finished loading; payload.data holds the single row.",
+                "id": "evt_01M3RWGC5NSA2MG9W3F0E0SB97",
                 "key": "DocumentDetailsLoaded",
                 "name": "Document details loaded",
                 "payloadSchema": [
@@ -330,7 +338,7 @@
                         "type": "string"
                       }
                     ],
-                    "type": "[object]"
+                    "type": "object"
                   }
                 ],
                 "synonyms": "loaded, fetched, retrieved",
@@ -383,6 +391,9 @@
             "states": [
               {
                 "isInitial": true,
+                "name": "resolving"
+              },
+              {
                 "name": "idle"
               }
             ],
@@ -395,7 +406,8 @@
                     {
                       "emit": {
                         "success": "DocumentDetailsLoaded"
-                      }
+                      },
+                      "id": "@payload.id"
                     }
                   ],
                   [
@@ -414,8 +426,57 @@
                 ],
                 "event": "INIT",
                 "eventId": "evt_01M13ZXC59XKCDATMN4TVFVMZ7",
-                "from": "idle",
-                "guard": "@config.selfFetch",
+                "from": "resolving",
+                "guard": [
+                  "and",
+                  "@config.selfFetch",
+                  [
+                    "!=",
+                    [
+                      "str/default",
+                      "@payload.id",
+                      ""
+                    ],
+                    ""
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "entity": "@entity",
+                      "fields": "@config.fields",
+                      "metaCommitEvent": "@config.metaCommitEvent",
+                      "relationEvent": "@config.relationEvent",
+                      "title": "@config.title",
+                      "type": "document-details"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01M13ZXC59XKCDATMN4TVFVMZ7",
+                "from": "resolving",
+                "guard": [
+                  "not",
+                  [
+                    "and",
+                    "@config.selfFetch",
+                    [
+                      "!=",
+                      [
+                        "str/default",
+                        "@payload.id",
+                        ""
+                      ],
+                      ""
+                    ]
+                  ]
+                ],
                 "to": "idle"
               },
               {
@@ -437,10 +498,6 @@
                 "event": "INIT",
                 "eventId": "evt_01M13ZXC59XKCDATMN4TVFVMZ7",
                 "from": "idle",
-                "guard": [
-                  "not",
-                  "@config.selfFetch"
-                ],
                 "to": "idle"
               },
               {
@@ -460,7 +517,7 @@
                   ]
                 ],
                 "event": "DocumentDetailsLoaded",
-                "eventId": "evt_01M13ZXC59HB41Z83ZYJR50JQP",
+                "eventId": "evt_01M3RWGC5NSA2MG9W3F0E0SB97",
                 "from": "idle",
                 "to": "idle"
               }

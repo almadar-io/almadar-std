@@ -2,7 +2,7 @@ app ui-form "1.0.0"
 "Form — UI factory (1:1 with the @almadar/ui form pattern)."
 ;; @pattern "form"
 orbital FormOrbital {
-    type FormLoaded = Event { data : [FormItem] } "Form rows finished loading; payload.data holds the collection"
+    type FormLoaded = Event { data : FormItem } "Form row finished loading; payload.data holds the single row"
   type FormFieldsItem = {
     name : string
     field : string
@@ -138,11 +138,11 @@ orbital FormOrbital {
   }
 
   trait FormRender -> @rebindable FormItem [interaction, instance] {
-    initial: idle
+    initial: resolving
 
-    state idle {
-      INIT -> idle when @config.selfFetch
-        (fetch FormItem { emit: { success: FormLoaded } })
+    state resolving {
+      INIT -> idle when (and @config.selfFetch (!= (str/default ?id "") "") (!= @config.mode "create"))
+        (fetch FormItem { id: ?id, emit: { success: FormLoaded } })
         (render-ui main {
           children: @config.children
           onSubmit: @config.onSubmit
@@ -176,7 +176,44 @@ orbital FormOrbital {
           repeatable: @config.repeatable
           type: form
         })
-      INIT -> idle when (not @config.selfFetch)
+      INIT -> idle when (not (and @config.selfFetch (!= (str/default ?id "") "") (!= @config.mode "create")))
+        (render-ui main {
+          children: @config.children
+          onSubmit: @config.onSubmit
+          onCancel: @config.onCancel
+          layout: @config.layout
+          gap: @config.gap
+          className: @config.className
+          entity: @entity
+          mode: @config.mode
+          fields: @config.fields
+          initialData: @entity
+          isLoading: @config.isLoading
+          error: @config.error
+          submitLabel: @config.submitLabel
+          cancelLabel: @config.cancelLabel
+          showCancel: @config.showCancel
+          showSubmit: @config.showSubmit
+          title: @config.title
+          submitEvent: @config.submitEvent
+          cancelEvent: @config.cancelEvent
+          relationsData: @config.relationsData
+          relationsLoading: @config.relationsLoading
+          fieldOverrides: @config.fieldOverrides
+          conditionalFields: @config.conditionalFields
+          hiddenCalculations: @config.hiddenCalculations
+          violationTriggers: @config.violationTriggers
+          evaluationContext: @config.evaluationContext
+          sections: @config.sections
+          onFieldChange: @config.onFieldChange
+          configPath: @config.configPath
+          repeatable: @config.repeatable
+          type: form
+        })
+    }
+
+    state idle {
+      INIT -> idle
         (render-ui main {
           children: @config.children
           onSubmit: @config.onSubmit
@@ -218,7 +255,7 @@ orbital FormOrbital {
           layout: @config.layout
           gap: @config.gap
           className: @config.className
-          entity: @payload.data
+          entity: @entity
           mode: @config.mode
           fields: @config.fields
           initialData: @payload.data
@@ -261,9 +298,17 @@ orbital FormOrbital {
         @description "Callback when any field value changes"
         @tier "essential"
       FormLoaded
-        @description "Form rows finished loading; payload.data holds the collection."
+        @description "Form row finished loading; payload.data holds the single row."
         @synonyms "loaded, fetched, retrieved"
         @tier "essential"
+    }
+
+    listens {
+      INIT {
+        id : string
+      }
+        @description "Mount payload; a host that routes to this panel by id (a :id page param) passes it here."
+        @tier "internal"
     }
 
     config {
@@ -380,8 +425,8 @@ orbital FormOrbital {
         @description "Whether the form supports repeatable entries"
         @tier "presentation"
       selfFetch : boolean = true
-        @label "Fetch its own rows on mount?"
-        @description "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's."
+        @label "Fetch its own row on mount?"
+        @description "true (default) = a mount that carries an id loads that one row (never the collection); a create-mode mount skips the load. false = a composing atom owns the load."
         @tier "internal"
     }
   }

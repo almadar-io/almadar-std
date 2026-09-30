@@ -54,6 +54,8 @@ export interface StdUiChartConfig {
   isLoading?: boolean;
   /** Default: `"bar-vertical"` */
   look?: 'bar-vertical' | 'bar-horizontal' | 'line' | 'area' | 'pie' | 'donut' | 'scatter' | 'histogram';
+  /** Default: `"day"` */
+  period?: 'day' | 'week' | 'month' | 'quarter' | 'year';
   /** Default: `[]` */
   scatterData?: EntityRow[];
   /** Default: `[]` */
@@ -68,6 +70,8 @@ export interface StdUiChartConfig {
   /** Default: `false` */
   timeAxis?: boolean;
   title?: string;
+  /** Default: `""` */
+  viewerRole?: string;
 }
 
 /**

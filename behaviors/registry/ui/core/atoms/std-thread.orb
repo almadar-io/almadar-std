@@ -1,5 +1,5 @@
 {
-  "description": "std-thread — forum-style nested replies with collapse + flat-mode toggle. Owns ThreadPost (persistent). flat:true covers 1:1 linear inquiry threads; flat:false renders forum-style nested. INIT fetches, scoped by @config.threadRootId when set (blank = every root, the default). REPLY persists a child post under @payload.parentId, stamped with the real @user identity. A consumer that mounts this as page comments forwards its own document-opened signal to SET_THREAD_ROOT { rootId }, which stamps @entity.replyRootId (scratch — the persisted threadRootId column is written only by the reply persist create) and refetches filtered by the payload; a plain INIT re-entry now also falls back through @entity.replyRootId before @config.threadRootId, so it stays scoped to the last SET_THREAD_ROOT instead of re-widening — only the after-create/after-select refetches still scope directly off their own event payload. Layer 3 variants override `bodyContent` to deliver chat-bubble, email-threaded, or linear-comments UX while inheriting the same trait, state machine, emits, and listens. A non-empty sectionTitle switches the default bodyContent into titled-comments mode: header + post list + a standalone composer button (without it an empty thread has no REPLY emitter at all — the affordance only existed per-row).",
+  "description": "std-thread — forum-style nested replies with collapse. Owns ThreadPost (persistent). INIT fetches, scoped by @config.threadRootId when set (blank = every root, the default). REPLY persists a child post under @payload.parentId, stamped with the real @user identity. A consumer that mounts this as page comments forwards its own document-opened signal to SET_THREAD_ROOT { rootId }, which stamps @entity.replyRootId (scratch — the persisted threadRootId column is written only by the reply persist create) and refetches filtered by the payload; a plain INIT re-entry now also falls back through @entity.replyRootId before @config.threadRootId, so it stays scoped to the last SET_THREAD_ROOT instead of re-widening — only the after-create/after-select refetches still scope directly off their own event payload. Layer 3 variants override `bodyContent` to deliver chat-bubble, email-threaded, or linear-comments UX while inheriting the same trait, state machine, emits, and listens. A non-empty sectionTitle switches the default bodyContent into titled-comments mode: header + post list + a standalone composer button (without it an empty thread has no REPLY emitter at all — the affordance only existed per-row).",
   "ledger": {
     "entries": {
       "ent_01KXG04HSZB16HRNNZWKASR1J1": {
@@ -129,6 +129,22 @@
         "bakedName": "ThreadPostBrowse",
         "curName": "ThreadPostBrowse",
         "id": "trt_01KXG04HSZF049W9Y5QFRH82Y8",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M3SFBP3PBCHDCWJGXP1X40MH": {
+        "bakedName": "ThreadReplyGate",
+        "curName": "ThreadReplyGate",
+        "id": "trt_01M3SFBP3PBCHDCWJGXP1X40MH",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M3SFBP3PXZ9F1MSVF2X0R18C": {
+        "bakedName": "ThreadReplyButton",
+        "curName": "ThreadReplyButton",
+        "id": "trt_01M3SFBP3PXZ9F1MSVF2X0R18C",
         "kind": "trait",
         "owner": "workspace",
         "renames": []
@@ -308,11 +324,38 @@
                     ],
                     "gap": "sm",
                     "itemActions": [
-                      {
-                        "event": "REPLY",
-                        "icon": "message-square",
-                        "label": "Reply"
-                      }
+                      "array/filter",
+                      "@config.itemActions",
+                      [
+                        "fn",
+                        "action",
+                        [
+                          "or",
+                          [
+                            "=",
+                            [
+                              "array/len",
+                              [
+                                "object/get",
+                                "@action",
+                                "roles",
+                                []
+                              ]
+                            ],
+                            0.0
+                          ],
+                          [
+                            "array/includes",
+                            [
+                              "object/get",
+                              "@action",
+                              "roles",
+                              []
+                            ],
+                            "@config.viewerRole"
+                          ]
+                        ]
+                      ]
                     ],
                     "look": "@config.tableLook",
                     "type": "data-list",
@@ -325,13 +368,7 @@
                       "@config.sectionTitle",
                       ""
                     ],
-                    {
-                      "action": "REPLY",
-                      "icon": "message-square",
-                      "label": "@config.composerLabel",
-                      "type": "button",
-                      "variant": "secondary"
-                    },
+                    "@trait.ThreadReplyGate",
                     {
                       "children": [],
                       "gap": "none",
@@ -356,110 +393,61 @@
               "tier": "presentation",
               "type": "string"
             },
-            "detailAuthorBinding": {
-              "default": "@entity.focusedRow.authorName",
-              "description": "Detail-pane binding for the focused message author.",
-              "label": "detailAuthorBinding",
+            "itemActions": {
+              "default": [
+                {
+                  "event": "REPLY",
+                  "icon": "message-square",
+                  "label": "Reply"
+                }
+              ],
+              "description": "Actions offered on each row; give an item `roles` to show it only to those viewer roles.",
+              "items": {
+                "properties": {
+                  "event": {
+                    "name": "event",
+                    "required": false,
+                    "type": "event"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "roles": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "name": "roles",
+                    "required": false,
+                    "type": "array"
+                  },
+                  "when": {
+                    "name": "when",
+                    "required": false,
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Row actions",
               "tier": "presentation",
-              "type": "string"
+              "type": "[ItemAction]"
             },
-            "detailContentBinding": {
-              "default": "@entity.focusedRow.content",
-              "description": "Detail-pane binding for the message body.",
-              "label": "detailContentBinding",
-              "tier": "presentation",
-              "type": "string"
-            },
-            "detailDateBinding": {
-              "default": "@entity.focusedRow.createdAt",
-              "description": "Detail-pane binding for the timestamp.",
-              "label": "detailDateBinding",
-              "tier": "presentation",
-              "type": "string"
-            },
-            "detailFromBinding": {
-              "default": "@entity.focusedRow.fromAddress",
-              "description": "Detail-pane binding for the From address.",
-              "label": "detailFromBinding",
-              "tier": "presentation",
-              "type": "string"
-            },
-            "detailSubjectBinding": {
-              "default": "@entity.focusedRow.subject",
-              "description": "Detail-pane binding for the focused message subject.",
-              "label": "detailSubjectBinding",
-              "tier": "presentation",
-              "type": "string"
-            },
-            "detailToBinding": {
-              "default": "@entity.focusedRow.toAddress",
-              "description": "Detail-pane binding for the To address.",
-              "label": "detailToBinding",
-              "tier": "presentation",
-              "type": "string"
-            },
-            "emailAuthorBinding": {
-              "default": "@item.authorName",
-              "description": "List-pane binding for the message author.",
-              "label": "emailAuthorBinding",
-              "tier": "presentation",
-              "type": "string"
-            },
-            "emailPreviewBinding": {
-              "default": "@item.preview",
-              "description": "List-pane binding for the message preview text.",
-              "label": "emailPreviewBinding",
-              "tier": "presentation",
-              "type": "string"
-            },
-            "emailSubjectBinding": {
-              "default": "@item.subject",
-              "description": "List-pane binding for the message subject.",
-              "label": "emailSubjectBinding",
-              "tier": "presentation",
-              "type": "string"
-            },
-            "flat": {
-              "default": false,
-              "description": "Render replies as a linear list instead of nested tree",
-              "label": "Flat thread",
-              "tier": "presentation",
-              "type": "boolean"
-            },
-            "recipientName": {
-              "default": "Conversation",
-              "description": "Header/recipient label for chat-style threads.",
-              "label": "recipientName",
-              "tier": "presentation",
-              "type": "string"
-            },
-            "replyAuthorBinding": {
-              "default": "@reply.authorName",
-              "description": "Reply binding for the reply author.",
-              "label": "replyAuthorBinding",
-              "tier": "presentation",
-              "type": "string"
-            },
-            "replyContentBinding": {
-              "default": "@reply.content",
-              "description": "Reply binding for the reply body.",
-              "label": "replyContentBinding",
-              "tier": "presentation",
-              "type": "string"
-            },
-            "replyDateBinding": {
-              "default": "@reply.createdAt",
-              "description": "Reply binding for the reply timestamp.",
-              "label": "replyDateBinding",
-              "tier": "presentation",
-              "type": "string"
-            },
-            "replyFromBinding": {
-              "default": "@reply.fromAddress",
-              "description": "Reply binding for the reply From address.",
-              "label": "replyFromBinding",
-              "tier": "presentation",
-              "type": "string"
+            "replyRoles": {
+              "default": [],
+              "description": "Roles (matched against viewerRole) that see the thread's Reply button. Empty = everyone.",
+              "items": {
+                "type": "string"
+              },
+              "label": "Roles that can reply",
+              "tier": "policy",
+              "type": "[string]"
             },
             "sectionTitle": {
               "default": "",
@@ -489,6 +477,13 @@
               "label": "Root post id",
               "synonyms": "rootId, topLevelId, scope, threadScope",
               "tier": "domain",
+              "type": "string"
+            },
+            "viewerRole": {
+              "default": "",
+              "description": "The signed-in viewer's role that each action's `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.",
+              "label": "Viewer's role",
+              "tier": "policy",
               "type": "string"
             }
           },
@@ -1990,7 +1985,87 @@
                 "to": "loading"
               }
             ]
+          },
+          "traitEmbedIds": {
+            "ThreadReplyGate": "trt_01M3SFBP3PBCHDCWJGXP1X40MH"
           }
+        },
+        {
+          "config": {
+            "action": {
+              "default": "REPLY",
+              "type": "unknown"
+            },
+            "icon": {
+              "default": "message-square",
+              "type": "unknown"
+            },
+            "label": {
+              "default": "@config.composerLabel",
+              "type": "unknown"
+            },
+            "variant": {
+              "default": "secondary",
+              "type": "unknown"
+            }
+          },
+          "id": "trt_01M3SFBP3PXZ9F1MSVF2X0R18C",
+          "name": "ThreadReplyButton",
+          "ref": "Button.traits.ButtonRender"
+        },
+        {
+          "config": {
+            "content": {
+              "default": "@trait.ThreadReplyButton",
+              "type": "unknown"
+            },
+            "roles": {
+              "default": "@config.replyRoles",
+              "type": "unknown"
+            },
+            "viewerRole": {
+              "default": "@config.viewerRole",
+              "type": "unknown"
+            }
+          },
+          "id": "trt_01M3SFBP3PBCHDCWJGXP1X40MH",
+          "name": "ThreadReplyGate",
+          "ref": "RoleGate.traits.RoleGate"
+        }
+      ],
+      "types": {
+        "ItemAction": [
+          {
+            "name": "label",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "event",
+            "type": "event"
+          },
+          {
+            "name": "icon",
+            "type": "string"
+          },
+          {
+            "name": "roles",
+            "type": "[string]"
+          },
+          {
+            "name": "when",
+            "type": "SExpr"
+          }
+        ]
+      },
+      "uses": [
+        {
+          "as": "RoleGate",
+          "from": "std/behaviors/std-role-gate"
+        },
+        {
+          "as": "Button",
+          "from": "std/behaviors/ui-button"
         }
       ]
     }

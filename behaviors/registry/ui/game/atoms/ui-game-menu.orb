@@ -222,6 +222,14 @@
                     "required": false,
                     "type": "string"
                   },
+                  "roles": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "name": "roles",
+                    "required": false,
+                    "type": "array"
+                  },
                   "subLabel": {
                     "name": "subLabel",
                     "required": false,
@@ -276,6 +284,14 @@
                     "required": false,
                     "type": "string"
                   },
+                  "roles": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "name": "roles",
+                    "required": false,
+                    "type": "array"
+                  },
                   "subLabel": {
                     "name": "subLabel",
                     "required": false,
@@ -304,6 +320,13 @@
               "description": "Menu title",
               "label": "Title",
               "tier": "presentation",
+              "type": "string"
+            },
+            "viewerRole": {
+              "default": "",
+              "description": "The viewer's role that each action's `roles` is checked against; bind it at the call site (e.g. `viewerRole: @user.role`). Empty = only actions with no `roles` show.",
+              "label": "Viewer's role",
+              "tier": "policy",
               "type": "string"
             }
           },
@@ -441,9 +464,75 @@
                       "background": "@config.background",
                       "className": "@config.className",
                       "logo": "@config.logo",
-                      "menuItems": "@config.menuItems",
+                      "menuItems": [
+                        "array/filter",
+                        "@config.menuItems",
+                        [
+                          "fn",
+                          "action",
+                          [
+                            "or",
+                            [
+                              "=",
+                              [
+                                "array/len",
+                                [
+                                  "object/get",
+                                  "@action",
+                                  "roles",
+                                  []
+                                ]
+                              ],
+                              0.0
+                            ],
+                            [
+                              "array/includes",
+                              [
+                                "object/get",
+                                "@action",
+                                "roles",
+                                []
+                              ],
+                              "@config.viewerRole"
+                            ]
+                          ]
+                        ]
+                      ],
                       "onSelect": "@config.onSelect",
-                      "options": "@config.options",
+                      "options": [
+                        "array/filter",
+                        "@config.options",
+                        [
+                          "fn",
+                          "action",
+                          [
+                            "or",
+                            [
+                              "=",
+                              [
+                                "array/len",
+                                [
+                                  "object/get",
+                                  "@action",
+                                  "roles",
+                                  []
+                                ]
+                              ],
+                              0.0
+                            ],
+                            [
+                              "array/includes",
+                              [
+                                "object/get",
+                                "@action",
+                                "roles",
+                                []
+                              ],
+                              "@config.viewerRole"
+                            ]
+                          ]
+                        ]
+                      ],
                       "subtitle": "@config.subtitle",
                       "title": "@config.title",
                       "type": "game-menu"
@@ -542,6 +631,10 @@
           {
             "name": "subLabel",
             "type": "string"
+          },
+          {
+            "name": "roles",
+            "type": "[string]"
           }
         ],
         "GameMenuOptionsItem": [
@@ -573,6 +666,10 @@
           {
             "name": "subLabel",
             "type": "string"
+          },
+          {
+            "name": "roles",
+            "type": "[string]"
           }
         ],
         "GameMenuSELECTOption": [

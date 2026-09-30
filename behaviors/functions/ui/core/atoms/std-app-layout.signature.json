@@ -57,6 +57,32 @@
         ],
         "overridableConfigKeys": [
           {
+            "key": "accessDeniedDescription",
+            "type": "string",
+            "default": "Ask an administrator if you need it.",
+            "label": "Access-denied message",
+            "tier": "presentation"
+          },
+          {
+            "key": "accessDeniedTitle",
+            "type": "string",
+            "default": "You don't have access to this page",
+            "label": "Access-denied title",
+            "tier": "presentation"
+          },
+          {
+            "key": "allowedRoles",
+            "type": "[string]",
+            "default": [],
+            "label": "Who may open this page?",
+            "description": "Roles (matched against viewerRole) allowed to see this page's content. Empty = everyone; anyone else sees the access-denied state instead. Nav items and top-bar actions carry their own `roles` the same way.",
+            "synonyms": "access, permission, restrict, only for, roles allowed, who can see",
+            "tier": "policy",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
             "key": "appName",
             "type": "string",
             "default": "App",
@@ -87,14 +113,6 @@
             "label": "Current path",
             "description": "Nav-highlight ONLY: which nav item to mark active. This is NOT the page route — it does not change what page loads or where the orbital lives. To set the landing route or a page path, use the orbital's pagePath / page path, not this knob. When omitted, the layout reads the current route.",
             "synonyms": "active nav item, highlighted nav link, which menu item is selected, nav highlight",
-            "tier": "internal"
-          },
-          {
-            "key": "detailSlot",
-            "type": "slot",
-            "default": "modal",
-            "label": "Detail slot",
-            "description": "Slot where detail/edit views render",
             "tier": "internal"
           },
           {
@@ -160,6 +178,14 @@
                   "name": "label",
                   "required": true,
                   "type": "string"
+                },
+                "roles": {
+                  "name": "roles",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
                 }
               },
               "type": "object"
@@ -256,6 +282,14 @@
                   "required": false,
                   "type": "string"
                 },
+                "roles": {
+                  "name": "roles",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
                 "variant": {
                   "name": "variant",
                   "required": false,
@@ -289,6 +323,14 @@
             "description": "Display name of the signed-in viewer, shown in the app bar's account menu — typically @user.name. Blank renders no account menu, so people can see which account (and which persona) they are viewing the app as only when it is actually known.",
             "synonyms": "signed in user, current user, account, profile, persona, who am i",
             "tier": "presentation"
+          },
+          {
+            "key": "viewerRole",
+            "type": "string",
+            "default": "",
+            "label": "Viewer's role",
+            "description": "The signed-in viewer's role that allowedRoles and each nav item's / top-bar action's `roles` are checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only items with no `roles` show and a page with allowedRoles is denied.",
+            "tier": "policy"
           }
         ],
         "capabilities": [],

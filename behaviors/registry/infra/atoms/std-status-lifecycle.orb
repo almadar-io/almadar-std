@@ -123,14 +123,6 @@
               "tier": "infra",
               "type": "boolean"
             },
-            "initialStatus": {
-              "default": "draft",
-              "description": "The status assigned when a record is first created.",
-              "label": "What status do new records start in?",
-              "synonyms": "starting state, default status, first stage, initial state",
-              "tier": "domain",
-              "type": "string"
-            },
             "states": {
               "default": [
                 "draft",
@@ -391,6 +383,11 @@
                 "guard": [
                   "and",
                   "@config.enabled",
+                  [
+                    "array/includes",
+                    "@config.states",
+                    "@payload.to"
+                  ],
                   [
                     "array/some",
                     "@config.transitions",

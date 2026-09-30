@@ -54,6 +54,8 @@ export interface StdUiModalConfig {
   closeOnEscape?: boolean;
   /** Default: `true` */
   closeOnOverlayClick?: boolean;
+  /** Default: `false` */
+  contained?: boolean;
   footer?: PatternValue;
   /** Default: `true` */
   isOpen?: boolean;

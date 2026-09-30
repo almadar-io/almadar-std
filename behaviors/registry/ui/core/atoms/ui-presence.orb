@@ -19,6 +19,15 @@
         "parent": "trt_01KY21K7YKMGGJFV3VJ5B1MQVT",
         "renames": []
       },
+      "evt_01M3R69VAQXRZ8MACTP58J0XBB": {
+        "bakedName": "@config.onExited",
+        "curName": "@config.onExited",
+        "id": "evt_01M3R69VAQXRZ8MACTP58J0XBB",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KY21K7YKMGGJFV3VJ5B1MQVT",
+        "renames": []
+      },
       "orb_01KY21K7YKV729A5YDR7FFP78C": {
         "bakedName": "PresenceOrbital",
         "curName": "PresenceOrbital",
@@ -80,6 +89,29 @@
         {
           "category": "interaction",
           "config": {
+            "animate": {
+              "description": "Per-instance opt-out. Global opt-out is `--motion-enable` / reduced-motion. @default true",
+              "label": "Animate",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "animation": {
+              "default": "modal",
+              "description": "Which motion preset to use (maps to `animate-<name>-in/out`).",
+              "label": "Animation",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "modal",
+                "overlay",
+                "slide-up",
+                "drawer",
+                "popover",
+                "toast",
+                "fade",
+                "page"
+              ]
+            },
             "children": {
               "description": "children prop",
               "label": "Children",
@@ -91,6 +123,13 @@
               "label": "Class Name",
               "tier": "presentation",
               "type": "string"
+            },
+            "onExited": {
+              "default": "EXITED",
+              "description": "Fired after the exit animation completes (before unmount).",
+              "label": "On Exited",
+              "tier": "presentation",
+              "type": "event"
             },
             "show": {
               "default": false,
@@ -104,6 +143,16 @@
             {
               "kind": "render-ui",
               "resource": "main"
+            }
+          ],
+          "emits": [
+            {
+              "definerKnob": "onExited",
+              "description": "Fired after the exit animation completes (before unmount).",
+              "event": "@config.onExited",
+              "eventId": "evt_01M3R69VAQXRZ8MACTP58J0XBB",
+              "scope": "external",
+              "tier": "essential"
             }
           ],
           "entityContract": {
@@ -125,6 +174,13 @@
                 "id": "evt_01KY21K7YKPH1N67R9W990TSE8",
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "description": "Fired after the exit animation completes (before unmount).",
+                "id": "evt_01M3R69VAQXRZ8MACTP58J0XBB",
+                "key": "@config.onExited",
+                "name": "@config.on exited",
+                "tier": "essential"
               }
             ],
             "states": [
@@ -140,8 +196,11 @@
                     "render-ui",
                     "main",
                     {
+                      "animate": "@config.animate",
+                      "animation": "@config.animation",
                       "children": "@config.children",
                       "className": "@config.className",
+                      "onExited": "@config.onExited",
                       "show": "@config.show",
                       "type": "presence"
                     }

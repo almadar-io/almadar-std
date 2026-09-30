@@ -1,6 +1,7 @@
 app std-list "1.0.0"
 "std-list as a Function"
 type FilterSpec = { field : string!, label : string, options : [string] }
+type ItemAction = { label : string!, event : event, variant : string, roles : [string], when : SExpr }
 ;;
 ;; Daisy-chain composition showcase: no `on EVENT { ... }` trait-ref overrides.
 ;; Modal + Confirmation trait refs are configured via `config: { ... }` at the
@@ -11,6 +12,10 @@ type FilterSpec = { field : string!, label : string, options : [string] }
 ;; old version had — form-section's mode set only supports "create" | "edit",
 ;; and a dedicated detail-view pattern is tracked separately (std-detail).
 orbital ListItemOrbital {
+  uses RoleGate from "std/behaviors/std-role-gate"
+
+  uses Button from "std/behaviors/ui-button"
+
   uses Confirmation from "std/behaviors/std-confirmation"
 
   uses Modal from "std/behaviors/std-modal"
@@ -61,13 +66,7 @@ orbital ListItemOrbital {
               direction: horizontal
               gap: md
               type: stack
-            }, {
-              action: CREATE
-              icon: plus
-              label: Create
-              type: button
-              variant: primary
-            }]
+            }, <trait.ListItemCreateGate />]
             direction: horizontal
             gap: md
             justify: between
@@ -118,15 +117,7 @@ orbital ListItemOrbital {
               name: status
               variant: badge
             }]
-            itemActions: [{
-              event: EDIT
-              label: Edit
-              variant: ghost
-            }, {
-              event: DELETE
-              label: Delete
-              variant: danger
-            }]
+            itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
             pageSize: @config.displayPageSize
             type: data-grid
           }]
@@ -208,13 +199,7 @@ orbital ListItemOrbital {
               direction: horizontal
               gap: md
               type: stack
-            }, {
-              action: CREATE
-              icon: plus
-              label: Create
-              type: button
-              variant: primary
-            }]
+            }, <trait.ListItemCreateGate />]
             direction: horizontal
             gap: md
             justify: between
@@ -265,15 +250,7 @@ orbital ListItemOrbital {
               name: status
               variant: badge
             }]
-            itemActions: [{
-              event: EDIT
-              label: Edit
-              variant: ghost
-            }, {
-              event: DELETE
-              label: Delete
-              variant: danger
-            }]
+            itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
             pageSize: @config.displayPageSize
             type: data-grid
           }]
@@ -392,6 +369,43 @@ orbital ListItemOrbital {
         @description "Rows visible per page before the data-grid's own pagination control appears — 20 matches the CRUD-list density sweet spot (Miller's law, 10-25 rows)."
         @synonyms "visible rows, items per page, display limit, show per page"
         @tier "presentation"
+      itemActions : [ItemAction] = [{
+        event: EDIT
+        label: Edit
+        variant: ghost
+      }, {
+        event: DELETE
+        label: Delete
+        variant: danger
+      }]
+        @label "Row actions"
+        @description "Actions offered on each row; give an item `roles` to show it only to those viewer roles."
+        @tier "presentation"
+      viewerRole : string = ""
+        @label "Viewer's role"
+        @description "The signed-in viewer's role that each action's `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show."
+        @tier "policy"
+      createRoles : [string] = []
+        @label "Roles that can create"
+        @description "Roles (matched against viewerRole) that see the Create button. Empty = everyone."
+        @tier "policy"
+    }
+  }
+
+  trait ListItemCreateButton = Button.traits.ButtonRender {
+    config {
+      action: CREATE
+      icon: plus
+      label: Create
+      variant: primary
+    }
+  }
+
+  trait ListItemCreateGate = RoleGate.traits.RoleGate {
+    config {
+      roles: @config.createRoles
+      viewerRole: @config.viewerRole
+      content: <trait.ListItemCreateButton />
     }
   }
 

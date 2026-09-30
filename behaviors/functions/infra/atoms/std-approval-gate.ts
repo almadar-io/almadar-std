@@ -617,14 +617,6 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
             'tier': 'policy',
             'type': '[string]',
           },
-          'autoApproveBelowThreshold': {
-            'default': true,
-            'description': 'When true, auto-approves requests below the threshold without queuing. v1.0 declarative only.',
-            'label': 'Skip review queue for low-value requests?',
-            'synonyms': 'auto approve, skip review, bypass queue, automatic approval',
-            'tier': 'policy',
-            'type': 'boolean',
-          },
           'blockSelfApproval': {
             'default': false,
             'description': 'When on, a reviewer cannot APPROVE a request they submitted themselves (requestedBy = the viewer\'s id) — enforced by the APPROVE transition guard, from the button or from the bus. Requires hosts to stamp requestedBy at request creation. DENY stays allowed on your own request (denying your own request withdraws it). Off by default.',
@@ -641,24 +633,69 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
             'tier': 'policy',
             'type': 'boolean',
           },
-          'escalationHours': {
-            'default': 0,
-            'description': 'Hours a request can sit pending before escalating. v1.0 declarative only.',
-            'label': 'Escalate after how many hours pending?',
-            'synonyms': 'escalation time, SLA hours, pending timeout, escalate after',
-            'tier': 'policy',
-            'type': 'number',
-          },
-          'escalationRoles': {
-            'default': [],
-            'description': 'Roles notified on escalation (compose sibling std-notify-on-event to deliver).',
+          'itemActions': {
+            'default': [
+              {
+                'event': 'OPEN_SUBJECT',
+                'icon': 'eye',
+                'label': 'View',
+                'variant': 'ghost',
+              },
+              {
+                'event': 'APPROVE',
+                'icon': 'check',
+                'label': 'Approve',
+                'variant': 'primary',
+              },
+              {
+                'event': 'DENY',
+                'icon': 'x',
+                'label': 'Deny',
+                'variant': 'danger',
+              },
+            ],
+            'description': 'Actions offered on each row; give an item `roles` to show it only to those viewer roles.',
             'items': {
-              'type': 'string',
+              'properties': {
+                'event': {
+                  'name': 'event',
+                  'required': false,
+                  'type': 'event',
+                },
+                'icon': {
+                  'name': 'icon',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': true,
+                  'type': 'string',
+                },
+                'roles': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'roles',
+                  'required': false,
+                  'type': 'array',
+                },
+                'variant': {
+                  'name': 'variant',
+                  'required': false,
+                  'type': 'string',
+                },
+                'when': {
+                  'name': 'when',
+                  'required': false,
+                  'type': 'object',
+                },
+              },
+              'type': 'object',
             },
-            'label': 'Who gets notified when a request escalates?',
-            'synonyms': 'escalation contacts, escalate to, notify roles, escalated approver',
-            'tier': 'policy',
-            'type': '[string]',
+            'label': 'Row actions',
+            'tier': 'presentation',
+            'type': '[ItemAction]',
           },
           'reviewSlot': {
             'default': 'modal',
@@ -682,19 +719,11 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
               'card-rows',
             ],
           },
-          'threshold': {
-            'default': 0,
-            'description': 'Requests whose gated value is below this threshold are auto-approved. v1.0 declarative only.',
-            'label': 'Auto-approve below this value',
-            'synonyms': 'auto approve amount, skip review under, threshold, limit',
-            'tier': 'policy',
-            'type': 'number',
-          },
-          'valueField': {
+          'viewerRole': {
             'default': '',
-            'description': 'Payload field name to compare against threshold (e.g. \'amount\' on a RefundRequested event). v1.0 declarative only.',
-            'label': 'Value field',
-            'tier': 'internal',
+            'description': 'The signed-in viewer\'s role that each action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
+            'label': 'Viewer\'s role',
+            'tier': 'policy',
             'type': 'string',
           },
         },
@@ -1113,16 +1142,6 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
         },
         'entityRebindable': true,
         'linkedEntity': 'ApprovalRequest',
-        'listens': [
-          {
-            'event': 'CLOSE',
-            'source': {
-              'kind': 'trait',
-              'trait': ('CloseButton' satisfies _StdApprovalGateListenTraitName),
-            },
-            'triggers': 'CLOSE',
-          },
-        ],
         'name': 'ApprovalGateReview',
         'scope': 'collection',
         'stateMachine': {
@@ -1753,24 +1772,38 @@ export function stdApprovalGateApprovalGateOrbital(params: StdApprovalGateApprov
                         ],
                         'gap': 'sm',
                         'itemActions': [
-                          {
-                            'event': 'OPEN_SUBJECT',
-                            'icon': 'eye',
-                            'label': 'View',
-                            'variant': 'ghost',
-                          },
-                          {
-                            'event': 'APPROVE',
-                            'icon': 'check',
-                            'label': 'Approve',
-                            'variant': 'primary',
-                          },
-                          {
-                            'event': 'DENY',
-                            'icon': 'x',
-                            'label': 'Deny',
-                            'variant': 'danger',
-                          },
+                          'array/filter',
+                          '@config.itemActions',
+                          [
+                            'fn',
+                            'action',
+                            [
+                              'or',
+                              [
+                                '=',
+                                [
+                                  'array/len',
+                                  [
+                                    'object/get',
+                                    '@action',
+                                    'roles',
+                                    [],
+                                  ],
+                                ],
+                                0,
+                              ],
+                              [
+                                'array/includes',
+                                [
+                                  'object/get',
+                                  '@action',
+                                  'roles',
+                                  [],
+                                ],
+                                '@config.viewerRole',
+                              ],
+                            ],
+                          ],
                         ],
                         'look': '@config.tableLook',
                         'type': 'data-grid',

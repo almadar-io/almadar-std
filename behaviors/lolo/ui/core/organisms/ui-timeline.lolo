@@ -23,6 +23,7 @@ orbital TimelineOrbital {
     event : event
     navigatesTo : string
     variant : "primary" | "secondary" | "ghost"
+    roles : [string]
   }
 
   entity TimelineItem [runtime] {
@@ -43,7 +44,7 @@ orbital TimelineOrbital {
           title: @config.title
           items: @config.items
           fields: @config.fields
-          itemActions: @config.itemActions
+          itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           look: @config.look
           type: timeline
         })
@@ -56,7 +57,7 @@ orbital TimelineOrbital {
           title: @config.title
           items: @config.items
           fields: @config.fields
-          itemActions: @config.itemActions
+          itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           look: @config.look
           type: timeline
         })
@@ -69,7 +70,7 @@ orbital TimelineOrbital {
           title: @config.title
           items: @config.items
           fields: @config.fields
-          itemActions: @config.itemActions
+          itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           look: @config.look
           type: timeline
         })
@@ -121,6 +122,10 @@ orbital TimelineOrbital {
         @label "Look"
         @description "Layer 2 visual treatment."
         @tier "presentation"
+      viewerRole : string = ""
+        @label "Viewer's role"
+        @description "The viewer's role that each action's `roles` is checked against; bind it at the call site (e.g. `viewerRole: @user.role`). Empty = only actions with no `roles` show."
+        @tier "policy"
       selfFetch : boolean = true
         @label "Fetch its own rows on mount?"
         @description "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's."

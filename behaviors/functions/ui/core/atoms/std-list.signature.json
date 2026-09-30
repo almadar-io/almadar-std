@@ -126,6 +126,17 @@
             "tier": "presentation"
           },
           {
+            "key": "createRoles",
+            "type": "[string]",
+            "default": [],
+            "label": "Roles that can create",
+            "description": "Roles (matched against viewerRole) that see the Create button. Empty = everyone.",
+            "tier": "policy",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
             "key": "displayPageSize",
             "type": "number",
             "default": 20,
@@ -183,6 +194,58 @@
             }
           },
           {
+            "key": "itemActions",
+            "type": "[ItemAction]",
+            "default": [
+              {
+                "event": "EDIT",
+                "label": "Edit",
+                "variant": "ghost"
+              },
+              {
+                "event": "DELETE",
+                "label": "Delete",
+                "variant": "danger"
+              }
+            ],
+            "label": "Row actions",
+            "description": "Actions offered on each row; give an item `roles` to show it only to those viewer roles.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "event": {
+                  "name": "event",
+                  "required": false,
+                  "type": "event"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "roles": {
+                  "name": "roles",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
+                "when": {
+                  "name": "when",
+                  "required": false,
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
             "key": "pageSize",
             "type": "number",
             "default": 20,
@@ -208,6 +271,14 @@
             "description": "Hint text inside the list search box.",
             "synonyms": "search hint, placeholder, search box text",
             "tier": "presentation"
+          },
+          {
+            "key": "viewerRole",
+            "type": "string",
+            "default": "",
+            "label": "Viewer's role",
+            "description": "The signed-in viewer's role that each action's `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.",
+            "tier": "policy"
           }
         ],
         "capabilities": [],
@@ -244,6 +315,69 @@
         "effectEntityRefs": [
           "ListItem"
         ]
+      },
+      {
+        "name": "ListItemCreateButton",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "action",
+            "type": "unknown",
+            "default": "CREATE"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus"
+          },
+          {
+            "key": "label",
+            "type": "unknown",
+            "default": "Create"
+          },
+          {
+            "key": "variant",
+            "type": "unknown",
+            "default": "primary"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Button.traits.ButtonRender",
+        "transitionEvents": [
+          "INIT"
+        ],
+        "definerKnobs": [
+          "action"
+        ]
+      },
+      {
+        "name": "ListItemCreateGate",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "content",
+            "type": "unknown",
+            "default": "@trait.ListItemCreateButton"
+          },
+          {
+            "key": "roles",
+            "type": "unknown",
+            "default": "@config.createRoles"
+          },
+          {
+            "key": "viewerRole",
+            "type": "unknown",
+            "default": "@config.viewerRole"
+          }
+        ],
+        "capabilities": [],
+        "ref": "RoleGate.traits.RoleGate",
+        "transitionEvents": [
+          "INIT"
+        ],
+        "definerKnobs": []
       },
       {
         "name": "ListItemCreate",
@@ -508,7 +642,7 @@
     ],
     "exposure": "both",
     "provenance": "authored",
-    "substrateSignature": "5885fcc627374c40",
+    "substrateSignature": "f5ab99b126f3a502",
     "sourceValid": true
   }
 ]

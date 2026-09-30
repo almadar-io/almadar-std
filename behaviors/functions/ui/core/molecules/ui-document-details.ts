@@ -53,7 +53,7 @@ export interface StdUiDocumentDetailsRelationPayload {
  * Payload shape for the `DocumentDetailsLoaded` event.
  */
 export interface StdUiDocumentDetailsDocumentDetailsLoadedPayload {
-  data?: EntityRow[];
+  data?: EntityRow;
 }
 
 /**

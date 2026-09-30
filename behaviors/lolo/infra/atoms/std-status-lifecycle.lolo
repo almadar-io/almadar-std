@@ -20,7 +20,7 @@ orbital StatusLifecycleOrbital {
     initial: idle
 
     state idle {
-      ChangeStatusRequested -> idle when (and @config.enabled (array/some @config.transitions (fn t (and ["=", (object/get @t from), ?from] ["=", (object/get @t to), ?to]))))
+      ChangeStatusRequested -> idle when (and @config.enabled (array/includes @config.states ?to) (array/some @config.transitions (fn t (and ["=", (object/get @t from), ?from] ["=", (object/get @t to), ?to]))))
         (persist update @config.targetEntity (object/set { id: ?id } @config.statusField ?to) {
           emit: { failure: StatusChangeFailed, success: StatusPersisted }
         })
@@ -74,11 +74,6 @@ orbital StatusLifecycleOrbital {
         @description "Entity field this lifecycle drives (e.g. 'status', 'state', 'stage', 'phase')."
         @synonyms "state field, stage field, status column, lifecycle field"
         @tier "infra"
-      initialStatus : string = "draft"
-        @label "What status do new records start in?"
-        @description "The status assigned when a record is first created."
-        @synonyms "starting state, default status, first stage, initial state"
-        @tier "domain"
       states : [string] = (draft active archived)
         @label "What are the possible statuses?"
         @description "The complete set of statuses a record can hold."

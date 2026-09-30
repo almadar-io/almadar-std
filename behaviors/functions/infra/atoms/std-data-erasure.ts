@@ -502,18 +502,6 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
         ],
         'category': 'interaction',
         'config': {
-          'anonymizeVsDelete': {
-            'default': 'anonymize',
-            'description': 'anonymize = scrub PII fields and keep row for audit; delete = remove the row entirely.',
-            'label': 'Anonymize or fully delete the record?',
-            'synonyms': 'deletion mode, anonymize, delete, scrub or remove, retention mode',
-            'tier': 'policy',
-            'type': 'string',
-            'values': [
-              'anonymize',
-              'delete',
-            ],
-          },
           'enabled': {
             'default': false,
             'description': 'Let people request that their data be permanently removed. Off by default.',
@@ -522,24 +510,52 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
             'tier': 'policy',
             'type': 'boolean',
           },
-          'gracePeriodDays': {
-            'default': 30,
-            'description': 'Days between request submission and execution. The subject can cancel during this window.',
-            'label': 'How many days before deletion is carried out?',
-            'synonyms': 'grace period, cancellation window, deletion delay, days before delete',
-            'tier': 'policy',
-            'type': 'number',
-          },
-          'piiFields': {
-            'default': [],
-            'description': 'Fields the target atom nulls when anonymizing (e.g. email, name, phone).',
+          'itemActions': {
+            'default': [
+              {
+                'event': 'CANCEL_ERASURE',
+                'icon': 'x',
+                'label': 'Cancel',
+                'variant': 'secondary',
+              },
+            ],
+            'description': 'Actions offered on each row; give an item `roles` to show it only to those viewer roles.',
             'items': {
-              'type': 'string',
+              'properties': {
+                'event': {
+                  'name': 'event',
+                  'required': false,
+                  'type': 'event',
+                },
+                'icon': {
+                  'name': 'icon',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': true,
+                  'type': 'string',
+                },
+                'roles': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'roles',
+                  'required': false,
+                  'type': 'array',
+                },
+                'variant': {
+                  'name': 'variant',
+                  'required': false,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
             },
-            'label': 'Which fields contain personal data to scrub?',
-            'synonyms': 'PII fields, personal data fields, sensitive fields, fields to scrub',
-            'tier': 'policy',
-            'type': '[string]',
+            'label': 'Row actions',
+            'tier': 'presentation',
+            'type': '[ItemAction]',
           },
           'reviewSlot': {
             'default': 'modal',
@@ -568,6 +584,13 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
             'description': 'Entity name whose records erasure requests apply to (e.g. \'CustomerAccount\').',
             'label': 'Target entity',
             'tier': 'internal',
+            'type': 'string',
+          },
+          'viewerRole': {
+            'default': '',
+            'description': 'The signed-in viewer\'s role that each action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
+            'label': 'Viewer\'s role',
+            'tier': 'policy',
             'type': 'string',
           },
         },
@@ -917,16 +940,6 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
           },
         ],
         'linkedEntity': 'ErasureRequest',
-        'listens': [
-          {
-            'event': 'CLOSE',
-            'source': {
-              'kind': 'trait',
-              'trait': ('CloseButton' satisfies _StdDataErasureListenTraitName),
-            },
-            'triggers': 'CLOSE',
-          },
-        ],
         'name': 'ErasureWorkflow',
         'scope': 'collection',
         'stateMachine': {
@@ -1359,12 +1372,16 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                   'set',
                   '@entity.targetEntity',
                   [
-                    'object/get',
+                    'str/default',
                     [
-                      'array/first',
-                      '@payload.data',
+                      'object/get',
+                      [
+                        'array/first',
+                        '@payload.data',
+                      ],
+                      'targetEntity',
                     ],
-                    'targetEntity',
+                    '@config.targetEntity',
                   ],
                 ],
                 [
@@ -1511,12 +1528,16 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                   'set',
                   '@entity.targetEntity',
                   [
-                    'object/get',
+                    'str/default',
                     [
-                      'array/first',
-                      '@payload.data',
+                      'object/get',
+                      [
+                        'array/first',
+                        '@payload.data',
+                      ],
+                      'targetEntity',
                     ],
-                    'targetEntity',
+                    '@config.targetEntity',
                   ],
                 ],
                 [
@@ -1653,12 +1674,38 @@ export function stdDataErasureDataErasureOrbital(params: StdDataErasureDataErasu
                         ],
                         'gap': 'sm',
                         'itemActions': [
-                          {
-                            'event': 'CANCEL_ERASURE',
-                            'icon': 'x',
-                            'label': 'Cancel',
-                            'variant': 'secondary',
-                          },
+                          'array/filter',
+                          '@config.itemActions',
+                          [
+                            'fn',
+                            'action',
+                            [
+                              'or',
+                              [
+                                '=',
+                                [
+                                  'array/len',
+                                  [
+                                    'object/get',
+                                    '@action',
+                                    'roles',
+                                    [],
+                                  ],
+                                ],
+                                0,
+                              ],
+                              [
+                                'array/includes',
+                                [
+                                  'object/get',
+                                  '@action',
+                                  'roles',
+                                  [],
+                                ],
+                                '@config.viewerRole',
+                              ],
+                            ],
+                          ],
                         ],
                         'look': '@config.tableLook',
                         'type': 'data-grid',

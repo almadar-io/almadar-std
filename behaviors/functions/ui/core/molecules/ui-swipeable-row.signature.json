@@ -22,13 +22,15 @@
           {
             "name": "SwipeableRowLoaded",
             "direction": "emit",
-            "description": "SwipeableRow rows finished loading; payload.data holds the collection.",
+            "description": "SwipeableRow row finished loading; payload.data holds the single row.",
             "synonyms": "loaded, fetched, retrieved",
             "tier": "essential"
           },
           {
             "name": "INIT",
-            "direction": "listen"
+            "direction": "listen",
+            "description": "Mount payload; a host that routes to this panel by id (a :id page param) passes it here.",
+            "tier": "internal"
           }
         ],
         "overridableConfigKeys": [
@@ -75,6 +77,14 @@
                   "required": true,
                   "type": "string"
                 },
+                "roles": {
+                  "name": "roles",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
                 "variant": {
                   "name": "variant",
                   "required": false,
@@ -85,6 +95,11 @@
                     "danger",
                     "ghost"
                   ]
+                },
+                "when": {
+                  "name": "when",
+                  "required": false,
+                  "type": "object"
                 }
               },
               "type": "object"
@@ -119,6 +134,14 @@
                   "required": true,
                   "type": "string"
                 },
+                "roles": {
+                  "name": "roles",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
                 "variant": {
                   "name": "variant",
                   "required": false,
@@ -129,6 +152,11 @@
                     "danger",
                     "ghost"
                   ]
+                },
+                "when": {
+                  "name": "when",
+                  "required": false,
+                  "type": "object"
                 }
               },
               "type": "object"
@@ -138,8 +166,8 @@
             "key": "selfFetch",
             "type": "boolean",
             "default": true,
-            "label": "Fetch its own rows on mount?",
-            "description": "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's.",
+            "label": "Fetch its own row on mount?",
+            "description": "true (default) = a mount that carries an id loads that one row (never the collection); a create-mode mount skips the load. false = a composing atom owns the load.",
             "tier": "internal"
           },
           {
@@ -149,6 +177,14 @@
             "label": "Threshold",
             "description": "threshold prop",
             "tier": "presentation"
+          },
+          {
+            "key": "viewerRole",
+            "type": "string",
+            "default": "",
+            "label": "Viewer's role",
+            "description": "The viewer's role that each action's `roles` is checked against; bind it at the call site (e.g. `viewerRole: @user.role`). Empty = only actions with no `roles` show.",
+            "tier": "policy"
           }
         ],
         "capabilities": [],

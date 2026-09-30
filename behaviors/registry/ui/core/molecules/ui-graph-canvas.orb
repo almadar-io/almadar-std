@@ -136,6 +136,14 @@
                     "required": false,
                     "type": "string"
                   },
+                  "roles": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "name": "roles",
+                    "required": false,
+                    "type": "array"
+                  },
                   "variant": {
                     "name": "variant",
                     "required": false,
@@ -480,6 +488,13 @@
               "description": "Graph title",
               "label": "Title",
               "tier": "presentation",
+              "type": "string"
+            },
+            "viewerRole": {
+              "default": "",
+              "description": "The viewer's role that each action's `roles` is checked against; bind it at the call site (e.g. `viewerRole: @user.role`). Empty = only actions with no `roles` show.",
+              "label": "Viewer's role",
+              "tier": "policy",
               "type": "string"
             }
           },
@@ -1051,7 +1066,40 @@
                     "render-ui",
                     "main",
                     {
-                      "actions": "@config.actions",
+                      "actions": [
+                        "array/filter",
+                        "@config.actions",
+                        [
+                          "fn",
+                          "action",
+                          [
+                            "or",
+                            [
+                              "=",
+                              [
+                                "array/len",
+                                [
+                                  "object/get",
+                                  "@action",
+                                  "roles",
+                                  []
+                                ]
+                              ],
+                              0.0
+                            ],
+                            [
+                              "array/includes",
+                              [
+                                "object/get",
+                                "@action",
+                                "roles",
+                                []
+                              ],
+                              "@config.viewerRole"
+                            ]
+                          ]
+                        ]
+                      ],
                       "className": "@config.className",
                       "draggable": "@config.draggable",
                       "edges": "@config.edges",
@@ -1106,6 +1154,10 @@
           {
             "name": "variant",
             "type": "string"
+          },
+          {
+            "name": "roles",
+            "type": "[string]"
           }
         ],
         "GraphCanvasBADGECLICKNode": [

@@ -1,6 +1,6 @@
 app std-calendar "1.4.0"
 "std-calendar as a Function — owns the fetch + SELECT_DAY state machine; default bodyContent renders the month-grid + upcoming-events tree. `config.calendarLook` switches the body between the default month-grid ('month'), a day-grouped agenda list ('agenda-list'), and a 7-column week timeline ('week-timeline') while inheriting the same trait, state machine, emits, and listens."
-type ItemAction = { label : string!, event : event, navigatesTo : string, variant : primary | secondary | ghost | danger, icon : string }
+type ItemAction = { label : string!, event : event, navigatesTo : string, variant : primary | secondary | ghost | danger, icon : string, roles : [string], when : SExpr }
 type FilterSpec = { field : string!, label : string, options : [string] }
 type FieldSpec = { name : string!, label : string, variant : h3 | h4 | body | caption | badge | small | progress, icon : string, format : date | currency | number | boolean | percent }
 orbital CalendarEventOrbital {
@@ -279,6 +279,10 @@ orbital CalendarEventOrbital {
         @description "Per-item action buttons on agenda-list rows — data-list itemActions descriptors (label/event/icon/variant). Consumers override to wire their own row actions (View/Edit/Delete) so agenda hosts never need a second table for actions."
         @synonyms "agenda actions, row actions, event actions, list actions"
         @tier "presentation"
+      viewerRole : string = ""
+        @label "Viewer's role"
+        @description "The signed-in viewer's role that each action's `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show."
+        @tier "policy"
       agendaGroupBy : string = date
         @label "Agenda group-by field"
         @description "Row field the agenda list groups its day sections by. Rebound hosts point this at their own timestamp column (e.g. startTime, scheduledAt)."
@@ -378,7 +382,7 @@ orbital CalendarEventOrbital {
         }, {
           entity: ?data
           fields: @config.fields
-          itemActions: @config.agendaItemActions
+          itemActions: (array/filter @config.agendaItemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           look: @config.tableLook
           type: data-list
         }]
@@ -446,7 +450,7 @@ orbital CalendarEventOrbital {
           fields: []
           gap: md
           groupBy: @config.agendaGroupBy
-          itemActions: @config.agendaItemActions
+          itemActions: (array/filter @config.agendaItemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           renderItem: (fn item {
             children: [{
               align: start

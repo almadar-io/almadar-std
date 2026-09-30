@@ -1691,13 +1691,6 @@ export function stdCrewBoard2dCrewBoard2DOrbital(params: StdCrewBoard2dCrewBoard
             'tier': 'presentation',
             'type': 'string',
           },
-          'scale': {
-            'default': 1,
-            'description': 'Canvas render scale.',
-            'label': 'Scale',
-            'tier': 'presentation',
-            'type': 'number',
-          },
           'showMinimap': {
             'default': false,
             'description': 'Whether the canvas draws a minimap.',

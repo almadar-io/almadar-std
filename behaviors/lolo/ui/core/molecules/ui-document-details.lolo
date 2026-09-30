@@ -3,7 +3,7 @@ app ui-document-details "1.0.0"
 ;; @capabilities "document settings, page details, post settings sidebar, metadata panel, document properties, publish settings"
 ;; @pattern "document-details"
 orbital DocumentDetailsOrbital {
-    type DocumentDetailsLoaded = Event { data : [DocumentDetailsItem] } "DocumentDetails rows finished loading; payload.data holds the collection"
+    type DocumentDetailsLoaded = Event { data : DocumentDetailsItem } "DocumentDetails row finished loading; payload.data holds the single row"
   type DocumentDetailsFieldsItem = {
     name : string
     key : string
@@ -28,11 +28,11 @@ orbital DocumentDetailsOrbital {
   }
 
   trait DocumentDetailsRender -> @rebindable DocumentDetailsItem [interaction, instance] {
-    initial: idle
+    initial: resolving
 
-    state idle {
-      INIT -> idle when @config.selfFetch
-        (fetch DocumentDetailsItem { emit: { success: DocumentDetailsLoaded } })
+    state resolving {
+      INIT -> idle when (and @config.selfFetch (!= (str/default ?id "") ""))
+        (fetch DocumentDetailsItem { id: ?id, emit: { success: DocumentDetailsLoaded } })
         (render-ui main {
           entity: @entity
           fields: @config.fields
@@ -42,7 +42,20 @@ orbital DocumentDetailsOrbital {
           className: @config.className
           type: document-details
         })
-      INIT -> idle when (not @config.selfFetch)
+      INIT -> idle when (not (and @config.selfFetch (!= (str/default ?id "") "")))
+        (render-ui main {
+          entity: @entity
+          fields: @config.fields
+          metaCommitEvent: @config.metaCommitEvent
+          relationEvent: @config.relationEvent
+          title: @config.title
+          className: @config.className
+          type: document-details
+        })
+    }
+
+    state idle {
+      INIT -> idle
         (render-ui main {
           entity: @entity
           fields: @config.fields
@@ -79,9 +92,17 @@ orbital DocumentDetailsOrbital {
         @description "Makes relation chips clickable: emitted with { field, id, name } when a hydrated relation value (or one row of a many-relation) is clicked — the host routes it to the linked record's own surface."
         @tier "essential"
       DocumentDetailsLoaded
-        @description "DocumentDetails rows finished loading; payload.data holds the collection."
+        @description "DocumentDetails row finished loading; payload.data holds the single row."
         @synonyms "loaded, fetched, retrieved"
         @tier "essential"
+    }
+
+    listens {
+      INIT {
+        id : string
+      }
+        @description "Mount payload; a host that routes to this panel by id (a :id page param) passes it here."
+        @tier "internal"
     }
 
     config {
@@ -106,8 +127,8 @@ orbital DocumentDetailsOrbital {
         @description "className prop"
         @tier "presentation"
       selfFetch : boolean = true
-        @label "Fetch its own rows on mount?"
-        @description "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's."
+        @label "Fetch its own row on mount?"
+        @description "true (default) = a mount that carries an id loads that one row (never the collection); a create-mode mount skips the load. false = a composing atom owns the load."
         @tier "internal"
     }
   }

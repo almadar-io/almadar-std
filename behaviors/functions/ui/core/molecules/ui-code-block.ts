@@ -123,6 +123,8 @@ export interface StdUiCodeBlockConfig {
   /** Default: `false` */
   showLineNumbers?: boolean;
   title?: string;
+  /** Default: `""` */
+  viewerRole?: string;
   /** Default: `false` */
   wordWrap?: boolean;
 }

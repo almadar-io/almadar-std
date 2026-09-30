@@ -62,8 +62,6 @@ export interface StdMlSimilaritySimilarityAbstainedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdMlSimilarityConfig {
-  /** Default: `""` */
-  embedModel?: string;
   /** Default: `0.82` */
   floor?: number;
   /** Default: `0.05` */
@@ -314,13 +312,6 @@ export function stdMlSimilarityMlSimilarityOrbital(params: StdMlSimilarityMlSimi
       {
         'category': 'lifecycle',
         'config': {
-          'embedModel': {
-            'default': '',
-            'description': 'Reserved for embedding-model selection; llm/embed takes only a texts array today, so this knob is not yet wired into the call',
-            'label': 'Embedding model',
-            'tier': 'infra',
-            'type': 'string',
-          },
           'floor': {
             'default': 0.82,
             'description': 'Minimum cosine score for a confident match',

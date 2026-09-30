@@ -1,6 +1,7 @@
 app std-recurrence "2.1.0"
 "std-recurrence — recurring-rule definition + upcoming runs (Stripe Subscriptions / Cron Hub style). The viewing state shows a plain-English rule sentence and the next N dated runs as an agenda timeline. Per-run exception modal supports skip / reschedule. Topology = loading / defining_rule / viewing / awaiting_exception_decision / cancelled / error."
 type ObjectSpec = { id : string, label : string, value : string }
+type ItemAction = { label : string!, event : event, roles : [string] }
 orbital RecurrenceOrbital {
     type OccurrenceItem = { id : string!, title : string!, description : string, date : string, status : "complete" | "active" | "pending" | "error", rawStatus : "scheduled" | "skipped" | "completed" | "rescheduled" }
 
@@ -139,7 +140,7 @@ orbital RecurrenceOrbital {
           }, {
             entity: @entity.occurrences
             fields: (title description date status)
-            itemActions: [{ event: OPEN_EXCEPTION, label: Manage }]
+            itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
             look: @config.timelineLook
             type: timeline
           }, {
@@ -543,6 +544,14 @@ orbital RecurrenceOrbital {
         @label "Timeline look"
         @description "Layer 2 visual treatment for the timeline."
         @tier "presentation"
+      itemActions : [ItemAction] = [{ event: OPEN_EXCEPTION, label: Manage }]
+        @label "Row actions"
+        @description "Actions offered on each row; give an item `roles` to show it only to those viewer roles."
+        @tier "presentation"
+      viewerRole : string = ""
+        @label "Viewer's role"
+        @description "The signed-in viewer's role that each action's `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show."
+        @tier "policy"
     }
   }
 

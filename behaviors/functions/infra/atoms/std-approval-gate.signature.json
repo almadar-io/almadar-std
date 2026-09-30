@@ -346,9 +346,7 @@
           "ApprovalRequestReviewed",
           "ApprovalRequestReviewFailed"
         ],
-        "listenedEvents": [
-          "CLOSE"
-        ],
+        "listenedEvents": [],
         "events": [
           {
             "name": "APPROVE",
@@ -467,15 +465,6 @@
             }
           },
           {
-            "key": "autoApproveBelowThreshold",
-            "type": "boolean",
-            "default": true,
-            "label": "Skip review queue for low-value requests?",
-            "description": "When true, auto-approves requests below the threshold without queuing. v1.0 declarative only.",
-            "synonyms": "auto approve, skip review, bypass queue, automatic approval",
-            "tier": "policy"
-          },
-          {
             "key": "blockSelfApproval",
             "type": "boolean",
             "default": false,
@@ -494,24 +483,68 @@
             "tier": "policy"
           },
           {
-            "key": "escalationHours",
-            "type": "number",
-            "default": 0,
-            "label": "Escalate after how many hours pending?",
-            "description": "Hours a request can sit pending before escalating. v1.0 declarative only.",
-            "synonyms": "escalation time, SLA hours, pending timeout, escalate after",
-            "tier": "policy"
-          },
-          {
-            "key": "escalationRoles",
-            "type": "[string]",
-            "default": [],
-            "label": "Who gets notified when a request escalates?",
-            "description": "Roles notified on escalation (compose sibling std-notify-on-event to deliver).",
-            "synonyms": "escalation contacts, escalate to, notify roles, escalated approver",
-            "tier": "policy",
+            "key": "itemActions",
+            "type": "[ItemAction]",
+            "default": [
+              {
+                "event": "OPEN_SUBJECT",
+                "icon": "eye",
+                "label": "View",
+                "variant": "ghost"
+              },
+              {
+                "event": "APPROVE",
+                "icon": "check",
+                "label": "Approve",
+                "variant": "primary"
+              },
+              {
+                "event": "DENY",
+                "icon": "x",
+                "label": "Deny",
+                "variant": "danger"
+              }
+            ],
+            "label": "Row actions",
+            "description": "Actions offered on each row; give an item `roles` to show it only to those viewer roles.",
+            "tier": "presentation",
             "items": {
-              "type": "string"
+              "properties": {
+                "event": {
+                  "name": "event",
+                  "required": false,
+                  "type": "event"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "roles": {
+                  "name": "roles",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
+                "when": {
+                  "name": "when",
+                  "required": false,
+                  "type": "object"
+                }
+              },
+              "type": "object"
             }
           },
           {
@@ -539,21 +572,12 @@
             ]
           },
           {
-            "key": "threshold",
-            "type": "number",
-            "default": 0,
-            "label": "Auto-approve below this value",
-            "description": "Requests whose gated value is below this threshold are auto-approved. v1.0 declarative only.",
-            "synonyms": "auto approve amount, skip review under, threshold, limit",
-            "tier": "policy"
-          },
-          {
-            "key": "valueField",
+            "key": "viewerRole",
             "type": "string",
             "default": "",
-            "label": "Value field",
-            "description": "Payload field name to compare against threshold (e.g. 'amount' on a RefundRequested event). v1.0 declarative only.",
-            "tier": "internal"
+            "label": "Viewer's role",
+            "description": "The signed-in viewer's role that each action's `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.",
+            "tier": "policy"
           }
         ],
         "capabilities": [
@@ -664,9 +688,7 @@
       "DENY",
       "OPEN_SUBJECT"
     ],
-    "listenedEvents": [
-      "CLOSE"
-    ],
+    "listenedEvents": [],
     "exposure": "both",
     "provenance": "authored",
     "sourceValid": true

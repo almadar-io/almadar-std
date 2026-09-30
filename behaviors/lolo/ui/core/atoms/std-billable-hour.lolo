@@ -1,8 +1,12 @@
 app std-billable-hour "1.0.0"
 "std-billable-hour — generic billable-hour timesheet primitive for legal, agency, and consulting domains. Lists entries in `browsing`; opens entry detail in `viewing_single` with Invoice / Write Off actions."
-type ItemAction = { label : string!, event : event, navigatesTo : string, variant : string, icon : string }
+type ItemAction = { label : string!, event : event, navigatesTo : string, variant : string, icon : string, roles : [string], when : SExpr }
 type ColumnSpec = { key : string!, field : string, header : string, width : string, align : string, className : string, weight : string, format : string, icon : string }
 orbital BillableHourOrbital {
+  uses RoleGate from "std/behaviors/std-role-gate"
+
+  uses Button from "std/behaviors/ui-button"
+
   uses TableView from "std/behaviors/ui-table-view"
 
     type BillableHourLoaded = Event { data : [BillableHour] } "Fired when the billable-hour collection finishes loading"
@@ -28,6 +32,7 @@ orbital BillableHourOrbital {
       columns: @config.columns
       emptyMessage: "No time entries"
       itemActions: @config.itemActions
+      viewerRole: @config.viewerRole
       look: @config.tableLook
       maxInlineActions: 2
       selfFetch: false
@@ -199,19 +204,7 @@ orbital BillableHourOrbital {
             type: simple-grid
           }, {
             align: center
-            children: [{
-              action: INVOICE_HOURS
-              actionPayload: { id: @entity.id }
-              label: Invoice
-              type: button
-              variant: primary
-            }, {
-              action: WRITE_OFF_HOURS
-              actionPayload: { id: @entity.id }
-              label: "Write Off"
-              type: button
-              variant: danger
-            }]
+            children: [<RoleGate.traits.RoleGate linkedEntity={BillableHour} roles={@config.invoiceRoles} viewerRole={@config.viewerRole} content={<Button.traits.ButtonRender linkedEntity={BillableHour} action={INVOICE_HOURS} actionPayload={{ id: ?row.id }} label={Invoice} variant={primary} />} />, <RoleGate.traits.RoleGate linkedEntity={BillableHour} roles={@config.writeOffRoles} viewerRole={@config.viewerRole} content={<Button.traits.ButtonRender linkedEntity={BillableHour} action={WRITE_OFF_HOURS} actionPayload={{ id: ?row.id }} label={"Write Off"} variant={danger} />} />]
             direction: horizontal
             gap: sm
             type: stack
@@ -448,10 +441,22 @@ orbital BillableHourOrbital {
         @label "Row actions"
         @description "Per-row actions rendered by the hours table."
         @tier "presentation"
+      viewerRole : string = ""
+        @label "Viewer's role"
+        @description "The signed-in viewer's role that each action's `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show."
+        @tier "policy"
       statLook : "elevated" | "flat" | "progress-backed" | "gauge" | "sparkline" = elevated
         @label "Stat display look"
         @description "Layer 2 visual treatment for stat / KPI cards."
         @tier "presentation"
+      invoiceRoles : [string] = []
+        @label "Roles that can invoice"
+        @description "Roles (matched against viewerRole) that see the Invoice button. Empty = everyone."
+        @tier "policy"
+      writeOffRoles : [string] = []
+        @label "Roles that can write off"
+        @description "Roles (matched against viewerRole) that see the Write Off button. Empty = everyone."
+        @tier "policy"
     }
   }
 

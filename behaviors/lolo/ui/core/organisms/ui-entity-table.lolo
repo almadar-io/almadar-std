@@ -32,6 +32,8 @@ orbital EntityTableOrbital {
     placement : string
     icon : icon
     variant : string
+    when : SExpr
+    roles : [string]
   }
   type EntityTableEmptyAction = {
     label : string!
@@ -42,12 +44,15 @@ orbital EntityTableOrbital {
     icon : icon
     variant : "default" | "danger"
     event : event
+    when : SExpr
+    roles : [string]
   }
   type EntityTableBulkActionsItem = {
     label : string!
     icon : icon
     variant : "default" | "danger"
     event : event
+    roles : [string]
   }
   type EntityTableRelationsDataValueItem = {
     value : string!
@@ -81,7 +86,7 @@ orbital EntityTableOrbital {
           entity: @entity
           fields: @config.fields
           columns: @config.columns
-          itemActions: @config.itemActions
+          itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           emptyIcon: @config.emptyIcon
           emptyTitle: @config.emptyTitle
           emptyDescription: @config.emptyDescription
@@ -89,8 +94,8 @@ orbital EntityTableOrbital {
           selectable: @config.selectable
           searchable: @config.searchable
           searchPlaceholder: @config.searchPlaceholder
-          rowActions: @config.rowActions
-          bulkActions: @config.bulkActions
+          rowActions: (array/filter @config.rowActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
+          bulkActions: (array/filter @config.bulkActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           headerActions: @config.headerActions
           showTotal: @config.showTotal
           look: @config.look
@@ -113,7 +118,7 @@ orbital EntityTableOrbital {
           entity: @entity
           fields: @config.fields
           columns: @config.columns
-          itemActions: @config.itemActions
+          itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           emptyIcon: @config.emptyIcon
           emptyTitle: @config.emptyTitle
           emptyDescription: @config.emptyDescription
@@ -121,8 +126,8 @@ orbital EntityTableOrbital {
           selectable: @config.selectable
           searchable: @config.searchable
           searchPlaceholder: @config.searchPlaceholder
-          rowActions: @config.rowActions
-          bulkActions: @config.bulkActions
+          rowActions: (array/filter @config.rowActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
+          bulkActions: (array/filter @config.bulkActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           headerActions: @config.headerActions
           showTotal: @config.showTotal
           look: @config.look
@@ -145,7 +150,7 @@ orbital EntityTableOrbital {
           entity: @payload.data
           fields: @config.fields
           columns: @config.columns
-          itemActions: @config.itemActions
+          itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           emptyIcon: @config.emptyIcon
           emptyTitle: @config.emptyTitle
           emptyDescription: @config.emptyDescription
@@ -153,8 +158,8 @@ orbital EntityTableOrbital {
           selectable: @config.selectable
           searchable: @config.searchable
           searchPlaceholder: @config.searchPlaceholder
-          rowActions: @config.rowActions
-          bulkActions: @config.bulkActions
+          rowActions: (array/filter @config.rowActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
+          bulkActions: (array/filter @config.bulkActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           headerActions: @config.headerActions
           showTotal: @config.showTotal
           look: @config.look
@@ -286,6 +291,10 @@ orbital EntityTableOrbital {
         @label "Relations Data"
         @description "Relation display data: { fieldName: [{value, label}] } — injected server-side by the runtime (relation-option injection) or bound by compiled codegen; resolves stored foreign ids to display names for a column whose field is relation-typed. Same contract DetailPanel takes."
         @tier "presentation"
+      viewerRole : string = ""
+        @label "Viewer's role"
+        @description "The viewer's role that each action's `roles` is checked against; bind it at the call site (e.g. `viewerRole: @user.role`). Empty = only actions with no `roles` show."
+        @tier "policy"
       selfFetch : boolean = true
         @label "Fetch its own rows on mount?"
         @description "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's."

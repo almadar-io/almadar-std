@@ -115,7 +115,7 @@ orbital StatsItemOrbital {
         @description "One stat card per entry; declares aggregation, format, and styling"
         @synonyms "list of KPI cards / stat tiles / metric cards. each entry has label / value / format / icon / variant / aggregation. user phrases: 'replace metrics with X, Y, Z' -> rewrite array; 'add Revenue tile' -> append entry; 'change KPIs to X' -> rewrite array"
         @tier "presentation"
-      title : string = Summary
+      title : string = ""
         @label "Section title"
         @description "Heading shown above the stat-card grid"
         @synonyms "the section header text. user phrases: 'rename section to X' / 'title the KPIs X' / 'change section title to X' -> X"
@@ -137,7 +137,7 @@ orbital StatsItemOrbital {
         @label "Stats look"
         @description "Layer 3 body layout: default per-metric stat-card grid ('cards'), Stripe-dashboard KPI tile row ('kpi-tiles'), single oversize hero number ('hero-metric'), or chart-first sparkline tile grid ('sparkline-row')."
         @tier "presentation"
-      bodyContent : render-ui = { data-theme: @config.theme, type: box, children: [{
+      bodyContent : render-ui = { data-theme: @config.theme, type: box, children: [(if ["!=", @config.title, ""] { content: @config.title, type: typography, variant: h3 } { children: [], gap: none, type: stack }), {
         entity: @entity.cards
         fields: []
         renderItem: (fn card {
@@ -163,7 +163,7 @@ orbital StatsItemOrbital {
         @label "Body content tree"
         @description "Render-ui SExpr rendered after metrics aggregate for statsLook='cards' — the canonical data-grid call mapping @entity.cards through stat-display. Other statsLook values render kpiTilesBodyContent / heroMetricBodyContent / sparklineRowBodyContent instead; all four share this trait's state machine, aggregation pipeline, and listens."
         @tier "internal"
-      kpiTilesBodyContent : render-ui = { data-theme: @config.theme, type: box, children: [{
+      kpiTilesBodyContent : render-ui = { data-theme: @config.theme, type: box, children: [(if ["!=", @config.title, ""] { content: @config.title, type: typography, variant: h3 } { children: [], gap: none, type: stack }), {
         className: w-full
         entity: @entity.cards
         fields: []
@@ -239,7 +239,7 @@ orbital StatsItemOrbital {
         @label "KPI tiles body content tree"
         @description "Render-ui SExpr for statsLook='kpi-tiles' — Stripe-dashboard style tile grid: huge typography number, label, trend indicator, sparkline hint."
         @tier "internal"
-      heroMetricBodyContent : render-ui = { data-theme: @config.theme, type: box, children: [{
+      heroMetricBodyContent : render-ui = { data-theme: @config.theme, type: box, children: [(if ["!=", @config.title, ""] { content: @config.title, type: typography, variant: h3 } { children: [], gap: none, type: stack }), {
         entity: @entity.cards
         fields: []
         gap: none
@@ -324,7 +324,7 @@ orbital StatsItemOrbital {
         @label "Hero metric body content tree"
         @description "Render-ui SExpr for statsLook='hero-metric' — one elevated card, one oversize number, background sparkline."
         @tier "internal"
-      sparklineRowBodyContent : render-ui = { data-theme: @config.theme, type: box, children: [{
+      sparklineRowBodyContent : render-ui = { data-theme: @config.theme, type: box, children: [(if ["!=", @config.title, ""] { content: @config.title, type: typography, variant: h3 } { children: [], gap: none, type: stack }), {
         className: w-full
         entity: @entity.cards
         fields: []

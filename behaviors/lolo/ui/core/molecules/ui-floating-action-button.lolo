@@ -8,6 +8,7 @@ orbital FloatingActionButtonOrbital {
     icon : icon!
     event : event
     variant : "primary" | "secondary" | "success" | "danger" | "warning"
+    roles : [string]
   }
 
   entity FloatingActionButtonItem [runtime] {
@@ -22,7 +23,7 @@ orbital FloatingActionButtonOrbital {
         (render-ui main {
           action: @config.action
           actionPayload: @config.actionPayload
-          actions: @config.actions
+          actions: (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           icon: @config.icon
           onClick: @config.onClick
           variant: @config.variant
@@ -79,6 +80,10 @@ orbital FloatingActionButtonOrbital {
         @label "Class Name"
         @description "Additional CSS classes"
         @tier "presentation"
+      viewerRole : string = ""
+        @label "Viewer's role"
+        @description "The viewer's role that each action's `roles` is checked against; bind it at the call site (e.g. `viewerRole: @user.role`). Empty = only actions with no `roles` show."
+        @tier "policy"
     }
   }
 

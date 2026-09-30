@@ -57,6 +57,8 @@ export interface StdUiBreadcrumbConfig {
   items?: EntityRow[];
   maxItems?: number;
   separator?: unknown;
+  /** Default: `""` */
+  viewerRole?: string;
 }
 
 /**

@@ -218,6 +218,22 @@
         "kind": "trait",
         "owner": "workspace",
         "renames": []
+      },
+      "trt_01M3SFBP29125B6XWS09H2479Q": {
+        "bakedName": "ListItemCreateButton",
+        "curName": "ListItemCreateButton",
+        "id": "trt_01M3SFBP29125B6XWS09H2479Q",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M3SFBP2919B7ZZAVP0866HMK": {
+        "bakedName": "ListItemCreateGate",
+        "curName": "ListItemCreateGate",
+        "id": "trt_01M3SFBP2919B7ZZAVP0866HMK",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
       }
     },
     "schemaVersion": 1
@@ -317,6 +333,16 @@
               "tier": "presentation",
               "type": "boolean"
             },
+            "createRoles": {
+              "default": [],
+              "description": "Roles (matched against viewerRole) that see the Create button. Empty = everyone.",
+              "items": {
+                "type": "string"
+              },
+              "label": "Roles that can create",
+              "tier": "policy",
+              "type": "[string]"
+            },
             "displayPageSize": {
               "default": 20.0,
               "description": "Rows visible per page before the data-grid's own pagination control appears — 20 matches the CRUD-list density sweet spot (Miller's law, 10-25 rows).",
@@ -371,6 +397,57 @@
               "tier": "presentation",
               "type": "[FilterSpec]"
             },
+            "itemActions": {
+              "default": [
+                {
+                  "event": "EDIT",
+                  "label": "Edit",
+                  "variant": "ghost"
+                },
+                {
+                  "event": "DELETE",
+                  "label": "Delete",
+                  "variant": "danger"
+                }
+              ],
+              "description": "Actions offered on each row; give an item `roles` to show it only to those viewer roles.",
+              "items": {
+                "properties": {
+                  "event": {
+                    "name": "event",
+                    "required": false,
+                    "type": "event"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "roles": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "name": "roles",
+                    "required": false,
+                    "type": "array"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "when": {
+                    "name": "when",
+                    "required": false,
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Row actions",
+              "tier": "presentation",
+              "type": "[ItemAction]"
+            },
             "pageSize": {
               "default": 20.0,
               "description": "Records fetched from the server per REFETCH_PAGE request. The initial load and search/filter refetches remain unpaginated (load everything that matches) unless a consumer wires REFETCH_PAGE, so the default list surface is unchanged.",
@@ -393,6 +470,13 @@
               "label": "Search box placeholder text",
               "synonyms": "search hint, placeholder, search box text",
               "tier": "presentation",
+              "type": "string"
+            },
+            "viewerRole": {
+              "default": "",
+              "description": "The signed-in viewer's role that each action's `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.",
+              "label": "Viewer's role",
+              "tier": "policy",
               "type": "string"
             }
           },
@@ -908,13 +992,7 @@
                               "gap": "md",
                               "type": "stack"
                             },
-                            {
-                              "action": "CREATE",
-                              "icon": "plus",
-                              "label": "Create",
-                              "type": "button",
-                              "variant": "primary"
-                            }
+                            "@trait.ListItemCreateGate"
                           ],
                           "direction": "horizontal",
                           "gap": "md",
@@ -998,16 +1076,38 @@
                             }
                           ],
                           "itemActions": [
-                            {
-                              "event": "EDIT",
-                              "label": "Edit",
-                              "variant": "ghost"
-                            },
-                            {
-                              "event": "DELETE",
-                              "label": "Delete",
-                              "variant": "danger"
-                            }
+                            "array/filter",
+                            "@config.itemActions",
+                            [
+                              "fn",
+                              "action",
+                              [
+                                "or",
+                                [
+                                  "=",
+                                  [
+                                    "array/len",
+                                    [
+                                      "object/get",
+                                      "@action",
+                                      "roles",
+                                      []
+                                    ]
+                                  ],
+                                  0.0
+                                ],
+                                [
+                                  "array/includes",
+                                  [
+                                    "object/get",
+                                    "@action",
+                                    "roles",
+                                    []
+                                  ],
+                                  "@config.viewerRole"
+                                ]
+                              ]
+                            ]
                           ],
                           "pageSize": "@config.displayPageSize",
                           "type": "data-grid"
@@ -1241,13 +1341,7 @@
                               "gap": "md",
                               "type": "stack"
                             },
-                            {
-                              "action": "CREATE",
-                              "icon": "plus",
-                              "label": "Create",
-                              "type": "button",
-                              "variant": "primary"
-                            }
+                            "@trait.ListItemCreateGate"
                           ],
                           "direction": "horizontal",
                           "gap": "md",
@@ -1331,16 +1425,38 @@
                             }
                           ],
                           "itemActions": [
-                            {
-                              "event": "EDIT",
-                              "label": "Edit",
-                              "variant": "ghost"
-                            },
-                            {
-                              "event": "DELETE",
-                              "label": "Delete",
-                              "variant": "danger"
-                            }
+                            "array/filter",
+                            "@config.itemActions",
+                            [
+                              "fn",
+                              "action",
+                              [
+                                "or",
+                                [
+                                  "=",
+                                  [
+                                    "array/len",
+                                    [
+                                      "object/get",
+                                      "@action",
+                                      "roles",
+                                      []
+                                    ]
+                                  ],
+                                  0.0
+                                ],
+                                [
+                                  "array/includes",
+                                  [
+                                    "object/get",
+                                    "@action",
+                                    "roles",
+                                    []
+                                  ],
+                                  "@config.viewerRole"
+                                ]
+                              ]
+                            ]
                           ],
                           "pageSize": "@config.displayPageSize",
                           "type": "data-grid"
@@ -1409,7 +1525,52 @@
                 "to": "loading"
               }
             ]
+          },
+          "traitEmbedIds": {
+            "ListItemCreateGate": "trt_01M3SFBP2919B7ZZAVP0866HMK"
           }
+        },
+        {
+          "config": {
+            "action": {
+              "default": "CREATE",
+              "type": "unknown"
+            },
+            "icon": {
+              "default": "plus",
+              "type": "unknown"
+            },
+            "label": {
+              "default": "Create",
+              "type": "unknown"
+            },
+            "variant": {
+              "default": "primary",
+              "type": "unknown"
+            }
+          },
+          "id": "trt_01M3SFBP29125B6XWS09H2479Q",
+          "name": "ListItemCreateButton",
+          "ref": "Button.traits.ButtonRender"
+        },
+        {
+          "config": {
+            "content": {
+              "default": "@trait.ListItemCreateButton",
+              "type": "unknown"
+            },
+            "roles": {
+              "default": "@config.createRoles",
+              "type": "unknown"
+            },
+            "viewerRole": {
+              "default": "@config.viewerRole",
+              "type": "unknown"
+            }
+          },
+          "id": "trt_01M3SFBP2919B7ZZAVP0866HMK",
+          "name": "ListItemCreateGate",
+          "ref": "RoleGate.traits.RoleGate"
         },
         {
           "config": {
@@ -1876,9 +2037,40 @@
             "name": "options",
             "type": "[string]"
           }
+        ],
+        "ItemAction": [
+          {
+            "name": "label",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "event",
+            "type": "event"
+          },
+          {
+            "name": "variant",
+            "type": "string"
+          },
+          {
+            "name": "roles",
+            "type": "[string]"
+          },
+          {
+            "name": "when",
+            "type": "SExpr"
+          }
         ]
       },
       "uses": [
+        {
+          "as": "RoleGate",
+          "from": "std/behaviors/std-role-gate"
+        },
+        {
+          "as": "Button",
+          "from": "std/behaviors/ui-button"
+        },
         {
           "as": "Confirmation",
           "from": "std/behaviors/std-confirmation"

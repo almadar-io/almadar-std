@@ -49,6 +49,8 @@ export interface StdBrowseConfig {
   selfFetch?: unknown;
   /** Default: `"compact"` */
   variant?: unknown;
+  /** Default: `"@config.viewerRole"` */
+  viewerRole?: unknown;
 }
 
 /**
@@ -276,6 +278,10 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
             'default': 'compact',
             'type': 'unknown',
           },
+          'viewerRole': {
+            'default': '@config.viewerRole',
+            'type': 'unknown',
+          },
         },
         'linkedEntity': 'BrowseItem',
         'listens': [
@@ -294,13 +300,6 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
       {
         'category': 'interaction',
         'config': {
-          'assigneeBinding': {
-            'default': '@item.assignee',
-            'description': 'Binding path for the assignee/owner slot.',
-            'label': 'Assignee field binding',
-            'tier': 'internal',
-            'type': 'string',
-          },
           'badgeBinding': {
             'default': '@item.status',
             'description': 'Binding path for the status/badge slot.',
@@ -366,11 +365,47 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                 ],
                 {
                   'cols': '@config.cols',
+                  'emptyDescription': '@config.emptyDescription',
+                  'emptyIcon': '@config.emptyIcon',
+                  'emptyTitle': '@config.emptyTitle',
                   'entity': '@payload.data',
                   'fields': '@config.fields',
                   'gap': '@config.gap',
                   'imageField': '@config.imageField',
-                  'itemActions': '@config.itemActions',
+                  'itemActions': [
+                    'array/filter',
+                    '@config.itemActions',
+                    [
+                      'fn',
+                      'item',
+                      [
+                        'or',
+                        [
+                          '=',
+                          [
+                            'array/len',
+                            [
+                              'object/get',
+                              '@item',
+                              'roles',
+                              [],
+                            ],
+                          ],
+                          0,
+                        ],
+                        [
+                          'array/includes',
+                          [
+                            'object/get',
+                            '@item',
+                            'roles',
+                            [],
+                          ],
+                          '@config.viewerRole',
+                        ],
+                      ],
+                    ],
+                  ],
                   'maxInlineActions': '@config.maxInlineActions',
                   'pageSize': '@config.displayPageSize',
                   'type': 'data-grid',
@@ -580,9 +615,44 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                   'children': [
                     {
                       'columns': '@config.columns',
-                      'emptyMessage': 'No records',
+                      'emptyDescription': '@config.emptyDescription',
+                      'emptyIcon': '@config.emptyIcon',
+                      'emptyTitle': '@config.emptyTitle',
                       'entity': '@payload.data',
-                      'itemActions': '@config.itemActions',
+                      'itemActions': [
+                        'array/filter',
+                        '@config.itemActions',
+                        [
+                          'fn',
+                          'item',
+                          [
+                            'or',
+                            [
+                              '=',
+                              [
+                                'array/len',
+                                [
+                                  'object/get',
+                                  '@item',
+                                  'roles',
+                                  [],
+                                ],
+                              ],
+                              0,
+                            ],
+                            [
+                              'array/includes',
+                              [
+                                'object/get',
+                                '@item',
+                                'roles',
+                                [],
+                              ],
+                              '@config.viewerRole',
+                            ],
+                          ],
+                        ],
+                      ],
                       'itemClickEvent': '@config.itemClickEvent',
                       'look': 'dense',
                       'maxInlineActions': '@config.maxInlineActions',
@@ -639,10 +709,23 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                   'required': true,
                   'type': 'string',
                 },
+                'roles': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'roles',
+                  'required': false,
+                  'type': 'array',
+                },
                 'variant': {
                   'name': 'variant',
                   'required': false,
                   'type': 'string',
+                },
+                'when': {
+                  'name': 'when',
+                  'required': false,
+                  'type': 'object',
                 },
               },
               'type': 'object',
@@ -675,6 +758,30 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
             'synonyms': 'visible rows, items per page, display limit, show per page',
             'tier': 'presentation',
             'type': 'number',
+          },
+          'emptyDescription': {
+            'default': '',
+            'description': 'What will appear here once rows exist.',
+            'label': 'Empty-state description',
+            'synonyms': 'empty text, no data message, empty hint',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'emptyIcon': {
+            'default': 'inbox',
+            'description': 'Domain icon shown when there are no rows.',
+            'label': 'Empty-state icon',
+            'synonyms': 'empty icon, no data icon',
+            'tier': 'presentation',
+            'type': 'icon',
+          },
+          'emptyTitle': {
+            'default': '',
+            'description': 'Specific title shown when there are no rows ("No orders yet"). Left blank, a generic line shows.',
+            'label': 'Empty-state title',
+            'synonyms': 'empty title, no data title, empty heading',
+            'tier': 'presentation',
+            'type': 'string',
           },
           'feedBodyContent': {
             'default': {
@@ -736,10 +843,46 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                   },
                 ],
                 {
+                  'emptyDescription': '@config.emptyDescription',
+                  'emptyIcon': '@config.emptyIcon',
+                  'emptyTitle': '@config.emptyTitle',
                   'entity': '@payload.data',
                   'fields': [],
                   'gap': 'md',
-                  'itemActions': '@config.itemActions',
+                  'itemActions': [
+                    'array/filter',
+                    '@config.itemActions',
+                    [
+                      'fn',
+                      'item',
+                      [
+                        'or',
+                        [
+                          '=',
+                          [
+                            'array/len',
+                            [
+                              'object/get',
+                              '@item',
+                              'roles',
+                              [],
+                            ],
+                          ],
+                          0,
+                        ],
+                        [
+                          'array/includes',
+                          [
+                            'object/get',
+                            '@item',
+                            'roles',
+                            [],
+                          ],
+                          '@config.viewerRole',
+                        ],
+                      ],
+                    ],
+                  ],
                   'renderItem': [
                     'fn',
                     'item',
@@ -1027,11 +1170,47 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                 ],
                 {
                   'className': 'w-full',
+                  'emptyDescription': '@config.emptyDescription',
+                  'emptyIcon': '@config.emptyIcon',
+                  'emptyTitle': '@config.emptyTitle',
                   'entity': '@payload.data',
                   'fields': '@config.fields',
                   'gap': 'lg',
                   'imageField': '@config.imageField',
-                  'itemActions': '@config.itemActions',
+                  'itemActions': [
+                    'array/filter',
+                    '@config.itemActions',
+                    [
+                      'fn',
+                      'item',
+                      [
+                        'or',
+                        [
+                          '=',
+                          [
+                            'array/len',
+                            [
+                              'object/get',
+                              '@item',
+                              'roles',
+                              [],
+                            ],
+                          ],
+                          0,
+                        ],
+                        [
+                          'array/includes',
+                          [
+                            'object/get',
+                            '@item',
+                            'roles',
+                            [],
+                          ],
+                          '@config.viewerRole',
+                        ],
+                      ],
+                    ],
+                  ],
                   'maxInlineActions': '@config.maxInlineActions',
                   'minCardWidth': 260,
                   'type': 'data-grid',
@@ -1061,13 +1240,6 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
             'label': 'Which field holds the row image?',
             'synonyms': 'image field, thumbnail field, photo field, picture column',
             'tier': 'presentation',
-            'type': 'string',
-          },
-          'imageLabelBinding': {
-            'default': '@item.thumbnailLabel',
-            'description': 'Binding path for the image-area label slot.',
-            'label': 'Image label binding',
-            'tier': 'internal',
             'type': 'string',
           },
           'include': {
@@ -1122,6 +1294,14 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                   'required': false,
                   'type': 'string',
                 },
+                'roles': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'roles',
+                  'required': false,
+                  'type': 'array',
+                },
                 'variant': {
                   'name': 'variant',
                   'required': false,
@@ -1132,6 +1312,11 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                     'ghost',
                     'danger',
                   ],
+                },
+                'when': {
+                  'name': 'when',
+                  'required': false,
+                  'type': 'object',
                 },
               },
               'type': 'object',
@@ -1302,7 +1487,40 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                 ],
                 {
                   'detail': {
-                    'actions': '@config.detailActions',
+                    'actions': [
+                      'array/filter',
+                      '@config.detailActions',
+                      [
+                        'fn',
+                        'action',
+                        [
+                          'or',
+                          [
+                            '=',
+                            [
+                              'array/len',
+                              [
+                                'object/get',
+                                '@action',
+                                'roles',
+                                [],
+                              ],
+                            ],
+                            0,
+                          ],
+                          [
+                            'array/includes',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                            '@config.viewerRole',
+                          ],
+                        ],
+                      ],
+                    ],
                     'fieldNames': '@config.detailFields',
                     'initialData': '@payload.row',
                     'showActions': true,
@@ -1367,20 +1585,6 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
             'synonyms': 'fetch limit, records per page, batch size, page limit',
             'tier': 'presentation',
             'type': 'number',
-          },
-          'priceBinding': {
-            'default': '@item.price',
-            'description': 'Binding path for the price/amount overlay slot.',
-            'label': 'Price field binding',
-            'tier': 'internal',
-            'type': 'string',
-          },
-          'priorityBinding': {
-            'default': '@item.priority',
-            'description': 'Binding path for the priority slot.',
-            'label': 'Priority field binding',
-            'tier': 'internal',
-            'type': 'string',
           },
           'scopeField': {
             'default': '',
@@ -1482,9 +1686,45 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
                 {
                   'children': [
                     {
+                      'emptyDescription': '@config.emptyDescription',
+                      'emptyIcon': '@config.emptyIcon',
+                      'emptyTitle': '@config.emptyTitle',
                       'entity': '@payload.data',
                       'fields': '@config.fields',
-                      'itemActions': '@config.itemActions',
+                      'itemActions': [
+                        'array/filter',
+                        '@config.itemActions',
+                        [
+                          'fn',
+                          'item',
+                          [
+                            'or',
+                            [
+                              '=',
+                              [
+                                'array/len',
+                                [
+                                  'object/get',
+                                  '@item',
+                                  'roles',
+                                  [],
+                                ],
+                              ],
+                              0,
+                            ],
+                            [
+                              'array/includes',
+                              [
+                                'object/get',
+                                '@item',
+                                'roles',
+                                [],
+                              ],
+                              '@config.viewerRole',
+                            ],
+                          ],
+                        ],
+                      ],
                       'maxInlineActions': '@config.maxInlineActions',
                       'type': 'data-list',
                       'variant': 'compact',
@@ -1506,12 +1746,12 @@ export function stdBrowseBrowseItemOrbital(params: StdBrowseBrowseItemOrbitalPar
             'tier': 'internal',
             'type': 'render-ui',
           },
-          'viewPattern': {
-            'default': 'data-grid',
-            'description': 'UI pattern used to render the collection. Used by the default bodyContent tree; Layer 3 variants override bodyContent directly instead and may ignore this knob.',
-            'label': 'Render pattern',
-            'tier': 'internal',
-            'type': 'pattern',
+          'viewerRole': {
+            'default': '',
+            'description': 'The signed-in viewer\'s role that each row action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
+            'label': 'Viewer\'s role',
+            'tier': 'policy',
+            'type': 'string',
           },
         },
         'effectRow': [

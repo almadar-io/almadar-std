@@ -19,6 +19,8 @@ orbital DrawerOrbital {
       OPEN -> open
         (render-ui drawer {
           isOpen: @config.isOpen
+          onExited: @config.onExited
+          contained: @config.contained
           onClose: @config.onClose
           title: @config.title
           children: @config.children
@@ -45,6 +47,9 @@ orbital DrawerOrbital {
     }
 
     emits {
+      @config.onExited -> external { }
+        @description "Fires after the exit animation completes (the drawer is about to unmount)."
+        @tier "essential"
       @config.onClose -> external { }
         @description "Callback when drawer should close (injected by slot wrapper)"
         @tier "essential"
@@ -59,6 +64,14 @@ orbital DrawerOrbital {
       isOpen : boolean = true
         @label "Is Open"
         @description "Whether the drawer is open (defaults to true when rendered by slot wrapper)"
+        @tier "presentation"
+      onExited : event = "EXITED"
+        @label "On Exited"
+        @description "Fires after the exit animation completes (the drawer is about to unmount)."
+        @tier "presentation"
+      contained : boolean = false
+        @label "Contained"
+        @description "Render inside the nearest positioned ancestor (a preview frame) instead of over the window."
         @tier "presentation"
       onClose : event = "CLOSE"
         @label "On Close"

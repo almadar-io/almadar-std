@@ -283,14 +283,6 @@ export function stdExportExportOrbital(params: StdExportExportOrbitalParams = {}
             'tier': 'presentation',
             'type': 'string',
           },
-          'event': {
-            'default': 'EXPORT_REQUESTED',
-            'description': 'Event emitted when the user picks a format. Each entry in formats[] carries its own literal event field (no per-item templating in .lolo) — overriding this alone does not retarget the click; also set formats[].event to match.',
-            'label': 'Export event',
-            'synonyms': 'bus event name. internal wiring; users rarely target directly',
-            'tier': 'internal',
-            'type': 'string',
-          },
           'formats': {
             'default': [
               {
@@ -347,14 +339,6 @@ export function stdExportExportOrbital(params: StdExportExportOrbitalParams = {}
             'synonyms': 'list of export format entries (csv / xlsx / pdf / png / json). user phrases: \'only CSV\' -> keep only csv entry; \'add JSON\' -> append json entry; \'no PNG\' -> remove png; \'allow X and Y\' -> set the array to those two',
             'tier': 'presentation',
             'type': '[FormatOption]',
-          },
-          'tileId': {
-            'default': '',
-            'description': 'Identifier of the dashboard tile being exported',
-            'label': 'Tile id',
-            'synonyms': 'internal identifier — host orbital wires this; users rarely set it directly',
-            'tier': 'internal',
-            'type': 'string',
           },
         },
         'effectRow': [

@@ -74,6 +74,7 @@
           "CANCEL",
           "SavedSearchLoaded",
           "SavedSearchLoadFailed",
+          "SavedSearchCreated",
           "SavedSearchUpdated",
           "SavedSearchDeleted"
         ],
@@ -143,6 +144,13 @@
             "tier": "internal"
           },
           {
+            "name": "SavedSearchCreated",
+            "direction": "emit",
+            "description": "Indicates the current search has been saved as a new row.",
+            "synonyms": "saved, created, bookmarked",
+            "tier": "presentation"
+          },
+          {
             "name": "SavedSearchUpdated",
             "direction": "emit",
             "description": "Indicates a saved search has been modified and persisted.",
@@ -159,9 +167,103 @@
           {
             "name": "INIT",
             "direction": "listen"
+          },
+          {
+            "name": "TRACK_QUERY",
+            "direction": "listen",
+            "description": "The page's current search text changed.",
+            "synonyms": "search changed, query changed, typed search",
+            "tier": "domain"
+          },
+          {
+            "name": "TRACK_FILTERS",
+            "direction": "listen",
+            "description": "The page's current filters changed.",
+            "synonyms": "filters changed, criteria changed",
+            "tier": "domain"
+          },
+          {
+            "name": "SAVE_CURRENT",
+            "direction": "listen",
+            "description": "Save the page's current search and filters as a new saved search.",
+            "synonyms": "save search, bookmark search, remember search",
+            "tier": "domain"
           }
         ],
         "overridableConfigKeys": [
+          {
+            "key": "defaultSearchName",
+            "type": "string",
+            "default": "Saved search",
+            "label": "Default saved-search name",
+            "description": "Name given to a saved search when the current search has no query text (filters only). Renamable afterwards.",
+            "tier": "presentation"
+          },
+          {
+            "key": "itemActions",
+            "type": "[ItemAction]",
+            "default": [
+              {
+                "event": "TOGGLE_ALERT",
+                "icon": "bell",
+                "label": "Toggle alert",
+                "variant": "secondary"
+              },
+              {
+                "event": "EDIT",
+                "icon": "pencil",
+                "label": "Edit",
+                "variant": "secondary"
+              },
+              {
+                "event": "DELETE",
+                "icon": "trash-2",
+                "label": "Delete",
+                "variant": "danger"
+              }
+            ],
+            "label": "Row actions",
+            "description": "Actions offered on each row; give an item `roles` to show it only to those viewer roles.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "event": {
+                  "name": "event",
+                  "required": false,
+                  "type": "event"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "roles": {
+                  "name": "roles",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
+                "when": {
+                  "name": "when",
+                  "required": false,
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            }
+          },
           {
             "key": "tableLook",
             "type": "string",
@@ -184,6 +286,14 @@
             "label": "Section title",
             "description": "Heading shown above the saved-search list",
             "tier": "presentation"
+          },
+          {
+            "key": "viewerRole",
+            "type": "string",
+            "default": "",
+            "label": "Viewer's role",
+            "description": "The signed-in viewer's role that each action's `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.",
+            "tier": "policy"
           }
         ],
         "capabilities": [],
@@ -196,11 +306,15 @@
           "INIT",
           "RENAME",
           "SAVE",
+          "SAVE_CURRENT",
+          "SavedSearchCreated",
           "SavedSearchDeleted",
           "SavedSearchLoadFailed",
           "SavedSearchLoaded",
           "SavedSearchUpdated",
-          "TOGGLE_ALERT"
+          "TOGGLE_ALERT",
+          "TRACK_FILTERS",
+          "TRACK_QUERY"
         ],
         "definerKnobs": [],
         "effectRow": [
@@ -226,11 +340,19 @@
           },
           {
             "kind": "set",
+            "resource": "@entity.filters"
+          },
+          {
+            "kind": "set",
             "resource": "@entity.id"
           },
           {
             "kind": "set",
             "resource": "@entity.name"
+          },
+          {
+            "kind": "set",
+            "resource": "@entity.query"
           }
         ],
         "effectEntityRefs": [
@@ -252,6 +374,7 @@
       "EDIT",
       "RENAME",
       "SAVE",
+      "SavedSearchCreated",
       "SavedSearchDeleted",
       "SavedSearchLoadFailed",
       "SavedSearchLoaded",

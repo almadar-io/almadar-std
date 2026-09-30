@@ -1,5 +1,5 @@
 app std-data-import "1.0.0"
-"std-data-import — staged CSV import run, source-agnostic: upload → staged review → confirm → parse+map → handoff. UPLOAD_CSV opens a run and persists an ImportBatch row (status uploaded, fieldMappingJson recorded verbatim for provenance); the host's file UI parses the CSV and answers with STAGE_ROWS, one JSON string per raw row, which the atom bulk-persists into import_rows against the batch id and presents as a staged review (row/error counts + Confirm/Discard). CONFIRM_IMPORT marks the batch confirmed, emits IMPORT_CONFIRMED { batchId, sourceName, rowCount }, and fetches the batch's staged rows; on fetch success the atom parses each rowJson via json/parse, remaps keys through the batch's mappingJson, and emits IMPORT_ROWS_PARSED { batchId, rows, failed } — the persist half is the CONSUMER organism's: it listens for IMPORT_ROWS_PARSED and persists the mapped rows into its own target entity (cross-atom persist into a consumer's entity is not expressible from here). This is deliberately the CSV-file path: the atom never calls a source service — sourceName/fieldMappingJson/targetEntity/historyWindowDays are declarative consumer configs, and any persist failure marks the batch row failed and fires IMPORT_FAILED, never a silent swallow. Compose with std-import for the file-picker menu."
+"std-data-import — staged CSV import run, source-agnostic: upload → staged review → confirm → parse+map → handoff. UPLOAD_CSV opens a run and persists an ImportBatch row (status uploaded, fieldMappingJson recorded verbatim for provenance); the host's file UI parses the CSV and answers with STAGE_ROWS, one JSON string per raw row, which the atom bulk-persists into import_rows against the batch id and presents as a staged review (row/error counts + Confirm/Discard). CONFIRM_IMPORT marks the batch confirmed, emits IMPORT_CONFIRMED { batchId, sourceName, rowCount }, and fetches the batch's staged rows; on fetch success the atom parses each rowJson via json/parse, remaps keys through the batch's mappingJson, and emits IMPORT_ROWS_PARSED { batchId, rows, failed } — the persist half is the CONSUMER organism's: it listens for IMPORT_ROWS_PARSED and persists the mapped rows into its own target entity (cross-atom persist into a consumer's entity is not expressible from here). This is deliberately the CSV-file path: the atom never calls a source service — sourceName/fieldMappingJson/targetEntity are consumer configs, and any persist failure marks the batch row failed and fires IMPORT_FAILED, never a silent swallow. Compose with std-import for the file-picker menu."
 orbital DataImportOrbital {
     type DataImportFile = { name : string!, size : number, type : string, content : string }
 
@@ -218,6 +218,7 @@ orbital DataImportOrbital {
               (fn k (if (object/has (json/parse @entity.mappingJson) @k)
                 (object/get (json/parse @entity.mappingJson) @k)
                 @k)))))
+          targetEntity: @config.targetEntity
         })
       ;; Same transient-failure self-loop as in `staged` — the row fetch can
       ;; fail after the batch row was already persisted as confirmed.
@@ -284,6 +285,7 @@ orbital DataImportOrbital {
         batchId : string!
         failed : number
         rows : [Map string scalar]
+        targetEntity : string
       }
         @description "Confirmed rows parsed and key-mapped: each staged row's rowJson was parsed via json/parse and remapped through the batch's mappingJson; failed counts rows whose rowJson did not parse to an object (surfaced, never dropped). The consumer persists rows into its own target entity and marks them imported."
         @synonyms "rows parsed, rows mapped, import rows ready"
@@ -330,21 +332,16 @@ orbital DataImportOrbital {
         @description "Free-form name of the upstream source this import pulls from — whatever tool or file export the user names. Recorded on the batch row for provenance and echoed on IMPORT_CONFIRMED."
         @synonyms "source, origin, import from, provider name, data source"
         @tier "domain"
+      targetEntity : string = ""
+        @label "Target entity"
+        @description "Name of the consumer organism's entity the staged rows land in after confirm. Carried on IMPORT_ROWS_PARSED so the consumer's persist half knows where the mapped rows belong — the atom never writes the target entity itself."
+        @synonyms "destination, import into, target type"
+        @tier "domain"
       fieldMappingJson : string = "{}"
         @label "Field mapping (JSON)"
         @description "JSON object mapping source CSV column names to target field names. Stored verbatim on the batch row (mappingJson); the atom applies it when it parses staged rows into IMPORT_ROWS_PARSED, so the consumer persists already-mapped rows into the target entity."
         @synonyms "field mapping, column mapping, map columns, remap fields, csv columns"
         @tier "domain"
-      targetEntity : string = ""
-        @label "Target entity"
-        @description "Name of the consumer organism's entity the staged rows land in after confirm. Declarative contract only — the atom never writes the target entity; the consumer persists on IMPORT_CONFIRMED."
-        @synonyms "destination, import into, target type"
-        @tier "domain"
-      historyWindowDays : number = 0
-        @label "Historical data range (days)"
-        @description "How many days back an import may reach (0 = unbounded). A declared import-config knob for the consumer's staging/mapping layer — the atom stages whatever rows it is handed and never filters by date."
-        @synonyms "history window, historical range, import range, days back, lookback period"
-        @tier "policy"
     }
   }
 

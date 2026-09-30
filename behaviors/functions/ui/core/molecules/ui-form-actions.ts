@@ -52,6 +52,8 @@ export interface StdUiFormActionsConfig {
   secondary?: EntityRow[];
   /** Default: `"default"` */
   variant?: 'default' | 'segmented' | 'toggle';
+  /** Default: `""` */
+  viewerRole?: string;
 }
 
 /**

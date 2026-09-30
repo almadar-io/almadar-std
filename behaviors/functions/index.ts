@@ -154,6 +154,7 @@ export * from './ui/core/atoms/std-recurrence.js';
 export * from './ui/core/atoms/std-related.js';
 export * from './infra/atoms/std-reminder-scheduler.js';
 export * from './infra/atoms/std-review-cycle.js';
+export * from './ui/core/atoms/std-role-gate.js';
 export * from './ui/game/atoms/std-round-flow.js';
 export * from './infra/atoms/std-row-access-control.js';
 export * from './ui/core/atoms/std-saved-search.js';

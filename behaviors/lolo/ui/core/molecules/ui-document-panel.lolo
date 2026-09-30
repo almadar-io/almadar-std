@@ -8,6 +8,7 @@ orbital DocumentPanelOrbital {
     event : event
     icon : icon
     variant : "primary" | "secondary" | "ghost" | "danger"
+    roles : [string]
   }
 
   entity DocumentPanelItem [runtime] {
@@ -29,7 +30,7 @@ orbital DocumentPanelOrbital {
           coverImage: @config.coverImage
           icon: @config.icon
           value: @entity.value
-          actions: @config.actions
+          actions: (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           maxInlineActions: @config.maxInlineActions
           editing: @config.editing
           titleCommitEvent: @config.titleCommitEvent
@@ -51,7 +52,7 @@ orbital DocumentPanelOrbital {
           coverImage: @config.coverImage
           icon: @config.icon
           value: @entity.value
-          actions: @config.actions
+          actions: (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           maxInlineActions: @config.maxInlineActions
           editing: @config.editing
           titleCommitEvent: @config.titleCommitEvent
@@ -73,7 +74,7 @@ orbital DocumentPanelOrbital {
           coverImage: @config.coverImage
           icon: @config.icon
           value: @entity.value
-          actions: @config.actions
+          actions: (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           maxInlineActions: @config.maxInlineActions
           editing: @config.editing
           titleCommitEvent: @config.titleCommitEvent
@@ -192,6 +193,10 @@ orbital DocumentPanelOrbital {
         @label "Class Name"
         @description "className prop"
         @tier "presentation"
+      viewerRole : string = ""
+        @label "Viewer's role"
+        @description "The viewer's role that each action's `roles` is checked against; bind it at the call site (e.g. `viewerRole: @user.role`). Empty = only actions with no `roles` show."
+        @tier "policy"
     }
   }
 

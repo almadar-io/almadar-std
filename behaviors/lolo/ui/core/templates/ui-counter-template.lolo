@@ -2,8 +2,6 @@ app ui-counter-template "1.0.0"
 "CounterTemplate — UI factory (1:1 with the @almadar/ui counter-template pattern)."
 ;; @pattern "counter-template"
 orbital CounterTemplateOrbital {
-    type CounterTemplateLoaded = Event { data : [CounterTemplateItem] } "CounterTemplate rows finished loading; payload.data holds the collection"
-
   entity CounterTemplateItem [runtime] {
     id : string!
     count : number = 1
@@ -18,42 +16,10 @@ orbital CounterTemplateOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle when @config.selfFetch
-        (fetch CounterTemplateItem { emit: { success: CounterTemplateLoaded } })
+      INIT -> idle
+        (fetch CounterTemplateItem {})
         (render-ui main {
           entity: @entity
-          className: @config.className
-          onIncrement: @config.onIncrement
-          onDecrement: @config.onDecrement
-          onReset: @config.onReset
-          incrementEvent: @config.incrementEvent
-          decrementEvent: @config.decrementEvent
-          resetEvent: @config.resetEvent
-          title: @config.title
-          showReset: @config.showReset
-          size: @config.size
-          variant: @config.variant
-          type: counter-template
-        })
-      INIT -> idle when (not @config.selfFetch)
-        (render-ui main {
-          entity: @entity
-          className: @config.className
-          onIncrement: @config.onIncrement
-          onDecrement: @config.onDecrement
-          onReset: @config.onReset
-          incrementEvent: @config.incrementEvent
-          decrementEvent: @config.decrementEvent
-          resetEvent: @config.resetEvent
-          title: @config.title
-          showReset: @config.showReset
-          size: @config.size
-          variant: @config.variant
-          type: counter-template
-        })
-      CounterTemplateLoaded -> idle
-        (render-ui main {
-          entity: @payload.data
           className: @config.className
           onIncrement: @config.onIncrement
           onDecrement: @config.onDecrement
@@ -78,10 +44,6 @@ orbital CounterTemplateOrbital {
         @tier "essential"
       @config.onReset -> external { }
         @description "Called when reset is clicked"
-        @tier "essential"
-      CounterTemplateLoaded
-        @description "CounterTemplate rows finished loading; payload.data holds the collection."
-        @synonyms "loaded, fetched, retrieved"
         @tier "essential"
     }
 
@@ -130,10 +92,6 @@ orbital CounterTemplateOrbital {
         @label "Variant"
         @description "Template variant"
         @tier "presentation"
-      selfFetch : boolean = true
-        @label "Fetch its own rows on mount?"
-        @description "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's."
-        @tier "internal"
     }
   }
 

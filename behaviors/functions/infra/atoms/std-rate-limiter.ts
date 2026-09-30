@@ -480,6 +480,13 @@ export function stdRateLimiterRateBucketOrbital(params: StdRateLimiterRateBucket
             'synonyms': 'state, condition, mode',
             'type': 'string',
           },
+          {
+            'default': 60,
+            'description': 'Requests this bucket admits per window before it throttles; set from requestsPerMinute when the limiter mounts.',
+            'name': 'limit',
+            'synonyms': 'cap, quota, ceiling, maximum requests',
+            'type': 'number',
+          },
         ];
         const extras = params.fields ?? [];
         if (extras.length === 0) return canonical;
@@ -608,7 +615,7 @@ export function stdRateLimiterRateBucketOrbital(params: StdRateLimiterRateBucket
       makeTraitRef({
         'config': {
           'max': {
-            'default': 100,
+            'default': '@entity.limit',
             'type': 'unknown',
           },
           'min': {
@@ -627,7 +634,7 @@ export function stdRateLimiterRateBucketOrbital(params: StdRateLimiterRateBucket
       makeTraitRef({
         'config': {
           'max': {
-            'default': 100,
+            'default': '@entity.limit',
             'type': 'unknown',
           },
           'showPercentage': {
@@ -741,14 +748,6 @@ export function stdRateLimiterRateBucketOrbital(params: StdRateLimiterRateBucket
         ],
         'category': 'interaction',
         'config': {
-          'burstSize': {
-            'default': 10,
-            'description': 'Requests allowed to burst above the per-minute rate before steady-state throttling kicks in. Lower burst = strict/no-spikes; higher burst = forgiving/allow-spikes.',
-            'label': 'Burst size',
-            'synonyms': 'burst capacity, allowance, spike allowance, no-spike (low) vs allow-bursts (high)',
-            'tier': 'domain',
-            'type': 'number',
-          },
           'enabled': {
             'default': false,
             'description': 'Whether rate limiting is active for the host orbital. Off by default; turn on to throttle requests.',
@@ -757,34 +756,9 @@ export function stdRateLimiterRateBucketOrbital(params: StdRateLimiterRateBucket
             'tier': 'domain',
             'type': 'boolean',
           },
-          'keyStrategy': {
-            'default': 'user',
-            'description': 'What identifier the per-bucket counter is keyed on: source IP, authenticated user, API key, or one global bucket.',
-            'label': 'Rate-limit key strategy',
-            'synonyms': 'limiter key, bucket key',
-            'tier': 'domain',
-            'type': 'string',
-            'values': [
-              'ip',
-              'user',
-              'api-key',
-              'global',
-            ],
-          },
-          'overrideRoles': {
-            'default': [],
-            'description': 'Roles exempt from rate limiting (e.g. internal services, admin override). Empty = no exemptions.',
-            'items': {
-              'type': 'string',
-            },
-            'label': 'Override roles',
-            'synonyms': 'exempt roles, bypass list',
-            'tier': 'domain',
-            'type': '[string]',
-          },
           'requestsPerMinute': {
             'default': 60,
-            'description': 'Maximum number of requests allowed per minute before throttling begins.',
+            'description': 'Requests a bucket admits per one-minute window; the next request throttles it, and each elapsed minute (or RESET) reopens it.',
             'label': 'Requests per minute',
             'synonyms': 'rate limit, request cap, RPS, throttle threshold',
             'tier': 'domain',
@@ -807,6 +781,11 @@ export function stdRateLimiterRateBucketOrbital(params: StdRateLimiterRateBucket
         },
         'effectRow': [
           {
+            'kind': 'emit',
+            'resource': 'WINDOW_ELAPSED',
+            'site': 'tick',
+          },
+          {
             'kind': 'render-ui',
             'resource': 'main',
           },
@@ -816,40 +795,29 @@ export function stdRateLimiterRateBucketOrbital(params: StdRateLimiterRateBucket
           },
           {
             'kind': 'set',
+            'resource': '@entity.limit',
+          },
+          {
+            'kind': 'set',
             'resource': '@entity.limiterStatus',
           },
           {
             'kind': 'set',
             'resource': '@entity.window',
           },
+          {
+            'kind': 'ticks',
+            'site': 'tick',
+          },
+        ],
+        'emits': [
+          {
+            'description': 'One rate-limit window (a minute) has elapsed; the request count starts over.',
+            'event': 'WINDOW_ELAPSED',
+            'scope': 'internal',
+          },
         ],
         'linkedEntity': 'RateBucket',
-        'listens': [
-          {
-            'event': 'REQUEST',
-            'source': {
-              'kind': 'trait',
-              'trait': ('RequestButton' satisfies _StdRateLimiterListenTraitName),
-            },
-            'triggers': 'REQUEST',
-          },
-          {
-            'event': 'RESET',
-            'source': {
-              'kind': 'trait',
-              'trait': ('ResetButton' satisfies _StdRateLimiterListenTraitName),
-            },
-            'triggers': 'RESET',
-          },
-          {
-            'event': 'RESET',
-            'source': {
-              'kind': 'trait',
-              'trait': ('ResetPrimaryButton' satisfies _StdRateLimiterListenTraitName),
-            },
-            'triggers': 'RESET',
-          },
-        ],
         'name': 'RateBucketRateLimiter',
         'scope': 'collection',
         'stateMachine': {
@@ -869,6 +837,22 @@ export function stdRateLimiterRateBucketOrbital(params: StdRateLimiterRateBucket
             {
               'key': 'RESET',
               'name': 'Reset',
+            },
+            {
+              'description': 'One rate-limit window (a minute) has elapsed; the request count starts over.',
+              'key': 'WINDOW_ELAPSED',
+              'name': 'Window Elapsed',
+            },
+            {
+              'description': 'Sets this bucket\'s limit (requests per window), e.g. from the host row\'s own rate limit.',
+              'key': 'CONFIGURE',
+              'name': 'Configure',
+              'payloadSchema': [
+                {
+                  'name': 'limit',
+                  'type': 'number',
+                },
+              ],
             },
           ],
           'states': [
@@ -892,6 +876,11 @@ export function stdRateLimiterRateBucketOrbital(params: StdRateLimiterRateBucket
                   'set',
                   '@entity.window',
                   60,
+                ],
+                [
+                  'set',
+                  '@entity.limit',
+                  '@config.requestsPerMinute',
                 ],
                 [
                   'set',
@@ -951,6 +940,93 @@ export function stdRateLimiterRateBucketOrbital(params: StdRateLimiterRateBucket
             {
               'effects': [
                 [
+                  'set',
+                  '@entity.count',
+                  [
+                    '+',
+                    '@entity.count',
+                    1,
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.limiterStatus',
+                  'throttled',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'align': 'center',
+                            'children': [
+                              '@trait.ShieldIcon',
+                              '@trait.RateBucketTitle',
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'type': 'stack',
+                          },
+                          '@trait.ThrottledStatusDot',
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'justify': 'between',
+                        'type': 'stack',
+                      },
+                      '@trait.RateBucketDivider',
+                      '@trait.RateLimitAlert',
+                      '@trait.StatsGrid',
+                      '@trait.CountMeter',
+                      {
+                        'children': [
+                          '@trait.ResetPrimaryButton',
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'justify': 'center',
+                        'type': 'stack',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'REQUEST',
+              'from': 'open',
+              'guard': [
+                'and',
+                '@config.enabled',
+                [
+                  '>=',
+                  [
+                    '+',
+                    '@entity.count',
+                    1,
+                  ],
+                  '@entity.limit',
+                ],
+              ],
+              'to': 'throttled',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.count',
+                  [
+                    '+',
+                    '@entity.count',
+                    1,
+                  ],
+                ],
+                [
                   'render-ui',
                   'main',
                   {
@@ -998,7 +1074,19 @@ export function stdRateLimiterRateBucketOrbital(params: StdRateLimiterRateBucket
               ],
               'event': 'REQUEST',
               'from': 'open',
-              'guard': '@config.enabled',
+              'guard': [
+                'and',
+                '@config.enabled',
+                [
+                  '<',
+                  [
+                    '+',
+                    '@entity.count',
+                    1,
+                  ],
+                  '@entity.limit',
+                ],
+              ],
               'to': 'open',
             },
             {
@@ -1123,6 +1211,104 @@ export function stdRateLimiterRateBucketOrbital(params: StdRateLimiterRateBucket
               'effects': [
                 [
                   'set',
+                  '@entity.count',
+                  0,
+                ],
+              ],
+              'event': 'WINDOW_ELAPSED',
+              'from': 'open',
+              'to': 'open',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.limit',
+                  '@payload.limit',
+                ],
+              ],
+              'event': 'CONFIGURE',
+              'from': 'open',
+              'to': 'open',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.limit',
+                  '@payload.limit',
+                ],
+              ],
+              'event': 'CONFIGURE',
+              'from': 'throttled',
+              'to': 'throttled',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.limiterStatus',
+                  'open',
+                ],
+                [
+                  'set',
+                  '@entity.count',
+                  0,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'align': 'center',
+                            'children': [
+                              '@trait.ShieldIcon',
+                              '@trait.RateBucketTitle',
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'type': 'stack',
+                          },
+                          '@trait.OpenStatusDot',
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'justify': 'between',
+                        'type': 'stack',
+                      },
+                      '@trait.RateBucketDivider',
+                      '@trait.StatsGrid',
+                      '@trait.CountMeter',
+                      '@trait.CountProgressBar',
+                      {
+                        'children': [
+                          '@trait.RequestButton',
+                          '@trait.ResetButton',
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'justify': 'center',
+                        'type': 'stack',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+              'event': 'WINDOW_ELAPSED',
+              'from': 'throttled',
+              'to': 'open',
+            },
+            {
+              'effects': [
+                [
+                  'set',
                   '@entity.limiterStatus',
                   'open',
                 ],
@@ -1234,6 +1420,18 @@ export function stdRateLimiterRateBucketOrbital(params: StdRateLimiterRateBucket
             },
           ],
         },
+        'ticks': [
+          {
+            'effects': [
+              [
+                'emit',
+                'WINDOW_ELAPSED',
+              ],
+            ],
+            'interval': 60000,
+            'name': 'windowElapsed',
+          },
+        ],
       } satisfies Trait,
     ],
     pages: [

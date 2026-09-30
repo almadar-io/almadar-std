@@ -13,6 +13,7 @@ orbital CommandPaletteOrbital {
     event : event
     action : event
     actionPayload : @payload action
+    roles : [string]
   }
   type CommandPaletteSELECTCommand = {
     id : string!
@@ -41,7 +42,7 @@ orbital CommandPaletteOrbital {
         (render-ui main {
           open: @entity.open
           onOpenChange: @config.onOpenChange
-          commands: @config.commands
+          commands: (array/filter @config.commands (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           onSelect: @config.onSelect
           placeholder: @config.placeholder
           emptyLabel: @config.emptyLabel
@@ -53,7 +54,7 @@ orbital CommandPaletteOrbital {
         (render-ui main {
           open: @entity.open
           onOpenChange: @config.onOpenChange
-          commands: @config.commands
+          commands: (array/filter @config.commands (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           onSelect: @config.onSelect
           placeholder: @config.placeholder
           emptyLabel: @config.emptyLabel
@@ -110,6 +111,10 @@ orbital CommandPaletteOrbital {
         @label "Class Name"
         @description "Additional CSS classes on the overlay's dialog"
         @tier "presentation"
+      viewerRole : string = ""
+        @label "Viewer's role"
+        @description "The viewer's role that each action's `roles` is checked against; bind it at the call site (e.g. `viewerRole: @user.role`). Empty = only actions with no `roles` show."
+        @tier "policy"
     }
   }
 

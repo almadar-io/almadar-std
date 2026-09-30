@@ -40,6 +40,7 @@ export interface StdGraphBuilderGraphReadyPayload {
   edges: EntityRow[];
   nodeCount: number;
   edgeCount: number;
+  directed: boolean;
 }
 
 /**
@@ -334,6 +335,11 @@ export function stdGraphBuilderGraphBuilderOrbital(params: StdGraphBuilderGraphB
                 'required': true,
                 'type': 'int',
               },
+              {
+                'name': 'directed',
+                'required': true,
+                'type': 'boolean',
+              },
             ],
             'scope': 'external',
             'tier': 'primary',
@@ -400,6 +406,11 @@ export function stdGraphBuilderGraphBuilderOrbital(params: StdGraphBuilderGraphB
                   'name': 'edgeCount',
                   'required': true,
                   'type': 'int',
+                },
+                {
+                  'name': 'directed',
+                  'required': true,
+                  'type': 'boolean',
                 },
               ],
               'tier': 'primary',
@@ -552,6 +563,7 @@ export function stdGraphBuilderGraphBuilderOrbital(params: StdGraphBuilderGraphB
                       'emit',
                       'GRAPH_READY',
                       {
+                        'directed': '@config.directed',
                         'edgeCount': [
                           'array/len',
                           '@edges',

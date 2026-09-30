@@ -91,6 +91,8 @@ export interface StdUiDocumentPanelConfig {
   /** Default: `"TITLE_COMMIT"` */
   titleCommitEvent?: string;
   value?: string;
+  /** Default: `""` */
+  viewerRole?: string;
 }
 
 /**

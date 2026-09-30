@@ -1,5 +1,5 @@
 app std-platformer-puzzle "1.0.0"
-"Platformer + puzzle genre substrate organism. Composes the standard authorities — platformer-body, pickup, objective-flow, choice-gate, fx-particles, fx-narrative, tutorial-overlay — and enforces five trait-typed pillar slots: agency, challenge, goal, reward, feedback. Levels consume this organism, fill every slot with a local rebinding trait, and add their own geometry, render, and math rules. Math targets and grade levels stay downstream in the domain package; this substrate is domain-agnostic."
+"Platformer + puzzle genre substrate organism. Composes the standard authorities — platformer-body, pickup, objective-flow, choice-gate, fx-particles, fx-narrative, tutorial-overlay — as the pillars a level rebinds: agency (body), challenge (choice), goal (objective), reward (pickup), feedback (fx, narrative, tutorial). Levels rebind these authorities locally and add their own geometry, render, and math rules. Math targets and grade levels stay downstream in the domain package; this substrate is domain-agnostic."
 
 orbital PlatformerPuzzleOrbital {
   uses Body from "std/behaviors/std-platformer-body"
@@ -135,26 +135,6 @@ orbital PlatformerPuzzleOrbital {
     body : string
     demoId : string
   }
-  type Asset = {
-    url : asset
-    atlas : asset
-    sprite : string
-    role : string
-    category : string
-    animations : [string]
-    style : string
-    variant : string
-    dimension : string
-    aspect : string
-    name : string
-    thumbnailUrl : string
-  }
-  type DirectionAssets = {
-    up : Asset
-    down : Asset
-    left : Asset
-    right : Asset
-  }
 
   entity PlatformerPuzzleData [runtime, shared] {
     id : string!
@@ -281,49 +261,5 @@ orbital PlatformerPuzzleOrbital {
     }
   }
 
-  trait PlatformerPuzzle -> @rebindable PlatformerPuzzleData [interaction, instance] {
-    initial: active
-
-    state active {
-      INIT -> active
-        (render-ui main null)
-    }
-
-    config {
-      agencyTrait : trait
-        @label "Agency trait"
-        @description "Trait that provides player verbs and immediate response. Usually a rebinding of std-platformer-body, std-motion-body, or std-hero-nav."
-        @tier "domain"
-      challengeTrait : trait
-        @label "Challenge trait"
-        @description "Trait that provides the obstacle, decision, or opposition. Usually a rebinding of std-choice-gate, std-gate-lock, std-patrol-hazard, std-velocity-gate, std-loop-lock, or std-pad-lock."
-        @tier "domain"
-      goalTrait : trait
-        @label "Goal trait"
-        @description "Trait that resolves the win condition. Usually a rebinding of std-objective-flow or std-objective-reach."
-        @tier "domain"
-      rewardTrait : trait
-        @label "Reward trait"
-        @description "Trait that provides collectibles or scoring. Usually a rebinding of std-pickup, std-score, std-xp, or std-gold."
-        @tier "domain"
-      feedbackTrait : trait
-        @label "Feedback trait"
-        @description "Trait that provides visual, audio, or narrative feedback. Usually a rebinding of std-fx-particles, std-fx-narrative, std-tutorial-overlay, std-audio-cue, or std-zone-card."
-        @tier "domain"
-      backgroundAsset : Asset = {}
-        @label "Background Asset"
-        @description "Game-shell background panel sprite (theme chrome)."
-        @tier "presentation"
-      hudBackgroundAsset : Asset = {}
-        @label "HUD Background Asset"
-        @description "HUD panel background sprite (theme chrome)."
-        @tier "presentation"
-      directionAssets : DirectionAssets = {}
-        @label "Direction Assets"
-        @description "D-pad direction icon sprites."
-        @tier "presentation"
-    }
-  }
-
-  page "/platformer-puzzle" as PlatformerPuzzlePage -> PlatformerPuzzleBody, PlatformerPuzzlePickup, PlatformerPuzzleObjective, PlatformerPuzzleChoice, PlatformerPuzzleFx, PlatformerPuzzleNarrative, PlatformerPuzzleTutorial, PlatformerPuzzle
+  page "/platformer-puzzle" as PlatformerPuzzlePage -> PlatformerPuzzleBody, PlatformerPuzzlePickup, PlatformerPuzzleObjective, PlatformerPuzzleChoice, PlatformerPuzzleFx, PlatformerPuzzleNarrative, PlatformerPuzzleTutorial
 }

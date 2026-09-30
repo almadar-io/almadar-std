@@ -1,5 +1,6 @@
 app std-version-history "1.0.0"
 "std-version-history — wiki/CMS revision history with diff + rollback. Browses revisions; opens detail in `viewing_single`; compares the opened revision with the newest in `comparing`; Rollback emits RevisionRolledBack { row } for the consumer to restore onto its source document. `RevisionManage` is a rebindable single-entity trait: a consumer rebinds it to its own entity via `linkedEntity`. `config.scopeField` names the Revision field holding the parent document id; a page-mounted `{id}` route param scopes INIT's own fetch, and a consumer forwards SHOW_HISTORY { key } (via a `listens` override) to rescope the feed to one document — empty scopeField (default) or no id keeps today's unfiltered global feed. Rollback and retry refetches stay scoped."
+type ItemAction = { label : string!, event : event, variant : string, icon : string, roles : [string], when : SExpr }
 orbital RevisionOrbital {
     type RevisionLoaded = Event { data : [Revision] } "Fired when the revision collection finishes loading"
 
@@ -79,17 +80,7 @@ orbital RevisionOrbital {
               variant: caption
             }]
             gap: sm
-            itemActions: [{
-              event: OPEN_REVISION
-              icon: arrow-right
-              label: Open
-              variant: ghost
-            }, {
-              event: ROLLBACK
-              icon: rotate-ccw
-              label: Rollback
-              variant: danger
-            }]
+            itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
             look: @config.tableLook
             type: data-grid
           }]
@@ -600,6 +591,24 @@ orbital RevisionOrbital {
         @label "Scope field"
         @description "Revision entity field holding the parent document's id. When set, a page-mounted {id} route param scopes INIT's fetch, and a SHOW_HISTORY { key } event rescopes the feed, to rows whose scopeField equals the id/key; rollback and retry refetches stay scoped too. Empty (default) or no id = unfiltered global feed, unchanged from prior behavior."
         @tier "domain"
+      itemActions : [ItemAction] = [{
+        event: OPEN_REVISION
+        icon: arrow-right
+        label: Open
+        variant: ghost
+      }, {
+        event: ROLLBACK
+        icon: rotate-ccw
+        label: Rollback
+        variant: danger
+      }]
+        @label "Row actions"
+        @description "Actions offered on each row; give an item `roles` to show it only to those viewer roles."
+        @tier "presentation"
+      viewerRole : string = ""
+        @label "Viewer's role"
+        @description "The signed-in viewer's role that each action's `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show."
+        @tier "policy"
     }
   }
 

@@ -119,6 +119,11 @@
             "key": "selfFetch",
             "type": "unknown",
             "default": false
+          },
+          {
+            "key": "viewerRole",
+            "type": "unknown",
+            "default": "@config.viewerRole"
           }
         ],
         "capabilities": [],
@@ -302,6 +307,17 @@
             }
           },
           {
+            "key": "invoiceRoles",
+            "type": "[string]",
+            "default": [],
+            "label": "Roles that can invoice",
+            "description": "Roles (matched against viewerRole) that see the Invoice button. Empty = everyone.",
+            "tier": "policy",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
             "key": "itemActions",
             "type": "[ItemAction]",
             "default": [
@@ -342,10 +358,23 @@
                   "required": false,
                   "type": "string"
                 },
+                "roles": {
+                  "name": "roles",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
                 "variant": {
                   "name": "variant",
                   "required": false,
                   "type": "string"
+                },
+                "when": {
+                  "name": "when",
+                  "required": false,
+                  "type": "object"
                 }
               },
               "type": "object"
@@ -388,6 +417,25 @@
             "label": "Section title",
             "description": "Heading shown above the time-entries list",
             "tier": "presentation"
+          },
+          {
+            "key": "viewerRole",
+            "type": "string",
+            "default": "",
+            "label": "Viewer's role",
+            "description": "The signed-in viewer's role that each action's `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.",
+            "tier": "policy"
+          },
+          {
+            "key": "writeOffRoles",
+            "type": "[string]",
+            "default": [],
+            "label": "Roles that can write off",
+            "description": "Roles (matched against viewerRole) that see the Write Off button. Empty = everyone.",
+            "tier": "policy",
+            "items": {
+              "type": "string"
+            }
           }
         ],
         "capabilities": [],
@@ -459,6 +507,140 @@
         "effectEntityRefs": [
           "BillableHour"
         ]
+      },
+      {
+        "name": "InlineButtonRender1",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "action",
+            "type": "unknown",
+            "default": "INVOICE_HOURS"
+          },
+          {
+            "key": "actionPayload",
+            "type": "unknown",
+            "default": {
+              "id": "@callsitePayload.row.id"
+            }
+          },
+          {
+            "key": "label",
+            "type": "unknown",
+            "default": "Invoice"
+          },
+          {
+            "key": "variant",
+            "type": "unknown",
+            "default": "primary"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Button.traits.ButtonRender",
+        "linkedEntity": "BillableHour",
+        "transitionEvents": [
+          "INIT"
+        ],
+        "definerKnobs": [
+          "action"
+        ]
+      },
+      {
+        "name": "InlineRoleGate2",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "content",
+            "type": "unknown",
+            "default": "@trait.InlineButtonRender1"
+          },
+          {
+            "key": "roles",
+            "type": "unknown",
+            "default": "@config.invoiceRoles"
+          },
+          {
+            "key": "viewerRole",
+            "type": "unknown",
+            "default": "@config.viewerRole"
+          }
+        ],
+        "capabilities": [],
+        "ref": "RoleGate.traits.RoleGate",
+        "linkedEntity": "BillableHour",
+        "transitionEvents": [
+          "INIT"
+        ],
+        "definerKnobs": []
+      },
+      {
+        "name": "InlineButtonRender3",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "action",
+            "type": "unknown",
+            "default": "WRITE_OFF_HOURS"
+          },
+          {
+            "key": "actionPayload",
+            "type": "unknown",
+            "default": {
+              "id": "@callsitePayload.row.id"
+            }
+          },
+          {
+            "key": "label",
+            "type": "unknown",
+            "default": "Write Off"
+          },
+          {
+            "key": "variant",
+            "type": "unknown",
+            "default": "danger"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Button.traits.ButtonRender",
+        "linkedEntity": "BillableHour",
+        "transitionEvents": [
+          "INIT"
+        ],
+        "definerKnobs": [
+          "action"
+        ]
+      },
+      {
+        "name": "InlineRoleGate4",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "content",
+            "type": "unknown",
+            "default": "@trait.InlineButtonRender3"
+          },
+          {
+            "key": "roles",
+            "type": "unknown",
+            "default": "@config.writeOffRoles"
+          },
+          {
+            "key": "viewerRole",
+            "type": "unknown",
+            "default": "@config.viewerRole"
+          }
+        ],
+        "capabilities": [],
+        "ref": "RoleGate.traits.RoleGate",
+        "linkedEntity": "BillableHour",
+        "transitionEvents": [
+          "INIT"
+        ],
+        "definerKnobs": []
       }
     ],
     "pages": [
@@ -481,7 +663,7 @@
     ],
     "exposure": "both",
     "provenance": "authored",
-    "substrateSignature": "38468cf8ab689149",
+    "substrateSignature": "ab273985a39fa11c",
     "sourceValid": true
   }
 ]

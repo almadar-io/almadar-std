@@ -23,6 +23,7 @@ orbital MediaGalleryOrbital {
     event : event
     navigatesTo : string
     variant : "primary" | "secondary" | "ghost"
+    roles : [string]
   }
 
   entity MediaGalleryItem [runtime] {
@@ -55,7 +56,7 @@ orbital MediaGalleryOrbital {
           selectedItems: @config.selectedItems
           selectionEvent: @config.selectionEvent
           showUpload: @config.showUpload
-          actions: @config.actions
+          actions: (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           aspectRatio: @config.aspectRatio
           type: media-gallery
         })
@@ -80,7 +81,7 @@ orbital MediaGalleryOrbital {
           selectedItems: @config.selectedItems
           selectionEvent: @config.selectionEvent
           showUpload: @config.showUpload
-          actions: @config.actions
+          actions: (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           aspectRatio: @config.aspectRatio
           type: media-gallery
         })
@@ -105,7 +106,7 @@ orbital MediaGalleryOrbital {
           selectedItems: @config.selectedItems
           selectionEvent: @config.selectionEvent
           showUpload: @config.showUpload
-          actions: @config.actions
+          actions: (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           aspectRatio: @config.aspectRatio
           type: media-gallery
         })
@@ -205,6 +206,10 @@ orbital MediaGalleryOrbital {
         @label "Aspect Ratio"
         @description "Aspect ratio for thumbnails"
         @tier "presentation"
+      viewerRole : string = ""
+        @label "Viewer's role"
+        @description "The viewer's role that each action's `roles` is checked against; bind it at the call site (e.g. `viewerRole: @user.role`). Empty = only actions with no `roles` show."
+        @tier "policy"
       selfFetch : boolean = true
         @label "Fetch its own rows on mount?"
         @description "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's."

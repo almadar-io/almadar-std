@@ -100,6 +100,8 @@ export interface StdFileStoreConfig {
   title?: string;
   /** Default: `[{"children":[{"name":"Active.pdf","path":"Active.pdf","type":"file"},{"name":"Archived.pdf","path":"Archived.pdf","type":"file"}],"name":"Contracts","path":"Contracts","type":"dir"},{"children":[{"name":"HR.docx","path":"Policies/HR.docx","type":"file"},{"name":"Security.md","path":"Policies/Security.md","type":"file"}],"name":"Policies","path":"Policies","type":"dir"},{"children":[{"name":"Invoice.docx","path":"Templates/Invoice.docx","type":"file"},{"name":"NDA.pdf","path":"Templates/NDA.pdf","type":"file"}],"name":"Templates","path":"Templates","type":"dir"}]` */
   tree?: EntityRow[];
+  /** Default: `""` */
+  viewerRole?: string;
 }
 
 /**
@@ -350,6 +352,14 @@ export function stdFileStoreStoredFileOrbital(params: StdFileStoreStoredFileOrbi
                   'required': true,
                   'type': 'string',
                 },
+                'roles': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'roles',
+                  'required': false,
+                  'type': 'array',
+                },
                 'variant': {
                   'name': 'variant',
                   'required': false,
@@ -360,6 +370,11 @@ export function stdFileStoreStoredFileOrbital(params: StdFileStoreStoredFileOrbi
                     'ghost',
                     'danger',
                   ],
+                },
+                'when': {
+                  'name': 'when',
+                  'required': false,
+                  'type': 'object',
                 },
               },
               'type': 'object',
@@ -496,6 +511,14 @@ export function stdFileStoreStoredFileOrbital(params: StdFileStoreStoredFileOrbi
                   'required': true,
                   'type': 'string',
                 },
+                'roles': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'roles',
+                  'required': false,
+                  'type': 'array',
+                },
                 'variant': {
                   'name': 'variant',
                   'required': false,
@@ -506,6 +529,11 @@ export function stdFileStoreStoredFileOrbital(params: StdFileStoreStoredFileOrbi
                     'ghost',
                     'danger',
                   ],
+                },
+                'when': {
+                  'name': 'when',
+                  'required': false,
+                  'type': 'object',
                 },
               },
               'type': 'object',
@@ -635,6 +663,13 @@ export function stdFileStoreStoredFileOrbital(params: StdFileStoreStoredFileOrbi
             'label': 'Folder tree',
             'tier': 'presentation',
             'type': '[TreeNode]',
+          },
+          'viewerRole': {
+            'default': '',
+            'description': 'The signed-in viewer\'s role that each action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
+            'label': 'Viewer\'s role',
+            'tier': 'policy',
+            'type': 'string',
           },
         },
         'effectRow': [
@@ -1249,7 +1284,40 @@ export function stdFileStoreStoredFileOrbital(params: StdFileStoreStoredFileOrbi
                         'entity': '@payload.data',
                         'fields': '@config.fields',
                         'gap': 'sm',
-                        'itemActions': '@config.itemActions',
+                        'itemActions': [
+                          'array/filter',
+                          '@config.itemActions',
+                          [
+                            'fn',
+                            'action',
+                            [
+                              'or',
+                              [
+                                '=',
+                                [
+                                  'array/len',
+                                  [
+                                    'object/get',
+                                    '@action',
+                                    'roles',
+                                    [],
+                                  ],
+                                ],
+                                0,
+                              ],
+                              [
+                                'array/includes',
+                                [
+                                  'object/get',
+                                  '@action',
+                                  'roles',
+                                  [],
+                                ],
+                                '@config.viewerRole',
+                              ],
+                            ],
+                          ],
+                        ],
                         'look': '@config.tableLook',
                         'reorderEvent': 'REORDER',
                         'reorderable': '@config.reorderable',
@@ -1422,7 +1490,40 @@ export function stdFileStoreStoredFileOrbital(params: StdFileStoreStoredFileOrbi
                         'type': 'divider',
                       },
                       {
-                        'entity': '@config.detailActions',
+                        'entity': [
+                          'array/filter',
+                          '@config.detailActions',
+                          [
+                            'fn',
+                            'action',
+                            [
+                              'or',
+                              [
+                                '=',
+                                [
+                                  'array/len',
+                                  [
+                                    'object/get',
+                                    '@action',
+                                    'roles',
+                                    [],
+                                  ],
+                                ],
+                                0,
+                              ],
+                              [
+                                'array/includes',
+                                [
+                                  'object/get',
+                                  '@action',
+                                  'roles',
+                                  [],
+                                ],
+                                '@config.viewerRole',
+                              ],
+                            ],
+                          ],
+                        ],
                         'fields': [],
                         'gap': 'sm',
                         'renderItem': [

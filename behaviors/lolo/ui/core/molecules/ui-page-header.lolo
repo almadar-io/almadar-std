@@ -18,6 +18,7 @@ orbital PageHeaderOrbital {
     icon : icon
     loading : boolean
     disabled : boolean
+    roles : [string]
   }
   type PageHeaderError = {
     message : string!
@@ -42,12 +43,13 @@ orbital PageHeaderOrbital {
       INIT -> idle
         (render-ui main {
           title: @config.title
+          icon: @config.icon
           subtitle: @config.subtitle
           showBack: @config.showBack
           backEvent: @config.backEvent
           breadcrumbs: @config.breadcrumbs
           status: @config.status
-          actions: @config.actions
+          actions: (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           isLoading: @config.isLoading
           error: @config.error
           tabs: @config.tabs
@@ -74,6 +76,10 @@ orbital PageHeaderOrbital {
       title : scalar
         @label "Title"
         @description "Page title - accepts string or number from generated code accessing dynamic entity data"
+        @tier "presentation"
+      icon : icon
+        @label "Icon"
+        @description "Icon shown before the title."
         @tier "presentation"
       subtitle : scalar
         @label "Subtitle"
@@ -127,6 +133,10 @@ orbital PageHeaderOrbital {
         @label "Class Name"
         @description "className prop"
         @tier "presentation"
+      viewerRole : string = ""
+        @label "Viewer's role"
+        @description "The viewer's role that each action's `roles` is checked against; bind it at the call site (e.g. `viewerRole: @user.role`). Empty = only actions with no `roles` show."
+        @tier "policy"
     }
   }
 

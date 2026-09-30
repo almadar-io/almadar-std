@@ -92,6 +92,8 @@ export interface StdUiEntityCardsConfig {
   sortDirection?: 'asc' | 'desc';
   totalCount?: number;
   variant?: string;
+  /** Default: `""` */
+  viewerRole?: string;
 }
 
 type _StdUiEntityCardsEntityName = 'EntityCardsItem';
@@ -373,10 +375,23 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
                   'required': false,
                   'type': 'string',
                 },
+                'roles': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'roles',
+                  'required': false,
+                  'type': 'array',
+                },
                 'variant': {
                   'name': 'variant',
                   'required': false,
                   'type': 'string',
+                },
+                'when': {
+                  'name': 'when',
+                  'required': false,
+                  'type': 'object',
                 },
               },
               'type': 'object',
@@ -474,6 +489,13 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
             'description': 'Visual variant for the card grid',
             'label': 'Variant',
             'tier': 'presentation',
+            'type': 'string',
+          },
+          'viewerRole': {
+            'default': '',
+            'description': 'The viewer\'s role that each action\'s `roles` is checked against; bind it at the call site (e.g. `viewerRole: @user.role`). Empty = only actions with no `roles` show.',
+            'label': 'Viewer\'s role',
+            'tier': 'policy',
             'type': 'string',
           },
         },
@@ -616,7 +638,40 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
                     'gap': '@config.gap',
                     'imageField': '@config.imageField',
                     'isLoading': '@config.isLoading',
-                    'itemActions': '@config.itemActions',
+                    'itemActions': [
+                      'array/filter',
+                      '@config.itemActions',
+                      [
+                        'fn',
+                        'action',
+                        [
+                          'or',
+                          [
+                            '=',
+                            [
+                              'array/len',
+                              [
+                                'object/get',
+                                '@action',
+                                'roles',
+                                [],
+                              ],
+                            ],
+                            0,
+                          ],
+                          [
+                            'array/includes',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                            '@config.viewerRole',
+                          ],
+                        ],
+                      ],
+                    ],
                     'maxCols': '@config.maxCols',
                     'minCardWidth': '@config.minCardWidth',
                     'page': '@config.pageProp',
@@ -656,7 +711,40 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
                     'gap': '@config.gap',
                     'imageField': '@config.imageField',
                     'isLoading': '@config.isLoading',
-                    'itemActions': '@config.itemActions',
+                    'itemActions': [
+                      'array/filter',
+                      '@config.itemActions',
+                      [
+                        'fn',
+                        'action',
+                        [
+                          'or',
+                          [
+                            '=',
+                            [
+                              'array/len',
+                              [
+                                'object/get',
+                                '@action',
+                                'roles',
+                                [],
+                              ],
+                            ],
+                            0,
+                          ],
+                          [
+                            'array/includes',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                            '@config.viewerRole',
+                          ],
+                        ],
+                      ],
+                    ],
                     'maxCols': '@config.maxCols',
                     'minCardWidth': '@config.minCardWidth',
                     'page': '@config.pageProp',
@@ -699,7 +787,40 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
                     'gap': '@config.gap',
                     'imageField': '@config.imageField',
                     'isLoading': '@config.isLoading',
-                    'itemActions': '@config.itemActions',
+                    'itemActions': [
+                      'array/filter',
+                      '@config.itemActions',
+                      [
+                        'fn',
+                        'action',
+                        [
+                          'or',
+                          [
+                            '=',
+                            [
+                              'array/len',
+                              [
+                                'object/get',
+                                '@action',
+                                'roles',
+                                [],
+                              ],
+                            ],
+                            0,
+                          ],
+                          [
+                            'array/includes',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                            '@config.viewerRole',
+                          ],
+                        ],
+                      ],
+                    ],
                     'maxCols': '@config.maxCols',
                     'minCardWidth': '@config.minCardWidth',
                     'page': '@config.pageProp',

@@ -2,7 +2,7 @@ app ui-detail-panel "1.0.0"
 "DetailPanel — UI factory (1:1 with the @almadar/ui detail-panel pattern)."
 ;; @pattern "detail-panel"
 orbital DetailPanelOrbital {
-    type DetailPanelLoaded = Event { data : [DetailPanelItem] } "DetailPanel rows finished loading; payload.data holds the collection"
+    type DetailPanelLoaded = Event { data : DetailPanelItem } "DetailPanel row finished loading; payload.data holds the single row"
   type DetailPanelError = {
     message : string!
     name : string
@@ -29,6 +29,8 @@ orbital DetailPanelOrbital {
     event : event
     navigatesTo : string
     variant : "primary" | "secondary" | "ghost" | "danger"
+    when : SExpr
+    roles : [string]
   }
   type DetailPanelBackAction = {
     label : string!
@@ -36,6 +38,7 @@ orbital DetailPanelOrbital {
     event : event
     navigatesTo : string
     variant : "primary" | "secondary" | "ghost" | "danger"
+    when : SExpr
   }
   type DetailPanelFieldsItem = {
     key : string!
@@ -60,11 +63,11 @@ orbital DetailPanelOrbital {
   }
 
   trait DetailPanelRender -> @rebindable DetailPanelItem [interaction, instance] {
-    initial: idle
+    initial: resolving
 
-    state idle {
-      INIT -> idle when @config.selfFetch
-        (fetch DetailPanelItem { emit: { success: DetailPanelLoaded } })
+    state resolving {
+      INIT -> idle when (and @config.selfFetch (!= (str/default ?id "") "") (!= @config.mode "create"))
+        (fetch DetailPanelItem { id: ?id, emit: { success: DetailPanelLoaded } })
         (render-ui main {
           className: @config.className
           isLoading: @config.isLoading
@@ -84,7 +87,7 @@ orbital DetailPanelOrbital {
           status: @config.status
           avatar: @config.avatar
           sections: @config.sections
-          actions: @config.actions
+          actions: (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           maxInlineActions: @config.maxInlineActions
           backAction: @config.backAction
           footer: @config.footer
@@ -100,7 +103,7 @@ orbital DetailPanelOrbital {
           relationsData: @config.relationsData
           type: detail-panel
         })
-      INIT -> idle when (not @config.selfFetch)
+      INIT -> idle when (not (and @config.selfFetch (!= (str/default ?id "") "") (!= @config.mode "create")))
         (render-ui main {
           className: @config.className
           isLoading: @config.isLoading
@@ -120,7 +123,46 @@ orbital DetailPanelOrbital {
           status: @config.status
           avatar: @config.avatar
           sections: @config.sections
-          actions: @config.actions
+          actions: (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
+          maxInlineActions: @config.maxInlineActions
+          backAction: @config.backAction
+          footer: @config.footer
+          slideOver: @config.slideOver
+          fields: @config.fields
+          fieldNames: @config.fieldNames
+          initialData: @entity
+          mode: @config.mode
+          position: @config.position
+          width: @config.width
+          displayFields: @config.displayFields
+          showActions: @config.showActions
+          relationsData: @config.relationsData
+          type: detail-panel
+        })
+    }
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          page: @config.pageProp
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          entity: @entity
+          title: @config.title
+          onTitleCommit: @config.onTitleCommit
+          subtitle: @config.subtitle
+          status: @config.status
+          avatar: @config.avatar
+          sections: @config.sections
+          actions: (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           maxInlineActions: @config.maxInlineActions
           backAction: @config.backAction
           footer: @config.footer
@@ -156,7 +198,7 @@ orbital DetailPanelOrbital {
           status: @config.status
           avatar: @config.avatar
           sections: @config.sections
-          actions: @config.actions
+          actions: (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           maxInlineActions: @config.maxInlineActions
           backAction: @config.backAction
           footer: @config.footer
@@ -176,9 +218,17 @@ orbital DetailPanelOrbital {
 
     emits {
       DetailPanelLoaded
-        @description "DetailPanel rows finished loading; payload.data holds the collection."
+        @description "DetailPanel row finished loading; payload.data holds the single row."
         @synonyms "loaded, fetched, retrieved"
         @tier "essential"
+    }
+
+    listens {
+      INIT {
+        id : string
+      }
+        @description "Mount payload; a host that routes to this panel by id (a :id page param) passes it here."
+        @tier "internal"
     }
 
     config {
@@ -303,9 +353,13 @@ orbital DetailPanelOrbital {
         @label "Relations Data"
         @description "Relation display data: { fieldName: [{value, label}] } — injected server-side by the runtime (relation-option injection) or bound by compiled codegen; resolves stored foreign ids to display names."
         @tier "presentation"
+      viewerRole : string = ""
+        @label "Viewer's role"
+        @description "The viewer's role that each action's `roles` is checked against; bind it at the call site (e.g. `viewerRole: @user.role`). Empty = only actions with no `roles` show."
+        @tier "policy"
       selfFetch : boolean = true
-        @label "Fetch its own rows on mount?"
-        @description "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's."
+        @label "Fetch its own row on mount?"
+        @description "true (default) = a mount that carries an id loads that one row (never the collection); a create-mode mount skips the load. false = a composing atom owns the load."
         @tier "internal"
     }
   }

@@ -865,36 +865,6 @@ export function stdCacheAsideCacheEntryOrbital(params: StdCacheAsideCacheEntryOr
               'mascot',
             ],
           },
-          'evictionPolicy': {
-            'default': 'lru',
-            'description': 'How entries are evicted when the cache fills: least-recently-used, least-frequently-used, first-in-first-out, or TTL-only (never evict early).',
-            'label': 'Eviction policy',
-            'synonyms': 'cache replacement, eviction strategy',
-            'tier': 'domain',
-            'type': 'string',
-            'values': [
-              'lru',
-              'lfu',
-              'fifo',
-              'ttl-only',
-            ],
-          },
-          'maxCacheSize': {
-            'default': 1000,
-            'description': 'Hard cap on cached entries before eviction. 0 = unlimited.',
-            'label': 'Max cache entries',
-            'synonyms': 'cache capacity, max entries',
-            'tier': 'domain',
-            'type': 'number',
-          },
-          'staleWhileRevalidate': {
-            'default': true,
-            'description': 'When true, serve stale entries to consumers while a background refresh fetches fresh data. Reduces latency at the cost of brief staleness.',
-            'label': 'Serve stale while revalidating',
-            'synonyms': 'SWR, stale serving',
-            'tier': 'domain',
-            'type': 'boolean',
-          },
           'tableLook': {
             'default': 'dense',
             'description': 'Layer 2 visual treatment for the data table rendered by this atom.',
@@ -908,14 +878,6 @@ export function stdCacheAsideCacheEntryOrbital(params: StdCacheAsideCacheEntryOr
               'borderless',
               'card-rows',
             ],
-          },
-          'ttlSeconds': {
-            'default': 300,
-            'description': 'Cache entry time-to-live before it goes stale. Default 5 minutes. Shorter = fresher/real-time data; longer = stable/long-lived caching.',
-            'label': 'TTL (seconds)',
-            'synonyms': 'expiration, time to live, cache duration, freshness, real-time (short) vs long-lived (long)',
-            'tier': 'domain',
-            'type': 'number',
           },
         },
         'effectRow': [
@@ -1032,40 +994,6 @@ export function stdCacheAsideCacheEntryOrbital(params: StdCacheAsideCacheEntryOr
           },
         ],
         'linkedEntity': 'CacheEntry',
-        'listens': [
-          {
-            'event': 'FETCH',
-            'source': {
-              'kind': 'trait',
-              'trait': ('FetchButton' satisfies _StdCacheAsideListenTraitName),
-            },
-            'triggers': 'FETCH',
-          },
-          {
-            'event': 'INVALIDATE',
-            'source': {
-              'kind': 'trait',
-              'trait': ('InvalidateButton' satisfies _StdCacheAsideListenTraitName),
-            },
-            'triggers': 'INVALIDATE',
-          },
-          {
-            'event': 'REFRESH',
-            'source': {
-              'kind': 'trait',
-              'trait': ('RefreshButton' satisfies _StdCacheAsideListenTraitName),
-            },
-            'triggers': 'REFRESH',
-          },
-          {
-            'event': 'FETCH',
-            'source': {
-              'kind': 'trait',
-              'trait': ('RetryButton' satisfies _StdCacheAsideListenTraitName),
-            },
-            'triggers': 'FETCH',
-          },
-        ],
         'name': 'CacheEntryCacheManager',
         'scope': 'collection',
         'stateMachine': {

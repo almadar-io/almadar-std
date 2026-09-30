@@ -387,6 +387,14 @@
                     "required": true,
                     "type": "string"
                   },
+                  "roles": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "name": "roles",
+                    "required": false,
+                    "type": "array"
+                  },
                   "variant": {
                     "name": "variant",
                     "required": false,
@@ -397,6 +405,11 @@
                       "ghost",
                       "danger"
                     ]
+                  },
+                  "when": {
+                    "name": "when",
+                    "required": false,
+                    "type": "object"
                   }
                 },
                 "type": "object"
@@ -425,10 +438,43 @@
               "default": {
                 "children": [
                   {
-                    "actions": "@config.actions",
-                    "entity": "@payload.data",
+                    "actions": [
+                      "array/filter",
+                      "@config.actions",
+                      [
+                        "fn",
+                        "action",
+                        [
+                          "or",
+                          [
+                            "=",
+                            [
+                              "array/len",
+                              [
+                                "object/get",
+                                "@action",
+                                "roles",
+                                []
+                              ]
+                            ],
+                            0.0
+                          ],
+                          [
+                            "array/includes",
+                            [
+                              "object/get",
+                              "@action",
+                              "roles",
+                              []
+                            ],
+                            "@config.viewerRole"
+                          ]
+                        ]
+                      ]
+                    ],
+                    "entity": "@entity.loadedRow",
                     "fields": "@config.fields",
-                    "initialData": "@payload.data",
+                    "initialData": "@entity.loadedRow",
                     "maxInlineActions": "@config.maxInlineActions",
                     "sections": "@config.sections",
                     "showActions": "@config.showActions",
@@ -478,7 +524,40 @@
             },
             "documentBodyContent": {
               "default": {
-                "actions": "@config.actions",
+                "actions": [
+                  "array/filter",
+                  "@config.actions",
+                  [
+                    "fn",
+                    "action",
+                    [
+                      "or",
+                      [
+                        "=",
+                        [
+                          "array/len",
+                          [
+                            "object/get",
+                            "@action",
+                            "roles",
+                            []
+                          ]
+                        ],
+                        0.0
+                      ],
+                      [
+                        "array/includes",
+                        [
+                          "object/get",
+                          "@action",
+                          "roles",
+                          []
+                        ],
+                        "@config.viewerRole"
+                      ]
+                    ]
+                  ]
+                ],
                 "className": "w-full",
                 "coverImage": "@entity.coverUrl",
                 "editEvent": [
@@ -510,7 +589,40 @@
             },
             "documentEditingContent": {
               "default": {
-                "actions": "@config.actions",
+                "actions": [
+                  "array/filter",
+                  "@config.actions",
+                  [
+                    "fn",
+                    "action",
+                    [
+                      "or",
+                      [
+                        "=",
+                        [
+                          "array/len",
+                          [
+                            "object/get",
+                            "@action",
+                            "roles",
+                            []
+                          ]
+                        ],
+                        0.0
+                      ],
+                      [
+                        "array/includes",
+                        [
+                          "object/get",
+                          "@action",
+                          "roles",
+                          []
+                        ],
+                        "@config.viewerRole"
+                      ]
+                    ]
+                  ]
+                ],
                 "autosaveHint": "@config.autosaveHint",
                 "className": "w-full",
                 "contentChangeEvent": "CONTENT_CHANGE",
@@ -643,10 +755,43 @@
               "default": {
                 "children": [
                   {
-                    "actions": "@config.actions",
-                    "entity": "@payload.data",
+                    "actions": [
+                      "array/filter",
+                      "@config.actions",
+                      [
+                        "fn",
+                        "action",
+                        [
+                          "or",
+                          [
+                            "=",
+                            [
+                              "array/len",
+                              [
+                                "object/get",
+                                "@action",
+                                "roles",
+                                []
+                              ]
+                            ],
+                            0.0
+                          ],
+                          [
+                            "array/includes",
+                            [
+                              "object/get",
+                              "@action",
+                              "roles",
+                              []
+                            ],
+                            "@config.viewerRole"
+                          ]
+                        ]
+                      ]
+                    ],
+                    "entity": "@entity.loadedRow",
                     "fields": "@config.fields",
-                    "initialData": "@payload.data",
+                    "initialData": "@entity.loadedRow",
                     "maxInlineActions": "@config.maxInlineActions",
                     "sections": "@config.sections",
                     "showActions": "@config.showActions",
@@ -710,10 +855,43 @@
               "default": {
                 "children": [
                   {
-                    "actions": "@config.actions",
-                    "entity": "@payload.data",
+                    "actions": [
+                      "array/filter",
+                      "@config.actions",
+                      [
+                        "fn",
+                        "action",
+                        [
+                          "or",
+                          [
+                            "=",
+                            [
+                              "array/len",
+                              [
+                                "object/get",
+                                "@action",
+                                "roles",
+                                []
+                              ]
+                            ],
+                            0.0
+                          ],
+                          [
+                            "array/includes",
+                            [
+                              "object/get",
+                              "@action",
+                              "roles",
+                              []
+                            ],
+                            "@config.viewerRole"
+                          ]
+                        ]
+                      ]
+                    ],
+                    "entity": "@entity.loadedRow",
                     "fields": "@config.fields",
-                    "initialData": "@payload.data",
+                    "initialData": "@entity.loadedRow",
                     "maxInlineActions": "@config.maxInlineActions",
                     "sections": "@config.sections",
                     "showActions": "@config.showActions",
@@ -746,6 +924,13 @@
               "label": "Which field is the record's title?",
               "synonyms": "title field, heading field, name field, label field",
               "tier": "presentation",
+              "type": "string"
+            },
+            "viewerRole": {
+              "default": "",
+              "description": "The signed-in viewer's role that each action's `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.",
+              "label": "Viewer's role",
+              "tier": "policy",
               "type": "string"
             }
           },
@@ -4176,6 +4361,14 @@
           {
             "name": "variant",
             "type": "string"
+          },
+          {
+            "name": "roles",
+            "type": "[string]"
+          },
+          {
+            "name": "when",
+            "type": "SExpr"
           }
         ],
         "RecordFieldSpec": [

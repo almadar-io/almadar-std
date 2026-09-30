@@ -53,6 +53,8 @@ export interface StdUiFloatingActionButtonConfig {
   position?: string;
   /** Default: `"primary"` */
   variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning';
+  /** Default: `""` */
+  viewerRole?: string;
 }
 
 /**

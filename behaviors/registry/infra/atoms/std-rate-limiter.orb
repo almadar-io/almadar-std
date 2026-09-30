@@ -46,6 +46,24 @@
         "parent": "trt_01KXG04FG0Z6SKFKJ8FG00CD2Y",
         "renames": []
       },
+      "evt_01M3RWG8DSSY9YMYT1VKYANSFG": {
+        "bakedName": "WINDOW_ELAPSED",
+        "curName": "WINDOW_ELAPSED",
+        "id": "evt_01M3RWG8DSSY9YMYT1VKYANSFG",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04FG0Z6SKFKJ8FG00CD2Y",
+        "renames": []
+      },
+      "evt_01M3RWZEZRFJBDSH3PTSQ5MZRW": {
+        "bakedName": "CONFIGURE",
+        "curName": "CONFIGURE",
+        "id": "evt_01M3RWZEZRFJBDSH3PTSQ5MZRW",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04FG0Z6SKFKJ8FG00CD2Y",
+        "renames": []
+      },
       "orb_01KXG04FG004GQAWQ22CK81TAQ": {
         "bakedName": "RateBucketOrbital",
         "curName": "RateBucketOrbital",
@@ -242,6 +260,13 @@
             "name": "limiterStatus",
             "synonyms": "state, condition, mode",
             "type": "string"
+          },
+          {
+            "default": 60.0,
+            "description": "Requests this bucket admits per window before it throttles; set from requestsPerMinute when the limiter mounts.",
+            "name": "limit",
+            "synonyms": "cap, quota, ceiling, maximum requests",
+            "type": "number"
           }
         ],
         "id": "ent_01KXG04FG0R4NF2MX692M3D599",
@@ -398,7 +423,7 @@
         {
           "config": {
             "max": {
-              "default": 100.0,
+              "default": "@entity.limit",
               "type": "unknown"
             },
             "min": {
@@ -419,7 +444,7 @@
         {
           "config": {
             "max": {
-              "default": 100.0,
+              "default": "@entity.limit",
               "type": "unknown"
             },
             "showPercentage": {
@@ -545,14 +570,6 @@
           ],
           "category": "interaction",
           "config": {
-            "burstSize": {
-              "default": 10.0,
-              "description": "Requests allowed to burst above the per-minute rate before steady-state throttling kicks in. Lower burst = strict/no-spikes; higher burst = forgiving/allow-spikes.",
-              "label": "Burst size",
-              "synonyms": "burst capacity, allowance, spike allowance, no-spike (low) vs allow-bursts (high)",
-              "tier": "domain",
-              "type": "number"
-            },
             "enabled": {
               "default": false,
               "description": "Whether rate limiting is active for the host orbital. Off by default; turn on to throttle requests.",
@@ -561,34 +578,9 @@
               "tier": "domain",
               "type": "boolean"
             },
-            "keyStrategy": {
-              "default": "user",
-              "description": "What identifier the per-bucket counter is keyed on: source IP, authenticated user, API key, or one global bucket.",
-              "label": "Rate-limit key strategy",
-              "synonyms": "limiter key, bucket key",
-              "tier": "domain",
-              "type": "string",
-              "values": [
-                "ip",
-                "user",
-                "api-key",
-                "global"
-              ]
-            },
-            "overrideRoles": {
-              "default": [],
-              "description": "Roles exempt from rate limiting (e.g. internal services, admin override). Empty = no exemptions.",
-              "items": {
-                "type": "string"
-              },
-              "label": "Override roles",
-              "synonyms": "exempt roles, bypass list",
-              "tier": "domain",
-              "type": "[string]"
-            },
             "requestsPerMinute": {
               "default": 60.0,
-              "description": "Maximum number of requests allowed per minute before throttling begins.",
+              "description": "Requests a bucket admits per one-minute window; the next request throttles it, and each elapsed minute (or RESET) reopens it.",
               "label": "Requests per minute",
               "synonyms": "rate limit, request cap, RPS, throttle threshold",
               "tier": "domain",
@@ -611,6 +603,11 @@
           },
           "effectRow": [
             {
+              "kind": "emit",
+              "resource": "WINDOW_ELAPSED",
+              "site": "tick"
+            },
+            {
               "kind": "render-ui",
               "resource": "main"
             },
@@ -620,11 +617,27 @@
             },
             {
               "kind": "set",
+              "resource": "@entity.limit"
+            },
+            {
+              "kind": "set",
               "resource": "@entity.limiterStatus"
             },
             {
               "kind": "set",
               "resource": "@entity.window"
+            },
+            {
+              "kind": "ticks",
+              "site": "tick"
+            }
+          ],
+          "emits": [
+            {
+              "description": "One rate-limit window (a minute) has elapsed; the request count starts over.",
+              "event": "WINDOW_ELAPSED",
+              "eventId": "evt_01M3RWG8DSSY9YMYT1VKYANSFG",
+              "scope": "internal"
             }
           ],
           "entityRefIds": {
@@ -633,41 +646,6 @@
           "id": "trt_01KXG04FG0Z6SKFKJ8FG00CD2Y",
           "linkedEntity": "RateBucket",
           "linkedEntityId": "ent_01KXG04FG0R4NF2MX692M3D599",
-          "listens": [
-            {
-              "event": "REQUEST",
-              "eventId": "evt_01KXG04FG0VC7PYC8M4YHN135D",
-              "source": {
-                "kind": "trait",
-                "trait": "RequestButton",
-                "traitId": "trt_01KXZ44Y74BVWRJJSS79FFTHAG"
-              },
-              "triggers": "REQUEST",
-              "triggersId": "evt_01KXG04FG0VC7PYC8M4YHN135D"
-            },
-            {
-              "event": "RESET",
-              "eventId": "evt_01KXG04FG0VTPGS05M6XYYTKW0",
-              "source": {
-                "kind": "trait",
-                "trait": "ResetButton",
-                "traitId": "trt_01KXZ44Y74WN9F55NWDE7BQRJN"
-              },
-              "triggers": "RESET",
-              "triggersId": "evt_01KXG04FG0VTPGS05M6XYYTKW0"
-            },
-            {
-              "event": "RESET",
-              "eventId": "evt_01KXG04FG0VTPGS05M6XYYTKW0",
-              "source": {
-                "kind": "trait",
-                "trait": "ResetPrimaryButton",
-                "traitId": "trt_01KXZ44Y74CNCGXS8AAK4QWSRT"
-              },
-              "triggers": "RESET",
-              "triggersId": "evt_01KXG04FG0VTPGS05M6XYYTKW0"
-            }
-          ],
           "name": "RateBucketRateLimiter",
           "scope": "collection",
           "stateMachine": {
@@ -691,6 +669,24 @@
                 "id": "evt_01KXG04FG0VTPGS05M6XYYTKW0",
                 "key": "RESET",
                 "name": "Reset"
+              },
+              {
+                "description": "One rate-limit window (a minute) has elapsed; the request count starts over.",
+                "id": "evt_01M3RWG8DSSY9YMYT1VKYANSFG",
+                "key": "WINDOW_ELAPSED",
+                "name": "Window Elapsed"
+              },
+              {
+                "description": "Sets this bucket's limit (requests per window), e.g. from the host row's own rate limit.",
+                "id": "evt_01M3RWZEZRFJBDSH3PTSQ5MZRW",
+                "key": "CONFIGURE",
+                "name": "Configure",
+                "payloadSchema": [
+                  {
+                    "name": "limit",
+                    "type": "number"
+                  }
+                ]
               }
             ],
             "states": [
@@ -714,6 +710,11 @@
                     "set",
                     "@entity.window",
                     60.0
+                  ],
+                  [
+                    "set",
+                    "@entity.limit",
+                    "@config.requestsPerMinute"
                   ],
                   [
                     "set",
@@ -774,6 +775,94 @@
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.count",
+                    [
+                      "+",
+                      "@entity.count",
+                      1.0
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.limiterStatus",
+                    "throttled"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "align": "center",
+                              "children": [
+                                "@trait.ShieldIcon",
+                                "@trait.RateBucketTitle"
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack"
+                            },
+                            "@trait.ThrottledStatusDot"
+                          ],
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "between",
+                          "type": "stack"
+                        },
+                        "@trait.RateBucketDivider",
+                        "@trait.RateLimitAlert",
+                        "@trait.StatsGrid",
+                        "@trait.CountMeter",
+                        {
+                          "children": [
+                            "@trait.ResetPrimaryButton"
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "center",
+                          "type": "stack"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "REQUEST",
+                "eventId": "evt_01KXG04FG0VC7PYC8M4YHN135D",
+                "from": "open",
+                "guard": [
+                  "and",
+                  "@config.enabled",
+                  [
+                    ">=",
+                    [
+                      "+",
+                      "@entity.count",
+                      1.0
+                    ],
+                    "@entity.limit"
+                  ]
+                ],
+                "to": "throttled"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.count",
+                    [
+                      "+",
+                      "@entity.count",
+                      1.0
+                    ]
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
@@ -822,7 +911,19 @@
                 "event": "REQUEST",
                 "eventId": "evt_01KXG04FG0VC7PYC8M4YHN135D",
                 "from": "open",
-                "guard": "@config.enabled",
+                "guard": [
+                  "and",
+                  "@config.enabled",
+                  [
+                    "<",
+                    [
+                      "+",
+                      "@entity.count",
+                      1.0
+                    ],
+                    "@entity.limit"
+                  ]
+                ],
                 "to": "open"
               },
               {
@@ -949,6 +1050,108 @@
                 "effects": [
                   [
                     "set",
+                    "@entity.count",
+                    0.0
+                  ]
+                ],
+                "event": "WINDOW_ELAPSED",
+                "eventId": "evt_01M3RWG8DSSY9YMYT1VKYANSFG",
+                "from": "open",
+                "to": "open"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.limit",
+                    "@payload.limit"
+                  ]
+                ],
+                "event": "CONFIGURE",
+                "eventId": "evt_01M3RWZEZRFJBDSH3PTSQ5MZRW",
+                "from": "open",
+                "to": "open"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.limit",
+                    "@payload.limit"
+                  ]
+                ],
+                "event": "CONFIGURE",
+                "eventId": "evt_01M3RWZEZRFJBDSH3PTSQ5MZRW",
+                "from": "throttled",
+                "to": "throttled"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.limiterStatus",
+                    "open"
+                  ],
+                  [
+                    "set",
+                    "@entity.count",
+                    0.0
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "align": "center",
+                              "children": [
+                                "@trait.ShieldIcon",
+                                "@trait.RateBucketTitle"
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack"
+                            },
+                            "@trait.OpenStatusDot"
+                          ],
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "between",
+                          "type": "stack"
+                        },
+                        "@trait.RateBucketDivider",
+                        "@trait.StatsGrid",
+                        "@trait.CountMeter",
+                        "@trait.CountProgressBar",
+                        {
+                          "children": [
+                            "@trait.RequestButton",
+                            "@trait.ResetButton"
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "center",
+                          "type": "stack"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "WINDOW_ELAPSED",
+                "eventId": "evt_01M3RWG8DSSY9YMYT1VKYANSFG",
+                "from": "throttled",
+                "to": "open"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
                     "@entity.limiterStatus",
                     "open"
                   ],
@@ -1062,6 +1265,18 @@
               }
             ]
           },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "emit",
+                  "WINDOW_ELAPSED"
+                ]
+              ],
+              "interval": 60000.0,
+              "name": "windowElapsed"
+            }
+          ],
           "traitEmbedIds": {
             "CountMeter": "trt_01KXZ44Y74H7C0JKXEVTDA5ZZB",
             "CountProgressBar": "trt_01KXZ44Y74HS8AQBFB2VWAF5WY",

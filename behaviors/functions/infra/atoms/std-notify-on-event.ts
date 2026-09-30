@@ -157,8 +157,6 @@ export interface StdNotifyOnEventConfig {
   guardOp?: 'eq' | 'gt' | 'lt' | 'gte' | 'lte';
   /** Default: `0` */
   guardValue?: number;
-  /** Default: `[]` */
-  listensFor?: string[];
   /** Default: `"in-app"` */
   notifyChannel?: 'in-app' | 'email' | 'sms' | 'push' | 'webhook';
   /** Default: `""` */
@@ -644,17 +642,6 @@ export function stdNotifyOnEventNotifyOnEventOrbital(params: StdNotifyOnEventNot
             'synonyms': 'threshold, cutoff, limit, watermark, trigger value',
             'tier': 'policy',
             'type': 'number',
-          },
-          'listensFor': {
-            'default': [],
-            'description': 'Event names that should fire a notification. Set this to the upstream event name (e.g. OrderPlaced, CheckoutCompleted) so this atom listens for events from the orbital that emits them. The orbital owning this trait reacts whenever the named event fires anywhere in the schema.',
-            'items': {
-              'type': 'string',
-            },
-            'label': 'Trigger events',
-            'synonyms': 'subscribe to event, listen for event, react to event, watch for, wire upstream event, observe event from another orbital, cross-orbital subscription, on-event trigger',
-            'tier': 'internal',
-            'type': '[string]',
           },
           'notifyChannel': {
             'default': 'in-app',

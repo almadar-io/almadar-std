@@ -1,6 +1,11 @@
 app std-thread "1.3.0"
-"std-thread — forum-style nested replies with collapse + flat-mode toggle. Owns ThreadPost (persistent). flat:true covers 1:1 linear inquiry threads; flat:false renders forum-style nested. INIT fetches, scoped by @config.threadRootId when set (blank = every root, the default). REPLY persists a child post under @payload.parentId, stamped with the real @user identity. A consumer that mounts this as page comments forwards its own document-opened signal to SET_THREAD_ROOT { rootId }, which stamps @entity.replyRootId (scratch — the persisted threadRootId column is written only by the reply persist create) and refetches filtered by the payload; a plain INIT re-entry now also falls back through @entity.replyRootId before @config.threadRootId, so it stays scoped to the last SET_THREAD_ROOT instead of re-widening — only the after-create/after-select refetches still scope directly off their own event payload. Layer 3 variants override `bodyContent` to deliver chat-bubble, email-threaded, or linear-comments UX while inheriting the same trait, state machine, emits, and listens. A non-empty sectionTitle switches the default bodyContent into titled-comments mode: header + post list + a standalone composer button (without it an empty thread has no REPLY emitter at all — the affordance only existed per-row)."
+"std-thread — forum-style nested replies with collapse. Owns ThreadPost (persistent). INIT fetches, scoped by @config.threadRootId when set (blank = every root, the default). REPLY persists a child post under @payload.parentId, stamped with the real @user identity. A consumer that mounts this as page comments forwards its own document-opened signal to SET_THREAD_ROOT { rootId }, which stamps @entity.replyRootId (scratch — the persisted threadRootId column is written only by the reply persist create) and refetches filtered by the payload; a plain INIT re-entry now also falls back through @entity.replyRootId before @config.threadRootId, so it stays scoped to the last SET_THREAD_ROOT instead of re-widening — only the after-create/after-select refetches still scope directly off their own event payload. Layer 3 variants override `bodyContent` to deliver chat-bubble, email-threaded, or linear-comments UX while inheriting the same trait, state machine, emits, and listens. A non-empty sectionTitle switches the default bodyContent into titled-comments mode: header + post list + a standalone composer button (without it an empty thread has no REPLY emitter at all — the affordance only existed per-row)."
+type ItemAction = { label : string!, event : event, icon : string, roles : [string], when : SExpr }
 orbital ThreadPostOrbital {
+  uses RoleGate from "std/behaviors/std-role-gate"
+
+  uses Button from "std/behaviors/ui-button"
+
   ;; Forward relation: array of child ThreadPost IDs whose parentId === this.id.
   ;; Lowers to `type: "relation", cardinality: "many"` (orbital-lolo lower.rs).
   ;; @rebindable rewrites the target to the rebound entity in variant atoms.
@@ -381,10 +386,6 @@ orbital ThreadPostOrbital {
     }
 
     config {
-      flat : boolean = false
-        @label "Flat thread"
-        @description "Render replies as a linear list instead of nested tree"
-        @tier "presentation"
       threadRootId : string = ""
         @label "Root post id"
         @description "Top-level post whose descendants are loaded, filters every fetch and defaults new top-level replies' threadRootId (blank = all roots, unfiltered)"
@@ -393,10 +394,6 @@ orbital ThreadPostOrbital {
       tableLook : "dense" | "spacious" | "striped" | "borderless" | "card-rows" = dense
         @label "Table look"
         @description "Layer 2 visual treatment for the data table rendered by this atom."
-        @tier "presentation"
-      recipientName : string = Conversation
-        @label "recipientName"
-        @description "Header/recipient label for chat-style threads."
         @tier "presentation"
       sectionTitle : string = ""
         @label "sectionTitle"
@@ -407,58 +404,6 @@ orbital ThreadPostOrbital {
         @label "composerLabel"
         @description "Label of the standalone composer button rendered under the post list when sectionTitle is non-empty."
         @synonyms "reply label, comment button, add comment"
-        @tier "presentation"
-      emailAuthorBinding : string = @item.authorName
-        @label "emailAuthorBinding"
-        @description "List-pane binding for the message author."
-        @tier "presentation"
-      emailSubjectBinding : string = @item.subject
-        @label "emailSubjectBinding"
-        @description "List-pane binding for the message subject."
-        @tier "presentation"
-      emailPreviewBinding : string = @item.preview
-        @label "emailPreviewBinding"
-        @description "List-pane binding for the message preview text."
-        @tier "presentation"
-      detailSubjectBinding : string = @entity.focusedRow.subject
-        @label "detailSubjectBinding"
-        @description "Detail-pane binding for the focused message subject."
-        @tier "presentation"
-      detailAuthorBinding : string = @entity.focusedRow.authorName
-        @label "detailAuthorBinding"
-        @description "Detail-pane binding for the focused message author."
-        @tier "presentation"
-      detailFromBinding : string = @entity.focusedRow.fromAddress
-        @label "detailFromBinding"
-        @description "Detail-pane binding for the From address."
-        @tier "presentation"
-      detailToBinding : string = @entity.focusedRow.toAddress
-        @label "detailToBinding"
-        @description "Detail-pane binding for the To address."
-        @tier "presentation"
-      detailDateBinding : string = @entity.focusedRow.createdAt
-        @label "detailDateBinding"
-        @description "Detail-pane binding for the timestamp."
-        @tier "presentation"
-      detailContentBinding : string = @entity.focusedRow.content
-        @label "detailContentBinding"
-        @description "Detail-pane binding for the message body."
-        @tier "presentation"
-      replyAuthorBinding : string = @reply.authorName
-        @label "replyAuthorBinding"
-        @description "Reply binding for the reply author."
-        @tier "presentation"
-      replyFromBinding : string = @reply.fromAddress
-        @label "replyFromBinding"
-        @description "Reply binding for the reply From address."
-        @tier "presentation"
-      replyDateBinding : string = @reply.createdAt
-        @label "replyDateBinding"
-        @description "Reply binding for the reply timestamp."
-        @tier "presentation"
-      replyContentBinding : string = @reply.content
-        @label "replyContentBinding"
-        @description "Reply binding for the reply body."
         @tier "presentation"
       bodyContent : render-ui = {
         children: [(if ["!=", @config.sectionTitle, ""] {
@@ -485,21 +430,11 @@ orbital ThreadPostOrbital {
             variant: caption
           }]
           gap: sm
-          itemActions: [{
-            event: REPLY
-            icon: message-square
-            label: Reply
-          }]
+          itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           look: @config.tableLook
           type: data-list
           variant: card
-        }, (if ["!=", @config.sectionTitle, ""] {
-          action: REPLY
-          icon: message-square
-          label: @config.composerLabel
-          type: button
-          variant: secondary
-        } {
+        }, (if ["!=", @config.sectionTitle, ""] <trait.ThreadReplyGate /> {
           children: []
           gap: none
           type: stack
@@ -511,6 +446,39 @@ orbital ThreadPostOrbital {
         @label "Body content tree"
         @description "Render-ui SExpr rendered after thread posts load. Default is the canonical forum-style data-list. Layer 3 variants override this with their own tree (chat bubbles, email-threaded cards, linear comment stacks, etc.) to deliver entirely different thread UX while inheriting the same trait, state machine, emits, and listens."
         @tier "internal"
+      itemActions : [ItemAction] = [{
+        event: REPLY
+        icon: message-square
+        label: Reply
+      }]
+        @label "Row actions"
+        @description "Actions offered on each row; give an item `roles` to show it only to those viewer roles."
+        @tier "presentation"
+      viewerRole : string = ""
+        @label "Viewer's role"
+        @description "The signed-in viewer's role that each action's `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show."
+        @tier "policy"
+      replyRoles : [string] = []
+        @label "Roles that can reply"
+        @description "Roles (matched against viewerRole) that see the thread's Reply button. Empty = everyone."
+        @tier "policy"
+    }
+  }
+
+  trait ThreadReplyButton = Button.traits.ButtonRender {
+    config {
+      action: REPLY
+      icon: message-square
+      label: @config.composerLabel
+      variant: secondary
+    }
+  }
+
+  trait ThreadReplyGate = RoleGate.traits.RoleGate {
+    config {
+      roles: @config.replyRoles
+      viewerRole: @config.viewerRole
+      content: <trait.ThreadReplyButton />
     }
   }
 

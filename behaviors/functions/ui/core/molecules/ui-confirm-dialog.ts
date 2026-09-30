@@ -30,7 +30,7 @@ const ALIAS = 'UiConfirmDialog';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiConfirmDialogEventKey = 'CLOSE' | 'CONFIRM' | 'INIT' | 'OPEN';
+export type StdUiConfirmDialogEventKey = 'CLOSE' | 'CONFIRM' | 'EXITED' | 'INIT' | 'OPEN';
 
 /**
  * Payload shape for the `OPEN` event.
@@ -62,6 +62,8 @@ export interface StdUiConfirmDialogConfig {
   onClose?: string;
   /** Default: `"CONFIRM"` */
   onConfirm?: string;
+  /** Default: `"EXITED"` */
+  onExited?: string;
   /** Default: `"sm"` */
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
   /** Default: `""` */

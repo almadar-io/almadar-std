@@ -1893,13 +1893,6 @@ export function stdWorldmapBoard2dWorldMapBoard2DOrbital(params: StdWorldmapBoar
             'tier': 'presentation',
             'type': 'Asset',
           },
-          'scale': {
-            'default': 0.8,
-            'description': 'Canvas render scale.',
-            'label': 'Scale',
-            'tier': 'presentation',
-            'type': 'number',
-          },
           'travelIconAsset': {
             'default': {},
             'description': 'Icon sprite for the Pass Turn button.',

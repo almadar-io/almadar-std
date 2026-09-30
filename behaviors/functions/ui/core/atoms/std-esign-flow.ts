@@ -78,6 +78,19 @@ export interface StdEsignFlowSignatureSessionLoadFailedPayload {
 }
 
 /**
+ * Typed call-site config block for this trait — every
+ * field maps to a `config { ... }` entry in the source
+ * .lolo. The agent fills these to specialise the trait
+ * without modifying its state-machine topology.
+ */
+export interface StdEsignFlowConfig {
+  /** Default: `[{"event":"RESEND_REQUEST","label":"Resend","variant":"primary"},{"event":"REQUEST_DELETE","label":"Cancel","variant":"danger"},{"event":"CHECK_ENVELOPE_STATUS","label":"Refresh status","variant":"secondary"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `""` */
+  viewerRole?: string;
+}
+
+/**
  * Params for the std-esign-flow descriptor helpers.
  *
  * `entityName` binds every trait/page reference's `linkedEntity`.
@@ -101,8 +114,8 @@ export interface StdEsignFlowParams {
   listens?: TraitEventListener[];
   /** Set every emit's scope. */
   emitsScope?: 'internal' | 'external';
-  /** Nested config override (outer key = config field name). */
-  config?: TraitConfig;
+  /** Typed call-site config block — see the per-field interface. */
+  config?: StdEsignFlowConfig;
   /** URL path override for the (first) page. */
   pagePath?: string;
 }
@@ -387,6 +400,71 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
     traits: [
       {
         'category': 'interaction',
+        'config': {
+          'itemActions': {
+            'default': [
+              {
+                'event': 'RESEND_REQUEST',
+                'label': 'Resend',
+                'variant': 'primary',
+              },
+              {
+                'event': 'REQUEST_DELETE',
+                'label': 'Cancel',
+                'variant': 'danger',
+              },
+              {
+                'event': 'CHECK_ENVELOPE_STATUS',
+                'label': 'Refresh status',
+                'variant': 'secondary',
+              },
+            ],
+            'description': 'Actions offered on each row; give an item `roles` to show it only to those viewer roles.',
+            'items': {
+              'properties': {
+                'event': {
+                  'name': 'event',
+                  'required': false,
+                  'type': 'event',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': true,
+                  'type': 'string',
+                },
+                'roles': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'roles',
+                  'required': false,
+                  'type': 'array',
+                },
+                'variant': {
+                  'name': 'variant',
+                  'required': false,
+                  'type': 'string',
+                },
+                'when': {
+                  'name': 'when',
+                  'required': false,
+                  'type': 'object',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Row actions',
+            'tier': 'presentation',
+            'type': '[ItemAction]',
+          },
+          'viewerRole': {
+            'default': '',
+            'description': 'The signed-in viewer\'s role that each action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
+            'label': 'Viewer\'s role',
+            'tier': 'policy',
+            'type': 'string',
+          },
+        },
         'effectRow': [
           {
             'kind': 'fetch',
@@ -1150,21 +1228,38 @@ export function stdEsignFlowSignatureSessionOrbital(params: StdEsignFlowSignatur
                           },
                         ],
                         'itemActions': [
-                          {
-                            'event': 'RESEND_REQUEST',
-                            'label': 'Resend',
-                            'variant': 'primary',
-                          },
-                          {
-                            'event': 'REQUEST_DELETE',
-                            'label': 'Cancel',
-                            'variant': 'danger',
-                          },
-                          {
-                            'event': 'CHECK_ENVELOPE_STATUS',
-                            'label': 'Refresh status',
-                            'variant': 'secondary',
-                          },
+                          'array/filter',
+                          '@config.itemActions',
+                          [
+                            'fn',
+                            'action',
+                            [
+                              'or',
+                              [
+                                '=',
+                                [
+                                  'array/len',
+                                  [
+                                    'object/get',
+                                    '@action',
+                                    'roles',
+                                    [],
+                                  ],
+                                ],
+                                0,
+                              ],
+                              [
+                                'array/includes',
+                                [
+                                  'object/get',
+                                  '@action',
+                                  'roles',
+                                  [],
+                                ],
+                                '@config.viewerRole',
+                              ],
+                            ],
+                          ],
                         ],
                         'type': 'data-grid',
                       },

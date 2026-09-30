@@ -64,8 +64,6 @@ export interface StdAuditCaptureConfig {
   enabled?: boolean;
   /** Default: `[]` */
   excludeFields?: string[];
-  /** Default: `2555` */
-  retentionDays?: number;
 }
 
 /**
@@ -357,14 +355,6 @@ export function stdAuditCaptureAuditCaptureOrbital(params: StdAuditCaptureAuditC
             'label': 'Skip fields',
             'tier': 'internal',
             'type': '[string]',
-          },
-          'retentionDays': {
-            'default': 2555,
-            'description': 'Number of days to retain audit entries. Default 2555 ≈ 7 years, typical for compliance.',
-            'label': 'How long should the audit log be kept (days)?',
-            'synonyms': 'log retention, keep for, audit expiry, retention period, log lifetime',
-            'tier': 'policy',
-            'type': 'number',
           },
         },
         'effectRow': [

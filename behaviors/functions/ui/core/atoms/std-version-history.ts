@@ -83,6 +83,8 @@ export interface StdVersionHistoryRevisionRolledBackPayload {
  * without modifying its state-machine topology.
  */
 export interface StdVersionHistoryConfig {
+  /** Default: `[{"event":"OPEN_REVISION","icon":"arrow-right","label":"Open","variant":"ghost"},{"event":"ROLLBACK","icon":"rotate-ccw","label":"Rollback","variant":"danger"}]` */
+  itemActions?: EntityRow[];
   /** Default: `""` */
   scopeField?: string;
   /** Default: `"elevated"` */
@@ -91,6 +93,8 @@ export interface StdVersionHistoryConfig {
   tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
   /** Default: `"Version History"` */
   title?: string;
+  /** Default: `""` */
+  viewerRole?: string;
 }
 
 /**
@@ -325,6 +329,64 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
       {
         'category': 'interaction',
         'config': {
+          'itemActions': {
+            'default': [
+              {
+                'event': 'OPEN_REVISION',
+                'icon': 'arrow-right',
+                'label': 'Open',
+                'variant': 'ghost',
+              },
+              {
+                'event': 'ROLLBACK',
+                'icon': 'rotate-ccw',
+                'label': 'Rollback',
+                'variant': 'danger',
+              },
+            ],
+            'description': 'Actions offered on each row; give an item `roles` to show it only to those viewer roles.',
+            'items': {
+              'properties': {
+                'event': {
+                  'name': 'event',
+                  'required': false,
+                  'type': 'event',
+                },
+                'icon': {
+                  'name': 'icon',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': true,
+                  'type': 'string',
+                },
+                'roles': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'roles',
+                  'required': false,
+                  'type': 'array',
+                },
+                'variant': {
+                  'name': 'variant',
+                  'required': false,
+                  'type': 'string',
+                },
+                'when': {
+                  'name': 'when',
+                  'required': false,
+                  'type': 'object',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Row actions',
+            'tier': 'presentation',
+            'type': '[ItemAction]',
+          },
           'scopeField': {
             'default': '',
             'description': 'Revision entity field holding the parent document\'s id. When set, a page-mounted {id} route param scopes INIT\'s fetch, and a SHOW_HISTORY { key } event rescopes the feed, to rows whose scopeField equals the id/key; rollback and retry refetches stay scoped too. Empty (default) or no id = unfiltered global feed, unchanged from prior behavior.',
@@ -365,6 +427,13 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
             'description': 'Heading shown above the revision list',
             'label': 'Section title',
             'tier': 'presentation',
+            'type': 'string',
+          },
+          'viewerRole': {
+            'default': '',
+            'description': 'The signed-in viewer\'s role that each action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
+            'label': 'Viewer\'s role',
+            'tier': 'policy',
             'type': 'string',
           },
         },
@@ -1259,18 +1328,38 @@ export function stdVersionHistoryRevisionOrbital(params: StdVersionHistoryRevisi
                         ],
                         'gap': 'sm',
                         'itemActions': [
-                          {
-                            'event': 'OPEN_REVISION',
-                            'icon': 'arrow-right',
-                            'label': 'Open',
-                            'variant': 'ghost',
-                          },
-                          {
-                            'event': 'ROLLBACK',
-                            'icon': 'rotate-ccw',
-                            'label': 'Rollback',
-                            'variant': 'danger',
-                          },
+                          'array/filter',
+                          '@config.itemActions',
+                          [
+                            'fn',
+                            'action',
+                            [
+                              'or',
+                              [
+                                '=',
+                                [
+                                  'array/len',
+                                  [
+                                    'object/get',
+                                    '@action',
+                                    'roles',
+                                    [],
+                                  ],
+                                ],
+                                0,
+                              ],
+                              [
+                                'array/includes',
+                                [
+                                  'object/get',
+                                  '@action',
+                                  'roles',
+                                  [],
+                                ],
+                                '@config.viewerRole',
+                              ],
+                            ],
+                          ],
                         ],
                         'look': '@config.tableLook',
                         'type': 'data-grid',

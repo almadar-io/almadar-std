@@ -69,6 +69,8 @@ export interface StdUiTimelineConfig {
   /** Default: `true` */
   selfFetch?: boolean;
   title?: string;
+  /** Default: `""` */
+  viewerRole?: string;
 }
 
 type _StdUiTimelineEntityName = 'TimelineItem';
@@ -216,6 +218,14 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
                   'required': false,
                   'type': 'string',
                 },
+                'roles': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'roles',
+                  'required': false,
+                  'type': 'array',
+                },
                 'variant': {
                   'name': 'variant',
                   'required': false,
@@ -313,6 +323,13 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
             'description': 'Timeline title',
             'label': 'Title',
             'tier': 'presentation',
+            'type': 'string',
+          },
+          'viewerRole': {
+            'default': '',
+            'description': 'The viewer\'s role that each action\'s `roles` is checked against; bind it at the call site (e.g. `viewerRole: @user.role`). Empty = only actions with no `roles` show.',
+            'label': 'Viewer\'s role',
+            'tier': 'policy',
             'type': 'string',
           },
         },
@@ -448,7 +465,40 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
                     'error': '@config.error',
                     'fields': '@config.fields',
                     'isLoading': '@config.isLoading',
-                    'itemActions': '@config.itemActions',
+                    'itemActions': [
+                      'array/filter',
+                      '@config.itemActions',
+                      [
+                        'fn',
+                        'action',
+                        [
+                          'or',
+                          [
+                            '=',
+                            [
+                              'array/len',
+                              [
+                                'object/get',
+                                '@action',
+                                'roles',
+                                [],
+                              ],
+                            ],
+                            0,
+                          ],
+                          [
+                            'array/includes',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                            '@config.viewerRole',
+                          ],
+                        ],
+                      ],
+                    ],
                     'items': '@config.items',
                     'look': '@config.look',
                     'title': '@config.title',
@@ -472,7 +522,40 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
                     'error': '@config.error',
                     'fields': '@config.fields',
                     'isLoading': '@config.isLoading',
-                    'itemActions': '@config.itemActions',
+                    'itemActions': [
+                      'array/filter',
+                      '@config.itemActions',
+                      [
+                        'fn',
+                        'action',
+                        [
+                          'or',
+                          [
+                            '=',
+                            [
+                              'array/len',
+                              [
+                                'object/get',
+                                '@action',
+                                'roles',
+                                [],
+                              ],
+                            ],
+                            0,
+                          ],
+                          [
+                            'array/includes',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                            '@config.viewerRole',
+                          ],
+                        ],
+                      ],
+                    ],
                     'items': '@config.items',
                     'look': '@config.look',
                     'title': '@config.title',
@@ -499,7 +582,40 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
                     'error': '@config.error',
                     'fields': '@config.fields',
                     'isLoading': '@config.isLoading',
-                    'itemActions': '@config.itemActions',
+                    'itemActions': [
+                      'array/filter',
+                      '@config.itemActions',
+                      [
+                        'fn',
+                        'action',
+                        [
+                          'or',
+                          [
+                            '=',
+                            [
+                              'array/len',
+                              [
+                                'object/get',
+                                '@action',
+                                'roles',
+                                [],
+                              ],
+                            ],
+                            0,
+                          ],
+                          [
+                            'array/includes',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                            '@config.viewerRole',
+                          ],
+                        ],
+                      ],
+                    ],
                     'items': '@config.items',
                     'look': '@config.look',
                     'title': '@config.title',

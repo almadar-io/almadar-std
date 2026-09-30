@@ -30,7 +30,7 @@ const ALIAS = 'SavedSearch';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdSavedSearchEventKey = 'CANCEL' | 'CHANGE_FREQUENCY' | 'DELETE' | 'EDIT' | 'INIT' | 'RENAME' | 'SAVE' | 'SavedSearchDeleted' | 'SavedSearchLoadFailed' | 'SavedSearchLoaded' | 'SavedSearchUpdated' | 'TOGGLE_ALERT';
+export type StdSavedSearchEventKey = 'CANCEL' | 'CHANGE_FREQUENCY' | 'DELETE' | 'EDIT' | 'INIT' | 'RENAME' | 'SAVE' | 'SAVE_CURRENT' | 'SavedSearchCreated' | 'SavedSearchDeleted' | 'SavedSearchLoadFailed' | 'SavedSearchLoaded' | 'SavedSearchUpdated' | 'TOGGLE_ALERT' | 'TRACK_FILTERS' | 'TRACK_QUERY';
 
 /**
  * Payload shape for the `TOGGLE_ALERT` event.
@@ -84,6 +84,21 @@ export interface StdSavedSearchSavedSearchLoadFailedPayload {
 }
 
 /**
+ * Payload shape for the `SavedSearchCreated` event.
+ */
+export interface StdSavedSearchSavedSearchCreatedPayload {
+  id: string;
+  name: string;
+  query?: string;
+  filters?: Record<string, EntityRow>;
+  alertEnabled?: boolean;
+  alertFrequency?: string;
+  userId?: string;
+  lastNotifiedAt?: string;
+  createdAt?: string;
+}
+
+/**
  * Payload shape for the `SavedSearchUpdated` event.
  */
 export interface StdSavedSearchSavedSearchUpdatedPayload {
@@ -112,10 +127,16 @@ export interface StdSavedSearchSavedSearchDeletedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdSavedSearchConfig {
+  /** Default: `"Saved search"` */
+  defaultSearchName?: string;
+  /** Default: `[{"event":"TOGGLE_ALERT","icon":"bell","label":"Toggle alert","variant":"secondary"},{"event":"EDIT","icon":"pencil","label":"Edit","variant":"secondary"},{"event":"DELETE","icon":"trash-2","label":"Delete","variant":"danger"}]` */
+  itemActions?: EntityRow[];
   /** Default: `"dense"` */
   tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
   /** Default: `"Saved Searches"` */
   title?: string;
+  /** Default: `""` */
+  viewerRole?: string;
 }
 
 /**
@@ -251,6 +272,11 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
   const built = makeOrbitalWithUses({
     name: 'SavedSearchOrbital',
     uses: [],
+    expects: [
+      {
+        'kind': 'identity',
+      },
+    ],
     entity: {
       name: 'SavedSearch',
       collection: collectionName,
@@ -330,6 +356,77 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
       {
         'category': 'interaction',
         'config': {
+          'defaultSearchName': {
+            'default': 'Saved search',
+            'description': 'Name given to a saved search when the current search has no query text (filters only). Renamable afterwards.',
+            'label': 'Default saved-search name',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'itemActions': {
+            'default': [
+              {
+                'event': 'TOGGLE_ALERT',
+                'icon': 'bell',
+                'label': 'Toggle alert',
+                'variant': 'secondary',
+              },
+              {
+                'event': 'EDIT',
+                'icon': 'pencil',
+                'label': 'Edit',
+                'variant': 'secondary',
+              },
+              {
+                'event': 'DELETE',
+                'icon': 'trash-2',
+                'label': 'Delete',
+                'variant': 'danger',
+              },
+            ],
+            'description': 'Actions offered on each row; give an item `roles` to show it only to those viewer roles.',
+            'items': {
+              'properties': {
+                'event': {
+                  'name': 'event',
+                  'required': false,
+                  'type': 'event',
+                },
+                'icon': {
+                  'name': 'icon',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': true,
+                  'type': 'string',
+                },
+                'roles': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'roles',
+                  'required': false,
+                  'type': 'array',
+                },
+                'variant': {
+                  'name': 'variant',
+                  'required': false,
+                  'type': 'string',
+                },
+                'when': {
+                  'name': 'when',
+                  'required': false,
+                  'type': 'object',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Row actions',
+            'tier': 'presentation',
+            'type': '[ItemAction]',
+          },
           'tableLook': {
             'default': 'dense',
             'description': 'Layer 2 visual treatment for the data table rendered by this atom.',
@@ -349,6 +446,13 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
             'description': 'Heading shown above the saved-search list',
             'label': 'Section title',
             'tier': 'presentation',
+            'type': 'string',
+          },
+          'viewerRole': {
+            'default': '',
+            'description': 'The signed-in viewer\'s role that each action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
+            'label': 'Viewer\'s role',
+            'tier': 'policy',
             'type': 'string',
           },
         },
@@ -375,11 +479,19 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
           },
           {
             'kind': 'set',
+            'resource': '@entity.filters',
+          },
+          {
+            'kind': 'set',
             'resource': '@entity.id',
           },
           {
             'kind': 'set',
             'resource': '@entity.name',
+          },
+          {
+            'kind': 'set',
+            'resource': '@entity.query',
           },
         ],
         'emits': [
@@ -533,6 +645,54 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
             ],
             'synonyms': 'error, failure, load error',
             'tier': 'internal',
+          },
+          {
+            'description': 'Indicates the current search has been saved as a new row.',
+            'event': 'SavedSearchCreated',
+            'payloadEntity': 'SavedSearch',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'name',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'query',
+                'type': 'string',
+              },
+              {
+                'name': 'filters',
+                'type': 'Map<string,scalar>',
+              },
+              {
+                'name': 'alertEnabled',
+                'type': 'boolean',
+              },
+              {
+                'name': 'alertFrequency',
+                'type': 'string',
+              },
+              {
+                'name': 'userId',
+                'type': 'string',
+              },
+              {
+                'name': 'lastNotifiedAt',
+                'type': 'datetime',
+              },
+              {
+                'name': 'createdAt',
+                'type': 'string',
+              },
+            ],
+            'scope': 'internal',
+            'synonyms': 'saved, created, bookmarked',
+            'tier': 'presentation',
           },
           {
             'description': 'Indicates a saved search has been modified and persisted.',
@@ -710,6 +870,45 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
               'tier': 'presentation',
             },
             {
+              'description': 'The page\'s current search text changed.',
+              'key': 'TRACK_QUERY',
+              'name': 'Track Query',
+              'payloadSchema': [
+                {
+                  'name': 'query',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'search changed, query changed, typed search',
+              'tier': 'domain',
+            },
+            {
+              'description': 'The page\'s current filters changed.',
+              'key': 'TRACK_FILTERS',
+              'name': 'Track Filters',
+              'payloadSchema': [
+                {
+                  'name': 'field',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'value',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'filters changed, criteria changed',
+              'tier': 'domain',
+            },
+            {
+              'description': 'Save the page\'s current search and filters as a new saved search.',
+              'key': 'SAVE_CURRENT',
+              'name': 'Save Current',
+              'synonyms': 'save search, bookmark search, remember search',
+              'tier': 'domain',
+            },
+            {
               'description': 'Indicates a saved search is being modified.',
               'key': 'EDIT',
               'name': 'Edit',
@@ -783,6 +982,54 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
                 },
               ],
               'synonyms': 'removed, purged, discarded',
+              'tier': 'presentation',
+            },
+            {
+              'description': 'Indicates the current search has been saved as a new row.',
+              'key': 'SavedSearchCreated',
+              'name': 'SavedSearch created',
+              'payloadEntity': 'SavedSearch',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'name',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'query',
+                  'type': 'string',
+                },
+                {
+                  'name': 'filters',
+                  'type': 'Map<string,scalar>',
+                },
+                {
+                  'name': 'alertEnabled',
+                  'type': 'boolean',
+                },
+                {
+                  'name': 'alertFrequency',
+                  'type': 'string',
+                },
+                {
+                  'name': 'userId',
+                  'type': 'string',
+                },
+                {
+                  'name': 'lastNotifiedAt',
+                  'type': 'datetime',
+                },
+                {
+                  'name': 'createdAt',
+                  'type': 'string',
+                },
+              ],
+              'synonyms': 'saved, created, bookmarked',
               'tier': 'presentation',
             },
             {
@@ -937,24 +1184,38 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
                         ],
                         'gap': 'sm',
                         'itemActions': [
-                          {
-                            'event': 'TOGGLE_ALERT',
-                            'icon': 'bell',
-                            'label': 'Toggle alert',
-                            'variant': 'secondary',
-                          },
-                          {
-                            'event': 'EDIT',
-                            'icon': 'pencil',
-                            'label': 'Edit',
-                            'variant': 'secondary',
-                          },
-                          {
-                            'event': 'DELETE',
-                            'icon': 'trash-2',
-                            'label': 'Delete',
-                            'variant': 'danger',
-                          },
+                          'array/filter',
+                          '@config.itemActions',
+                          [
+                            'fn',
+                            'action',
+                            [
+                              'or',
+                              [
+                                '=',
+                                [
+                                  'array/len',
+                                  [
+                                    'object/get',
+                                    '@action',
+                                    'roles',
+                                    [],
+                                  ],
+                                ],
+                                0,
+                              ],
+                              [
+                                'array/includes',
+                                [
+                                  'object/get',
+                                  '@action',
+                                  'roles',
+                                  [],
+                                ],
+                                '@config.viewerRole',
+                              ],
+                            ],
+                          ],
                         ],
                         'look': '@config.tableLook',
                         'type': 'data-grid',
@@ -1075,6 +1336,80 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
                 ],
               ],
               'event': 'DELETE',
+              'from': 'browsing',
+              'to': 'browsing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.query',
+                  '@payload.query',
+                ],
+              ],
+              'event': 'TRACK_QUERY',
+              'from': 'browsing',
+              'to': 'browsing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.filters',
+                  [
+                    'if',
+                    [
+                      '=',
+                      '@payload.value',
+                      '',
+                    ],
+                    [
+                      'object/omit',
+                      '@entity.filters',
+                      [
+                        '@payload.field',
+                      ],
+                    ],
+                    [
+                      'object/set',
+                      '@entity.filters',
+                      '@payload.field',
+                      '@payload.value',
+                    ],
+                  ],
+                ],
+              ],
+              'event': 'TRACK_FILTERS',
+              'from': 'browsing',
+              'to': 'browsing',
+            },
+            {
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  ('SavedSearch' satisfies _StdSavedSearchEntityName),
+                  {
+                    'createdAt': '@now',
+                    'filters': '@entity.filters',
+                    'name': [
+                      'if',
+                      '@entity.query',
+                      '@entity.query',
+                      '@config.defaultSearchName',
+                    ],
+                    'query': '@entity.query',
+                    'userId': '@user.id',
+                  },
+                  {
+                    'emit': {
+                      'failure': 'SavedSearchLoadFailed',
+                      'success': 'SavedSearchCreated',
+                    },
+                  },
+                ],
+              ],
+              'event': 'SAVE_CURRENT',
               'from': 'browsing',
               'to': 'browsing',
             },
@@ -1204,6 +1539,23 @@ export function stdSavedSearchSavedSearchOrbital(params: StdSavedSearchSavedSear
                 ],
               ],
               'event': 'SavedSearchDeleted',
+              'from': 'browsing',
+              'to': 'loading',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('SavedSearch' satisfies _StdSavedSearchEntityName),
+                  {
+                    'emit': {
+                      'failure': 'SavedSearchLoadFailed',
+                      'success': 'SavedSearchLoaded',
+                    },
+                  },
+                ],
+              ],
+              'event': 'SavedSearchCreated',
               'from': 'browsing',
               'to': 'loading',
             },

@@ -72,17 +72,6 @@ export interface StdVoteVoteCastFailedPayload {
 }
 
 /**
- * Typed call-site config block for this trait — every
- * field maps to a `config { ... }` entry in the source
- * .lolo. The agent fills these to specialise the trait
- * without modifying its state-machine topology.
- */
-export interface StdVoteConfig {
-  /** Default: `true` */
-  allowDown?: boolean;
-}
-
-/**
  * Params for the std-vote descriptor helpers.
  *
  * `entityName` binds every trait/page reference's `linkedEntity`.
@@ -106,8 +95,8 @@ export interface StdVoteParams {
   listens?: TraitEventListener[];
   /** Set every emit's scope. */
   emitsScope?: 'internal' | 'external';
-  /** Typed call-site config block — see the per-field interface. */
-  config?: StdVoteConfig;
+  /** Nested config override (outer key = config field name). */
+  config?: TraitConfig;
   /** URL path override for the (first) page. */
   pagePath?: string;
 }
@@ -266,15 +255,6 @@ export function stdVoteVoteOrbital(params: StdVoteVoteOrbitalParams = {}): Orbit
     traits: [
       {
         'category': 'interaction',
-        'config': {
-          'allowDown': {
-            'default': true,
-            'description': 'Show the downvote arrow alongside the upvote',
-            'label': 'Allow downvotes',
-            'tier': 'domain',
-            'type': 'boolean',
-          },
-        },
         'effectRow': [
           {
             'kind': 'fetch',

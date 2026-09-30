@@ -75,8 +75,6 @@ export interface StdMlClassifyConfig {
   categories?: string[];
   /** Default: `""` */
   model?: string;
-  /** Default: `""` */
-  provider?: string;
 }
 
 /**
@@ -299,13 +297,6 @@ export function stdMlClassifyMlClassifyOrbital(params: StdMlClassifyMlClassifyOr
             'default': '',
             'description': 'Model override forwarded to the classify call',
             'label': 'Model',
-            'tier': 'infra',
-            'type': 'string',
-          },
-          'provider': {
-            'default': '',
-            'description': 'Reserved for provider selection; LLMServiceActions.classify (packages/almadar-llm/src/contracts.ts) takes no provider param today, so this knob is not forwarded to the call',
-            'label': 'Provider',
             'tier': 'infra',
             'type': 'string',
           },

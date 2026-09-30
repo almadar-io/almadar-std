@@ -293,7 +293,7 @@ orbital ModalEditorOrbital {
         (set @entity.cmdline "")
         (emit SET_MODE { editorId: ?editorId, mode: "NORMAL", caret: "block" })
 
-      KEY -> COMMAND when (and ["!=", ?key, "Enter"] ["!=", ?key, "Escape"] ["!=", ?key, "Backspace"])
+      KEY -> COMMAND when (and (array/includes (object/get @config.keymap "COMMAND") ?key) ["!=", ?key, "Enter"] ["!=", ?key, "Escape"] ["!=", ?key, "Backspace"])
         (set @entity.cmdline (str/concat @entity.cmdline ?key))
 
       EDITOR_FOCUS -> COMMAND
@@ -312,7 +312,7 @@ orbital ModalEditorOrbital {
         meta : boolean
         repeat : boolean
       }
-        @description "One physical keydown, delivered by the host's keyboard router. The host decides preventDefault from config.keymap; this trait only reads key + editorId."
+        @description "One physical keydown, delivered by the host's keyboard router. The host decides preventDefault from config.keymap; the command line accepts only keys config.keymap captures in COMMAND."
       EDITOR_FOCUS {
         editorId : string
       }

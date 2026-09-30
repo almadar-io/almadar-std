@@ -2,8 +2,6 @@ app ui-generic-app-template "1.0.0"
 "GenericAppTemplate — UI factory (1:1 with the @almadar/ui generic-app-template pattern)."
 ;; @pattern "generic-app-template"
 orbital GenericAppTemplateOrbital {
-    type GenericAppTemplateLoaded = Event { data : [GenericAppTemplateItem] } "GenericAppTemplate rows finished loading; payload.data holds the collection"
-
   entity GenericAppTemplateItem [runtime] {
     id : string!
   }
@@ -12,8 +10,8 @@ orbital GenericAppTemplateOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle when @config.selfFetch
-        (fetch GenericAppTemplateItem { emit: { success: GenericAppTemplateLoaded } })
+      INIT -> idle
+        (fetch GenericAppTemplateItem {})
         (render-ui main {
           entity: @entity
           className: @config.className
@@ -24,35 +22,6 @@ orbital GenericAppTemplateOrbital {
           footer: @config.footer
           type: generic-app-template
         })
-      INIT -> idle when (not @config.selfFetch)
-        (render-ui main {
-          entity: @entity
-          className: @config.className
-          title: @config.title
-          subtitle: @config.subtitle
-          children: @config.children
-          headerActions: @config.headerActions
-          footer: @config.footer
-          type: generic-app-template
-        })
-      GenericAppTemplateLoaded -> idle
-        (render-ui main {
-          entity: @payload.data
-          className: @config.className
-          title: @config.title
-          subtitle: @config.subtitle
-          children: @config.children
-          headerActions: @config.headerActions
-          footer: @config.footer
-          type: generic-app-template
-        })
-    }
-
-    emits {
-      GenericAppTemplateLoaded
-        @description "GenericAppTemplate rows finished loading; payload.data holds the collection."
-        @synonyms "loaded, fetched, retrieved"
-        @tier "essential"
     }
 
     config {
@@ -80,10 +49,6 @@ orbital GenericAppTemplateOrbital {
         @label "Footer"
         @description "Footer content"
         @tier "presentation"
-      selfFetch : boolean = true
-        @label "Fetch its own rows on mount?"
-        @description "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's."
-        @tier "internal"
     }
   }
 

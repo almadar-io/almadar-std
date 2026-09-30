@@ -1,0 +1,39 @@
+app std-role-gate "1.0.0"
+"std-role-gate — explicit role gate around ONE piece of UI. Renders its `content` trait only when `roles` is empty or lists the viewer's role; any other viewer gets nothing rendered. Wrap a single button, FAB or panel in it, bind `viewerRole` at the call site (e.g. `viewerRole: @user.role`), and list the roles that may see it."
+;; @capabilities "role gate, only for roles, hide for role, permission wrapper, restrict button to role, show only to admins, role-based visibility"
+;; @synonyms "role guard, permission gate, access gate, visible to roles, hide unless role, admin only"
+orbital RoleGateOrbital {
+  entity RoleGateData [runtime] {
+    id : string!
+  }
+
+  trait RoleGate -> @rebindable RoleGateData [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (or (= (array/len @config.roles) 0) (array/includes @config.roles @config.viewerRole))
+        (render-ui main { children: [@config.content], type: box })
+      INIT -> idle when (not (or (= (array/len @config.roles) 0) (array/includes @config.roles @config.viewerRole)))
+        (render-ui main null)
+    }
+
+    config {
+      content : trait
+        @label "Gated content"
+        @description "The trait rendered when the viewer's role is allowed, e.g. a button or panel trait ref."
+        @synonyms "wrapped content, guarded element, protected button"
+        @tier "presentation"
+      roles : [string] = []
+        @label "Visible to roles"
+        @description "Roles (matched against viewerRole) that see the content. Empty = everyone; any other viewer sees nothing."
+        @synonyms "allowed roles, only for, who can see, permitted roles"
+        @tier "policy"
+      viewerRole : string = ""
+        @label "Viewer's role"
+        @description "The signed-in viewer's role that `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`); left empty, only an ungated (empty `roles`) gate renders."
+        @tier "policy"
+    }
+  }
+
+  page "/role-gate" as RoleGatePage -> RoleGate
+}

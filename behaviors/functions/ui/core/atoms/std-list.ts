@@ -78,18 +78,24 @@ export interface StdListListItemLoadFailedPayload {
 export interface StdListConfig {
   /** Default: `false` */
   bodySearch?: boolean;
+  /** Default: `[]` */
+  createRoles?: string[];
   /** Default: `20` */
   displayPageSize?: number;
   /** Default: `"toolbar"` */
   filterBarLook?: 'toolbar' | 'chips' | 'pills' | 'popover-trigger' | 'inline-column-header';
   /** Default: `[]` */
   filters?: EntityRow[];
+  /** Default: `[{"event":"EDIT","label":"Edit","variant":"ghost"},{"event":"DELETE","label":"Delete","variant":"danger"}]` */
+  itemActions?: EntityRow[];
   /** Default: `20` */
   pageSize?: number;
   /** Default: `"name"` */
   searchField?: string;
   /** Default: `"Search…"` */
   searchPlaceholder?: string;
+  /** Default: `""` */
+  viewerRole?: string;
 }
 
 /**
@@ -128,6 +134,34 @@ export function stdListListItemBrowseTrait(params: StdListParams): TraitReferenc
     from: BEHAVIOR_PATH,
     ref: `${ALIAS}.traits.ListItemBrowse`,
     linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `List.traits.ListItemCreateButton`. */
+export function stdListListItemCreateButtonTrait(params: StdListParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.ListItemCreateButton`,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `List.traits.ListItemCreateGate`. */
+export function stdListListItemCreateGateTrait(params: StdListParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.ListItemCreateGate`,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects } : {}),
@@ -220,6 +254,8 @@ export function stdList(params: StdListParams): OrbitalDefinition {
     entity,
     traits: [
       stdListListItemBrowseTrait(params),
+      stdListListItemCreateButtonTrait(params),
+      stdListListItemCreateGateTrait(params),
       stdListListItemCreateTrait(params),
       stdListListItemEditTrait(params),
       stdListListItemDeleteTrait(params),
@@ -231,8 +267,8 @@ export function stdList(params: StdListParams): OrbitalDefinition {
   });
 }
 
-type _StdListEntityName = 'ListItem' | 'ConfirmAction' | 'ModalRecord';
-type _StdListListenTraitName = 'ListItemBrowse' | 'ListItemCreate' | 'ListItemEdit' | 'ListItemDelete' | 'ListItemPersistor';
+type _StdListEntityName = 'ListItem' | 'RoleGateData' | 'ButtonItem' | 'ConfirmAction' | 'ModalRecord';
+type _StdListListenTraitName = 'ListItemBrowse' | 'ListItemCreateButton' | 'ListItemCreateGate' | 'ListItemCreate' | 'ListItemEdit' | 'ListItemDelete' | 'ListItemPersistor';
 
 /**
  * Tunable params for the ListItemOrbital orbital.
@@ -274,13 +310,13 @@ export interface StdListListItemOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'ListItemCreate' | 'ListItemEdit' | 'ListItemDelete' | 'ListItemBrowse' | 'ListItemPersistor',
+    'ListItemCreateButton' | 'ListItemCreateGate' | 'ListItemCreate' | 'ListItemEdit' | 'ListItemDelete' | 'ListItemBrowse' | 'ListItemPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** `'Alias.traits.TraitName'` literal union of every trait ListItemOrbital's `uses[]` exports. */
-type _StdListListItemOrbitalUsesRef = 'Confirmation.traits.ConfirmActionConfirmation' | 'Modal.traits.ModalRecordModal';
+type _StdListListItemOrbitalUsesRef = 'RoleGate.traits.RoleGate' | 'Button.traits.ButtonRender' | 'Confirmation.traits.ConfirmActionConfirmation' | 'Modal.traits.ModalRecordModal';
 
 /** Per-orbital factory: builds the ListItemOrbital orbital with consumer params. */
 export function stdListListItemOrbital(params: StdListListItemOrbitalParams = {}): OrbitalDefinition {
@@ -289,6 +325,14 @@ export function stdListListItemOrbital(params: StdListListItemOrbitalParams = {}
   const built = makeOrbitalWithUses({
     name: 'ListItemOrbital',
     uses: [
+      {
+        'as': 'RoleGate',
+        'from': 'std/behaviors/std-role-gate',
+      },
+      {
+        'as': 'Button',
+        'from': 'std/behaviors/ui-button',
+      },
       {
         'as': 'Confirmation',
         'from': 'std/behaviors/std-confirmation',
@@ -364,6 +408,16 @@ export function stdListListItemOrbital(params: StdListListItemOrbitalParams = {}
             'tier': 'presentation',
             'type': 'boolean',
           },
+          'createRoles': {
+            'default': [],
+            'description': 'Roles (matched against viewerRole) that see the Create button. Empty = everyone.',
+            'items': {
+              'type': 'string',
+            },
+            'label': 'Roles that can create',
+            'tier': 'policy',
+            'type': '[string]',
+          },
           'displayPageSize': {
             'default': 20,
             'description': 'Rows visible per page before the data-grid\'s own pagination control appears — 20 matches the CRUD-list density sweet spot (Miller\'s law, 10-25 rows).',
@@ -418,6 +472,57 @@ export function stdListListItemOrbital(params: StdListListItemOrbitalParams = {}
             'tier': 'presentation',
             'type': '[FilterSpec]',
           },
+          'itemActions': {
+            'default': [
+              {
+                'event': 'EDIT',
+                'label': 'Edit',
+                'variant': 'ghost',
+              },
+              {
+                'event': 'DELETE',
+                'label': 'Delete',
+                'variant': 'danger',
+              },
+            ],
+            'description': 'Actions offered on each row; give an item `roles` to show it only to those viewer roles.',
+            'items': {
+              'properties': {
+                'event': {
+                  'name': 'event',
+                  'required': false,
+                  'type': 'event',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': true,
+                  'type': 'string',
+                },
+                'roles': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'roles',
+                  'required': false,
+                  'type': 'array',
+                },
+                'variant': {
+                  'name': 'variant',
+                  'required': false,
+                  'type': 'string',
+                },
+                'when': {
+                  'name': 'when',
+                  'required': false,
+                  'type': 'object',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Row actions',
+            'tier': 'presentation',
+            'type': '[ItemAction]',
+          },
           'pageSize': {
             'default': 20,
             'description': 'Records fetched from the server per REFETCH_PAGE request. The initial load and search/filter refetches remain unpaginated (load everything that matches) unless a consumer wires REFETCH_PAGE, so the default list surface is unchanged.',
@@ -440,6 +545,13 @@ export function stdListListItemOrbital(params: StdListListItemOrbitalParams = {}
             'label': 'Search box placeholder text',
             'synonyms': 'search hint, placeholder, search box text',
             'tier': 'presentation',
+            'type': 'string',
+          },
+          'viewerRole': {
+            'default': '',
+            'description': 'The signed-in viewer\'s role that each action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
+            'label': 'Viewer\'s role',
+            'tier': 'policy',
             'type': 'string',
           },
         },
@@ -925,13 +1037,7 @@ export function stdListListItemOrbital(params: StdListListItemOrbitalParams = {}
                             'gap': 'md',
                             'type': 'stack',
                           },
-                          {
-                            'action': 'CREATE',
-                            'icon': 'plus',
-                            'label': 'Create',
-                            'type': 'button',
-                            'variant': 'primary',
-                          },
+                          '@trait.ListItemCreateGate',
                         ],
                         'direction': 'horizontal',
                         'gap': 'md',
@@ -1015,16 +1121,38 @@ export function stdListListItemOrbital(params: StdListListItemOrbitalParams = {}
                           },
                         ],
                         'itemActions': [
-                          {
-                            'event': 'EDIT',
-                            'label': 'Edit',
-                            'variant': 'ghost',
-                          },
-                          {
-                            'event': 'DELETE',
-                            'label': 'Delete',
-                            'variant': 'danger',
-                          },
+                          'array/filter',
+                          '@config.itemActions',
+                          [
+                            'fn',
+                            'action',
+                            [
+                              'or',
+                              [
+                                '=',
+                                [
+                                  'array/len',
+                                  [
+                                    'object/get',
+                                    '@action',
+                                    'roles',
+                                    [],
+                                  ],
+                                ],
+                                0,
+                              ],
+                              [
+                                'array/includes',
+                                [
+                                  'object/get',
+                                  '@action',
+                                  'roles',
+                                  [],
+                                ],
+                                '@config.viewerRole',
+                              ],
+                            ],
+                          ],
                         ],
                         'pageSize': '@config.displayPageSize',
                         'type': 'data-grid',
@@ -1251,13 +1379,7 @@ export function stdListListItemOrbital(params: StdListListItemOrbitalParams = {}
                             'gap': 'md',
                             'type': 'stack',
                           },
-                          {
-                            'action': 'CREATE',
-                            'icon': 'plus',
-                            'label': 'Create',
-                            'type': 'button',
-                            'variant': 'primary',
-                          },
+                          '@trait.ListItemCreateGate',
                         ],
                         'direction': 'horizontal',
                         'gap': 'md',
@@ -1341,16 +1463,38 @@ export function stdListListItemOrbital(params: StdListListItemOrbitalParams = {}
                           },
                         ],
                         'itemActions': [
-                          {
-                            'event': 'EDIT',
-                            'label': 'Edit',
-                            'variant': 'ghost',
-                          },
-                          {
-                            'event': 'DELETE',
-                            'label': 'Delete',
-                            'variant': 'danger',
-                          },
+                          'array/filter',
+                          '@config.itemActions',
+                          [
+                            'fn',
+                            'action',
+                            [
+                              'or',
+                              [
+                                '=',
+                                [
+                                  'array/len',
+                                  [
+                                    'object/get',
+                                    '@action',
+                                    'roles',
+                                    [],
+                                  ],
+                                ],
+                                0,
+                              ],
+                              [
+                                'array/includes',
+                                [
+                                  'object/get',
+                                  '@action',
+                                  'roles',
+                                  [],
+                                ],
+                                '@config.viewerRole',
+                              ],
+                            ],
+                          ],
                         ],
                         'pageSize': '@config.displayPageSize',
                         'type': 'data-grid',
@@ -1418,6 +1562,46 @@ export function stdListListItemOrbital(params: StdListListItemOrbitalParams = {}
           ],
         },
       } satisfies Trait,
+      makeTraitRef({
+        'config': {
+          'action': {
+            'default': 'CREATE',
+            'type': 'unknown',
+          },
+          'icon': {
+            'default': 'plus',
+            'type': 'unknown',
+          },
+          'label': {
+            'default': 'Create',
+            'type': 'unknown',
+          },
+          'variant': {
+            'default': 'primary',
+            'type': 'unknown',
+          },
+        },
+        'name': 'ListItemCreateButton',
+        'ref': ('Button.traits.ButtonRender' satisfies _StdListListItemOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'content': {
+            'default': '@trait.ListItemCreateButton',
+            'type': 'unknown',
+          },
+          'roles': {
+            'default': '@config.createRoles',
+            'type': 'unknown',
+          },
+          'viewerRole': {
+            'default': '@config.viewerRole',
+            'type': 'unknown',
+          },
+        },
+        'name': 'ListItemCreateGate',
+        'ref': ('RoleGate.traits.RoleGate' satisfies _StdListListItemOrbitalUsesRef),
+      }),
       makeTraitRef({
         'config': {
           'fields': {
@@ -1935,6 +2119,8 @@ export const StdListListItemOrbitalManifest = {
     },
   ] as const,
   traitNames: [
+    'ListItemCreateButton',
+    'ListItemCreateGate',
     'ListItemCreate',
     'ListItemEdit',
     'ListItemDelete',

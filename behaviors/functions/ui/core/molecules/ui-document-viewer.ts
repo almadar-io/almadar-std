@@ -63,6 +63,8 @@ export interface StdUiDocumentViewerConfig {
   src?: unknown;
   title?: string;
   totalPages?: number;
+  /** Default: `""` */
+  viewerRole?: string;
 }
 
 /**

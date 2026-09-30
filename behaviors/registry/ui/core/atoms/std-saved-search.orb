@@ -118,6 +118,42 @@
         "parent": "trt_01KXG04HEK12VXNQKHPXBN5YWN",
         "renames": []
       },
+      "evt_01M3R78EJFAK3X937CRFBNVQ3C": {
+        "bakedName": "SavedSearchCreated",
+        "curName": "SavedSearchCreated",
+        "id": "evt_01M3R78EJFAK3X937CRFBNVQ3C",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04HEK12VXNQKHPXBN5YWN",
+        "renames": []
+      },
+      "evt_01M3R78EJFB3MQR8T2JZSX2AXB": {
+        "bakedName": "TRACK_QUERY",
+        "curName": "TRACK_QUERY",
+        "id": "evt_01M3R78EJFB3MQR8T2JZSX2AXB",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04HEK12VXNQKHPXBN5YWN",
+        "renames": []
+      },
+      "evt_01M3R78EJFTDDS9MFJHWF8YTWF": {
+        "bakedName": "TRACK_FILTERS",
+        "curName": "TRACK_FILTERS",
+        "id": "evt_01M3R78EJFTDDS9MFJHWF8YTWF",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04HEK12VXNQKHPXBN5YWN",
+        "renames": []
+      },
+      "evt_01M3R78EJFW0PVT55R4G57AB8K": {
+        "bakedName": "SAVE_CURRENT",
+        "curName": "SAVE_CURRENT",
+        "id": "evt_01M3R78EJFW0PVT55R4G57AB8K",
+        "kind": "event",
+        "owner": "workspace",
+        "parent": "trt_01KXG04HEK12VXNQKHPXBN5YWN",
+        "renames": []
+      },
       "orb_01KXG04HEK41V0ZGXWG1TYBR76": {
         "bakedName": "SavedSearchOrbital",
         "curName": "SavedSearchOrbital",
@@ -237,6 +273,77 @@
         {
           "category": "interaction",
           "config": {
+            "defaultSearchName": {
+              "default": "Saved search",
+              "description": "Name given to a saved search when the current search has no query text (filters only). Renamable afterwards.",
+              "label": "Default saved-search name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "itemActions": {
+              "default": [
+                {
+                  "event": "TOGGLE_ALERT",
+                  "icon": "bell",
+                  "label": "Toggle alert",
+                  "variant": "secondary"
+                },
+                {
+                  "event": "EDIT",
+                  "icon": "pencil",
+                  "label": "Edit",
+                  "variant": "secondary"
+                },
+                {
+                  "event": "DELETE",
+                  "icon": "trash-2",
+                  "label": "Delete",
+                  "variant": "danger"
+                }
+              ],
+              "description": "Actions offered on each row; give an item `roles` to show it only to those viewer roles.",
+              "items": {
+                "properties": {
+                  "event": {
+                    "name": "event",
+                    "required": false,
+                    "type": "event"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "roles": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "name": "roles",
+                    "required": false,
+                    "type": "array"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "when": {
+                    "name": "when",
+                    "required": false,
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Row actions",
+              "tier": "presentation",
+              "type": "[ItemAction]"
+            },
             "tableLook": {
               "default": "dense",
               "description": "Layer 2 visual treatment for the data table rendered by this atom.",
@@ -256,6 +363,13 @@
               "description": "Heading shown above the saved-search list",
               "label": "Section title",
               "tier": "presentation",
+              "type": "string"
+            },
+            "viewerRole": {
+              "default": "",
+              "description": "The signed-in viewer's role that each action's `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.",
+              "label": "Viewer's role",
+              "tier": "policy",
               "type": "string"
             }
           },
@@ -282,11 +396,19 @@
             },
             {
               "kind": "set",
+              "resource": "@entity.filters"
+            },
+            {
+              "kind": "set",
               "resource": "@entity.id"
             },
             {
               "kind": "set",
               "resource": "@entity.name"
+            },
+            {
+              "kind": "set",
+              "resource": "@entity.query"
             }
           ],
           "emits": [
@@ -449,6 +571,55 @@
               ],
               "synonyms": "error, failure, load error",
               "tier": "internal"
+            },
+            {
+              "description": "Indicates the current search has been saved as a new row.",
+              "event": "SavedSearchCreated",
+              "eventId": "evt_01M3R78EJFAK3X937CRFBNVQ3C",
+              "payloadEntity": "SavedSearch",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "query",
+                  "type": "string"
+                },
+                {
+                  "name": "filters",
+                  "type": "Map<string,scalar>"
+                },
+                {
+                  "name": "alertEnabled",
+                  "type": "boolean"
+                },
+                {
+                  "name": "alertFrequency",
+                  "type": "string"
+                },
+                {
+                  "name": "userId",
+                  "type": "string"
+                },
+                {
+                  "name": "lastNotifiedAt",
+                  "type": "datetime"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "string"
+                }
+              ],
+              "scope": "internal",
+              "synonyms": "saved, created, bookmarked",
+              "tier": "presentation"
             },
             {
               "description": "Indicates a saved search has been modified and persisted.",
@@ -638,6 +809,48 @@
                 "tier": "presentation"
               },
               {
+                "description": "The page's current search text changed.",
+                "id": "evt_01M3R78EJFB3MQR8T2JZSX2AXB",
+                "key": "TRACK_QUERY",
+                "name": "Track Query",
+                "payloadSchema": [
+                  {
+                    "name": "query",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "search changed, query changed, typed search",
+                "tier": "domain"
+              },
+              {
+                "description": "The page's current filters changed.",
+                "id": "evt_01M3R78EJFTDDS9MFJHWF8YTWF",
+                "key": "TRACK_FILTERS",
+                "name": "Track Filters",
+                "payloadSchema": [
+                  {
+                    "name": "field",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "value",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "filters changed, criteria changed",
+                "tier": "domain"
+              },
+              {
+                "description": "Save the page's current search and filters as a new saved search.",
+                "id": "evt_01M3R78EJFW0PVT55R4G57AB8K",
+                "key": "SAVE_CURRENT",
+                "name": "Save Current",
+                "synonyms": "save search, bookmark search, remember search",
+                "tier": "domain"
+              },
+              {
                 "description": "Indicates a saved search is being modified.",
                 "id": "evt_01KXG04HEPKXNXT78X9K6N7YJ0",
                 "key": "EDIT",
@@ -714,6 +927,55 @@
                   }
                 ],
                 "synonyms": "removed, purged, discarded",
+                "tier": "presentation"
+              },
+              {
+                "description": "Indicates the current search has been saved as a new row.",
+                "id": "evt_01M3R78EJFAK3X937CRFBNVQ3C",
+                "key": "SavedSearchCreated",
+                "name": "SavedSearch created",
+                "payloadEntity": "SavedSearch",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "name",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "query",
+                    "type": "string"
+                  },
+                  {
+                    "name": "filters",
+                    "type": "Map<string,scalar>"
+                  },
+                  {
+                    "name": "alertEnabled",
+                    "type": "boolean"
+                  },
+                  {
+                    "name": "alertFrequency",
+                    "type": "string"
+                  },
+                  {
+                    "name": "userId",
+                    "type": "string"
+                  },
+                  {
+                    "name": "lastNotifiedAt",
+                    "type": "datetime"
+                  },
+                  {
+                    "name": "createdAt",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "saved, created, bookmarked",
                 "tier": "presentation"
               },
               {
@@ -873,24 +1135,38 @@
                           ],
                           "gap": "sm",
                           "itemActions": [
-                            {
-                              "event": "TOGGLE_ALERT",
-                              "icon": "bell",
-                              "label": "Toggle alert",
-                              "variant": "secondary"
-                            },
-                            {
-                              "event": "EDIT",
-                              "icon": "pencil",
-                              "label": "Edit",
-                              "variant": "secondary"
-                            },
-                            {
-                              "event": "DELETE",
-                              "icon": "trash-2",
-                              "label": "Delete",
-                              "variant": "danger"
-                            }
+                            "array/filter",
+                            "@config.itemActions",
+                            [
+                              "fn",
+                              "action",
+                              [
+                                "or",
+                                [
+                                  "=",
+                                  [
+                                    "array/len",
+                                    [
+                                      "object/get",
+                                      "@action",
+                                      "roles",
+                                      []
+                                    ]
+                                  ],
+                                  0.0
+                                ],
+                                [
+                                  "array/includes",
+                                  [
+                                    "object/get",
+                                    "@action",
+                                    "roles",
+                                    []
+                                  ],
+                                  "@config.viewerRole"
+                                ]
+                              ]
+                            ]
                           ],
                           "look": "@config.tableLook",
                           "type": "data-grid"
@@ -1016,6 +1292,83 @@
                 ],
                 "event": "DELETE",
                 "eventId": "evt_01KXG04HEPQ5SY3A24SYMP0XH5",
+                "from": "browsing",
+                "to": "browsing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.query",
+                    "@payload.query"
+                  ]
+                ],
+                "event": "TRACK_QUERY",
+                "eventId": "evt_01M3R78EJFB3MQR8T2JZSX2AXB",
+                "from": "browsing",
+                "to": "browsing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.filters",
+                    [
+                      "if",
+                      [
+                        "=",
+                        "@payload.value",
+                        ""
+                      ],
+                      [
+                        "object/omit",
+                        "@entity.filters",
+                        [
+                          "@payload.field"
+                        ]
+                      ],
+                      [
+                        "object/set",
+                        "@entity.filters",
+                        "@payload.field",
+                        "@payload.value"
+                      ]
+                    ]
+                  ]
+                ],
+                "event": "TRACK_FILTERS",
+                "eventId": "evt_01M3R78EJFTDDS9MFJHWF8YTWF",
+                "from": "browsing",
+                "to": "browsing"
+              },
+              {
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "SavedSearch",
+                    {
+                      "createdAt": "@now",
+                      "filters": "@entity.filters",
+                      "name": [
+                        "if",
+                        "@entity.query",
+                        "@entity.query",
+                        "@config.defaultSearchName"
+                      ],
+                      "query": "@entity.query",
+                      "userId": "@user.id"
+                    },
+                    {
+                      "emit": {
+                        "failure": "SavedSearchLoadFailed",
+                        "success": "SavedSearchCreated"
+                      }
+                    }
+                  ]
+                ],
+                "event": "SAVE_CURRENT",
+                "eventId": "evt_01M3R78EJFW0PVT55R4G57AB8K",
                 "from": "browsing",
                 "to": "browsing"
               },
@@ -1154,6 +1507,24 @@
               {
                 "effects": [
                   [
+                    "fetch",
+                    "SavedSearch",
+                    {
+                      "emit": {
+                        "failure": "SavedSearchLoadFailed",
+                        "success": "SavedSearchLoaded"
+                      }
+                    }
+                  ]
+                ],
+                "event": "SavedSearchCreated",
+                "eventId": "evt_01M3R78EJFAK3X937CRFBNVQ3C",
+                "from": "browsing",
+                "to": "loading"
+              },
+              {
+                "effects": [
+                  [
                     "render-ui",
                     "main",
                     {
@@ -1261,7 +1632,36 @@
             ]
           }
         }
-      ]
+      ],
+      "types": {
+        "ItemAction": [
+          {
+            "name": "label",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "event",
+            "type": "event"
+          },
+          {
+            "name": "variant",
+            "type": "string"
+          },
+          {
+            "name": "icon",
+            "type": "string"
+          },
+          {
+            "name": "roles",
+            "type": "[string]"
+          },
+          {
+            "name": "when",
+            "type": "SExpr"
+          }
+        ]
+      }
     }
   ],
   "schemaVersion": 1,

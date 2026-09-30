@@ -18,6 +18,7 @@ orbital CodeBlockOrbital {
     event : event
     navigatesTo : string
     variant : "primary" | "secondary" | "ghost"
+    roles : [string]
   }
   type CodeBlockError = {
     message : string!
@@ -66,7 +67,7 @@ orbital CodeBlockOrbital {
           showLineNumbers: @config.showLineNumbers
           wordWrap: @config.wordWrap
           files: @config.files
-          actions: @config.actions
+          actions: (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           isLoading: @config.isLoading
           error: @config.error
           showCopy: @config.showCopy
@@ -106,7 +107,7 @@ orbital CodeBlockOrbital {
           showLineNumbers: @config.showLineNumbers
           wordWrap: @config.wordWrap
           files: @config.files
-          actions: @config.actions
+          actions: (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           isLoading: @config.isLoading
           error: @config.error
           showCopy: @config.showCopy
@@ -146,7 +147,7 @@ orbital CodeBlockOrbital {
           showLineNumbers: @config.showLineNumbers
           wordWrap: @config.wordWrap
           files: @config.files
-          actions: @config.actions
+          actions: (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           isLoading: @config.isLoading
           error: @config.error
           showCopy: @config.showCopy
@@ -186,7 +187,7 @@ orbital CodeBlockOrbital {
           showLineNumbers: @config.showLineNumbers
           wordWrap: @config.wordWrap
           files: @config.files
-          actions: @config.actions
+          actions: (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           isLoading: @config.isLoading
           error: @config.error
           showCopy: @config.showCopy
@@ -226,7 +227,7 @@ orbital CodeBlockOrbital {
           showLineNumbers: @config.showLineNumbers
           wordWrap: @config.wordWrap
           files: @config.files
-          actions: @config.actions
+          actions: (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           isLoading: @config.isLoading
           error: @config.error
           showCopy: @config.showCopy
@@ -266,7 +267,7 @@ orbital CodeBlockOrbital {
           showLineNumbers: @config.showLineNumbers
           wordWrap: @config.wordWrap
           files: @config.files
-          actions: @config.actions
+          actions: (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           isLoading: @config.isLoading
           error: @config.error
           showCopy: @config.showCopy
@@ -306,7 +307,7 @@ orbital CodeBlockOrbital {
           showLineNumbers: @config.showLineNumbers
           wordWrap: @config.wordWrap
           files: @config.files
-          actions: @config.actions
+          actions: (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           isLoading: @config.isLoading
           error: @config.error
           showCopy: @config.showCopy
@@ -346,7 +347,7 @@ orbital CodeBlockOrbital {
           showLineNumbers: @config.showLineNumbers
           wordWrap: @config.wordWrap
           files: @config.files
-          actions: @config.actions
+          actions: (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           isLoading: @config.isLoading
           error: @config.error
           showCopy: @config.showCopy
@@ -564,6 +565,10 @@ orbital CodeBlockOrbital {
         @label "Line Numbers"
         @description "Editable only: number the lines in a gutter (lines with errors in red). Default on."
         @tier "presentation"
+      viewerRole : string = ""
+        @label "Viewer's role"
+        @description "The viewer's role that each action's `roles` is checked against; bind it at the call site (e.g. `viewerRole: @user.role`). Empty = only actions with no `roles` show."
+        @tier "policy"
     }
   }
 

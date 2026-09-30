@@ -1101,7 +1101,17 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                               {
                                 'cancelEvent': 'CANCEL',
                                 'entity': '@entity',
-                                'fields': '@entity.currentFields',
+                                'fields': [
+                                  'array/map',
+                                  '@entity.currentFields',
+                                  [
+                                    'fn',
+                                    'f',
+                                    {
+                                      'name': '@f',
+                                    },
+                                  ],
+                                ],
                                 'mode': 'edit',
                                 'showCancel': false,
                                 'showSubmit': false,
@@ -1419,7 +1429,17 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                               {
                                 'cancelEvent': 'CANCEL',
                                 'entity': '@entity',
-                                'fields': '@entity.currentFields',
+                                'fields': [
+                                  'array/map',
+                                  '@entity.currentFields',
+                                  [
+                                    'fn',
+                                    'f',
+                                    {
+                                      'name': '@f',
+                                    },
+                                  ],
+                                ],
                                 'mode': 'edit',
                                 'showCancel': false,
                                 'showSubmit': false,
@@ -1742,7 +1762,17 @@ export function stdWizardWizardOrbital(params: StdWizardWizardOrbitalParams = {}
                               {
                                 'cancelEvent': 'CANCEL',
                                 'entity': '@entity',
-                                'fields': '@entity.currentFields',
+                                'fields': [
+                                  'array/map',
+                                  '@entity.currentFields',
+                                  [
+                                    'fn',
+                                    'f',
+                                    {
+                                      'name': '@f',
+                                    },
+                                  ],
+                                ],
                                 'mode': 'edit',
                                 'showCancel': false,
                                 'showSubmit': false,

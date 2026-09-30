@@ -30,7 +30,7 @@ const ALIAS = 'UiDrawer';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiDrawerEventKey = 'CLOSE' | 'INIT' | 'OPEN';
+export type StdUiDrawerEventKey = 'CLOSE' | 'EXITED' | 'INIT' | 'OPEN';
 
 /**
  * Payload shape for the `OPEN` event.
@@ -54,11 +54,15 @@ export interface StdUiDrawerConfig {
   closeOnEscape?: boolean;
   /** Default: `true` */
   closeOnOverlayClick?: boolean;
+  /** Default: `false` */
+  contained?: boolean;
   footer?: PatternValue;
   /** Default: `true` */
   isOpen?: boolean;
   /** Default: `"CLOSE"` */
   onClose?: string;
+  /** Default: `"EXITED"` */
+  onExited?: string;
   /** Default: `"right"` */
   position?: 'left' | 'right';
   /** Default: `true` */

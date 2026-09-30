@@ -98,10 +98,14 @@ export interface StdNotificationPreferencesPreferenceDeletedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdNotificationPreferencesConfig {
+  /** Default: `[{"event":"EDIT","icon":"pencil","label":"Edit","variant":"secondary"},{"event":"DELETE","icon":"trash-2","label":"Delete","variant":"danger"}]` */
+  itemActions?: EntityRow[];
   /** Default: `"dense"` */
   tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
   /** Default: `"Notification preferences"` */
   title?: string;
+  /** Default: `""` */
+  viewerRole?: string;
 }
 
 /**
@@ -422,6 +426,64 @@ export function stdNotificationPreferencesNotificationPreferencesOrbital(params:
       {
         'category': 'interaction',
         'config': {
+          'itemActions': {
+            'default': [
+              {
+                'event': 'EDIT',
+                'icon': 'pencil',
+                'label': 'Edit',
+                'variant': 'secondary',
+              },
+              {
+                'event': 'DELETE',
+                'icon': 'trash-2',
+                'label': 'Delete',
+                'variant': 'danger',
+              },
+            ],
+            'description': 'Actions offered on each row; give an item `roles` to show it only to those viewer roles.',
+            'items': {
+              'properties': {
+                'event': {
+                  'name': 'event',
+                  'required': false,
+                  'type': 'event',
+                },
+                'icon': {
+                  'name': 'icon',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': true,
+                  'type': 'string',
+                },
+                'roles': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'roles',
+                  'required': false,
+                  'type': 'array',
+                },
+                'variant': {
+                  'name': 'variant',
+                  'required': false,
+                  'type': 'string',
+                },
+                'when': {
+                  'name': 'when',
+                  'required': false,
+                  'type': 'object',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Row actions',
+            'tier': 'presentation',
+            'type': '[ItemAction]',
+          },
           'tableLook': {
             'default': 'dense',
             'description': 'Layer 2 visual treatment for the preference data table rendered by this atom.',
@@ -441,6 +503,13 @@ export function stdNotificationPreferencesNotificationPreferencesOrbital(params:
             'description': 'Heading shown above the preference list',
             'label': 'Section title',
             'tier': 'presentation',
+            'type': 'string',
+          },
+          'viewerRole': {
+            'default': '',
+            'description': 'The signed-in viewer\'s role that each action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
+            'label': 'Viewer\'s role',
+            'tier': 'policy',
             'type': 'string',
           },
         },
@@ -1177,18 +1246,38 @@ export function stdNotificationPreferencesNotificationPreferencesOrbital(params:
                         ],
                         'gap': 'sm',
                         'itemActions': [
-                          {
-                            'event': 'EDIT',
-                            'icon': 'pencil',
-                            'label': 'Edit',
-                            'variant': 'secondary',
-                          },
-                          {
-                            'event': 'DELETE',
-                            'icon': 'trash-2',
-                            'label': 'Delete',
-                            'variant': 'danger',
-                          },
+                          'array/filter',
+                          '@config.itemActions',
+                          [
+                            'fn',
+                            'action',
+                            [
+                              'or',
+                              [
+                                '=',
+                                [
+                                  'array/len',
+                                  [
+                                    'object/get',
+                                    '@action',
+                                    'roles',
+                                    [],
+                                  ],
+                                ],
+                                0,
+                              ],
+                              [
+                                'array/includes',
+                                [
+                                  'object/get',
+                                  '@action',
+                                  'roles',
+                                  [],
+                                ],
+                                '@config.viewerRole',
+                              ],
+                            ],
+                          ],
                         ],
                         'look': '@config.tableLook',
                         'type': 'data-grid',

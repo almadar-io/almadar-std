@@ -263,9 +263,7 @@
           "ExecScanFailed",
           "ExecStepped"
         ],
-        "listenedEvents": [
-          "CLOSE"
-        ],
+        "listenedEvents": [],
         "events": [
           {
             "name": "CANCEL_ERASURE",
@@ -351,19 +349,6 @@
         ],
         "overridableConfigKeys": [
           {
-            "key": "anonymizeVsDelete",
-            "type": "string",
-            "default": "anonymize",
-            "label": "Anonymize or fully delete the record?",
-            "description": "anonymize = scrub PII fields and keep row for audit; delete = remove the row entirely.",
-            "synonyms": "deletion mode, anonymize, delete, scrub or remove, retention mode",
-            "tier": "policy",
-            "enumValues": [
-              "anonymize",
-              "delete"
-            ]
-          },
-          {
             "key": "enabled",
             "type": "boolean",
             "default": false,
@@ -373,24 +358,51 @@
             "tier": "policy"
           },
           {
-            "key": "gracePeriodDays",
-            "type": "number",
-            "default": 30,
-            "label": "How many days before deletion is carried out?",
-            "description": "Days between request submission and execution. The subject can cancel during this window.",
-            "synonyms": "grace period, cancellation window, deletion delay, days before delete",
-            "tier": "policy"
-          },
-          {
-            "key": "piiFields",
-            "type": "[string]",
-            "default": [],
-            "label": "Which fields contain personal data to scrub?",
-            "description": "Fields the target atom nulls when anonymizing (e.g. email, name, phone).",
-            "synonyms": "PII fields, personal data fields, sensitive fields, fields to scrub",
-            "tier": "policy",
+            "key": "itemActions",
+            "type": "[ItemAction]",
+            "default": [
+              {
+                "event": "CANCEL_ERASURE",
+                "icon": "x",
+                "label": "Cancel",
+                "variant": "secondary"
+              }
+            ],
+            "label": "Row actions",
+            "description": "Actions offered on each row; give an item `roles` to show it only to those viewer roles.",
+            "tier": "presentation",
             "items": {
-              "type": "string"
+              "properties": {
+                "event": {
+                  "name": "event",
+                  "required": false,
+                  "type": "event"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "roles": {
+                  "name": "roles",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
             }
           },
           {
@@ -424,6 +436,14 @@
             "label": "Target entity",
             "description": "Entity name whose records erasure requests apply to (e.g. 'CustomerAccount').",
             "tier": "internal"
+          },
+          {
+            "key": "viewerRole",
+            "type": "string",
+            "default": "",
+            "label": "Viewer's role",
+            "description": "The signed-in viewer's role that each action's `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.",
+            "tier": "policy"
           }
         ],
         "capabilities": [
@@ -517,9 +537,7 @@
       "ExecStepped",
       "ExecuteErasure"
     ],
-    "listenedEvents": [
-      "CLOSE"
-    ],
+    "listenedEvents": [],
     "exposure": "both",
     "provenance": "authored",
     "sourceValid": true

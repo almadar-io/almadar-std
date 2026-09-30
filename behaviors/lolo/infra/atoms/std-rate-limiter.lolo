@@ -21,6 +21,7 @@ orbital RateBucketOrbital {
     count : number @description "The current value of a counter." @synonyms "value, amount, total" = 0
     window : number @description "The duration of the rate limiting window, in seconds." @synonyms "duration, time, interval, period" = 0
     limiterStatus : string @description "Current operational state of the rate limiter." @synonyms "state, condition, mode" = open
+    limit : number @description "Requests this bucket admits per window before it throttles; set from requestsPerMinute when the limiter mounts." @synonyms "cap, quota, ceiling, maximum requests" = 60
   }
 
   trait ShieldIcon = Icon.traits.IconRender -> RateBucket {
@@ -77,7 +78,7 @@ orbital RateBucketOrbital {
 
   trait CountMeter = Meter.traits.MeterRender -> RateBucket {
     config {
-      max: 100
+      max: @entity.limit
       min: 0
       value: @entity.count
     }
@@ -85,7 +86,7 @@ orbital RateBucketOrbital {
 
   trait CountProgressBar = ProgressBar.traits.ProgressBarRender -> RateBucket {
     config {
-      max: 100
+      max: @entity.limit
       showPercentage: true
       value: @entity.count
     }
@@ -136,6 +137,7 @@ orbital RateBucketOrbital {
       INIT -> open
         (set @entity.count 0)
         (set @entity.window 60)
+        (set @entity.limit @config.requestsPerMinute)
         (set @entity.limiterStatus open)
         (render-ui main {
           children: [{
@@ -162,7 +164,36 @@ orbital RateBucketOrbital {
           gap: lg
           type: stack
         })
-      REQUEST -> open when @config.enabled
+      REQUEST -> throttled when (and @config.enabled (>= (+ @entity.count 1) @entity.limit))
+        (set @entity.count (+ @entity.count 1))
+        (set @entity.limiterStatus throttled)
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{
+              align: center
+              children: [@trait.ShieldIcon, @trait.RateBucketTitle]
+              direction: horizontal
+              gap: md
+              type: stack
+            }, @trait.ThrottledStatusDot]
+            direction: horizontal
+            gap: md
+            justify: between
+            type: stack
+          }, @trait.RateBucketDivider, @trait.RateLimitAlert, @trait.StatsGrid, @trait.CountMeter, {
+            children: [@trait.ResetPrimaryButton]
+            direction: horizontal
+            gap: sm
+            justify: center
+            type: stack
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
+      REQUEST -> open when (and @config.enabled (< (+ @entity.count 1) @entity.limit))
+        (set @entity.count (+ @entity.count 1))
         (render-ui main {
           children: [{
             align: center
@@ -243,9 +274,43 @@ orbital RateBucketOrbital {
           gap: lg
           type: stack
         })
+      WINDOW_ELAPSED -> open
+        (set @entity.count 0)
+      CONFIGURE -> open
+        (set @entity.limit ?limit)
     }
 
     state throttled {
+      CONFIGURE -> throttled
+        (set @entity.limit ?limit)
+      WINDOW_ELAPSED -> open
+        (set @entity.limiterStatus open)
+        (set @entity.count 0)
+        (render-ui main {
+          children: [{
+            align: center
+            children: [{
+              align: center
+              children: [@trait.ShieldIcon, @trait.RateBucketTitle]
+              direction: horizontal
+              gap: md
+              type: stack
+            }, @trait.OpenStatusDot]
+            direction: horizontal
+            gap: md
+            justify: between
+            type: stack
+          }, @trait.RateBucketDivider, @trait.StatsGrid, @trait.CountMeter, @trait.CountProgressBar, {
+            children: [@trait.RequestButton, @trait.ResetButton]
+            direction: horizontal
+            gap: sm
+            justify: center
+            type: stack
+          }]
+          direction: vertical
+          gap: lg
+          type: stack
+        })
       RESET -> open
         (set @entity.limiterStatus open)
         (set @entity.count 0)
@@ -303,9 +368,21 @@ orbital RateBucketOrbital {
     }
 
     listens {
-      RequestButton.REQUEST -> REQUEST
-      ResetButton.RESET -> RESET
-      ResetPrimaryButton.RESET -> RESET
+      CONFIGURE {
+        limit : number
+      }
+        @description "Sets this bucket's limit (requests per window), e.g. from the host row's own rate limit."
+    }
+
+    ticks {
+      windowElapsed every 1m
+        (emit WINDOW_ELAPSED)
+    }
+
+    emits {
+      WINDOW_ELAPSED -> internal {
+      }
+        @description "One rate-limit window (a minute) has elapsed; the request count starts over."
     }
 
     config {
@@ -316,23 +393,8 @@ orbital RateBucketOrbital {
         @tier "domain"
       requestsPerMinute : number = 60
         @label "Requests per minute"
-        @description "Maximum number of requests allowed per minute before throttling begins."
+        @description "Requests a bucket admits per one-minute window; the next request throttles it, and each elapsed minute (or RESET) reopens it."
         @synonyms "rate limit, request cap, RPS, throttle threshold"
-        @tier "domain"
-      burstSize : number = 10
-        @label "Burst size"
-        @description "Requests allowed to burst above the per-minute rate before steady-state throttling kicks in. Lower burst = strict/no-spikes; higher burst = forgiving/allow-spikes."
-        @synonyms "burst capacity, allowance, spike allowance, no-spike (low) vs allow-bursts (high)"
-        @tier "domain"
-      keyStrategy : "ip" | "user" | "api-key" | "global" = user
-        @label "Rate-limit key strategy"
-        @description "What identifier the per-bucket counter is keyed on: source IP, authenticated user, API key, or one global bucket."
-        @synonyms "limiter key, bucket key"
-        @tier "domain"
-      overrideRoles : [string] = []
-        @label "Override roles"
-        @description "Roles exempt from rate limiting (e.g. internal services, admin override). Empty = no exemptions."
-        @synonyms "exempt roles, bypass list"
         @tier "domain"
       statLook : "elevated" | "flat" | "progress-backed" | "gauge" | "sparkline" = elevated
         @label "Stat display look"

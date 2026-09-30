@@ -50,7 +50,7 @@ export interface StdUiFormSectionFieldChangePayload {
  * Payload shape for the `FormSectionLoaded` event.
  */
 export interface StdUiFormSectionFormSectionLoadedPayload {
-  data?: EntityRow[];
+  data?: EntityRow;
 }
 
 /**
@@ -1201,8 +1201,8 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
           },
           'selfFetch': {
             'default': true,
-            'description': 'true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper\'s own un-hydrated fetch so it cannot race the composer\'s.',
-            'label': 'Fetch its own rows on mount?',
+            'description': 'true (default) = a mount that carries an id loads that one row (never the collection); a create-mode mount skips the load. false = a composing atom owns the load.',
+            'label': 'Fetch its own row on mount?',
             'tier': 'internal',
             'type': 'boolean',
           },
@@ -1400,7 +1400,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
             'tier': 'essential',
           },
           {
-            'description': 'FormSection rows finished loading; payload.data holds the collection.',
+            'description': 'FormSection row finished loading; payload.data holds the single row.',
             'event': 'FormSectionLoaded',
             'payloadSchema': [
               {
@@ -1413,7 +1413,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                     'type': 'string',
                   },
                 ],
-                'type': '[object]',
+                'type': 'object',
               },
             ],
             'scope': 'internal',
@@ -1432,11 +1432,19 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
         'stateMachine': {
           'events': [
             {
+              'description': 'Mount payload; a host that routes to this panel by id (a :id page param) passes it here.',
               'key': 'INIT',
               'name': 'Initialize',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+              'tier': 'internal',
             },
             {
-              'description': 'FormSection rows finished loading; payload.data holds the collection.',
+              'description': 'FormSection row finished loading; payload.data holds the single row.',
               'key': 'FormSectionLoaded',
               'name': 'Form section loaded',
               'payloadSchema': [
@@ -1450,7 +1458,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                       'type': 'string',
                     },
                   ],
-                  'type': '[object]',
+                  'type': 'object',
                 },
               ],
               'synonyms': 'loaded, fetched, retrieved',
@@ -1552,6 +1560,9 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
           'states': [
             {
               'isInitial': true,
+              'name': 'resolving',
+            },
+            {
               'name': 'idle',
             },
           ],
@@ -1565,6 +1576,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                     'emit': {
                       'success': 'FormSectionLoaded',
                     },
+                    'id': '@payload.id',
                   },
                 ],
                 [
@@ -1606,8 +1618,25 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                 ],
               ],
               'event': 'INIT',
-              'from': 'idle',
-              'guard': '@config.selfFetch',
+              'from': 'resolving',
+              'guard': [
+                'and',
+                '@config.selfFetch',
+                [
+                  '!=',
+                  [
+                    'str/default',
+                    '@payload.id',
+                    '',
+                  ],
+                  '',
+                ],
+                [
+                  '!=',
+                  '@config.mode',
+                  'create',
+                ],
+              ],
               'to': 'idle',
             },
             {
@@ -1651,10 +1680,27 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                 ],
               ],
               'event': 'INIT',
-              'from': 'idle',
+              'from': 'resolving',
               'guard': [
                 'not',
-                '@config.selfFetch',
+                [
+                  'and',
+                  '@config.selfFetch',
+                  [
+                    '!=',
+                    [
+                      'str/default',
+                      '@payload.id',
+                      '',
+                    ],
+                    '',
+                  ],
+                  [
+                    '!=',
+                    '@config.mode',
+                    'create',
+                  ],
+                ],
               ],
               'to': 'idle',
             },
@@ -1670,7 +1716,51 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                     'className': '@config.className',
                     'conditionalFields': '@config.conditionalFields',
                     'configPath': '@config.configPath',
-                    'entity': '@payload.data',
+                    'entity': '@entity',
+                    'error': '@config.error',
+                    'evaluationContext': '@config.evaluationContext',
+                    'fieldOverrides': '@config.fieldOverrides',
+                    'fields': '@config.fields',
+                    'gap': '@config.gap',
+                    'hiddenCalculations': '@config.hiddenCalculations',
+                    'initialData': '@entity',
+                    'isLoading': '@config.isLoading',
+                    'layout': '@config.layout',
+                    'mode': '@config.mode',
+                    'onCancel': '@config.onCancel',
+                    'onFieldChange': '@config.onFieldChange',
+                    'onSubmit': '@config.onSubmit',
+                    'relationsData': '@config.relationsData',
+                    'relationsLoading': '@config.relationsLoading',
+                    'repeatable': '@config.repeatable',
+                    'sections': '@config.sections',
+                    'showCancel': '@config.showCancel',
+                    'showSubmit': '@config.showSubmit',
+                    'submitEvent': '@config.submitEvent',
+                    'submitLabel': '@config.submitLabel',
+                    'title': '@config.title',
+                    'type': 'form-section',
+                    'violationTriggers': '@config.violationTriggers',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'cancelEvent': '@config.cancelEvent',
+                    'cancelLabel': '@config.cancelLabel',
+                    'children': '@config.children',
+                    'className': '@config.className',
+                    'conditionalFields': '@config.conditionalFields',
+                    'configPath': '@config.configPath',
+                    'entity': '@entity',
                     'error': '@config.error',
                     'evaluationContext': '@config.evaluationContext',
                     'fieldOverrides': '@config.fieldOverrides',

@@ -4,6 +4,10 @@ app ui-table-view "1.0.0"
 ;; @pattern "table-view"
 orbital TableViewOrbital {
     type TableViewLoaded = Event { data : [TableViewItem] } "TableView rows finished loading; payload.data holds the collection"
+  type TableViewEmptyAction = {
+    label : string!
+    event : event
+  }
   type TableViewColumnsItem = {
     key : string!
     field : string
@@ -35,6 +39,8 @@ orbital TableViewOrbital {
     event : event!
     icon : icon
     variant : "primary" | "secondary" | "ghost" | "danger"
+    when : SExpr
+    roles : [string]
   }
   type TableViewError = {
     message : string!
@@ -68,10 +74,14 @@ orbital TableViewOrbital {
           positionEvent: @config.positionEvent
           dndItemIdField: @config.dndItemIdField
           dndRoot: @config.dndRoot
+          emptyIcon: @config.emptyIcon
+          emptyTitle: @config.emptyTitle
+          emptyDescription: @config.emptyDescription
+          emptyAction: @config.emptyAction
           entity: @entity
           columns: @config.columns
           fields: @config.fields
-          itemActions: @config.itemActions
+          itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           maxInlineActions: @config.maxInlineActions
           itemClickEvent: @config.itemClickEvent
           selectable: @config.selectable
@@ -100,10 +110,14 @@ orbital TableViewOrbital {
           positionEvent: @config.positionEvent
           dndItemIdField: @config.dndItemIdField
           dndRoot: @config.dndRoot
+          emptyIcon: @config.emptyIcon
+          emptyTitle: @config.emptyTitle
+          emptyDescription: @config.emptyDescription
+          emptyAction: @config.emptyAction
           entity: @entity
           columns: @config.columns
           fields: @config.fields
-          itemActions: @config.itemActions
+          itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           maxInlineActions: @config.maxInlineActions
           itemClickEvent: @config.itemClickEvent
           selectable: @config.selectable
@@ -132,10 +146,14 @@ orbital TableViewOrbital {
           positionEvent: @config.positionEvent
           dndItemIdField: @config.dndItemIdField
           dndRoot: @config.dndRoot
+          emptyIcon: @config.emptyIcon
+          emptyTitle: @config.emptyTitle
+          emptyDescription: @config.emptyDescription
+          emptyAction: @config.emptyAction
           entity: @payload.data
           columns: @config.columns
           fields: @config.fields
-          itemActions: @config.itemActions
+          itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           maxInlineActions: @config.maxInlineActions
           itemClickEvent: @config.itemClickEvent
           selectable: @config.selectable
@@ -213,6 +231,22 @@ orbital TableViewOrbital {
         @label "Dnd Root"
         @description "Mark this container as the DnD root for its subtree — descendant zones share one DndContext (cross-container drag). Use on an outer container whose own items are not draggable."
         @tier "presentation"
+      emptyIcon : icon
+        @label "Empty Icon"
+        @description "Domain icon for the empty state."
+        @tier "presentation"
+      emptyTitle : string
+        @label "Empty Title"
+        @description "Specific title ('No orders yet')."
+        @tier "presentation"
+      emptyDescription : string
+        @label "Empty Description"
+        @description "What will appear here once rows exist."
+        @tier "presentation"
+      emptyAction : TableViewEmptyAction
+        @label "Empty Action"
+        @description "Create-the-first-item action."
+        @tier "presentation"
       columns : [TableViewColumnsItem] = []
         @label "Columns"
         @description "Column definitions. The compiler emits `columns`; `fields` is the alias."
@@ -289,6 +323,10 @@ orbital TableViewOrbital {
         @label "Relations Data"
         @description "Relation display data: { fieldName: [{value, label}] } — injected server-side by the runtime (relation-option injection) or bound by compiled codegen; resolves stored foreign ids to display names for a column whose field is relation-typed. Same contract DetailPanel takes."
         @tier "presentation"
+      viewerRole : string = ""
+        @label "Viewer's role"
+        @description "The viewer's role that each action's `roles` is checked against; bind it at the call site (e.g. `viewerRole: @user.role`). Empty = only actions with no `roles` show."
+        @tier "policy"
       selfFetch : boolean = true
         @label "Fetch its own rows on mount?"
         @description "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's."

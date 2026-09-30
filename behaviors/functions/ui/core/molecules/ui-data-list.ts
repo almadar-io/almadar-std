@@ -71,7 +71,11 @@ export interface StdUiDataListConfig {
   dndRoot?: boolean;
   dragGroup?: string;
   dropEvent?: string;
+  emptyAction?: EntityRow;
+  emptyDescription?: string;
+  emptyIcon?: unknown;
   emptyMessage?: string;
+  emptyTitle?: string;
   error?: EntityRow;
   /** Default: `[]` */
   fields?: EntityRow[];
@@ -119,6 +123,8 @@ export interface StdUiDataListConfig {
   swipeRightEvent?: string;
   /** Default: `"default"` */
   variant?: 'default' | 'card' | 'compact' | 'message';
+  /** Default: `""` */
+  viewerRole?: string;
 }
 
 /**

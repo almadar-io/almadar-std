@@ -97,6 +97,8 @@ export interface StdUiEntityTableConfig {
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
   totalCount?: number;
+  /** Default: `""` */
+  viewerRole?: string;
 }
 
 type _StdUiEntityTableEntityName = 'EntityTableItem';
@@ -199,6 +201,14 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
                   'name': 'label',
                   'required': true,
                   'type': 'string',
+                },
+                'roles': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'roles',
+                  'required': false,
+                  'type': 'array',
                 },
                 'variant': {
                   'name': 'variant',
@@ -436,10 +446,23 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
                   'required': false,
                   'type': 'string',
                 },
+                'roles': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'roles',
+                  'required': false,
+                  'type': 'array',
+                },
                 'variant': {
                   'name': 'variant',
                   'required': false,
                   'type': 'string',
+                },
+                'when': {
+                  'name': 'when',
+                  'required': false,
+                  'type': 'object',
                 },
               },
               'type': 'object',
@@ -530,6 +553,14 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
                   'required': true,
                   'type': 'string',
                 },
+                'roles': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'roles',
+                  'required': false,
+                  'type': 'array',
+                },
                 'variant': {
                   'name': 'variant',
                   'required': false,
@@ -538,6 +569,11 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
                     'default',
                     'danger',
                   ],
+                },
+                'when': {
+                  'name': 'when',
+                  'required': false,
+                  'type': 'object',
                 },
               },
               'type': 'object',
@@ -618,6 +654,13 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
             'label': 'Total Count',
             'tier': 'presentation',
             'type': 'number',
+          },
+          'viewerRole': {
+            'default': '',
+            'description': 'The viewer\'s role that each action\'s `roles` is checked against; bind it at the call site (e.g. `viewerRole: @user.role`). Empty = only actions with no `roles` show.',
+            'label': 'Viewer\'s role',
+            'tier': 'policy',
+            'type': 'string',
           },
         },
         'effectRow': [
@@ -748,7 +791,40 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
                   'main',
                   {
                     'activeFilters': '@config.activeFilters',
-                    'bulkActions': '@config.bulkActions',
+                    'bulkActions': [
+                      'array/filter',
+                      '@config.bulkActions',
+                      [
+                        'fn',
+                        'action',
+                        [
+                          'or',
+                          [
+                            '=',
+                            [
+                              'array/len',
+                              [
+                                'object/get',
+                                '@action',
+                                'roles',
+                                [],
+                              ],
+                            ],
+                            0,
+                          ],
+                          [
+                            'array/includes',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                            '@config.viewerRole',
+                          ],
+                        ],
+                      ],
+                    ],
                     'className': '@config.className',
                     'columns': '@config.columns',
                     'emptyAction': '@config.emptyAction',
@@ -760,12 +836,78 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
                     'fields': '@config.fields',
                     'headerActions': '@config.headerActions',
                     'isLoading': '@config.isLoading',
-                    'itemActions': '@config.itemActions',
+                    'itemActions': [
+                      'array/filter',
+                      '@config.itemActions',
+                      [
+                        'fn',
+                        'action',
+                        [
+                          'or',
+                          [
+                            '=',
+                            [
+                              'array/len',
+                              [
+                                'object/get',
+                                '@action',
+                                'roles',
+                                [],
+                              ],
+                            ],
+                            0,
+                          ],
+                          [
+                            'array/includes',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                            '@config.viewerRole',
+                          ],
+                        ],
+                      ],
+                    ],
                     'look': '@config.look',
                     'page': '@config.pageProp',
                     'pageSize': '@config.pageSize',
                     'relationsData': '@config.relationsData',
-                    'rowActions': '@config.rowActions',
+                    'rowActions': [
+                      'array/filter',
+                      '@config.rowActions',
+                      [
+                        'fn',
+                        'action',
+                        [
+                          'or',
+                          [
+                            '=',
+                            [
+                              'array/len',
+                              [
+                                'object/get',
+                                '@action',
+                                'roles',
+                                [],
+                              ],
+                            ],
+                            0,
+                          ],
+                          [
+                            'array/includes',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                            '@config.viewerRole',
+                          ],
+                        ],
+                      ],
+                    ],
                     'searchPlaceholder': '@config.searchPlaceholder',
                     'searchValue': '@config.searchValue',
                     'searchable': '@config.searchable',
@@ -791,7 +933,40 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
                   'main',
                   {
                     'activeFilters': '@config.activeFilters',
-                    'bulkActions': '@config.bulkActions',
+                    'bulkActions': [
+                      'array/filter',
+                      '@config.bulkActions',
+                      [
+                        'fn',
+                        'action',
+                        [
+                          'or',
+                          [
+                            '=',
+                            [
+                              'array/len',
+                              [
+                                'object/get',
+                                '@action',
+                                'roles',
+                                [],
+                              ],
+                            ],
+                            0,
+                          ],
+                          [
+                            'array/includes',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                            '@config.viewerRole',
+                          ],
+                        ],
+                      ],
+                    ],
                     'className': '@config.className',
                     'columns': '@config.columns',
                     'emptyAction': '@config.emptyAction',
@@ -803,12 +978,78 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
                     'fields': '@config.fields',
                     'headerActions': '@config.headerActions',
                     'isLoading': '@config.isLoading',
-                    'itemActions': '@config.itemActions',
+                    'itemActions': [
+                      'array/filter',
+                      '@config.itemActions',
+                      [
+                        'fn',
+                        'action',
+                        [
+                          'or',
+                          [
+                            '=',
+                            [
+                              'array/len',
+                              [
+                                'object/get',
+                                '@action',
+                                'roles',
+                                [],
+                              ],
+                            ],
+                            0,
+                          ],
+                          [
+                            'array/includes',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                            '@config.viewerRole',
+                          ],
+                        ],
+                      ],
+                    ],
                     'look': '@config.look',
                     'page': '@config.pageProp',
                     'pageSize': '@config.pageSize',
                     'relationsData': '@config.relationsData',
-                    'rowActions': '@config.rowActions',
+                    'rowActions': [
+                      'array/filter',
+                      '@config.rowActions',
+                      [
+                        'fn',
+                        'action',
+                        [
+                          'or',
+                          [
+                            '=',
+                            [
+                              'array/len',
+                              [
+                                'object/get',
+                                '@action',
+                                'roles',
+                                [],
+                              ],
+                            ],
+                            0,
+                          ],
+                          [
+                            'array/includes',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                            '@config.viewerRole',
+                          ],
+                        ],
+                      ],
+                    ],
                     'searchPlaceholder': '@config.searchPlaceholder',
                     'searchValue': '@config.searchValue',
                     'searchable': '@config.searchable',
@@ -837,7 +1078,40 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
                   'main',
                   {
                     'activeFilters': '@config.activeFilters',
-                    'bulkActions': '@config.bulkActions',
+                    'bulkActions': [
+                      'array/filter',
+                      '@config.bulkActions',
+                      [
+                        'fn',
+                        'action',
+                        [
+                          'or',
+                          [
+                            '=',
+                            [
+                              'array/len',
+                              [
+                                'object/get',
+                                '@action',
+                                'roles',
+                                [],
+                              ],
+                            ],
+                            0,
+                          ],
+                          [
+                            'array/includes',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                            '@config.viewerRole',
+                          ],
+                        ],
+                      ],
+                    ],
                     'className': '@config.className',
                     'columns': '@config.columns',
                     'emptyAction': '@config.emptyAction',
@@ -849,12 +1123,78 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
                     'fields': '@config.fields',
                     'headerActions': '@config.headerActions',
                     'isLoading': '@config.isLoading',
-                    'itemActions': '@config.itemActions',
+                    'itemActions': [
+                      'array/filter',
+                      '@config.itemActions',
+                      [
+                        'fn',
+                        'action',
+                        [
+                          'or',
+                          [
+                            '=',
+                            [
+                              'array/len',
+                              [
+                                'object/get',
+                                '@action',
+                                'roles',
+                                [],
+                              ],
+                            ],
+                            0,
+                          ],
+                          [
+                            'array/includes',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                            '@config.viewerRole',
+                          ],
+                        ],
+                      ],
+                    ],
                     'look': '@config.look',
                     'page': '@config.pageProp',
                     'pageSize': '@config.pageSize',
                     'relationsData': '@config.relationsData',
-                    'rowActions': '@config.rowActions',
+                    'rowActions': [
+                      'array/filter',
+                      '@config.rowActions',
+                      [
+                        'fn',
+                        'action',
+                        [
+                          'or',
+                          [
+                            '=',
+                            [
+                              'array/len',
+                              [
+                                'object/get',
+                                '@action',
+                                'roles',
+                                [],
+                              ],
+                            ],
+                            0,
+                          ],
+                          [
+                            'array/includes',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                            '@config.viewerRole',
+                          ],
+                        ],
+                      ],
+                    ],
                     'searchPlaceholder': '@config.searchPlaceholder',
                     'searchValue': '@config.searchValue',
                     'searchable': '@config.searchable',

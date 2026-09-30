@@ -30,14 +30,7 @@ const ALIAS = 'UiGenericAppTemplate';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiGenericAppTemplateEventKey = 'GenericAppTemplateLoaded' | 'INIT';
-
-/**
- * Payload shape for the `GenericAppTemplateLoaded` event.
- */
-export interface StdUiGenericAppTemplateGenericAppTemplateLoadedPayload {
-  data?: EntityRow[];
-}
+export type StdUiGenericAppTemplateEventKey = 'INIT';
 
 /**
  * Typed call-site config block for this trait — every
@@ -50,8 +43,6 @@ export interface StdUiGenericAppTemplateConfig {
   className?: string;
   footer?: PatternValue;
   headerActions?: PatternValue;
-  /** Default: `true` */
-  selfFetch?: boolean;
   subtitle?: string;
   /** Default: `""` */
   title?: string;

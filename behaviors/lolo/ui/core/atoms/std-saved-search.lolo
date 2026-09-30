@@ -1,5 +1,6 @@
 app std-saved-search "1.0.0"
 "std-saved-search — persisted query + alert subscription. Owns a SavedSearch entity (one row per saved query) and a single manage trait that lists saved searches in a data-grid, lets users toggle their alert subscription / rename the search / delete it, and persists each change."
+type ItemAction = { label : string!, event : event, variant : string, icon : string, roles : [string], when : SExpr }
 orbital SavedSearchOrbital {
     type SavedSearchLoaded = Event { data : [SavedSearch] } "Fired when the saved-search collection finishes loading"
 
@@ -8,6 +9,8 @@ orbital SavedSearchOrbital {
     type SavedSearchUpdated = Event SavedSearch "Fired after a saved-search row's update persists (toggle alert / rename / change frequency)"
 
     type SavedSearchDeleted = Event { id : string! } "Fired after a saved-search row is deleted"
+
+    type SavedSearchCreated = Event SavedSearch "Fired after the current search is saved as a new row"
 
   entity SavedSearch [persistent: savedsearches] {
     id : string!
@@ -74,22 +77,7 @@ orbital SavedSearchOrbital {
               variant: badge
             }]
             gap: sm
-            itemActions: [{
-              event: TOGGLE_ALERT
-              icon: bell
-              label: "Toggle alert"
-              variant: secondary
-            }, {
-              event: EDIT
-              icon: pencil
-              label: Edit
-              variant: secondary
-            }, {
-              event: DELETE
-              icon: trash-2
-              label: Delete
-              variant: danger
-            }]
+            itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
             look: @config.tableLook
             type: data-grid
           }]
@@ -136,6 +124,24 @@ orbital SavedSearchOrbital {
         ;; clean. Matches the corpus idiom (std-board, std-esign-flow, …).
         (persist delete SavedSearch ?id {
           emit: { failure: SavedSearchLoadFailed, success: SavedSearchDeleted }
+        })
+      ;; The page's live search, fed by whichever search/filter traits the
+      ;; consumer wires in, so SAVE_CURRENT captures what the viewer sees.
+      TRACK_QUERY -> browsing
+        (set @entity.query ?query)
+      ;; One filter change at a time (std-filter's FILTER shape); an empty
+      ;; value clears that filter, matching std-browse's REFETCH_FILTER.
+      TRACK_FILTERS -> browsing
+        (set @entity.filters (if ["=", ?value, ""] (object/omit @entity.filters [?field]) (object/set @entity.filters ?field ?value)))
+      SAVE_CURRENT -> browsing
+        (persist create SavedSearch {
+          name: (if @entity.query @entity.query @config.defaultSearchName)
+          query: @entity.query
+          filters: @entity.filters
+          userId: @user.id
+          createdAt: @now
+        } {
+          emit: { failure: SavedSearchLoadFailed, success: SavedSearchCreated }
         })
       EDIT -> editing
         (set @entity.id ?id)
@@ -191,6 +197,10 @@ orbital SavedSearchOrbital {
           emit: { failure: SavedSearchLoadFailed, success: SavedSearchLoaded }
         })
       SavedSearchDeleted -> loading
+        (fetch SavedSearch {
+          emit: { failure: SavedSearchLoadFailed, success: SavedSearchLoaded }
+        })
+      SavedSearchCreated -> loading
         (fetch SavedSearch {
           emit: { failure: SavedSearchLoadFailed, success: SavedSearchLoaded }
         })
@@ -280,6 +290,10 @@ orbital SavedSearchOrbital {
         @description "Indicates a failure to load saved search data."
         @synonyms "error, failure, load error"
         @tier "internal"
+      SavedSearchCreated
+        @description "Indicates the current search has been saved as a new row."
+        @synonyms "saved, created, bookmarked"
+        @tier "presentation"
       SavedSearchUpdated
         @description "Indicates a saved search has been modified and persisted."
         @synonyms "modified, changed, updated, persisted"
@@ -332,6 +346,27 @@ orbital SavedSearchOrbital {
         @description "Aborts the current operation or view."
         @synonyms "dismiss, close, undo"
         @tier "domain"
+      TRACK_QUERY {
+        query : string
+      }
+        @description "The page's current search text changed."
+        @synonyms "search changed, query changed, typed search"
+        @tier "domain"
+      TRACK_FILTERS {
+        field : string!
+        value : string!
+      }
+        @description "The page's current filters changed."
+        @synonyms "filters changed, criteria changed"
+        @tier "domain"
+      SAVE_CURRENT
+        @description "Save the page's current search and filters as a new saved search."
+        @synonyms "save search, bookmark search, remember search"
+        @tier "domain"
+      SavedSearchCreated
+        @description "The current search was saved as a new row."
+        @synonyms "saved, created, bookmarked"
+        @tier "presentation"
       SavedSearchLoaded {
         data : [SavedSearch]
       }
@@ -366,6 +401,33 @@ orbital SavedSearchOrbital {
         @label "Table look"
         @description "Layer 2 visual treatment for the data table rendered by this atom."
         @tier "presentation"
+      defaultSearchName : string = "Saved search"
+        @label "Default saved-search name"
+        @description "Name given to a saved search when the current search has no query text (filters only). Renamable afterwards."
+        @tier "presentation"
+      itemActions : [ItemAction] = [{
+        event: TOGGLE_ALERT
+        icon: bell
+        label: "Toggle alert"
+        variant: secondary
+      }, {
+        event: EDIT
+        icon: pencil
+        label: Edit
+        variant: secondary
+      }, {
+        event: DELETE
+        icon: trash-2
+        label: Delete
+        variant: danger
+      }]
+        @label "Row actions"
+        @description "Actions offered on each row; give an item `roles` to show it only to those viewer roles."
+        @tier "presentation"
+      viewerRole : string = ""
+        @label "Viewer's role"
+        @description "The signed-in viewer's role that each action's `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show."
+        @tier "policy"
     }
   }
 

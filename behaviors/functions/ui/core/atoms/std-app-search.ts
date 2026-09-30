@@ -317,6 +317,14 @@ export function stdAppSearchAppSearchOrbital(params: StdAppSearchAppSearchOrbita
                   'required': false,
                   'type': 'string',
                 },
+                'roles': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'roles',
+                  'required': false,
+                  'type': 'array',
+                },
                 'variant': {
                   'name': 'variant',
                   'required': false,
@@ -436,6 +444,13 @@ export function stdAppSearchAppSearchOrbital(params: StdAppSearchAppSearchOrbita
             'description': 'Entity field matched against the query (case-insensitive substring).',
             'label': 'Search field',
             'tier': 'presentation',
+            'type': 'string',
+          },
+          'viewerRole': {
+            'default': '',
+            'description': 'The signed-in viewer\'s role that each action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
+            'label': 'Viewer\'s role',
+            'tier': 'policy',
             'type': 'string',
           },
         },
@@ -804,7 +819,40 @@ export function stdAppSearchAppSearchOrbital(params: StdAppSearchAppSearchOrbita
                       {
                         'entity': '@payload.data',
                         'fields': '@config.resultFields',
-                        'itemActions': '@config.resultActions',
+                        'itemActions': [
+                          'array/filter',
+                          '@config.resultActions',
+                          [
+                            'fn',
+                            'action',
+                            [
+                              'or',
+                              [
+                                '=',
+                                [
+                                  'array/len',
+                                  [
+                                    'object/get',
+                                    '@action',
+                                    'roles',
+                                    [],
+                                  ],
+                                ],
+                                0,
+                              ],
+                              [
+                                'array/includes',
+                                [
+                                  'object/get',
+                                  '@action',
+                                  'roles',
+                                  [],
+                                ],
+                                '@config.viewerRole',
+                              ],
+                            ],
+                          ],
+                        ],
                         'type': 'data-grid',
                       },
                     ],

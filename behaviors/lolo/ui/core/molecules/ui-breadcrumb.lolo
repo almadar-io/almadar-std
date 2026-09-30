@@ -9,6 +9,7 @@ orbital BreadcrumbOrbital {
     icon : icon
     isCurrent : boolean
     event : event
+    roles : [string]
   }
 
   entity BreadcrumbItem [runtime] {
@@ -21,7 +22,7 @@ orbital BreadcrumbOrbital {
     state idle {
       INIT -> idle
         (render-ui main {
-          items: @config.items
+          items: (array/filter @config.items (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           fromNavStack: @config.fromNavStack
           itemEvent: @config.itemEvent
           separator: @config.separator
@@ -66,6 +67,10 @@ orbital BreadcrumbOrbital {
         @label "Class Name"
         @description "Additional CSS classes"
         @tier "presentation"
+      viewerRole : string = ""
+        @label "Viewer's role"
+        @description "The viewer's role that each action's `roles` is checked against; bind it at the call site (e.g. `viewerRole: @user.role`). Empty = only actions with no `roles` show."
+        @tier "policy"
     }
   }
 

@@ -1,7 +1,7 @@
 app std-file-store "2.0.0"
 "std-file-store — the generic file/page tree primitive. A file-tree + config-driven data table over a hierarchical collection; opens a row in `viewing_single` with config-driven detail actions. Rebindable: pass `fields`/`itemActions`/`detailActions`/`tree` to retarget it at any hierarchical entity (files, wiki pages, note trees). Folds in the former std-page-tree via `reorderable` + a page field/action set."
 type FieldSpec = { name : string!, label : string, variant : "h3" | "h4" | "body" | "caption" | "badge" | "small" | "progress", icon : string, format : "date" | "currency" | "number" | "boolean" | "percent", key : string, header : string }
-type ItemAction = { label : string!, event : event!, variant : "primary" | "secondary" | "ghost" | "danger", icon : string }
+type ItemAction = { label : string!, event : event!, variant : "primary" | "secondary" | "ghost" | "danger", icon : string, roles : [string], when : SExpr }
 type TreeNode = { name : string!, path : string!, type : "file" | "dir"!, children : [TreeNode] }
 orbital StoredFileOrbital {
     type StoredFileLoaded = Event { data : [StoredFile] } "Fired when the collection finishes loading"
@@ -63,7 +63,7 @@ orbital StoredFileOrbital {
             entity: ?data
             fields: @config.fields
             gap: sm
-            itemActions: @config.itemActions
+            itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
             look: @config.tableLook
             reorderEvent: REORDER
             reorderable: @config.reorderable
@@ -154,7 +154,7 @@ orbital StoredFileOrbital {
             gap: sm
             type: stack
           }, { type: divider }, {
-            entity: @config.detailActions
+            entity: (array/filter @config.detailActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
             fields: []
             gap: sm
             renderItem: (fn a {
@@ -431,6 +431,10 @@ orbital StoredFileOrbital {
         @label "Detail actions"
         @description "Buttons shown on the opened row's detail"
         @tier "presentation"
+      viewerRole : string = ""
+        @label "Viewer's role"
+        @description "The signed-in viewer's role that each action's `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show."
+        @tier "policy"
       tree : [TreeNode] = [{
         children: [{
           name: "Active.pdf"

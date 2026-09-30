@@ -47,6 +47,8 @@ export interface StdUiMenuConfig {
   /** Default: `"bottom-left"` */
   position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'top-start' | 'top-end' | 'bottom-start' | 'bottom-end';
   trigger?: PatternValue;
+  /** Default: `""` */
+  viewerRole?: string;
 }
 
 /**

@@ -104,6 +104,38 @@
         "kind": "trait",
         "owner": "workspace",
         "renames": []
+      },
+      "trt_01M3SFBP546Y99DXZM8G4P315G": {
+        "bakedName": "InlineRoleGate2",
+        "curName": "InlineRoleGate2",
+        "id": "trt_01M3SFBP546Y99DXZM8G4P315G",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M3SFBP54FZ5X3NJPMNMNBM03": {
+        "bakedName": "InlineRoleGate4",
+        "curName": "InlineRoleGate4",
+        "id": "trt_01M3SFBP54FZ5X3NJPMNMNBM03",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M3SFBP54H0VTEPAQXHHXAD3K": {
+        "bakedName": "InlineButtonRender3",
+        "curName": "InlineButtonRender3",
+        "id": "trt_01M3SFBP54H0VTEPAQXHHXAD3K",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
+      },
+      "trt_01M3SFBP54H9K3VTVETMCRBEFS": {
+        "bakedName": "InlineButtonRender1",
+        "curName": "InlineButtonRender1",
+        "id": "trt_01M3SFBP54H9K3VTVETMCRBEFS",
+        "kind": "trait",
+        "owner": "workspace",
+        "renames": []
       }
     },
     "schemaVersion": 1
@@ -211,6 +243,22 @@
             {
               "ref": "BillableHourTimesheet",
               "refId": "trt_01KXG04FQKNW4X2KG5RSG3SYPV"
+            },
+            {
+              "ref": "InlineButtonRender1",
+              "refId": "trt_01M3SFBP54H9K3VTVETMCRBEFS"
+            },
+            {
+              "ref": "InlineRoleGate2",
+              "refId": "trt_01M3SFBP546Y99DXZM8G4P315G"
+            },
+            {
+              "ref": "InlineButtonRender3",
+              "refId": "trt_01M3SFBP54H0VTEPAQXHHXAD3K"
+            },
+            {
+              "ref": "InlineRoleGate4",
+              "refId": "trt_01M3SFBP54FZ5X3NJPMNMNBM03"
             }
           ]
         }
@@ -240,6 +288,10 @@
             },
             "selfFetch": {
               "default": false,
+              "type": "unknown"
+            },
+            "viewerRole": {
+              "default": "@config.viewerRole",
               "type": "unknown"
             }
           },
@@ -366,6 +418,16 @@
               "tier": "presentation",
               "type": "[ColumnSpec]"
             },
+            "invoiceRoles": {
+              "default": [],
+              "description": "Roles (matched against viewerRole) that see the Invoice button. Empty = everyone.",
+              "items": {
+                "type": "string"
+              },
+              "label": "Roles that can invoice",
+              "tier": "policy",
+              "type": "[string]"
+            },
             "itemActions": {
               "default": [
                 {
@@ -403,10 +465,23 @@
                     "required": false,
                     "type": "string"
                   },
+                  "roles": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "name": "roles",
+                    "required": false,
+                    "type": "array"
+                  },
                   "variant": {
                     "name": "variant",
                     "required": false,
                     "type": "string"
+                  },
+                  "when": {
+                    "name": "when",
+                    "required": false,
+                    "type": "object"
                   }
                 },
                 "type": "object"
@@ -449,6 +524,23 @@
               "label": "Section title",
               "tier": "presentation",
               "type": "string"
+            },
+            "viewerRole": {
+              "default": "",
+              "description": "The signed-in viewer's role that each action's `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.",
+              "label": "Viewer's role",
+              "tier": "policy",
+              "type": "string"
+            },
+            "writeOffRoles": {
+              "default": [],
+              "description": "Roles (matched against viewerRole) that see the Write Off button. Empty = everyone.",
+              "items": {
+                "type": "string"
+              },
+              "label": "Roles that can write off",
+              "tier": "policy",
+              "type": "[string]"
             }
           },
           "effectRow": [
@@ -1231,24 +1323,8 @@
                         {
                           "align": "center",
                           "children": [
-                            {
-                              "action": "INVOICE_HOURS",
-                              "actionPayload": {
-                                "id": "@entity.id"
-                              },
-                              "label": "Invoice",
-                              "type": "button",
-                              "variant": "primary"
-                            },
-                            {
-                              "action": "WRITE_OFF_HOURS",
-                              "actionPayload": {
-                                "id": "@entity.id"
-                              },
-                              "label": "Write Off",
-                              "type": "button",
-                              "variant": "danger"
-                            }
+                            "@trait.InlineRoleGate2",
+                            "@trait.InlineRoleGate4"
                           ],
                           "direction": "horizontal",
                           "gap": "sm",
@@ -1470,8 +1546,106 @@
             ]
           },
           "traitEmbedIds": {
-            "DenseHoursTable": "trt_01KYGG0J813545ADJDSSED6T49"
+            "DenseHoursTable": "trt_01KYGG0J813545ADJDSSED6T49",
+            "InlineRoleGate2": "trt_01M3SFBP546Y99DXZM8G4P315G",
+            "InlineRoleGate4": "trt_01M3SFBP54FZ5X3NJPMNMNBM03"
           }
+        },
+        {
+          "config": {
+            "action": {
+              "default": "INVOICE_HOURS",
+              "type": "unknown"
+            },
+            "actionPayload": {
+              "default": {
+                "id": "@callsitePayload.row.id"
+              },
+              "type": "unknown"
+            },
+            "label": {
+              "default": "Invoice",
+              "type": "unknown"
+            },
+            "variant": {
+              "default": "primary",
+              "type": "unknown"
+            }
+          },
+          "id": "trt_01M3SFBP54H9K3VTVETMCRBEFS",
+          "linkedEntity": "BillableHour",
+          "linkedEntityId": "ent_01KXG04FQKJHPT5T65NNKMM8AM",
+          "name": "InlineButtonRender1",
+          "ref": "Button.traits.ButtonRender"
+        },
+        {
+          "config": {
+            "content": {
+              "default": "@trait.InlineButtonRender1",
+              "type": "unknown"
+            },
+            "roles": {
+              "default": "@config.invoiceRoles",
+              "type": "unknown"
+            },
+            "viewerRole": {
+              "default": "@config.viewerRole",
+              "type": "unknown"
+            }
+          },
+          "id": "trt_01M3SFBP546Y99DXZM8G4P315G",
+          "linkedEntity": "BillableHour",
+          "linkedEntityId": "ent_01KXG04FQKJHPT5T65NNKMM8AM",
+          "name": "InlineRoleGate2",
+          "ref": "RoleGate.traits.RoleGate"
+        },
+        {
+          "config": {
+            "action": {
+              "default": "WRITE_OFF_HOURS",
+              "type": "unknown"
+            },
+            "actionPayload": {
+              "default": {
+                "id": "@callsitePayload.row.id"
+              },
+              "type": "unknown"
+            },
+            "label": {
+              "default": "Write Off",
+              "type": "unknown"
+            },
+            "variant": {
+              "default": "danger",
+              "type": "unknown"
+            }
+          },
+          "id": "trt_01M3SFBP54H0VTEPAQXHHXAD3K",
+          "linkedEntity": "BillableHour",
+          "linkedEntityId": "ent_01KXG04FQKJHPT5T65NNKMM8AM",
+          "name": "InlineButtonRender3",
+          "ref": "Button.traits.ButtonRender"
+        },
+        {
+          "config": {
+            "content": {
+              "default": "@trait.InlineButtonRender3",
+              "type": "unknown"
+            },
+            "roles": {
+              "default": "@config.writeOffRoles",
+              "type": "unknown"
+            },
+            "viewerRole": {
+              "default": "@config.viewerRole",
+              "type": "unknown"
+            }
+          },
+          "id": "trt_01M3SFBP54FZ5X3NJPMNMNBM03",
+          "linkedEntity": "BillableHour",
+          "linkedEntityId": "ent_01KXG04FQKJHPT5T65NNKMM8AM",
+          "name": "InlineRoleGate4",
+          "ref": "RoleGate.traits.RoleGate"
         }
       ],
       "types": {
@@ -1535,10 +1709,26 @@
           {
             "name": "icon",
             "type": "string"
+          },
+          {
+            "name": "roles",
+            "type": "[string]"
+          },
+          {
+            "name": "when",
+            "type": "SExpr"
           }
         ]
       },
       "uses": [
+        {
+          "as": "RoleGate",
+          "from": "std/behaviors/std-role-gate"
+        },
+        {
+          "as": "Button",
+          "from": "std/behaviors/ui-button"
+        },
         {
           "as": "TableView",
           "from": "std/behaviors/ui-table-view"

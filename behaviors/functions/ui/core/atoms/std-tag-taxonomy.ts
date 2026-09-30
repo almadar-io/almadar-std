@@ -946,6 +946,7 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                         'entity': '@payload.data',
                         'fields': [],
                         'gap': 'sm',
+                        'look': '@config.tableLook',
                         'minCardWidth': 180,
                         'renderItem': [
                           'fn',
@@ -1271,6 +1272,7 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                         'entity': '@payload.data',
                         'fields': [],
                         'gap': 'sm',
+                        'look': '@config.tableLook',
                         'minCardWidth': 180,
                         'renderItem': [
                           'fn',
@@ -1757,6 +1759,7 @@ export function stdTagTaxonomyTagTaxonomyOrbital(params: StdTagTaxonomyTagTaxono
                         'entity': '@payload.data',
                         'fields': [],
                         'gap': 'sm',
+                        'look': '@config.tableLook',
                         'minCardWidth': 180,
                         'renderItem': [
                           'fn',

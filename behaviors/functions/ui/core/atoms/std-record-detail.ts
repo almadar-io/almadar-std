@@ -109,7 +109,7 @@ export interface StdRecordDetailConfig {
   allowEdit?: boolean;
   /** Default: `"Saves as you type"` */
   autosaveHint?: string;
-  /** Default: `{"children":[{"actions":"@config.actions","entity":"@payload.data","fields":"@config.fields","initialData":"@payload.data","maxInlineActions":"@config.maxInlineActions","sections":"@config.sections","showActions":"@config.showActions","subtitle":"@entity.description","title":"@entity.name","type":"detail-panel"}],"direction":"vertical","gap":"lg","type":"stack"}` */
+  /** Default: `{"children":[{"actions":["array/filter","@config.actions",["fn","action",["or",["=",["array/len",["object/get","@action","roles",[]]],0],["array/includes",["object/get","@action","roles",[]],"@config.viewerRole"]]]],"entity":"@entity.loadedRow","fields":"@config.fields","initialData":"@entity.loadedRow","maxInlineActions":"@config.maxInlineActions","sections":"@config.sections","showActions":"@config.showActions","subtitle":"@entity.description","title":"@entity.name","type":"detail-panel"}],"direction":"vertical","gap":"lg","type":"stack"}` */
   bodyContent?: unknown;
   /** Default: `"content"` */
   contentField?: string;
@@ -117,9 +117,9 @@ export interface StdRecordDetailConfig {
   coverField?: string;
   /** Default: `"panel"` */
   detailLook?: 'panel' | 'slide-over' | 'page' | 'document';
-  /** Default: `{"actions":"@config.actions","className":"w-full","coverImage":"@entity.coverUrl","editEvent":["if","@config.allowEdit","EDIT_CONTENT",null],"editLabel":"@config.editLabel","icon":"@entity.iconName","id":"@entity.id","maxInlineActions":"@config.maxInlineActions","placeholder":"@config.placeholder","subtitle":"@entity.description","title":"@entity.name","titleCommitEvent":["if","@config.allowEdit","TITLE_COMMITTED",null],"type":"document-panel","value":"@entity.content"}` */
+  /** Default: `{"actions":["array/filter","@config.actions",["fn","action",["or",["=",["array/len",["object/get","@action","roles",[]]],0],["array/includes",["object/get","@action","roles",[]],"@config.viewerRole"]]]],"className":"w-full","coverImage":"@entity.coverUrl","editEvent":["if","@config.allowEdit","EDIT_CONTENT",null],"editLabel":"@config.editLabel","icon":"@entity.iconName","id":"@entity.id","maxInlineActions":"@config.maxInlineActions","placeholder":"@config.placeholder","subtitle":"@entity.description","title":"@entity.name","titleCommitEvent":["if","@config.allowEdit","TITLE_COMMITTED",null],"type":"document-panel","value":"@entity.content"}` */
   documentBodyContent?: unknown;
-  /** Default: `{"actions":"@config.actions","autosaveHint":"@config.autosaveHint","className":"w-full","contentChangeEvent":"CONTENT_CHANGE","coverImage":"@entity.coverUrl","doneEvent":"DONE_EDITING","doneLabel":"@config.doneLabel","editing":true,"icon":"@entity.iconName","id":"@entity.id","maxInlineActions":"@config.maxInlineActions","placeholder":"@config.placeholder","subtitle":"@entity.description","title":"@entity.name","titleCommitEvent":"TITLE_COMMITTED","type":"document-panel","value":"@entity.content"}` */
+  /** Default: `{"actions":["array/filter","@config.actions",["fn","action",["or",["=",["array/len",["object/get","@action","roles",[]]],0],["array/includes",["object/get","@action","roles",[]],"@config.viewerRole"]]]],"autosaveHint":"@config.autosaveHint","className":"w-full","contentChangeEvent":"CONTENT_CHANGE","coverImage":"@entity.coverUrl","doneEvent":"DONE_EDITING","doneLabel":"@config.doneLabel","editing":true,"icon":"@entity.iconName","id":"@entity.id","maxInlineActions":"@config.maxInlineActions","placeholder":"@config.placeholder","subtitle":"@entity.description","title":"@entity.name","titleCommitEvent":"TITLE_COMMITTED","type":"document-panel","value":"@entity.content"}` */
   documentEditingContent?: unknown;
   /** Default: `"Done"` */
   doneLabel?: string;
@@ -135,7 +135,7 @@ export interface StdRecordDetailConfig {
   maxInlineActions?: number;
   /** Default: `"init"` */
   openOn?: 'init' | 'event';
-  /** Default: `{"children":[{"actions":"@config.actions","entity":"@payload.data","fields":"@config.fields","initialData":"@payload.data","maxInlineActions":"@config.maxInlineActions","sections":"@config.sections","showActions":"@config.showActions","subtitle":"@entity.description","title":"@entity.name","type":"detail-panel"}],"className":"w-full max-w-4xl","direction":"vertical","gap":"lg","type":"stack"}` */
+  /** Default: `{"children":[{"actions":["array/filter","@config.actions",["fn","action",["or",["=",["array/len",["object/get","@action","roles",[]]],0],["array/includes",["object/get","@action","roles",[]],"@config.viewerRole"]]]],"entity":"@entity.loadedRow","fields":"@config.fields","initialData":"@entity.loadedRow","maxInlineActions":"@config.maxInlineActions","sections":"@config.sections","showActions":"@config.showActions","subtitle":"@entity.description","title":"@entity.name","type":"detail-panel"}],"className":"w-full max-w-4xl","direction":"vertical","gap":"lg","type":"stack"}` */
   pageBodyContent?: unknown;
   /** Default: `"Start writing…"` */
   placeholder?: string;
@@ -143,12 +143,14 @@ export interface StdRecordDetailConfig {
   sections?: EntityRow[];
   /** Default: `true` */
   showActions?: boolean;
-  /** Default: `{"children":[{"actions":"@config.actions","entity":"@payload.data","fields":"@config.fields","initialData":"@payload.data","maxInlineActions":"@config.maxInlineActions","sections":"@config.sections","showActions":"@config.showActions","slideOver":true,"subtitle":"@entity.description","title":"@entity.name","type":"detail-panel"}],"direction":"vertical","gap":"none","type":"stack"}` */
+  /** Default: `{"children":[{"actions":["array/filter","@config.actions",["fn","action",["or",["=",["array/len",["object/get","@action","roles",[]]],0],["array/includes",["object/get","@action","roles",[]],"@config.viewerRole"]]]],"entity":"@entity.loadedRow","fields":"@config.fields","initialData":"@entity.loadedRow","maxInlineActions":"@config.maxInlineActions","sections":"@config.sections","showActions":"@config.showActions","slideOver":true,"subtitle":"@entity.description","title":"@entity.name","type":"detail-panel"}],"direction":"vertical","gap":"none","type":"stack"}` */
   slideOverBodyContent?: unknown;
   /** Default: `"description"` */
   subtitleField?: string;
   /** Default: `"name"` */
   titleField?: string;
+  /** Default: `""` */
+  viewerRole?: string;
 }
 
 /**
@@ -416,6 +418,14 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                   'required': true,
                   'type': 'string',
                 },
+                'roles': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'roles',
+                  'required': false,
+                  'type': 'array',
+                },
                 'variant': {
                   'name': 'variant',
                   'required': false,
@@ -426,6 +436,11 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
                     'ghost',
                     'danger',
                   ],
+                },
+                'when': {
+                  'name': 'when',
+                  'required': false,
+                  'type': 'object',
                 },
               },
               'type': 'object',
@@ -454,10 +469,43 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
             'default': {
               'children': [
                 {
-                  'actions': '@config.actions',
-                  'entity': '@payload.data',
+                  'actions': [
+                    'array/filter',
+                    '@config.actions',
+                    [
+                      'fn',
+                      'action',
+                      [
+                        'or',
+                        [
+                          '=',
+                          [
+                            'array/len',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                          ],
+                          0,
+                        ],
+                        [
+                          'array/includes',
+                          [
+                            'object/get',
+                            '@action',
+                            'roles',
+                            [],
+                          ],
+                          '@config.viewerRole',
+                        ],
+                      ],
+                    ],
+                  ],
+                  'entity': '@entity.loadedRow',
                   'fields': '@config.fields',
-                  'initialData': '@payload.data',
+                  'initialData': '@entity.loadedRow',
                   'maxInlineActions': '@config.maxInlineActions',
                   'sections': '@config.sections',
                   'showActions': '@config.showActions',
@@ -507,7 +555,40 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
           },
           'documentBodyContent': {
             'default': {
-              'actions': '@config.actions',
+              'actions': [
+                'array/filter',
+                '@config.actions',
+                [
+                  'fn',
+                  'action',
+                  [
+                    'or',
+                    [
+                      '=',
+                      [
+                        'array/len',
+                        [
+                          'object/get',
+                          '@action',
+                          'roles',
+                          [],
+                        ],
+                      ],
+                      0,
+                    ],
+                    [
+                      'array/includes',
+                      [
+                        'object/get',
+                        '@action',
+                        'roles',
+                        [],
+                      ],
+                      '@config.viewerRole',
+                    ],
+                  ],
+                ],
+              ],
               'className': 'w-full',
               'coverImage': '@entity.coverUrl',
               'editEvent': [
@@ -539,7 +620,40 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
           },
           'documentEditingContent': {
             'default': {
-              'actions': '@config.actions',
+              'actions': [
+                'array/filter',
+                '@config.actions',
+                [
+                  'fn',
+                  'action',
+                  [
+                    'or',
+                    [
+                      '=',
+                      [
+                        'array/len',
+                        [
+                          'object/get',
+                          '@action',
+                          'roles',
+                          [],
+                        ],
+                      ],
+                      0,
+                    ],
+                    [
+                      'array/includes',
+                      [
+                        'object/get',
+                        '@action',
+                        'roles',
+                        [],
+                      ],
+                      '@config.viewerRole',
+                    ],
+                  ],
+                ],
+              ],
               'autosaveHint': '@config.autosaveHint',
               'className': 'w-full',
               'contentChangeEvent': 'CONTENT_CHANGE',
@@ -672,10 +786,43 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
             'default': {
               'children': [
                 {
-                  'actions': '@config.actions',
-                  'entity': '@payload.data',
+                  'actions': [
+                    'array/filter',
+                    '@config.actions',
+                    [
+                      'fn',
+                      'action',
+                      [
+                        'or',
+                        [
+                          '=',
+                          [
+                            'array/len',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                          ],
+                          0,
+                        ],
+                        [
+                          'array/includes',
+                          [
+                            'object/get',
+                            '@action',
+                            'roles',
+                            [],
+                          ],
+                          '@config.viewerRole',
+                        ],
+                      ],
+                    ],
+                  ],
+                  'entity': '@entity.loadedRow',
                   'fields': '@config.fields',
-                  'initialData': '@payload.data',
+                  'initialData': '@entity.loadedRow',
                   'maxInlineActions': '@config.maxInlineActions',
                   'sections': '@config.sections',
                   'showActions': '@config.showActions',
@@ -739,10 +886,43 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
             'default': {
               'children': [
                 {
-                  'actions': '@config.actions',
-                  'entity': '@payload.data',
+                  'actions': [
+                    'array/filter',
+                    '@config.actions',
+                    [
+                      'fn',
+                      'action',
+                      [
+                        'or',
+                        [
+                          '=',
+                          [
+                            'array/len',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                          ],
+                          0,
+                        ],
+                        [
+                          'array/includes',
+                          [
+                            'object/get',
+                            '@action',
+                            'roles',
+                            [],
+                          ],
+                          '@config.viewerRole',
+                        ],
+                      ],
+                    ],
+                  ],
+                  'entity': '@entity.loadedRow',
                   'fields': '@config.fields',
-                  'initialData': '@payload.data',
+                  'initialData': '@entity.loadedRow',
                   'maxInlineActions': '@config.maxInlineActions',
                   'sections': '@config.sections',
                   'showActions': '@config.showActions',
@@ -775,6 +955,13 @@ export function stdRecordDetailRecordItemOrbital(params: StdRecordDetailRecordIt
             'label': 'Which field is the record\'s title?',
             'synonyms': 'title field, heading field, name field, label field',
             'tier': 'presentation',
+            'type': 'string',
+          },
+          'viewerRole': {
+            'default': '',
+            'description': 'The signed-in viewer\'s role that each action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
+            'label': 'Viewer\'s role',
+            'tier': 'policy',
             'type': 'string',
           },
         },

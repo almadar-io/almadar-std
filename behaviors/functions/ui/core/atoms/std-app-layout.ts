@@ -68,6 +68,12 @@ export interface StdAppLayoutAppLayoutStateLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdAppLayoutConfig {
+  /** Default: `"Ask an administrator if you need it."` */
+  accessDeniedDescription?: string;
+  /** Default: `"You don't have access to this page"` */
+  accessDeniedTitle?: string;
+  /** Default: `[]` */
+  allowedRoles?: string[];
   /** Default: `"App"` */
   appName?: string;
   /** Default: `"max-w-5xl mx-auto w-full"` */
@@ -75,8 +81,6 @@ export interface StdAppLayoutConfig {
   contentTrait?: TraitFieldRef;
   /** Default: `""` */
   currentPath?: string;
-  /** Default: `"modal"` */
-  detailSlot?: unknown;
   /** Default: `"sidebar"` */
   layoutMode?: 'sidebar' | 'topnav' | 'bottomnav' | 'minimal';
   /** Default: `"dashboard-layout"` */
@@ -100,6 +104,8 @@ export interface StdAppLayoutConfig {
   viewerEmail?: string;
   /** Default: `""` */
   viewerName?: string;
+  /** Default: `""` */
+  viewerRole?: string;
 }
 
 /**
@@ -245,6 +251,29 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
       {
         'category': 'interaction',
         'config': {
+          'accessDeniedDescription': {
+            'default': 'Ask an administrator if you need it.',
+            'label': 'Access-denied message',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'accessDeniedTitle': {
+            'default': 'You don\'t have access to this page',
+            'label': 'Access-denied title',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'allowedRoles': {
+            'default': [],
+            'description': 'Roles (matched against viewerRole) allowed to see this page\'s content. Empty = everyone; anyone else sees the access-denied state instead. Nav items and top-bar actions carry their own `roles` the same way.',
+            'items': {
+              'type': 'string',
+            },
+            'label': 'Who may open this page?',
+            'synonyms': 'access, permission, restrict, only for, roles allowed, who can see',
+            'tier': 'policy',
+            'type': '[string]',
+          },
           'appName': {
             'default': 'App',
             'description': 'Name shown in the top-left of the chrome header.',
@@ -273,13 +302,6 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
             'synonyms': 'active nav item, highlighted nav link, which menu item is selected, nav highlight',
             'tier': 'internal',
             'type': 'string',
-          },
-          'detailSlot': {
-            'default': 'modal',
-            'description': 'Slot where detail/edit views render',
-            'label': 'Detail slot',
-            'tier': 'internal',
-            'type': 'slot',
           },
           'layoutMode': {
             'default': 'sidebar',
@@ -337,6 +359,14 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
                   'name': 'label',
                   'required': true,
                   'type': 'string',
+                },
+                'roles': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'roles',
+                  'required': false,
+                  'type': 'array',
                 },
               },
               'type': 'object',
@@ -427,6 +457,14 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
                   'required': false,
                   'type': 'string',
                 },
+                'roles': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'roles',
+                  'required': false,
+                  'type': 'array',
+                },
                 'variant': {
                   'name': 'variant',
                   'required': false,
@@ -460,6 +498,13 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
             'label': 'Who is signed in',
             'synonyms': 'signed in user, current user, account, profile, persona, who am i',
             'tier': 'presentation',
+            'type': 'string',
+          },
+          'viewerRole': {
+            'default': '',
+            'description': 'The signed-in viewer\'s role that allowedRoles and each nav item\'s / top-bar action\'s `roles` are checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only items with no `roles` show and a page with allowedRoles is denied.',
+            'label': 'Viewer\'s role',
+            'tier': 'policy',
             'type': 'string',
           },
         },
@@ -661,12 +706,139 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
                         ],
                         'currentPath': '@config.currentPath',
                         'layoutMode': '@config.layoutMode',
-                        'navItems': '@config.navItems',
+                        'navItems': [
+                          'array/map',
+                          [
+                            'array/filter',
+                            '@config.navItems',
+                            [
+                              'fn',
+                              'item',
+                              [
+                                'or',
+                                [
+                                  '=',
+                                  [
+                                    'array/len',
+                                    [
+                                      'object/get',
+                                      '@item',
+                                      'roles',
+                                      [],
+                                    ],
+                                  ],
+                                  0,
+                                ],
+                                [
+                                  'array/includes',
+                                  [
+                                    'object/get',
+                                    '@item',
+                                    'roles',
+                                    [],
+                                  ],
+                                  '@config.viewerRole',
+                                ],
+                              ],
+                            ],
+                          ],
+                          [
+                            'fn',
+                            'item',
+                            [
+                              'if',
+                              [
+                                'object/has',
+                                '@item',
+                                'children',
+                              ],
+                              [
+                                'object/merge',
+                                '@item',
+                                {
+                                  'children': [
+                                    'array/filter',
+                                    [
+                                      'object/get',
+                                      '@item',
+                                      'children',
+                                      [],
+                                    ],
+                                    [
+                                      'fn',
+                                      'child',
+                                      [
+                                        'or',
+                                        [
+                                          '=',
+                                          [
+                                            'array/len',
+                                            [
+                                              'object/get',
+                                              '@child',
+                                              'roles',
+                                              [],
+                                            ],
+                                          ],
+                                          0,
+                                        ],
+                                        [
+                                          'array/includes',
+                                          [
+                                            'object/get',
+                                            '@child',
+                                            'roles',
+                                            [],
+                                          ],
+                                          '@config.viewerRole',
+                                        ],
+                                      ],
+                                    ],
+                                  ],
+                                },
+                              ],
+                              '@item',
+                            ],
+                          ],
+                        ],
                         'notificationClickEvent': '@config.notificationClickEvent',
                         'notifications': '@config.notifications',
                         'searchEvent': '@config.searchEvent',
                         'sidebarContent': '@config.sidebarTrait',
-                        'topBarActions': '@config.topBarActions',
+                        'topBarActions': [
+                          'array/filter',
+                          '@config.topBarActions',
+                          [
+                            'fn',
+                            'action',
+                            [
+                              'or',
+                              [
+                                '=',
+                                [
+                                  'array/len',
+                                  [
+                                    'object/get',
+                                    '@action',
+                                    'roles',
+                                    [],
+                                  ],
+                                ],
+                                0,
+                              ],
+                              [
+                                'array/includes',
+                                [
+                                  'object/get',
+                                  '@action',
+                                  'roles',
+                                  [],
+                                ],
+                                '@config.viewerRole',
+                              ],
+                            ],
+                          ],
+                        ],
                         'type': '@config.layoutPattern',
                         'user': [
                           'if',
@@ -689,6 +861,235 @@ export function stdAppLayoutAppLayoutOrbital(params: StdAppLayoutAppLayoutOrbita
               ],
               'event': 'INIT',
               'from': 'composing',
+              'guard': [
+                'or',
+                [
+                  '=',
+                  [
+                    'array/len',
+                    '@config.allowedRoles',
+                  ],
+                  0,
+                ],
+                [
+                  'array/includes',
+                  '@config.allowedRoles',
+                  '@config.viewerRole',
+                ],
+              ],
+              'to': 'composing',
+            },
+            {
+              'effects': [
+                [
+                  'fetch',
+                  ('AppLayoutData' satisfies _StdAppLayoutEntityName),
+                  {
+                    'emit': {
+                      'failure': 'AppLayoutStateLoadFailed',
+                      'success': 'AppLayoutStateLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'appName': '@config.appName',
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'description': '@config.accessDeniedDescription',
+                                'icon': 'lock',
+                                'title': '@config.accessDeniedTitle',
+                                'type': 'empty-state',
+                              },
+                            ],
+                            'className': '@config.contentClassName',
+                            'direction': 'vertical',
+                            'gap': 'lg',
+                            'type': 'stack',
+                          },
+                        ],
+                        'currentPath': '@config.currentPath',
+                        'layoutMode': '@config.layoutMode',
+                        'navItems': [
+                          'array/map',
+                          [
+                            'array/filter',
+                            '@config.navItems',
+                            [
+                              'fn',
+                              'item',
+                              [
+                                'or',
+                                [
+                                  '=',
+                                  [
+                                    'array/len',
+                                    [
+                                      'object/get',
+                                      '@item',
+                                      'roles',
+                                      [],
+                                    ],
+                                  ],
+                                  0,
+                                ],
+                                [
+                                  'array/includes',
+                                  [
+                                    'object/get',
+                                    '@item',
+                                    'roles',
+                                    [],
+                                  ],
+                                  '@config.viewerRole',
+                                ],
+                              ],
+                            ],
+                          ],
+                          [
+                            'fn',
+                            'item',
+                            [
+                              'if',
+                              [
+                                'object/has',
+                                '@item',
+                                'children',
+                              ],
+                              [
+                                'object/merge',
+                                '@item',
+                                {
+                                  'children': [
+                                    'array/filter',
+                                    [
+                                      'object/get',
+                                      '@item',
+                                      'children',
+                                      [],
+                                    ],
+                                    [
+                                      'fn',
+                                      'child',
+                                      [
+                                        'or',
+                                        [
+                                          '=',
+                                          [
+                                            'array/len',
+                                            [
+                                              'object/get',
+                                              '@child',
+                                              'roles',
+                                              [],
+                                            ],
+                                          ],
+                                          0,
+                                        ],
+                                        [
+                                          'array/includes',
+                                          [
+                                            'object/get',
+                                            '@child',
+                                            'roles',
+                                            [],
+                                          ],
+                                          '@config.viewerRole',
+                                        ],
+                                      ],
+                                    ],
+                                  ],
+                                },
+                              ],
+                              '@item',
+                            ],
+                          ],
+                        ],
+                        'notificationClickEvent': '@config.notificationClickEvent',
+                        'notifications': '@config.notifications',
+                        'searchEvent': '@config.searchEvent',
+                        'sidebarContent': '@config.sidebarTrait',
+                        'topBarActions': [
+                          'array/filter',
+                          '@config.topBarActions',
+                          [
+                            'fn',
+                            'action',
+                            [
+                              'or',
+                              [
+                                '=',
+                                [
+                                  'array/len',
+                                  [
+                                    'object/get',
+                                    '@action',
+                                    'roles',
+                                    [],
+                                  ],
+                                ],
+                                0,
+                              ],
+                              [
+                                'array/includes',
+                                [
+                                  'object/get',
+                                  '@action',
+                                  'roles',
+                                  [],
+                                ],
+                                '@config.viewerRole',
+                              ],
+                            ],
+                          ],
+                        ],
+                        'type': '@config.layoutPattern',
+                        'user': [
+                          'if',
+                          '@config.viewerName',
+                          {
+                            'avatar': '@config.viewerAvatar',
+                            'email': '@config.viewerEmail',
+                            'name': '@config.viewerName',
+                          },
+                          null,
+                        ],
+                      },
+                    ],
+                    'className': 'min-h-screen w-full',
+                    'data-theme': '@config.theme',
+                    'fullHeight': true,
+                    'type': 'box',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'composing',
+              'guard': [
+                'not',
+                [
+                  'or',
+                  [
+                    '=',
+                    [
+                      'array/len',
+                      '@config.allowedRoles',
+                    ],
+                    0,
+                  ],
+                  [
+                    'array/includes',
+                    '@config.allowedRoles',
+                    '@config.viewerRole',
+                  ],
+                ],
+              ],
               'to': 'composing',
             },
             {

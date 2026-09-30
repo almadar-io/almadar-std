@@ -84,6 +84,8 @@ export interface StdUiDashboardLayoutConfig {
   /** Default: `[]` */
   topBarActions?: EntityRow[];
   user?: EntityRow;
+  /** Default: `""` */
+  viewerRole?: string;
 }
 
 /**

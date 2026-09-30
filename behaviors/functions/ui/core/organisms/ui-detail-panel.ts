@@ -36,7 +36,7 @@ export type StdUiDetailPanelEventKey = 'DetailPanelLoaded' | 'INIT';
  * Payload shape for the `DetailPanelLoaded` event.
  */
 export interface StdUiDetailPanelDetailPanelLoadedPayload {
-  data?: EntityRow[];
+  data?: EntityRow;
 }
 
 /**
@@ -92,6 +92,8 @@ export interface StdUiDetailPanelConfig {
   subtitle?: string;
   title?: string;
   totalCount?: number;
+  /** Default: `""` */
+  viewerRole?: string;
   width?: string;
 }
 
@@ -191,6 +193,14 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                   'required': false,
                   'type': 'string',
                 },
+                'roles': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'roles',
+                  'required': false,
+                  'type': 'array',
+                },
                 'variant': {
                   'name': 'variant',
                   'required': false,
@@ -201,6 +211,11 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                     'ghost',
                     'danger',
                   ],
+                },
+                'when': {
+                  'name': 'when',
+                  'required': false,
+                  'type': 'object',
                 },
               },
               'type': 'object',
@@ -259,6 +274,11 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                   'ghost',
                   'danger',
                 ],
+              },
+              'when': {
+                'name': 'when',
+                'required': false,
+                'type': 'object',
               },
             },
             'tier': 'presentation',
@@ -561,8 +581,8 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
           },
           'selfFetch': {
             'default': true,
-            'description': 'true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper\'s own un-hydrated fetch so it cannot race the composer\'s.',
-            'label': 'Fetch its own rows on mount?',
+            'description': 'true (default) = a mount that carries an id loads that one row (never the collection); a create-mode mount skips the load. false = a composing atom owns the load.',
+            'label': 'Fetch its own row on mount?',
             'tier': 'internal',
             'type': 'boolean',
           },
@@ -640,6 +660,13 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
             'tier': 'presentation',
             'type': 'number',
           },
+          'viewerRole': {
+            'default': '',
+            'description': 'The viewer\'s role that each action\'s `roles` is checked against; bind it at the call site (e.g. `viewerRole: @user.role`). Empty = only actions with no `roles` show.',
+            'label': 'Viewer\'s role',
+            'tier': 'policy',
+            'type': 'string',
+          },
           'width': {
             'description': 'Panel width (CSS value, e.g., \'400px\', \'50%\')',
             'label': 'Width',
@@ -659,7 +686,7 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
         ],
         'emits': [
           {
-            'description': 'DetailPanel rows finished loading; payload.data holds the collection.',
+            'description': 'DetailPanel row finished loading; payload.data holds the single row.',
             'event': 'DetailPanelLoaded',
             'payloadSchema': [
               {
@@ -672,7 +699,7 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                     'type': 'string',
                   },
                 ],
-                'type': '[object]',
+                'type': 'object',
               },
             ],
             'scope': 'internal',
@@ -691,11 +718,19 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
         'stateMachine': {
           'events': [
             {
+              'description': 'Mount payload; a host that routes to this panel by id (a :id page param) passes it here.',
               'key': 'INIT',
               'name': 'Initialize',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+              'tier': 'internal',
             },
             {
-              'description': 'DetailPanel rows finished loading; payload.data holds the collection.',
+              'description': 'DetailPanel row finished loading; payload.data holds the single row.',
               'key': 'DetailPanelLoaded',
               'name': 'Detail panel loaded',
               'payloadSchema': [
@@ -709,7 +744,7 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                       'type': 'string',
                     },
                   ],
-                  'type': '[object]',
+                  'type': 'object',
                 },
               ],
               'synonyms': 'loaded, fetched, retrieved',
@@ -719,6 +754,9 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
           'states': [
             {
               'isInitial': true,
+              'name': 'resolving',
+            },
+            {
               'name': 'idle',
             },
           ],
@@ -732,13 +770,47 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                     'emit': {
                       'success': 'DetailPanelLoaded',
                     },
+                    'id': '@payload.id',
                   },
                 ],
                 [
                   'render-ui',
                   'main',
                   {
-                    'actions': '@config.actions',
+                    'actions': [
+                      'array/filter',
+                      '@config.actions',
+                      [
+                        'fn',
+                        'action',
+                        [
+                          'or',
+                          [
+                            '=',
+                            [
+                              'array/len',
+                              [
+                                'object/get',
+                                '@action',
+                                'roles',
+                                [],
+                              ],
+                            ],
+                            0,
+                          ],
+                          [
+                            'array/includes',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                            '@config.viewerRole',
+                          ],
+                        ],
+                      ],
+                    ],
                     'activeFilters': '@config.activeFilters',
                     'avatar': '@config.avatar',
                     'backAction': '@config.backAction',
@@ -775,8 +847,25 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                 ],
               ],
               'event': 'INIT',
-              'from': 'idle',
-              'guard': '@config.selfFetch',
+              'from': 'resolving',
+              'guard': [
+                'and',
+                '@config.selfFetch',
+                [
+                  '!=',
+                  [
+                    'str/default',
+                    '@payload.id',
+                    '',
+                  ],
+                  '',
+                ],
+                [
+                  '!=',
+                  '@config.mode',
+                  'create',
+                ],
+              ],
               'to': 'idle',
             },
             {
@@ -785,7 +874,40 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                   'render-ui',
                   'main',
                   {
-                    'actions': '@config.actions',
+                    'actions': [
+                      'array/filter',
+                      '@config.actions',
+                      [
+                        'fn',
+                        'action',
+                        [
+                          'or',
+                          [
+                            '=',
+                            [
+                              'array/len',
+                              [
+                                'object/get',
+                                '@action',
+                                'roles',
+                                [],
+                              ],
+                            ],
+                            0,
+                          ],
+                          [
+                            'array/includes',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                            '@config.viewerRole',
+                          ],
+                        ],
+                      ],
+                    ],
                     'activeFilters': '@config.activeFilters',
                     'avatar': '@config.avatar',
                     'backAction': '@config.backAction',
@@ -822,10 +944,27 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                 ],
               ],
               'event': 'INIT',
-              'from': 'idle',
+              'from': 'resolving',
               'guard': [
                 'not',
-                '@config.selfFetch',
+                [
+                  'and',
+                  '@config.selfFetch',
+                  [
+                    '!=',
+                    [
+                      'str/default',
+                      '@payload.id',
+                      '',
+                    ],
+                    '',
+                  ],
+                  [
+                    '!=',
+                    '@config.mode',
+                    'create',
+                  ],
+                ],
               ],
               'to': 'idle',
             },
@@ -835,7 +974,119 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                   'render-ui',
                   'main',
                   {
-                    'actions': '@config.actions',
+                    'actions': [
+                      'array/filter',
+                      '@config.actions',
+                      [
+                        'fn',
+                        'action',
+                        [
+                          'or',
+                          [
+                            '=',
+                            [
+                              'array/len',
+                              [
+                                'object/get',
+                                '@action',
+                                'roles',
+                                [],
+                              ],
+                            ],
+                            0,
+                          ],
+                          [
+                            'array/includes',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                            '@config.viewerRole',
+                          ],
+                        ],
+                      ],
+                    ],
+                    'activeFilters': '@config.activeFilters',
+                    'avatar': '@config.avatar',
+                    'backAction': '@config.backAction',
+                    'className': '@config.className',
+                    'displayFields': '@config.displayFields',
+                    'entity': '@entity',
+                    'error': '@config.error',
+                    'fieldNames': '@config.fieldNames',
+                    'fields': '@config.fields',
+                    'footer': '@config.footer',
+                    'initialData': '@entity',
+                    'isLoading': '@config.isLoading',
+                    'maxInlineActions': '@config.maxInlineActions',
+                    'mode': '@config.mode',
+                    'onTitleCommit': '@config.onTitleCommit',
+                    'page': '@config.pageProp',
+                    'pageSize': '@config.pageSize',
+                    'position': '@config.position',
+                    'relationsData': '@config.relationsData',
+                    'searchValue': '@config.searchValue',
+                    'sections': '@config.sections',
+                    'selectedIds': '@config.selectedIds',
+                    'showActions': '@config.showActions',
+                    'slideOver': '@config.slideOver',
+                    'sortBy': '@config.sortBy',
+                    'sortDirection': '@config.sortDirection',
+                    'status': '@config.status',
+                    'subtitle': '@config.subtitle',
+                    'title': '@config.title',
+                    'totalCount': '@config.totalCount',
+                    'type': 'detail-panel',
+                    'width': '@config.width',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'actions': [
+                      'array/filter',
+                      '@config.actions',
+                      [
+                        'fn',
+                        'action',
+                        [
+                          'or',
+                          [
+                            '=',
+                            [
+                              'array/len',
+                              [
+                                'object/get',
+                                '@action',
+                                'roles',
+                                [],
+                              ],
+                            ],
+                            0,
+                          ],
+                          [
+                            'array/includes',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                            '@config.viewerRole',
+                          ],
+                        ],
+                      ],
+                    ],
                     'activeFilters': '@config.activeFilters',
                     'avatar': '@config.avatar',
                     'backAction': '@config.backAction',

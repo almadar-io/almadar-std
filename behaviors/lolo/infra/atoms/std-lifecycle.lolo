@@ -25,7 +25,9 @@ orbital LifecycleOrbital {
 
     state idle {
       INIT -> idle
-      ScanRecordsLoaded -> scanning when (and @config.enabled [">", (array/len ?data), 0])
+      ScanRecordsLoaded -> idle when (and @config.enabled @config.dryRun [">", (array/len ?data), 0])
+        (notify info (str/concat "Dry run — " (array/len ?data) " record(s) would transition, nothing was written."))
+      ScanRecordsLoaded -> scanning when (and @config.enabled (not @config.dryRun) [">", (array/len ?data), 0])
         (set @entity.headId (object/get (array/first ?data) id))
         (set @entity.headStatus @config.toStatus)
         (emit LifecycleTransitioned { entityId: @entity.headId, status: @entity.headStatus })

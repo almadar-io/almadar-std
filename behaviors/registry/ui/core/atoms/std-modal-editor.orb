@@ -770,7 +770,7 @@
                 "name": "Initialize"
               },
               {
-                "description": "One physical keydown, delivered by the host's keyboard router. The host decides preventDefault from config.keymap; this trait only reads key + editorId.",
+                "description": "One physical keydown, delivered by the host's keyboard router. The host decides preventDefault from config.keymap; the command line accepts only keys config.keymap captures in COMMAND.",
                 "id": "evt_01M1N9RFGVK31M3ZE4N9FBHBWM",
                 "key": "KEY",
                 "name": "Key",
@@ -3095,6 +3095,15 @@
                 "from": "COMMAND",
                 "guard": [
                   "and",
+                  [
+                    "array/includes",
+                    [
+                      "object/get",
+                      "@config.keymap",
+                      "COMMAND"
+                    ],
+                    "@payload.key"
+                  ],
                   [
                     "!=",
                     "@payload.key",

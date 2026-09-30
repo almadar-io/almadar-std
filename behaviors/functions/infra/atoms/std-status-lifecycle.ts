@@ -65,8 +65,6 @@ export interface StdStatusLifecycleStatusChangeFailedPayload {
 export interface StdStatusLifecycleConfig {
   /** Default: `false` */
   enabled?: boolean;
-  /** Default: `"draft"` */
-  initialStatus?: string;
   /** Default: `["draft","active","archived"]` */
   states?: string[];
   /** Default: `"status"` */
@@ -246,14 +244,6 @@ export function stdStatusLifecycleStatusLifecycleOrbital(params: StdStatusLifecy
             'synonyms': 'lifecycle, statuses, states, stages, workflow, status transitions, enforce, enable, apply',
             'tier': 'infra',
             'type': 'boolean',
-          },
-          'initialStatus': {
-            'default': 'draft',
-            'description': 'The status assigned when a record is first created.',
-            'label': 'What status do new records start in?',
-            'synonyms': 'starting state, default status, first stage, initial state',
-            'tier': 'domain',
-            'type': 'string',
           },
           'states': {
             'default': [
@@ -501,6 +491,11 @@ export function stdStatusLifecycleStatusLifecycleOrbital(params: StdStatusLifecy
               'guard': [
                 'and',
                 '@config.enabled',
+                [
+                  'array/includes',
+                  '@config.states',
+                  '@payload.to',
+                ],
                 [
                   'array/some',
                   '@config.transitions',

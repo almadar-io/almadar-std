@@ -47,6 +47,7 @@ export interface StdUiAvlStateMachineTransitionClickPayload {
   event: string;
   from: string;
   to: string;
+  transition?: EntityRow;
 }
 
 /**
@@ -65,6 +66,8 @@ export interface StdUiAvlStateMachineConfig {
   entityFields?: string[];
   /** Default: `"pill"` */
   nodeShape?: 'pill' | 'gear';
+  /** Default: `"TRANSITION_CLICK"` */
+  onTransitionClick?: string;
   pendingSourceState?: string;
   selectedState?: string;
   /** Default: `true` */

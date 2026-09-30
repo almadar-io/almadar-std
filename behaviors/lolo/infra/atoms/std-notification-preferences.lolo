@@ -1,5 +1,6 @@
 app std-notification-preferences "1.0.0"
 "std-notification-preferences — per-person notification preference store plus a consultable gate. Owns NotificationPreference rows (one per person + event key: channel override in_app/email/push/slack/sms/webhook, mode instant/digest/off, quiet-hours window 'HH:MM-HH:MM' such as 22:00-07:00). The PreferencesManage trait is standard CRUD over the store (list / create / update / delete, persisted, success/failure cascade arms): a data-grid browse plus ModalRecordModal create/edit forms whose SAVE carries the full row payload (std-list daisy-chain idiom). The PreferenceGate trait is the consult half other notify traits call: emit CHECK_PREFERENCE { personId, eventKey } and the gate fetches the matching row (a row whose eventKey is blank applies to every event) and answers PREFERENCE_RESOLVED { personId, eventKey, channel, mode, suppressed } — suppressed is true only when the row's quietHours window covers the current hour; mode 'digest' rides on the verdict for the caller to defer. Default policy: no matching row — or a failed lookup — resolves fail-open to { channel: in_app, mode: instant, suppressed: false }; the absence of a preference never silences a notification."
+type ItemAction = { label : string!, event : event, variant : string, icon : string, roles : [string], when : SExpr }
 orbital NotificationPreferencesOrbital {
     uses Modal from "std/behaviors/std-modal"
 
@@ -102,17 +103,7 @@ orbital NotificationPreferencesOrbital {
               variant: caption
             }]
             gap: sm
-            itemActions: [{
-              event: EDIT
-              icon: pencil
-              label: Edit
-              variant: secondary
-            }, {
-              event: DELETE
-              icon: trash-2
-              label: Delete
-              variant: danger
-            }]
+            itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
             look: @config.tableLook
             type: data-grid
           }]
@@ -342,6 +333,24 @@ orbital NotificationPreferencesOrbital {
         @label "Table look"
         @description "Layer 2 visual treatment for the preference data table rendered by this atom."
         @tier "presentation"
+      itemActions : [ItemAction] = [{
+        event: EDIT
+        icon: pencil
+        label: Edit
+        variant: secondary
+      }, {
+        event: DELETE
+        icon: trash-2
+        label: Delete
+        variant: danger
+      }]
+        @label "Row actions"
+        @description "Actions offered on each row; give an item `roles` to show it only to those viewer roles."
+        @tier "presentation"
+      viewerRole : string = ""
+        @label "Viewer's role"
+        @description "The signed-in viewer's role that each action's `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show."
+        @tier "policy"
     }
   }
 

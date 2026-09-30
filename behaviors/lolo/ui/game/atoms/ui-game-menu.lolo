@@ -10,6 +10,7 @@ orbital GameMenuOrbital {
     variant : string
     disabled : boolean
     subLabel : string
+    roles : [string]
   }
   type GameMenuMenuItemsItem = {
     id : string
@@ -19,6 +20,7 @@ orbital GameMenuOrbital {
     variant : string
     disabled : boolean
     subLabel : string
+    roles : [string]
   }
   type GameMenuLogo = {
     url : asset!
@@ -56,8 +58,8 @@ orbital GameMenuOrbital {
         (render-ui main {
           title: @config.title
           subtitle: @config.subtitle
-          options: @config.options
-          menuItems: @config.menuItems
+          options: (array/filter @config.options (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
+          menuItems: (array/filter @config.menuItems (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           onSelect: @config.onSelect
           background: @config.background
           logo: @config.logo
@@ -107,6 +109,10 @@ orbital GameMenuOrbital {
         @label "Class Name"
         @description "Additional CSS classes"
         @tier "presentation"
+      viewerRole : string = ""
+        @label "Viewer's role"
+        @description "The viewer's role that each action's `roles` is checked against; bind it at the call site (e.g. `viewerRole: @user.role`). Empty = only actions with no `roles` show."
+        @tier "policy"
     }
   }
 

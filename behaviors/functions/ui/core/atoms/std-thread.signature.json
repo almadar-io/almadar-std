@@ -238,11 +238,38 @@
                   ],
                   "gap": "sm",
                   "itemActions": [
-                    {
-                      "event": "REPLY",
-                      "icon": "message-square",
-                      "label": "Reply"
-                    }
+                    "array/filter",
+                    "@config.itemActions",
+                    [
+                      "fn",
+                      "action",
+                      [
+                        "or",
+                        [
+                          "=",
+                          [
+                            "array/len",
+                            [
+                              "object/get",
+                              "@action",
+                              "roles",
+                              []
+                            ]
+                          ],
+                          0
+                        ],
+                        [
+                          "array/includes",
+                          [
+                            "object/get",
+                            "@action",
+                            "roles",
+                            []
+                          ],
+                          "@config.viewerRole"
+                        ]
+                      ]
+                    ]
                   ],
                   "look": "@config.tableLook",
                   "type": "data-list",
@@ -255,13 +282,7 @@
                     "@config.sectionTitle",
                     ""
                   ],
-                  {
-                    "action": "REPLY",
-                    "icon": "message-square",
-                    "label": "@config.composerLabel",
-                    "type": "button",
-                    "variant": "secondary"
-                  },
+                  "@trait.ThreadReplyGate",
                   {
                     "children": [],
                     "gap": "none",
@@ -287,124 +308,62 @@
             "tier": "presentation"
           },
           {
-            "key": "detailAuthorBinding",
-            "type": "string",
-            "default": "@entity.focusedRow.authorName",
-            "label": "detailAuthorBinding",
-            "description": "Detail-pane binding for the focused message author.",
-            "tier": "presentation"
+            "key": "itemActions",
+            "type": "[ItemAction]",
+            "default": [
+              {
+                "event": "REPLY",
+                "icon": "message-square",
+                "label": "Reply"
+              }
+            ],
+            "label": "Row actions",
+            "description": "Actions offered on each row; give an item `roles` to show it only to those viewer roles.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "event": {
+                  "name": "event",
+                  "required": false,
+                  "type": "event"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "roles": {
+                  "name": "roles",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "when": {
+                  "name": "when",
+                  "required": false,
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            }
           },
           {
-            "key": "detailContentBinding",
-            "type": "string",
-            "default": "@entity.focusedRow.content",
-            "label": "detailContentBinding",
-            "description": "Detail-pane binding for the message body.",
-            "tier": "presentation"
-          },
-          {
-            "key": "detailDateBinding",
-            "type": "string",
-            "default": "@entity.focusedRow.createdAt",
-            "label": "detailDateBinding",
-            "description": "Detail-pane binding for the timestamp.",
-            "tier": "presentation"
-          },
-          {
-            "key": "detailFromBinding",
-            "type": "string",
-            "default": "@entity.focusedRow.fromAddress",
-            "label": "detailFromBinding",
-            "description": "Detail-pane binding for the From address.",
-            "tier": "presentation"
-          },
-          {
-            "key": "detailSubjectBinding",
-            "type": "string",
-            "default": "@entity.focusedRow.subject",
-            "label": "detailSubjectBinding",
-            "description": "Detail-pane binding for the focused message subject.",
-            "tier": "presentation"
-          },
-          {
-            "key": "detailToBinding",
-            "type": "string",
-            "default": "@entity.focusedRow.toAddress",
-            "label": "detailToBinding",
-            "description": "Detail-pane binding for the To address.",
-            "tier": "presentation"
-          },
-          {
-            "key": "emailAuthorBinding",
-            "type": "string",
-            "default": "@item.authorName",
-            "label": "emailAuthorBinding",
-            "description": "List-pane binding for the message author.",
-            "tier": "presentation"
-          },
-          {
-            "key": "emailPreviewBinding",
-            "type": "string",
-            "default": "@item.preview",
-            "label": "emailPreviewBinding",
-            "description": "List-pane binding for the message preview text.",
-            "tier": "presentation"
-          },
-          {
-            "key": "emailSubjectBinding",
-            "type": "string",
-            "default": "@item.subject",
-            "label": "emailSubjectBinding",
-            "description": "List-pane binding for the message subject.",
-            "tier": "presentation"
-          },
-          {
-            "key": "flat",
-            "type": "boolean",
-            "default": false,
-            "label": "Flat thread",
-            "description": "Render replies as a linear list instead of nested tree",
-            "tier": "presentation"
-          },
-          {
-            "key": "recipientName",
-            "type": "string",
-            "default": "Conversation",
-            "label": "recipientName",
-            "description": "Header/recipient label for chat-style threads.",
-            "tier": "presentation"
-          },
-          {
-            "key": "replyAuthorBinding",
-            "type": "string",
-            "default": "@reply.authorName",
-            "label": "replyAuthorBinding",
-            "description": "Reply binding for the reply author.",
-            "tier": "presentation"
-          },
-          {
-            "key": "replyContentBinding",
-            "type": "string",
-            "default": "@reply.content",
-            "label": "replyContentBinding",
-            "description": "Reply binding for the reply body.",
-            "tier": "presentation"
-          },
-          {
-            "key": "replyDateBinding",
-            "type": "string",
-            "default": "@reply.createdAt",
-            "label": "replyDateBinding",
-            "description": "Reply binding for the reply timestamp.",
-            "tier": "presentation"
-          },
-          {
-            "key": "replyFromBinding",
-            "type": "string",
-            "default": "@reply.fromAddress",
-            "label": "replyFromBinding",
-            "description": "Reply binding for the reply From address.",
-            "tier": "presentation"
+            "key": "replyRoles",
+            "type": "[string]",
+            "default": [],
+            "label": "Roles that can reply",
+            "description": "Roles (matched against viewerRole) that see the thread's Reply button. Empty = everyone.",
+            "tier": "policy",
+            "items": {
+              "type": "string"
+            }
           },
           {
             "key": "sectionTitle",
@@ -438,6 +397,14 @@
             "description": "Top-level post whose descendants are loaded, filters every fetch and defaults new top-level replies' threadRootId (blank = all roots, unfiltered)",
             "synonyms": "rootId, topLevelId, scope, threadScope",
             "tier": "domain"
+          },
+          {
+            "key": "viewerRole",
+            "type": "string",
+            "default": "",
+            "label": "Viewer's role",
+            "description": "The signed-in viewer's role that each action's `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.",
+            "tier": "policy"
           }
         ],
         "capabilities": [],
@@ -499,6 +466,69 @@
         "effectEntityRefs": [
           "ThreadPost"
         ]
+      },
+      {
+        "name": "ThreadReplyButton",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "action",
+            "type": "unknown",
+            "default": "REPLY"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "message-square"
+          },
+          {
+            "key": "label",
+            "type": "unknown",
+            "default": "@config.composerLabel"
+          },
+          {
+            "key": "variant",
+            "type": "unknown",
+            "default": "secondary"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Button.traits.ButtonRender",
+        "transitionEvents": [
+          "INIT"
+        ],
+        "definerKnobs": [
+          "action"
+        ]
+      },
+      {
+        "name": "ThreadReplyGate",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "content",
+            "type": "unknown",
+            "default": "@trait.ThreadReplyButton"
+          },
+          {
+            "key": "roles",
+            "type": "unknown",
+            "default": "@config.replyRoles"
+          },
+          {
+            "key": "viewerRole",
+            "type": "unknown",
+            "default": "@config.viewerRole"
+          }
+        ],
+        "capabilities": [],
+        "ref": "RoleGate.traits.RoleGate",
+        "transitionEvents": [
+          "INIT"
+        ],
+        "definerKnobs": []
       }
     ],
     "pages": [
@@ -522,7 +552,7 @@
     "listenedEvents": [],
     "exposure": "both",
     "provenance": "authored",
-    "substrateSignature": "e3b0c44298fc1c14",
+    "substrateSignature": "041ef201ea4937f5",
     "sourceValid": true
   }
 ]

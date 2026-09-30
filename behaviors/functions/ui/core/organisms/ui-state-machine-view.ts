@@ -47,6 +47,7 @@ export interface StdUiStateMachineViewTransitionClickPayload {
   event: string;
   from: string;
   to: string;
+  transition?: EntityRow;
 }
 
 /**
@@ -68,6 +69,8 @@ export interface StdUiStateMachineViewConfig {
   isLoading?: boolean;
   /** Default: `"pill"` */
   nodeShape?: 'pill' | 'gear';
+  /** Default: `"TRANSITION_CLICK"` */
+  onTransitionClick?: string;
   pendingSourceState?: string;
   selectedState?: string;
   showHeader?: boolean;
@@ -235,6 +238,13 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
               'pill',
               'gear',
             ],
+          },
+          'onTransitionClick': {
+            'default': 'TRANSITION_CLICK',
+            'description': 'Direct transition-click callback, for React hosts (e.g. a canvas node).',
+            'label': 'On Transition Click',
+            'tier': 'presentation',
+            'type': 'event',
           },
           'pendingSourceState': {
             'description': 'Source of a transition being drawn — the next state click picks its target.',
@@ -443,6 +453,32 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
                 'required': true,
                 'type': 'string',
               },
+              {
+                'name': 'transition',
+                'properties': [
+                  {
+                    'name': 'index',
+                    'required': true,
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'event',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'from',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'to',
+                    'required': true,
+                    'type': 'string',
+                  },
+                ],
+                'type': 'object',
+              },
             ],
             'scope': 'external',
             'tier': 'essential',
@@ -500,6 +536,32 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
                   'required': true,
                   'type': 'string',
                 },
+                {
+                  'name': 'transition',
+                  'properties': [
+                    {
+                      'name': 'index',
+                      'required': true,
+                      'type': 'number',
+                    },
+                    {
+                      'name': 'event',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'from',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    {
+                      'name': 'to',
+                      'required': true,
+                      'type': 'string',
+                    },
+                  ],
+                  'type': 'object',
+                },
               ],
               'tier': 'essential',
             },
@@ -525,6 +587,7 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
                     'error': '@config.error',
                     'isLoading': '@config.isLoading',
                     'nodeShape': '@config.nodeShape',
+                    'onTransitionClick': '@config.onTransitionClick',
                     'pendingSourceState': '@config.pendingSourceState',
                     'selectedState': '@config.selectedState',
                     'showHeader': '@config.showHeader',

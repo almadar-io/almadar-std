@@ -2,7 +2,7 @@ app std-record-detail "1.0.0"
 "std-record-detail — single primitive: detail-panel. Owns the fetch-one-record state machine (loading → viewing → error, with RETRY), the record counterpart to std-browse's collection machine. Consumers configure fields/sections/actions and the title/subtitle/status bindings; the atom fetches by the id (or, for slug-routed records, the slug) carried on INIT and renders the panel. `detailLook` (panel default / slide-over / page / document) selects the render body, exactly as std-browse's browseLook selects a collection shape. The `document` look is for records whose shape IS a document (wiki page, note, article): the pure writing surface — a big inline-editable title with the rich-text body DIRECTLY beneath it, Edit/Done and the actions menu tucked into the header corner — where clicking the body drops a cursor in, every typing pause autosaves (CONTENT_SAVED, which the host persists QUIETLY — no refetch, or the editor unmounts mid-keystroke), and Done emits CONTENT_COMMITTED (the host refetches and snapshots version history on this one). Metadata never sits between the title and the words: compose the sibling RecordItemDetails trait beside the doc for a Gutenberg-style settings rail. A row minted blank by a document-first create arrives with draft=1 on INIT and opens straight in the editor. Pair with std-detail-layout for the back + breadcrumb chrome — that atom owns navigation, this one owns the record — exactly as a list page pairs std-browse with std-app-layout."
 ;; @capabilities "record detail, single record view, entity detail panel, drill-down record, show one record, record profile, detail page, view details, document editor, wiki page, note taking, article body, rich text editing, write and edit content"
 orbital RecordItemOrbital {
-  type RecordAction = { label : string!, event : event!, icon : string, variant : primary | secondary | ghost | danger }
+  type RecordAction = { label : string!, event : event!, icon : string, variant : primary | secondary | ghost | danger, roles : [string], when : SExpr }
   type RecordFieldSpec = { key : string!, header : string, format : date | currency | number | boolean | percent }
   type MetaFieldSpec = { key : string!, label : string, kind : text | boolean | select | readonly, options : [string], icon : string, format : date | currency | number | boolean | percent }
   type RecordSection = { title : string!, fields : [string] }
@@ -481,6 +481,10 @@ orbital RecordItemOrbital {
         @description "Buttons on the panel header. One primary at most; the rest collapse past maxInlineActions."
         @synonyms "record actions, detail actions, panel buttons"
         @tier "presentation"
+      viewerRole : string = ""
+        @label "Viewer's role"
+        @description "The signed-in viewer's role that each action's `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show."
+        @tier "policy"
       maxInlineActions : number = 3
         @label "How many actions before collapsing?"
         @description "Actions beyond this count collapse into a '⋯' overflow menu."
@@ -560,10 +564,10 @@ orbital RecordItemOrbital {
         @tier "presentation"
       bodyContent : render-ui = {
         children: [{
-          actions: @config.actions
-          entity: ?data
+          actions: (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
+          entity: @entity.loadedRow
           fields: @config.fields
-          initialData: ?data
+          initialData: @entity.loadedRow
           maxInlineActions: @config.maxInlineActions
           sections: @config.sections
           showActions: @config.showActions
@@ -580,10 +584,10 @@ orbital RecordItemOrbital {
         @tier "internal"
       slideOverBodyContent : render-ui = {
         children: [{
-          actions: @config.actions
-          entity: ?data
+          actions: (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
+          entity: @entity.loadedRow
           fields: @config.fields
-          initialData: ?data
+          initialData: @entity.loadedRow
           maxInlineActions: @config.maxInlineActions
           sections: @config.sections
           showActions: @config.showActions
@@ -601,10 +605,10 @@ orbital RecordItemOrbital {
         @tier "internal"
       pageBodyContent : render-ui = {
         children: [{
-          actions: @config.actions
-          entity: ?data
+          actions: (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
+          entity: @entity.loadedRow
           fields: @config.fields
-          initialData: ?data
+          initialData: @entity.loadedRow
           maxInlineActions: @config.maxInlineActions
           sections: @config.sections
           showActions: @config.showActions
@@ -621,7 +625,7 @@ orbital RecordItemOrbital {
         @description "Render-ui SExpr rendered after the record loads when detailLook = page: a full record page, width-capped so field rows do not stretch past a readable measure (Almadar_UI_Beauty.md §3)."
         @tier "internal"
       documentBodyContent : render-ui = {
-        actions: @config.actions
+        actions: (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
         coverImage: @entity.coverUrl
         icon: @entity.iconName
         editEvent: (if @config.allowEdit EDIT_CONTENT null)
@@ -640,7 +644,7 @@ orbital RecordItemOrbital {
         @description "Render-ui SExpr for detailLook = document while reading: the pure writing surface — editable title with the rich-text body DIRECTLY beneath it, Edit and the actions menu tucked into the header corner. Metadata never sits between title and content; compose the sibling RecordItemDetails trait beside this one for the settings rail. Binds only @entity fields, never ?data, because it is also painted by arms whose payload is not the record."
         @tier "internal"
       documentEditingContent : render-ui = {
-        actions: @config.actions
+        actions: (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
         coverImage: @entity.coverUrl
         icon: @entity.iconName
         autosaveHint: @config.autosaveHint

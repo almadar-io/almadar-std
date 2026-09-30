@@ -102,10 +102,14 @@ export interface StdRecurrenceConfig {
   cardLook?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
   /** Default: `["frequency","interval","startDate","endDate","endAfterCount"]` */
   formFields?: string[];
+  /** Default: `[{"event":"OPEN_EXCEPTION","label":"Manage"}]` */
+  itemActions?: EntityRow[];
   /** Default: `"vertical-spacious"` */
   timelineLook?: 'vertical-compact' | 'vertical-spacious' | 'horizontal' | 'swimlane';
   /** Default: `"Schedule"` */
   title?: string;
+  /** Default: `""` */
+  viewerRole?: string;
 }
 
 /**
@@ -443,6 +447,41 @@ export function stdRecurrenceRecurrenceOrbital(params: StdRecurrenceRecurrenceOr
             'tier': 'presentation',
             'type': '[string]',
           },
+          'itemActions': {
+            'default': [
+              {
+                'event': 'OPEN_EXCEPTION',
+                'label': 'Manage',
+              },
+            ],
+            'description': 'Actions offered on each row; give an item `roles` to show it only to those viewer roles.',
+            'items': {
+              'properties': {
+                'event': {
+                  'name': 'event',
+                  'required': false,
+                  'type': 'event',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': true,
+                  'type': 'string',
+                },
+                'roles': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'roles',
+                  'required': false,
+                  'type': 'array',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Row actions',
+            'tier': 'presentation',
+            'type': '[ItemAction]',
+          },
           'timelineLook': {
             'default': 'vertical-spacious',
             'description': 'Layer 2 visual treatment for the timeline.',
@@ -461,6 +500,13 @@ export function stdRecurrenceRecurrenceOrbital(params: StdRecurrenceRecurrenceOr
             'description': 'Heading shown above the recurrence editor',
             'label': 'Section title',
             'tier': 'presentation',
+            'type': 'string',
+          },
+          'viewerRole': {
+            'default': '',
+            'description': 'The signed-in viewer\'s role that each action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
+            'label': 'Viewer\'s role',
+            'tier': 'policy',
             'type': 'string',
           },
         },
@@ -1146,10 +1192,38 @@ export function stdRecurrenceRecurrenceOrbital(params: StdRecurrenceRecurrenceOr
                           'status',
                         ],
                         'itemActions': [
-                          {
-                            'event': 'OPEN_EXCEPTION',
-                            'label': 'Manage',
-                          },
+                          'array/filter',
+                          '@config.itemActions',
+                          [
+                            'fn',
+                            'action',
+                            [
+                              'or',
+                              [
+                                '=',
+                                [
+                                  'array/len',
+                                  [
+                                    'object/get',
+                                    '@action',
+                                    'roles',
+                                    [],
+                                  ],
+                                ],
+                                0,
+                              ],
+                              [
+                                'array/includes',
+                                [
+                                  'object/get',
+                                  '@action',
+                                  'roles',
+                                  [],
+                                ],
+                                '@config.viewerRole',
+                              ],
+                            ],
+                          ],
                         ],
                         'look': '@config.timelineLook',
                         'type': 'timeline',

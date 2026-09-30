@@ -702,48 +702,6 @@ export function stdKnowledgeLoopKnowledgeLoopOrbital(params: StdKnowledgeLoopKno
         },
         'entityRebindable': true,
         'linkedEntity': 'KnowledgeClaim',
-        'listens': [
-          {
-            'event': 'SURVIVED',
-            'source': {
-              'kind': 'trait',
-              'trait': ('SurvivedButton' satisfies _StdKnowledgeLoopListenTraitName),
-            },
-            'triggers': 'SURVIVED',
-          },
-          {
-            'event': 'FAILED',
-            'source': {
-              'kind': 'trait',
-              'trait': ('FailedButton' satisfies _StdKnowledgeLoopListenTraitName),
-            },
-            'triggers': 'FAILED',
-          },
-          {
-            'event': 'CHECKS_AGREE',
-            'source': {
-              'kind': 'trait',
-              'trait': ('ChecksAgreeButton' satisfies _StdKnowledgeLoopListenTraitName),
-            },
-            'triggers': 'CHECKS_AGREE',
-          },
-          {
-            'event': 'CHECKS_DISAGREE',
-            'source': {
-              'kind': 'trait',
-              'trait': ('ChecksDisagreeButton' satisfies _StdKnowledgeLoopListenTraitName),
-            },
-            'triggers': 'CHECKS_DISAGREE',
-          },
-          {
-            'event': 'CHOOSE_NEXT_TARGET',
-            'source': {
-              'kind': 'trait',
-              'trait': ('ChooseNextTargetButton' satisfies _StdKnowledgeLoopListenTraitName),
-            },
-            'triggers': 'CHOOSE_NEXT_TARGET',
-          },
-        ],
         'name': 'KnowledgeLoop',
         'scope': 'collection',
         'stateMachine': {

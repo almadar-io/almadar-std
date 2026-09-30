@@ -1,6 +1,7 @@
 app std-selection "1.0.0"
 "std-selection as a Function"
 type FilterSpec = { field : string!, label : string, options : [string] }
+type ItemAction = { label : string!, event : event, icon : string, roles : [string], when : SExpr }
 orbital SelectableItemOrbital {
     type SelectableItemLoaded = Event { data : [SelectableItem] } "Fired when SelectableItem finishes loading; payload.data holds the list"
 
@@ -86,11 +87,7 @@ orbital SelectableItemOrbital {
             className: "transition-shadow hover:shadow-md cursor-pointer"
             entity: ?data
             fields: []
-            itemActions: [{
-              event: SELECT
-              icon: check
-              label: Select
-            }]
+            itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
             look: @config.tableLook
             pageSize: @config.displayPageSize
             renderItem: (fn item {
@@ -220,11 +217,7 @@ orbital SelectableItemOrbital {
             className: "transition-shadow hover:shadow-md cursor-pointer"
             entity: ?data
             fields: []
-            itemActions: [{
-              event: SELECT
-              icon: check
-              label: Select
-            }]
+            itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
             look: @config.tableLook
             pageSize: @config.displayPageSize
             renderItem: (fn item {
@@ -467,6 +460,18 @@ orbital SelectableItemOrbital {
         @description "Rows visible per page before the data-grid's own pagination control appears — 20 matches the pick-list density sweet spot (Miller's law, 10-25 rows)."
         @synonyms "visible rows, items per page, display limit, show per page"
         @tier "presentation"
+      itemActions : [ItemAction] = [{
+        event: SELECT
+        icon: check
+        label: Select
+      }]
+        @label "Row actions"
+        @description "Actions offered on each row; give an item `roles` to show it only to those viewer roles."
+        @tier "presentation"
+      viewerRole : string = ""
+        @label "Viewer's role"
+        @description "The signed-in viewer's role that each action's `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show."
+        @tier "policy"
     }
   }
 

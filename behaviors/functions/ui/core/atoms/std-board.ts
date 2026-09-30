@@ -128,11 +128,13 @@ export interface StdBoardBoardItemsSaveFailedPayload {
 export interface StdBoardConfig {
   /** Default: `"columns"` */
   boardLook?: 'columns' | 'kanban-classic';
-  /** Default: `{"children":[{"align":"center","children":[{"name":"kanban-square","size":"lg","type":"icon"},{"content":"@config.title","type":"typography","variant":"h3"}],"direction":"horizontal","gap":"sm","type":"stack"},{"type":"divider"},["if","@config.bodySearch",{"children":[{"className":"w-full max-w-md","clearable":true,"event":"REFETCH_QUERY","placeholder":"@config.searchPlaceholder","type":"search-input"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if",[">",["array/len","@config.filters"],0],{"children":[{"entity":"BoardView","event":"REFETCH_FILTER","filters":"@config.filters","look":"@config.filterBarLook","type":"filter-group"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],{"cols":"@config.gridCols","dndRoot":true,"entity":"@entity.boards","fields":[],"gap":"md","renderItem":["fn","col",{"children":[{"children":[{"align":"center","children":[{"name":"@col.icon","type":"icon"},{"content":"@col.label","type":"typography","variant":"h4"},{"label":"@col.count","type":"badge","variant":"@col.variant"}],"direction":"horizontal","gap":"xs","type":"stack"},{"accepts":"*","dragGroup":"@col.key","dropEvent":"MOVE_CARD","entity":"@col.items","fields":[],"gap":"sm","positionEvent":"REORDER_POSITION","renderItem":["fn","item",{"children":[{"children":[{"content":"@config.cardTitleBinding","type":"typography","variant":"h4"},{"color":"muted","content":"@config.cardDescriptionBinding","type":"typography","variant":"caption"},{"align":"center","children":[{"action":"OPEN_CARD","actionPayload":{"description":"@config.cardDescriptionBinding","id":"@config.cardIdBinding","notes":"@config.cardNotesBinding","row":"@item","stage":"@config.cardStageBinding","title":"@config.cardTitleBinding"},"icon":"arrow-right","label":"Open","type":"button","variant":"ghost"}],"direction":"horizontal","gap":"xs","type":"stack"}],"direction":"vertical","gap":"xs","type":"stack"}],"look":"@config.cardLook","type":"card"}],"reorderEvent":"REORDER_CARD","sortable":true,"type":"data-list"}],"direction":"vertical","gap":"sm","type":"stack"}],"look":"@config.cardLook","type":"card"}],"type":"data-grid"},{"action":"ADD_CARD","icon":"plus","label":"Add item","type":"floating-action-button","variant":"primary"}],"direction":"vertical","gap":"md","type":"stack"}` */
+  /** Default: `{"children":[["if","@config.showHeader",{"children":[{"align":"center","children":[{"name":"kanban-square","size":"lg","type":"icon"},{"content":"@config.title","type":"typography","variant":"h3"}],"direction":"horizontal","gap":"sm","type":"stack"},{"type":"divider"}],"direction":"vertical","gap":"md","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if","@config.bodySearch",{"children":[{"className":"w-full max-w-md","clearable":true,"event":"REFETCH_QUERY","placeholder":"@config.searchPlaceholder","type":"search-input"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if",[">",["array/len","@config.filters"],0],{"children":[{"entity":"BoardView","event":"REFETCH_FILTER","filters":"@config.filters","look":"@config.filterBarLook","type":"filter-group"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],{"cols":"@config.gridCols","dndRoot":true,"entity":"@entity.boards","fields":[],"gap":"md","renderItem":["fn","col",{"children":[{"children":[{"align":"center","children":[{"name":"@col.icon","type":"icon"},{"content":"@col.label","type":"typography","variant":"h4"},{"label":"@col.count","type":"badge","variant":"@col.variant"}],"direction":"horizontal","gap":"xs","type":"stack"},{"accepts":"*","dragGroup":"@col.key","dropEvent":"MOVE_CARD","entity":"@col.items","fields":[],"gap":"sm","positionEvent":"REORDER_POSITION","renderItem":["fn","item",{"children":[{"children":[{"content":"@config.cardTitleBinding","type":"typography","variant":"h4"},{"color":"muted","content":"@config.cardDescriptionBinding","type":"typography","variant":"caption"},{"align":"center","children":[{"action":"OPEN_CARD","actionPayload":{"description":"@config.cardDescriptionBinding","id":"@config.cardIdBinding","notes":"@config.cardNotesBinding","row":"@item","stage":"@config.cardStageBinding","title":"@config.cardTitleBinding"},"icon":"arrow-right","label":"Open","type":"button","variant":"ghost"}],"direction":"horizontal","gap":"xs","type":"stack"}],"direction":"vertical","gap":"xs","type":"stack"}],"look":"@config.cardLook","type":"card"}],"reorderEvent":"REORDER_CARD","sortable":true,"type":"data-list"}],"direction":"vertical","gap":"sm","type":"stack"}],"look":"@config.cardLook","type":"card"}],"type":"data-grid"},{"action":"ADD_CARD","icon":"plus","label":"Add item","type":"floating-action-button","variant":"primary"}],"direction":"vertical","gap":"md","type":"stack"}` */
   bodyContent?: unknown;
   /** Default: `false` */
   bodySearch?: boolean;
-  /** Default: `{"align":"center","children":[{"action":"DELETE_CARD","actionPayload":{"id":"@entity.currentId"},"icon":"trash-2","label":"Delete","type":"button","variant":"danger"}],"direction":"horizontal","gap":"sm","type":"stack"}` */
+  /** Default: `[{"event":"DELETE_CARD","icon":"trash-2","label":"Delete","variant":"danger"}]` */
+  cardActions?: EntityRow[];
+  /** Default: `{"align":"center","children":["array/map",["array/filter","@config.cardActions",["fn","action",["or",["=",["array/len",["object/get","@action","roles",[]]],0],["array/includes",["object/get","@action","roles",[]],"@config.viewerRole"]]]],["fn","a",{"action":"@a.event","actionPayload":{"id":"@entity.currentId"},"icon":"@a.icon","label":"@a.label","type":"button","variant":"@a.variant"}]],"direction":"horizontal","gap":"sm","type":"stack"}` */
   cardActionsContent?: unknown;
   /** Default: `"@item.description"` */
   cardDescriptionBinding?: string;
@@ -158,7 +160,9 @@ export interface StdBoardConfig {
   gridCols?: number;
   /** Default: `"stage"` */
   groupByField?: string;
-  /** Default: `{"children":[{"align":"center","children":[{"name":"kanban-square","size":"xl","type":"icon"},{"content":"@config.title","type":"typography","variant":"h2"}],"className":"px-card-md","direction":"horizontal","gap":"sm","type":"stack"},{"type":"divider"},["if","@config.bodySearch",{"children":[{"className":"w-full max-w-md","clearable":true,"event":"REFETCH_QUERY","placeholder":"@config.searchPlaceholder","type":"search-input"}],"className":"px-card-md","direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if",[">",["array/len","@config.filters"],0],{"children":[{"entity":"BoardView","event":"REFETCH_FILTER","filters":"@config.filters","look":"@config.filterBarLook","type":"filter-group"}],"className":"px-card-md","direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],{"className":"w-full pb-2","dndRoot":true,"entity":"@entity.boards","fields":[],"gap":"lg","minCardWidth":300,"renderItem":["fn","col",{"children":[{"children":[{"align":"center","children":[{"name":"@col.icon","type":"icon"},{"className":"flex-1","content":"@col.label","type":"typography","variant":"h4"},{"label":"@col.count","size":"sm","type":"badge","variant":"primary"}],"className":"p-card-md border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-surface)]","direction":"horizontal","gap":"sm","type":"stack"},{"accepts":"*","className":"p-card-md min-h-[120px]","dragGroup":"@col.key","dropEvent":"MOVE_CARD","entity":"@col.items","fields":[],"gap":"sm","positionEvent":"REORDER_POSITION","renderItem":["fn","item",{"children":[{"children":[{"content":"@config.cardTitleBinding","type":"typography","variant":"body","weight":"medium"},{"className":"line-clamp-2","color":"muted","content":"@config.cardDescriptionBinding","type":"typography","variant":"caption"},{"align":"center","children":[{"label":"@config.cardStageBinding","size":"sm","type":"badge","variant":"@col.variant"},{"action":"OPEN_CARD","actionPayload":{"description":"@config.cardDescriptionBinding","id":"@config.cardIdBinding","notes":"@config.cardNotesBinding","row":"@item","stage":"@config.cardStageBinding","title":"@config.cardTitleBinding"},"className":"ml-auto","icon":"arrow-right","label":"Open","size":"sm","type":"button","variant":"ghost"}],"className":"pt-1","direction":"horizontal","gap":"xs","type":"stack"}],"direction":"vertical","gap":"xs","type":"stack"}],"className":"cursor-grab hover:shadow-lg transition-shadow","look":"@config.cardLook","padding":"sm","type":"card"}],"reorderEvent":"REORDER_CARD","sortable":true,"type":"data-list"}],"direction":"vertical","gap":"none","type":"stack"}],"className":"w-[300px] bg-[var(--color-surface-subtle)] rounded-lg overflow-hidden","look":"elevated","padding":"none","type":"card"}],"scrollX":true,"type":"data-grid"},{"action":"ADD_CARD","icon":"plus","label":"Add card","type":"floating-action-button","variant":"primary"}],"className":"h-full","direction":"vertical","gap":"md","type":"stack"}` */
+  /** Default: `[]` */
+  include?: string[];
+  /** Default: `{"children":[["if","@config.showHeader",{"children":[{"align":"center","children":[{"name":"kanban-square","size":"xl","type":"icon"},{"content":"@config.title","type":"typography","variant":"h2"}],"className":"px-card-md","direction":"horizontal","gap":"sm","type":"stack"},{"type":"divider"}],"direction":"vertical","gap":"md","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if","@config.bodySearch",{"children":[{"className":"w-full max-w-md","clearable":true,"event":"REFETCH_QUERY","placeholder":"@config.searchPlaceholder","type":"search-input"}],"className":"px-card-md","direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if",[">",["array/len","@config.filters"],0],{"children":[{"entity":"BoardView","event":"REFETCH_FILTER","filters":"@config.filters","look":"@config.filterBarLook","type":"filter-group"}],"className":"px-card-md","direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],{"className":"w-full pb-2","dndRoot":true,"entity":"@entity.boards","fields":[],"gap":"lg","minCardWidth":300,"renderItem":["fn","col",{"children":[{"children":[{"align":"center","children":[{"name":"@col.icon","type":"icon"},{"className":"flex-1","content":"@col.label","type":"typography","variant":"h4"},{"label":"@col.count","size":"sm","type":"badge","variant":"primary"}],"className":"p-card-md border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-surface)]","direction":"horizontal","gap":"sm","type":"stack"},{"accepts":"*","className":"p-card-md min-h-[120px]","dragGroup":"@col.key","dropEvent":"MOVE_CARD","entity":"@col.items","fields":[],"gap":"sm","positionEvent":"REORDER_POSITION","renderItem":["fn","item",{"children":[{"children":[{"content":"@config.cardTitleBinding","type":"typography","variant":"body","weight":"medium"},{"className":"line-clamp-2","color":"muted","content":"@config.cardDescriptionBinding","type":"typography","variant":"caption"},{"align":"center","children":[{"label":"@config.cardStageBinding","size":"sm","type":"badge","variant":"@col.variant"},{"action":"OPEN_CARD","actionPayload":{"description":"@config.cardDescriptionBinding","id":"@config.cardIdBinding","notes":"@config.cardNotesBinding","row":"@item","stage":"@config.cardStageBinding","title":"@config.cardTitleBinding"},"className":"ml-auto","icon":"arrow-right","label":"Open","size":"sm","type":"button","variant":"ghost"}],"className":"pt-1","direction":"horizontal","gap":"xs","type":"stack"}],"direction":"vertical","gap":"xs","type":"stack"}],"className":"cursor-grab hover:shadow-lg transition-shadow","look":"@config.cardLook","padding":"sm","type":"card"}],"reorderEvent":"REORDER_CARD","sortable":true,"type":"data-list"}],"direction":"vertical","gap":"none","type":"stack"}],"className":"w-[300px] bg-[var(--color-surface-subtle)] rounded-lg overflow-hidden","look":"elevated","padding":"none","type":"card"}],"scrollX":true,"type":"data-grid"},{"action":"ADD_CARD","icon":"plus","label":"Add card","type":"floating-action-button","variant":"primary"}],"className":"h-full","direction":"vertical","gap":"md","type":"stack"}` */
   kanbanClassicBodyContent?: unknown;
   /** Default: `10` */
   pageSize?: number;
@@ -166,8 +170,12 @@ export interface StdBoardConfig {
   searchField?: string;
   /** Default: `"Search…"` */
   searchPlaceholder?: string;
+  /** Default: `true` */
+  showHeader?: boolean;
   /** Default: `"Board"` */
   title?: string;
+  /** Default: `""` */
+  viewerRole?: string;
 }
 
 /**
@@ -508,27 +516,43 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
           'bodyContent': {
             'default': {
               'children': [
-                {
-                  'align': 'center',
-                  'children': [
-                    {
-                      'name': 'kanban-square',
-                      'size': 'lg',
-                      'type': 'icon',
-                    },
-                    {
-                      'content': '@config.title',
-                      'type': 'typography',
-                      'variant': 'h3',
-                    },
-                  ],
-                  'direction': 'horizontal',
-                  'gap': 'sm',
-                  'type': 'stack',
-                },
-                {
-                  'type': 'divider',
-                },
+                [
+                  'if',
+                  '@config.showHeader',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'name': 'kanban-square',
+                            'size': 'lg',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': '@config.title',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                  {
+                    'children': [],
+                    'gap': 'none',
+                    'type': 'stack',
+                  },
+                ],
                 [
                   'if',
                   '@config.bodySearch',
@@ -717,20 +741,112 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
             'tier': 'presentation',
             'type': 'boolean',
           },
+          'cardActions': {
+            'default': [
+              {
+                'event': 'DELETE_CARD',
+                'icon': 'trash-2',
+                'label': 'Delete',
+                'variant': 'danger',
+              },
+            ],
+            'description': 'Buttons on the open-card panel\'s actions row, built by the default cardActionsContent. Give an item `roles` to show it only to those viewer roles.',
+            'items': {
+              'properties': {
+                'event': {
+                  'name': 'event',
+                  'required': false,
+                  'type': 'event',
+                },
+                'icon': {
+                  'name': 'icon',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': true,
+                  'type': 'string',
+                },
+                'roles': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'roles',
+                  'required': false,
+                  'type': 'array',
+                },
+                'variant': {
+                  'name': 'variant',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'primary',
+                    'secondary',
+                    'ghost',
+                    'danger',
+                  ],
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Card panel action list',
+            'tier': 'presentation',
+            'type': '[ItemAction]',
+          },
           'cardActionsContent': {
             'default': {
               'align': 'center',
               'children': [
-                {
-                  'action': 'DELETE_CARD',
-                  'actionPayload': {
-                    'id': '@entity.currentId',
+                'array/map',
+                [
+                  'array/filter',
+                  '@config.cardActions',
+                  [
+                    'fn',
+                    'action',
+                    [
+                      'or',
+                      [
+                        '=',
+                        [
+                          'array/len',
+                          [
+                            'object/get',
+                            '@action',
+                            'roles',
+                            [],
+                          ],
+                        ],
+                        0,
+                      ],
+                      [
+                        'array/includes',
+                        [
+                          'object/get',
+                          '@action',
+                          'roles',
+                          [],
+                        ],
+                        '@config.viewerRole',
+                      ],
+                    ],
+                  ],
+                ],
+                [
+                  'fn',
+                  'a',
+                  {
+                    'action': '@a.event',
+                    'actionPayload': {
+                      'id': '@entity.currentId',
+                    },
+                    'icon': '@a.icon',
+                    'label': '@a.label',
+                    'type': 'button',
+                    'variant': '@a.variant',
                   },
-                  'icon': 'trash-2',
-                  'label': 'Delete',
-                  'type': 'button',
-                  'variant': 'danger',
-                },
+                ],
               ],
               'direction': 'horizontal',
               'gap': 'sm',
@@ -918,31 +1034,58 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
             'tier': 'presentation',
             'type': 'string',
           },
+          'include': {
+            'default': [],
+            'description': 'Entity relation field names to hydrate on fetch (e.g. an `assignee : TeamMember` field named `assignee`), so card bindings can use dot-paths like @item.assignee.name. Empty = no hydration, the default.',
+            'items': {
+              'type': 'string',
+            },
+            'label': 'Which relation fields to hydrate?',
+            'synonyms': 'relation hydration, populate relations, joined fields, hydrate relations',
+            'tier': 'domain',
+            'type': '[string]',
+          },
           'kanbanClassicBodyContent': {
             'default': {
               'children': [
-                {
-                  'align': 'center',
-                  'children': [
-                    {
-                      'name': 'kanban-square',
-                      'size': 'xl',
-                      'type': 'icon',
-                    },
-                    {
-                      'content': '@config.title',
-                      'type': 'typography',
-                      'variant': 'h2',
-                    },
-                  ],
-                  'className': 'px-card-md',
-                  'direction': 'horizontal',
-                  'gap': 'sm',
-                  'type': 'stack',
-                },
-                {
-                  'type': 'divider',
-                },
+                [
+                  'if',
+                  '@config.showHeader',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'name': 'kanban-square',
+                            'size': 'xl',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': '@config.title',
+                            'type': 'typography',
+                            'variant': 'h2',
+                          },
+                        ],
+                        'className': 'px-card-md',
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                  {
+                    'children': [],
+                    'gap': 'none',
+                    'type': 'stack',
+                  },
+                ],
                 [
                   'if',
                   '@config.bodySearch',
@@ -1171,11 +1314,25 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
             'tier': 'presentation',
             'type': 'string',
           },
+          'showHeader': {
+            'default': true,
+            'description': 'Off when the page already carries a page header naming the same thing, so the page shows one title.',
+            'label': 'Show the board\'s own title row?',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
           'title': {
             'default': 'Board',
             'description': 'Heading shown above the column board',
             'label': 'Board title',
             'tier': 'presentation',
+            'type': 'string',
+          },
+          'viewerRole': {
+            'default': '',
+            'description': 'The signed-in viewer\'s role that each card action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
+            'label': 'Viewer\'s role',
+            'tier': 'policy',
             'type': 'string',
           },
         },
@@ -1816,6 +1973,7 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                       'failure': 'BoardItemsLoadFailed',
                       'success': 'BoardItemsLoaded',
                     },
+                    'include': '@config.include',
                   },
                 ],
                 [
@@ -1972,6 +2130,7 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                       'failure': 'BoardItemsLoadFailed',
                       'success': 'BoardItemsLoaded',
                     },
+                    'include': '@config.include',
                   },
                 ],
                 [
@@ -1997,6 +2156,7 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                       'failure': 'BoardItemsLoadFailed',
                       'success': 'BoardItemsLoaded',
                     },
+                    'include': '@config.include',
                   },
                 ],
                 [
@@ -2043,6 +2203,7 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                       'failure': 'BoardItemsLoadFailed',
                       'success': 'BoardItemsLoaded',
                     },
+                    'include': '@config.include',
                   },
                 ],
                 [
@@ -2347,6 +2508,7 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                       'failure': 'BoardItemsLoadFailed',
                       'success': 'BoardItemsLoaded',
                     },
+                    'include': '@config.include',
                   },
                 ],
               ],
@@ -2381,6 +2543,7 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                         '@payload.searchTerm',
                       ],
                     ],
+                    'include': '@config.include',
                   },
                 ],
               ],
@@ -2415,6 +2578,7 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                         '@payload.value',
                       ],
                     ],
+                    'include': '@config.include',
                   },
                 ],
               ],
@@ -2432,6 +2596,7 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                       'failure': 'BoardItemsLoadFailed',
                       'success': 'BoardItemsLoaded',
                     },
+                    'include': '@config.include',
                     'limit': '@config.pageSize',
                     'offset': [
                       '*',
@@ -2603,6 +2768,7 @@ export function stdBoardBoardOrbital(params: StdBoardBoardOrbitalParams = {}): O
                       'failure': 'BoardItemsLoadFailed',
                       'success': 'BoardItemsLoaded',
                     },
+                    'include': '@config.include',
                   },
                 ],
                 [

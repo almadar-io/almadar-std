@@ -85,6 +85,8 @@ export interface StdUiEntityListConfig {
   totalCount?: number;
   /** Default: `"default"` */
   variant?: 'default' | 'card';
+  /** Default: `""` */
+  viewerRole?: string;
 }
 
 type _StdUiEntityListEntityName = 'EntityListItem';
@@ -313,6 +315,14 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
                   'required': false,
                   'type': 'string',
                 },
+                'roles': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'roles',
+                  'required': false,
+                  'type': 'array',
+                },
                 'variant': {
                   'name': 'variant',
                   'required': false,
@@ -324,6 +334,11 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
                     'danger',
                     'default',
                   ],
+                },
+                'when': {
+                  'name': 'when',
+                  'required': false,
+                  'type': 'object',
                 },
               },
               'type': 'object',
@@ -414,6 +429,13 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
               'default',
               'card',
             ],
+          },
+          'viewerRole': {
+            'default': '',
+            'description': 'The viewer\'s role that each action\'s `roles` is checked against; bind it at the call site (e.g. `viewerRole: @user.role`). Empty = only actions with no `roles` show.',
+            'label': 'Viewer\'s role',
+            'tier': 'policy',
+            'type': 'string',
           },
         },
         'effectRow': [
@@ -565,7 +587,40 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
                     'fieldNames': '@config.fieldNames',
                     'fields': '@config.fields',
                     'isLoading': '@config.isLoading',
-                    'itemActions': '@config.itemActions',
+                    'itemActions': [
+                      'array/filter',
+                      '@config.itemActions',
+                      [
+                        'fn',
+                        'action',
+                        [
+                          'or',
+                          [
+                            '=',
+                            [
+                              'array/len',
+                              [
+                                'object/get',
+                                '@action',
+                                'roles',
+                                [],
+                              ],
+                            ],
+                            0,
+                          ],
+                          [
+                            'array/includes',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                            '@config.viewerRole',
+                          ],
+                        ],
+                      ],
+                    ],
                     'page': '@config.pageProp',
                     'pageSize': '@config.pageSize',
                     'searchValue': '@config.searchValue',
@@ -601,7 +656,40 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
                     'fieldNames': '@config.fieldNames',
                     'fields': '@config.fields',
                     'isLoading': '@config.isLoading',
-                    'itemActions': '@config.itemActions',
+                    'itemActions': [
+                      'array/filter',
+                      '@config.itemActions',
+                      [
+                        'fn',
+                        'action',
+                        [
+                          'or',
+                          [
+                            '=',
+                            [
+                              'array/len',
+                              [
+                                'object/get',
+                                '@action',
+                                'roles',
+                                [],
+                              ],
+                            ],
+                            0,
+                          ],
+                          [
+                            'array/includes',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                            '@config.viewerRole',
+                          ],
+                        ],
+                      ],
+                    ],
                     'page': '@config.pageProp',
                     'pageSize': '@config.pageSize',
                     'searchValue': '@config.searchValue',
@@ -640,7 +728,40 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
                     'fieldNames': '@config.fieldNames',
                     'fields': '@config.fields',
                     'isLoading': '@config.isLoading',
-                    'itemActions': '@config.itemActions',
+                    'itemActions': [
+                      'array/filter',
+                      '@config.itemActions',
+                      [
+                        'fn',
+                        'action',
+                        [
+                          'or',
+                          [
+                            '=',
+                            [
+                              'array/len',
+                              [
+                                'object/get',
+                                '@action',
+                                'roles',
+                                [],
+                              ],
+                            ],
+                            0,
+                          ],
+                          [
+                            'array/includes',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                            '@config.viewerRole',
+                          ],
+                        ],
+                      ],
+                    ],
                     'page': '@config.pageProp',
                     'pageSize': '@config.pageSize',
                     'searchValue': '@config.searchValue',

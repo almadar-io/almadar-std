@@ -2486,6 +2486,11 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                           {
                             'items': '@entity.fx',
                             'presets': '@config.fxPresets',
+                            'sprites': [
+                              'object/get',
+                              '@config.assetManifest',
+                              'effects',
+                            ],
                             'tickMs': 500,
                             'type': 'draw-fx-layer',
                           },
@@ -3431,6 +3436,11 @@ export function stdArcadeBoard3dArcadeBoard3DFrameOrbital(params: StdArcadeBoard
                         {
                           'items': '@entity.fx',
                           'presets': '@config.fxPresets',
+                          'sprites': [
+                            'object/get',
+                            '@config.assetManifest',
+                            'effects',
+                          ],
                           'tickMs': 500,
                           'type': 'draw-fx-layer',
                         },

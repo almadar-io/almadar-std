@@ -46,15 +46,6 @@
         "parent": "trt_01KXG04TAATRX8PKKYZ2W1WQ3K",
         "renames": []
       },
-      "evt_01KXG04TADXBY5RKKJ8HPNBXBQ": {
-        "bakedName": "CounterTemplateLoaded",
-        "curName": "CounterTemplateLoaded",
-        "id": "evt_01KXG04TADXBY5RKKJ8HPNBXBQ",
-        "kind": "event",
-        "owner": "workspace",
-        "parent": "trt_01KXG04TAATRX8PKKYZ2W1WQ3K",
-        "renames": []
-      },
       "orb_01KXG04TAAS05A5AT0PK9N6VAR": {
         "bakedName": "CounterTemplateOrbital",
         "curName": "CounterTemplateOrbital",
@@ -194,13 +185,6 @@
               "tier": "presentation",
               "type": "event"
             },
-            "selfFetch": {
-              "default": true,
-              "description": "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's.",
-              "label": "Fetch its own rows on mount?",
-              "tier": "internal",
-              "type": "boolean"
-            },
             "showReset": {
               "default": true,
               "description": "Show reset button",
@@ -274,52 +258,6 @@
               "eventId": "evt_01KXG04TADKWPZVDR2YXHJ9EQX",
               "scope": "external",
               "tier": "essential"
-            },
-            {
-              "description": "CounterTemplate rows finished loading; payload.data holds the collection.",
-              "event": "CounterTemplateLoaded",
-              "eventId": "evt_01KXG04TADXBY5RKKJ8HPNBXBQ",
-              "payloadSchema": [
-                {
-                  "entity": "CounterTemplateItem",
-                  "name": "data",
-                  "properties": [
-                    {
-                      "name": "id",
-                      "required": true,
-                      "type": "string"
-                    },
-                    {
-                      "name": "count",
-                      "type": "number"
-                    },
-                    {
-                      "name": "decrementDisabled",
-                      "type": "boolean"
-                    },
-                    {
-                      "name": "incrementDisabled",
-                      "type": "boolean"
-                    },
-                    {
-                      "name": "decrementLabel",
-                      "type": "string"
-                    },
-                    {
-                      "name": "incrementLabel",
-                      "type": "string"
-                    },
-                    {
-                      "name": "rangeText",
-                      "type": "string"
-                    }
-                  ],
-                  "type": "[object]"
-                }
-              ],
-              "scope": "internal",
-              "synonyms": "loaded, fetched, retrieved",
-              "tier": "essential"
             }
           ],
           "entityContract": {
@@ -341,52 +279,6 @@
                 "id": "evt_01KXG04TAAZBPQE4K43H6GG762",
                 "key": "INIT",
                 "name": "Initialize"
-              },
-              {
-                "description": "CounterTemplate rows finished loading; payload.data holds the collection.",
-                "id": "evt_01KXG04TADXBY5RKKJ8HPNBXBQ",
-                "key": "CounterTemplateLoaded",
-                "name": "Counter template loaded",
-                "payloadSchema": [
-                  {
-                    "entity": "CounterTemplateItem",
-                    "name": "data",
-                    "properties": [
-                      {
-                        "name": "id",
-                        "required": true,
-                        "type": "string"
-                      },
-                      {
-                        "name": "count",
-                        "type": "number"
-                      },
-                      {
-                        "name": "decrementDisabled",
-                        "type": "boolean"
-                      },
-                      {
-                        "name": "incrementDisabled",
-                        "type": "boolean"
-                      },
-                      {
-                        "name": "decrementLabel",
-                        "type": "string"
-                      },
-                      {
-                        "name": "incrementLabel",
-                        "type": "string"
-                      },
-                      {
-                        "name": "rangeText",
-                        "type": "string"
-                      }
-                    ],
-                    "type": "[object]"
-                  }
-                ],
-                "synonyms": "loaded, fetched, retrieved",
-                "tier": "essential"
               },
               {
                 "description": "Called when increment is clicked",
@@ -422,11 +314,7 @@
                   [
                     "fetch",
                     "CounterTemplateItem",
-                    {
-                      "emit": {
-                        "success": "CounterTemplateLoaded"
-                      }
-                    }
+                    {}
                   ],
                   [
                     "render-ui",
@@ -450,65 +338,6 @@
                 ],
                 "event": "INIT",
                 "eventId": "evt_01KXG04TAAZBPQE4K43H6GG762",
-                "from": "idle",
-                "guard": "@config.selfFetch",
-                "to": "idle"
-              },
-              {
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "className": "@config.className",
-                      "decrementEvent": "@config.decrementEvent",
-                      "entity": "@entity",
-                      "incrementEvent": "@config.incrementEvent",
-                      "onDecrement": "@config.onDecrement",
-                      "onIncrement": "@config.onIncrement",
-                      "onReset": "@config.onReset",
-                      "resetEvent": "@config.resetEvent",
-                      "showReset": "@config.showReset",
-                      "size": "@config.size",
-                      "title": "@config.title",
-                      "type": "counter-template",
-                      "variant": "@config.variant"
-                    }
-                  ]
-                ],
-                "event": "INIT",
-                "eventId": "evt_01KXG04TAAZBPQE4K43H6GG762",
-                "from": "idle",
-                "guard": [
-                  "not",
-                  "@config.selfFetch"
-                ],
-                "to": "idle"
-              },
-              {
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "className": "@config.className",
-                      "decrementEvent": "@config.decrementEvent",
-                      "entity": "@payload.data",
-                      "incrementEvent": "@config.incrementEvent",
-                      "onDecrement": "@config.onDecrement",
-                      "onIncrement": "@config.onIncrement",
-                      "onReset": "@config.onReset",
-                      "resetEvent": "@config.resetEvent",
-                      "showReset": "@config.showReset",
-                      "size": "@config.size",
-                      "title": "@config.title",
-                      "type": "counter-template",
-                      "variant": "@config.variant"
-                    }
-                  ]
-                ],
-                "event": "CounterTemplateLoaded",
-                "eventId": "evt_01KXG04TADXBY5RKKJ8HPNBXBQ",
                 "from": "idle",
                 "to": "idle"
               }

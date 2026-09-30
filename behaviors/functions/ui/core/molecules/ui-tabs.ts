@@ -61,6 +61,8 @@ export interface StdUiTabsConfig {
   tabs?: EntityRow[];
   /** Default: `"default"` */
   variant?: 'default' | 'pills' | 'underline';
+  /** Default: `""` */
+  viewerRole?: string;
 }
 
 /**

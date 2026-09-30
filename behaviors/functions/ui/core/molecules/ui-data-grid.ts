@@ -70,6 +70,10 @@ export interface StdUiDataGridConfig {
   dndRoot?: boolean;
   dragGroup?: string;
   dropEvent?: string;
+  emptyAction?: EntityRow;
+  emptyDescription?: string;
+  emptyIcon?: unknown;
+  emptyTitle?: string;
   error?: EntityRow;
   /** Default: `[]` */
   fields?: EntityRow[];
@@ -104,6 +108,8 @@ export interface StdUiDataGridConfig {
   /** Default: `true` */
   selfFetch?: boolean;
   sortable?: boolean;
+  /** Default: `""` */
+  viewerRole?: string;
 }
 
 /**

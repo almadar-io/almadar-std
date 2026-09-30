@@ -67,11 +67,11 @@ export interface StdCalendarConfig {
   agendaGroupBy?: string;
   /** Default: `[]` */
   agendaItemActions?: EntityRow[];
-  /** Default: `{"children":[{"align":"center","children":[{"align":"center","children":[{"name":"list","size":"xl","type":"icon"},{"content":"Agenda","type":"typography","variant":"h2"}],"direction":"horizontal","gap":"sm","type":"stack"},{"onSelect":"SELECT_DAY","selected":"@entity.selectedRange","type":"date-range-selector"}],"direction":"horizontal","gap":"md","justify":"between","type":"stack"},["if","@config.bodySearch",{"children":[{"className":"w-full max-w-md","clearable":true,"event":"REFETCH_QUERY","placeholder":"@config.searchPlaceholder","type":"search-input"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if",[">",["array/len","@config.filters"],0],{"children":[{"entity":"CalendarEvent","event":"REFETCH_FILTER","filters":"@config.filters","look":"@config.filterBarLook","type":"filter-group"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],{"type":"divider"},{"entity":"@payload.data","fields":[],"gap":"md","groupBy":"@config.agendaGroupBy","itemActions":"@config.agendaItemActions","renderItem":["fn","item",{"children":[{"align":"start","children":[{"align":"center","children":[{"color":"muted","content":"@config.timeBinding","format":"time","type":"typography","variant":"overline"},{"color":"muted","name":"clock","size":"sm","type":"icon"}],"className":"w-16 shrink-0","direction":"vertical","gap":"xs","type":"stack"},{"orientation":"vertical","type":"divider"},{"children":[{"align":"center","children":[{"className":"truncate","content":"@config.titleBinding","type":"typography","variant":"h4","weight":"medium"},{"label":"@config.badgeBinding","size":"sm","type":"badge","variant":"default"}],"direction":"horizontal","gap":"sm","justify":"between","type":"stack"},{"className":"truncate","color":"muted","content":"@config.descriptionBinding","type":"typography","variant":"body2"}],"className":"flex-1 min-w-0","direction":"vertical","gap":"xs","type":"stack"}],"direction":"horizontal","gap":"md","type":"stack"}],"look":"flat-bordered","padding":"md","type":"card"}],"type":"data-list","variant":"default"}],"className":"w-full p-card-md","direction":"vertical","gap":"lg","type":"stack"}` */
+  /** Default: `{"children":[{"align":"center","children":[{"align":"center","children":[{"name":"list","size":"xl","type":"icon"},{"content":"Agenda","type":"typography","variant":"h2"}],"direction":"horizontal","gap":"sm","type":"stack"},{"onSelect":"SELECT_DAY","selected":"@entity.selectedRange","type":"date-range-selector"}],"direction":"horizontal","gap":"md","justify":"between","type":"stack"},["if","@config.bodySearch",{"children":[{"className":"w-full max-w-md","clearable":true,"event":"REFETCH_QUERY","placeholder":"@config.searchPlaceholder","type":"search-input"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if",[">",["array/len","@config.filters"],0],{"children":[{"entity":"CalendarEvent","event":"REFETCH_FILTER","filters":"@config.filters","look":"@config.filterBarLook","type":"filter-group"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],{"type":"divider"},{"entity":"@payload.data","fields":[],"gap":"md","groupBy":"@config.agendaGroupBy","itemActions":["array/filter","@config.agendaItemActions",["fn","action",["or",["=",["array/len",["object/get","@action","roles",[]]],0],["array/includes",["object/get","@action","roles",[]],"@config.viewerRole"]]]],"renderItem":["fn","item",{"children":[{"align":"start","children":[{"align":"center","children":[{"color":"muted","content":"@config.timeBinding","format":"time","type":"typography","variant":"overline"},{"color":"muted","name":"clock","size":"sm","type":"icon"}],"className":"w-16 shrink-0","direction":"vertical","gap":"xs","type":"stack"},{"orientation":"vertical","type":"divider"},{"children":[{"align":"center","children":[{"className":"truncate","content":"@config.titleBinding","type":"typography","variant":"h4","weight":"medium"},{"label":"@config.badgeBinding","size":"sm","type":"badge","variant":"default"}],"direction":"horizontal","gap":"sm","justify":"between","type":"stack"},{"className":"truncate","color":"muted","content":"@config.descriptionBinding","type":"typography","variant":"body2"}],"className":"flex-1 min-w-0","direction":"vertical","gap":"xs","type":"stack"}],"direction":"horizontal","gap":"md","type":"stack"}],"look":"flat-bordered","padding":"md","type":"card"}],"type":"data-list","variant":"default"}],"className":"w-full p-card-md","direction":"vertical","gap":"lg","type":"stack"}` */
   agendaListBodyContent?: unknown;
   /** Default: `"@item.status"` */
   badgeBinding?: string;
-  /** Default: `{"children":[{"align":"center","children":[{"align":"center","children":[{"name":"calendar","size":"xl","type":"icon"},{"content":"@config.title","type":"typography","variant":"h2"}],"direction":"horizontal","gap":"sm","type":"stack"},{"onSelect":"SELECT_DAY","selected":"@entity.selectedRange","type":"date-range-selector"}],"direction":"horizontal","gap":"md","justify":"between","type":"stack"},["if","@config.bodySearch",{"children":[{"className":"w-full max-w-md","clearable":true,"event":"REFETCH_QUERY","placeholder":"@config.searchPlaceholder","type":"search-input"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if",[">",["array/len","@config.filters"],0],{"children":[{"entity":"CalendarEvent","event":"REFETCH_FILTER","filters":"@config.filters","look":"@config.filterBarLook","type":"filter-group"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],{"type":"divider"},{"events":"@payload.data","onEventClick":"@config.onEventClick","renderItem":["fn","item",{"content":"@config.titleBinding","type":"typography","variant":"small"}],"startField":"@config.startField","type":"calendar-grid"},{"type":"divider"},{"content":"Upcoming Events","type":"typography","variant":"h4"},{"entity":"@payload.data","fields":"@config.fields","itemActions":"@config.agendaItemActions","look":"@config.tableLook","type":"data-list"}],"direction":"vertical","gap":"lg","type":"stack"}` */
+  /** Default: `{"children":[{"align":"center","children":[{"align":"center","children":[{"name":"calendar","size":"xl","type":"icon"},{"content":"@config.title","type":"typography","variant":"h2"}],"direction":"horizontal","gap":"sm","type":"stack"},{"onSelect":"SELECT_DAY","selected":"@entity.selectedRange","type":"date-range-selector"}],"direction":"horizontal","gap":"md","justify":"between","type":"stack"},["if","@config.bodySearch",{"children":[{"className":"w-full max-w-md","clearable":true,"event":"REFETCH_QUERY","placeholder":"@config.searchPlaceholder","type":"search-input"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if",[">",["array/len","@config.filters"],0],{"children":[{"entity":"CalendarEvent","event":"REFETCH_FILTER","filters":"@config.filters","look":"@config.filterBarLook","type":"filter-group"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],{"type":"divider"},{"events":"@payload.data","onEventClick":"@config.onEventClick","renderItem":["fn","item",{"content":"@config.titleBinding","type":"typography","variant":"small"}],"startField":"@config.startField","type":"calendar-grid"},{"type":"divider"},{"content":"Upcoming Events","type":"typography","variant":"h4"},{"entity":"@payload.data","fields":"@config.fields","itemActions":["array/filter","@config.agendaItemActions",["fn","action",["or",["=",["array/len",["object/get","@action","roles",[]]],0],["array/includes",["object/get","@action","roles",[]],"@config.viewerRole"]]]],"look":"@config.tableLook","type":"data-list"}],"direction":"vertical","gap":"lg","type":"stack"}` */
   bodyContent?: unknown;
   /** Default: `false` */
   bodySearch?: boolean;
@@ -103,6 +103,8 @@ export interface StdCalendarConfig {
   title?: string;
   /** Default: `"@item.name"` */
   titleBinding?: string;
+  /** Default: `""` */
+  viewerRole?: string;
   /** Default: `{"children":[{"align":"center","children":[{"align":"center","children":[{"name":"calendar","size":"xl","type":"icon"},{"content":"Week","type":"typography","variant":"h2"}],"direction":"horizontal","gap":"sm","type":"stack"},{"align":"center","children":[{"action":"CALENDAR_PREV_WEEK","icon":"chevron-left","label":"Previous week","type":"button","variant":"ghost"},{"color":"muted","content":["time/format","@entity.weekAnchor","MMM D, YYYY"],"type":"typography","variant":"caption"},{"action":"CALENDAR_NEXT_WEEK","icon":"chevron-right","label":"Next week","type":"button","variant":"ghost"}],"direction":"horizontal","gap":"xs","type":"stack"},{"onSelect":"SELECT_DAY","selected":"@entity.selectedRange","type":"date-range-selector"}],"direction":"horizontal","gap":"md","justify":"between","type":"stack"},["if","@config.bodySearch",{"children":[{"className":"w-full max-w-md","clearable":true,"event":"REFETCH_QUERY","placeholder":"@config.searchPlaceholder","type":"search-input"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],["if",[">",["array/len","@config.filters"],0],{"children":[{"entity":"CalendarEvent","event":"REFETCH_FILTER","filters":"@config.filters","look":"@config.filterBarLook","type":"filter-group"}],"direction":"horizontal","gap":"sm","type":"stack"},{"children":[],"gap":"none","type":"stack"}],{"type":"divider"},{"className":"w-full","dayWindow":7,"events":"@payload.data","onEventClick":"@config.onEventClick","renderItem":["fn","item",{"content":"@config.titleBinding","type":"typography","variant":"small"}],"startField":"@config.startField","swipeLeftEvent":"CALENDAR_NEXT_WEEK","swipeRightEvent":"CALENDAR_PREV_WEEK","type":"calendar-grid","weekStart":"@entity.weekAnchor"}],"direction":"vertical","gap":"md","type":"stack"}` */
   weekTimelineBodyContent?: unknown;
 }
@@ -341,6 +343,14 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                   'required': false,
                   'type': 'string',
                 },
+                'roles': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'roles',
+                  'required': false,
+                  'type': 'array',
+                },
                 'variant': {
                   'name': 'variant',
                   'required': false,
@@ -351,6 +361,11 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                     'ghost',
                     'danger',
                   ],
+                },
+                'when': {
+                  'name': 'when',
+                  'required': false,
+                  'type': 'object',
                 },
               },
               'type': 'object',
@@ -456,7 +471,40 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                   'fields': [],
                   'gap': 'md',
                   'groupBy': '@config.agendaGroupBy',
-                  'itemActions': '@config.agendaItemActions',
+                  'itemActions': [
+                    'array/filter',
+                    '@config.agendaItemActions',
+                    [
+                      'fn',
+                      'action',
+                      [
+                        'or',
+                        [
+                          '=',
+                          [
+                            'array/len',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                          ],
+                          0,
+                        ],
+                        [
+                          'array/includes',
+                          [
+                            'object/get',
+                            '@action',
+                            'roles',
+                            [],
+                          ],
+                          '@config.viewerRole',
+                        ],
+                      ],
+                    ],
+                  ],
                   'renderItem': [
                     'fn',
                     'item',
@@ -677,7 +725,40 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
                 {
                   'entity': '@payload.data',
                   'fields': '@config.fields',
-                  'itemActions': '@config.agendaItemActions',
+                  'itemActions': [
+                    'array/filter',
+                    '@config.agendaItemActions',
+                    [
+                      'fn',
+                      'action',
+                      [
+                        'or',
+                        [
+                          '=',
+                          [
+                            'array/len',
+                            [
+                              'object/get',
+                              '@action',
+                              'roles',
+                              [],
+                            ],
+                          ],
+                          0,
+                        ],
+                        [
+                          'array/includes',
+                          [
+                            'object/get',
+                            '@action',
+                            'roles',
+                            [],
+                          ],
+                          '@config.viewerRole',
+                        ],
+                      ],
+                    ],
+                  ],
                   'look': '@config.tableLook',
                   'type': 'data-list',
                 },
@@ -917,6 +998,13 @@ export function stdCalendarCalendarEventOrbital(params: StdCalendarCalendarEvent
             'description': 'Per-row binding for the event title slot.',
             'label': 'Title binding',
             'tier': 'presentation',
+            'type': 'string',
+          },
+          'viewerRole': {
+            'default': '',
+            'description': 'The signed-in viewer\'s role that each action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
+            'label': 'Viewer\'s role',
+            'tier': 'policy',
             'type': 'string',
           },
           'weekTimelineBodyContent': {

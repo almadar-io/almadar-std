@@ -30,7 +30,7 @@ const ALIAS = 'UiPresence';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiPresenceEventKey = 'INIT';
+export type StdUiPresenceEventKey = 'EXITED' | 'INIT';
 
 /**
  * Typed call-site config block for this trait — every
@@ -39,8 +39,13 @@ export type StdUiPresenceEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiPresenceConfig {
+  animate?: boolean;
+  /** Default: `"modal"` */
+  animation?: 'modal' | 'overlay' | 'slide-up' | 'drawer' | 'popover' | 'toast' | 'fade' | 'page';
   children?: PatternValue;
   className?: string;
+  /** Default: `"EXITED"` */
+  onExited?: string;
   /** Default: `false` */
   show?: boolean;
 }

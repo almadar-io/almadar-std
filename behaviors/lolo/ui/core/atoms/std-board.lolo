@@ -2,6 +2,7 @@ app std-board "1.3.0"
 "std-board — generic N-column board primitive. `config.columns` is an array of column definitions ({ key, label, icon, variant }); the trait `array/map`s them on `BoardItemsLoaded` into `@entity.boards` where each board carries its filtered items + a count. The render is a `data-grid` over `@entity.boards` (one card per column) whose `renderItem` lambda nests a `data-list` over `@col.items` (the cards in that stage). N is config-driven — pass any number of columns; the outer `data-grid`'s `cols` is bound to `@config.gridCols` so the grid wraps if you exceed it. Topology = loading / viewing_board / viewing_card / adding / error — distinct from the cookie-cutter `loading/browsing/viewing_single/error` CRUD shape. App-level atoms (e.g. std-pipeline) compose std-board via `uses` and add a sibling persistor + extended source entity. `config.boardLook` switches the board body between the default N-column grid ('columns') and a Trello-style wide-column kanban ('kanban-classic'). `viewing_board` listens for REFETCH_QUERY/REFETCH_FILTER/REFETCH_PAGE (the std-search/std-filter/std-pagination wiring targets, no render on refetch — @entity.boards is bound reactively) and can optionally render its own search box (config.bodySearch, default false) and filter bar (config.filters, default []); no pagination control is rendered — a board's columns are not a paged list."
 type ObjectSpec = { id : string, label : string, value : string }
 type ColumnSpec = { key : string!, label : string!, icon : string, variant : string }
+type ItemAction = { label : string!, event : event, variant : primary | secondary | ghost | danger, icon : string, roles : [string] }
 type FilterSpec = { field : string!, label : string, options : [string] }
 orbital BoardOrbital {
     type BoardItem = { id : string!, title : string, description : string, stage : string, notes : string, position : number }
@@ -42,6 +43,7 @@ orbital BoardOrbital {
       INIT -> loading
         (fetch BoardView {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
+          include: @config.include
         })
         (render-ui main {
           title: "Loading board…"
@@ -72,6 +74,7 @@ orbital BoardOrbital {
       BoardItemsSaved -> loading
         (fetch BoardView {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
+          include: @config.include
         })
         (render-ui main {
           title: "Refreshing board…"
@@ -82,6 +85,7 @@ orbital BoardOrbital {
       BoardItemDeleted -> loading
         (fetch BoardView {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
+          include: @config.include
         })
         (render-ui main {
           title: "Refreshing board…"
@@ -100,6 +104,7 @@ orbital BoardOrbital {
       INIT -> loading
         (fetch BoardView {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
+          include: @config.include
         })
         (render-ui main {
           title: "Loading board…"
@@ -231,6 +236,7 @@ orbital BoardOrbital {
       BoardItemsSaved -> viewing_board
         (fetch BoardView {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
+          include: @config.include
         })
       ;; REFETCH_* stay in viewing_board and issue no render-ui, matching
       ;; std-browse's REFETCH_QUERY/REFETCH_FILTER/REFETCH_PAGE: a render here
@@ -241,11 +247,13 @@ orbital BoardOrbital {
       REFETCH_QUERY -> viewing_board
         (fetch BoardView {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
+          include: @config.include
           filter: (or ["=", ?searchTerm, ""] (str/includes (object/get @entity @config.searchField) ?searchTerm))
         })
       REFETCH_FILTER -> viewing_board
         (fetch BoardView {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
+          include: @config.include
           filter: (or ["=", ?value, ""] ["=", (object/get @entity ?field), ?value])
         })
       ;; A board's columns are not a paged list — paging the underlying fetch
@@ -256,6 +264,7 @@ orbital BoardOrbital {
       REFETCH_PAGE -> viewing_board
         (fetch BoardView {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
+          include: @config.include
           limit: @config.pageSize
           offset: ["*", ["-", ?page, 1], @config.pageSize]
         })
@@ -280,6 +289,7 @@ orbital BoardOrbital {
       CLOSE_CARD -> loading
         (fetch BoardView {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
+          include: @config.include
         })
         (render-ui main {
           title: "Refreshing board…"
@@ -531,6 +541,10 @@ orbital BoardOrbital {
     }
 
     config {
+      showHeader : boolean = true
+        @label "Show the board's own title row?"
+        @description "Off when the page already carries a page header naming the same thing, so the page shows one title."
+        @tier "presentation"
       title : string = Board
         @label "Board title"
         @description "Heading shown above the column board"
@@ -575,6 +589,11 @@ orbital BoardOrbital {
         @label "Card title binding"
         @description "Per-card binding for the title slot."
         @tier "presentation"
+      include : [string] = []
+        @label "Which relation fields to hydrate?"
+        @description "Entity relation field names to hydrate on fetch (e.g. an `assignee : TeamMember` field named `assignee`), so card bindings can use dot-paths like @item.assignee.name. Empty = no hydration, the default."
+        @synonyms "relation hydration, populate relations, joined fields, hydrate relations"
+        @tier "domain"
       cardDescriptionBinding : string = @item.description
         @label "Card description binding"
         @description "Per-card binding for the description slot."
@@ -624,16 +643,29 @@ orbital BoardOrbital {
         @description "Records fetched per REFETCH_PAGE request. std-board renders no pagination control itself — this only feeds the fetch limit/offset when a consumer wires a composed std-pagination to REFETCH_PAGE."
         @synonyms "fetch limit, records per page, batch size, page limit"
         @tier "presentation"
+      cardActions : [ItemAction] = [{
+        event: DELETE_CARD
+        icon: trash-2
+        label: Delete
+        variant: danger
+      }]
+        @label "Card panel action list"
+        @description "Buttons on the open-card panel's actions row, built by the default cardActionsContent. Give an item `roles` to show it only to those viewer roles."
+        @tier "presentation"
+      viewerRole : string = ""
+        @label "Viewer's role"
+        @description "The signed-in viewer's role that each card action's `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show."
+        @tier "policy"
       cardActionsContent : render-ui = {
         align: center
-        children: [{
-          action: DELETE_CARD
+        children: (array/map (array/filter @config.cardActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole)))) (fn a {
+          action: @a.event
           actionPayload: { id: @entity.currentId }
-          icon: trash-2
-          label: Delete
+          icon: @a.icon
+          label: @a.label
           type: button
-          variant: danger
-        }]
+          variant: @a.variant
+        }))
         direction: horizontal
         gap: sm
         type: stack
@@ -642,17 +674,26 @@ orbital BoardOrbital {
         @description "Actions row of the open-card panel. Default is the Delete button only. Override to add consumer-wired actions — e.g. an Edit button with action: EDIT_CARD and actionPayload: { id: @entity.currentId, row: @entity.currentRow }, listened to by the organism's edit modal. Never leave a button here without a listener."
         @tier "presentation"
       bodyContent : render-ui = {
-        children: [{
-          align: center
-          children: [{ name: kanban-square, size: lg, type: icon }, {
-            content: @config.title
-            type: typography
-            variant: h3
-          }]
-          direction: horizontal
-          gap: sm
+        children: [(if @config.showHeader {
+          children: [{
+            align: center
+            children: [{ name: kanban-square, size: lg, type: icon }, {
+              content: @config.title
+              type: typography
+              variant: h3
+            }]
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }]
+          direction: vertical
+          gap: md
           type: stack
-        }, { type: divider }, (if @config.bodySearch {
+        } {
+          children: []
+          gap: none
+          type: stack
+        }), (if @config.bodySearch {
           children: [{
             className: "w-full max-w-md"
             clearable: true
@@ -771,18 +812,27 @@ orbital BoardOrbital {
         @description "Render-ui SExpr rendered after the board loads for boardLook='columns' — the canonical column data-grid with nested per-column data-lists. boardLook='kanban-classic' renders kanbanClassicBodyContent instead; both share this trait's state machine, emits, and listens."
         @tier "internal"
       kanbanClassicBodyContent : render-ui = {
-        children: [{
-          align: center
-          children: [{ name: kanban-square, size: xl, type: icon }, {
-            content: @config.title
-            type: typography
-            variant: h2
-          }]
-          className: px-card-md
-          direction: horizontal
-          gap: sm
+        children: [(if @config.showHeader {
+          children: [{
+            align: center
+            children: [{ name: kanban-square, size: xl, type: icon }, {
+              content: @config.title
+              type: typography
+              variant: h2
+            }]
+            className: px-card-md
+            direction: horizontal
+            gap: sm
+            type: stack
+          }, { type: divider }]
+          direction: vertical
+          gap: md
           type: stack
-        }, { type: divider }, (if @config.bodySearch {
+        } {
+          children: []
+          gap: none
+          type: stack
+        }), (if @config.bodySearch {
           children: [{
             className: "w-full max-w-md"
             clearable: true

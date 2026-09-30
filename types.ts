@@ -96,8 +96,28 @@ export type BasicReturnType = 'number' | 'boolean' | 'string' | 'any' | 'void' |
  *   `ReturnTypeOf<lambda>` / type of `init`).
  * - `'object-key-lookup'` — return type depends on the input object
  *   shape and the literal key (`object/get`, `object/pick`).
- * - `'identity-of-arg<N>'` — return type matches the input arg at index N
- *   (`tap`, `pipe-through`).
+ * - `'identity-of-arg<N>'` — the result IS arg N, narrowed or reordered:
+ *   its type matches arg N's, and every value/element it can carry is drawn
+ *   from arg N (`array/filter`, `array/slice`, `array/sort`, `array/take`,
+ *   `array/unique`, …; `let` is `identity-of-arg<1>`, its body).
+ * - `'union-of-args'` — the result carries values drawn from EVERY arg
+ *   (`array/concat`). `'union-of-args<i,j>'` restricts that to the listed arg
+ *   indices: arg 0 is the list, the other listed index is the single element
+ *   the operator adds (`array/append`/`array/prepend` are `<0,1>`,
+ *   `array/insert` is `<0,2>`). A listed arg is either a list (contributes
+ *   its elements) or one element (contributes itself).
+ * - `'last-of-args'` — the result is the last arg's value (`do`).
+ *
+ * Provenance kinds (`identity-of-arg<N>`, `union-of-args[<..>]`,
+ * `last-of-args`, `branch-union`, `lambda-result`) are what the validator's
+ * one generic value-source walk reads (`orbital-core`
+ * `SExpression::value_leaves`) to trace which leaf values an expression can
+ * yield — e.g. which events a render-bound `itemActions` list can fire.
+ * `branch-union` = every arg after the condition; `lambda-result` = the body
+ * of the lambda arg (the arg whose operator declares `returnType:
+ * 'function'`). An operator whose result elements are NOT provably drawn from
+ * its inputs (`array/range`, `array/zip`, `array/groupBy`, `array/partition`,
+ * `array/flatten`) declares nothing and the walk treats it as opaque.
  *
  * Operators NOT listed here keep the fixed `returnType` semantics —
  * arithmetic, math, comparisons, aggregations (`array/sum`/`avg`/`len`),
@@ -113,7 +133,12 @@ export type ReturnSemantics =
   | 'element-of-arg<1>'
   | 'lambda-result'
   | 'object-key-lookup'
-  | 'identity-of-arg<0>';
+  | 'identity-of-arg<0>'
+  | 'identity-of-arg<1>'
+  | 'union-of-args'
+  | 'union-of-args<0,1>'
+  | 'union-of-args<0,2>'
+  | 'last-of-args';
 
 /** Where an effect executes: a client host delegates `server` effects, a server ships `client` effects back, `any` runs wherever it is dispatched. */
 export type RunsOn = 'client' | 'server' | 'any';

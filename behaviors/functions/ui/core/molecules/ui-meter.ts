@@ -63,6 +63,8 @@ export interface StdUiMeterConfig {
   value?: number;
   /** Default: `"linear"` */
   variant?: 'linear' | 'radial' | 'segmented';
+  /** Default: `""` */
+  viewerRole?: string;
 }
 
 /**

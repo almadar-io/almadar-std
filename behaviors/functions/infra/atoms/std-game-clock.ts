@@ -30,7 +30,7 @@ const ALIAS = 'GameClock';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdGameClockEventKey = 'GameClockTicked' | 'PAUSE' | 'RESUME';
+export type StdGameClockEventKey = 'GameClockTicked' | 'INIT' | 'PAUSE' | 'RESUME';
 
 /**
  * Payload shape for the `GameClockTicked` event.
@@ -257,6 +257,10 @@ export function stdGameClockGameClockOrbital(params: StdGameClockGameClockOrbita
         'stateMachine': {
           'events': [
             {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
               'key': 'PAUSE',
               'name': 'Pause',
             },
@@ -288,6 +292,22 @@ export function stdGameClockGameClockOrbital(params: StdGameClockGameClockOrbita
             },
           ],
           'transitions': [
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.running',
+                  false,
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'running',
+              'guard': [
+                'not',
+                '@config.autoStart',
+              ],
+              'to': 'paused',
+            },
             {
               'effects': [
                 [

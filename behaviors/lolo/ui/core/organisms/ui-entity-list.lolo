@@ -21,6 +21,8 @@ orbital EntityListOrbital {
     navigatesTo : string
     placement : string
     variant : "primary" | "secondary" | "ghost" | "danger" | "default"
+    when : SExpr
+    roles : [string]
   }
 
   entity EntityListItem [runtime] {
@@ -48,7 +50,7 @@ orbital EntityListOrbital {
           entity: @entity
           entityType: @config.entityType
           selectable: @config.selectable
-          itemActions: @config.itemActions
+          itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           showDividers: @config.showDividers
           variant: @config.variant
           emptyMessage: @config.emptyMessage
@@ -73,7 +75,7 @@ orbital EntityListOrbital {
           entity: @entity
           entityType: @config.entityType
           selectable: @config.selectable
-          itemActions: @config.itemActions
+          itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           showDividers: @config.showDividers
           variant: @config.variant
           emptyMessage: @config.emptyMessage
@@ -98,7 +100,7 @@ orbital EntityListOrbital {
           entity: @payload.data
           entityType: @config.entityType
           selectable: @config.selectable
-          itemActions: @config.itemActions
+          itemActions: (array/filter @config.itemActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           showDividers: @config.showDividers
           variant: @config.variant
           emptyMessage: @config.emptyMessage
@@ -207,6 +209,10 @@ orbital EntityListOrbital {
         @label "Field Names"
         @description "Alias for fields - backwards compatibility"
         @tier "presentation"
+      viewerRole : string = ""
+        @label "Viewer's role"
+        @description "The viewer's role that each action's `roles` is checked against; bind it at the call site (e.g. `viewerRole: @user.role`). Empty = only actions with no `roles` show."
+        @tier "policy"
       selfFetch : boolean = true
         @label "Fetch its own rows on mount?"
         @description "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's."

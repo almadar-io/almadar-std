@@ -12,6 +12,7 @@ orbital FloatingToolbarOrbital {
     active : boolean
     disabled : boolean
     testId : string
+    roles : [string]
   }
 
   entity FloatingToolbarItem [runtime] {
@@ -24,7 +25,7 @@ orbital FloatingToolbarOrbital {
     state idle {
       INIT -> idle
         (render-ui main {
-          items: @config.items
+          items: (array/filter @config.items (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           position: @config.position
           children: @config.children
           className: @config.className
@@ -49,6 +50,10 @@ orbital FloatingToolbarOrbital {
         @label "Class Name"
         @description "Additional CSS classes on the positioned root"
         @tier "presentation"
+      viewerRole : string = ""
+        @label "Viewer's role"
+        @description "The viewer's role that each action's `roles` is checked against; bind it at the call site (e.g. `viewerRole: @user.role`). Empty = only actions with no `roles` show."
+        @tier "policy"
     }
   }
 

@@ -513,6 +513,44 @@ export function stdLifecycleLifecycleOrbital(params: StdLifecycleLifecycleOrbita
             {
               'effects': [
                 [
+                  'render-ui',
+                  'toast',
+                  {
+                    'dismissible': true,
+                    'message': [
+                      'str/concat',
+                      'Dry run — ',
+                      [
+                        'array/len',
+                        '@payload.data',
+                      ],
+                      ' record(s) would transition, nothing was written.',
+                    ],
+                    'type': 'alert',
+                    'variant': 'info',
+                  },
+                ],
+              ],
+              'event': 'ScanRecordsLoaded',
+              'from': 'idle',
+              'guard': [
+                'and',
+                '@config.enabled',
+                '@config.dryRun',
+                [
+                  '>',
+                  [
+                    'array/len',
+                    '@payload.data',
+                  ],
+                  0,
+                ],
+              ],
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
                   'set',
                   '@entity.headId',
                   [
@@ -557,6 +595,10 @@ export function stdLifecycleLifecycleOrbital(params: StdLifecycleLifecycleOrbita
               'guard': [
                 'and',
                 '@config.enabled',
+                [
+                  'not',
+                  '@config.dryRun',
+                ],
                 [
                   '>',
                   [

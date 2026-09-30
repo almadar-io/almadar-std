@@ -58,6 +58,8 @@ export interface StdUiGameMenuConfig {
   subtitle?: string;
   /** Default: `"Epic Quest"` */
   title?: string;
+  /** Default: `""` */
+  viewerRole?: string;
 }
 
 /**

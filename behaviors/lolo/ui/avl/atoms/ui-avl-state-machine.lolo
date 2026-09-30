@@ -27,6 +27,12 @@ orbital AvlStateMachineOrbital {
     type : string!
     args : [SExpr]!
   }
+  type AvlStateMachineTRANSITIONCLICKTransition = {
+    index : number!
+    event : string!
+    from : string!
+    to : string!
+  }
 
   entity AvlStateMachineItem [runtime] {
     id : string!
@@ -44,6 +50,7 @@ orbital AvlStateMachineOrbital {
           visitedStates: @config.visitedStates
           stateClickEvent: @config.stateClickEvent
           transitionClickEvent: @config.transitionClickEvent
+          onTransitionClick: @config.onTransitionClick
           selectedState: @config.selectedState
           pendingSourceState: @config.pendingSourceState
           nodeShape: @config.nodeShape
@@ -66,6 +73,7 @@ orbital AvlStateMachineOrbital {
         event : string!
         from : string!
         to : string!
+        transition : AvlStateMachineTRANSITIONCLICKTransition
       }
         @description "Emits UI:{transitionClickEvent} with { index, event, from, to } when a transition label is clicked."
         @tier "essential"
@@ -96,6 +104,10 @@ orbital AvlStateMachineOrbital {
       transitionClickEvent : event = "TRANSITION_CLICK"
         @label "Transition Click Event"
         @description "Emits UI:{transitionClickEvent} with { index, event, from, to } when a transition label is clicked."
+        @tier "presentation"
+      onTransitionClick : event = "TRANSITION_CLICK"
+        @label "On Transition Click"
+        @description "Direct transition-click callback, for React hosts (e.g. a canvas node)."
         @tier "presentation"
       selectedState : string
         @label "Selected State"

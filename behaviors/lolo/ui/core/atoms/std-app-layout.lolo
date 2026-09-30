@@ -1,8 +1,8 @@
 app std-app-layout "1.4.1"
 "std-app-layout — dashboard-layout chrome (sidebar nav + top bar with search + topBarActions + notifications) wrapping a single contentTrait slot. Use for list-style apps (CMS / helpdesk / CRM) and account/settings pages: the chrome stays stable while the consumer's content trait renders the data, and the consumer can add domain icons (cart / profile / help) via topBarActions. Bind once per orbital — the consumer rebinds linkedEntity via `XAppLayout = AppShell.traits.AppLayout -> XEntity` so multiple orbitals in one file each get their own chrome without colliding on a shared atom entity."
 ;; @capabilities "settings page shell, preferences page, account settings layout, profile settings, admin console shell"
-type NavItem = { label : string!, href : string!, icon : string, badge : string, children : [NavItem] }
-type ItemAction = { label : string!, event : event, navigatesTo : string, variant : string, icon : string }
+type NavItem = { label : string!, href : string!, icon : string, badge : string, children : [NavItem], roles : [string] }
+type ItemAction = { label : string!, event : event, navigatesTo : string, variant : string, icon : string, roles : [string] }
 type NotificationSpec = { id : string, message : string, variant : string }
 orbital AppLayoutOrbital {
     type AppLayoutStateLoaded = Event { data : [AppLayoutData] }
@@ -17,7 +17,7 @@ orbital AppLayoutOrbital {
     initial: composing
 
     state composing {
-      INIT -> composing
+      INIT -> composing when (or (= (array/len @config.allowedRoles) 0) (array/includes @config.allowedRoles @config.viewerRole))
         (fetch AppLayoutData {
           emit: { failure: AppLayoutStateLoadFailed, success: AppLayoutStateLoaded }
         })
@@ -37,12 +37,47 @@ orbital AppLayoutOrbital {
             }]
             currentPath: @config.currentPath
             layoutMode: @config.layoutMode
-            navItems: @config.navItems
+            navItems: (array/map (array/filter @config.navItems (fn item (or (= (array/len (object/get @item roles [])) 0) (array/includes (object/get @item roles []) @config.viewerRole)))) (fn item (if (object/has @item children) (object/merge @item { children: (array/filter (object/get @item children []) (fn child (or (= (array/len (object/get @child roles [])) 0) (array/includes (object/get @child roles []) @config.viewerRole)))) }) @item)))
             notificationClickEvent: @config.notificationClickEvent
             notifications: @config.notifications
             searchEvent: @config.searchEvent
             sidebarContent: @config.sidebarTrait
-            topBarActions: @config.topBarActions
+            topBarActions: (array/filter @config.topBarActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
+            type: @config.layoutPattern
+            user: (if @config.viewerName { avatar: @config.viewerAvatar, email: @config.viewerEmail, name: @config.viewerName } null)
+          }]
+        })
+      INIT -> composing when (not (or (= (array/len @config.allowedRoles) 0) (array/includes @config.allowedRoles @config.viewerRole)))
+        (fetch AppLayoutData {
+          emit: { failure: AppLayoutStateLoadFailed, success: AppLayoutStateLoaded }
+        })
+        (render-ui main {
+          data-theme: @config.theme
+          className: "min-h-screen w-full"
+          fullHeight: true
+          type: box
+          children: [{
+            appName: @config.appName
+            children: [{
+              children: [{
+                description: @config.accessDeniedDescription
+                icon: lock
+                title: @config.accessDeniedTitle
+                type: empty-state
+              }]
+              className: @config.contentClassName
+              direction: vertical
+              gap: lg
+              type: stack
+            }]
+            currentPath: @config.currentPath
+            layoutMode: @config.layoutMode
+            navItems: (array/map (array/filter @config.navItems (fn item (or (= (array/len (object/get @item roles [])) 0) (array/includes (object/get @item roles []) @config.viewerRole)))) (fn item (if (object/has @item children) (object/merge @item { children: (array/filter (object/get @item children []) (fn child (or (= (array/len (object/get @child roles [])) 0) (array/includes (object/get @child roles []) @config.viewerRole)))) }) @item)))
+            notificationClickEvent: @config.notificationClickEvent
+            notifications: @config.notifications
+            searchEvent: @config.searchEvent
+            sidebarContent: @config.sidebarTrait
+            topBarActions: (array/filter @config.topBarActions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
             type: @config.layoutPattern
             user: (if @config.viewerName { avatar: @config.viewerAvatar, email: @config.viewerEmail, name: @config.viewerName } null)
           }]
@@ -147,10 +182,6 @@ orbital AppLayoutOrbital {
         @description "sidebar = left rail; topnav = top bar; bottomnav = mobile tab bar; minimal = no nav."
         @synonyms "nav position, navigation style, menu placement, layout style"
         @tier "presentation"
-      detailSlot : slot = modal
-        @label "Detail slot"
-        @description "Slot where detail/edit views render"
-        @tier "internal"
       currentPath : string = ""
         @label "Current path"
         @description "Nav-highlight ONLY: which nav item to mark active. This is NOT the page route — it does not change what page loads or where the orbital lives. To set the landing route or a page path, use the orbital's pagePath / page path, not this knob. When omitted, the layout reads the current route."
@@ -160,6 +191,21 @@ orbital AppLayoutOrbital {
         @label "Content wrapper class"
         @description "CSS class applied to the content area wrapper."
         @tier "internal"
+      viewerRole : string = ""
+        @label "Viewer's role"
+        @description "The signed-in viewer's role that allowedRoles and each nav item's / top-bar action's `roles` are checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only items with no `roles` show and a page with allowedRoles is denied."
+        @tier "policy"
+      allowedRoles : [string] = []
+        @label "Who may open this page?"
+        @description "Roles (matched against viewerRole) allowed to see this page's content. Empty = everyone; anyone else sees the access-denied state instead. Nav items and top-bar actions carry their own `roles` the same way."
+        @synonyms "access, permission, restrict, only for, roles allowed, who can see"
+        @tier "policy"
+      accessDeniedTitle : string = "You don't have access to this page"
+        @label "Access-denied title"
+        @tier "presentation"
+      accessDeniedDescription : string = "Ask an administrator if you need it."
+        @label "Access-denied message"
+        @tier "presentation"
       theme : string = @currentTheme
         @label "Theme"
         @description "Data-theme attribute applied to the layout root (e.g. almadar-website-dark)."

@@ -1139,8 +1139,8 @@
             },
             "selfFetch": {
               "default": true,
-              "description": "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's.",
-              "label": "Fetch its own rows on mount?",
+              "description": "true (default) = a mount that carries an id loads that one row (never the collection); a create-mode mount skips the load. false = a composing atom owns the load.",
+              "label": "Fetch its own row on mount?",
               "tier": "internal",
               "type": "boolean"
             },
@@ -1341,7 +1341,7 @@
               "tier": "essential"
             },
             {
-              "description": "FormSection rows finished loading; payload.data holds the collection.",
+              "description": "FormSection row finished loading; payload.data holds the single row.",
               "event": "FormSectionLoaded",
               "eventId": "evt_01KXG04SM2DVNXX31353QRB30A",
               "payloadSchema": [
@@ -1355,7 +1355,7 @@
                       "type": "string"
                     }
                   ],
-                  "type": "[object]"
+                  "type": "object"
                 }
               ],
               "scope": "internal",
@@ -1379,12 +1379,20 @@
           "stateMachine": {
             "events": [
               {
+                "description": "Mount payload; a host that routes to this panel by id (a :id page param) passes it here.",
                 "id": "evt_01KXG04SKZFVRPEFWABSGRQCW9",
                 "key": "INIT",
-                "name": "Initialize"
+                "name": "Initialize",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "internal"
               },
               {
-                "description": "FormSection rows finished loading; payload.data holds the collection.",
+                "description": "FormSection row finished loading; payload.data holds the single row.",
                 "id": "evt_01KXG04SM2DVNXX31353QRB30A",
                 "key": "FormSectionLoaded",
                 "name": "Form section loaded",
@@ -1399,7 +1407,7 @@
                         "type": "string"
                       }
                     ],
-                    "type": "[object]"
+                    "type": "object"
                   }
                 ],
                 "synonyms": "loaded, fetched, retrieved",
@@ -1504,6 +1512,9 @@
             "states": [
               {
                 "isInitial": true,
+                "name": "resolving"
+              },
+              {
                 "name": "idle"
               }
             ],
@@ -1516,7 +1527,8 @@
                     {
                       "emit": {
                         "success": "FormSectionLoaded"
-                      }
+                      },
+                      "id": "@payload.id"
                     }
                   ],
                   [
@@ -1559,8 +1571,91 @@
                 ],
                 "event": "INIT",
                 "eventId": "evt_01KXG04SKZFVRPEFWABSGRQCW9",
-                "from": "idle",
-                "guard": "@config.selfFetch",
+                "from": "resolving",
+                "guard": [
+                  "and",
+                  "@config.selfFetch",
+                  [
+                    "!=",
+                    [
+                      "str/default",
+                      "@payload.id",
+                      ""
+                    ],
+                    ""
+                  ],
+                  [
+                    "!=",
+                    "@config.mode",
+                    "create"
+                  ]
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "cancelEvent": "@config.cancelEvent",
+                      "cancelLabel": "@config.cancelLabel",
+                      "children": "@config.children",
+                      "className": "@config.className",
+                      "conditionalFields": "@config.conditionalFields",
+                      "configPath": "@config.configPath",
+                      "entity": "@entity",
+                      "error": "@config.error",
+                      "evaluationContext": "@config.evaluationContext",
+                      "fieldOverrides": "@config.fieldOverrides",
+                      "fields": "@config.fields",
+                      "gap": "@config.gap",
+                      "hiddenCalculations": "@config.hiddenCalculations",
+                      "initialData": "@entity",
+                      "isLoading": "@config.isLoading",
+                      "layout": "@config.layout",
+                      "mode": "@config.mode",
+                      "onCancel": "@config.onCancel",
+                      "onFieldChange": "@config.onFieldChange",
+                      "onSubmit": "@config.onSubmit",
+                      "relationsData": "@config.relationsData",
+                      "relationsLoading": "@config.relationsLoading",
+                      "repeatable": "@config.repeatable",
+                      "sections": "@config.sections",
+                      "showCancel": "@config.showCancel",
+                      "showSubmit": "@config.showSubmit",
+                      "submitEvent": "@config.submitEvent",
+                      "submitLabel": "@config.submitLabel",
+                      "title": "@config.title",
+                      "type": "form-section",
+                      "violationTriggers": "@config.violationTriggers"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01KXG04SKZFVRPEFWABSGRQCW9",
+                "from": "resolving",
+                "guard": [
+                  "not",
+                  [
+                    "and",
+                    "@config.selfFetch",
+                    [
+                      "!=",
+                      [
+                        "str/default",
+                        "@payload.id",
+                        ""
+                      ],
+                      ""
+                    ],
+                    [
+                      "!=",
+                      "@config.mode",
+                      "create"
+                    ]
+                  ]
+                ],
                 "to": "idle"
               },
               {
@@ -1606,10 +1701,6 @@
                 "event": "INIT",
                 "eventId": "evt_01KXG04SKZFVRPEFWABSGRQCW9",
                 "from": "idle",
-                "guard": [
-                  "not",
-                  "@config.selfFetch"
-                ],
                 "to": "idle"
               },
               {
@@ -1624,7 +1715,7 @@
                       "className": "@config.className",
                       "conditionalFields": "@config.conditionalFields",
                       "configPath": "@config.configPath",
-                      "entity": "@payload.data",
+                      "entity": "@entity",
                       "error": "@config.error",
                       "evaluationContext": "@config.evaluationContext",
                       "fieldOverrides": "@config.fieldOverrides",

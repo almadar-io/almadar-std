@@ -49,6 +49,8 @@ export interface StdBillableHourConfig {
   maxInlineActions?: unknown;
   /** Default: `false` */
   selfFetch?: unknown;
+  /** Default: `"@config.viewerRole"` */
+  viewerRole?: unknown;
 }
 
 /**
@@ -111,6 +113,66 @@ export function stdBillableHourBillableHourTimesheetTrait(params: StdBillableHou
   });
 }
 
+/** Trait descriptor: `BillableHour.traits.InlineButtonRender1`. */
+export function stdBillableHourInlineButtonRender1Trait(params: StdBillableHourParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.InlineButtonRender1`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `BillableHour.traits.InlineRoleGate2`. */
+export function stdBillableHourInlineRoleGate2Trait(params: StdBillableHourParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.InlineRoleGate2`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `BillableHour.traits.InlineButtonRender3`. */
+export function stdBillableHourInlineButtonRender3Trait(params: StdBillableHourParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.InlineButtonRender3`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
+/** Trait descriptor: `BillableHour.traits.InlineRoleGate4`. */
+export function stdBillableHourInlineRoleGate4Trait(params: StdBillableHourParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.InlineRoleGate4`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
 /** Page descriptor: `BillableHour.pages.BillableHourPage`. */
 export function stdBillableHourPage(params: StdBillableHourParams): PageRefObject {
   return makePageRef({
@@ -135,6 +197,10 @@ export function stdBillableHour(params: StdBillableHourParams): OrbitalDefinitio
     traits: [
       stdBillableHourDenseHoursTableTrait(params),
       stdBillableHourBillableHourTimesheetTrait(params),
+      stdBillableHourInlineButtonRender1Trait(params),
+      stdBillableHourInlineRoleGate2Trait(params),
+      stdBillableHourInlineButtonRender3Trait(params),
+      stdBillableHourInlineRoleGate4Trait(params),
     ],
     pages: [
       stdBillableHourPage(params),
@@ -142,8 +208,8 @@ export function stdBillableHour(params: StdBillableHourParams): OrbitalDefinitio
   });
 }
 
-type _StdBillableHourEntityName = 'BillableHour' | 'TableViewItem';
-type _StdBillableHourListenTraitName = 'DenseHoursTable' | 'BillableHourTimesheet';
+type _StdBillableHourEntityName = 'BillableHour' | 'RoleGateData' | 'ButtonItem' | 'TableViewItem';
+type _StdBillableHourListenTraitName = 'DenseHoursTable' | 'BillableHourTimesheet' | 'InlineButtonRender1' | 'InlineRoleGate2' | 'InlineButtonRender3' | 'InlineRoleGate4';
 
 /**
  * Tunable params for the BillableHourOrbital orbital.
@@ -185,13 +251,13 @@ export interface StdBillableHourBillableHourOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'DenseHoursTable' | 'BillableHourTimesheet',
+    'DenseHoursTable' | 'InlineButtonRender1' | 'InlineRoleGate2' | 'InlineButtonRender3' | 'InlineRoleGate4' | 'BillableHourTimesheet',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** `'Alias.traits.TraitName'` literal union of every trait BillableHourOrbital's `uses[]` exports. */
-type _StdBillableHourBillableHourOrbitalUsesRef = 'TableView.traits.TableViewRender';
+type _StdBillableHourBillableHourOrbitalUsesRef = 'RoleGate.traits.RoleGate' | 'Button.traits.ButtonRender' | 'TableView.traits.TableViewRender';
 
 /** Per-orbital factory: builds the BillableHourOrbital orbital with consumer params. */
 export function stdBillableHourBillableHourOrbital(params: StdBillableHourBillableHourOrbitalParams = {}): OrbitalDefinition {
@@ -200,6 +266,14 @@ export function stdBillableHourBillableHourOrbital(params: StdBillableHourBillab
   const built = makeOrbitalWithUses({
     name: 'BillableHourOrbital',
     uses: [
+      {
+        'as': 'RoleGate',
+        'from': 'std/behaviors/std-role-gate',
+      },
+      {
+        'as': 'Button',
+        'from': 'std/behaviors/ui-button',
+      },
       {
         'as': 'TableView',
         'from': 'std/behaviors/ui-table-view',
@@ -326,6 +400,10 @@ export function stdBillableHourBillableHourOrbital(params: StdBillableHourBillab
             'default': false,
             'type': 'unknown',
           },
+          'viewerRole': {
+            'default': '@config.viewerRole',
+            'type': 'unknown',
+          },
         },
         'linkedEntity': 'BillableHour',
         'listens': [
@@ -448,6 +526,16 @@ export function stdBillableHourBillableHourOrbital(params: StdBillableHourBillab
             'tier': 'presentation',
             'type': '[ColumnSpec]',
           },
+          'invoiceRoles': {
+            'default': [],
+            'description': 'Roles (matched against viewerRole) that see the Invoice button. Empty = everyone.',
+            'items': {
+              'type': 'string',
+            },
+            'label': 'Roles that can invoice',
+            'tier': 'policy',
+            'type': '[string]',
+          },
           'itemActions': {
             'default': [
               {
@@ -485,10 +573,23 @@ export function stdBillableHourBillableHourOrbital(params: StdBillableHourBillab
                   'required': false,
                   'type': 'string',
                 },
+                'roles': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'roles',
+                  'required': false,
+                  'type': 'array',
+                },
                 'variant': {
                   'name': 'variant',
                   'required': false,
                   'type': 'string',
+                },
+                'when': {
+                  'name': 'when',
+                  'required': false,
+                  'type': 'object',
                 },
               },
               'type': 'object',
@@ -531,6 +632,23 @@ export function stdBillableHourBillableHourOrbital(params: StdBillableHourBillab
             'label': 'Section title',
             'tier': 'presentation',
             'type': 'string',
+          },
+          'viewerRole': {
+            'default': '',
+            'description': 'The signed-in viewer\'s role that each action\'s `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.',
+            'label': 'Viewer\'s role',
+            'tier': 'policy',
+            'type': 'string',
+          },
+          'writeOffRoles': {
+            'default': [],
+            'description': 'Roles (matched against viewerRole) that see the Write Off button. Empty = everyone.',
+            'items': {
+              'type': 'string',
+            },
+            'label': 'Roles that can write off',
+            'tier': 'policy',
+            'type': '[string]',
           },
         },
         'effectRow': [
@@ -1291,24 +1409,8 @@ export function stdBillableHourBillableHourOrbital(params: StdBillableHourBillab
                       {
                         'align': 'center',
                         'children': [
-                          {
-                            'action': 'INVOICE_HOURS',
-                            'actionPayload': {
-                              'id': '@entity.id',
-                            },
-                            'label': 'Invoice',
-                            'type': 'button',
-                            'variant': 'primary',
-                          },
-                          {
-                            'action': 'WRITE_OFF_HOURS',
-                            'actionPayload': {
-                              'id': '@entity.id',
-                            },
-                            'label': 'Write Off',
-                            'type': 'button',
-                            'variant': 'danger',
-                          },
+                          '@trait.InlineRoleGate2',
+                          '@trait.InlineRoleGate4',
                         ],
                         'direction': 'horizontal',
                         'gap': 'sm',
@@ -1524,6 +1626,94 @@ export function stdBillableHourBillableHourOrbital(params: StdBillableHourBillab
           ],
         },
       } satisfies Trait,
+      makeTraitRef({
+        'config': {
+          'action': {
+            'default': 'INVOICE_HOURS',
+            'type': 'unknown',
+          },
+          'actionPayload': {
+            'default': {
+              'id': '@callsitePayload.row.id',
+            },
+            'type': 'unknown',
+          },
+          'label': {
+            'default': 'Invoice',
+            'type': 'unknown',
+          },
+          'variant': {
+            'default': 'primary',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'BillableHour',
+        'name': 'InlineButtonRender1',
+        'ref': ('Button.traits.ButtonRender' satisfies _StdBillableHourBillableHourOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'content': {
+            'default': '@trait.InlineButtonRender1',
+            'type': 'unknown',
+          },
+          'roles': {
+            'default': '@config.invoiceRoles',
+            'type': 'unknown',
+          },
+          'viewerRole': {
+            'default': '@config.viewerRole',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'BillableHour',
+        'name': 'InlineRoleGate2',
+        'ref': ('RoleGate.traits.RoleGate' satisfies _StdBillableHourBillableHourOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'action': {
+            'default': 'WRITE_OFF_HOURS',
+            'type': 'unknown',
+          },
+          'actionPayload': {
+            'default': {
+              'id': '@callsitePayload.row.id',
+            },
+            'type': 'unknown',
+          },
+          'label': {
+            'default': 'Write Off',
+            'type': 'unknown',
+          },
+          'variant': {
+            'default': 'danger',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'BillableHour',
+        'name': 'InlineButtonRender3',
+        'ref': ('Button.traits.ButtonRender' satisfies _StdBillableHourBillableHourOrbitalUsesRef),
+      }),
+      makeTraitRef({
+        'config': {
+          'content': {
+            'default': '@trait.InlineButtonRender3',
+            'type': 'unknown',
+          },
+          'roles': {
+            'default': '@config.writeOffRoles',
+            'type': 'unknown',
+          },
+          'viewerRole': {
+            'default': '@config.viewerRole',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': 'BillableHour',
+        'name': 'InlineRoleGate4',
+        'ref': ('RoleGate.traits.RoleGate' satisfies _StdBillableHourBillableHourOrbitalUsesRef),
+      }),
     ],
     pages: [
       {
@@ -1532,6 +1722,18 @@ export function stdBillableHourBillableHourOrbital(params: StdBillableHourBillab
         'traits': [
           {
             'ref': 'BillableHourTimesheet',
+          },
+          {
+            'ref': 'InlineButtonRender1',
+          },
+          {
+            'ref': 'InlineRoleGate2',
+          },
+          {
+            'ref': 'InlineButtonRender3',
+          },
+          {
+            'ref': 'InlineRoleGate4',
           },
         ],
       } satisfies Page,
@@ -1612,6 +1814,10 @@ export const StdBillableHourBillableHourOrbitalManifest = {
   ] as const,
   traitNames: [
     'DenseHoursTable',
+    'InlineButtonRender1',
+    'InlineRoleGate2',
+    'InlineButtonRender3',
+    'InlineRoleGate4',
   ] as const,
   inlineTraitNames: [
     'BillableHourTimesheet',

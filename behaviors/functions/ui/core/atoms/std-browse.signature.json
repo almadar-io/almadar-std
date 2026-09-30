@@ -70,6 +70,11 @@
             "key": "variant",
             "type": "unknown",
             "default": "compact"
+          },
+          {
+            "key": "viewerRole",
+            "type": "unknown",
+            "default": "@config.viewerRole"
           }
         ],
         "capabilities": [],
@@ -169,14 +174,6 @@
         ],
         "overridableConfigKeys": [
           {
-            "key": "assigneeBinding",
-            "type": "string",
-            "default": "@item.assignee",
-            "label": "Assignee field binding",
-            "description": "Binding path for the assignee/owner slot.",
-            "tier": "internal"
-          },
-          {
             "key": "badgeBinding",
             "type": "string",
             "default": "@item.status",
@@ -244,11 +241,47 @@
                 ],
                 {
                   "cols": "@config.cols",
+                  "emptyDescription": "@config.emptyDescription",
+                  "emptyIcon": "@config.emptyIcon",
+                  "emptyTitle": "@config.emptyTitle",
                   "entity": "@payload.data",
                   "fields": "@config.fields",
                   "gap": "@config.gap",
                   "imageField": "@config.imageField",
-                  "itemActions": "@config.itemActions",
+                  "itemActions": [
+                    "array/filter",
+                    "@config.itemActions",
+                    [
+                      "fn",
+                      "item",
+                      [
+                        "or",
+                        [
+                          "=",
+                          [
+                            "array/len",
+                            [
+                              "object/get",
+                              "@item",
+                              "roles",
+                              []
+                            ]
+                          ],
+                          0
+                        ],
+                        [
+                          "array/includes",
+                          [
+                            "object/get",
+                            "@item",
+                            "roles",
+                            []
+                          ],
+                          "@config.viewerRole"
+                        ]
+                      ]
+                    ]
+                  ],
                   "maxInlineActions": "@config.maxInlineActions",
                   "pageSize": "@config.displayPageSize",
                   "type": "data-grid"
@@ -464,9 +497,44 @@
                   "children": [
                     {
                       "columns": "@config.columns",
-                      "emptyMessage": "No records",
+                      "emptyDescription": "@config.emptyDescription",
+                      "emptyIcon": "@config.emptyIcon",
+                      "emptyTitle": "@config.emptyTitle",
                       "entity": "@payload.data",
-                      "itemActions": "@config.itemActions",
+                      "itemActions": [
+                        "array/filter",
+                        "@config.itemActions",
+                        [
+                          "fn",
+                          "item",
+                          [
+                            "or",
+                            [
+                              "=",
+                              [
+                                "array/len",
+                                [
+                                  "object/get",
+                                  "@item",
+                                  "roles",
+                                  []
+                                ]
+                              ],
+                              0
+                            ],
+                            [
+                              "array/includes",
+                              [
+                                "object/get",
+                                "@item",
+                                "roles",
+                                []
+                              ],
+                              "@config.viewerRole"
+                            ]
+                          ]
+                        ]
+                      ],
                       "itemClickEvent": "@config.itemClickEvent",
                       "look": "dense",
                       "maxInlineActions": "@config.maxInlineActions",
@@ -528,10 +596,23 @@
                   "required": true,
                   "type": "string"
                 },
+                "roles": {
+                  "name": "roles",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
                 "variant": {
                   "name": "variant",
                   "required": false,
                   "type": "string"
+                },
+                "when": {
+                  "name": "when",
+                  "required": false,
+                  "type": "object"
                 }
               },
               "type": "object"
@@ -561,6 +642,33 @@
             "label": "How many rows to show at once?",
             "description": "Rows visible per page before the pagination control appears.",
             "synonyms": "visible rows, items per page, display limit, show per page",
+            "tier": "presentation"
+          },
+          {
+            "key": "emptyDescription",
+            "type": "string",
+            "default": "",
+            "label": "Empty-state description",
+            "description": "What will appear here once rows exist.",
+            "synonyms": "empty text, no data message, empty hint",
+            "tier": "presentation"
+          },
+          {
+            "key": "emptyIcon",
+            "type": "icon",
+            "default": "inbox",
+            "label": "Empty-state icon",
+            "description": "Domain icon shown when there are no rows.",
+            "synonyms": "empty icon, no data icon",
+            "tier": "presentation"
+          },
+          {
+            "key": "emptyTitle",
+            "type": "string",
+            "default": "",
+            "label": "Empty-state title",
+            "description": "Specific title shown when there are no rows (\"No orders yet\"). Left blank, a generic line shows.",
+            "synonyms": "empty title, no data title, empty heading",
             "tier": "presentation"
           },
           {
@@ -625,10 +733,46 @@
                   }
                 ],
                 {
+                  "emptyDescription": "@config.emptyDescription",
+                  "emptyIcon": "@config.emptyIcon",
+                  "emptyTitle": "@config.emptyTitle",
                   "entity": "@payload.data",
                   "fields": [],
                   "gap": "md",
-                  "itemActions": "@config.itemActions",
+                  "itemActions": [
+                    "array/filter",
+                    "@config.itemActions",
+                    [
+                      "fn",
+                      "item",
+                      [
+                        "or",
+                        [
+                          "=",
+                          [
+                            "array/len",
+                            [
+                              "object/get",
+                              "@item",
+                              "roles",
+                              []
+                            ]
+                          ],
+                          0
+                        ],
+                        [
+                          "array/includes",
+                          [
+                            "object/get",
+                            "@item",
+                            "roles",
+                            []
+                          ],
+                          "@config.viewerRole"
+                        ]
+                      ]
+                    ]
+                  ],
                   "renderItem": [
                     "fn",
                     "item",
@@ -920,11 +1064,47 @@
                 ],
                 {
                   "className": "w-full",
+                  "emptyDescription": "@config.emptyDescription",
+                  "emptyIcon": "@config.emptyIcon",
+                  "emptyTitle": "@config.emptyTitle",
                   "entity": "@payload.data",
                   "fields": "@config.fields",
                   "gap": "lg",
                   "imageField": "@config.imageField",
-                  "itemActions": "@config.itemActions",
+                  "itemActions": [
+                    "array/filter",
+                    "@config.itemActions",
+                    [
+                      "fn",
+                      "item",
+                      [
+                        "or",
+                        [
+                          "=",
+                          [
+                            "array/len",
+                            [
+                              "object/get",
+                              "@item",
+                              "roles",
+                              []
+                            ]
+                          ],
+                          0
+                        ],
+                        [
+                          "array/includes",
+                          [
+                            "object/get",
+                            "@item",
+                            "roles",
+                            []
+                          ],
+                          "@config.viewerRole"
+                        ]
+                      ]
+                    ]
+                  ],
                   "maxInlineActions": "@config.maxInlineActions",
                   "minCardWidth": 260,
                   "type": "data-grid"
@@ -956,14 +1136,6 @@
             "description": "Entity field containing the thumbnail URL for each row.",
             "synonyms": "image field, thumbnail field, photo field, picture column",
             "tier": "presentation"
-          },
-          {
-            "key": "imageLabelBinding",
-            "type": "string",
-            "default": "@item.thumbnailLabel",
-            "label": "Image label binding",
-            "description": "Binding path for the image-area label slot.",
-            "tier": "internal"
           },
           {
             "key": "include",
@@ -1025,6 +1197,14 @@
                   "required": false,
                   "type": "string"
                 },
+                "roles": {
+                  "name": "roles",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
                 "variant": {
                   "name": "variant",
                   "required": false,
@@ -1035,6 +1215,11 @@
                     "ghost",
                     "danger"
                   ]
+                },
+                "when": {
+                  "name": "when",
+                  "required": false,
+                  "type": "object"
                 }
               },
               "type": "object"
@@ -1205,7 +1390,40 @@
                 ],
                 {
                   "detail": {
-                    "actions": "@config.detailActions",
+                    "actions": [
+                      "array/filter",
+                      "@config.detailActions",
+                      [
+                        "fn",
+                        "action",
+                        [
+                          "or",
+                          [
+                            "=",
+                            [
+                              "array/len",
+                              [
+                                "object/get",
+                                "@action",
+                                "roles",
+                                []
+                              ]
+                            ],
+                            0
+                          ],
+                          [
+                            "array/includes",
+                            [
+                              "object/get",
+                              "@action",
+                              "roles",
+                              []
+                            ],
+                            "@config.viewerRole"
+                          ]
+                        ]
+                      ]
+                    ],
                     "fieldNames": "@config.detailFields",
                     "initialData": "@payload.row",
                     "showActions": true,
@@ -1273,22 +1491,6 @@
             "description": "Records fetched from the server per page request.",
             "synonyms": "fetch limit, records per page, batch size, page limit",
             "tier": "presentation"
-          },
-          {
-            "key": "priceBinding",
-            "type": "string",
-            "default": "@item.price",
-            "label": "Price field binding",
-            "description": "Binding path for the price/amount overlay slot.",
-            "tier": "internal"
-          },
-          {
-            "key": "priorityBinding",
-            "type": "string",
-            "default": "@item.priority",
-            "label": "Priority field binding",
-            "description": "Binding path for the priority slot.",
-            "tier": "internal"
           },
           {
             "key": "scopeField",
@@ -1397,9 +1599,45 @@
                 {
                   "children": [
                     {
+                      "emptyDescription": "@config.emptyDescription",
+                      "emptyIcon": "@config.emptyIcon",
+                      "emptyTitle": "@config.emptyTitle",
                       "entity": "@payload.data",
                       "fields": "@config.fields",
-                      "itemActions": "@config.itemActions",
+                      "itemActions": [
+                        "array/filter",
+                        "@config.itemActions",
+                        [
+                          "fn",
+                          "item",
+                          [
+                            "or",
+                            [
+                              "=",
+                              [
+                                "array/len",
+                                [
+                                  "object/get",
+                                  "@item",
+                                  "roles",
+                                  []
+                                ]
+                              ],
+                              0
+                            ],
+                            [
+                              "array/includes",
+                              [
+                                "object/get",
+                                "@item",
+                                "roles",
+                                []
+                              ],
+                              "@config.viewerRole"
+                            ]
+                          ]
+                        ]
+                      ],
                       "maxInlineActions": "@config.maxInlineActions",
                       "type": "data-list",
                       "variant": "compact"
@@ -1421,12 +1659,12 @@
             "tier": "internal"
           },
           {
-            "key": "viewPattern",
-            "type": "pattern",
-            "default": "data-grid",
-            "label": "Render pattern",
-            "description": "UI pattern used to render the collection. Used by the default bodyContent tree; Layer 3 variants override bodyContent directly instead and may ignore this knob.",
-            "tier": "internal"
+            "key": "viewerRole",
+            "type": "string",
+            "default": "",
+            "label": "Viewer's role",
+            "description": "The signed-in viewer's role that each row action's `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.",
+            "tier": "policy"
           }
         ],
         "capabilities": [],

@@ -398,6 +398,11 @@ export function stdGeosearchGeoSearchResultOrbital(params: StdGeosearchGeoSearch
             {
               'effects': [
                 [
+                  'set',
+                  '@entity.radiusKm',
+                  '@config.defaultRadiusKm',
+                ],
+                [
                   'render-ui',
                   'main',
                   {

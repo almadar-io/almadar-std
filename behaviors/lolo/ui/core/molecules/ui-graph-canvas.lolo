@@ -41,6 +41,7 @@ orbital GraphCanvasOrbital {
     event : event
     navigatesTo : string
     variant : "primary" | "secondary" | "ghost"
+    roles : [string]
   }
   type GraphCanvasError = {
     message : string!
@@ -128,7 +129,7 @@ orbital GraphCanvasOrbital {
           showLabels: @config.showLabels
           interactive: @config.interactive
           draggable: @config.draggable
-          actions: @config.actions
+          actions: (array/filter @config.actions (fn action (or (= (array/len (object/get @action roles [])) 0) (array/includes (object/get @action roles []) @config.viewerRole))))
           onNodeClick: @config.onNodeClick
           onMarkClick: @config.onMarkClick
           onNodeDoubleClick: @config.onNodeDoubleClick
@@ -268,6 +269,10 @@ orbital GraphCanvasOrbital {
         @label "Class Name"
         @description "Additional CSS classes"
         @tier "presentation"
+      viewerRole : string = ""
+        @label "Viewer's role"
+        @description "The viewer's role that each action's `roles` is checked against; bind it at the call site (e.g. `viewerRole: @user.role`). Empty = only actions with no `roles` show."
+        @tier "policy"
     }
   }
 

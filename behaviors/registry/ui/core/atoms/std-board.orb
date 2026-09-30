@@ -426,27 +426,43 @@
             "bodyContent": {
               "default": {
                 "children": [
-                  {
-                    "align": "center",
-                    "children": [
-                      {
-                        "name": "kanban-square",
-                        "size": "lg",
-                        "type": "icon"
-                      },
-                      {
-                        "content": "@config.title",
-                        "type": "typography",
-                        "variant": "h3"
-                      }
-                    ],
-                    "direction": "horizontal",
-                    "gap": "sm",
-                    "type": "stack"
-                  },
-                  {
-                    "type": "divider"
-                  },
+                  [
+                    "if",
+                    "@config.showHeader",
+                    {
+                      "children": [
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "name": "kanban-square",
+                              "size": "lg",
+                              "type": "icon"
+                            },
+                            {
+                              "content": "@config.title",
+                              "type": "typography",
+                              "variant": "h3"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    },
+                    {
+                      "children": [],
+                      "gap": "none",
+                      "type": "stack"
+                    }
+                  ],
                   [
                     "if",
                     "@config.bodySearch",
@@ -635,20 +651,112 @@
               "tier": "presentation",
               "type": "boolean"
             },
+            "cardActions": {
+              "default": [
+                {
+                  "event": "DELETE_CARD",
+                  "icon": "trash-2",
+                  "label": "Delete",
+                  "variant": "danger"
+                }
+              ],
+              "description": "Buttons on the open-card panel's actions row, built by the default cardActionsContent. Give an item `roles` to show it only to those viewer roles.",
+              "items": {
+                "properties": {
+                  "event": {
+                    "name": "event",
+                    "required": false,
+                    "type": "event"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "roles": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "name": "roles",
+                    "required": false,
+                    "type": "array"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "primary",
+                      "secondary",
+                      "ghost",
+                      "danger"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Card panel action list",
+              "tier": "presentation",
+              "type": "[ItemAction]"
+            },
             "cardActionsContent": {
               "default": {
                 "align": "center",
                 "children": [
-                  {
-                    "action": "DELETE_CARD",
-                    "actionPayload": {
-                      "id": "@entity.currentId"
-                    },
-                    "icon": "trash-2",
-                    "label": "Delete",
-                    "type": "button",
-                    "variant": "danger"
-                  }
+                  "array/map",
+                  [
+                    "array/filter",
+                    "@config.cardActions",
+                    [
+                      "fn",
+                      "action",
+                      [
+                        "or",
+                        [
+                          "=",
+                          [
+                            "array/len",
+                            [
+                              "object/get",
+                              "@action",
+                              "roles",
+                              []
+                            ]
+                          ],
+                          0.0
+                        ],
+                        [
+                          "array/includes",
+                          [
+                            "object/get",
+                            "@action",
+                            "roles",
+                            []
+                          ],
+                          "@config.viewerRole"
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "fn",
+                    "a",
+                    {
+                      "action": "@a.event",
+                      "actionPayload": {
+                        "id": "@entity.currentId"
+                      },
+                      "icon": "@a.icon",
+                      "label": "@a.label",
+                      "type": "button",
+                      "variant": "@a.variant"
+                    }
+                  ]
                 ],
                 "direction": "horizontal",
                 "gap": "sm",
@@ -836,31 +944,58 @@
               "tier": "presentation",
               "type": "string"
             },
+            "include": {
+              "default": [],
+              "description": "Entity relation field names to hydrate on fetch (e.g. an `assignee : TeamMember` field named `assignee`), so card bindings can use dot-paths like @item.assignee.name. Empty = no hydration, the default.",
+              "items": {
+                "type": "string"
+              },
+              "label": "Which relation fields to hydrate?",
+              "synonyms": "relation hydration, populate relations, joined fields, hydrate relations",
+              "tier": "domain",
+              "type": "[string]"
+            },
             "kanbanClassicBodyContent": {
               "default": {
                 "children": [
-                  {
-                    "align": "center",
-                    "children": [
-                      {
-                        "name": "kanban-square",
-                        "size": "xl",
-                        "type": "icon"
-                      },
-                      {
-                        "content": "@config.title",
-                        "type": "typography",
-                        "variant": "h2"
-                      }
-                    ],
-                    "className": "px-card-md",
-                    "direction": "horizontal",
-                    "gap": "sm",
-                    "type": "stack"
-                  },
-                  {
-                    "type": "divider"
-                  },
+                  [
+                    "if",
+                    "@config.showHeader",
+                    {
+                      "children": [
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "name": "kanban-square",
+                              "size": "xl",
+                              "type": "icon"
+                            },
+                            {
+                              "content": "@config.title",
+                              "type": "typography",
+                              "variant": "h2"
+                            }
+                          ],
+                          "className": "px-card-md",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    },
+                    {
+                      "children": [],
+                      "gap": "none",
+                      "type": "stack"
+                    }
+                  ],
                   [
                     "if",
                     "@config.bodySearch",
@@ -1089,11 +1224,25 @@
               "tier": "presentation",
               "type": "string"
             },
+            "showHeader": {
+              "default": true,
+              "description": "Off when the page already carries a page header naming the same thing, so the page shows one title.",
+              "label": "Show the board's own title row?",
+              "tier": "presentation",
+              "type": "boolean"
+            },
             "title": {
               "default": "Board",
               "description": "Heading shown above the column board",
               "label": "Board title",
               "tier": "presentation",
+              "type": "string"
+            },
+            "viewerRole": {
+              "default": "",
+              "description": "The signed-in viewer's role that each card action's `roles` is checked against. Bind it explicitly at the call site (e.g. `viewerRole: @user.role`) in an app whose identity carries a role; left empty, only actions with no `roles` show.",
+              "label": "Viewer's role",
+              "tier": "policy",
               "type": "string"
             }
           },
@@ -1771,7 +1920,8 @@
                       "emit": {
                         "failure": "BoardItemsLoadFailed",
                         "success": "BoardItemsLoaded"
-                      }
+                      },
+                      "include": "@config.include"
                     }
                   ],
                   [
@@ -1930,7 +2080,8 @@
                       "emit": {
                         "failure": "BoardItemsLoadFailed",
                         "success": "BoardItemsLoaded"
-                      }
+                      },
+                      "include": "@config.include"
                     }
                   ],
                   [
@@ -1956,7 +2107,8 @@
                       "emit": {
                         "failure": "BoardItemsLoadFailed",
                         "success": "BoardItemsLoaded"
-                      }
+                      },
+                      "include": "@config.include"
                     }
                   ],
                   [
@@ -2004,7 +2156,8 @@
                       "emit": {
                         "failure": "BoardItemsLoadFailed",
                         "success": "BoardItemsLoaded"
-                      }
+                      },
+                      "include": "@config.include"
                     }
                   ],
                   [
@@ -2314,7 +2467,8 @@
                       "emit": {
                         "failure": "BoardItemsLoadFailed",
                         "success": "BoardItemsLoaded"
-                      }
+                      },
+                      "include": "@config.include"
                     }
                   ]
                 ],
@@ -2349,7 +2503,8 @@
                           ],
                           "@payload.searchTerm"
                         ]
-                      ]
+                      ],
+                      "include": "@config.include"
                     }
                   ]
                 ],
@@ -2384,7 +2539,8 @@
                           ],
                           "@payload.value"
                         ]
-                      ]
+                      ],
+                      "include": "@config.include"
                     }
                   ]
                 ],
@@ -2403,6 +2559,7 @@
                         "failure": "BoardItemsLoadFailed",
                         "success": "BoardItemsLoaded"
                       },
+                      "include": "@config.include",
                       "limit": "@config.pageSize",
                       "offset": [
                         "*",
@@ -2577,7 +2734,8 @@
                       "emit": {
                         "failure": "BoardItemsLoadFailed",
                         "success": "BoardItemsLoaded"
-                      }
+                      },
+                      "include": "@config.include"
                     }
                   ],
                   [
@@ -2832,6 +2990,29 @@
           },
           {
             "name": "options",
+            "type": "[string]"
+          }
+        ],
+        "ItemAction": [
+          {
+            "name": "label",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "event",
+            "type": "event"
+          },
+          {
+            "name": "variant",
+            "type": "string"
+          },
+          {
+            "name": "icon",
+            "type": "string"
+          },
+          {
+            "name": "roles",
             "type": "[string]"
           }
         ],

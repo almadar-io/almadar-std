@@ -33,6 +33,12 @@ orbital StateMachineViewOrbital {
     code : string
     stack : string
   }
+  type StateMachineViewTRANSITIONCLICKTransition = {
+    index : number!
+    event : string!
+    from : string!
+    to : string!
+  }
 
   entity StateMachineViewItem [runtime] {
     id : string!
@@ -49,6 +55,7 @@ orbital StateMachineViewOrbital {
           visitedStates: @config.visitedStates
           stateClickEvent: @config.stateClickEvent
           transitionClickEvent: @config.transitionClickEvent
+          onTransitionClick: @config.onTransitionClick
           selectedState: @config.selectedState
           pendingSourceState: @config.pendingSourceState
           nodeShape: @config.nodeShape
@@ -74,6 +81,7 @@ orbital StateMachineViewOrbital {
         event : string!
         from : string!
         to : string!
+        transition : StateMachineViewTRANSITIONCLICKTransition
       }
         @description "Emits UI:{transitionClickEvent} with { index, event, from, to } when a transition label is clicked."
         @tier "essential"
@@ -99,6 +107,10 @@ orbital StateMachineViewOrbital {
       transitionClickEvent : event = "TRANSITION_CLICK"
         @label "Transition Click Event"
         @description "Emits UI:{transitionClickEvent} with { index, event, from, to } when a transition label is clicked."
+        @tier "presentation"
+      onTransitionClick : event = "TRANSITION_CLICK"
+        @label "On Transition Click"
+        @description "Direct transition-click callback, for React hosts (e.g. a canvas node)."
         @tier "presentation"
       selectedState : string
         @label "Selected State"

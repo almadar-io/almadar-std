@@ -19,10 +19,10 @@
         "parent": "trt_01KXG04SD9CXEV12B2DCF8KYGK",
         "renames": []
       },
-      "evt_01KXG04SDBVHXJR39FQKJ2R4F9": {
+      "evt_01M3RWGFY2NR2AWA5M5G9DE397": {
         "bakedName": "DetailPanelLoaded",
         "curName": "DetailPanelLoaded",
-        "id": "evt_01KXG04SDBVHXJR39FQKJ2R4F9",
+        "id": "evt_01M3RWGFY2NR2AWA5M5G9DE397",
         "kind": "event",
         "owner": "workspace",
         "parent": "trt_01KXG04SD9CXEV12B2DCF8KYGK",
@@ -114,6 +114,14 @@
                     "required": false,
                     "type": "string"
                   },
+                  "roles": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "name": "roles",
+                    "required": false,
+                    "type": "array"
+                  },
                   "variant": {
                     "name": "variant",
                     "required": false,
@@ -124,6 +132,11 @@
                       "ghost",
                       "danger"
                     ]
+                  },
+                  "when": {
+                    "name": "when",
+                    "required": false,
+                    "type": "object"
                   }
                 },
                 "type": "object"
@@ -182,6 +195,11 @@
                     "ghost",
                     "danger"
                   ]
+                },
+                "when": {
+                  "name": "when",
+                  "required": false,
+                  "type": "object"
                 }
               },
               "tier": "presentation",
@@ -484,8 +502,8 @@
             },
             "selfFetch": {
               "default": true,
-              "description": "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's.",
-              "label": "Fetch its own rows on mount?",
+              "description": "true (default) = a mount that carries an id loads that one row (never the collection); a create-mode mount skips the load. false = a composing atom owns the load.",
+              "label": "Fetch its own row on mount?",
               "tier": "internal",
               "type": "boolean"
             },
@@ -563,6 +581,13 @@
               "tier": "presentation",
               "type": "number"
             },
+            "viewerRole": {
+              "default": "",
+              "description": "The viewer's role that each action's `roles` is checked against; bind it at the call site (e.g. `viewerRole: @user.role`). Empty = only actions with no `roles` show.",
+              "label": "Viewer's role",
+              "tier": "policy",
+              "type": "string"
+            },
             "width": {
               "description": "Panel width (CSS value, e.g., '400px', '50%')",
               "label": "Width",
@@ -582,9 +607,9 @@
           ],
           "emits": [
             {
-              "description": "DetailPanel rows finished loading; payload.data holds the collection.",
+              "description": "DetailPanel row finished loading; payload.data holds the single row.",
               "event": "DetailPanelLoaded",
-              "eventId": "evt_01KXG04SDBVHXJR39FQKJ2R4F9",
+              "eventId": "evt_01M3RWGFY2NR2AWA5M5G9DE397",
               "payloadSchema": [
                 {
                   "entity": "DetailPanelItem",
@@ -596,7 +621,7 @@
                       "type": "string"
                     }
                   ],
-                  "type": "[object]"
+                  "type": "object"
                 }
               ],
               "scope": "internal",
@@ -620,13 +645,21 @@
           "stateMachine": {
             "events": [
               {
+                "description": "Mount payload; a host that routes to this panel by id (a :id page param) passes it here.",
                 "id": "evt_01KXG04SD94X8KGY16SVTBNF6K",
                 "key": "INIT",
-                "name": "Initialize"
+                "name": "Initialize",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "internal"
               },
               {
-                "description": "DetailPanel rows finished loading; payload.data holds the collection.",
-                "id": "evt_01KXG04SDBVHXJR39FQKJ2R4F9",
+                "description": "DetailPanel row finished loading; payload.data holds the single row.",
+                "id": "evt_01M3RWGFY2NR2AWA5M5G9DE397",
                 "key": "DetailPanelLoaded",
                 "name": "Detail panel loaded",
                 "payloadSchema": [
@@ -640,7 +673,7 @@
                         "type": "string"
                       }
                     ],
-                    "type": "[object]"
+                    "type": "object"
                   }
                 ],
                 "synonyms": "loaded, fetched, retrieved",
@@ -650,6 +683,9 @@
             "states": [
               {
                 "isInitial": true,
+                "name": "resolving"
+              },
+              {
                 "name": "idle"
               }
             ],
@@ -662,14 +698,48 @@
                     {
                       "emit": {
                         "success": "DetailPanelLoaded"
-                      }
+                      },
+                      "id": "@payload.id"
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "actions": "@config.actions",
+                      "actions": [
+                        "array/filter",
+                        "@config.actions",
+                        [
+                          "fn",
+                          "action",
+                          [
+                            "or",
+                            [
+                              "=",
+                              [
+                                "array/len",
+                                [
+                                  "object/get",
+                                  "@action",
+                                  "roles",
+                                  []
+                                ]
+                              ],
+                              0.0
+                            ],
+                            [
+                              "array/includes",
+                              [
+                                "object/get",
+                                "@action",
+                                "roles",
+                                []
+                              ],
+                              "@config.viewerRole"
+                            ]
+                          ]
+                        ]
+                      ],
                       "activeFilters": "@config.activeFilters",
                       "avatar": "@config.avatar",
                       "backAction": "@config.backAction",
@@ -707,8 +777,25 @@
                 ],
                 "event": "INIT",
                 "eventId": "evt_01KXG04SD94X8KGY16SVTBNF6K",
-                "from": "idle",
-                "guard": "@config.selfFetch",
+                "from": "resolving",
+                "guard": [
+                  "and",
+                  "@config.selfFetch",
+                  [
+                    "!=",
+                    [
+                      "str/default",
+                      "@payload.id",
+                      ""
+                    ],
+                    ""
+                  ],
+                  [
+                    "!=",
+                    "@config.mode",
+                    "create"
+                  ]
+                ],
                 "to": "idle"
               },
               {
@@ -717,7 +804,40 @@
                     "render-ui",
                     "main",
                     {
-                      "actions": "@config.actions",
+                      "actions": [
+                        "array/filter",
+                        "@config.actions",
+                        [
+                          "fn",
+                          "action",
+                          [
+                            "or",
+                            [
+                              "=",
+                              [
+                                "array/len",
+                                [
+                                  "object/get",
+                                  "@action",
+                                  "roles",
+                                  []
+                                ]
+                              ],
+                              0.0
+                            ],
+                            [
+                              "array/includes",
+                              [
+                                "object/get",
+                                "@action",
+                                "roles",
+                                []
+                              ],
+                              "@config.viewerRole"
+                            ]
+                          ]
+                        ]
+                      ],
                       "activeFilters": "@config.activeFilters",
                       "avatar": "@config.avatar",
                       "backAction": "@config.backAction",
@@ -755,10 +875,27 @@
                 ],
                 "event": "INIT",
                 "eventId": "evt_01KXG04SD94X8KGY16SVTBNF6K",
-                "from": "idle",
+                "from": "resolving",
                 "guard": [
                   "not",
-                  "@config.selfFetch"
+                  [
+                    "and",
+                    "@config.selfFetch",
+                    [
+                      "!=",
+                      [
+                        "str/default",
+                        "@payload.id",
+                        ""
+                      ],
+                      ""
+                    ],
+                    [
+                      "!=",
+                      "@config.mode",
+                      "create"
+                    ]
+                  ]
                 ],
                 "to": "idle"
               },
@@ -768,7 +905,120 @@
                     "render-ui",
                     "main",
                     {
-                      "actions": "@config.actions",
+                      "actions": [
+                        "array/filter",
+                        "@config.actions",
+                        [
+                          "fn",
+                          "action",
+                          [
+                            "or",
+                            [
+                              "=",
+                              [
+                                "array/len",
+                                [
+                                  "object/get",
+                                  "@action",
+                                  "roles",
+                                  []
+                                ]
+                              ],
+                              0.0
+                            ],
+                            [
+                              "array/includes",
+                              [
+                                "object/get",
+                                "@action",
+                                "roles",
+                                []
+                              ],
+                              "@config.viewerRole"
+                            ]
+                          ]
+                        ]
+                      ],
+                      "activeFilters": "@config.activeFilters",
+                      "avatar": "@config.avatar",
+                      "backAction": "@config.backAction",
+                      "className": "@config.className",
+                      "displayFields": "@config.displayFields",
+                      "entity": "@entity",
+                      "error": "@config.error",
+                      "fieldNames": "@config.fieldNames",
+                      "fields": "@config.fields",
+                      "footer": "@config.footer",
+                      "initialData": "@entity",
+                      "isLoading": "@config.isLoading",
+                      "maxInlineActions": "@config.maxInlineActions",
+                      "mode": "@config.mode",
+                      "onTitleCommit": "@config.onTitleCommit",
+                      "page": "@config.pageProp",
+                      "pageSize": "@config.pageSize",
+                      "position": "@config.position",
+                      "relationsData": "@config.relationsData",
+                      "searchValue": "@config.searchValue",
+                      "sections": "@config.sections",
+                      "selectedIds": "@config.selectedIds",
+                      "showActions": "@config.showActions",
+                      "slideOver": "@config.slideOver",
+                      "sortBy": "@config.sortBy",
+                      "sortDirection": "@config.sortDirection",
+                      "status": "@config.status",
+                      "subtitle": "@config.subtitle",
+                      "title": "@config.title",
+                      "totalCount": "@config.totalCount",
+                      "type": "detail-panel",
+                      "width": "@config.width"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "eventId": "evt_01KXG04SD94X8KGY16SVTBNF6K",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "actions": [
+                        "array/filter",
+                        "@config.actions",
+                        [
+                          "fn",
+                          "action",
+                          [
+                            "or",
+                            [
+                              "=",
+                              [
+                                "array/len",
+                                [
+                                  "object/get",
+                                  "@action",
+                                  "roles",
+                                  []
+                                ]
+                              ],
+                              0.0
+                            ],
+                            [
+                              "array/includes",
+                              [
+                                "object/get",
+                                "@action",
+                                "roles",
+                                []
+                              ],
+                              "@config.viewerRole"
+                            ]
+                          ]
+                        ]
+                      ],
                       "activeFilters": "@config.activeFilters",
                       "avatar": "@config.avatar",
                       "backAction": "@config.backAction",
@@ -805,7 +1055,7 @@
                   ]
                 ],
                 "event": "DetailPanelLoaded",
-                "eventId": "evt_01KXG04SDBVHXJR39FQKJ2R4F9",
+                "eventId": "evt_01M3RWGFY2NR2AWA5M5G9DE397",
                 "from": "idle",
                 "to": "idle"
               }
@@ -835,6 +1085,14 @@
           {
             "name": "variant",
             "type": "string"
+          },
+          {
+            "name": "when",
+            "type": "SExpr"
+          },
+          {
+            "name": "roles",
+            "type": "[string]"
           }
         ],
         "DetailPanelBackAction": [
@@ -858,6 +1116,10 @@
           {
             "name": "variant",
             "type": "string"
+          },
+          {
+            "name": "when",
+            "type": "SExpr"
           }
         ],
         "DetailPanelError": [

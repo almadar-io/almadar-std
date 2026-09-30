@@ -36,7 +36,7 @@ export type StdUiSwipeableRowEventKey = 'INIT' | 'SwipeableRowLoaded';
  * Payload shape for the `SwipeableRowLoaded` event.
  */
 export interface StdUiSwipeableRowSwipeableRowLoadedPayload {
-  data?: EntityRow[];
+  data?: EntityRow;
 }
 
 /**
@@ -56,6 +56,8 @@ export interface StdUiSwipeableRowConfig {
   selfFetch?: boolean;
   /** Default: `80` */
   threshold?: number;
+  /** Default: `""` */
+  viewerRole?: string;
 }
 
 /**
